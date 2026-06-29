@@ -40,6 +40,9 @@ class ReservationAPI {
   getReservationStats(filters = {}) {
     return API.get("/reservations/stats", { params: filters });
   }
+  getHeatmapV2(filters = {}) {
+    return API.get("/reservations/heatmap-v2", { params: filters });
+  }
 }
 
 export default new ReservationAPI();

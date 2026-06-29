@@ -189,6 +189,44 @@ const getPaymentSummaryHandler = async (req, res) => {
   });
 };
 
+const getHeatmapV2Handler = async (req, res) => {
+  const { mode = "date-hour", from, to } = req.query;
+
+  if (!["date-hour", "calendar"].includes(mode)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid mode. Use 'date-hour' or 'calendar'.",
+    });
+  }
+
+  if (from && isNaN(Date.parse(from))) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid 'from' date. Use YYYY-MM-DD format.",
+    });
+  }
+
+  if (to && isNaN(Date.parse(to))) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid 'to' date. Use YYYY-MM-DD format.",
+    });
+  }
+
+  if (from && to && new Date(from) > new Date(to)) {
+    return res.status(400).json({
+      success: false,
+      message: "'from' date cannot be after 'to' date.",
+    });
+  }
+
+  const result = await reservationDAO.getHeatmapV2(from, to, mode);
+  return res.status(200).json({
+    success: true,
+    ...result,
+  });
+};
+
 const getStatsHandler = async (req, res) => {
   const filters = {};
   if (req.query.from) filters.from = req.query.from;
@@ -211,6 +249,7 @@ module.exports = {
   cancelHandler,
   chooseTableHandler,
   getHeatmapHandler,
+  getHeatmapV2Handler,
   bulkCancelHandler,
   bulkUpdateHandler,
   getAssignedStaffHandler,

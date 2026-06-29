@@ -207,6 +207,91 @@ const getReservationsHeatmap = async () => {
   return heatmap;
 };
 
+const getHeatmapV2 = async (from, to, mode = "date-hour") => {
+  const where = {
+    resStatus: "pending",
+  };
+  if (from) where.resDate = { ...where.resDate, [Op.gte]: from };
+  if (to) where.resDate = { ...where.resDate, [Op.lte]: to };
+
+  if (mode === "calendar") {
+    const results = await Reservation.findAll({
+      attributes: [
+        [col("resDate"), "date"],
+        [fn("COUNT", col("id")), "count"],
+        [fn("HOUR", fn("MIN", col("resTime"))), "peakHour"],
+        [fn("COUNT", col("id")), "peakCount"],
+      ],
+      where,
+      group: [col("resDate")],
+      order: [[col("resDate"), "ASC"]],
+      raw: true,
+    });
+
+    const days = results.map((r) => ({
+      date: r.date,
+      count: parseInt(r.count, 10),
+      peakHour: r.peakHour !== null ? String(r.peakHour).padStart(2, "0") + ":00" : null,
+      peakCount: parseInt(r.peakCount || r.count, 10),
+    }));
+
+    return { days };
+  }
+
+  const results = await Reservation.findAll({
+    attributes: [
+      ["resDate", "date"],
+      [fn("HOUR", col("resTime")), "hour"],
+      [fn("COUNT", col("id")), "count"],
+    ],
+    where,
+    group: ["resDate", fn("HOUR", col("resTime"))],
+    order: [["resDate", "ASC"]],
+    raw: true,
+  });
+
+  const dateSet = new Set();
+  const hourSet = new Set();
+  const matrixMap = new Map();
+
+  results.forEach((r) => {
+    dateSet.add(r.date);
+    hourSet.add(String(r.hour).padStart(2, "0"));
+    const key = `${r.date}|${String(r.hour).padStart(2, "0")}`;
+    matrixMap.set(key, parseInt(r.count, 10));
+  });
+
+  const dates = Array.from(dateSet).sort();
+  const hours = Array.from(hourSet).sort();
+
+  const matrix = dates.map((date) => {
+    return hours.map((hour) => {
+      const key = `${date}|${hour}`;
+      return matrixMap.get(key) || 0;
+    });
+  });
+
+  const totalsPerDay = dates.map((date) => {
+    return matrix[dates.indexOf(date)].reduce((sum, count) => sum + count, 0);
+  });
+
+  const totalsPerHour = hours.map((hour) => {
+    let sum = 0;
+    matrix.forEach((row) => {
+      sum += row[hours.indexOf(hour)];
+    });
+    return sum;
+  });
+
+  return {
+    dates,
+    hours,
+    matrix,
+    totalsPerDay,
+    totalsPerHour,
+  };
+};
+
 const getPaymentStatusCounts = async () => {
   const results = await Reservation.findAll({
     attributes: [
@@ -347,6 +432,7 @@ module.exports = {
   setReservationTable,
   setReservationStatus,
   getReservationsHeatmap,
+  getHeatmapV2,
   getPaymentStatusCounts,
   bulkCancel,
   bulkUpdate,
