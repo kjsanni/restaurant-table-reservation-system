@@ -1,4 +1,5 @@
 const customerService = require("../services/customerService");
+const reservationDAO = require("../DAOs/reservation.dao");
 
 const getCustomerHandler = async (req, res) => {
   const { customerId } = req.params;
@@ -7,6 +8,29 @@ const getCustomerHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Customer not found" });
   }
   return res.status(200).json({ success: true, customer });
+};
+
+const getCustomerProfileHandler = async (req, res) => {
+  const { customerId } = req.params;
+
+  const customer = await reservationDAO.getCustomerById(customerId);
+  if (!customer) {
+    return res.status(404).json({ success: false, message: "Customer not found" });
+  }
+
+  const [history, stats] = await Promise.all([
+    reservationDAO.getCustomerReservationHistory(customerId, 50),
+    reservationDAO.getCustomerStats(customerId),
+  ]);
+
+  return res.status(200).json({
+    success: true,
+    profile: {
+      customer,
+      history,
+      stats,
+    },
+  });
 };
 
 const updateTagsHandler = async (req, res) => {
@@ -23,6 +47,7 @@ const findOrCreateHandler = async (req, res) => {
 
 module.exports = {
   getCustomerHandler,
+  getCustomerProfileHandler,
   updateTagsHandler,
   findOrCreateHandler,
 };

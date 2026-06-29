@@ -109,7 +109,7 @@ const router = createRouter({
       component: () => import("../views/PaymentDashboardView.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
-    {
+{
       path: "/waitlist",
       name: "waitlist",
       component: () => import("../views/WaitlistView.vue"),
@@ -120,6 +120,12 @@ const router = createRouter({
       name: "audit-logs",
       component: () => import("../views/AuditLogView.vue"),
       meta: { requiresAuth: true, requiresPermission: "view_audit_logs" },
+    },
+    {
+      path: "/admin/customers/:id",
+      name: "customer-profile",
+      component: () => import("../views/CustomerProfileView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "view_reservations" },
     },
     {
       path: "/about",

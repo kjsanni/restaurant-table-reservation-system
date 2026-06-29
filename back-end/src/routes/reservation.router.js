@@ -19,6 +19,16 @@ router
   .all(httpMethodError);
 
 router
+  .route("/heatmap-v2")
+  .get(...protectedRoute("view_reservations", reservationController.getHeatmapV2Handler))
+  .all(httpMethodError);
+
+router
+  .route("/stats")
+  .get(...protectedRoute("view_reservations", reservationController.getStatsHandler))
+  .all(httpMethodError);
+
+router
   .route("/bulk-cancel")
   .post(...writeRoute("edit_reservations", reservationController.bulkCancelHandler))
   .all(httpMethodError);
@@ -36,11 +46,6 @@ router
 router
   .route("/payment-summary")
   .get(...protectedRoute("view_reservations", reservationController.getPaymentSummaryHandler))
-  .all(httpMethodError);
-
-router
-  .route("/stats")
-  .get(...protectedRoute("view_reservations", reservationController.getStatsHandler))
   .all(httpMethodError);
 
 router

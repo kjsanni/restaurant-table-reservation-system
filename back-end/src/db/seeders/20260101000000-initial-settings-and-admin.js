@@ -5,8 +5,6 @@ const SALT_ROUNDS = 10;
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const hashedPassword = await bcrypt.hash("admin123", SALT_ROUNDS);
-
     await queryInterface.bulkDelete("settings", null, {});
     await queryInterface.bulkDelete("users", null, {});
 
@@ -48,16 +46,19 @@ module.exports = {
       },
     ]);
 
-    await queryInterface.bulkInsert("users", [
-      {
-        username: "admin",
-        email: "admin@rtrs.com",
-        password: hashedPassword,
-        role: "admin",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]);
+    if (process.env.NODE_ENV !== "production") {
+      const hashedPassword = await bcrypt.hash("admin123", SALT_ROUNDS);
+      await queryInterface.bulkInsert("users", [
+        {
+          username: "admin",
+          email: "admin@rtrs.com",
+          password: hashedPassword,
+          role: "admin",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+    }
   },
 
   async down(queryInterface, Sequelize) {

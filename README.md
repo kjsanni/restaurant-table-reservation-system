@@ -5,93 +5,160 @@ Restaurant Table Reservation System - RTRS
 <br>
 </h1>
 
-<h4 align="center">Table reservation web app which could be applied in any restaurant</h4>
+<h4 align="center">Table reservation web app for any restaurant with RBAC, payments, analytics, and real-time waitlist management</h4>
 
 <p align="center">
   <a href="#key-features">Key Features</a> •
+  <a href="#tech-stack">Tech Stack</a> •
   <a href="#how-to-use">How To Use</a> •
-  <a href="#credits">Credits</a> •
-  <a href="#extra">Extra</a> •
-  <a href="#ideas-for-future-development">Ideas For Future Development</a> •
+  <a href="#credentials">Default Credentials</a> •
+  <a href="#security">Security</a> •
   <a href="#contact">Contact</a>
 </p>
 
+---
+
 ## Key Features
 
-* Responsive UI
-* Single Page Application (faster loading experience)
-* Create new reservations
-* Search for registered reservations in the system
-* Register new restaurant tables by specifying name and table capacity
-* View all reservations by chosen date
-* Edit reservation details. ex. => Reservation Time, Reservation Date, Number of People
-* Cancel a reservation
-* Seat guests by accessing their registered reservation in the system and choosing free restaurant table
-* Free a table when given reservation is complete.
+### Core Functionality
+- **Responsive UI** — Vue 3 + PrimeVue with unified design system (Inter font, rounded cards, status chips, spinner loading)
+- **Single Page Application** — Faster loading experience with Vite build tooling
+- **Reservation Management** — Create, edit, cancel, and seat guests with drag-and-drop floor plan
+- **Table Management** — Register tables with capacity, block/unblock, assign staff (5-table limit per staff)
+- **Waitlist Management** — Queue guests, auto-suggest seating when tables free up (Socket.io real-time)
+- **Staff Assignment** — Assign waiting staff to reservations and tables
+
+### Payment & Analytics
+- **Payment Tracking** — Record payments with auto-classification (deposit/partial/paid/unpaid)
+- **Revenue Reports** — Time-series dashboard with SVG charts, CSV export, preset ranges
+- **Payment Dashboard** — Admin view with status summary, bar chart, filterable table
+
+### RBAC & Security
+- **Role-Based Access Control** — Admin, Manager, Staff roles with granular permissions
+- **Group Management** — Create user groups with permission sets
+- **Permission-Based UI** — Action buttons match backend `requirePermission` checks
+- **JWT Authentication** — Secure tokens with rotation support
+- **CSRF Protection** — Strict sameSite enforcement
+- **CSP Headers** — Environment-aware content security policy
+- **Account Lockout** — 5 failed attempts / 15-minute lockout
+- **Audit Logging** — Comprehensive trail for authentication and data mutations
+- **Rate Limiting** — API protection against brute-force attacks
+
+### Scheduling & Calendar
+- **Schedule Management** — Weekly opening hours with toggle switches
+- **Holiday Management** — Add/remove closed dates
+- **Calendar View** — Visual calendar for opening hours and reservations
+
+### Analytics & Reporting
+- **Weekly Heatmap** — Reservation density by day × hour (pending only)
+- **2D Heatmap** — Date-range matrix with calendar drill-down mode
+- **No-Show Widget** — No-show rate tracking with color-coded rates and trend indicators
+- **General Reports** — Filterable report dashboard
+
+### Search & History
+- **Global Search** — Search reservations by name, phone, email, date, time
+- **Customer Loyalty Tags** — Tag customers for segmentation
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend Runtime | Node.js + Express |
+| Backend ORM | Sequelize + MySQL |
+| Authentication | JWT (Tymon JWTAuth pattern) |
+| Real-time | Socket.io |
+| Frontend Framework | Vue 3 (Composition API) |
+| Frontend UI | PrimeVue + Tailwind CSS + CSS custom properties |
+| State Management | Pinia |
+| Build Tool | Vite |
+| Testing | Playwright (E2E) |
+
+---
 
 ## How To Use
 
-To clone and run this application, you'll need [Git](https://git-scm.com), [Node.js](https://nodejs.org/en/download/), [MySQL](https://dev.mysql.com/downloads/mysql/) (needed since the application and the database aren't hosted currently)
+### Prerequisites
+- Node.js 18+
+- MySQL 8+ (or MariaDB)
+- Git
 
 ```bash
 # Clone this repository
-$ git clone https://github.com/slavyanHristov/restaurant-table-reservation-system.git 
+$ git clone https://github.com/kjsanni/restaurant-table-reservation-system.git
 
 # Go into the repository
 $ cd restaurant-table-reservation-system
 
 # Install dependencies
 $ npm install
+$ cd back-end && npm install && cd ..
+$ cd front-end && npm install && cd ..
 
-# Create environment variables file
-$ touch .\back-end\.env
+# Set up backend environment
+$ cp back-end/.env.production.example back-end/.env
+# Edit back-end/.env with your DB credentials and JWT secret
 
-# Add environment variables to the file
-$ echo "DB_USERNAME=<your_db_username> DB_PASSWORD=<your_db_password> DB_NAME=rtrs_db DB_HOST=localhost DB_DIALECT=mysql DB_PORT=3306 PORT=5000" >> .\back-end\.env
+# Initialize database
+$ cd back-end
+$ npx sequelize-cli db:migrate
+$ npx sequelize-cli db:seed:all
 
-# Run the app in production mode
-$ npm run start:prod
+# Run backend (PM2, port 8000)
+$ cd back-end && npm run dev
 
-# Run the app in development mode (nodemon dependency needed)
-$ npm run start:dev
+# Run frontend (Vite, port 8080)
+$ cd front-end && npm run dev
 ```
 
-## Credits
+### Production Deployment
+See `DEPLOYMENT-GUIDE.md` for Apache/Nginx + PM2 setup.
 
-This software uses the following open source packages:
+---
+
+## Default Credentials
+
+**⚠️ Change these immediately in production!**
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@rtrs.com` | `admin123` |
+
+---
+
+## Security
+
+- **JWT Secret** — Generate with `openssl rand -hex 32` and set in `.env`
+- **CORS Origins** — Set explicit origins in `CORS_ORIGINS` env var
+- **Database** — Use strong passwords; never commit `.env` files
+- **Audit** — Review `SECURITY_AUDIT_REPORT.md` for known vulnerabilities and remediation steps
+
+---
+
+## Documentation
+
+- `docs/README.md` — Documentation index
+- `CHANGELOG.md` — Version history
+- `DEPLOYMENT-GUIDE.md` — Production setup
+- `SECURITY_AUDIT_REPORT.md` — Security findings
+- `docs/` — Full Obsidian documentation vault
+
+---
+
+## Credits
 
 - [Node.js](https://nodejs.org/)
 - [Vue.js](https://vuejs.org/)
 - [Express.js](https://expressjs.com/)
 - [Sequelize](https://sequelize.org/)
+- [PrimeVue](https://primevue.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Socket.io](https://socket.io/)
+- [Playwright](https://playwright.dev/)
 
-The UI/UX Design is built by the help of [Figma](https://figma.com/)
-
-## Extra
-The UI/UX Design can be found here:
-* [RTRS-FIGMA-PROJECT](https://www.figma.com/file/Rpx13QhhGTYX2fAHnXs4XR/restaurant-reservation-ui%2Fux-v1.0?node-id=2%3A35)
-
-Readme files introducing the developed project:
-* [Front-end README](https://github.com/slavyanHristov/restaurant-table-reservation-system/blob/feature/readme/front-end/README.md)
-* [Back-end README](https://github.com/slavyanHristov/restaurant-table-reservation-system/blob/feature/readme/back-end/README.md)
-  
-YouTube video diplaying the end-product of the project: 
-* [Link](https://www.youtube.com/watch?v=E2CjHID9dfs)
-
-## Ideas For Future Development
-
-- Integration of payment systems. (Customers shouldn't reserve restaurant tables for free)
-- Make the system more large-scale. For example, make it handle multiple restaurants.
-- Implement mailing service which notifies customers for details about their reservation.
-- Development of unit, integration and end-to-end tests.
-- Restaurant should have schedule. On some days of the week the restaurant could be closed or opened earlier or later. Or on the other hand it won't work at all. In such cases there should be validations which prevent from making reservations.
+---
 
 ## Contact
- > **Note**
- > If any issues are encountered or you want to collaborate with me on developing further the project please contact me at:
 
- ---
-
- > GitHub [@slavyanHristov](https://github.com/slavyanHristov) &nbsp;&middot;&nbsp;
- > Gmail slavqnhristov@gmail.com &nbsp;&middot;&nbsp;
- > ABV slavqn99@abv.bg (for bulgarian audience)
+> GitHub [@kjsanni](https://github.com/kjsanni)
