@@ -18,10 +18,10 @@ const props = defineProps({
   border: 1px solid var(--primary-black);
   width: 100%;
   text-align: center;
-  font-family: "Montserrat-Bold";
-  border-radius: 5px;
-  padding: 10px 20px;
-  transition: 300ms;
+  font-family: "Inter-Bold";
+  border-radius: var(--btn-radius);
+  padding: var(--btn-padding);
+  transition: background-color 0.2s ease, color 0.2s ease;
   cursor: pointer;
 }
 .wrapper:hover {

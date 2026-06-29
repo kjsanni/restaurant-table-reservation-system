@@ -18,9 +18,9 @@ const getAllHandler = async (req, res) => {
 };
 
 const registerHandler = async (req, res) => {
-  const { name, capacity } = req.body;
+  const { name, capacity, staffIds } = req.body;
 
-  if (!name && !capacity)
+  if (!name || !capacity)
     throw {
       status: 400,
       message: "Please fill in all fields!",
@@ -29,6 +29,7 @@ const registerHandler = async (req, res) => {
   const table = await tableService.registerTable(tableDAO, {
     name,
     capacity,
+    staffIds: staffIds || [],
   });
 
   return res.status(201).json({
@@ -45,9 +46,68 @@ const freeTableHandler = async (req, res) => {
     tableId
   );
 
+  const io = req.app.get("io");
+  if (io) {
+    io.emit("table-freed", { tableId, reservationId: info?.id });
+  }
+
   return res.status(200).json({
     success: true,
     message: "Successfully freed the chosen table!",
+    item: info,
+  });
+};
+
+const blockTableHandler = async (req, res) => {
+  const { id } = req.params;
+  const { notes } = req.body;
+  const table = await tableDAO.blockTable(id, notes);
+
+  return res.status(200).json({
+    success: true,
+    message: "Table blocked for maintenance!",
+    item: table,
+  });
+};
+
+const unblockTableHandler = async (req, res) => {
+  const { id } = req.params;
+  const table = await tableDAO.unblockTable(id);
+
+  return res.status(200).json({
+    success: true,
+    message: "Table unblocked!",
+    item: table,
+  });
+};
+
+const getWaitingStaffHandler = async (req, res) => {
+  const staff = await tableService.getWaitingStaff(tableDAO);
+  return res.status(200).json({
+    success: true,
+    staff,
+  });
+};
+
+const assignStaffHandler = async (req, res) => {
+  const { tableId } = req.params;
+  const { userId } = req.body;
+  const info = await tableService.assignStaff(tableDAO, tableId, userId);
+
+  return res.status(200).json({
+    success: true,
+    message: "Staff assigned successfully!",
+    item: info,
+  });
+};
+
+const unassignStaffHandler = async (req, res) => {
+  const { tableId, userId } = req.params;
+  const info = await tableService.unassignStaff(tableDAO, tableId, userId);
+
+  return res.status(200).json({
+    success: true,
+    message: "Staff unassigned successfully!",
     item: info,
   });
 };
@@ -56,4 +116,9 @@ module.exports = {
   getAllHandler,
   registerHandler,
   freeTableHandler,
+  blockTableHandler,
+  unblockTableHandler,
+  getWaitingStaffHandler,
+  assignStaffHandler,
+  unassignStaffHandler,
 };

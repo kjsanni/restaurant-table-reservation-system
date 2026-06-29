@@ -4,7 +4,7 @@ const regularExpressions = {
     msg: "Invalid name!",
   },
   phone: {
-    regex: /^\d{10}$/,
+    regex: /^\d{10,15}$/,
     msg: "Invalid phone number!",
   },
 };

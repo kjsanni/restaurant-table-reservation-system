@@ -27,10 +27,10 @@ const cssProps = computed(() => {
   color: var(--main-color);
   width: 100%;
   text-align: center;
-  font-family: "Inter-Light";
-  border-radius: 5px;
-
-  transition: 300ms;
+  font-family: "Inter-Medium";
+  border-radius: var(--btn-radius);
+  padding: var(--btn-padding);
+  transition: background-color 0.2s ease, color 0.2s ease;
   cursor: pointer;
 }
 .wrapper:hover {

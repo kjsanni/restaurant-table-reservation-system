@@ -13,7 +13,7 @@
 
 ```
 front-end\
- |--public\             
+ |--public\
  |--src\
     |--assets\       # Images, stylesheets
     |--components\   # UI components (.vue files)
@@ -32,10 +32,11 @@ front-end\
  |--package-lock.json   # Dependency managment
  |--package.json        # Dependency managment
  |--README.md           # About
- ```
+```
 
 ## Sitemap
-*Displays all pages in the web app and their hierrarchy.*
+
+_Displays all pages in the web app and their hierrarchy._
 
 <img src="https://github.com/slavyanHristov/restaurant-table-reservation-system/blob/feature/readme/screenshots/sitemap.png" />
 <!-- Apply width? -->
@@ -44,21 +45,22 @@ front-end\
 
 ### Home
 
-*Entry point of the web application.*
+_Entry point of the web application._
 
 <summary>URL: <code>http://localhost:3000/</code></summary>
 
 #### Desktop
+
 <br> 
 <br> 
 <img src="https://github.com/slavyanHristov/restaurant-table-reservation-system/blob/feature/readme/screenshots/home/home-desktop.png" width="800" /> 
-<br>   
+<br>
 
 #### Mobile
 
 <br>  
 <img src="https://github.com/slavyanHristov/restaurant-table-reservation-system/blob/feature/readme/screenshots/home/home-mobile.png" height="500" /> 
-<br> 
+<br>
 
 #### Mobile Navigation Menu
 
@@ -67,7 +69,7 @@ front-end\
 
 ### Add Table
 
-*The add table page contains a form for registering new restaurant tables in the system. All fields contain validations for wrong input from the user.*
+_The add table page contains a form for registering new restaurant tables in the system. All fields contain validations for wrong input from the user._
 
 <summary>URL: <code>http://localhost:3000/add-table</code></summary>
 
@@ -77,7 +79,7 @@ front-end\
 
 <br>
 <img src="https://github.com/slavyanHristov/restaurant-table-reservation-system/blob/feature/readme/screenshots/add-tables/add-table-desktop.png" width="800" />
-<br> 
+<br>
 
 #### Mobile
 
@@ -86,10 +88,9 @@ front-end\
 
 ### Search
 
-*The search page displays all pending reservations in the system and user can search for specific reservations by entering keywords in the search box. Search can be performed by all criteria (by name, email, reservation date, time etc..*
+_The search page displays all pending reservations in the system and user can search for specific reservations by entering keywords in the search box. Search can be performed by all criteria (by name, email, reservation date, time etc.._
 
 <summary>URL: <code>http://localhost:3000/search</code></summary>
-
 
 <br>
 
@@ -97,7 +98,7 @@ front-end\
 
 <br>
 <img src="https://github.com/slavyanHristov/restaurant-table-reservation-system/blob/feature/readme/screenshots/search/search-desktop.png" width="800" />
-<br> 
+<br>
 
 #### Mobile
 
@@ -106,10 +107,9 @@ front-end\
 
 ### New Reservation
 
-*The new reservation page has a form which requires all data needed from the user to register his reservation. All fields have specific data validations. For example User cannot make a reservation with date and time which is in the past. Upon error encountered, message is displayed which informs for the specific error.*
+_The new reservation page has a form which requires all data needed from the user to register his reservation. All fields have specific data validations. For example User cannot make a reservation with date and time which is in the past. Upon error encountered, message is displayed which informs for the specific error._
 
 <summary>URL: <code>http://localhost:3000/new-reservation</code></summary>
-
 
 <br>
 
@@ -134,7 +134,7 @@ On entered incorrect data:
 
 ### Reservations
 
-*The reservations page displays all reservations for a specific day. The user has the ability to move forward, backwards or to current day. From this page the user can also perform specific actions such as: edit reservation, seat at a table, and cancel reservation. In this page all registered restaurant tables are outputed with their name and capacity. If a table is occupied, the system gives the ability to free the given table and to be able to be reserved once again.*
+_The reservations page displays all reservations for a specific day. The user has the ability to move forward, backwards or to current day. From this page the user can also perform specific actions such as: edit reservation, seat at a table, and cancel reservation. In this page all registered restaurant tables are outputed with their name and capacity. If a table is occupied, the system gives the ability to free the given table and to be able to be reserved once again._
 
 <summary>URL: <code>http://localhost:3000/reservations</code></summary>
 
@@ -175,7 +175,8 @@ Each of the fields have their needed validations. Upon error free data sent, the
 <img src="https://github.com/slavyanHristov/restaurant-table-reservation-system/blob/feature/readme/screenshots/reservations/reservations-edit-desktop.png" width="800" />
 
 ### Not found page (404)
-*This page is displayed when unregistered/wrong URL is entered in the address bar by the user.*
+
+_This page is displayed when unregistered/wrong URL is entered in the address bar by the user._
 <br>
 
 #### Desktop

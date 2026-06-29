@@ -1,4 +1,4 @@
-const tableService = require("../services/table");
+const tableService = require("../services/tableService");
 
 describe("restaurant table", () => {
   it("should call findAllTables DAO method", async () => {

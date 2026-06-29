@@ -5,9 +5,7 @@ const LEVEL = Symbol.for("level");
 const customFormat = format.combine(
   format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
   format.printf((info) => {
-    return `${info.timestamp} - [${info.level.toUpperCase()}] - ${
-      info.message
-    }`;
+    return `${info.timestamp} - [${info.level.toUpperCase()}] - ${info.message}`;
   })
 );
 
@@ -18,7 +16,7 @@ const filterOnly = (level) => {
 };
 
 const logger = createLogger({
-  level: "debug",
+  level: process.env.LOG_LEVEL || "info",
   format: customFormat,
   transports: [
     new transports.Console(),
@@ -26,11 +24,6 @@ const logger = createLogger({
       level: "error",
       format: filterOnly("error"),
       filename: "logs/error.log",
-    }),
-    new transports.File({
-      level: "info",
-      format: filterOnly("info"),
-      filename: "logs/info.log",
     }),
     new transports.File({
       level: "warn",

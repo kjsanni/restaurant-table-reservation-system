@@ -18,6 +18,16 @@
   --x-spacing-mobile: 20px;
   --opacity-val: 0;
   --blur-val: 0;
+
+  --header-height: 200px;
+  --page-margin-y: 50px;
+  --page-margin-x: var(--x-spacing-mobile);
+  --card-radius: 12px;
+  --card-padding: 20px;
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  --btn-radius: 8px;
+  --btn-padding: 10px 20px;
+  --input-radius: 8px;
 }
 
 *,

@@ -1,5 +1,6 @@
 const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+require("dotenv").config({ path: path.resolve(__dirname, "../.env." + (process.env.NODE_ENV || "development")), override: false });
 
 module.exports = {
   development: {
@@ -7,7 +8,7 @@ module.exports = {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
-    dialect: process.env.DB_DIALECT,
+    dialect: process.env.DB_DIALECT || "mysql",
     port: process.env.DB_PORT,
     server_port: process.env.PORT,
   },
@@ -16,7 +17,7 @@ module.exports = {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME_TEST,
     host: process.env.DB_HOST,
-    dialect: process.env.DB_DIALECT,
+    dialect: process.env.DB_DIALECT || "mysql",
     port: process.env.DB_PORT,
     server_port: process.env.PORT,
   },
@@ -25,7 +26,7 @@ module.exports = {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
-    dialect: process.env.DB_DIALECT,
+    dialect: process.env.DB_DIALECT || "mysql",
     port: process.env.DB_PORT,
     server_port: process.env.PORT,
   },

@@ -54,6 +54,20 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+      visitCount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      lastVisitDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      tags: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: [],
+      },
     },
     {
       sequelize,

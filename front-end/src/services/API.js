@@ -1,7 +1,10 @@
 import axios from "axios";
 
-export default (url = "http://localhost:5000/api/v1") => {
-  return axios.create({
-    baseURL: url,
-  });
-};
+const API = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "/api/v1",
+  withCredentials: true,
+  xsrfCookieName: "XSRF-TOKEN",
+  xsrfHeaderName: "x-xsrf-token",
+});
+
+export default API;

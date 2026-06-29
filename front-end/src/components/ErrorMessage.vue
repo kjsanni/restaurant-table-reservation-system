@@ -2,7 +2,10 @@
 import ErrorIcon from "~icons/bxs/error-circle";
 
 const props = defineProps({
-  errorFlag: Boolean,
+  errorFlag: {
+    type: [Boolean, String],
+    default: false,
+  },
   errorMessage: String,
 });
 </script>
