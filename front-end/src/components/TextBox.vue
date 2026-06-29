@@ -10,7 +10,6 @@ const props = defineProps({
   errors: Object,
 });
 
-console.log(props.errors);
 const emit = defineEmits(["update:input"]);
 </script>
 

@@ -1,15 +1,13 @@
 {
-    "include": [
-        "./src/**/*"
-    ],
+  "include": ["./src/**/*"],
 
-    "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "@/*": ["./src/*"],
-        },
-        "jsx": "preserve",
-        "allowJs": true,
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
     },
+    "jsx": "preserve",
+    "allowJs": true
+  }
 }
-

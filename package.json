@@ -18,5 +18,9 @@
   "bugs": {
     "url": "https://github.com/slavyanHristov/Restaurant-Table-Reservation-System/issues"
   },
-  "homepage": "https://github.com/slavyanHristov/Restaurant-Table-Reservation-System#readme"
+  "homepage": "https://github.com/slavyanHristov/Restaurant-Table-Reservation-System#readme",
+  "dependencies": {
+    "csurf": "^1.11.0",
+    "express-rate-limit": "^8.5.2"
+  }
 }

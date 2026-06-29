@@ -2,8 +2,8 @@ const getAllTables = async (tableDAO) => {
   return await tableDAO.findAllTables();
 };
 
-const registerTable = async (tableDAO, { name, capacity }) => {
-  return await tableDAO.createTable({ name, capacity });
+const registerTable = async (tableDAO, { name, capacity, staffIds }) => {
+  return await tableDAO.createTable({ name, capacity, staffIds });
 };
 
 const freeTable = async ({ reservationDAO, tableDAO }, tableId) => {
@@ -17,8 +17,23 @@ const freeTable = async ({ reservationDAO, tableDAO }, tableId) => {
   return await tableDAO.freeTable(reservationDAO, table);
 };
 
+const getWaitingStaff = async (tableDAO) => {
+  return await tableDAO.getWaitingStaff();
+};
+
+const assignStaff = async (tableDAO, tableId, userId) => {
+  return await tableDAO.assignStaffToTable(tableId, userId);
+};
+
+const unassignStaff = async (tableDAO, tableId, userId) => {
+  return await tableDAO.unassignStaffFromTable(tableId, userId);
+};
+
 module.exports = {
   getAllTables,
   registerTable,
   freeTable,
+  getWaitingStaff,
+  assignStaff,
+  unassignStaff,
 };

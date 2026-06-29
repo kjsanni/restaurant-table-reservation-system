@@ -1,6 +1,7 @@
 const db = require("../db/models");
 const Table = db.table;
 const Reservation = db.reservation;
+const User = db.user;
 
 const findAllTables = async () => {
   return await Table.findAll({
@@ -8,15 +9,24 @@ const findAllTables = async () => {
       {
         model: Reservation,
       },
+      {
+        model: User,
+        through: { attributes: [] },
+        attributes: ["id", "username", "email", "role"],
+      },
     ],
   });
 };
 
-const createTable = async ({ name, capacity }) => {
-  return await Table.create({
+const createTable = async ({ name, capacity, staffIds }) => {
+  const table = await Table.create({
     name: name,
     capacity: capacity,
   });
+  if (staffIds && staffIds.length > 0) {
+    await table.addUsers(staffIds);
+  }
+  return table;
 };
 
 const findTableById = async (id) => {
@@ -31,15 +41,103 @@ const updateTable = async (table, payload) => {
   return await table.update(payload);
 };
 
+const blockTable = async (id, notes = null) => {
+  const table = await findTableById(id);
+  if (!table) {
+    throw { status: 404, message: "Table not found!" };
+  }
+  return await table.update({ isBlocked: true, maintenanceNotes: notes });
+};
+
+const unblockTable = async (id) => {
+  const table = await findTableById(id);
+  if (!table) {
+    throw { status: 404, message: "Table not found!" };
+  }
+  return await table.update({ isBlocked: false, maintenanceNotes: null });
+};
+
 const freeTable = async (reservationDAO, table) => {
   const reservationId = table.reservationId;
+  if (!reservationId) {
+    await updateTable(table, {
+      isOccupied: false,
+      reservationId: null,
+    });
+    return null;
+  }
+
   const reservation = await reservationDAO.findReservationById(reservationId);
   await updateTable(table, {
     isOccupied: false,
     reservationId: null,
   });
 
-  return await reservation.destroy();
+  if (reservation) {
+    return await reservation.update({ resStatus: "completed" });
+  }
+  return null;
+};
+
+const getWaitingStaff = async () => {
+  const staff = await User.findAll({
+    where: { role: "staff" },
+    attributes: {
+      include: [
+        [
+          db.sequelize.literal(`(
+            SELECT COUNT(*) FROM table_staff WHERE table_staff.userId = user.id
+          )`),
+          "tableCount",
+        ],
+      ],
+    },
+    order: [["username", "ASC"]],
+  });
+  return staff.map((s) => ({
+    id: s.id,
+    username: s.username,
+    email: s.email,
+    tableCount: parseInt(s.dataValues.tableCount, 10) || 0,
+  }));
+};
+
+const assignStaffToTable = async (tableId, userId) => {
+  const table = await findTableById(tableId);
+  if (!table) {
+    throw { status: 404, message: "Table not found!" };
+  }
+  const user = await User.findByPk(userId);
+  if (!user) {
+    throw { status: 404, message: "User not found!" };
+  }
+  const existingStaff = await table.getUsers();
+  const alreadyAssigned = existingStaff.some((s) => s.id === userId);
+  if (alreadyAssigned) {
+    throw { status: 400, message: "Staff already assigned to this table!" };
+  }
+  if (existingStaff.length >= 5) {
+    throw { status: 400, message: "Table already has 5 staff assigned!" };
+  }
+  const userTables = await user.getTables();
+  if (userTables.length >= 5) {
+    throw { status: 400, message: "Staff member already assigned to 5 tables!" };
+  }
+  await table.addUser(user);
+  return { tableId, userId };
+};
+
+const unassignStaffFromTable = async (tableId, userId) => {
+  const table = await findTableById(tableId);
+  if (!table) {
+    throw { status: 404, message: "Table not found!" };
+  }
+  const user = await User.findByPk(userId);
+  if (!user) {
+    throw { status: 404, message: "User not found!" };
+  }
+  await table.removeUser(user);
+  return { tableId, userId };
 };
 
 module.exports = {
@@ -47,4 +145,9 @@ module.exports = {
   createTable,
   findTableById,
   freeTable,
+  blockTable,
+  unblockTable,
+  getWaitingStaff,
+  assignStaffToTable,
+  unassignStaffFromTable,
 };

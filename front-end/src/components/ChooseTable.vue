@@ -4,9 +4,11 @@ import ButtonFilled from "@/components/ButtonFilled.vue";
 import SaveIcon from "~icons/fluent/save-16-regular";
 import SuccessMessage from "@/components/SuccessMessage.vue";
 import ErrorMessage from "@/components/ErrorMessage.vue";
+import logger from "@/utils/logger";
 
 import reservationAPI from "@/services/reservationAPI";
 import { ref } from "vue";
+import { getApiErrorMessage } from "@/utils/apiError";
 
 const props = defineProps({
   freeTables: Array,
@@ -30,17 +32,15 @@ const chooseTable = async () => {
       props.reservation.id,
       payload.value
     );
-    console.log(res);
+    logger.debug("Table chosen", { reservationId: props.reservation.id });
     isSuccessful.value = true;
     emit("onChosen");
   } catch (err) {
-    if (err.response && err.response.data) {
-      if (err.response.status === 400) {
-        emit("onChosen");
-        errMsg.value = err.response.data.message;
-      }
+    if (err.response && err.response.status === 400) {
+      emit("onChosen");
+      errMsg.value = getApiErrorMessage(err);
     }
-    console.log(err);
+    logger.error("Choose table failed", { error: err.message });
   }
 };
 </script>

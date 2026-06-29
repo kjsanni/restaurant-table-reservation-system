@@ -7,6 +7,11 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: "cascade",
         hooks: true,
       });
+      Table.belongsToMany(models.user, {
+        through: "table_staff",
+        foreignKey: "tableId",
+        otherKey: "userId",
+      });
     }
   }
   Table.init(
@@ -40,7 +45,7 @@ module.exports = (sequelize, DataTypes) => {
           },
           isInt: {
             arg: true,
-            msg: "Should be an integer value!",
+              msg: "Should be an integer value!",
           },
           min: {
             args: [1],
@@ -56,6 +61,15 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.BOOLEAN,
         defaultValue: false,
+      },
+      isBlocked: {
+        allowNull: false,
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      maintenanceNotes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
       },
     },
     {

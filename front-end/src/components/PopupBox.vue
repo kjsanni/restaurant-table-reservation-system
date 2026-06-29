@@ -20,7 +20,11 @@ const emit = defineEmits(["closeModal"]);
         <div class="popup-wrapper">
           <div class="header">
             <h1>{{ props.headerText }}</h1>
-            <button v-if="props.isClosable" @click="emit('closeModal')">
+            <button
+              v-if="props.isClosable"
+              class="close-btn"
+              @click="emit('closeModal')"
+            >
               <CloseIcon />
             </button>
           </div>
@@ -43,11 +47,13 @@ const emit = defineEmits(["closeModal"]);
   top: 0;
   left: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   width: 100%;
   height: 100%;
   background-color: var(--darkened-color);
+  overflow-y: auto;
+  padding: 5vh 0;
 }
 button {
   appearance: none;
@@ -59,12 +65,18 @@ button {
   position: relative;
   width: 40%;
   min-width: 420px;
+  max-height: 90vh;
   background-color: var(--primary-white);
   border-radius: 10px;
+  display: flex;
+  flex-direction: column;
 }
 
 .popup-content {
   padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .popup-wrapper .header {
@@ -73,10 +85,35 @@ button {
   justify-content: space-between;
   align-items: flex-start;
   gap: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--primary-white);
+  border-radius: 10px 10px 0 0;
+  flex-shrink: 0;
 }
 
 .header h1 {
   text-align: center;
+}
+
+.close-btn {
+  position: relative;
+  z-index: 20;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--secondary-gray);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  color: var(--primary-black);
+  background-color: var(--light-pink);
 }
 
 .popupAnimation-enter-from,

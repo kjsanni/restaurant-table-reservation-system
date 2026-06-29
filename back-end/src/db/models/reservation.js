@@ -16,6 +16,11 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: "cascade",
         hooks: true,
       });
+      Reservation.belongsToMany(models.user, {
+        through: "reservation_staff",
+        foreignKey: "reservationId",
+        otherKey: "userId",
+      });
     }
   }
   Reservation.init(
@@ -29,9 +34,9 @@ module.exports = (sequelize, DataTypes) => {
             msg: "Please enter reservation date!",
           },
           isDateInThePast(value) {
-            const currDate = dateTimeValidator.asDateString(new Date());
-            if (dateTimeValidator.isDateInThePast(currDate, value))
-              throw new Error("Given date is in the past!");
+            if (value < dateTimeValidator.asDateString(new Date())) {
+              throw new Error("Reservation date cannot be in the past!");
+            }
           },
         },
       },
@@ -64,9 +69,23 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       resStatus: {
-        type: DataTypes.ENUM("pending", "seated", "missed"),
+        type: DataTypes.ENUM("pending", "seated", "missed", "cancelled", "completed"),
         allowNull: false,
         defaultValue: "pending",
+      },
+      paymentStatus: {
+        type: DataTypes.ENUM("deposit", "partial", "paid", "unpaid"),
+        allowNull: false,
+        defaultValue: "unpaid",
+      },
+      expectedTotal: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0,
+      },
+      notes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
       },
     },
     {

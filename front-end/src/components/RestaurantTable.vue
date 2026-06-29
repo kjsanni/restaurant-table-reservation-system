@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import tableAPI from "@/services/tableAPI";
+import logger from "@/utils/logger";
 
 const props = defineProps({
   table: Object,
@@ -18,9 +19,9 @@ const freeTable = async (id) => {
   try {
     const res = await tableAPI.freeTable(id);
     emit("onFreedTable");
-    console.log(res);
+    logger.debug("Table freed", { id });
   } catch (err) {
-    console.log(err);
+    logger.error("Free table failed", { error: err.message });
   }
 };
 </script>
@@ -52,28 +53,34 @@ const freeTable = async (id) => {
 
 <style scoped>
 .main-wrapper {
-  background-color: var(--primary-red);
-  padding: 10px;
+  background-color: #eef2ff;
+  padding: 8px;
   width: 100%;
-  height: 100%;
+  height: auto;
+  min-height: 90px;
   border-radius: 10px;
-  transition: all 1.5s;
+  transition: all 0.2s;
+  border: 1px solid #dbeafe;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .main-wrapper .header {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   position: relative;
   align-items: center;
-  grid-gap: 10px;
+  gap: 6px;
   font-family: "Inter-Bold";
-  color: var(--primary-white);
+  color: #1e293b;
+  font-size: 12px;
 }
 .header .table-status {
   background-color: transparent;
-  color: var(--primary-black);
+  color: #1e293b;
   font-family: "Inter-Light";
   font-size: 10px;
-  border: 1px solid var(--primary-black);
+  border: 1px solid #cbd5e1;
   padding-left: 5px;
   padding-right: 5px;
   border-radius: 10px;
@@ -82,8 +89,8 @@ const freeTable = async (id) => {
   position: relative;
   top: 0;
   right: 5px;
-  color: var(--primary-black);
-  border: 1px solid var(--primary-black);
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
   padding-left: 5px;
   padding-right: 5px;
   border-radius: 20px;
@@ -92,9 +99,9 @@ const freeTable = async (id) => {
   transition: all 0.2s ease;
 }
 .free-table-button:hover {
-  background-color: var(--primary-white);
-  border-color: var(--primary-green);
-  color: var(--primary-green);
+  background-color: #ffffff;
+  border-color: var(--primary-blue);
+  color: var(--primary-blue);
 }
 .content {
   display: flex;
@@ -103,20 +110,21 @@ const freeTable = async (id) => {
 }
 
 .seats-wrapper {
-  margin-top: 15px;
-  margin-bottom: 15px;
+  margin-top: 6px;
+  margin-bottom: 6px;
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 6px;
   align-items: center;
-  width: 80%;
+  width: 100%;
   flex-wrap: wrap;
 }
 
 .circle {
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
   background-color: var(--primary-white);
+  border: 2px solid #94a3b8;
   border-radius: 100%;
 }
 .blackColor {
@@ -125,13 +133,13 @@ const freeTable = async (id) => {
 
 @media screen and (min-width: 1024px) {
   .seats-wrapper {
-    margin-top: 20px;
-    width: 40%;
-    margin-bottom: 20px;
+    margin-top: 8px;
+    width: 100%;
+    margin-bottom: 8px;
   }
   .circle {
-    width: 20px;
-    height: 20px;
+    width: 14px;
+    height: 14px;
   }
 }
 </style>
