@@ -28,6 +28,19 @@
   --btn-radius: 8px;
   --btn-padding: 10px 20px;
   --input-radius: 8px;
+
+  /* Vuestic UI brand overrides */
+  --va-button-border-radius: 8px;
+  --va-button-content-px: 20px;
+  --va-button-content-py: 10px;
+  --va-input-wrapper-border-radius: 8px;
+  --va-card-border-radius: 12px;
+  --va-card-padding: 20px;
+  --va-modal-border-radius: 14px;
+  --va-sidebar-item-content-padding: 14px;
+
+  --va-primary: #04030f;
+  --va-background: #f8e9f2;
 }
 
 *,

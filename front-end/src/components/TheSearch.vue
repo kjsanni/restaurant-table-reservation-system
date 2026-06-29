@@ -174,8 +174,16 @@ const confirmDelete = async () => {
                 :search-query="searchVal"
                 @on-delete="openDeleteModal"
               />
-              <div class="card-actions" v-if="slotProps.item.resStatus === 'pending' && canEditReservations">
-                <button class="action-btn no-show-btn" @click="openNoShowModal(slotProps.item.id)">
+              <div
+                class="card-actions"
+                v-if="
+                  slotProps.item.resStatus === 'pending' && canEditReservations
+                "
+              >
+                <button
+                  class="action-btn no-show-btn"
+                  @click="openNoShowModal(slotProps.item.id)"
+                >
                   Mark No-Show
                 </button>
               </div>
@@ -183,10 +191,17 @@ const confirmDelete = async () => {
           </template>
         </ListContainer>
 
-        <div v-if="!loading && filteredReservations.length === 0" class="empty-state">
+        <div
+          v-if="!loading && filteredReservations.length === 0"
+          class="empty-state"
+        >
           <span class="empty-icon">🔍</span>
           <p class="empty-text">
-            {{ searchVal ? "No matching reservations found" : "No reservations available" }}
+            {{
+              searchVal
+                ? "No matching reservations found"
+                : "No reservations available"
+            }}
           </p>
         </div>
       </div>
@@ -202,8 +217,12 @@ const confirmDelete = async () => {
         <div class="confirm-content">
           <p>Are you sure you want to delete this reservation?</p>
           <div class="confirm-actions">
-            <button class="btn btn-cancel" @click="closeDeleteModal">Cancel</button>
-            <button class="btn btn-danger" @click="confirmDelete">Delete</button>
+            <button class="btn btn-cancel" @click="closeDeleteModal">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmDelete">
+              Delete
+            </button>
           </div>
         </div>
       </template>
@@ -219,8 +238,12 @@ const confirmDelete = async () => {
         <div class="confirm-content">
           <p>Mark this reservation as a no-show?</p>
           <div class="confirm-actions">
-            <button class="btn btn-cancel" @click="closeNoShowModal">Cancel</button>
-            <button class="btn btn-warning" @click="confirmNoShow">Mark No-Show</button>
+            <button class="btn btn-cancel" @click="closeNoShowModal">
+              Cancel
+            </button>
+            <button class="btn btn-warning" @click="confirmNoShow">
+              Mark No-Show
+            </button>
           </div>
         </div>
       </template>

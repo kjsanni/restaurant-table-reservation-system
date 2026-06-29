@@ -1,57 +1,74 @@
-<script setup>
-import TextBox from "@/components/TextBox.vue";
-import ButtonFilled from "@/components/ButtonFilled.vue";
-import SuccessMessage from "@/components/SuccessMessage.vue";
-import ErrorMessage from "@/components/ErrorMessage.vue";
+<script setup lang="ts">
+import {
+  VaInput,
+  VaButton,
+  VaAlert,
+  VaCard,
+  VaCardTitle,
+  VaCardContent,
+} from 'vuestic-ui'
 
-import RegisterIcon from "~icons/fluent/person-add-16-regular";
+import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
+import { onMounted, ref, computed } from 'vue'
+import { getApiErrorMessage, getApiErrors } from '@/utils/apiError'
 
-import { useAuthStore } from "@/stores/auth";
-import { useRouter } from "vue-router";
-import { ref } from "vue";
-import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
-
-const router = useRouter();
-const authStore = useAuthStore();
+const router = useRouter()
+const authStore = useAuthStore()
 
 const user = ref({
-  username: "",
-  email: "",
-  password: "",
-});
+  username: '',
+  email: '',
+  password: '',
+})
 
-const validationErrors = ref(null);
-const isSuccessful = ref(false);
-const generalError = ref(null);
-const registrationEnabled = ref(true);
+const validationErrors = ref<Record<string, string[]> | null>(null)
+const isSuccessful = ref(false)
+const generalError = ref<string | null>(null)
+const registrationEnabled = ref(true)
+
+const passwordRequirements = computed(() => [
+  { label: 'At least 12 characters', met: user.value.password.length >= 12 },
+  { label: 'One lowercase letter', met: /[a-z]/.test(user.value.password) },
+  { label: 'One uppercase letter', met: /[A-Z]/.test(user.value.password) },
+  { label: 'One number', met: /[0-9]/.test(user.value.password) },
+  {
+    label: 'One special character',
+    met: /[^a-zA-Z0-9]/.test(user.value.password),
+  },
+])
+
+const allRequirementsMet = computed(() =>
+  passwordRequirements.value.every((r) => r.met),
+)
 
 onMounted(async () => {
-  registrationEnabled.value = await authStore.fetchRegistrationStatus();
-});
+  registrationEnabled.value = await authStore.fetchRegistrationStatus()
+})
 
 const handleRegister = async () => {
-  isSuccessful.value = false;
-  validationErrors.value = null;
-  generalError.value = null;
+  isSuccessful.value = false
+  validationErrors.value = null
+  generalError.value = null
 
   if (!registrationEnabled.value) {
-    generalError.value = "Registration is currently disabled!";
-    return;
+    generalError.value = 'Registration is currently disabled!'
+    return
   }
 
   try {
     await authStore.register(
       user.value.username,
       user.value.email,
-      user.value.password
-    );
-    isSuccessful.value = true;
-    setTimeout(() => router.push("/login"), 2000);
+      user.value.password,
+    )
+    isSuccessful.value = true
+    setTimeout(() => router.push('/login'), 2000)
   } catch (err) {
-    generalError.value = getApiErrorMessage(err);
-    validationErrors.value = getApiErrors(err);
+    generalError.value = getApiErrorMessage(err)
+    validationErrors.value = getApiErrors(err)
   }
-};
+}
 </script>
 
 <template>
@@ -60,47 +77,67 @@ const handleRegister = async () => {
       <h1>Register</h1>
     </div>
     <div class="form-wrapper">
-      <form @submit.prevent="handleRegister">
-        <TextBox
-          text-box-type="text"
-          id="username"
-          label-text="Username"
-          placeholder-text="Enter your username..."
-          :errors="validationErrors"
-          v-model:input="user.username"
-        />
-        <TextBox
-          text-box-type="email"
-          id="email"
-          label-text="Email Address"
-          placeholder-text="Enter your email address..."
-          :errors="validationErrors"
-          v-model:input="user.email"
-        />
-        <TextBox
-          text-box-type="password"
-          id="password"
-          label-text="Password"
-          placeholder-text="Enter your password..."
-          :errors="validationErrors"
-          v-model:input="user.password"
-        />
-        <SuccessMessage
-          :is-successful="isSuccessful"
-          success-message="Successfully registered! Redirecting to login..."
-        />
-        <ErrorMessage
-          :error-flag="generalError"
-          :error-message="generalError"
-        />
-        <ButtonFilled
-          class="button"
-          text="Register"
-          :disabled="!registrationEnabled"
-        >
-          <template #icon><RegisterIcon /></template>
-        </ButtonFilled>
-      </form>
+      <VaCard>
+        <VaCardTitle class="card-title">Register</VaCardTitle>
+        <VaCardContent>
+          <form @submit.prevent="handleRegister">
+            <VaInput
+              v-model="user.username"
+              label="Username"
+              :error-messages="validationErrors?.username"
+              class="mb-4"
+            />
+            <VaInput
+              v-model="user.email"
+              label="Email Address"
+              type="email"
+              :error-messages="validationErrors?.email"
+              class="mb-4"
+            />
+            <VaInput
+              v-model="user.password"
+              label="Password"
+              type="password"
+              :error-messages="validationErrors?.password"
+              class="mb-4"
+            />
+            <div class="password-requirements">
+              <p class="requirements-title">Password requirements:</p>
+              <ul class="requirements-list">
+                <li
+                  v-for="req in passwordRequirements"
+                  :key="req.label"
+                  :class="{ 'requirement-met': req.met }"
+                >
+                  {{ req.label }}
+                </li>
+              </ul>
+            </div>
+            <VaAlert
+              v-if="isSuccessful"
+              color="success"
+              class="mb-4"
+            >
+              Successfully registered! Redirecting to login...
+            </VaAlert>
+            <VaAlert
+              v-if="generalError"
+              color="danger"
+              class="mb-4"
+            >
+              {{ generalError }}
+            </VaAlert>
+            <VaButton
+              block
+              type="submit"
+              :disabled="!registrationEnabled || !allRequirementsMet"
+              class="register-btn"
+            >
+              Register
+            </VaButton>
+          </form>
+        </VaCardContent>
+      </VaCard>
     </div>
   </div>
 </template>
@@ -112,7 +149,8 @@ const handleRegister = async () => {
   justify-content: flex-end;
   width: 100%;
   height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/add-table-header.jpg");
+  background: var(--lighter-gray)
+    url("@/assets/images/add-table-header.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -132,21 +170,43 @@ const handleRegister = async () => {
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
   align-items: center;
-  background-color: var(--primary-white);
-  padding: var(--card-padding);
-  border: 1px solid #f0f0f0;
-  border-radius: var(--card-radius);
-  box-shadow: var(--card-shadow);
 }
-form {
-  width: 80%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
+.card-title {
+  font-family: 'Inter-Bold';
+  font-size: 24px;
+  text-align: center;
 }
-.button {
-  width: 200px;
+.register-btn {
+  margin-top: 16px;
+}
+.password-requirements {
+  margin: 16px 0;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  width: 100%;
+}
+.requirements-title {
+  font-family: 'Inter-Medium';
+  font-size: 12px;
+  color: var(--secondary-gray);
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+}
+.requirements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.requirements-list li {
+  font-family: 'Inter-Light';
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 4px;
+  transition: color 0.2s;
+}
+.requirements-list li.requirement-met {
+  color: #059669;
 }
 
 @media screen and (min-width: 1024px) {

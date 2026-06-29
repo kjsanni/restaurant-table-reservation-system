@@ -126,12 +126,7 @@ const registerTable = async () => {
                 v-model="selectedStaffIds"
               />
               <span class="staff-name">{{ staff.username }}</span>
-              <span
-                :class="[
-                  'staff-count',
-                  { full: staff.tableCount >= 5 },
-                ]"
-              >
+              <span :class="['staff-count', { full: staff.tableCount >= 5 }]">
                 {{ staff.tableCount }}/5 tables
               </span>
             </label>

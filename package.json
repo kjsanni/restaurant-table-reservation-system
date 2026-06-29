@@ -22,5 +22,10 @@
   "dependencies": {
     "csurf": "^1.11.0",
     "express-rate-limit": "^8.5.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.5"
   }
 }

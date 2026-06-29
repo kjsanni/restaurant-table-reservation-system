@@ -14,12 +14,15 @@ const profile = ref(null);
 
 const customer = computed(() => profile.value?.customer || {});
 const history = computed(() => profile.value?.history || []);
-const stats = computed(() => profile.value?.stats || {
-  totalVisits: 0,
-  noShowCount: 0,
-  noShowRate: 0,
-  statusBreakdown: [],
-});
+const stats = computed(
+  () =>
+    profile.value?.stats || {
+      totalVisits: 0,
+      noShowCount: 0,
+      noShowRate: 0,
+      statusBreakdown: [],
+    }
+);
 
 const statusColors = {
   pending: "#f59e0b",
@@ -128,7 +131,8 @@ const navigateToNewReservation = () => {
       <template v-else-if="customer">
         <div class="profile-header">
           <div class="customer-avatar">
-            {{ customer.firstName?.charAt(0) }}{{ customer.lastName?.charAt(0) }}
+            {{ customer.firstName?.charAt(0)
+            }}{{ customer.lastName?.charAt(0) }}
           </div>
           <div class="customer-meta">
             <h2>{{ customer.firstName }} {{ customer.lastName }}</h2>
@@ -154,16 +158,28 @@ const navigateToNewReservation = () => {
           <div class="section-card">
             <div class="section-header">
               <h3>Tags</h3>
-              <button v-if="!editingTags" class="btn-link" @click="startEditingTags">
+              <button
+                v-if="!editingTags"
+                class="btn-link"
+                @click="startEditingTags"
+              >
                 Edit
               </button>
             </div>
-            <div v-if="showSaveMessage" class="save-message" :class="saveMessage.includes('Failed') ? 'error' : 'success'">
+            <div
+              v-if="showSaveMessage"
+              class="save-message"
+              :class="saveMessage.includes('Failed') ? 'error' : 'success'"
+            >
               {{ saveMessage }}
             </div>
             <div v-if="editingTags" class="tags-editor">
               <div class="tags-list">
-                <span v-for="tag in customer.tags || []" :key="tag" class="tag-chip">
+                <span
+                  v-for="tag in customer.tags || []"
+                  :key="tag"
+                  class="tag-chip"
+                >
                   {{ tag }}
                   <button class="tag-remove" @click="removeTag(tag)">×</button>
                 </span>
@@ -181,7 +197,11 @@ const navigateToNewReservation = () => {
             </div>
             <div v-else class="tags-display">
               <span v-if="!customer.tags?.length" class="no-tags">No tags</span>
-              <span v-for="tag in customer.tags || []" :key="tag" class="tag-chip">
+              <span
+                v-for="tag in customer.tags || []"
+                :key="tag"
+                class="tag-chip"
+              >
                 {{ tag }}
               </span>
             </div>
@@ -202,7 +222,9 @@ const navigateToNewReservation = () => {
                 <div class="history-meta">
                   <span
                     class="status-chip"
-                    :style="{ backgroundColor: statusColors[res.resStatus] || '#6c757d' }"
+                    :style="{
+                      backgroundColor: statusColors[res.resStatus] || '#6c757d',
+                    }"
                   >
                     {{ statusLabels[res.resStatus] || res.resStatus }}
                   </span>
@@ -237,10 +259,16 @@ const navigateToNewReservation = () => {
               </div>
             </div>
             <div v-if="stats.statusBreakdown?.length" class="breakdown-list">
-              <div v-for="item in stats.statusBreakdown" :key="item.status" class="breakdown-row">
+              <div
+                v-for="item in stats.statusBreakdown"
+                :key="item.status"
+                class="breakdown-row"
+              >
                 <span
                   class="status-chip small"
-                  :style="{ backgroundColor: statusColors[item.status] || '#6c757d' }"
+                  :style="{
+                    backgroundColor: statusColors[item.status] || '#6c757d',
+                  }"
                 >
                   {{ statusLabels[item.status] || item.status }}
                 </span>

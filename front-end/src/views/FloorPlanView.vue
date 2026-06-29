@@ -14,6 +14,14 @@ const assignPopupOpen = ref(false);
 const selectedTable = ref(null);
 const errorPopupOpen = ref(false);
 const errorMessage = ref("");
+const touchMode = ref(false);
+const layoutMode = ref("auto");
+
+const layoutModes = [
+  { label: "Auto Grid", value: "auto" },
+  { label: "Compact", value: "compact" },
+  { label: "Wide", value: "wide" },
+];
 
 const pendingReservations = computed(() => {
   return (reservations.value || []).filter(
@@ -62,6 +70,17 @@ const allowDrop = (table) => {
   return tableStatus(table) === "free";
 };
 
+const gridMinWidth = computed(() => {
+  switch (layoutMode.value) {
+    case "compact":
+      return "140px";
+    case "wide":
+      return "220px";
+    default:
+      return "170px";
+  }
+});
+
 const onDragStart = (reservation, event) => {
   draggingReservation.value = reservation;
   if (event.dataTransfer) {
@@ -75,6 +94,46 @@ const onDragEnd = () => {
   document
     .querySelectorAll(".table-block.drag-over")
     .forEach((el) => el.classList.remove("drag-over"));
+  touchMode.value = false;
+};
+
+const onTouchStart = (reservation, event) => {
+  touchMode.value = true;
+  draggingReservation.value = reservation;
+  event.preventDefault();
+};
+
+const onTouchMove = (event) => {
+  if (!draggingReservation.value || !touchMode.value) return;
+  const touch = event.touches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  document
+    .querySelectorAll(".table-block.drag-over")
+    .forEach((elem) => elem.classList.remove("drag-over"));
+  const tableBlock = el?.closest(".table-block");
+  if (tableBlock) {
+    tableBlock.classList.add("drag-over");
+  }
+};
+
+const onTouchEnd = (event) => {
+  if (!draggingReservation.value || !touchMode.value) return;
+  const touch = event.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const tableBlock = el?.closest(".table-block");
+  document
+    .querySelectorAll(".table-block.drag-over")
+    .forEach((elem) => elem.classList.remove("drag-over"));
+  if (tableBlock) {
+    const tableId = parseInt(tableBlock.dataset.tableId);
+    const table = tables.value.find((t) => t.id === tableId);
+    if (table && allowDrop(table)) {
+      selectedTable.value = table;
+      assignPopupOpen.value = true;
+    }
+  }
+  draggingReservation.value = null;
+  touchMode.value = false;
 };
 
 const onTableDragOver = (table, event) => {
@@ -153,6 +212,14 @@ onMounted(loadData);
             <h2>Pending Reservations</h2>
             <span class="badge">{{ pendingReservations.length }}</span>
           </div>
+          <div class="layout-selector">
+            <label class="layout-label">Layout:</label>
+            <select v-model="layoutMode" class="layout-select">
+              <option v-for="mode in layoutModes" :key="mode.value" :value="mode.value">
+                {{ mode.label }}
+              </option>
+            </select>
+          </div>
           <div v-if="pendingReservations.length === 0" class="empty-state">
             <span class="empty-icon">📭</span>
             <p>No pending reservations</p>
@@ -165,6 +232,9 @@ onMounted(loadData);
               draggable="true"
               @dragstart="onDragStart(res, $event)"
               @dragend="onDragEnd"
+              @touchstart="onTouchStart(res, $event)"
+              @touchmove="onTouchMove"
+              @touchend="onTouchEnd"
             >
               <div class="pending-header">
                 <span class="pending-avatar">
@@ -180,7 +250,7 @@ onMounted(loadData);
               <div v-if="res.notes" class="pending-notes">
                 {{ res.notes }}
               </div>
-              <div class="drag-hint">Drag onto a free table</div>
+              <div class="drag-hint">Drag or tap to assign</div>
             </div>
           </div>
         </aside>
@@ -197,11 +267,12 @@ onMounted(loadData);
               <span class="dot"></span> Blocked
             </span>
           </div>
-          <div class="plan-grid">
+          <div class="plan-grid" :style="{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}, 1fr))` }">
             <div
               v-for="table in tables"
               :key="table.id"
               :class="['table-block', tableStatus(table)]"
+              :data-table-id="table.id"
               @dragover.prevent="onTableDragOver(table, $event)"
               @dragenter.prevent="onDragEnter(table)"
               @dragleave="onDragLeave(table)"
@@ -235,6 +306,7 @@ onMounted(loadData);
 
       <p class="hint-bar">
         Drag a pending reservation from the list onto a free table to assign it.
+        Touch devices: tap and hold a reservation, then tap a free table.
       </p>
 
       <PopupBox
@@ -275,7 +347,9 @@ onMounted(loadData);
           <div class="error-content">
             <p>{{ errorMessage }}</p>
             <div class="confirm-actions">
-              <button class="btn btn-secondary" @click="errorPopupOpen = false">OK</button>
+              <button class="btn btn-secondary" @click="errorPopupOpen = false">
+                OK
+              </button>
             </div>
           </div>
         </template>
@@ -361,9 +435,9 @@ onMounted(loadData);
   min-width: 0;
   background: var(--primary-white);
   border: 1px solid #f0f0f0;
-  border-radius: var(--card-radius);
-  padding: var(--card-padding);
-  box-shadow: var(--card-shadow);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 .panel-header {
@@ -379,6 +453,30 @@ onMounted(loadData);
   font-size: 15px;
   color: var(--primary-black);
   margin: 0;
+}
+
+.layout-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.layout-label {
+  font-family: "Inter-Medium";
+  font-size: 12px;
+  color: var(--secondary-gray);
+}
+
+.layout-select {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  font-family: "Inter-Light";
+  font-size: 12px;
+  background: white;
+  cursor: pointer;
 }
 
 .badge {
@@ -402,7 +500,8 @@ onMounted(loadData);
   border-radius: 12px;
   padding: 12px;
   cursor: grab;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
   user-select: none;
 }
 
@@ -495,16 +594,6 @@ onMounted(loadData);
   opacity: 0.6;
 }
 
-.plan-panel {
-  flex: 1;
-  min-width: 0;
-  background: var(--primary-white);
-  border: 1px solid #f0f0f0;
-  border-radius: 14px;
-  padding: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-}
-
 .legend-bar {
   display: flex;
   flex-wrap: wrap;
@@ -545,7 +634,6 @@ onMounted(loadData);
 
 .plan-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 14px;
 }
 
@@ -723,10 +811,6 @@ onMounted(loadData);
     width: 100%;
     min-width: 100%;
     max-height: 260px;
-  }
-
-  .plan-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 }
 

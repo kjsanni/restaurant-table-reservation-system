@@ -122,7 +122,9 @@ const exportPDF = async () => {
       <div class="action-bar">
         <div class="export-bar">
           <button class="btn btn-primary" @click="exportCSV">Export CSV</button>
-          <button class="btn btn-secondary" @click="exportPDF">Export PDF</button>
+          <button class="btn btn-secondary" @click="exportPDF">
+            Export PDF
+          </button>
         </div>
       </div>
 
@@ -173,7 +175,10 @@ const exportPDF = async () => {
         <div class="section-card holidays-card">
           <div class="holidays-header">
             <h2 class="section-title">Holidays</h2>
-            <button class="btn btn-primary btn-sm" @click="showHolidayDialog = true">
+            <button
+              class="btn btn-primary btn-sm"
+              @click="showHolidayDialog = true"
+            >
               Add Holiday
             </button>
           </div>

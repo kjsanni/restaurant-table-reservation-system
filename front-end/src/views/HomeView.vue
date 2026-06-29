@@ -1,12 +1,10 @@
-<script setup>
-import ButtonFilled from "@/components/ButtonFilled.vue";
-import ButtonOutlined from "@/components/ButtonOutlined.vue";
+<script setup lang="ts">
+import { VaButton, VaCard, VaCardTitle, VaCardContent } from 'vuestic-ui'
+import { useRouter } from 'vue-router'
 
-import { useRouter } from "vue-router";
+const router = useRouter()
 
-const router = useRouter();
-
-const changeRoute = (routeName) => router.push({ name: routeName });
+const changeRoute = (routeName: string) => router.push({ name: routeName })
 </script>
 
 <template>
@@ -16,11 +14,12 @@ const changeRoute = (routeName) => router.push({ name: routeName });
         <h1>Straight to the point restaurant booking system</h1>
       </div>
       <div class="buttons">
-        <ButtonFilled
-          text="New Reservation"
-          @click="changeRoute('new-reservation')"
-        />
-        <ButtonOutlined text="Search" @click="changeRoute('search')" />
+        <VaButton preset="primary" size="large" @click="changeRoute('new-reservation')">
+          New Reservation
+        </VaButton>
+        <VaButton preset="secondary" size="large" @click="changeRoute('search')">
+          Search
+        </VaButton>
       </div>
     </div>
     <div class="right-section">
@@ -67,7 +66,7 @@ img {
 }
 
 h1 {
-  font-family: "Jost-Bold";
+  font-family: 'Jost-Bold';
   line-height: 40px;
   text-transform: uppercase;
   font-size: 30px;

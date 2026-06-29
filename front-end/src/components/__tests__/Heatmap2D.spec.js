@@ -94,7 +94,9 @@ describe("Heatmap2D", () => {
     reservationAPI.getHeatmapV2
       .mockResolvedValueOnce({
         data: {
-          days: [{ date: "2026-06-29", count: 5, peakHour: "12:00", peakCount: 3 }],
+          days: [
+            { date: "2026-06-29", count: 5, peakHour: "12:00", peakCount: 3 },
+          ],
         },
       })
       .mockResolvedValueOnce({
@@ -130,7 +132,9 @@ describe("Heatmap2D", () => {
   });
 
   it("should show error state and retry button on API failure", async () => {
-    reservationAPI.getHeatmapV2.mockRejectedValueOnce(new Error("Network error"));
+    reservationAPI.getHeatmapV2.mockRejectedValueOnce(
+      new Error("Network error")
+    );
 
     const wrapper = mount(Heatmap2D, {
       props: { mode: "date-hour" },

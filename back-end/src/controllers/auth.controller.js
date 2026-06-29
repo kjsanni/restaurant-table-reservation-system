@@ -49,7 +49,7 @@ const loginHandler = async (req, res) => {
 
   res.cookie("token", result.token, {
     ...cookieBase,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 30 * 60 * 1000,
   });
 
   if (result.refreshToken) {
@@ -152,9 +152,31 @@ const refreshTokenHandler = async (req, res) => {
   const { refreshToken } = req.body;
   const result = await authService.refreshAccessToken(authDAO, refreshToken);
 
+  const isProd = process.env.NODE_ENV === "production";
+  const cookieBase = {
+    httpOnly: true,
+    secure: isProd,
+    path: "/",
+    sameSite: isProd ? "lax" : false,
+  };
+
+  res.cookie("token", result.token, {
+    ...cookieBase,
+    maxAge: 30 * 60 * 1000,
+  });
+
+  if (result.refreshToken) {
+    res.cookie("refreshToken", result.refreshToken, {
+      ...cookieBase,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+  }
+
   return res.status(200).json({
     success: true,
-    ...result,
+    token: result.token,
+    refreshToken: result.refreshToken,
+    user: result.user,
   });
 };
 

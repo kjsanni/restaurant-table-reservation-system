@@ -144,7 +144,8 @@ const availableStaffForAssign = computed(() => {
   if (!selectedTable.value) return [];
   const assignedStaffIds = selectedTable.value.Users?.map((u) => u.id) || [];
   return waitingStaff.value.filter(
-    (s) => !assignedStaffIds.includes(s.id) && s.tableCount < MAX_TABLES_PER_STAFF
+    (s) =>
+      !assignedStaffIds.includes(s.id) && s.tableCount < MAX_TABLES_PER_STAFF
   );
 });
 
@@ -156,7 +157,6 @@ const assignedStaffForTable = computed(() => {
 const staffAtLimit = (staff) => {
   return staff.tableCount >= MAX_TABLES_PER_STAFF;
 };
-
 </script>
 
 <template>
@@ -189,8 +189,23 @@ const staffAtLimit = (staff) => {
                   <span class="table-id">ID: {{ table.id }}</span>
                 </div>
               </div>
-              <span class="status-chip" :class="table.isBlocked ? 'blocked' : table.isOccupied ? 'occupied' : 'free'">
-                {{ table.isBlocked ? "Blocked" : table.isOccupied ? "Occupied" : "Free" }}
+              <span
+                class="status-chip"
+                :class="
+                  table.isBlocked
+                    ? 'blocked'
+                    : table.isOccupied
+                    ? 'occupied'
+                    : 'free'
+                "
+              >
+                {{
+                  table.isBlocked
+                    ? "Blocked"
+                    : table.isOccupied
+                    ? "Occupied"
+                    : "Free"
+                }}
               </span>
             </div>
 
@@ -199,7 +214,10 @@ const staffAtLimit = (staff) => {
                 <span class="meta-icon">👥</span>
                 <span class="meta-text">Capacity: {{ table.capacity }}</span>
               </div>
-              <div v-if="table.isBlocked && table.maintenanceNotes" class="blocked-reason">
+              <div
+                v-if="table.isBlocked && table.maintenanceNotes"
+                class="blocked-reason"
+              >
                 {{ table.maintenanceNotes }}
               </div>
             </div>
@@ -285,7 +303,9 @@ const staffAtLimit = (staff) => {
       <div v-if="showStaffDialog" class="modal-overlay">
         <div class="modal">
           <h3 class="modal-title">
-            {{ staffDialogMode === 'assign' ? 'Assign Staff' : 'Unassign Staff' }}
+            {{
+              staffDialogMode === "assign" ? "Assign Staff" : "Unassign Staff"
+            }}
           </h3>
           <p class="modal-subtitle">
             Table <strong>{{ selectedTable?.name }}</strong>
@@ -298,7 +318,8 @@ const staffAtLimit = (staff) => {
                 v-if="availableStaffForAssign.length === 0"
                 class="empty-msg"
               >
-                No available staff. All staff are either assigned or at the 5-table limit.
+                No available staff. All staff are either assigned or at the
+                5-table limit.
               </div>
               <button
                 v-for="staff in availableStaffForAssign"
@@ -317,10 +338,7 @@ const staffAtLimit = (staff) => {
           <div v-else class="field">
             <label class="field-label">Currently Assigned</label>
             <div class="staff-options">
-              <div
-                v-if="assignedStaffForTable.length === 0"
-                class="empty-msg"
-              >
+              <div v-if="assignedStaffForTable.length === 0" class="empty-msg">
                 No staff assigned to this table.
               </div>
               <button
@@ -347,11 +365,16 @@ const staffAtLimit = (staff) => {
         <div class="modal">
           <h3 class="modal-title">Confirm Unseat</h3>
           <p class="modal-subtitle">
-            Unseat table <strong>{{ confirmTarget?.name }}</strong>? This will mark the reservation as completed.
+            Unseat table <strong>{{ confirmTarget?.name }}</strong
+            >? This will mark the reservation as completed.
           </p>
           <div class="modal-actions">
-            <button class="btn btn-secondary" @click="closeConfirm">Cancel</button>
-            <button class="btn btn-danger" @click="confirmAction">Unseat</button>
+            <button class="btn btn-secondary" @click="closeConfirm">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmAction">
+              Unseat
+            </button>
           </div>
         </div>
       </div>
@@ -448,7 +471,8 @@ const staffAtLimit = (staff) => {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
   box-shadow: var(--card-shadow);
 }
 

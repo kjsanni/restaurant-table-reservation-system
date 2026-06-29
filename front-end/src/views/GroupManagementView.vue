@@ -151,7 +151,9 @@ const confirmAction = async () => {
     </div>
     <div class="content-wrapper">
       <div class="action-bar">
-        <button class="btn btn-primary" @click="openCreate">Create Group</button>
+        <button class="btn btn-primary" @click="openCreate">
+          Create Group
+        </button>
       </div>
 
       <div v-if="loading" class="loading-state">
@@ -164,10 +166,16 @@ const confirmAction = async () => {
             <div class="group-title-row">
               <h3 class="group-name">{{ group.name }}</h3>
               <div class="group-actions">
-                <button class="btn btn-secondary btn-sm" @click="openAddUser(group)">
+                <button
+                  class="btn btn-secondary btn-sm"
+                  @click="openAddUser(group)"
+                >
                   Add User
                 </button>
-                <button class="btn btn-secondary btn-sm" @click="openEdit(group)">
+                <button
+                  class="btn btn-secondary btn-sm"
+                  @click="openEdit(group)"
+                >
                   Edit
                 </button>
                 <button
@@ -282,8 +290,12 @@ const confirmAction = async () => {
           <h3 class="modal-title">Confirm</h3>
           <p class="modal-subtitle">{{ confirmMessage }}</p>
           <div class="modal-actions">
-            <button class="btn btn-secondary" @click="showConfirmModal = false">Cancel</button>
-            <button class="btn btn-danger" @click="confirmAction">Confirm</button>
+            <button class="btn btn-secondary" @click="showConfirmModal = false">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmAction">
+              Confirm
+            </button>
           </div>
         </div>
       </div>

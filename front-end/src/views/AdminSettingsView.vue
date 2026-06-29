@@ -162,7 +162,11 @@ const adjustNumber = (setting, delta) => {
       </div>
 
       <div v-else class="settings-container">
-        <div v-for="category in categories" :key="category" class="settings-card">
+        <div
+          v-for="category in categories"
+          :key="category"
+          class="settings-card"
+        >
           <h2 class="category-title">{{ category }}</h2>
           <div class="settings-list">
             <div

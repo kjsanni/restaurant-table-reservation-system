@@ -2,6 +2,8 @@ const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const fs = require("fs");
+const path = require("path");
 const notFound = require("../middleware/notFound");
 const errorHandler = require("../middleware/errorHandler");
 const tableRouter = require("../routes/table.router");
@@ -24,9 +26,41 @@ const { Server } = require("socket.io");
 
 const createServer = () => {
   const app = express();
-  const server = require("http").createServer(app);
-  
+  const isProd = process.env.NODE_ENV === "production";
+  const sslEnabled = process.env.SSL_ENABLED === "true";
+
+  let server;
+  if (isProd && sslEnabled) {
+    try {
+      const sslCertPath = process.env.SSL_CERT_PATH;
+      const sslKeyPath = process.env.SSL_KEY_PATH;
+      if (sslCertPath && sslKeyPath && fs.existsSync(sslCertPath) && fs.existsSync(sslKeyPath)) {
+        const https = require("https");
+        const sslOptions = {
+          cert: fs.readFileSync(sslCertPath),
+          key: fs.readFileSync(sslKeyPath),
+        };
+        server = https.createServer(sslOptions, app);
+      } else {
+        console.warn("SSL enabled but certificate files not found, falling back to HTTP");
+        server = require("http").createServer(app);
+      }
+    } catch (err) {
+      console.warn("SSL configuration failed, falling back to HTTP:", err.message);
+      server = require("http").createServer(app);
+    }
+  } else {
+    server = require("http").createServer(app);
+  }
+
+  const hstsEnabled = isProd && sslEnabled ? {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  } : false;
+
   getCurrentSecret();
+  
   const io = new Server(server, {
     cors: {
       origin: process.env.CORS_ORIGINS?.split(",").filter(o => o.trim()).join(",") || "http://localhost:8080",
@@ -52,7 +86,10 @@ const createServer = () => {
     credentials: true,
   }));
   app.use(express.json({ limit: "10kb" }));
-  app.use(helmet({ crossOriginResourcePolicy: false }));
+  app.use(helmet({
+    crossOriginResourcePolicy: false,
+    hsts: hstsEnabled,
+  }));
   app.use(cspHeaders);
   app.use(require("../middleware/sanitize").sanitize);
 

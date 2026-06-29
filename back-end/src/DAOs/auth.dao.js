@@ -5,8 +5,28 @@ const RefreshToken = db.refreshToken;
 const Setting = db.setting;
 
 const hashPassword = async (password) => {
-  const salt = await bcrypt.genSalt(10);
+  const salt = await bcrypt.genSalt(12);
   return await bcrypt.hash(password, salt);
+};
+
+const validatePasswordComplexity = (password) => {
+  const errors = [];
+  if (password.length < 12) {
+    errors.push("Password must be at least 12 characters long");
+  }
+  if (!/[a-z]/.test(password)) {
+    errors.push("Password must contain at least one lowercase letter");
+  }
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Password must contain at least one uppercase letter");
+  }
+  if (!/[0-9]/.test(password)) {
+    errors.push("Password must contain at least one number");
+  }
+  if (!/[^a-zA-Z0-9]/.test(password)) {
+    errors.push("Password must contain at least one special character");
+  }
+  return errors;
 };
 
 const comparePassword = async (plainPassword, hashedPassword) => {
@@ -57,6 +77,10 @@ const getAdminCount = async () => {
 };
 
 const createStaffUser = async ({ username, email, password, role, permissions }) => {
+  const errors = validatePasswordComplexity(password);
+  if (errors.length > 0) {
+    throw { status: 400, message: errors.join(". ") + "." };
+  }
   const hashedPassword = await hashPassword(password);
   return await User.create({
     username,
@@ -71,6 +95,13 @@ const updateStaffUser = async (id, updates) => {
   const user = await User.findByPk(id);
   if (!user) {
     throw { status: 404, message: "User not found!" };
+  }
+  if (updates.password) {
+    const errors = validatePasswordComplexity(updates.password);
+    if (errors.length > 0) {
+      throw { status: 400, message: errors.join(". ") + "." };
+    }
+    updates.password = await hashPassword(updates.password);
   }
   return await user.update(updates);
 };
@@ -156,7 +187,7 @@ const recordFailedLogin = async (email, ipAddress) => {
 const checkLoginLockout = async (email, ipAddress) => {
   const LoginAttempt = db.loginAttempt;
   if (!LoginAttempt) return { locked: false, remainingSeconds: 0 };
-  
+
   const cutoff = new Date(Date.now() - 15 * 60 * 1000);
   const { Op } = db.Sequelize;
 
@@ -229,4 +260,5 @@ module.exports = {
   recordFailedLogin,
   checkLoginLockout,
   clearLoginAttempts,
+  validatePasswordComplexity,
 };

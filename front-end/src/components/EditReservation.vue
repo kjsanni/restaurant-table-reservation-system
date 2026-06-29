@@ -129,7 +129,9 @@ const addPayment = async () => {
     setTimeout(() => (paymentSuccess.value = false), 3000);
     emit("onEdited");
   } catch (err) {
-    paymentErrors.value = getApiErrors(err) || { amount: getApiErrorMessage(err, "Failed") };
+    paymentErrors.value = getApiErrors(err) || {
+      amount: getApiErrorMessage(err, "Failed"),
+    };
   }
 };
 
@@ -319,11 +321,17 @@ const editReservation = async () => {
 
     <div v-if="showDeleteConfirm" class="confirm-overlay">
       <div class="confirm-box">
-        <p class="confirm-text">Are you sure you want to delete this payment?</p>
+        <p class="confirm-text">
+          Are you sure you want to delete this payment?
+        </p>
         <p v-if="removeError" class="confirm-error">{{ removeError }}</p>
         <div class="confirm-actions">
-          <button class="btn btn-secondary" @click="showDeleteConfirm = false">Cancel</button>
-          <button class="btn btn-danger" @click="confirmRemovePayment">Delete</button>
+          <button class="btn btn-secondary" @click="showDeleteConfirm = false">
+            Cancel
+          </button>
+          <button class="btn btn-danger" @click="confirmRemovePayment">
+            Delete
+          </button>
         </div>
       </div>
     </div>

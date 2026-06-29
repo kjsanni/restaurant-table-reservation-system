@@ -241,6 +241,15 @@ const getStatsHandler = async (req, res) => {
   });
 };
 
+const searchNotesHandler = async (req, res) => {
+  const { q: query } = req.query;
+  const results = await reservationDAO.searchReservationsByNotes(query || "");
+  return res.status(200).json({
+    success: true,
+    collection: results,
+  });
+};
+
 module.exports = {
   getAllHandler,
   registerHandler,
@@ -257,4 +266,5 @@ module.exports = {
   unassignStaffHandler,
   getPaymentSummaryHandler,
   getStatsHandler,
+  searchNotesHandler,
 };

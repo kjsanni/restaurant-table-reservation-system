@@ -77,4 +77,9 @@ router
   .delete(...writeRoute("manage_tables", reservationController.unassignStaffHandler))
   .all(httpMethodError);
 
+router
+  .route("/search-notes")
+  .get(...protectedRoute("view_reservations", reservationController.searchNotesHandler))
+  .all(httpMethodError);
+
 module.exports = router;

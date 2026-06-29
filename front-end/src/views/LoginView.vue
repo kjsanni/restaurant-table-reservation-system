@@ -1,37 +1,63 @@
-<script setup>
-import TextBox from "@/components/TextBox.vue";
-import ButtonFilled from "@/components/ButtonFilled.vue";
-import ErrorMessage from "@/components/ErrorMessage.vue";
+<script setup lang="ts">
+import {
+  VaInput,
+  VaButton,
+  VaAlert,
+  VaCard,
+  VaCardTitle,
+  VaCardContent,
+} from 'vuestic-ui'
 
-import LoginIcon from "~icons/fluent/arrow-right-16-regular";
+import { useAuthStore } from '@/stores/auth'
+import { getApiErrorMessage, getApiErrors } from '@/utils/apiError'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-import { useAuthStore } from "@/stores/auth";
-import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-
-const router = useRouter();
-const authStore = useAuthStore();
+const router = useRouter()
+const authStore = useAuthStore()
 
 const credentials = ref({
-  email: "",
-  password: "",
-});
+  email: '',
+  password: '',
+})
 
-const validationErrors = ref(null);
-const generalError = ref(null);
+const validationErrors = ref<Record<string, string[]> | null>(null)
+const generalError = ref<string | null>(null)
+const lockoutRemaining = ref(0)
+const lockoutTimer = ref<number | null>(null)
+
+const formatLockoutTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${minutes}:${secs.toString().padStart(2, '0')}`
+}
+
+const startLockoutTimer = (remainingSeconds: number) => {
+  lockoutRemaining.value = remainingSeconds
+  if (lockoutTimer.value) clearInterval(lockoutTimer.value)
+  lockoutTimer.value = window.setInterval(() => {
+    lockoutRemaining.value--
+    if (lockoutRemaining.value <= 0) {
+      clearInterval(lockoutTimer.value)
+      lockoutTimer.value = null
+    }
+  }, 1000)
+}
 
 const handleLogin = async () => {
-  validationErrors.value = null;
-  generalError.value = null;
+  validationErrors.value = null
+  generalError.value = null
   try {
-    await authStore.login(credentials.value.email, credentials.value.password);
-    router.push("/reservations");
+    await authStore.login(credentials.value.email, credentials.value.password)
+    router.push('/reservations')
   } catch (err) {
-    generalError.value = getApiErrorMessage(err);
-    validationErrors.value = getApiErrors(err);
+    generalError.value = getApiErrorMessage(err)
+    validationErrors.value = getApiErrors(err)
+    if (err?.response?.data?.remainingSeconds) {
+      startLockoutTimer(err.response.data.remainingSeconds)
+    }
   }
-};
+}
 </script>
 
 <template>
@@ -40,31 +66,42 @@ const handleLogin = async () => {
       <h1>Login</h1>
     </div>
     <div class="form-wrapper">
-      <form @submit.prevent="handleLogin">
-        <TextBox
-          text-box-type="email"
-          id="email"
-          label-text="Email Address"
-          placeholder-text="Enter your email address..."
-          :errors="validationErrors"
-          v-model:input="credentials.email"
-        />
-        <TextBox
-          text-box-type="password"
-          id="password"
-          label-text="Password"
-          placeholder-text="Enter your password..."
-          :errors="validationErrors"
-          v-model:input="credentials.password"
-        />
-        <ErrorMessage
-          :error-flag="generalError"
-          :error-message="generalError"
-        />
-        <ButtonFilled class="button" text="Login">
-          <template #icon><LoginIcon /></template>
-        </ButtonFilled>
-      </form>
+      <VaCard>
+        <VaCardTitle class="card-title">Login</VaCardTitle>
+        <VaCardContent>
+          <form @submit.prevent="handleLogin">
+            <VaInput
+              v-model="credentials.email"
+              label="Email Address"
+              type="email"
+              :error-messages="validationErrors?.email"
+              class="mb-4"
+            />
+            <VaInput
+              v-model="credentials.password"
+              label="Password"
+              type="password"
+              :error-messages="validationErrors?.password"
+              class="mb-4"
+            />
+            <VaAlert
+              v-if="lockoutRemaining > 0"
+              color="warning"
+              class="mb-4 lockout-alert"
+            >
+              Account locked. Try again in {{ formatLockoutTime(lockoutRemaining) }}
+            </VaAlert>
+            <VaAlert
+              v-if="generalError"
+              color="danger"
+              class="mb-4"
+            >
+              {{ generalError }}
+            </VaAlert>
+            <VaButton block type="submit" class="login-btn">Login</VaButton>
+          </form>
+        </VaCardContent>
+      </VaCard>
     </div>
   </div>
 </template>
@@ -96,21 +133,19 @@ const handleLogin = async () => {
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
   align-items: center;
-  background-color: var(--primary-white);
-  padding: var(--card-padding);
-  border: 1px solid #f0f0f0;
-  border-radius: var(--card-radius);
-  box-shadow: var(--card-shadow);
 }
-form {
-  width: 80%;
+.card-title {
+  font-family: 'Inter-Bold';
+  font-size: 24px;
+  text-align: center;
+}
+.login-btn {
+  margin-top: 16px;
+}
+.lockout-alert {
   display: flex;
-  justify-content: center;
   align-items: center;
-  flex-direction: column;
-}
-.button {
-  width: 200px;
+  gap: 8px;
 }
 
 @media screen and (min-width: 1024px) {

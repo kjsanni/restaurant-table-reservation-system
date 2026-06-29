@@ -423,6 +423,28 @@ const findAllReservationsRaw = async (where = {}) => {
   return await Reservation.findAll({ where });
 };
 
+const searchReservationsByNotes = async (query) => {
+  const searchTerm = query.trim();
+  if (!searchTerm) return [];
+
+  const reservations = await db.sequelize.query(
+    `SELECT r.id, r.customerId, r.resDate, r.resTime, r.resStatus, r.people, r.paymentStatus, r.expectedTotal, r.notes, 
+     c.firstName, c.lastName, c.email, c.phone, c.tags,
+     MATCH(r.notes) AGAINST (:searchTerm IN NATURAL LANGUAGE MODE) as relevance
+     FROM reservations r
+     JOIN customers c ON r.customerId = c.id
+     WHERE MATCH(r.notes) AGAINST (:searchTerm IN NATURAL LANGUAGE MODE)
+     ORDER BY relevance DESC
+     LIMIT 50`,
+    {
+      replacements: { searchTerm },
+      type: db.sequelize.QueryTypes.SELECT,
+    }
+  );
+
+  return flattenArrayObjects(reservations);
+};
+
 const getReservationStats = async (filters = {}) => {
   const where = {};
   if (filters.from) where.resDate = { ...where.resDate, [Op.gte]: filters.from };
@@ -493,4 +515,5 @@ module.exports = {
   getCustomerById,
   getCustomerReservationHistory,
   getCustomerStats,
+  searchReservationsByNotes,
 };

@@ -130,7 +130,10 @@ const confirmAction = async () => {
                 <span v-if="role.isSystem" class="system-badge">System</span>
               </h3>
               <div class="role-actions">
-                <button class="btn btn-secondary btn-sm" @click="openEdit(role)">
+                <button
+                  class="btn btn-secondary btn-sm"
+                  @click="openEdit(role)"
+                >
                   Edit
                 </button>
                 <button
@@ -207,8 +210,12 @@ const confirmAction = async () => {
           <h3 class="modal-title">Confirm</h3>
           <p class="modal-subtitle">{{ confirmMessage }}</p>
           <div class="modal-actions">
-            <button class="btn btn-secondary" @click="showConfirmModal = false">Cancel</button>
-            <button class="btn btn-danger" @click="confirmAction">Confirm</button>
+            <button class="btn btn-secondary" @click="showConfirmModal = false">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmAction">
+              Confirm
+            </button>
           </div>
         </div>
       </div>

@@ -7,7 +7,11 @@ import tableAPI from "@/services/tableAPI";
 import groupAPI from "@/services/groupAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
-import { paymentOptions, getPaymentStatusColor, getPaymentStatusLabel } from "@/constants";
+import {
+  paymentOptions,
+  getPaymentStatusColor,
+  getPaymentStatusLabel,
+} from "@/constants";
 
 const schedules = ref([]);
 const holidays = ref([]);
@@ -380,7 +384,8 @@ const handleReschedule = async () => {
                 {{ day.holidayDesc }}
               </div>
               <div v-else-if="day.openTime" class="hours-badge">
-                {{ day.openTime?.slice(0, 5) }} - {{ day.closeTime?.slice(0, 5) }}
+                {{ day.openTime?.slice(0, 5) }} -
+                {{ day.closeTime?.slice(0, 5) }}
               </div>
 
               <div class="reservation-chips">
@@ -593,10 +598,7 @@ const handleReschedule = async () => {
                   <div
                     v-for="(res, idx) in selectedDay.reservations"
                     :key="res.id"
-                    :class="[
-                      'diagram-row',
-                      idx % 2 === 0 ? 'left' : 'right',
-                    ]"
+                    :class="['diagram-row', idx % 2 === 0 ? 'left' : 'right']"
                   >
                     <div class="diagram-node">
                       <span

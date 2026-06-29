@@ -124,12 +124,14 @@ const registerReservation = async () => {
     loyaltyLoaded.value = false;
     setTimeout(() => (isSuccessful.value = false), 3000);
   } catch (err) {
-    logger.error("Reservation creation failed", { error: err.message, details: getApiErrors(err) });
+    logger.error("Reservation creation failed", {
+      error: err.message,
+      details: getApiErrors(err),
+    });
     generalError.value = getApiErrorMessage(err);
     validationErrors.value = getApiErrors(err);
   }
 };
-
 </script>
 
 <template>

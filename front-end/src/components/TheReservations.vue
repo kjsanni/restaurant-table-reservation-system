@@ -194,8 +194,14 @@ const buildCalendarDays = (year, month) => {
     days.push({ date: null, isCurrentMonth: false });
   }
 
-  const scheduleMap = schedules.value.reduce((m, s) => m.set(s.dayOfWeek, s), new Map());
-  const holidayMap = holidays.value.reduce((m, h) => m.set(h.date, h), new Map());
+  const scheduleMap = schedules.value.reduce(
+    (m, s) => m.set(s.dayOfWeek, s),
+    new Map()
+  );
+  const holidayMap = holidays.value.reduce(
+    (m, h) => m.set(h.date, h),
+    new Map()
+  );
 
   for (let day = 1; day <= lastDay.getDate(); day++) {
     const date = new Date(year, month, day);
@@ -442,7 +448,9 @@ const currDate = computed(() => {
 const filterReservations = computed(() => {
   const dateStr = currentMonth.value.toISOString().split("T")[0];
   const prefix = dateStr.slice(0, 7);
-  return reservations.value.filter((r) => r.resDate && r.resDate.startsWith(prefix));
+  return reservations.value.filter(
+    (r) => r.resDate && r.resDate.startsWith(prefix)
+  );
 });
 
 const openPopup = ({ headerText }) => {
@@ -527,16 +535,13 @@ const today = () => {
           >
             <template #card="slotProps">
               <div class="reservation-card">
-              <ReservationInfo
-                :reservation="slotProps.item"
-                :can-delete="canEditReservations"
-                @on-delete="openDeleteModal"
-              />
+                <ReservationInfo
+                  :reservation="slotProps.item"
+                  :can-delete="canEditReservations"
+                  @on-delete="openDeleteModal"
+                />
                 <div class="card-meta">
-                  <span
-                    class="status-badge"
-                    :class="slotProps.item.resStatus"
-                  >
+                  <span class="status-badge" :class="slotProps.item.resStatus">
                     {{ slotProps.item.resStatus }}
                   </span>
                   <span
@@ -668,8 +673,12 @@ const today = () => {
         <div class="confirm-content">
           <p>Are you sure you want to permanently delete this reservation?</p>
           <div class="confirm-actions">
-            <button class="btn btn-secondary" @click="closeDeleteModal">Cancel</button>
-            <button class="btn btn-danger" @click="confirmDelete">Delete</button>
+            <button class="btn btn-secondary" @click="closeDeleteModal">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmDelete">
+              Delete
+            </button>
           </div>
         </div>
       </template>
@@ -685,8 +694,12 @@ const today = () => {
         <div class="confirm-content">
           <p>Mark this reservation as a no-show?</p>
           <div class="confirm-actions">
-            <button class="btn btn-secondary" @click="closeNoShowModal">Cancel</button>
-            <button class="btn btn-warning" @click="confirmNoShow">Mark No-Show</button>
+            <button class="btn btn-secondary" @click="closeNoShowModal">
+              Cancel
+            </button>
+            <button class="btn btn-warning" @click="confirmNoShow">
+              Mark No-Show
+            </button>
           </div>
         </div>
       </template>

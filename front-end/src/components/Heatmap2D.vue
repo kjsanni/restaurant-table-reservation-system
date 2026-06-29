@@ -45,13 +45,15 @@ const maxCount = computed(() => {
 
 const legendGradientStyle = computed(() => {
   return {
-    background: "linear-gradient(to right, #f9fafb, #dbeafe, #93c5fd, #3b82f6, #1d4ed8)",
+    background:
+      "linear-gradient(to right, #f9fafb, #dbeafe, #93c5fd, #3b82f6, #1d4ed8)",
   };
 });
 
 const calendarLegendGradientStyle = computed(() => {
   return {
-    background: "linear-gradient(to right, #f9fafb, #d1fae5, #34d399, #059669, #047857)",
+    background:
+      "linear-gradient(to right, #f9fafb, #d1fae5, #34d399, #059669, #047857)",
   };
 });
 
@@ -143,9 +145,8 @@ const openDrillDown = async (day) => {
     hours.forEach((hour) => {
       const dateIdx = res.data.dates.indexOf(day.date);
       const hIdx = res.data.hours.indexOf(hour);
-      const count = dateIdx >= 0 && hIdx >= 0
-        ? (res.data.matrix[dateIdx]?.[hIdx] || 0)
-        : 0;
+      const count =
+        dateIdx >= 0 && hIdx >= 0 ? res.data.matrix[dateIdx]?.[hIdx] || 0 : 0;
       breakdown.push({ hour, count });
     });
     breakdown.sort((a, b) => a.hour.localeCompare(b.hour));
@@ -206,7 +207,13 @@ const closeDrillDown = () => {
       </div>
 
       <div v-else-if="errorMsg" key="error" class="error-state">
-        <svg class="state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          class="state-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <circle cx="12" cy="12" r="10" />
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -216,7 +223,13 @@ const closeDrillDown = () => {
       </div>
 
       <div v-else-if="!data" key="empty" class="empty-state">
-        <svg class="state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          class="state-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <line x1="9" y1="9" x2="15" y2="15" />
           <line x1="15" y1="9" x2="9" y2="15" />
@@ -228,7 +241,10 @@ const closeDrillDown = () => {
         <div class="legend">
           <span class="legend-label">Less</span>
           <div class="legend-gradient-bar">
-            <div class="legend-gradient-fill" :style="legendGradientStyle"></div>
+            <div
+              class="legend-gradient-fill"
+              :style="legendGradientStyle"
+            ></div>
             <div class="legend-ticks">
               <span>0</span>
               <span>{{ Math.ceil(maxCount * 0.25) }}</span>
@@ -243,13 +259,14 @@ const closeDrillDown = () => {
         <template v-if="props.mode === 'date-hour'">
           <div class="heatmap-card">
             <div class="matrix-scroll">
-              <div class="matrix-grid" :style="{ gridTemplateColumns: `120px repeat(${data.hours.length}, 1fr)` }">
+              <div
+                class="matrix-grid"
+                :style="{
+                  gridTemplateColumns: `120px repeat(${data.hours.length}, 1fr)`,
+                }"
+              >
                 <div class="corner-cell"></div>
-                <div
-                  v-for="hour in data.hours"
-                  :key="hour"
-                  class="hour-header"
-                >
+                <div v-for="hour in data.hours" :key="hour" class="hour-header">
                   {{ hour }}
                 </div>
 
@@ -261,7 +278,10 @@ const closeDrillDown = () => {
                     class="matrix-cell"
                     :style="{
                       backgroundColor: cellColor(data.matrix[dIdx][hIdx]),
-                      color: data.matrix[dIdx][hIdx] > 0 ? 'var(--primary-black)' : 'transparent',
+                      color:
+                        data.matrix[dIdx][hIdx] > 0
+                          ? 'var(--primary-black)'
+                          : 'transparent',
                     }"
                     :title="`${date} ${hour}: ${data.matrix[dIdx][hIdx]} reservations`"
                   >
@@ -290,7 +310,10 @@ const closeDrillDown = () => {
           <div class="legend-calendar">
             <span class="legend-label">Less</span>
             <div class="legend-gradient-bar calendar-legend">
-              <div class="legend-gradient-fill" :style="calendarLegendGradientStyle"></div>
+              <div
+                class="legend-gradient-fill"
+                :style="calendarLegendGradientStyle"
+              ></div>
               <div class="legend-ticks">
                 <span>0</span>
                 <span>{{ Math.ceil(maxCount * 0.25) }}</span>
@@ -310,9 +333,18 @@ const closeDrillDown = () => {
               :style="{ backgroundColor: calendarCellColor(day.count) }"
               @click="openDrillDown(day)"
             >
-              <div class="day-date">{{ new Date(day.date).toLocaleDateString("en-US", { day: "numeric", month: "short" }) }}</div>
+              <div class="day-date">
+                {{
+                  new Date(day.date).toLocaleDateString("en-US", {
+                    day: "numeric",
+                    month: "short",
+                  })
+                }}
+              </div>
               <div class="day-count">{{ day.count }}</div>
-              <div v-if="day.peakHour" class="day-peak">Peak: {{ day.peakHour }}</div>
+              <div v-if="day.peakHour" class="day-peak">
+                Peak: {{ day.peakHour }}
+              </div>
             </div>
           </div>
         </template>
@@ -338,13 +370,19 @@ const closeDrillDown = () => {
             <p>No hourly data available.</p>
           </div>
           <div v-else class="hour-bars">
-            <div v-for="item in drillDownHours" :key="item.hour" class="hour-row">
+            <div
+              v-for="item in drillDownHours"
+              :key="item.hour"
+              class="hour-row"
+            >
               <span class="hour-label">{{ item.hour }}</span>
               <div class="bar-track">
                 <div
                   class="bar-fill"
                   :style="{
-                    width: drillDownMax ? `${(item.count / drillDownMax) * 100}%` : '0%',
+                    width: drillDownMax
+                      ? `${(item.count / drillDownMax) * 100}%`
+                      : '0%',
                     backgroundColor: item.count > 0 ? '#3b82f6' : '#e5e7eb',
                   }"
                 />

@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const { verifyTokenWithFallback, getCurrentSecret } = require("../utils/jwtRotation");
 
 const JWT_SECRET = getCurrentSecret();
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30m";
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || JWT_SECRET;
 const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "30d";
 
@@ -33,6 +33,14 @@ const registerUser = async (userDAO, payload) => {
     };
   }
 
+  const passwordErrors = userDAO.validatePasswordComplexity(password);
+  if (passwordErrors.length > 0) {
+    throw {
+      status: 400,
+      message: passwordErrors.join(". ") + ".",
+    };
+  }
+
   const hashedPassword = await userDAO.hashPassword(password);
 
   return await userDAO.createUser({
@@ -59,9 +67,21 @@ const refreshAccessToken = async (refreshTokenDAO, refreshToken) => {
   }
 
   const newAccessToken = generateToken(user.id, user.role);
+  const newRefreshToken = generateRefreshToken();
+
+  if (refreshTokenDAO.createRefreshToken && refreshTokenDAO.revokeRefreshToken) {
+    try {
+      await refreshTokenDAO.revokeRefreshToken(refreshToken);
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      await refreshTokenDAO.createRefreshToken(user.id, newRefreshToken, expiresAt);
+    } catch (err) {
+      console.warn("Failed to rotate refresh token:", err.message);
+    }
+  }
 
   return {
     token: newAccessToken,
+    refreshToken: newRefreshToken,
     user: {
       id: user.id,
       username: user.username,
@@ -99,6 +119,7 @@ const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = n
       throw {
         status: 401,
         message: "Invalid credentials!",
+        remainingSeconds: lockoutCheck.remainingSeconds,
       };
     }
   }

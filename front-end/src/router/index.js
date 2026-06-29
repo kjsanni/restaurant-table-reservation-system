@@ -109,7 +109,7 @@ const router = createRouter({
       component: () => import("../views/PaymentDashboardView.vue"),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
-{
+    {
       path: "/waitlist",
       name: "waitlist",
       component: () => import("../views/WaitlistView.vue"),
@@ -143,7 +143,11 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated && !authStore.isLoading) {
+  if (
+    to.meta.requiresAuth &&
+    !authStore.isAuthenticated &&
+    !authStore.isLoading
+  ) {
     next({ name: "login" });
   } else if (to.meta.requiresAdmin && authStore.user?.role !== "admin") {
     next({ name: "home" });
