@@ -5,6 +5,7 @@ import ClockIcon from "~icons/ant-design/clock-circle-outlined";
 import EmailIcon from "~icons/carbon/email";
 import GroupIcon from "~icons/clarity/group-solid";
 import DeleteIcon from "~icons/fluent/delete-16-regular";
+import { RouterLink } from "vue-router";
 
 import { computed } from "vue";
 
@@ -22,14 +23,25 @@ const highlightedNotes = computed(() => {
   const regex = new RegExp(`(${escaped})`, 'gi');
   return props.reservation.notes.replace(regex, '<mark>$1</mark>');
 });
+
+const customerLink = computed(() => {
+  if (props.reservation?.customerId) {
+    return `/admin/customers/${props.reservation.customerId}`;
+  }
+  return null;
+});
 </script>
 
 <template>
   <div class="wrapper">
     <div class="header-row">
-      <p class="names">
+      <component
+        :is="customerLink ? RouterLink : 'p'"
+        :to="customerLink"
+        class="names"
+      >
         {{ props.reservation.name }}
-      </p>
+      </component>
       <button
         v-if="canDelete"
         type="button"
@@ -105,6 +117,13 @@ const highlightedNotes = computed(() => {
   font-size: 16px;
   margin: 0;
   flex: 1;
+  color: var(--primary-black);
+  text-decoration: none;
+}
+
+.names:hover {
+  color: var(--primary-blue);
+  text-decoration: underline;
 }
 
 .delete-btn {

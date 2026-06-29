@@ -122,6 +122,12 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresPermission: "view_audit_logs" },
     },
     {
+      path: "/admin/customers/:id",
+      name: "customer-profile",
+      component: () => import("../views/CustomerProfileView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "view_reservations" },
+    },
+    {
       path: "/about",
       name: "about",
       component: () => import("../views/AboutView.vue"),
