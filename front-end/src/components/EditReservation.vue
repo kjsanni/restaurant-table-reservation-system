@@ -93,6 +93,7 @@ const paymentErrors = ref({});
 const paymentSuccess = ref(false);
 const showDeleteConfirm = ref(false);
 const deleteTargetId = ref(null);
+const removeError = ref("");
 
 const loadPayments = async () => {
   if (!props.reservation?.id) return;
@@ -134,6 +135,7 @@ const addPayment = async () => {
 
 const removePayment = async (paymentId) => {
   deleteTargetId.value = paymentId;
+  removeError.value = "";
   showDeleteConfirm.value = true;
 };
 
@@ -144,7 +146,8 @@ const confirmRemovePayment = async () => {
     await loadPayments();
     emit("onEdited");
   } catch (err) {
-    alert(getApiErrorMessage(err, "Failed to remove payment"));
+    removeError.value = getApiErrorMessage(err, "Failed to remove payment");
+    return;
   } finally {
     showDeleteConfirm.value = false;
     deleteTargetId.value = null;
@@ -317,6 +320,7 @@ const editReservation = async () => {
     <div v-if="showDeleteConfirm" class="confirm-overlay">
       <div class="confirm-box">
         <p class="confirm-text">Are you sure you want to delete this payment?</p>
+        <p v-if="removeError" class="confirm-error">{{ removeError }}</p>
         <div class="confirm-actions">
           <button class="btn btn-secondary" @click="showDeleteConfirm = false">Cancel</button>
           <button class="btn btn-danger" @click="confirmRemovePayment">Delete</button>
@@ -482,6 +486,13 @@ const editReservation = async () => {
   font-size: 15px;
   color: var(--primary-black);
   margin: 0 0 20px 0;
+}
+
+.confirm-error {
+  font-family: "Inter-Medium";
+  font-size: 14px;
+  color: var(--primary-red);
+  margin: 0 0 16px 0;
 }
 
 .confirm-actions {

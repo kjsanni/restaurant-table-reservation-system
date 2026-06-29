@@ -12,6 +12,8 @@ const loading = ref(true);
 const draggingReservation = ref(null);
 const assignPopupOpen = ref(false);
 const selectedTable = ref(null);
+const errorPopupOpen = ref(false);
+const errorMessage = ref("");
 
 const pendingReservations = computed(() => {
   return (reservations.value || []).filter(
@@ -121,7 +123,8 @@ const confirmAssign = async () => {
     await loadData();
   } catch (err) {
     logger.error("Assign table error", { error: err.message });
-    alert(getApiErrorMessage(err, "Failed to assign table"));
+    errorMessage.value = getApiErrorMessage(err, "Failed to assign table");
+    errorPopupOpen.value = true;
   }
 };
 
@@ -257,6 +260,22 @@ onMounted(loadData);
               <button class="btn btn-primary" @click="confirmAssign">
                 Assign
               </button>
+            </div>
+          </div>
+        </template>
+      </PopupBox>
+
+      <PopupBox
+        :is-open="errorPopupOpen"
+        header-text="Error"
+        :is-closable="true"
+        @close-modal="errorPopupOpen = false"
+      >
+        <template #popup-content>
+          <div class="error-content">
+            <p>{{ errorMessage }}</p>
+            <div class="confirm-actions">
+              <button class="btn btn-secondary" @click="errorPopupOpen = false">OK</button>
             </div>
           </div>
         </template>
@@ -721,5 +740,24 @@ onMounted(loadData);
     margin-left: 200px;
     margin-right: 200px;
   }
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.error-content p {
+  font-family: "Inter-Medium";
+  font-size: 15px;
+  color: var(--primary-black);
+  margin: 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 </style>
