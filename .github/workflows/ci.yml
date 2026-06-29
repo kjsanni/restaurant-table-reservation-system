@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, Features ]
+  pull_request:
+    branches: [ main, Features ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: back-end/package-lock.json
+      - name: Install backend dependencies
+        working-directory: ./back-end
+        run: npm ci
+      - name: Run backend tests
+        working-directory: ./back-end
+        run: npm test
+        env:
+          NODE_ENV: test
+
+  frontend:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: front-end/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: ./front-end
+        run: npm ci
+      - name: Lint
+        working-directory: ./front-end
+        run: npm run lint
+      - name: Run frontend tests
+        working-directory: ./front-end
+        run: npm run test:unit
+      - name: Build
+        working-directory: ./front-end
+        run: npm run build
