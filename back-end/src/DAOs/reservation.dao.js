@@ -8,7 +8,7 @@ const { flattenArrayObjects } = require("../utils/flattenObject");
 
 const findAllReservations = async () => {
   const reservations = await Reservation.findAll({
-    attributes: ["id", "resDate", "resTime", "resStatus", "people", "paymentStatus", "expectedTotal", "notes"],
+    attributes: ["id", "customerId", "resDate", "resTime", "resStatus", "people", "paymentStatus", "expectedTotal", "notes"],
     include: [
       {
         model: Customer,
@@ -87,6 +87,52 @@ const getCustomerById = async (customerId) => {
       "tags",
     ],
   });
+};
+
+const getCustomerReservationHistory = async (customerId, limit = 50) => {
+  return await Reservation.findAll({
+    where: { customerId },
+    order: [["resDate", "DESC"]],
+    limit,
+    attributes: ["id", "resDate", "resTime", "resStatus", "people", "paymentStatus", "expectedTotal", "notes"],
+    include: [
+      {
+        model: Table,
+        attributes: ["id", "name", "capacity"],
+      },
+    ],
+  });
+};
+
+const getCustomerStats = async (customerId) => {
+  const reservations = await Reservation.findAll({
+    where: { customerId },
+    attributes: [
+      "resStatus",
+      "expectedTotal",
+      [fn("SUM", col("expectedTotal")), "totalExpected"],
+      [fn("COUNT", col("id")), "totalVisits"],
+    ],
+    group: ["resStatus"],
+    raw: true,
+  });
+
+  const totalVisits = reservations.reduce((sum, r) => sum + parseInt(r.totalVisits, 10), 0);
+  const noShowCount = reservations
+    .filter((r) => r.resStatus === "missed")
+    .reduce((sum, r) => sum + parseInt(r.totalVisits, 10), 0);
+  const noShowRate = totalVisits > 0 ? parseFloat((noShowCount / totalVisits) * 100).toFixed(2) : 0;
+
+  return {
+    totalVisits,
+    noShowCount,
+    noShowRate,
+    statusBreakdown: reservations.map((r) => ({
+      status: r.resStatus,
+      count: parseInt(r.totalVisits, 10),
+      totalExpected: parseFloat(r.totalExpected || 0),
+    })),
+  };
 };
 
 const createReservation = async (resDetails) => {
@@ -446,4 +492,6 @@ module.exports = {
   findOrCreateCustomer,
   updateCustomerTags,
   getCustomerById,
+  getCustomerReservationHistory,
+  getCustomerStats,
 };

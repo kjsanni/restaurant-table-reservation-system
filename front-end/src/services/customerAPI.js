@@ -4,6 +4,9 @@ class CustomerAPI {
   getCustomer(customerId) {
     return API.get("/customers/" + customerId);
   }
+  getProfile(customerId) {
+    return API.get("/customers/" + customerId + "/profile");
+  }
   updateTags(customerId, tags) {
     return API.patch("/customers/" + customerId, { tags });
   }

@@ -18,4 +18,9 @@ router
   .patch(...writeRoute("manage_staff", customerController.updateTagsHandler))
   .all(httpMethodError);
 
+router
+  .route("/:customerId/profile")
+  .get(...protectedRoute("view_reservations", customerController.getCustomerProfileHandler))
+  .all(httpMethodError);
+
 module.exports = router;
