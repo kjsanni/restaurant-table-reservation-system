@@ -37,6 +37,9 @@ class ReservationAPI {
   getPaymentSummary() {
     return API.get("/reservations/payment-summary");
   }
+  getReservationStats(filters = {}) {
+    return API.get("/reservations/stats", { params: filters });
+  }
 }
 
 export default new ReservationAPI();

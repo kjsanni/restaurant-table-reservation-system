@@ -850,6 +850,25 @@ const staffAtLimit = (staff) => {
   background-color: #fee2e2;
 }
 
+.error-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.error-content p {
+  font-family: "Inter-Medium";
+  font-size: 15px;
+  color: var(--primary-black);
+  margin: 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .btn-sm {
   padding: 6px 12px;
   font-size: 12px;
