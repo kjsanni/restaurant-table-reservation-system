@@ -1,9 +1,8 @@
-<script setup>
+<script setup lang="ts">
 import ReservationInfo from "@/components/ReservationInfo.vue";
 import ListContainer from "@/components/ListContainer.vue";
 import SearchIcon from "~icons/ant-design/search-outlined";
 import ClearIcon from "~icons/fluent/dismiss-16-filled";
-import PopupBox from "@/components/PopupBox.vue";
 
 import reservationAPI from "@/services/reservationAPI";
 import logger from "@/utils/logger";
@@ -207,47 +206,35 @@ const confirmDelete = async () => {
       </div>
     </div>
 
-    <PopupBox
-      :is-open="showDeleteModal"
-      header-text="Confirm Delete"
-      :is-closable="true"
-      @close-modal="closeDeleteModal"
-    >
-      <template #popup-content>
+    <va-modal v-model="showDeleteModal" title="Confirm Delete" size="small">
+      <template #content>
         <div class="confirm-content">
           <p>Are you sure you want to delete this reservation?</p>
           <div class="confirm-actions">
-            <button class="btn btn-cancel" @click="closeDeleteModal">
-              Cancel
-            </button>
-            <button class="btn btn-danger" @click="confirmDelete">
-              Delete
-            </button>
+            <va-button preset="secondary" @click="closeDeleteModal"
+              >Cancel</va-button
+            >
+            <va-button preset="danger" @click="confirmDelete">Delete</va-button>
           </div>
         </div>
       </template>
-    </PopupBox>
+    </va-modal>
 
-    <PopupBox
-      :is-open="showNoShowModal"
-      header-text="Confirm No-Show"
-      :is-closable="true"
-      @close-modal="closeNoShowModal"
-    >
-      <template #popup-content>
+    <va-modal v-model="showNoShowModal" title="Confirm No-Show" size="small">
+      <template #content>
         <div class="confirm-content">
           <p>Mark this reservation as a no-show?</p>
           <div class="confirm-actions">
-            <button class="btn btn-cancel" @click="closeNoShowModal">
-              Cancel
-            </button>
-            <button class="btn btn-warning" @click="confirmNoShow">
-              Mark No-Show
-            </button>
+            <va-button preset="secondary" @click="closeNoShowModal"
+              >Cancel</va-button
+            >
+            <va-button preset="warning" @click="confirmNoShow"
+              >Mark No-Show</va-button
+            >
           </div>
         </div>
       </template>
-    </PopupBox>
+    </va-modal>
   </div>
 </template>
 

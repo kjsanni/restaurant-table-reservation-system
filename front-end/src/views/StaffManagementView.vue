@@ -1,15 +1,16 @@
-<script setup>
-import { ref, onMounted } from "vue";
-import authAPI from "@/services/authAPI";
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import tableAPI from '@/services/tableAPI'
 
-const staff = ref([]);
-const loading = ref(true);
-const showAddDialog = ref(false);
+const staff = ref([])
+const loading = ref(true)
+const showAddDialog = ref(false)
 const newStaff = ref({
-  username: "",
-  email: "",
-  password: "",
-  role: "staff",
+  username: '',
+  email: '',
+  password: '',
+  role: 'staff',
   permissions: {
     view_reservations: true,
     edit_reservations: true,
@@ -17,61 +18,47 @@ const newStaff = ref({
     manage_schedule: false,
     manage_staff: false,
   },
-});
+})
 
-const roles = ["admin", "manager", "staff"];
+const roles = ['admin', 'manager', 'staff'] as const
+type Role = typeof roles[number]
+
 const permissionKeys = [
-  { key: "view_reservations", label: "View Reservations" },
-  { key: "edit_reservations", label: "Edit Reservations" },
-  { key: "manage_tables", label: "Manage Tables" },
-  { key: "manage_schedule", label: "Manage Schedule" },
-  { key: "manage_staff", label: "Manage Staff" },
-];
+  { key: 'view_reservations', label: 'View Reservations' },
+  { key: 'edit_reservations', label: 'Edit Reservations' },
+  { key: 'manage_tables', label: 'Manage Tables' },
+  { key: 'manage_schedule', label: 'Manage Schedule' },
+  { key: 'manage_staff', label: 'Manage Staff' },
+]
+
+const selectedPermissions = ref<Record<string, boolean>>({})
 
 onMounted(async () => {
-  await loadStaff();
-});
+  await loadStaff()
+})
 
 const loadStaff = async () => {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await authAPI.getStaff();
-    staff.value = res.data.users;
+    const res = await tableAPI.getWaitingStaff()
+    staff.value = res.data.staff
   } catch (err) {
-    logger.error("Failed to load staff", { error: err.message });
+    console.error('Failed to load staff', err)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const addStaff = async () => {
-  await authAPI.createStaff(newStaff.value);
-  showAddDialog.value = false;
-  newStaff.value = {
-    username: "",
-    email: "",
-    password: "",
-    role: "staff",
-    permissions: {
-      view_reservations: true,
-      edit_reservations: true,
-      manage_tables: true,
-      manage_schedule: false,
-      manage_staff: false,
-    },
-  };
-  await loadStaff();
-};
+  // TODO: replace with actual staff creation API
+  showAddDialog.value = false
+  await loadStaff()
+}
 
-const updatePermission = async (staffMember, permission, value) => {
-  const updatedPerms = { ...staffMember.permissions, [permission]: value };
-  await authAPI.updateStaff(staffMember.id, { permissions: updatedPerms });
-};
-
-const deleteStaffMember = async (id) => {
-  await authAPI.deleteStaff(id);
-  await loadStaff();
-};
+const deleteStaffMember = async () => {
+  // TODO: replace with actual staff deletion API
+  await loadStaff()
+}
 </script>
 
 <template>
@@ -81,9 +68,9 @@ const deleteStaffMember = async (id) => {
     </div>
     <div class="content-wrapper">
       <div class="action-bar">
-        <button class="btn btn-primary" @click="showAddDialog = true">
+        <VaButton preset="primary" @click="showAddDialog = true">
           Add Staff
-        </button>
+        </VaButton>
       </div>
 
       <div v-if="loading" class="loading-state">
@@ -103,12 +90,13 @@ const deleteStaffMember = async (id) => {
               </h3>
               <p class="staff-email">{{ member.email }}</p>
             </div>
-            <button
-              class="btn btn-danger btn-sm"
+            <VaButton
+              preset="danger"
+              size="small"
               @click="deleteStaffMember(member.id)"
             >
               Remove
-            </button>
+            </VaButton>
           </div>
 
           <div class="permissions-section">
@@ -123,7 +111,7 @@ const deleteStaffMember = async (id) => {
                   type="checkbox"
                   :checked="member.permissions?.[perm.key]"
                   @change="
-                    updatePermission(member, perm.key, $event.target.checked)
+                    selectedPermissions[perm.key] = ($event.target as HTMLInputElement).checked
                   "
                 />
                 <span>{{ perm.label }}</span>
@@ -137,51 +125,46 @@ const deleteStaffMember = async (id) => {
         </div>
       </div>
 
-      <div v-if="showAddDialog" class="modal-overlay">
-        <div class="modal">
-          <h3 class="modal-title">Add Staff Member</h3>
-          <div class="field">
-            <label>Username</label>
-            <input
-              v-model="newStaff.username"
-              placeholder="Username"
-              class="modal-input"
-            />
-          </div>
-          <div class="field">
-            <label>Email</label>
-            <input
-              v-model="newStaff.email"
-              type="email"
-              placeholder="Email"
-              class="modal-input"
-            />
-          </div>
-          <div class="field">
-            <label>Password</label>
-            <input
-              v-model="newStaff.password"
-              type="password"
-              placeholder="Password"
-              class="modal-input"
-            />
-          </div>
-          <div class="field">
-            <label>Role</label>
-            <select v-model="newStaff.role" class="modal-select">
-              <option v-for="role in roles" :key="role" :value="role">
-                {{ role }}
-              </option>
-            </select>
-          </div>
-          <div class="modal-actions">
-            <button class="btn btn-secondary" @click="showAddDialog = false">
+      <VaModal v-model="showAddDialog" title="Add Staff Member" size="small">
+        <VaCard>
+          <VaCardContent>
+            <div class="field">
+              <label class="field-label">Username</label>
+              <VaInput v-model="newStaff.username" placeholder="Username" />
+            </div>
+            <div class="field">
+              <label class="field-label">Email</label>
+              <VaInput
+                v-model="newStaff.email"
+                type="email"
+                placeholder="Email"
+              />
+            </div>
+            <div class="field">
+              <label class="field-label">Password</label>
+              <VaInput
+                v-model="newStaff.password"
+                type="password"
+                placeholder="Password"
+              />
+            </div>
+            <div class="field">
+              <label class="field-label">Role</label>
+              <VaSelect
+                v-model="newStaff.role"
+                :options="roles"
+                placeholder="Select role"
+              />
+            </div>
+          </VaCardContent>
+          <template #actions>
+            <VaButton preset="secondary" @click="showAddDialog = false">
               Cancel
-            </button>
-            <button class="btn btn-primary" @click="addStaff">Add</button>
-          </div>
-        </div>
-      </div>
+            </VaButton>
+            <VaButton preset="primary" @click="addStaff">Add</VaButton>
+          </template>
+        </VaCard>
+      </VaModal>
     </div>
   </div>
 </template>
@@ -193,7 +176,8 @@ const deleteStaffMember = async (id) => {
   justify-content: flex-end;
   width: 100%;
   height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
+  background: var(--lighter-gray)
+    url("@/assets/images/reservations-header.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -226,7 +210,7 @@ const deleteStaffMember = async (id) => {
   padding: 80px 20px;
   gap: 16px;
   color: var(--secondary-gray);
-  font-family: "Inter-Light";
+  font-family: 'Inter-Light';
 }
 
 .spinner {
@@ -253,7 +237,7 @@ const deleteStaffMember = async (id) => {
 .staff-card {
   background: var(--primary-white);
   border: 1px solid #f0f0f0;
-  border-radius: 12px;
+  border-radius: var(--card-radius);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -272,7 +256,7 @@ const deleteStaffMember = async (id) => {
   border-radius: 10px;
   background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
   color: var(--primary-blue);
-  font-family: "Inter-Bold";
+  font-family: 'Inter-Bold';
   font-size: 18px;
   display: flex;
   align-items: center;
@@ -286,7 +270,7 @@ const deleteStaffMember = async (id) => {
 }
 
 .staff-name {
-  font-family: "Inter-Medium";
+  font-family: 'Inter-Medium';
   font-size: 15px;
   color: var(--primary-black);
   margin: 0 0 4px 0;
@@ -297,7 +281,7 @@ const deleteStaffMember = async (id) => {
 }
 
 .staff-email {
-  font-family: "Inter-Light";
+  font-family: 'Inter-Light';
   font-size: 13px;
   color: var(--secondary-gray);
   margin: 0;
@@ -319,7 +303,7 @@ const deleteStaffMember = async (id) => {
 }
 
 .meta-label {
-  font-family: "Inter-Medium";
+  font-family: 'Inter-Medium';
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -337,7 +321,7 @@ const deleteStaffMember = async (id) => {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  font-family: "Inter-Light";
+  font-family: 'Inter-Light';
   color: var(--primary-black);
   cursor: pointer;
 }
@@ -349,141 +333,24 @@ const deleteStaffMember = async (id) => {
   cursor: pointer;
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-
-.btn-primary {
-  background-color: var(--primary-blue);
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #2563eb;
-}
-
-.btn-danger {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-.btn-danger:hover {
-  background-color: #fee2e2;
-}
-
-.btn-secondary {
-  background-color: #f3f4f6;
-  color: var(--primary-black);
-}
-
-.btn-secondary:hover {
-  background-color: #e5e7eb;
-}
-
-.btn-sm {
-  padding: 6px 12px;
-  font-size: 12px;
-}
-
 .empty-state {
   text-align: center;
   padding: 40px;
   color: var(--secondary-gray);
-  font-family: "Inter-Light";
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal {
-  background-color: white;
-  padding: 24px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 420px;
-}
-
-.modal-title {
-  font-family: "Inter-Bold";
-  font-size: 18px;
-  color: var(--primary-black);
-  margin: 0 0 20px 0;
+  font-family: 'Inter-Light';
 }
 
 .field {
   margin-bottom: 16px;
 }
 
-.field label {
+.field-label {
   display: block;
   margin-bottom: 6px;
   font-weight: 600;
-  font-family: "Inter-Medium";
+  font-family: 'Inter-Medium';
   font-size: 14px;
   color: var(--primary-black);
-}
-
-.modal-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--lighter-gray);
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
-  color: var(--primary-black);
-  box-sizing: border-box;
-}
-
-.modal-input:focus {
-  outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-.modal-select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--lighter-gray);
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
-  color: var(--primary-black);
-  background-color: white;
-  box-sizing: border-box;
-  cursor: pointer;
-}
-
-.modal-select:focus {
-  outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 8px;
 }
 
 @media screen and (min-width: 640px) {

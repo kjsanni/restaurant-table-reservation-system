@@ -44,6 +44,7 @@ const validateCsrfToken = (req, res, next) => {
 module.exports = {
   setCsrfCookie,
   validateCsrfToken,
+  generateCsrfToken,
   CSRF_COOKIE_NAME,
   CSRF_HEADER_NAME,
 };

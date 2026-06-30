@@ -1,5 +1,6 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { VaButton, VaAlert } from "vuestic-ui";
 import reportAPI from "@/services/reportAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
 
@@ -95,31 +96,22 @@ onMounted(() => {
           </div>
         </div>
         <div class="filters-actions">
-          <button
-            class="btn btn-primary"
-            @click="loadReport"
-            :disabled="loading"
-          >
+          <VaButton preset="primary" @click="loadReport" :disabled="loading">
             {{ loading ? "Generating..." : "Generate Report" }}
-          </button>
+          </VaButton>
         </div>
       </div>
 
       <div class="export-bar">
-        <button class="btn btn-secondary" @click="exportCSV">Export CSV</button>
-        <button class="btn btn-secondary" @click="exportPDF">
-          Export Report
-        </button>
+        <VaButton preset="secondary" @click="exportCSV">Export CSV</VaButton>
+        <VaButton preset="secondary" @click="exportPDF">Export Report</VaButton>
       </div>
 
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
         <p>Generating report...</p>
       </div>
-      <div v-else-if="errorMsg" class="error-state">
-        <span class="error-icon">⚠️</span>
-        <p>{{ errorMsg }}</p>
-      </div>
+      <VaAlert v-if="errorMsg" color="danger">{{ errorMsg }}</VaAlert>
       <div v-else-if="generated && report" class="report-container">
         <div class="report-grid">
           <div class="report-metric">
@@ -195,25 +187,10 @@ onMounted(() => {
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
-  padding: 0;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-
-.content-wrapper {
   margin-top: 50px;
   margin-bottom: 50px;
-  margin-left: var(--x-spacing-mobile);
-  margin-right: var(--x-spacing-mobile);
+  margin-left: var(--page-margin-x);
+  margin-right: var(--page-margin-x);
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -304,23 +281,6 @@ onMounted(() => {
 .export-bar {
   display: flex;
   gap: 10px;
-}
-
-.error-state {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #dc2626;
-  font-family: "Inter-Light";
-}
-
-.error-icon {
-  font-size: 20px;
-  flex-shrink: 0;
 }
 
 .report-container {
@@ -429,42 +389,6 @@ onMounted(() => {
   color: var(--secondary-gray);
   font-family: "Inter-Light";
   font-size: 14px;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  transition: all 0.15s;
-}
-
-.btn-primary {
-  background-color: var(--primary-blue);
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #2563eb;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: #f3f4f6;
-  color: var(--primary-black);
-}
-
-.btn-secondary:hover {
-  background-color: #e5e7eb;
 }
 
 @media screen and (min-width: 640px) {

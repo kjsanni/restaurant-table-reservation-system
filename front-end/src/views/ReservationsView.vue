@@ -1,6 +1,6 @@
 <script setup>
-import ReservationsSkeleton from "@/components/ReservationsSkeleton.vue";
 import TheReservations from "@/components/TheReservations.vue";
+import { VaSkeleton } from "vuestic-ui";
 </script>
 
 <template>
@@ -10,7 +10,7 @@ import TheReservations from "@/components/TheReservations.vue";
         <TheReservations />
       </template>
       <template #fallback>
-        <ReservationsSkeleton />
+        <VaSkeleton variant="text" :lines="5" />
       </template>
     </Suspense>
   </div>

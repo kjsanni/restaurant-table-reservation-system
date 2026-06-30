@@ -1,6 +1,4 @@
-<script setup>
-import ButtonOutlined from "@/components/ButtonOutlined.vue";
-
+<script setup lang="ts">
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -17,7 +15,7 @@ const routeToHome = () => router.push({ name: "home" });
     />
     <div class="content">
       <h1>Page Not Found</h1>
-      <ButtonOutlined text="Back To Home" @click="routeToHome" />
+      <VaButton text="Back To Home" @click="routeToHome" />
     </div>
   </div>
 </template>

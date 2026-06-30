@@ -16,7 +16,8 @@ const waitlistRouter = require("../routes/waitlist.router");
 const paymentRouter = require("../routes/payment.router");
 const reportRouter = require("../routes/report.router");
 const customerRouter = require("../routes/customer.router");
-const { setCsrfCookie, CSRF_HEADER_NAME } = require("../middleware/csrf");
+const { setCsrfCookie, CSRF_HEADER_NAME, CSRF_COOKIE_NAME } = require("../middleware/csrf");
+const { generateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
 const { requestLogger } = require("../middleware/requestLogger");
 const { logAction } = require("../middleware/auditLog");
@@ -94,7 +95,17 @@ const createServer = () => {
   app.use(require("../middleware/sanitize").sanitize);
 
   app.get("/api/v1/csrf-token", (req, res) => {
-    res.json({ success: true });
+    const token = req.cookies?.[CSRF_COOKIE_NAME] || generateCsrfToken();
+    if (!req.cookies?.[CSRF_COOKIE_NAME]) {
+      res.cookie(CSRF_COOKIE_NAME, token, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "lax" : false,
+        path: "/",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+    }
+    res.json({ success: true, token });
   });
 
   app.get("/api/v1/health", (req, res) => {

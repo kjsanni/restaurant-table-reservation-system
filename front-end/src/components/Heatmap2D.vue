@@ -1,7 +1,7 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
+import { VaModal } from "vuestic-ui";
 import reservationAPI from "@/services/reservationAPI";
-import PopupBox from "@/components/PopupBox.vue";
 
 const props = defineProps({
   mode: {
@@ -351,13 +351,8 @@ const closeDrillDown = () => {
       </div>
     </Transition>
 
-    <PopupBox
-      :is-open="drillDownOpen"
-      header-text="Daily Breakdown"
-      :is-closable="true"
-      @close-modal="closeDrillDown"
-    >
-      <template #popup-content>
+    <va-modal v-model="drillDownOpen" title="Daily Breakdown" size="medium">
+      <template #content>
         <div class="drill-down">
           <p v-if="selectedDay" class="drill-date">
             {{ selectedDay.date }} — Total: {{ selectedDay.count }} reservations
@@ -392,7 +387,7 @@ const closeDrillDown = () => {
           </div>
         </div>
       </template>
-    </PopupBox>
+    </va-modal>
   </div>
 </template>
 

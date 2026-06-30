@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
 import auditAPI from "@/services/auditAPI";
 
@@ -15,7 +15,7 @@ const loadLogs = async () => {
     const res = await auditAPI.getAuditLogs();
     logs.value = res.data.logs;
   } catch (err) {
-    logger.error("Failed to load audit logs", { error: err.message });
+    console.error("Failed to load audit logs", err);
   } finally {
     loading.value = false;
   }

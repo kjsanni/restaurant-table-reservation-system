@@ -1,14 +1,10 @@
-<script setup>
-import ComboBox from "@/components/ComboBox.vue";
-import ButtonFilled from "@/components/ButtonFilled.vue";
+<script setup lang="ts">
 import SaveIcon from "~icons/fluent/save-16-regular";
-import SuccessMessage from "@/components/SuccessMessage.vue";
-import ErrorMessage from "@/components/ErrorMessage.vue";
-import logger from "@/utils/logger";
 
 import reservationAPI from "@/services/reservationAPI";
 import { ref } from "vue";
 import { getApiErrorMessage } from "@/utils/apiError";
+import logger from "@/utils/logger";
 
 const props = defineProps({
   freeTables: Array,
@@ -48,23 +44,27 @@ const chooseTable = async () => {
 <template>
   <div>
     <form @submit.prevent="chooseTable">
-      <ComboBox
+      <va-select
         id="table"
-        label-text="Table"
-        placeholder-text="Choose a table..."
-        :collection="props.freeTables"
-        v-model:selectedItem="payload.tableId"
+        label="Table"
+        placeholder="Choose a table..."
+        :options="props.freeTables"
+        v-model="payload.tableId"
+        value-key="id"
+        text-key="name"
       />
-      <SuccessMessage
-        :is-successful="isSuccessful"
-        success-message="Successfully reserved a table!"
-      />
-      <ErrorMessage :error-flag="errMsg" :error-message="errMsg" />
-      <ButtonFilled text="Done">
+      <va-alert v-if="isSuccessful" color="success">
+        Successfully reserved a table!
+      </va-alert>
+      <va-alert v-if="errMsg" color="danger">
+        {{ errMsg }}
+      </va-alert>
+      <va-button preset="primary" @click="chooseTable()">
         <template #icon>
           <SaveIcon />
         </template>
-      </ButtonFilled>
+        Done
+      </va-button>
     </form>
   </div>
 </template>

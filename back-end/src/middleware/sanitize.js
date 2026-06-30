@@ -3,6 +3,8 @@ const sanitizeString = (value) => {
   return value
     .replace(/[<>]/g, "")
     .replace(/javascript:/gi, "")
+    .replace(/vbscript:/gi, "")
+    .replace(/data:/gi, "")
     .replace(/on\w+\s*=/gi, "")
     .trim();
 };

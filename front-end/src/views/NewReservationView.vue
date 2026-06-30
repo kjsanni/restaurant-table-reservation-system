@@ -1,48 +1,59 @@
-<script setup>
-import { ref, onMounted } from "vue";
-import { paymentOptions } from "@/constants";
-import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
-import reservationAPI from "@/services/reservationAPI";
-import customerAPI from "@/services/customerAPI";
-import SuccessMessage from "@/components/SuccessMessage.vue";
-import ErrorMessage from "@/components/ErrorMessage.vue";
-import SaveIcon from "~icons/fluent/save-16-regular";
-import logger from "@/utils/logger";
-import getValues from "@/utils/getValues";
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import {
+  VaInput,
+  VaButton,
+  VaAlert,
+  VaCard,
+  VaCardTitle,
+  VaCardContent,
+  VaSelect,
+  VaTextarea,
+} from 'vuestic-ui'
+
+import { paymentOptions } from '@/constants'
+import { getApiErrorMessage, getApiErrors } from '@/utils/apiError'
+import reservationAPI from '@/services/reservationAPI'
+import customerAPI from '@/services/customerAPI'
+import logger from '@/utils/logger'
 
 const reservation = ref({
-  firstName: "",
-  lastName: "",
-  phone: "",
-  email: "",
-  resDate: "",
-  resTime: "",
-  people: "",
-  expectedTotal: "",
-  paymentStatus: "unpaid",
-  notes: "",
-});
+  firstName: '',
+  lastName: '',
+  phone: '',
+  email: '',
+  resDate: '',
+  resTime: '',
+  people: '',
+  expectedTotal: '',
+  paymentStatus: 'unpaid',
+  notes: '',
+})
 
-const customerId = ref(null);
-const visitCount = ref(0);
-const customerTags = ref([]);
-const loyaltyLoaded = ref(false);
+const customerId = ref<number | null>(null)
+const visitCount = ref(0)
+const customerTags = ref<string[]>([])
+const loyaltyLoaded = ref(false)
 
 const availableTags = [
-  { key: "vip", label: "⭐ VIP", color: "#f59e0b" },
-  { key: "allergy_dairy", label: "🥛 Dairy allergy", color: "#ef4444" },
-  { key: "allergy_nuts", label: "🥜 Nut allergy", color: "#ef4444" },
-  { key: "allergy_gluten", label: "🌾 Gluten-free", color: "#ef4444" },
-  { key: "allergy_shellfish", label: "🦐 Shellfish allergy", color: "#ef4444" },
-  { key: "birthday", label: "🎂 Birthday", color: "#3b82f6" },
-  { key: "anniversary", label: "💍 Anniversary", color: "#ec4899" },
-  { key: "regular", label: "🔄 Regular", color: "#22c55e" },
-];
+  { key: 'vip', label: '⭐ VIP', color: '#f59e0b' },
+  { key: 'allergy_dairy', label: '🥛 Dairy allergy', color: '#ef4444' },
+  { key: 'allergy_nuts', label: '🥜 Nut allergy', color: '#ef4444' },
+  { key: 'allergy_gluten', label: '🌾 Gluten-free', color: '#ef4444' },
+  { key: 'allergy_shellfish', label: '🦐 Shellfish allergy', color: '#ef4444' },
+  { key: 'birthday', label: '🎂 Birthday', color: '#3b82f6' },
+  { key: 'anniversary', label: '💍 Anniversary', color: '#ec4899' },
+  { key: 'regular', label: '🔄 Regular', color: '#22c55e' },
+]
 
-const loadCustomerLoyalty = async (email) => {
-  if (!email || !email.includes("@")) {
-    loyaltyLoaded.value = false;
-    return;
+const validationErrors = ref<Record<string, string[]> | null>(null)
+const isSuccessful = ref(false)
+const generalError = ref<string | null>(null)
+
+const loadCustomerLoyalty = async (email: string) => {
+  if (!email || !email.includes('@')) {
+    loyaltyLoaded.value = false
+    return
   }
   try {
     const res = await customerAPI.findOrCreate({
@@ -50,88 +61,84 @@ const loadCustomerLoyalty = async (email) => {
       firstName: reservation.value.firstName,
       lastName: reservation.value.lastName,
       phone: reservation.value.phone,
-    });
-    const customer = res.data.customer;
-    customerId.value = customer.id;
-    visitCount.value = customer.visitCount || 0;
-    customerTags.value = customer.tags || [];
-    loyaltyLoaded.value = true;
+    })
+    const customer = res.data.customer
+    customerId.value = customer.id
+    visitCount.value = customer.visitCount || 0
+    customerTags.value = customer.tags || []
+    loyaltyLoaded.value = true
   } catch (err) {
-    logger.error("Failed to load customer loyalty", { error: err.message });
+    logger.error('Failed to load customer loyalty', { error: (err as Error).message })
   }
-};
+}
 
-const toggleTag = async (tagKey) => {
-  if (!customerId.value) return;
-  const idx = customerTags.value.indexOf(tagKey);
+const toggleTag = async (tagKey: string) => {
+  if (!customerId.value) return
+  const idx = customerTags.value.indexOf(tagKey)
   if (idx >= 0) {
-    customerTags.value.splice(idx, 1);
+    customerTags.value.splice(idx, 1)
   } else {
-    customerTags.value.push(tagKey);
+    customerTags.value.push(tagKey)
   }
   try {
-    await customerAPI.updateTags(customerId.value, customerTags.value);
+    await customerAPI.updateTags(customerId.value, customerTags.value)
   } catch (err) {
-    logger.error("Failed to update tags", { error: err.message });
+    logger.error('Failed to update tags', { error: (err as Error).message })
   }
-};
+}
 
-const validationErrors = ref(null);
-const isSuccessful = ref(false);
-const generalError = ref(null);
+const capitalize = (s: string) => {
+  const str = String(s || '').trim()
+  if (!str) return str
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+}
 
-const capitalize = (s) => {
-  const str = String(s || "").trim();
-  if (!str) return str;
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
-
-const cleanPhone = (phone) =>
-  String(phone || "")
+const cleanPhone = (phone: string) =>
+  String(phone || '')
     .trim()
-    .replace(/\D/g, "")
-    .slice(0, 15);
+    .replace(/\D/g, '')
+    .slice(0, 15)
 
 const registerReservation = async () => {
-  isSuccessful.value = false;
-  validationErrors.value = null;
-  generalError.value = null;
+  isSuccessful.value = false
+  validationErrors.value = null
+  generalError.value = null
   try {
     const payload = {
       ...reservation.value,
       firstName: capitalize(reservation.value.firstName),
       lastName: capitalize(reservation.value.lastName),
       phone: cleanPhone(reservation.value.phone),
-    };
-    const res = await reservationAPI.registerReservation(payload);
-    logger.debug("Reservation created", { id: res?.data?.id });
-    isSuccessful.value = true;
+    }
+    const res = await reservationAPI.registerReservation(payload)
+    logger.debug('Reservation created', { id: res?.data?.id })
+    isSuccessful.value = true
     reservation.value = {
-      firstName: "",
-      lastName: "",
-      phone: "",
-      email: "",
-      resDate: "",
-      resTime: "",
-      people: "",
-      expectedTotal: "",
-      paymentStatus: "unpaid",
-      notes: "",
-    };
-    customerId.value = null;
-    visitCount.value = 0;
-    customerTags.value = [];
-    loyaltyLoaded.value = false;
-    setTimeout(() => (isSuccessful.value = false), 3000);
+      firstName: '',
+      lastName: '',
+      phone: '',
+      email: '',
+      resDate: '',
+      resTime: '',
+      people: '',
+      expectedTotal: '',
+      paymentStatus: 'unpaid',
+      notes: '',
+    }
+    customerId.value = null
+    visitCount.value = 0
+    customerTags.value = []
+    loyaltyLoaded.value = false
+    setTimeout(() => (isSuccessful.value = false), 3000)
   } catch (err) {
-    logger.error("Reservation creation failed", {
-      error: err.message,
+    logger.error('Reservation creation failed', {
+      error: (err as Error).message,
       details: getApiErrors(err),
-    });
-    generalError.value = getApiErrorMessage(err);
-    validationErrors.value = getApiErrors(err);
+    })
+    generalError.value = getApiErrorMessage(err)
+    validationErrors.value = getApiErrors(err)
   }
-};
+}
 </script>
 
 <template>
@@ -141,151 +148,142 @@ const registerReservation = async () => {
     </div>
     <div class="content-wrapper">
       <form @submit.prevent="registerReservation" class="reservation-form">
-        <div class="form-section">
-          <h2 class="section-title">Guest Details</h2>
-          <div class="fields-grid">
-            <div class="field">
-              <label class="field-label">First Name</label>
-              <input
+        <VaCard class="form-section">
+          <VaCardTitle class="section-title">Guest Details</VaCardTitle>
+          <VaCardContent>
+            <div class="fields-grid">
+              <VaInput
                 v-model="reservation.firstName"
-                class="field-input"
-                placeholder="Enter first name..."
+                label="First Name"
+                :error-messages="validationErrors?.firstName"
+                class="mb-4"
               />
-            </div>
-            <div class="field">
-              <label class="field-label">Last Name</label>
-              <input
+              <VaInput
                 v-model="reservation.lastName"
-                class="field-input"
-                placeholder="Enter last name..."
+                label="Last Name"
+                :error-messages="validationErrors?.lastName"
+                class="mb-4"
               />
             </div>
-          </div>
-          <div class="field">
-            <label class="field-label">Phone Number</label>
-            <input
+            <VaInput
               v-model="reservation.phone"
-              class="field-input"
-              placeholder="Enter phone number..."
+              label="Phone Number"
+              :error-messages="validationErrors?.phone"
+              class="mb-4"
             />
-          </div>
-          <div class="field">
-            <label class="field-label">Email Address</label>
-            <input
+            <VaInput
               v-model="reservation.email"
+              label="Email Address"
               type="email"
-              class="field-input"
-              placeholder="Enter email address..."
+              :error-messages="validationErrors?.email"
+              class="mb-4"
             />
-          </div>
-        </div>
+          </VaCardContent>
+        </VaCard>
 
-        <div class="form-section">
-          <h2 class="section-title">Reservation Details</h2>
-          <div class="fields-grid">
-            <div class="field">
-              <label class="field-label">Date</label>
-              <input
+        <VaCard class="form-section">
+          <VaCardTitle class="section-title">Reservation Details</VaCardTitle>
+          <VaCardContent>
+            <div class="fields-grid">
+              <VaInput
                 v-model="reservation.resDate"
+                label="Date"
                 type="date"
-                class="field-input"
+                :error-messages="validationErrors?.resDate"
+                class="mb-4"
               />
-            </div>
-            <div class="field">
-              <label class="field-label">Time</label>
-              <input
+              <VaInput
                 v-model="reservation.resTime"
+                label="Time"
                 type="time"
-                class="field-input"
+                :error-messages="validationErrors?.resTime"
+                class="mb-4"
               />
             </div>
-          </div>
-          <div class="field">
-            <label class="field-label">Number of People</label>
-            <input
+            <VaInput
               v-model="reservation.people"
+              label="Number of People"
               type="number"
               min="1"
-              class="field-input"
-              placeholder="Number of guests..."
+              :error-messages="validationErrors?.people"
+              class="mb-4"
             />
-          </div>
-          <div class="field">
-            <label class="field-label">Expected Total (GHS)</label>
-            <input
+            <VaInput
               v-model="reservation.expectedTotal"
+              label="Expected Total (GHS)"
               type="number"
               min="0"
               step="0.01"
-              class="field-input"
-              placeholder="Expected total amount..."
+              :error-messages="validationErrors?.expectedTotal"
+              class="mb-4"
             />
-          </div>
-          <div class="field">
-            <label class="field-label">Payment Status</label>
-            <select v-model="reservation.paymentStatus" class="field-input">
-              <option
-                v-for="opt in paymentOptions"
-                :key="opt.value"
-                :value="opt.value"
-              >
-                {{ opt.label }}
-              </option>
-            </select>
-          </div>
-          <div class="field">
-            <label class="field-label">Notes / Special Requests</label>
-            <textarea
+            <VaSelect
+              v-model="reservation.paymentStatus"
+              label="Payment Status"
+              :options="paymentOptions"
+              option-value="value"
+              option-text="label"
+              class="mb-4"
+            />
+            <VaTextarea
               v-model="reservation.notes"
-              class="field-input"
-              rows="3"
-              placeholder="Anniversary, window seat, allergies..."
-            ></textarea>
-          </div>
-        </div>
+              label="Notes / Special Requests"
+              :rows="3"
+              class="mb-4"
+            />
+          </VaCardContent>
+        </VaCard>
 
-        <div v-if="loyaltyLoaded" class="form-section loyalty-section">
-          <div class="loyalty-header">
+        <VaCard v-if="loyaltyLoaded" class="form-section loyalty-section">
+          <VaCardTitle class="section-title">
             <span class="loyalty-badge">
-              {{ visitCount }} visit{{ visitCount !== 1 ? "s" : "" }}
+              {{ visitCount }} visit{{ visitCount !== 1 ? 's' : '' }}
             </span>
-            <h2 class="section-title">Customer Tags</h2>
-          </div>
-          <div class="tags-grid">
-            <button
-              v-for="tag in availableTags"
-              :key="tag.key"
-              :class="['tag-btn', { active: customerTags.includes(tag.key) }]"
-              :style="
-                customerTags.includes(tag.key)
-                  ? {
-                      backgroundColor: tag.color,
-                      color: 'white',
-                      borderColor: tag.color,
-                    }
-                  : {}
-              "
-              @click="toggleTag(tag.key)"
-              type="button"
-            >
-              {{ tag.label }}
-            </button>
-          </div>
-        </div>
+            Customer Tags
+          </VaCardTitle>
+          <VaCardContent>
+            <div class="tags-grid">
+              <button
+                v-for="tag in availableTags"
+                :key="tag.key"
+                type="button"
+                class="tag-btn"
+                :class="{ active: customerTags.includes(tag.key) }"
+                :style="
+                  customerTags.includes(tag.key)
+                    ? {
+                        backgroundColor: tag.color,
+                        color: 'white',
+                        borderColor: tag.color,
+                      }
+                    : {}
+                "
+                @click="toggleTag(tag.key)"
+              >
+                {{ tag.label }}
+              </button>
+            </div>
+          </VaCardContent>
+        </VaCard>
 
         <div class="form-actions">
-          <SuccessMessage
-            :is-successful="isSuccessful"
-            success-message="Successfully registered your reservation!"
-          />
-          <ErrorMessage
-            :error-flag="generalError"
-            :error-message="generalError"
-          />
-          <button type="submit" class="btn btn-primary btn-submit">
-            <SaveIcon class="btn-icon" />
+          <VaAlert
+            v-if="isSuccessful"
+            color="success"
+            class="mb-4"
+          >
+            Successfully registered your reservation!
+          </VaAlert>
+          <VaAlert
+            v-if="generalError"
+            color="danger"
+            class="mb-4"
+          >
+            {{ generalError }}
+          </VaAlert>
+          <VaButton type="submit" preset="primary" size="large" class="submit-btn">
             Submit Reservation
-          </button>
+          </VaButton>
         </div>
       </form>
     </div>
@@ -333,15 +331,14 @@ const registerReservation = async () => {
   background: var(--primary-white);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
-  padding: var(--card-padding);
   box-shadow: var(--card-shadow);
 }
 
 .section-title {
-  font-family: "Inter-Bold";
+  font-family: 'Inter-Bold';
   font-size: 16px;
   color: var(--primary-black);
-  margin: 0 0 16px 0;
+  margin: 0;
 }
 
 .fields-grid {
@@ -350,59 +347,18 @@ const registerReservation = async () => {
   gap: 16px;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field-label {
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  color: var(--secondary-gray);
-}
-
-.field-input {
-  padding: 10px 14px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
-  color: var(--primary-black);
-  background: white;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.field-input:focus {
-  outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-textarea.field-input {
-  resize: vertical;
-  min-height: 80px;
-}
-
 .loyalty-section {
   background: linear-gradient(180deg, #fefeff 0%, #f8fafc 100%);
 }
 
-.loyalty-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
 .loyalty-badge {
-  font-family: "Inter-Medium";
+  font-family: 'Inter-Medium';
   font-size: 13px;
   background: var(--primary-blue);
   color: white;
   padding: 6px 14px;
   border-radius: 10px;
+  margin-right: 12px;
 }
 
 .tags-grid {
@@ -417,7 +373,7 @@ textarea.field-input {
   border-radius: 10px;
   background: white;
   cursor: pointer;
-  font-family: "Inter-Medium";
+  font-family: 'Inter-Medium';
   font-size: 13px;
   transition: all 0.15s;
 }
@@ -439,33 +395,9 @@ textarea.field-input {
   gap: 16px;
 }
 
-.btn-submit {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 12px 32px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 15px;
-  transition: all 0.15s;
-  background-color: var(--primary-blue);
-  color: white;
+.submit-btn {
   width: 100%;
   max-width: 300px;
-}
-
-.btn-submit:hover {
-  background-color: #2563eb;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.btn-icon {
-  width: 18px;
-  height: 18px;
 }
 
 @media screen and (min-width: 640px) {
@@ -484,7 +416,7 @@ textarea.field-input {
     margin-left: 200px;
     margin-right: 200px;
   }
-  .btn-submit {
+  .submit-btn {
     width: auto;
     min-width: 260px;
   }

@@ -1,7 +1,6 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import reservationAPI from "@/services/reservationAPI";
-import PopupBox from "@/components/PopupBox.vue";
 
 const loading = ref(true);
 const series = ref([]);
@@ -109,6 +108,33 @@ const exportCSV = () => {
   a.download = `revenue-report-${dateRangeLabel.value}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+};
+
+const getMethodColor = (method) => {
+  const colors = {
+    cash: "#22c55e",
+    card: "#3b82f6",
+    transfer: "#f59e0b",
+    other: "#8b5cf6",
+  };
+  return colors[method] || "#9ca3af";
+};
+
+const getStackedHeight = (amount) => {
+  if (!series.value.length) return 0;
+  const max = Math.max(...series.value.map((s) => s.total));
+  if (max === 0) return 0;
+  return (amount / max) * 160;
+};
+
+const getStackedY = (item, methodKey, mIndex) => {
+  const methods = Object.keys(item.byMethod || {});
+  let y = 180;
+  for (let i = 0; i < methods.indexOf(methodKey); i++) {
+    const prev = item.byMethod[methods[i]];
+    y -= getStackedHeight(prev.total);
+  }
+  return y;
 };
 </script>
 
@@ -288,37 +314,6 @@ const exportCSV = () => {
     </div>
   </div>
 </template>
-
-<script>
-export default {
-  methods: {
-    getMethodColor(method) {
-      const colors = {
-        cash: "#22c55e",
-        card: "#3b82f6",
-        transfer: "#f59e0b",
-        other: "#8b5cf6",
-      };
-      return colors[method] || "#9ca3af";
-    },
-    getStackedHeight(amount) {
-      if (!this.series.length) return 0;
-      const max = Math.max(...this.series.map((s) => s.total));
-      if (max === 0) return 0;
-      return (amount / max) * 160;
-    },
-    getStackedY(item, methodKey, mIndex) {
-      const methods = Object.keys(item.byMethod || {});
-      let y = 180;
-      for (let i = 0; i < methods.indexOf(methodKey); i++) {
-        const prev = item.byMethod[methods[i]];
-        y -= this.getStackedHeight(prev.total);
-      }
-      return y;
-    },
-  },
-};
-</script>
 
 <style scoped>
 .main-wrapper {

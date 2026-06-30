@@ -1,7 +1,6 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
-import PopupBox from "@/components/PopupBox.vue";
-import ToggleSwitch from "@/components/ToggleSwitch.vue";
+import { VaSwitch } from "vuestic-ui";
 import scheduleAPI from "@/services/scheduleAPI";
 
 const schedules = ref([]);
@@ -163,7 +162,7 @@ const exportPDF = async () => {
                 <span v-if="!schedule.isClosed" class="slot-badge">
                   {{ schedule.slotDuration }} min slots
                 </span>
-                <ToggleSwitch
+                <VaSwitch
                   v-model="schedule.isClosed"
                   @change="updateSchedule(schedule)"
                 />
@@ -226,7 +225,7 @@ const exportPDF = async () => {
           </div>
           <div class="field">
             <label class="field-label">Closed</label>
-            <ToggleSwitch v-model="newHoliday.isClosed" />
+            <VaSwitch v-model="newHoliday.isClosed" />
           </div>
           <div class="modal-actions">
             <button

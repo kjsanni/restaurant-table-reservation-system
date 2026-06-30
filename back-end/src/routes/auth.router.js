@@ -4,7 +4,7 @@ const tryCatchHandler = require("../middleware/tryCatch");
 const httpMethodError = require("../middleware/httpMethodError");
 const authController = require("../controllers/auth.controller");
 const { protect, admin, requirePermission } = require("../middleware/auth");
-const { authLimiter } = require("../middleware/rateLimit");
+const { authLimiter, generalLimiter } = require("../middleware/rateLimit");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 
 router
@@ -24,8 +24,8 @@ router
 
 router
   .route("/settings")
-  .get(tryCatchHandler(protect), tryCatchHandler(admin), tryCatchHandler(authController.getSettingsHandler))
-  .put(tryCatchHandler(protect), tryCatchHandler(admin), tryCatchHandler(authController.updateSettingsHandler));
+  .get(generalLimiter, tryCatchHandler(protect), tryCatchHandler(admin), tryCatchHandler(authController.getSettingsHandler))
+  .put(generalLimiter, tryCatchHandler(protect), tryCatchHandler(admin), tryCatchHandler(authController.updateSettingsHandler));
 
 router
   .route("/staff")
@@ -46,7 +46,7 @@ router
 
 router
   .route("/refresh-token")
-  .post(tryCatchHandler(authController.refreshTokenHandler))
+  .post(authLimiter, tryCatchHandler(authController.refreshTokenHandler))
   .all(httpMethodError);
 
 router

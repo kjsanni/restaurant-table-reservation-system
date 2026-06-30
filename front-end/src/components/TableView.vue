@@ -1,12 +1,8 @@
-<script setup>
-import ButtonAction from "@/components/ButtonAction.vue";
-import CrossIcon from "~icons/radix-icons/cross-circled";
-import NotFoundResource from "@/components/NotFoundResource.vue";
-import PopupBox from "@/components/PopupBox.vue";
-import reservationAPI from "@/services/reservationAPI";
+<script setup lang="ts">
+import { ref, computed } from "vue";
 import { useAuthStore } from "@/stores/auth";
-import { computed, ref } from "vue";
-import logger from "@/utils/logger";
+import reservationAPI from "@/services/reservationAPI";
+import { getPaymentStatusColor, getPaymentStatusLabel } from "@/constants";
 
 const props = defineProps({
   fields: Object,
@@ -18,8 +14,6 @@ const emit = defineEmits([
   "onSelectedReservation",
   "onCanceledReservation",
 ]);
-
-import { getPaymentStatusColor, getPaymentStatusLabel } from "@/constants";
 
 const showNotes = (item) => {
   if (item.notes) {
@@ -88,10 +82,9 @@ const cancelReservation = async (item) => {
   if (confirmTarget.value?.id === item.id) {
     try {
       await reservationAPI.cancelReservation(item.id);
-      logger.debug("Reservation cancelled", { id: item.id });
       emit("onCanceledReservation");
-    } catch (err) {
-      logger.error("Cancel reservation failed", { error: err.message });
+    } catch {
+      // Cancellation failed
     } finally {
       closeConfirm();
       return;
@@ -105,8 +98,8 @@ const deleteReservation = async (item) => {
     try {
       await reservationAPI.cancelReservation(item.id);
       emit("onCanceledReservation");
-    } catch (err) {
-      logger.error("Delete reservation failed", { error: err.message });
+    } catch {
+      // Deletion failed
     } finally {
       closeConfirm();
       return;
@@ -118,7 +111,7 @@ const deleteReservation = async (item) => {
 
 <template>
   <div class="main-wrapper">
-    <table key="1" v-if="props.collection.length !== 0">
+    <table v-if="props.collection.length !== 0">
       <thead>
         <tr class="header-row">
           <th v-for="field in props.fields" :key="field">
@@ -164,55 +157,54 @@ const deleteReservation = async (item) => {
             </div>
           </td>
           <td>
-            <button
+            <VaButton
               v-if="item.notes"
-              class="notes-btn"
+              icon="description"
+              preset="secondary"
               @click="showNotes(item)"
               title="View notes"
-            >
-              📝
-            </button>
+            />
           </td>
           <td>
             <div
               v-if="['pending', 'missed'].includes(item.resStatus)"
               class="actions"
             >
-              <ButtonAction
+              <VaButton
                 text="Seat"
-                color="#22c55e"
+                color="success"
                 @click="
                   openPopup('Choose Table');
                   passItemData(item);
                 "
               />
-              <ButtonAction
+              <VaButton
                 text="Edit"
-                color="#3b82f6"
+                color="primary"
                 @click="
                   openPopup('Edit Reservation');
                   passItemData(item);
                 "
               />
-              <ButtonAction
+              <VaButton
                 v-if="canManageTables"
                 text="Assign"
-                color="#f59e0b"
+                color="warning"
                 @click="
                   openPopup('Assign Staff');
                   passItemData(item);
                 "
               />
-              <ButtonAction
+              <VaButton
                 text="Cancel"
-                color="#ef4444"
+                color="danger"
                 @click="cancelReservation(item)"
               />
             </div>
             <div class="actions" v-else-if="canEditReservations">
-              <ButtonAction
+              <VaButton
                 text="Delete"
-                color="#ef4444"
+                color="danger"
                 @click="deleteReservation(item)"
               />
             </div>
@@ -229,83 +221,36 @@ const deleteReservation = async (item) => {
         </tr>
       </tbody>
     </table>
-    <NotFoundResource
-      class="test"
-      v-else
-      text="No Reservations"
-      position="relative"
-    >
-      <template #icon><CrossIcon class="vector" /></template>
-    </NotFoundResource>
+    <VaAlert v-else type="warning" class="test">No Reservations</VaAlert>
   </div>
 
-  <PopupBox
-    :is-open="showConfirm"
-    header-text="Confirm"
-    :is-closable="true"
-    @close-modal="closeConfirm"
-  >
-    <template #popup-content>
-      <div class="confirm-content">
+  <VaModal v-model="showConfirm" title="Confirm" size="small">
+    <VaCard>
+      <VaCardContent>
         <p>{{ confirmMessage }}</p>
-        <div class="confirm-actions">
-          <button class="btn btn-secondary" @click="closeConfirm">
-            Cancel
-          </button>
-          <button
-            class="btn btn-danger"
-            @click="confirmTarget && cancelReservation(confirmTarget)"
-          >
-            {{ confirmActionText }}
-          </button>
-        </div>
-      </div>
-    </template>
-  </PopupBox>
+      </VaCardContent>
+      <template #actions>
+        <VaButton preset="secondary" @click="closeConfirm">Cancel</VaButton>
+        <VaButton
+          preset="danger"
+          @click="confirmTarget && cancelReservation(confirmTarget)"
+        >
+          {{ confirmActionText }}
+        </VaButton>
+      </template>
+    </VaCard>
+  </VaModal>
 
-  <PopupBox
-    :is-open="notesPopup"
-    header-text="Reservation Notes"
-    :is-closable="true"
-    @close-modal="notesPopup = false"
-  >
-    <template #popup-content>
-      <div class="notes-popup-content">
+  <VaModal v-model="notesPopup" title="Reservation Notes" size="small">
+    <VaCard>
+      <VaCardContent>
         <p>{{ notesContent }}</p>
-      </div>
-    </template>
-  </PopupBox>
+      </VaCardContent>
+    </VaCard>
+  </VaModal>
 </template>
 
 <style scoped>
-.confirm-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.confirm-content p {
-  font-family: "Inter-Medium";
-  font-size: 15px;
-  color: var(--primary-black);
-  margin: 0;
-}
-
-.confirm-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.btn-danger {
-  background-color: var(--primary-red);
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #dc2626;
-}
-
 .notes-popup-content {
   font-family: "Inter-Medium";
   font-size: 15px;

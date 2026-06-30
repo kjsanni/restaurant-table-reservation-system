@@ -1,13 +1,5 @@
-<script setup>
-import ButtonFilled from "@/components/ButtonFilled.vue";
-import TextBox from "@/components/TextBox.vue";
-import SuccessMessage from "@/components/SuccessMessage.vue";
-import ErrorMessage from "@/components/ErrorMessage.vue";
-import SaveIcon from "~icons/fluent/save-16-regular";
-import PaymentIcon from "~icons/fluent/payment-16-regular";
-
+<script setup lang="ts">
 import { ref, watch, onMounted, computed } from "vue";
-import logger from "@/utils/logger";
 import { getApiErrors, getApiErrorMessage } from "@/utils/apiError";
 import paymentAPI from "@/services/paymentAPI";
 import reservationAPI from "@/services/reservationAPI";
@@ -22,8 +14,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["onEdited"]);
-
-logger.debug("Edit reservation opened", { reservation: props.reservation });
 
 const reservation = ref({
   resDate: {
@@ -101,8 +91,8 @@ const loadPayments = async () => {
     const res = await paymentAPI.getPayments(props.reservation.id);
     payments.value = Array.isArray(res.data.payments) ? res.data.payments : [];
     totalPaid.value = res.data.totalPaid || 0;
-  } catch (err) {
-    logger.error("Failed to load payments", { error: err.message });
+  } catch {
+    // Payment load failed, table will be empty
   }
 };
 
@@ -189,50 +179,42 @@ const editReservation = async () => {
     );
     emit("onEdited");
     isSuccessful.value = true;
-    logger.debug("Reservation updated", { id: props.reservation.id });
   } catch (err) {
     validationErrors.value = getApiErrors(err);
     generalErrors.value = getApiErrorMessage(err);
-    logger.error("Edit reservation failed", { error: err.message });
   }
 };
 </script>
 
 <template>
   <div :class="{ 'main-wrapper': !isModal }">
-    <form @submit.prevent="editReservation()">
-      <TextBox
+    <VaForm @submit="editReservation()">
+      <div
         v-for="textBox in filteredReservation"
         :key="textBox.id"
-        :text-box-type="textBox.textBoxType"
-        :id="textBox.id"
-        :label-text="textBox.labelText"
-        :placeholder-text="textBox.placeholderText"
-        :errors="validationErrors"
-        v-model:input="textBox.value"
-      />
+        class="form-group"
+      >
+        <VaInput
+          :type="textBox.textBoxType"
+          :id="textBox.id"
+          :label="textBox.labelText"
+          :placeholder="textBox.placeholderText"
+          v-model="textBox.value"
+        />
+      </div>
       <div v-if="reservation.paymentStatus" class="form-group">
         <label class="form-label">{{
           reservation.paymentStatus.labelText
         }}</label>
-        <select
+        <VaSelect
           :id="reservation.paymentStatus.id"
-          class="form-select"
           v-model="reservation.paymentStatus.value"
-        >
-          <option
-            v-for="opt in reservation.paymentStatus.options"
-            :key="opt.value"
-            :value="opt.value"
-          >
-            {{ opt.label }}
-          </option>
-        </select>
+          :options="reservation.paymentStatus.options"
+        />
       </div>
 
       <div class="payments-section">
         <div class="payments-header">
-          <PaymentIcon />
           <span class="payments-title">Payments</span>
           <span class="total-paid"
             >Total paid: GHS {{ totalPaid.toFixed(2) }}</span
@@ -251,90 +233,72 @@ const editReservation = async () => {
                 >Ref: {{ pay.reference }}</span
               >
             </div>
-            <button
-              class="remove-pay-btn"
+            <VaButton
+              icon="close"
+              preset="danger"
               @click="removePayment(pay.id)"
               title="Remove"
-            >
-              ×
-            </button>
+            />
           </div>
         </div>
 
-        <form class="add-payment-form" @submit.prevent="addPayment">
+        <div class="add-payment-form">
           <div class="form-group inline">
             <label class="form-label">Amount</label>
-            <input
+            <VaInput
               type="number"
               step="0.01"
               min="0.01"
-              class="form-select"
               v-model="newPayment.amount"
               placeholder="0.00"
             />
           </div>
           <div class="form-group inline">
             <label class="form-label">Method</label>
-            <select class="form-select" v-model="newPayment.method">
-              <option value="cash">Cash</option>
-              <option value="card">Card</option>
-              <option value="transfer">Transfer</option>
-              <option value="other">Other</option>
-            </select>
+            <VaSelect
+              v-model="newPayment.method"
+              :options="[
+                { label: 'Cash', value: 'cash' },
+                { label: 'Card', value: 'card' },
+                { label: 'Transfer', value: 'transfer' },
+                { label: 'Other', value: 'other' },
+              ]"
+            />
           </div>
           <div class="form-group inline">
             <label class="form-label">Paid By</label>
-            <input
-              type="text"
-              class="form-select"
-              v-model="newPayment.paidBy"
-              placeholder="Name"
-            />
+            <VaInput v-model="newPayment.paidBy" placeholder="Name" />
           </div>
           <div class="form-group inline">
             <label class="form-label">Reference</label>
-            <input
-              type="text"
-              class="form-select"
-              v-model="newPayment.reference"
-              placeholder="Ref #"
-            />
+            <VaInput v-model="newPayment.reference" placeholder="Ref #" />
           </div>
-          <button type="submit" class="add-pay-btn">Add</button>
-        </form>
-      </div>
-      <ErrorMessage
-        :error-flag="generalErrors"
-        :error-message="generalErrors"
-      />
-      <SuccessMessage
-        class="success"
-        :is-successful="isSuccessful"
-        success-message="Done!"
-      />
-      <ButtonFilled text="Done">
-        <template #icon>
-          <SaveIcon />
-        </template>
-      </ButtonFilled>
-    </form>
-
-    <div v-if="showDeleteConfirm" class="confirm-overlay">
-      <div class="confirm-box">
-        <p class="confirm-text">
-          Are you sure you want to delete this payment?
-        </p>
-        <p v-if="removeError" class="confirm-error">{{ removeError }}</p>
-        <div class="confirm-actions">
-          <button class="btn btn-secondary" @click="showDeleteConfirm = false">
-            Cancel
-          </button>
-          <button class="btn btn-danger" @click="confirmRemovePayment">
-            Delete
-          </button>
+          <VaButton preset="success" @click="addPayment">Add</VaButton>
         </div>
       </div>
-    </div>
+      <VaAlert v-if="generalErrors" color="danger">{{ generalErrors }}</VaAlert>
+      <VaAlert v-if="isSuccessful" color="success">Done!</VaAlert>
+      <VaButton preset="primary" @click="editReservation">Done</VaButton>
+    </VaForm>
+
+    <VaModal v-model="showDeleteConfirm" title="Confirm" size="small">
+      <VaCard>
+        <VaCardContent>
+          <p class="confirm-text">
+            Are you sure you want to delete this payment?
+          </p>
+          <VaAlert v-if="removeError" color="danger">{{ removeError }}</VaAlert>
+        </VaCardContent>
+        <template #actions>
+          <VaButton preset="secondary" @click="showDeleteConfirm = false"
+            >Cancel</VaButton
+          >
+          <VaButton preset="danger" @click="confirmRemovePayment"
+            >Delete</VaButton
+          >
+        </template>
+      </VaCard>
+    </VaModal>
   </div>
 </template>
 

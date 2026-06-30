@@ -1,11 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { io } from "socket.io-client";
 import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
 import groupAPI from "@/services/groupAPI";
-import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import {
   paymentOptions,
@@ -421,285 +420,258 @@ const handleReschedule = async () => {
         </div>
       </div>
 
-      <PopupBox
-        :is-open="dayPopupOpen"
-        :header-text="
-          selectedDay ? 'Reservations — ' + selectedDay.dateStr : ''
-        "
-        :is-closable="true"
-        @close-modal="closeDayPopup"
+      <VaModal
+        v-model="dayPopupOpen"
+        :title="selectedDay ? 'Reservations — ' + selectedDay.dateStr : ''"
       >
-        <template #popup-content>
-          <div v-if="selectedDay" class="day-popup">
-            <div v-if="selectedDay.isClosed" class="popup-state closed-state">
-              <span class="state-icon">🔒</span>
-              <p>Restaurant is closed this day.</p>
-            </div>
-            <div
-              v-else-if="(selectedDay.reservations?.length || 0) === 0"
-              class="popup-state empty-state"
-            >
-              <span class="state-icon">📅</span>
-              <p>No reservations for this day.</p>
-            </div>
-            <div v-else>
-              <div
-                v-if="activeAction && actionReservation"
-                class="action-panel"
-              >
-                <div class="action-header">
-                  <h3 class="action-title">{{ actionTitle }}</h3>
-                  <button class="action-back" @click="closeAction">
-                    ← Back
-                  </button>
-                </div>
-                <div v-if="actionError" class="action-error">
-                  {{ actionError }}
-                </div>
-
-                <div v-if="activeAction === 'cancel'" class="action-body">
-                  <p class="action-text">
-                    Cancel reservation for
-                    <strong>{{ actionReservation.name || "Guest" }}</strong> on
-                    {{ actionReservation.resTime?.slice(0, 5) }}?
-                  </p>
-                  <div class="action-buttons">
-                    <button
-                      class="btn btn-danger"
-                      @click="handleCancel"
-                      :disabled="actionLoading"
-                    >
-                      {{ actionLoading ? "Cancelling..." : "Yes, Cancel" }}
-                    </button>
-                  </div>
-                </div>
-
-                <div v-else-if="activeAction === 'payment'" class="action-body">
-                  <p class="action-text">
-                    Current:
-                    <span
-                      class="payment-status"
-                      :style="{
-                        color: getPaymentStatusColor(
-                          actionReservation.paymentStatus || 'unpaid'
-                        ),
-                      }"
-                      >{{ actionReservation.paymentStatus || "unpaid" }}</span
-                    >
-                  </p>
-                  <div class="payment-options">
-                    <button
-                      v-for="opt in paymentOptions"
-                      :key="opt.value"
-                      :class="[
-                        'pay-btn',
-                        {
-                          active:
-                            (actionReservation.paymentStatus || 'unpaid') ===
-                            opt.value,
-                        },
-                      ]"
-                      :style="{
-                        borderColor: getPaymentStatusColor(opt.value),
-                        color:
-                          (actionReservation.paymentStatus || 'unpaid') ===
-                          opt.value
-                            ? getPaymentStatusColor(opt.value)
-                            : '',
-                        backgroundColor:
-                          (actionReservation.paymentStatus || 'unpaid') ===
-                          opt.value
-                            ? getPaymentStatusColor(opt.value) + '18'
-                            : '',
-                      }"
-                      @click="handlePaymentChange(opt.value)"
-                      :disabled="actionLoading"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </div>
-                </div>
-
-                <div v-else-if="activeAction === 'table'" class="action-body">
-                  <p class="action-text">Assign a free table:</p>
-                  <div v-if="freeTables.length === 0" class="empty-msg">
-                    No free tables available
-                  </div>
-                  <div class="table-grid">
-                    <button
-                      v-for="table in freeTables"
-                      :key="table.id"
-                      class="table-btn"
-                      @click="handleAssignTable(table.id)"
-                      :disabled="actionLoading"
-                    >
-                      Table {{ table.name || table.id }}
-                    </button>
-                  </div>
-                </div>
-
-                <div v-else-if="activeAction === 'staff'" class="action-body">
-                  <p class="action-text">Assign waiting staff:</p>
-                  <div v-if="waitingStaffList.length === 0" class="empty-msg">
-                    No waiting staff available
-                  </div>
-                  <div class="staff-list-actions">
-                    <button
-                      v-for="staff in waitingStaffList"
-                      :key="staff.id"
-                      class="staff-btn"
-                      @click="handleAssignStaff(staff.id)"
-                      :disabled="actionLoading"
-                    >
-                      {{ staff.username }}
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  v-else-if="activeAction === 'reschedule'"
-                  class="action-body"
-                >
-                  <div class="field-group">
-                    <label class="field-label">New Date</label>
-                    <input
-                      type="date"
-                      v-model="newResDate"
-                      class="action-input"
-                    />
-                  </div>
-                  <div class="field-group">
-                    <label class="field-label">New Time</label>
-                    <input
-                      type="time"
-                      v-model="newResTime"
-                      class="action-input"
-                    />
-                  </div>
-                  <div class="action-buttons">
-                    <button
-                      class="btn btn-primary"
-                      @click="handleReschedule"
-                      :disabled="actionLoading"
-                    >
-                      {{ actionLoading ? "Saving..." : "Reschedule" }}
-                    </button>
-                  </div>
-                </div>
+        <VaCard>
+          <VaCardContent>
+            <div v-if="selectedDay" class="day-popup">
+              <div v-if="selectedDay.isClosed" class="popup-state closed-state">
+                <span class="state-icon">🔒</span>
+                <p>Restaurant is closed this day.</p>
               </div>
-              <div v-else class="diagram-popup">
-                <div class="popup-count">
-                  {{ selectedDay.reservations.length }} reservation{{
-                    selectedDay.reservations.length > 1 ? "s" : ""
-                  }}
-                </div>
-                <div class="diagram-track">
-                  <div class="diagram-line"></div>
+              <div
+                v-else-if="(selectedDay.reservations?.length || 0) === 0"
+                class="popup-state empty-state"
+              >
+                <span class="state-icon">📅</span>
+                <p>No reservations for this day.</p>
+              </div>
+              <div v-else>
+                <div
+                  v-if="activeAction && actionReservation"
+                  class="action-panel"
+                >
+                  <div class="action-header">
+                    <h3 class="action-title">{{ actionTitle }}</h3>
+                    <VaButton preset="secondary" @click="closeAction"
+                      >← Back</VaButton
+                    >
+                  </div>
+                  <VaAlert v-if="actionError" color="danger">{{
+                    actionError
+                  }}</VaAlert>
+
+                  <div v-if="activeAction === 'cancel'" class="action-body">
+                    <p class="action-text">
+                      Cancel reservation for
+                      <strong>{{ actionReservation.name || "Guest" }}</strong>
+                      on {{ actionReservation.resTime?.slice(0, 5) }}?
+                    </p>
+                    <div class="action-buttons">
+                      <VaButton
+                        preset="danger"
+                        @click="handleCancel"
+                        :disabled="actionLoading"
+                      >
+                        {{ actionLoading ? "Cancelling..." : "Yes, Cancel" }}
+                      </VaButton>
+                    </div>
+                  </div>
+
                   <div
-                    v-for="(res, idx) in selectedDay.reservations"
-                    :key="res.id"
-                    :class="['diagram-row', idx % 2 === 0 ? 'left' : 'right']"
+                    v-else-if="activeAction === 'payment'"
+                    class="action-body"
                   >
-                    <div class="diagram-node">
+                    <p class="action-text">
+                      Current:
                       <span
-                        class="diagram-dot"
+                        class="payment-status"
                         :style="{
-                          backgroundColor: statusColor(
-                            res.resStatus || 'pending'
+                          color: getPaymentStatusColor(
+                            actionReservation.paymentStatus || 'unpaid'
                           ),
                         }"
-                      ></span>
+                        >{{ actionReservation.paymentStatus || "unpaid" }}</span
+                      >
+                    </p>
+                    <div class="payment-options">
+                      <VaButton
+                        v-for="opt in paymentOptions"
+                        :key="opt.value"
+                        :color="
+                          (actionReservation.paymentStatus || 'unpaid') ===
+                          opt.value
+                            ? 'primary'
+                            : 'secondary'
+                        "
+                        @click="handlePaymentChange(opt.value)"
+                        :disabled="actionLoading"
+                      >
+                        {{ opt.label }}
+                      </VaButton>
                     </div>
-                    <div class="diagram-card">
-                      <div class="timeline-card-header">
-                        <span class="timeline-name">{{
-                          res.name || "Guest"
-                        }}</span>
+                  </div>
+
+                  <div v-else-if="activeAction === 'table'" class="action-body">
+                    <p class="action-text">Assign a free table:</p>
+                    <div v-if="freeTables.length === 0" class="empty-msg">
+                      No free tables available
+                    </div>
+                    <div class="table-grid">
+                      <VaButton
+                        v-for="table in freeTables"
+                        :key="table.id"
+                        preset="secondary"
+                        @click="handleAssignTable(table.id)"
+                        :disabled="actionLoading"
+                      >
+                        Table {{ table.name || table.id }}
+                      </VaButton>
+                    </div>
+                  </div>
+
+                  <div v-else-if="activeAction === 'staff'" class="action-body">
+                    <p class="action-text">Assign waiting staff:</p>
+                    <div v-if="waitingStaffList.length === 0" class="empty-msg">
+                      No waiting staff available
+                    </div>
+                    <div class="staff-list-actions">
+                      <VaButton
+                        v-for="staff in waitingStaffList"
+                        :key="staff.id"
+                        preset="secondary"
+                        @click="handleAssignStaff(staff.id)"
+                        :disabled="actionLoading"
+                      >
+                        {{ staff.username }}
+                      </VaButton>
+                    </div>
+                  </div>
+
+                  <div
+                    v-else-if="activeAction === 'reschedule'"
+                    class="action-body"
+                  >
+                    <div class="field-group">
+                      <label class="field-label">New Date</label>
+                      <VaInput type="date" v-model="newResDate" />
+                    </div>
+                    <div class="field-group">
+                      <label class="field-label">New Time</label>
+                      <VaInput type="time" v-model="newResTime" />
+                    </div>
+                    <div class="action-buttons">
+                      <VaButton
+                        preset="primary"
+                        @click="handleReschedule"
+                        :disabled="actionLoading"
+                      >
+                        {{ actionLoading ? "Saving..." : "Reschedule" }}
+                      </VaButton>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="diagram-popup">
+                  <div class="popup-count">
+                    {{ selectedDay.reservations.length }} reservation{{
+                      selectedDay.reservations.length > 1 ? "s" : ""
+                    }}
+                  </div>
+                  <div class="diagram-track">
+                    <div class="diagram-line"></div>
+                    <div
+                      v-for="(res, idx) in selectedDay.reservations"
+                      :key="res.id"
+                      :class="['diagram-row', idx % 2 === 0 ? 'left' : 'right']"
+                    >
+                      <div class="diagram-node">
                         <span
-                          class="timeline-status"
+                          class="diagram-dot"
                           :style="{
                             backgroundColor: statusColor(
                               res.resStatus || 'pending'
                             ),
                           }"
-                        >
-                          {{ res.resStatus || "pending" }}
-                        </span>
+                        ></span>
                       </div>
-                      <div class="timeline-card-body">
-                        <div class="timeline-row">
-                          <span class="timeline-icon">🕐</span>
-                          <span class="timeline-text">{{
-                            res.resTime?.slice(0, 5)
+                      <div class="diagram-card">
+                        <div class="timeline-card-header">
+                          <span class="timeline-name">{{
+                            res.name || "Guest"
                           }}</span>
-                          <span class="timeline-spacer"></span>
-                          <span class="timeline-icon">👥</span>
-                          <span class="timeline-text"
-                            >{{ res.people || "?" }} guests</span
-                          >
-                        </div>
-                        <div class="timeline-row">
-                          <span class="timeline-icon">💳</span>
                           <span
-                            class="timeline-payment"
+                            class="timeline-status"
                             :style="{
-                              color: getPaymentStatusColor(
-                                res.paymentStatus || 'unpaid'
+                              backgroundColor: statusColor(
+                                res.resStatus || 'pending'
                               ),
                             }"
                           >
-                            {{ res.paymentStatus || "unpaid" }}
+                            {{ res.resStatus || "pending" }}
                           </span>
                         </div>
-                        <div v-if="res.email" class="timeline-row">
-                          <span class="timeline-icon">✉️</span>
-                          <span
-                            class="timeline-text timeline-email"
-                            :title="res.email"
-                          >
-                            {{ res.email }}
-                          </span>
-                        </div>
-                        <div v-if="res.phone" class="timeline-row">
-                          <span class="timeline-icon">📞</span>
-                          <span class="timeline-text">{{ res.phone }}</span>
-                        </div>
-                        <div class="diagram-actions">
-                          <button
-                            class="action-btn cancel"
-                            @click.stop="openAction('cancel', res)"
-                            title="Cancel"
-                          >
-                            ✕
-                          </button>
-                          <button
-                            class="action-btn payment"
-                            @click.stop="openAction('payment', res)"
-                            title="Payment"
-                          >
-                            💳
-                          </button>
-                          <button
-                            class="action-btn table"
-                            @click.stop="openAction('table', res)"
-                            title="Assign Table"
-                          >
-                            🪑
-                          </button>
-                          <button
-                            class="action-btn staff"
-                            @click.stop="openAction('staff', res)"
-                            title="Assign Staff"
-                          >
-                            👤
-                          </button>
-                          <button
-                            class="action-btn reschedule"
-                            @click.stop="openAction('reschedule', res)"
-                            title="Reschedule"
-                          >
-                            📅
-                          </button>
+                        <div class="timeline-card-body">
+                          <div class="timeline-row">
+                            <span class="timeline-icon">🕐</span>
+                            <span class="timeline-text">{{
+                              res.resTime?.slice(0, 5)
+                            }}</span>
+                            <span class="timeline-spacer"></span>
+                            <span class="timeline-icon">👥</span>
+                            <span class="timeline-text"
+                              >{{ res.people || "?" }} guests</span
+                            >
+                          </div>
+                          <div class="timeline-row">
+                            <span class="timeline-icon">💳</span>
+                            <span
+                              class="timeline-payment"
+                              :style="{
+                                color: getPaymentStatusColor(
+                                  res.paymentStatus || 'unpaid'
+                                ),
+                              }"
+                            >
+                              {{ res.paymentStatus || "unpaid" }}
+                            </span>
+                          </div>
+                          <div v-if="res.email" class="timeline-row">
+                            <span class="timeline-icon">✉️</span>
+                            <span
+                              class="timeline-text timeline-email"
+                              :title="res.email"
+                            >
+                              {{ res.email }}
+                            </span>
+                          </div>
+                          <div v-if="res.phone" class="timeline-row">
+                            <span class="timeline-icon">📞</span>
+                            <span class="timeline-text">{{ res.phone }}</span>
+                          </div>
+                          <div class="diagram-actions">
+                            <VaButton
+                              icon="close"
+                              preset="secondary"
+                              @click.stop="openAction('cancel', res)"
+                              title="Cancel"
+                            />
+                            <VaButton
+                              icon="payment"
+                              preset="secondary"
+                              @click.stop="openAction('payment', res)"
+                              title="Payment"
+                            />
+                            <VaButton
+                              icon="table_restaurant"
+                              preset="secondary"
+                              @click.stop="openAction('table', res)"
+                              title="Assign Table"
+                            />
+                            <VaButton
+                              icon="person"
+                              preset="secondary"
+                              @click.stop="openAction('staff', res)"
+                              title="Assign Staff"
+                            />
+                            <VaButton
+                              icon="event"
+                              preset="secondary"
+                              @click.stop="openAction('reschedule', res)"
+                              title="Reschedule"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -707,9 +679,9 @@ const handleReschedule = async () => {
                 </div>
               </div>
             </div>
-          </div>
-        </template>
-      </PopupBox>
+          </VaCardContent>
+        </VaCard>
+      </VaModal>
     </div>
   </div>
 </template>

@@ -9,28 +9,28 @@ export interface NavItem {
 }
 
 export const guestNavItems: NavItem[] = [
-  { routeName: 'home', text: 'Home', icon: 'va-home' },
-  { routeName: 'new-reservation', text: 'New Reservation', icon: 'va-calendar-plus' },
+  { routeName: 'home', text: 'Home', icon: 'mdi:home' },
+  { routeName: 'new-reservation', text: 'New Reservation', icon: 'mdi:calendar-plus' },
 ]
 
 export const authenticatedNavItems: NavItem[] = [
-  { routeName: 'reservations', text: 'Reservations', icon: 'va-list', requiresAuth: true },
-  { routeName: 'search', text: 'Search', icon: 'va-search', requiresAuth: true },
-  { routeName: 'add-table', text: 'Add Table', icon: 'va-plus', requiresAuth: true, requiresPermission: 'manage_tables' },
-  { routeName: 'table-management', text: 'Tables', icon: 'va-table', requiresAuth: true },
-  { routeName: 'schedule', text: 'Schedule', icon: 'va-calendar', requiresAuth: true },
-  { routeName: 'calendar', text: 'Calendar', icon: 'va-calendar', requiresAuth: true },
-  { routeName: 'staff-management', text: 'Staff', icon: 'va-users', requiresAuth: true },
-  { routeName: 'floor-plan', text: 'Floor Plan', icon: 'va-map', requiresAuth: true },
-  { routeName: 'waitlist', text: 'Waitlist', icon: 'va-clock', requiresAuth: true },
-  { routeName: 'reports', text: 'Reports', icon: 'va-chart-bar', requiresAuth: true },
-  { routeName: 'heatmap', text: 'Heatmap', icon: 'va-chart-area', requiresAuth: true },
+  { routeName: 'reservations', text: 'Reservations', icon: 'mdi:format-list-bulleted', requiresAuth: true },
+  { routeName: 'search', text: 'Search', icon: 'mdi:magnify', requiresAuth: true },
+  { routeName: 'add-table', text: 'Add Table', icon: 'mdi:plus', requiresAuth: true, requiresPermission: 'manage_tables' },
+  { routeName: 'table-management', text: 'Tables', icon: 'mdi:table', requiresAuth: true },
+  { routeName: 'schedule', text: 'Schedule', icon: 'mdi:calendar', requiresAuth: true },
+  { routeName: 'calendar', text: 'Calendar', icon: 'mdi:calendar', requiresAuth: true },
+  { routeName: 'staff-management', text: 'Staff', icon: 'mdi:account-group', requiresAuth: true },
+  { routeName: 'floor-plan', text: 'Floor Plan', icon: 'mdi:map', requiresAuth: true },
+  { routeName: 'waitlist', text: 'Waitlist', icon: 'mdi:clock', requiresAuth: true },
+  { routeName: 'reports', text: 'Reports', icon: 'mdi:chart-bar', requiresAuth: true },
+  { routeName: 'heatmap', text: 'Heatmap', icon: 'mdi:chart-area', requiresAuth: true },
 ]
 
 export const adminNavItems: NavItem[] = [
-  { routeName: 'admin-settings', text: 'Settings', icon: 'va-cog', requiresAuth: true, requiresAdmin: true },
-  { routeName: 'role-management', text: 'Roles', icon: 'va-key', requiresAuth: true },
-  { routeName: 'group-management', text: 'Groups', icon: 'va-users-group', requiresAuth: true },
-  { routeName: 'payment-dashboard', text: 'Payments', icon: 'va-money', requiresAuth: true, requiresAdmin: true },
-  { routeName: 'audit-logs', text: 'Audit', icon: 'va-file-text', requiresAuth: true },
+  { routeName: 'admin-settings', text: 'Settings', icon: 'mdi:cog', requiresAuth: true, requiresAdmin: true },
+  { routeName: 'role-management', text: 'Roles', icon: 'mdi:key', requiresAuth: true },
+  { routeName: 'group-management', text: 'Groups', icon: 'mdi:account-group', requiresAuth: true },
+  { routeName: 'payment-dashboard', text: 'Payments', icon: 'mdi:currency-usd', requiresAuth: true, requiresAdmin: true },
+  { routeName: 'audit-logs', text: 'Audit', icon: 'mdi:file-document-text', requiresAuth: true },
 ]

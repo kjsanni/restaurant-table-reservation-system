@@ -1,9 +1,7 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import { VaSelect, VaDataTable, VaButton } from "vuestic-ui";
 import reservationAPI from "@/services/reservationAPI";
-import TableView from "@/components/TableView.vue";
-import PopupBox from "@/components/PopupBox.vue";
-import EditReservation from "@/components/EditReservation.vue";
 
 const loading = ref(true);
 const reservations = ref([]);
@@ -75,30 +73,6 @@ const tableFields = {
   paymentStatus: "Payment",
 };
 
-const isPopupOpen = ref(false);
-const popupHeaderText = ref("");
-const selectedReservation = ref(null);
-
-const openPopup = ({ headerText }) => {
-  isPopupOpen.value = true;
-  popupHeaderText.value = headerText;
-};
-
-const closePopup = () => {
-  isPopupOpen.value = false;
-  popupHeaderText.value = "";
-  selectedReservation.value = null;
-};
-
-const passItemData = (item) => {
-  selectedReservation.value = item;
-};
-
-const refreshData = async () => {
-  await loadData();
-  closePopup();
-};
-
 const loadData = async () => {
   loading.value = true;
   try {
@@ -109,7 +83,7 @@ const loadData = async () => {
     reservations.value = resRes.data.collection;
     summary.value = summaryRes.data.summary;
   } catch (err) {
-    logger.error("Failed to load payment dashboard", { error: err.message });
+    console.error("Failed to load payment dashboard", err);
   } finally {
     loading.value = false;
   }
@@ -182,50 +156,41 @@ onMounted(loadData);
         <div class="dashboard-card table-card">
           <h2 class="card-title">Reservation Details</h2>
           <div class="filters">
-            <select v-model="filterPaymentStatus" class="filter-select">
-              <option value="">All Payment Statuses</option>
-              <option
-                v-for="status in paymentStatusOrder"
-                :key="status"
-                :value="status"
-              >
-                {{ paymentDisplayLabels[status] }}
-              </option>
-            </select>
-            <select v-model="filterResStatus" class="filter-select">
-              <option value="">All Reservation Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="seated">Seated</option>
-              <option value="missed">Missed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+            <VaSelect
+              v-model="filterPaymentStatus"
+              placeholder="All Payment Statuses"
+              :options="
+                paymentStatusOrder.map((s) => ({
+                  label: paymentDisplayLabels[s],
+                  value: s,
+                }))
+              "
+              clearable
+            />
+            <VaSelect
+              v-model="filterResStatus"
+              placeholder="All Reservation Statuses"
+              :options="
+                ['pending', 'seated', 'missed', 'cancelled'].map((s) => ({
+                  label: s.charAt(0).toUpperCase() + s.slice(1),
+                  value: s,
+                }))
+              "
+              clearable
+            />
           </div>
-          <TableView
-            :fields="tableFields"
-            :collection="filteredReservations"
-            @onOpen="openPopup"
-            @onSelectedReservation="passItemData"
-            @onCanceledReservation="loadData"
+          <VaDataTable
+            :items="filteredReservations"
+            :columns="
+              Object.keys(tableFields).map((key) => ({
+                key,
+                label: tableFields[key],
+              }))
+            "
           />
         </div>
       </div>
     </div>
-
-    <PopupBox
-      :is-open="isPopupOpen"
-      :header-text="popupHeaderText"
-      :is-closable="true"
-      @close-modal="closePopup"
-    >
-      <template #popup-content>
-        <EditReservation
-          v-if="popupHeaderText === 'Edit Reservation'"
-          :reservation="selectedReservation"
-          :is-modal="true"
-          @on-edited="refreshData"
-        />
-      </template>
-    </PopupBox>
   </div>
 </template>
 
@@ -421,21 +386,12 @@ onMounted(loadData);
   flex-wrap: wrap;
 }
 
-.filter-select {
-  padding: 10px 14px;
-  border: 1px solid var(--lighter-gray);
-  border-radius: 8px;
+.empty-state {
+  text-align: center;
+  padding: 30px;
+  color: var(--secondary-gray);
   font-family: "Inter-Light";
   font-size: 14px;
-  background-color: white;
-  min-width: 180px;
-  color: var(--primary-black);
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 @media screen and (min-width: 640px) {

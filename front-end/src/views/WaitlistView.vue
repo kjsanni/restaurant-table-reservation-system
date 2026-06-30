@@ -1,10 +1,16 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
+import {
+  VaModal,
+  VaCard,
+  VaCardContent,
+  VaAlert,
+  VaInput,
+  VaButton,
+} from "vuestic-ui";
 import waitlistAPI from "@/services/waitlistAPI";
 import tableAPI from "@/services/tableAPI";
-import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
-import logger from "@/utils/logger";
 
 const entries = ref([]);
 const stats = ref({
@@ -43,8 +49,8 @@ const loadData = async () => {
     ]);
     entries.value = entriesRes.data.entries;
     stats.value = statsRes.data.stats;
-  } catch (err) {
-    logger.error("Failed to load waitlist", { error: err.message });
+  } catch {
+    // Load failed, data will remain empty
   } finally {
     loading.value = false;
   }
@@ -149,7 +155,6 @@ const confirmDelete = async () => {
     await waitlistAPI.deleteEntry(deleteTargetId.value);
     await loadData();
   } catch (err) {
-    logger.error("Failed to delete", { error: err.message });
   } finally {
     showDeleteModal.value = false;
     deleteTargetId.value = null;
@@ -160,9 +165,7 @@ const handleExpire = async () => {
   try {
     await waitlistAPI.expireOld();
     await loadData();
-  } catch (err) {
-    logger.error("Failed to expire entries", { error: err.message });
-  }
+  } catch (err) {}
 };
 
 const formatTime = (time) => {
@@ -293,162 +296,139 @@ onMounted(() => {
         </div>
       </template>
 
-      <PopupBox
-        :is-open="showPopup"
-        :header-text="
+      <VaModal
+        v-model="showPopup"
+        :title="
           popupMode === 'add'
             ? 'Add to Waitlist'
             : popupMode === 'seat'
             ? 'Seat Guest'
             : 'Cancel Entry'
         "
-        :is-closable="true"
-        @close-modal="closePopup"
+        size="small"
       >
-        <template #popup-content>
-          <div class="popup-body">
-            <div v-if="actionError" class="error-msg">{{ actionError }}</div>
+        <VaCard>
+          <VaCardContent>
+            <div class="popup-body">
+              <VaAlert v-if="actionError" color="danger">{{
+                actionError
+              }}</VaAlert>
 
-            <div v-if="popupMode === 'add'" class="form-section">
-              <div class="field">
-                <label class="field-label">Name *</label>
-                <input
-                  v-model="form.name"
-                  class="field-input"
-                  placeholder="Guest name"
-                />
+              <div v-if="popupMode === 'add'" class="form-section">
+                <div class="field">
+                  <VaInput
+                    v-model="form.name"
+                    label="Name *"
+                    placeholder="Guest name"
+                  />
+                </div>
+                <div class="field">
+                  <VaInput
+                    type="number"
+                    v-model="form.partySize"
+                    label="Party Size"
+                    min="1"
+                    max="20"
+                  />
+                </div>
+                <div class="field">
+                  <VaInput
+                    v-model="form.phone"
+                    label="Phone"
+                    placeholder="Phone number"
+                  />
+                </div>
+                <div class="field">
+                  <VaInput
+                    v-model="form.email"
+                    label="Email"
+                    placeholder="Email address"
+                  />
+                </div>
+                <div class="field">
+                  <VaInput
+                    type="time"
+                    v-model="form.desiredTime"
+                    label="Desired Time"
+                  />
+                </div>
+                <div class="field">
+                  <VaInput
+                    v-model="form.notes"
+                    label="Notes"
+                    placeholder="Special requests..."
+                  />
+                </div>
               </div>
-              <div class="field">
-                <label class="field-label">Party Size</label>
-                <input
-                  type="number"
-                  v-model="form.partySize"
-                  class="field-input"
-                  min="1"
-                  max="20"
-                />
+
+              <div v-else-if="popupMode === 'seat'" class="form-section">
+                <p class="seat-info">
+                  Assign a table to
+                  <strong>{{ selectedEntry?.name }}</strong> ({{
+                    selectedEntry?.partySize
+                  }}
+                  guests)
+                </p>
+                <div v-if="freeTables.length === 0" class="empty-msg">
+                  No free tables available
+                </div>
+                <div class="table-grid">
+                  <VaButton
+                    v-for="table in freeTables"
+                    :key="table.id"
+                    preset="secondary"
+                    @click="handleSeat(table.id)"
+                    :disabled="actionLoading"
+                  >
+                    Table {{ table.name || table.id }}
+                  </VaButton>
+                </div>
               </div>
-              <div class="field">
-                <label class="field-label">Phone</label>
-                <input
-                  v-model="form.phone"
-                  class="field-input"
-                  placeholder="Phone number"
-                />
-              </div>
-              <div class="field">
-                <label class="field-label">Email</label>
-                <input
-                  v-model="form.email"
-                  class="field-input"
-                  placeholder="Email address"
-                />
-              </div>
-              <div class="field">
-                <label class="field-label">Desired Time</label>
-                <input
-                  type="time"
-                  v-model="form.desiredTime"
-                  class="field-input"
-                />
-              </div>
-              <div class="field">
-                <label class="field-label">Notes</label>
-                <textarea
-                  v-model="form.notes"
-                  class="field-input"
-                  rows="2"
-                  placeholder="Special requests..."
-                ></textarea>
-              </div>
-              <div class="popup-actions">
-                <button class="btn btn-secondary" @click="closePopup">
-                  Cancel
-                </button>
-                <button
-                  class="btn btn-primary"
-                  @click="handleAdd"
-                  :disabled="actionLoading"
-                >
-                  {{ actionLoading ? "Adding..." : "Add to Waitlist" }}
-                </button>
+
+              <div v-else-if="popupMode === 'cancel'" class="form-section">
+                <p class="cancel-text">
+                  Cancel waitlist entry for
+                  <strong>{{ selectedEntry?.name }}</strong
+                  >?
+                </p>
               </div>
             </div>
+          </VaCardContent>
+          <template #actions>
+            <VaButton preset="secondary" @click="closePopup">Cancel</VaButton>
+            <VaButton
+              v-if="popupMode === 'add'"
+              preset="primary"
+              @click="handleAdd"
+              :disabled="actionLoading"
+            >
+              {{ actionLoading ? "Adding..." : "Add to Waitlist" }}
+            </VaButton>
+            <VaButton
+              v-if="popupMode === 'cancel'"
+              preset="danger"
+              @click="handleCancel"
+              :disabled="actionLoading"
+            >
+              {{ actionLoading ? "Cancelling..." : "Yes, Cancel" }}
+            </VaButton>
+          </template>
+        </VaCard>
+      </VaModal>
 
-            <div v-else-if="popupMode === 'seat'" class="form-section">
-              <p class="seat-info">
-                Assign a table to <strong>{{ selectedEntry?.name }}</strong> ({{
-                  selectedEntry?.partySize
-                }}
-                guests)
-              </p>
-              <div v-if="freeTables.length === 0" class="empty-msg">
-                No free tables available
-              </div>
-              <div class="table-grid">
-                <button
-                  v-for="table in freeTables"
-                  :key="table.id"
-                  class="table-btn"
-                  @click="handleSeat(table.id)"
-                  :disabled="actionLoading"
-                >
-                  Table {{ table.name || table.id }}
-                </button>
-              </div>
-              <div class="popup-actions">
-                <button class="btn btn-secondary" @click="closePopup">
-                  Cancel
-                </button>
-              </div>
-            </div>
-
-            <div v-else-if="popupMode === 'cancel'" class="form-section">
-              <p class="cancel-text">
-                Cancel waitlist entry for
-                <strong>{{ selectedEntry?.name }}</strong
-                >?
-              </p>
-              <div class="popup-actions">
-                <button class="btn btn-secondary" @click="closePopup">
-                  Keep
-                </button>
-                <button
-                  class="btn btn-danger"
-                  @click="handleCancel"
-                  :disabled="actionLoading"
-                >
-                  {{ actionLoading ? "Cancelling..." : "Yes, Cancel" }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </template>
-      </PopupBox>
-
-      <PopupBox
-        :is-open="showDeleteModal"
-        header-text="Confirm Delete"
-        :is-closable="true"
-        @close-modal="showDeleteModal = false"
-      >
-        <template #popup-content>
-          <div class="confirm-content">
+      <VaModal v-model="showDeleteModal" title="Confirm Delete" size="small">
+        <VaCard>
+          <VaCardContent>
             <p>Are you sure you want to delete this waitlist entry?</p>
-            <div class="confirm-actions">
-              <button
-                class="btn btn-secondary"
-                @click="showDeleteModal = false"
-              >
-                Cancel
-              </button>
-              <button class="btn btn-danger" @click="confirmDelete">
-                Delete
-              </button>
-            </div>
-          </div>
-        </template>
-      </PopupBox>
+          </VaCardContent>
+          <template #actions>
+            <VaButton preset="secondary" @click="showDeleteModal = false"
+              >Cancel</VaButton
+            >
+            <VaButton preset="danger" @click="confirmDelete">Delete</VaButton>
+          </template>
+        </VaCard>
+      </VaModal>
     </div>
   </div>
 </template>

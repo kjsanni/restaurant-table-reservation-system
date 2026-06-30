@@ -1,14 +1,13 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { VaButton, VaModal, VaCard, VaCardContent } from "vuestic-ui";
 import { io } from "socket.io-client";
 import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
 import groupAPI from "@/services/groupAPI";
-import PopupBox from "@/components/PopupBox.vue";
 import ListContainer from "@/components/ListContainer.vue";
 import ReservationInfo from "@/components/ReservationInfo.vue";
-import ButtonAction from "@/components/ButtonAction.vue";
 import GridContainer from "@/components/GridContainer.vue";
 import RestaurantTable from "@/components/RestaurantTable.vue";
 import EditReservation from "@/components/EditReservation.vue";
@@ -562,54 +561,63 @@ const today = () => {
                     canManageTables
                   "
                 >
-                  <ButtonAction
+                  <VaButton
                     v-if="
                       ['pending', 'missed'].includes(slotProps.item.resStatus)
                     "
-                    text="Seat"
+                    preset="primary"
                     color="#22c55e"
                     @click="
                       openPopup('Choose Table');
                       assignSelectedReservation(slotProps.item);
                     "
-                  />
-                  <ButtonAction
-                    text="Edit"
+                  >
+                    Seat
+                  </VaButton>
+                  <VaButton
+                    preset="primary"
                     color="#3b82f6"
                     @click="
                       openPopup('Edit Reservation');
                       assignSelectedReservation(slotProps.item);
                     "
-                  />
-                  <ButtonAction
+                  >
+                    Edit
+                  </VaButton>
+                  <VaButton
                     v-if="canManageTables"
-                    text="Assign"
+                    preset="primary"
                     color="#f59e0b"
                     @click="
                       openPopup('Assign Staff');
                       assignSelectedReservation(slotProps.item);
                     "
-                  />
-                  <ButtonAction
+                  >
+                    Assign
+                  </VaButton>
+                  <VaButton
                     v-if="
                       ['pending', 'missed'].includes(slotProps.item.resStatus)
                     "
-                    text="Cancel"
-                    color="#ef4444"
+                    preset="danger"
                     @click="handleCancelItem(slotProps.item)"
-                  />
-                  <ButtonAction
+                  >
+                    Cancel
+                  </VaButton>
+                  <VaButton
                     v-if="slotProps.item.resStatus === 'pending'"
-                    text="Mark No-Show"
-                    color="#f59e0b"
+                    preset="warning"
                     @click="openNoShowModal(slotProps.item.id)"
-                  />
-                  <ButtonAction
+                  >
+                    Mark No-Show
+                  </VaButton>
+                  <VaButton
                     v-else-if="canEditReservations"
-                    text="Delete"
-                    color="#ef4444"
+                    preset="danger"
                     @click="openDeleteModal(slotProps.item.id)"
-                  />
+                  >
+                    Delete
+                  </VaButton>
                 </div>
               </div>
             </template>
@@ -633,77 +641,62 @@ const today = () => {
       </div>
     </div>
 
-    <PopupBox
-      :is-open="isPopupOpen"
-      :header-text="popupHeaderText"
-      :is-closable="true"
-      @close-modal="isPopupOpen = false"
-    >
-      <template #popup-content>
-        <EditReservation
-          v-if="popupHeaderText === 'Edit Reservation'"
-          :reservation="selectedReservation"
-          @on-edited="refreshReservations(true)"
-        />
-        <ChooseTable
-          v-else-if="popupHeaderText === 'Choose Table'"
-          :free-tables="freeTables"
-          :reservation="selectedReservation"
-          @on-chosen="
-            refreshTables();
-            getReservations();
-          "
-        />
-        <AssignStaff
-          v-else-if="popupHeaderText === 'Assign Staff'"
-          :reservation="selectedReservation"
-          @on-assigned="refreshReservations()"
-          @on-unassigned="refreshReservations()"
-        />
-      </template>
-    </PopupBox>
+    <VaModal v-model="isPopupOpen" :title="popupHeaderText" size="large">
+      <VaCard>
+        <VaCardContent>
+          <EditReservation
+            v-if="popupHeaderText === 'Edit Reservation'"
+            :reservation="selectedReservation"
+            @on-edited="refreshReservations(true)"
+          />
+          <ChooseTable
+            v-else-if="popupHeaderText === 'Choose Table'"
+            :free-tables="freeTables"
+            :reservation="selectedReservation"
+            @on-chosen="
+              refreshTables();
+              getReservations();
+            "
+          />
+          <AssignStaff
+            v-else-if="popupHeaderText === 'Assign Staff'"
+            :reservation="selectedReservation"
+            @on-assigned="refreshReservations()"
+            @on-unassigned="refreshReservations()"
+          />
+        </VaCardContent>
+      </VaCard>
+    </VaModal>
 
-    <PopupBox
-      :is-open="showDeleteModal"
-      header-text="Confirm Delete"
-      :is-closable="true"
-      @close-modal="closeDeleteModal"
-    >
-      <template #popup-content>
-        <div class="confirm-content">
+    <VaModal v-model="showDeleteModal" title="Confirm Delete" size="small">
+      <VaCard>
+        <VaCardContent>
           <p>Are you sure you want to permanently delete this reservation?</p>
-          <div class="confirm-actions">
-            <button class="btn btn-secondary" @click="closeDeleteModal">
-              Cancel
-            </button>
-            <button class="btn btn-danger" @click="confirmDelete">
-              Delete
-            </button>
-          </div>
-        </div>
-      </template>
-    </PopupBox>
+        </VaCardContent>
+        <template #actions>
+          <VaButton preset="secondary" @click="closeDeleteModal"
+            >Cancel</VaButton
+          >
+          <VaButton preset="danger" @click="confirmDelete">Delete</VaButton>
+        </template>
+      </VaCard>
+    </VaModal>
 
-    <PopupBox
-      :is-open="showNoShowModal"
-      header-text="Confirm No-Show"
-      :is-closable="true"
-      @close-modal="closeNoShowModal"
-    >
-      <template #popup-content>
-        <div class="confirm-content">
+    <VaModal v-model="showNoShowModal" title="Confirm No-Show" size="small">
+      <VaCard>
+        <VaCardContent>
           <p>Mark this reservation as a no-show?</p>
-          <div class="confirm-actions">
-            <button class="btn btn-secondary" @click="closeNoShowModal">
-              Cancel
-            </button>
-            <button class="btn btn-warning" @click="confirmNoShow">
-              Mark No-Show
-            </button>
-          </div>
-        </div>
-      </template>
-    </PopupBox>
+        </VaCardContent>
+        <template #actions>
+          <VaButton preset="secondary" @click="closeNoShowModal"
+            >Cancel</VaButton
+          >
+          <VaButton preset="warning" @click="confirmNoShow"
+            >Mark No-Show</VaButton
+          >
+        </template>
+      </VaCard>
+    </VaModal>
   </div>
 </template>
 

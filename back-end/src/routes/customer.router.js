@@ -4,12 +4,13 @@ const tryCatchHandler = require("../middleware/tryCatch");
 const httpMethodError = require("../middleware/httpMethodError");
 const customerController = require("../controllers/customer.controller");
 const { protect } = require("../middleware/auth");
+const { generalLimiter } = require("../middleware/rateLimit");
 const { validateCsrfToken } = require("../middleware/csrf");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 
 router
   .route("/find-or-create")
-  .post(tryCatchHandler(protect), validateCsrfToken, tryCatchHandler(customerController.findOrCreateHandler))
+  .post(generalLimiter, tryCatchHandler(protect), validateCsrfToken, tryCatchHandler(customerController.findOrCreateHandler))
   .all(httpMethodError);
 
 router

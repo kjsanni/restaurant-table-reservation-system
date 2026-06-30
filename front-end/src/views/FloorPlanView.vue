@@ -1,8 +1,8 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import { VaModal, VaButton } from "vuestic-ui";
 import tableAPI from "@/services/tableAPI";
 import reservationAPI from "@/services/reservationAPI";
-import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
 
@@ -215,7 +215,11 @@ onMounted(loadData);
           <div class="layout-selector">
             <label class="layout-label">Layout:</label>
             <select v-model="layoutMode" class="layout-select">
-              <option v-for="mode in layoutModes" :key="mode.value" :value="mode.value">
+              <option
+                v-for="mode in layoutModes"
+                :key="mode.value"
+                :value="mode.value"
+              >
                 {{ mode.label }}
               </option>
             </select>
@@ -267,7 +271,12 @@ onMounted(loadData);
               <span class="dot"></span> Blocked
             </span>
           </div>
-          <div class="plan-grid" :style="{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}, 1fr))` }">
+          <div
+            class="plan-grid"
+            :style="{
+              gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}, 1fr))`,
+            }"
+          >
             <div
               v-for="table in tables"
               :key="table.id"
@@ -280,17 +289,23 @@ onMounted(loadData);
             >
               <div class="table-top">
                 <div class="table-id-row">
-                  <span class="table-id">{{ table.name || `T${table.id}` }}</span>
+                  <span class="table-id">{{
+                    table.name || `T${table.id}`
+                  }}</span>
                   <span
                     class="status-dot"
-                    :style="{ backgroundColor: statusColor(tableStatus(table)) }"
+                    :style="{
+                      backgroundColor: statusColor(tableStatus(table)),
+                    }"
                   ></span>
                 </div>
                 <span class="capacity">🪑 {{ table.capacity }}</span>
               </div>
               <div v-if="table.reservationId" class="table-reservation">
                 <span class="res-name">
-                  {{ reservationForTable(table)?.name?.split(" ")[0] || "Guest" }}
+                  {{
+                    reservationForTable(table)?.name?.split(" ")[0] || "Guest"
+                  }}
                 </span>
                 <span class="res-time">
                   {{ reservationForTable(table)?.resTime?.slice(0, 5) }}
@@ -309,51 +324,42 @@ onMounted(loadData);
         Touch devices: tap and hold a reservation, then tap a free table.
       </p>
 
-      <PopupBox
-        :is-open="assignPopupOpen"
-        header-text="Assign to Table"
-        :is-closable="true"
-        @close-modal="closeAssign"
-      >
-        <template #popup-content>
+      <va-modal v-model="assignPopupOpen" title="Assign to Table" size="small">
+        <template #content>
           <div class="assign-content">
             <p class="assign-text">
               Assign <strong>{{ draggingReservation?.name }}</strong> ({{
                 draggingReservation?.people
               }}
               guests) to
-              <strong>Table {{ selectedTable?.name || selectedTable?.id }}</strong
+              <strong
+                >Table {{ selectedTable?.name || selectedTable?.id }}</strong
               >?
             </p>
             <div class="popup-actions">
-              <button class="btn btn-outline" @click="closeAssign">
-                Cancel
-              </button>
-              <button class="btn btn-primary" @click="confirmAssign">
-                Assign
-              </button>
+              <va-button preset="secondary" @click="closeAssign"
+                >Cancel</va-button
+              >
+              <va-button preset="primary" @click="confirmAssign"
+                >Assign</va-button
+              >
             </div>
           </div>
         </template>
-      </PopupBox>
+      </va-modal>
 
-      <PopupBox
-        :is-open="errorPopupOpen"
-        header-text="Error"
-        :is-closable="true"
-        @close-modal="errorPopupOpen = false"
-      >
-        <template #popup-content>
+      <va-modal v-model="errorPopupOpen" title="Error" size="small">
+        <template #content>
           <div class="error-content">
             <p>{{ errorMessage }}</p>
             <div class="confirm-actions">
-              <button class="btn btn-secondary" @click="errorPopupOpen = false">
-                OK
-              </button>
+              <va-button preset="secondary" @click="errorPopupOpen = false"
+                >OK</va-button
+              >
             </div>
           </div>
         </template>
-      </PopupBox>
+      </va-modal>
     </div>
   </div>
 </template>

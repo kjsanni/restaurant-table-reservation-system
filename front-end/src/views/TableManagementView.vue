@@ -1,7 +1,6 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import tableAPI from "@/services/tableAPI";
-import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 const tables = ref([]);
@@ -29,8 +28,8 @@ const loadTables = async () => {
   try {
     const res = await tableAPI.getTables();
     tables.value = res.data.collection;
-  } catch (err) {
-    logger.error("Failed to load tables", { error: err.message });
+  } catch {
+    // Load failed, tables will remain empty
   } finally {
     loading.value = false;
   }
@@ -40,8 +39,8 @@ const loadWaitingStaff = async () => {
   try {
     const res = await tableAPI.getWaitingStaff();
     waitingStaff.value = res.data.staff;
-  } catch (err) {
-    logger.error("Failed to load waiting staff", { error: err.message });
+  } catch {
+    // Load failed
   }
 };
 
@@ -380,21 +379,16 @@ const staffAtLimit = (staff) => {
       </div>
     </div>
 
-    <PopupBox
-      :is-open="showErrorModal"
-      header-text="Error"
-      :is-closable="true"
-      @close-modal="closeError"
-    >
-      <template #popup-content>
-        <div class="error-content">
+    <VaModal v-model="showErrorModal" title="Error" size="small">
+      <VaCard>
+        <VaCardContent>
           <p>{{ errorMessage }}</p>
-          <div class="confirm-actions">
-            <button class="btn btn-secondary" @click="closeError">OK</button>
-          </div>
-        </div>
-      </template>
-    </PopupBox>
+        </VaCardContent>
+        <template #actions>
+          <VaButton preset="secondary" @click="closeError">OK</VaButton>
+        </template>
+      </VaCard>
+    </VaModal>
   </div>
 </template>
 

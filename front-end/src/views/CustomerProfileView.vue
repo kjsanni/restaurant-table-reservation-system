@@ -1,9 +1,7 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import customerAPI from "@/services/customerAPI";
-import PopupBox from "@/components/PopupBox.vue";
-import SuccessMessage from "@/components/SuccessMessage.vue";
 
 const route = useRoute();
 const customerId = route.params.id;
@@ -47,6 +45,7 @@ const newTag = ref("");
 const tagInput = ref(null);
 const saveMessage = ref("");
 const showSaveMessage = ref(false);
+const showQuickReservation = ref(false);
 
 const formattedAddress = computed(() => {
   if (!customer.value) return "";
@@ -282,15 +281,22 @@ const navigateToNewReservation = () => {
         </div>
       </template>
 
-      <PopupBox
-        :is-open="false"
-        header-text="Quick Reservation"
-        :is-closable="true"
+      <VaModal
+        v-model="showQuickReservation"
+        title="Quick Reservation"
+        size="small"
       >
-        <template #popup-content>
-          <p>Quick reservation form would open here.</p>
-        </template>
-      </PopupBox>
+        <VaCard>
+          <VaCardContent>
+            <p>Quick reservation form would open here.</p>
+          </VaCardContent>
+          <template #actions>
+            <VaButton preset="secondary" @click="showQuickReservation = false"
+              >Close</VaButton
+            >
+          </template>
+        </VaCard>
+      </VaModal>
     </div>
   </div>
 </template>
