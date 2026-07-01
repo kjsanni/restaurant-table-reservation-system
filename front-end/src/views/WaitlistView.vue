@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted } from "vue";
-import {
-  VaModal,
-  VaCard,
-  VaCardContent,
-  VaAlert,
-  VaInput,
-  VaButton,
-} from "vuestic-ui";
+import { VaModal, VaCard, VaCardContent, VaAlert, VaInput, VaButton } from "vuestic-ui";
 import waitlistAPI from "@/services/waitlistAPI";
 import logger from "@/utils/logger";
 import tableAPI from "@/services/tableAPI";
@@ -162,6 +155,8 @@ const confirmDelete = async () => {
     await waitlistAPI.deleteEntry(deleteTargetId.value);
     await loadData();
   } catch (err) {
+    logger.error("Failed to delete waitlist entry", { error: err.message });
+    actionError.value = "Failed to delete entry. Please try again.";
   } finally {
     showDeleteModal.value = false;
     deleteTargetId.value = null;
