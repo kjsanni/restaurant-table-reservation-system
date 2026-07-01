@@ -10,6 +10,9 @@ class CustomerAPI {
   updateTags(customerId, tags) {
     return API.patch("/customers/" + customerId, { tags });
   }
+  updateCustomer(customerId, data) {
+    return API.patch("/customers/" + customerId, data);
+  }
   findOrCreate(customerData) {
     return API.post("/customers/find-or-create", customerData);
   }

@@ -40,6 +40,13 @@ const updateTagsHandler = async (req, res) => {
   return res.status(200).json({ success: true, customer });
 };
 
+const updateCustomerHandler = async (req, res) => {
+  const { customerId } = req.params;
+  const updates = req.body;
+  const customer = await customerService.updateCustomer(customerId, updates);
+  return res.status(200).json({ success: true, customer });
+};
+
 const findOrCreateHandler = async (req, res) => {
   const customer = await customerService.findOrCreateCustomer(req.body);
   return res.status(200).json({ success: true, customer });

@@ -1,4 +1,5 @@
 <script setup>
+import PageHeader from "@/components/PageHeader.vue"
 import TheSearch from "@/components/TheSearch.vue";
 </script>
 

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { VaSwitch } from "vuestic-ui"
 import PageHeader from "@/components/PageHeader.vue"
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
