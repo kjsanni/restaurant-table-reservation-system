@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",
+    "@typescript-eslint/parser": "^8.62.1",
     "@vitejs/plugin-vue": "^3.1.2",
     "@vue/eslint-config-prettier": "^7.0.0",
     "@vue/test-utils": "^2.1.0",
@@ -41,6 +42,7 @@
     "jsdom": "^20.0.1",
     "prettier": "^2.7.1",
     "rollup-plugin-visualizer": "^7.0.1",
+    "typescript": "^6.0.3",
     "vite": "^3.1.8",
     "vitest": "^0.24.3",
     "vuestic-ui": "^1.10.3"
