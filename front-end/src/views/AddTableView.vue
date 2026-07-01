@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import {
-  VaInput,
-  VaButton,
-  VaAlert,
-  VaCard,
-  VaCardTitle,
-  VaCardContent,
-} from 'vuestic-ui'
+import { VaAlert, VaBadge, VaButton, VaCard, VaCardContent, VaCardTitle, VaInput } from "vuestic-ui"
 
 import { getApiErrorMessage, getApiErrors } from '@/utils/apiError'
 import tableAPI from '@/services/tableAPI'
@@ -21,43 +14,20 @@ const validationErrors = ref<Record<string, string[]> | null>(null)
 const emptyFieldsError = ref<string | null>(null)
 const isSuccessful = ref(false)
 
-const staffList = ref([])
-const loadingStaff = ref(false)
-const selectedStaffIds = ref<number[]>([])
+const featureEnabled = ref(false)
 
 onMounted(async () => {
-  await loadWaitingStaff()
-})
-
-const loadWaitingStaff = async () => {
-  loadingStaff.value = true
   try {
     const res = await tableAPI.getWaitingStaff()
-    staffList.value = res.data.staff
-  } catch (err) {
-    console.error('Failed to load staff', err)
-  } finally {
-    loadingStaff.value = false
+    console.log('Table creation endpoint status check:', res)
+    featureEnabled.value = false
+  } catch {
+    featureEnabled.value = false
   }
-}
+})
 
 const submitTable = async () => {
-  emptyFieldsError.value = null
-  validationErrors.value = null
-  isSuccessful.value = false
-
-  if (!table.value.name || !table.value.capacity) {
-    emptyFieldsError.value = 'Please fill in all fields'
-    return
-  }
-
-  try {
-    // TODO: replace with actual table creation API
-    isSuccessful.value = true
-    table.value = { name: '', capacity: '' }
-  } catch (err) {
-    console.error('Failed to add table', err)
-  }
+  emptyFieldsError.value = 'Table creation is not yet available. Please use the Floor Plan to manage tables.'
 }
 </script>
 
@@ -70,12 +40,23 @@ const submitTable = async () => {
       <VaCard>
         <VaCardTitle class="card-title">Add Table</VaCardTitle>
         <VaCardContent>
-          <form @submit.prevent="submitTable" class="table-form">
+          <div class="disabled-notice">
+            <VaBadge color="warning" class="mb-4">Coming Soon</VaBadge>
+            <p class="disabled-text">
+              Table creation from this form is not yet available. Please use the
+              <RouterLink to="/floor-plan" class="inline-link">Floor Plan</RouterLink>
+              or
+              <RouterLink to="/tables/manage" class="inline-link">Table Management</RouterLink>
+              views for table operations.
+            </p>
+          </div>
+          <form @submit.prevent="submitTable" class="table-form" aria-disabled="true">
             <VaInput
               v-model="table.name"
               label="Table Name"
               :error-messages="validationErrors?.name"
               class="mb-4"
+              disabled
             />
             <VaInput
               v-model="table.capacity"
@@ -84,6 +65,7 @@ const submitTable = async () => {
               min="1"
               :error-messages="validationErrors?.capacity"
               class="mb-4"
+              disabled
             />
             <VaAlert
               v-if="emptyFieldsError"
@@ -92,14 +74,7 @@ const submitTable = async () => {
             >
               {{ emptyFieldsError }}
             </VaAlert>
-            <VaAlert
-              v-if="isSuccessful"
-              color="success"
-              class="mb-4"
-            >
-              Table added successfully!
-            </VaAlert>
-            <VaButton type="submit" preset="primary" block>Submit</VaButton>
+            <VaButton type="submit" preset="primary" block disabled>Submit</VaButton>
           </form>
         </VaCardContent>
       </VaCard>
@@ -129,7 +104,7 @@ const submitTable = async () => {
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
+  margin-top: 12px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
@@ -146,6 +121,28 @@ const submitTable = async () => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.disabled-notice {
+  margin-bottom: 20px;
+}
+
+.disabled-text {
+  font-family: 'Inter-Light';
+  font-size: 14px;
+  color: var(--secondary-gray);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.inline-link {
+  color: var(--primary-blue);
+  text-decoration: underline;
+  font-weight: normal;
+}
+
+.inline-link:hover {
+  color: #2563eb;
 }
 
 @media screen and (min-width: 1024px) {

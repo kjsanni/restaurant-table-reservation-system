@@ -42,4 +42,19 @@ router
   .patch(...writeRoute("manage_tables", tableController.unblockTableHandler))
   .all(httpMethodError);
 
+router
+  .route("/merge")
+  .post(...writeRoute("manage_tables", tableController.mergeTablesHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:tableId/unmerge")
+  .post(...writeRoute("manage_tables", tableController.unmergeTableHandler))
+  .all(httpMethodError);
+
+router
+  .route("/price")
+  .post(...protectedRoute("manage_tables", tableController.calculatePriceHandler))
+  .all(httpMethodError);
+
 module.exports = router;

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
+import { VaButton } from "vuestic-ui";
 
 const router = useRouter();
 

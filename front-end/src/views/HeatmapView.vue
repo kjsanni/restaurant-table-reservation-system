@@ -17,9 +17,7 @@ onMounted(() => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Reservation Heatmap</h1>
-    </div>
+    <PageHeader title="Reservation Heatmap" />
     <div class="content-wrapper">
       <Heatmap2D :mode="mode" :from="from" :to="to" />
     </div>
@@ -48,7 +46,7 @@ onMounted(() => {
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
+  margin-top: 12px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);

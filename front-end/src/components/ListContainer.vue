@@ -9,9 +9,9 @@ const props = defineProps({
 
 <template>
   <div v-if="props.collection">
-    <va-alert v-if="!props.filteredCollection.length" color="warning">
+    <VaAlert v-if="!props.filteredCollection.length" color="warning">
       Not Found
-    </va-alert>
+    </VaAlert>
     <div
       class="item-container"
       v-for="item in props.filteredCollection"

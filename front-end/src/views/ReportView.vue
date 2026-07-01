@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted } from "vue";
 import { VaButton, VaAlert } from "vuestic-ui";
 import reportAPI from "@/services/reportAPI";
@@ -59,9 +60,7 @@ onMounted(() => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Reports &amp; Export</h1>
-    </div>
+    <PageHeader title="Reports & Export" />
     <div class="content-wrapper">
       <div class="filters-card">
         <h2 class="card-title">Filters</h2>
@@ -187,8 +186,8 @@ onMounted(() => {
 }
 
 .content-wrapper {
-  margin-top: 50px;
-  margin-bottom: 50px;
+  margin-top: 12px;
+  margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
   padding: 0;

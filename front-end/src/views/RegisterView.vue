@@ -1,12 +1,6 @@
 <script setup lang="ts">
-import {
-  VaInput,
-  VaButton,
-  VaAlert,
-  VaCard,
-  VaCardTitle,
-  VaCardContent,
-} from 'vuestic-ui'
+import { VaAlert, VaButton, VaCard, VaCardContent, VaCardTitle, VaInput } from "vuestic-ui"
+import PageHeader from "@/components/PageHeader.vue"
 
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
@@ -73,12 +67,10 @@ const handleRegister = async () => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Register</h1>
-    </div>
-    <div class="form-wrapper">
+    <PageHeader title="Create Account" subtitle="Start managing your restaurant reservations" />
+    <div class="content-wrapper">
       <VaCard>
-        <VaCardTitle class="card-title">Register</VaCardTitle>
+        <VaCardTitle class="card-title">Create Account</VaCardTitle>
         <VaCardContent>
           <form @submit.prevent="handleRegister">
             <VaInput
@@ -143,39 +135,27 @@ const handleRegister = async () => {
 </template>
 
 <style scoped>
-.header {
+.main-wrapper {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray)
-    url("@/assets/images/add-table-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
+  background: var(--restaurant-background);
 }
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-.form-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: var(--page-margin-y);
+
+.content-wrapper {
+  margin-top: 12px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
-  align-items: center;
+  padding: 0;
 }
+
 .card-title {
   font-family: 'Inter-Bold';
   font-size: 24px;
   text-align: center;
 }
+
 .register-btn {
   margin-top: 16px;
 }
@@ -209,14 +189,21 @@ const handleRegister = async () => {
   color: #059669;
 }
 
-@media screen and (min-width: 1024px) {
-  .form-wrapper {
-    margin: 50px var(--x-spacing-desktop) var(--x-spacing-desktop) 50px;
+@media screen and (min-width: 640px) {
+  .content-wrapper {
+    display: flex;
+    justify-content: center;
   }
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
+
+  :deep(.va-card) {
+    max-width: 480px;
+    width: 100%;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .content-wrapper {
+    margin: 50px var(--x-spacing-desktop) var(--x-spacing-desktop) 50px;
   }
 }
 </style>

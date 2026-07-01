@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { VaSwitch } from "vuestic-ui"
+import PageHeader from "@/components/PageHeader.vue"
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { VaSwitch, VaCard, VaCardTitle, VaCardContent, VaButton, VaAlert } from 'vuestic-ui'
@@ -159,9 +161,7 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Admin Settings</h1>
-    </div>
+    <PageHeader title="Admin Settings" />
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -305,7 +305,7 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
+  margin-top: 12px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);

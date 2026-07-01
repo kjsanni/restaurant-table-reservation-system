@@ -25,6 +25,18 @@ class TableAPI {
   unassignStaff(tableId, userId) {
     return API.delete("/tables/" + tableId + "/staff/" + userId);
   }
+  mergeTables(tableIds) {
+    return API.post("/tables/merge", { tableIds });
+  }
+  unmergeTable(tableId) {
+    return API.post("/tables/" + tableId + "/unmerge");
+  }
+  calculatePrice(capacity) {
+    return API.post("/tables/price", { capacity });
+  }
+  updateTable(tableId, data) {
+    return API.patch("/tables/" + tableId, data);
+  }
 }
 
 export default new TableAPI();

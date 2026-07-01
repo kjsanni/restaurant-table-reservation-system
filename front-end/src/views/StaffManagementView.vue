@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { VaBadge, VaButton, VaCard, VaCardContent, VaInput, VaModal, VaSelect } from "vuestic-ui"
 import { useAuthStore } from '@/stores/auth'
 import tableAPI from '@/services/tableAPI'
 
+const authStore = useAuthStore()
 const staff = ref([])
 const loading = ref(true)
 const showAddDialog = ref(false)
@@ -20,8 +22,12 @@ const newStaff = ref({
   },
 })
 
-const roles = ['admin', 'manager', 'staff'] as const
-type Role = typeof roles[number]
+const roles = [
+  { label: 'Admin', value: 'admin' },
+  { label: 'Manager', value: 'manager' },
+  { label: 'Staff', value: 'staff' },
+] as const
+type Role = typeof roles[number]['value']
 
 const permissionKeys = [
   { key: 'view_reservations', label: 'View Reservations' },
@@ -32,6 +38,7 @@ const permissionKeys = [
 ]
 
 const selectedPermissions = ref<Record<string, boolean>>({})
+const featureAvailable = ref(false)
 
 onMounted(async () => {
   await loadStaff()
@@ -50,14 +57,10 @@ const loadStaff = async () => {
 }
 
 const addStaff = async () => {
-  // TODO: replace with actual staff creation API
   showAddDialog.value = false
-  await loadStaff()
 }
 
 const deleteStaffMember = async () => {
-  // TODO: replace with actual staff deletion API
-  await loadStaff()
 }
 </script>
 
@@ -68,7 +71,7 @@ const deleteStaffMember = async () => {
     </div>
     <div class="content-wrapper">
       <div class="action-bar">
-        <VaButton preset="primary" @click="showAddDialog = true">
+        <VaButton preset="primary" @click="showAddDialog = true" :disabled="!featureAvailable">
           Add Staff
         </VaButton>
       </div>
@@ -94,6 +97,7 @@ const deleteStaffMember = async () => {
               preset="danger"
               size="small"
               @click="deleteStaffMember(member.id)"
+              :disabled="!featureAvailable"
             >
               Remove
             </VaButton>
@@ -110,9 +114,7 @@ const deleteStaffMember = async () => {
                 <input
                   type="checkbox"
                   :checked="member.permissions?.[perm.key]"
-                  @change="
-                    selectedPermissions[perm.key] = ($event.target as HTMLInputElement).checked
-                  "
+                  disabled
                 />
                 <span>{{ perm.label }}</span>
               </label>
@@ -128,9 +130,13 @@ const deleteStaffMember = async () => {
       <VaModal v-model="showAddDialog" title="Add Staff Member" size="small">
         <VaCard>
           <VaCardContent>
+            <div class="feature-unavailable">
+              <VaBadge color="warning" class="mb-4">Coming Soon</VaBadge>
+              <p>Staff creation and removal will be available in a future update. Currently, staff are managed through the backend.</p>
+            </div>
             <div class="field">
               <label class="field-label">Username</label>
-              <VaInput v-model="newStaff.username" placeholder="Username" />
+              <VaInput v-model="newStaff.username" placeholder="Username" disabled />
             </div>
             <div class="field">
               <label class="field-label">Email</label>
@@ -138,6 +144,7 @@ const deleteStaffMember = async () => {
                 v-model="newStaff.email"
                 type="email"
                 placeholder="Email"
+                disabled
               />
             </div>
             <div class="field">
@@ -146,6 +153,7 @@ const deleteStaffMember = async () => {
                 v-model="newStaff.password"
                 type="password"
                 placeholder="Password"
+                disabled
               />
             </div>
             <div class="field">
@@ -154,14 +162,14 @@ const deleteStaffMember = async () => {
                 v-model="newStaff.role"
                 :options="roles"
                 placeholder="Select role"
+                disabled
               />
             </div>
           </VaCardContent>
           <template #actions>
             <VaButton preset="secondary" @click="showAddDialog = false">
-              Cancel
+              Close
             </VaButton>
-            <VaButton preset="primary" @click="addStaff">Add</VaButton>
           </template>
         </VaCard>
       </VaModal>
@@ -191,7 +199,7 @@ const deleteStaffMember = async () => {
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
+  margin-top: 12px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
@@ -323,14 +331,15 @@ const deleteStaffMember = async () => {
   font-size: 13px;
   font-family: 'Inter-Light';
   color: var(--primary-black);
-  cursor: pointer;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .perm-item input {
   accent-color: var(--primary-blue);
   width: 16px;
   height: 16px;
-  cursor: pointer;
+  cursor: not-allowed;
 }
 
 .empty-state {
@@ -351,6 +360,10 @@ const deleteStaffMember = async () => {
   font-family: 'Inter-Medium';
   font-size: 14px;
   color: var(--primary-black);
+}
+
+.feature-unavailable {
+  margin-bottom: 16px;
 }
 
 @media screen and (min-width: 640px) {

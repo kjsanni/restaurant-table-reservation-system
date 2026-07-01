@@ -15,18 +15,21 @@ const addPayment = async (reservationId, data) => {
   if (!data.amount || parseFloat(data.amount) <= 0) {
     throw { status: 400, message: "Invalid payment amount" };
   }
+  const discount = data.discount ? parseFloat(data.discount) : 0;
   const payment = await paymentDAO.create({
     ...data,
     reservationId,
     amount: parseFloat(data.amount),
+    discount,
   });
 
-  const totalPaid = await paymentDAO.getTotalPaid(reservationId);
+  const paidInfo = await paymentDAO.getTotalPaid(reservationId);
   const reservation = await reservationDAO.findReservationById(reservationId);
   let updatedReservation = null;
   if (reservation) {
     const expectedTotal = reservation.expectedTotal || 0;
-    const newStatus = classifyPaymentStatus(totalPaid, expectedTotal);
+    const finalPaid = paidInfo.finalTotal;
+    const newStatus = classifyPaymentStatus(finalPaid, expectedTotal);
     if (reservation.paymentStatus !== newStatus) {
       await reservationDAO.updateReservation(reservationId, {
         paymentStatus: newStatus,
@@ -36,7 +39,7 @@ const addPayment = async (reservationId, data) => {
     updatedReservation = reservation;
   }
 
-  return { payment, totalPaid, reservation: updatedReservation };
+  return { payment, ...paidInfo, reservation: updatedReservation };
 };
 
 const getTotalPaid = async (reservationId) => {
@@ -45,12 +48,13 @@ const getTotalPaid = async (reservationId) => {
 
 const removePayment = async (reservationId, id) => {
   await paymentDAO.remove(reservationId, id);
-  const totalPaid = await paymentDAO.getTotalPaid(reservationId);
+  const paidInfo = await paymentDAO.getTotalPaid(reservationId);
   const reservation = await reservationDAO.findReservationById(reservationId);
   let updatedReservation = null;
   if (reservation) {
     const expectedTotal = reservation.expectedTotal || 0;
-    const newStatus = classifyPaymentStatus(totalPaid, expectedTotal);
+    const finalPaid = paidInfo.finalTotal;
+    const newStatus = classifyPaymentStatus(finalPaid, expectedTotal);
     if (reservation.paymentStatus !== newStatus) {
       await reservationDAO.updateReservation(reservationId, {
         paymentStatus: newStatus,
@@ -59,7 +63,7 @@ const removePayment = async (reservationId, id) => {
     }
     updatedReservation = reservation;
   }
-  return { totalPaid, reservation: updatedReservation };
+  return { ...paidInfo, reservation: updatedReservation };
 };
 
 const getPaymentHistory = async (filters = {}) => {

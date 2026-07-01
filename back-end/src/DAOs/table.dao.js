@@ -140,6 +140,84 @@ const unassignStaffFromTable = async (tableId, userId) => {
   return { tableId, userId };
 };
 
+const getPriceForCapacity = (capacity) => {
+  const basePrice = parseFloat(process.env.TABLE_BASE_PRICE || 20);
+  const pricePerSeat = parseFloat(process.env.TABLE_PRICE_PER_ADDITIONAL_SEAT || 5);
+  if (capacity <= 6) {
+    return basePrice;
+  }
+  return basePrice + (capacity - 6) * pricePerSeat;
+};
+
+const mergeTables = async (tableIds) => {
+  if (!tableIds || tableIds.length < 2) {
+    throw { status: 400, message: "At least 2 tables required for merge!" };
+  }
+
+  const tables = await Table.findAll({
+    where: { id: tableIds },
+  });
+
+  if (tables.length !== tableIds.length) {
+    throw { status: 404, message: "One or more tables not found!" };
+  }
+
+  const hasBlocked = tables.some((t) => t.isBlocked);
+  if (hasBlocked) {
+    throw { status: 400, message: "Cannot merge blocked tables!" };
+  }
+
+  const hasOccupied = tables.some((t) => t.isOccupied);
+  if (hasOccupied) {
+    throw { status: 400, message: "Cannot merge occupied tables!" };
+  }
+
+  const hasParent = tables.some((t) => t.parentTableId);
+  if (hasParent) {
+    throw { status: 400, message: "Cannot merge tables that are already merged!" };
+  }
+
+  const mergedCapacity = tables.reduce((sum, t) => sum + (t.capacity || 0), 0);
+  const mergedPrice = tables.reduce((sum, t) => sum + (parseFloat(t.price) || 0), 0);
+  const primaryName = tables.map((t) => t.name).join(" + ");
+
+  const parentTable = await Table.create({
+    name: primaryName,
+    capacity: mergedCapacity,
+    price: mergedPrice,
+    isBlocked: false,
+    maintenanceNotes: `Merged from: ${tables.map((t) => t.name).join(", ")}`,
+  });
+
+  for (const table of tables) {
+    await table.update({ parentTableId: parentTable.id });
+  }
+
+  return {
+    parentTable,
+    mergedTables: tables.map((t) => t.id),
+  };
+};
+
+const unmergeTable = async (tableId) => {
+  const mergedTables = await Table.findAll({
+    where: { parentTableId: tableId },
+  });
+
+  if (mergedTables.length === 0) {
+    throw { status: 400, message: "Table is not a merged table!" };
+  }
+
+  for (const table of mergedTables) {
+    await table.update({ parentTableId: null });
+  }
+
+  const parentTable = await findTableById(tableId);
+  await parentTable.destroy();
+
+  return { unmergedTableIds: mergedTables.map((t) => t.id) };
+};
+
 module.exports = {
   findAllTables,
   createTable,

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted } from "vue";
 import auditAPI from "@/services/auditAPI";
 
@@ -28,9 +29,7 @@ const formatDate = (date) => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Audit Logs</h1>
-    </div>
+    <PageHeader title="Audit Logs" />
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -88,7 +87,7 @@ const formatDate = (date) => {
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
+  margin-top: 12px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);

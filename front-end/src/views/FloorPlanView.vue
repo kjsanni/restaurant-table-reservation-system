@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import PageHeader from "@/components/PageHeader.vue";
 import { ref, computed, onMounted } from "vue";
 import { VaModal, VaButton } from "vuestic-ui";
+import LoadingSpinner from "@/components/LoadingSpinner.vue";
 import tableAPI from "@/services/tableAPI";
 import reservationAPI from "@/services/reservationAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
@@ -198,13 +200,15 @@ onMounted(loadData);
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Floor Plan</h1>
-    </div>
+    <PageHeader title="Floor Plan" />
     <div class="content-wrapper">
+      <div v-if="loadError" class="error-banner" role="alert">
+        <span class="error-icon">⚠️</span>
+        <span>{{ loadError }}</span>
+        <button class="error-retry" @click="loadData">Retry</button>
+      </div>
       <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading floor plan...</p>
+        <LoadingSpinner text="Loading floor plan..." />
       </div>
       <div v-else class="floor-layout">
         <aside class="sidebar-panel">
@@ -324,7 +328,7 @@ onMounted(loadData);
         Touch devices: tap and hold a reservation, then tap a free table.
       </p>
 
-      <va-modal v-model="assignPopupOpen" title="Assign to Table" size="small">
+      <VaModal v-model="assignPopupOpen" title="Assign to Table" size="small">
         <template #content>
           <div class="assign-content">
             <p class="assign-text">
@@ -337,29 +341,29 @@ onMounted(loadData);
               >?
             </p>
             <div class="popup-actions">
-              <va-button preset="secondary" @click="closeAssign"
-                >Cancel</va-button
+              <VaButton preset="secondary" @click="closeAssign"
+                >Cancel</VaButton
               >
-              <va-button preset="primary" @click="confirmAssign"
-                >Assign</va-button
+              <VaButton preset="primary" @click="confirmAssign"
+                >Assign</VaButton
               >
             </div>
           </div>
         </template>
-      </va-modal>
+      </VaModal>
 
-      <va-modal v-model="errorPopupOpen" title="Error" size="small">
+      <VaModal v-model="errorPopupOpen" title="Error" size="small">
         <template #content>
           <div class="error-content">
             <p>{{ errorMessage }}</p>
             <div class="confirm-actions">
-              <va-button preset="secondary" @click="errorPopupOpen = false"
-                >OK</va-button
+              <VaButton preset="secondary" @click="errorPopupOpen = false"
+                >OK</VaButton
               >
             </div>
           </div>
         </template>
-      </va-modal>
+      </VaModal>
     </div>
   </div>
 </template>
@@ -371,21 +375,20 @@ onMounted(loadData);
   justify-content: flex-end;
   width: 100%;
   height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
+  background: var(--restaurant-primary);
+  position: relative;
 }
+
 .header h1 {
   margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
+  margin-bottom: 12px;
+  font-size: 28px;
+  color: white;
+  font-family: "Inter-Bold";
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
+  margin-top: 12px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
@@ -397,17 +400,17 @@ onMounted(loadData);
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 100px 20px;
-  gap: 16px;
-  color: var(--secondary-gray);
+  padding: 80px 20px;
+  gap: 12px;
+  color: var(--restaurant-secondary);
   font-family: "Inter-Light";
 }
 
 .spinner {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
+  border-top-color: var(--restaurant-accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -420,18 +423,18 @@ onMounted(loadData);
 
 .floor-layout {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   align-items: stretch;
 }
 
 .sidebar-panel {
-  width: 260px;
-  min-width: 240px;
-  background: var(--primary-white);
-  border: 1px solid #f0f0f0;
+  width: 240px;
+  min-width: 220px;
+  background: white;
+  border: 1px solid var(--restaurant-border);
   border-radius: var(--card-radius);
   padding: var(--card-padding);
-  max-height: calc(100vh - 260px);
+  max-height: calc(100vh - 240px);
   overflow-y: auto;
   box-shadow: var(--card-shadow);
 }
@@ -439,46 +442,46 @@ onMounted(loadData);
 .plan-panel {
   flex: 1;
   min-width: 0;
-  background: var(--primary-white);
-  border: 1px solid #f0f0f0;
-  border-radius: 14px;
-  padding: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  background: white;
+  border: 1px solid var(--restaurant-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  box-shadow: var(--card-shadow);
 }
 
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .panel-header h2 {
   font-family: "Inter-Bold";
-  font-size: 15px;
-  color: var(--primary-black);
+  font-size: 14px;
+  color: var(--restaurant-primary);
   margin: 0;
 }
 
 .layout-selector {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
 .layout-label {
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-secondary);
 }
 
 .layout-select {
   flex: 1;
-  padding: 6px 10px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--restaurant-border);
+  border-radius: 6px;
   font-family: "Inter-Light";
   font-size: 12px;
   background: white;
@@ -487,57 +490,54 @@ onMounted(loadData);
 
 .badge {
   font-family: "Inter-Medium";
-  font-size: 12px;
-  background: var(--primary-blue);
+  font-size: 11px;
+  background: var(--restaurant-primary);
   color: white;
-  padding: 2px 10px;
+  padding: 2px 8px;
   border-radius: 999px;
 }
 
 .pending-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .pending-card {
-  background: #fafafa;
-  border: 1px solid #f0f0f0;
-  border-radius: 12px;
-  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid var(--restaurant-border);
+  border-radius: 8px;
+  padding: 10px;
   cursor: grab;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease,
-    transform 0.2s ease;
+  transition: all 0.2s ease;
   user-select: none;
 }
 
 .pending-card:hover {
   background: white;
-  border-color: var(--primary-blue);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
-  transform: translateY(-1px);
+  border-color: var(--restaurant-accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .pending-card:active {
   cursor: grabbing;
-  transform: translateY(0);
 }
 
 .pending-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 .pending-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
-  color: var(--primary-blue);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--restaurant-accent);
+  color: white;
   font-family: "Inter-Bold";
-  font-size: 14px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -553,8 +553,8 @@ onMounted(loadData);
 
 .pending-name {
   font-family: "Inter-Medium";
-  font-size: 13px;
-  color: var(--primary-black);
+  font-size: 12px;
+  color: var(--restaurant-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -562,15 +562,15 @@ onMounted(loadData);
 
 .pending-meta {
   font-family: "Inter-Light";
-  font-size: 12px;
-  color: var(--secondary-gray);
+  font-size: 11px;
+  color: var(--restaurant-secondary);
 }
 
 .pending-notes {
   font-family: "Inter-Light";
-  font-size: 12px;
-  color: #f59e0b;
-  margin-bottom: 6px;
+  font-size: 11px;
+  color: var(--restaurant-warning);
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -578,109 +578,103 @@ onMounted(loadData);
 
 .drag-hint {
   font-family: "Inter-Light";
-  font-size: 11px;
-  color: var(--secondary-gray);
-  opacity: 0.7;
+  font-size: 10px;
+  color: var(--restaurant-secondary);
+  opacity: 0.6;
 }
 
 .empty-state {
   text-align: center;
-  padding: 24px 0;
-  color: var(--secondary-gray);
+  padding: 20px 0;
+  color: var(--restaurant-secondary);
   font-family: "Inter-Light";
-  font-size: 13px;
+  font-size: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .empty-icon {
-  font-size: 22px;
-  opacity: 0.6;
+  font-size: 20px;
+  opacity: 0.5;
 }
 
 .legend-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .legend-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 4px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-family: "Inter-Medium";
-  font-size: 12px;
-  background: #f3f4f6;
-  color: var(--primary-black);
+  font-size: 11px;
+  background: #f1f5f9;
+  color: var(--restaurant-primary);
 }
 
 .legend-pill .dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  display: inline-block;
 }
 
 .legend-pill.free .dot {
-  background-color: #22c55e;
+  background-color: var(--restaurant-success);
 }
 
 .legend-pill.occupied .dot {
-  background-color: #ef4444;
+  background-color: var(--restaurant-danger);
 }
 
 .legend-pill.blocked .dot {
-  background-color: #6c757d;
+  background-color: var(--restaurant-secondary);
 }
 
 .plan-grid {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .table-block {
   background: white;
-  border: 1px solid #f0f0f0;
-  border-radius: 12px;
-  padding: 14px;
+  border: 1px solid var(--restaurant-border);
+  border-radius: 8px;
+  padding: 12px;
   transition: all 0.2s ease;
-  min-height: 110px;
+  min-height: 100px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .table-block:hover {
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
 }
 
 .table-block.free {
-  border-color: #22c55e;
-  background: linear-gradient(180deg, #f6fef9 0%, #ffffff 100%);
+  border-left: 3px solid var(--restaurant-success);
 }
 
 .table-block.free.drag-over {
-  border-color: #16a34a;
-  background: #dcfce7;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35);
-  transform: translateY(-1px);
+  border-color: var(--restaurant-success);
+  background: #f0fdf4;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.3);
 }
 
 .table-block.occupied {
-  border-color: #ef4444;
-  background: linear-gradient(180deg, #fff5f5 0%, #ffffff 100%);
-  opacity: 0.9;
+  border-left: 3px solid var(--restaurant-danger);
+  opacity: 0.85;
 }
 
 .table-block.blocked {
-  border-color: #6c757d;
-  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  border-left: 3px solid var(--restaurant-secondary);
   opacity: 0.7;
 }
 
@@ -693,32 +687,31 @@ onMounted(loadData);
 .table-id-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .table-id {
   font-family: "Inter-Bold";
-  font-size: 15px;
-  color: var(--primary-black);
+  font-size: 14px;
+  color: var(--restaurant-primary);
 }
 
 .status-dot {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
 }
 
 .capacity {
   font-family: "Inter-Light";
-  font-size: 12px;
-  color: var(--secondary-gray);
+  font-size: 11px;
+  color: var(--restaurant-secondary);
 }
 
 .table-reservation {
   margin-top: auto;
-  padding-top: 8px;
-  border-top: 1px solid #f0f0f0;
+  padding-top: 6px;
+  border-top: 1px solid var(--restaurant-border);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -726,86 +719,70 @@ onMounted(loadData);
 
 .res-name {
   font-family: "Inter-Medium";
-  font-size: 13px;
-  color: #ef4444;
+  font-size: 12px;
+  color: var(--restaurant-danger);
 }
 
 .res-time {
   font-family: "Inter-Light";
-  font-size: 12px;
-  color: var(--secondary-gray);
+  font-size: 11px;
+  color: var(--restaurant-secondary);
 }
 
 .table-empty {
   margin-top: auto;
-  padding-top: 8px;
-  border-top: 1px dashed #f0f0f0;
+  padding-top: 6px;
+  border-top: 1px dashed var(--restaurant-border);
   text-align: center;
   font-family: "Inter-Medium";
-  font-size: 12px;
-  color: var(--secondary-gray);
+  font-size: 11px;
+  color: var(--restaurant-secondary);
 }
 
 .hint-bar {
   text-align: center;
   font-family: "Inter-Light";
-  font-size: 13px;
-  color: var(--secondary-gray);
-  margin-top: 18px;
+  font-size: 12px;
+  color: var(--restaurant-secondary);
+  margin-top: 16px;
 }
 
 .assign-content {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .assign-text {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
 .popup-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding-top: 12px;
-  border-top: 1px solid var(--lighter-gray);
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--restaurant-border);
 }
 
-.loading {
-  text-align: center;
-  padding: 60px;
-  font-family: "Inter-Light";
+.error-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.btn-outline {
-  background-color: transparent;
-  border: 1px solid var(--lighter-gray);
-  color: var(--primary-black);
-  border-radius: 8px;
-  padding: 8px 16px;
+.error-content p {
   font-family: "Inter-Medium";
-  font-size: 13px;
+  font-size: 14px;
+  color: var(--restaurant-primary);
+  margin: 0;
 }
 
-.btn-outline:hover {
-  background-color: #f3f4f6;
-}
-
-.btn-primary {
-  background-color: var(--primary-blue);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.btn-primary:hover {
-  background-color: #2563eb;
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 @media screen and (max-width: 860px) {
@@ -816,38 +793,55 @@ onMounted(loadData);
   .sidebar-panel {
     width: 100%;
     min-width: 100%;
-    max-height: 260px;
+    max-height: 240px;
   }
 }
 
 @media screen and (min-width: 861px) {
   .header h1 {
     margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
+    font-size: 36px;
+    margin-bottom: 15px;
   }
   .content-wrapper {
-    margin-left: 200px;
-    margin-right: 200px;
+    margin-left: 40px;
+    margin-right: 40px;
   }
 }
 
-.error-content {
+.error-banner {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.error-content p {
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--card-radius);
+  margin-bottom: 20px;
   font-family: "Inter-Medium";
-  font-size: 15px;
-  color: var(--primary-black);
-  margin: 0;
+  font-size: 14px;
+  color: #991b1b;
 }
 
-.confirm-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+.error-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.error-retry {
+  margin-left: auto;
+  padding: 6px 14px;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  background: white;
+  color: #dc2626;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.error-retry:hover {
+  background: #fef2f2;
 }
 </style>

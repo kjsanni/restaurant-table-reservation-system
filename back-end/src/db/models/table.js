@@ -7,6 +7,14 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: "cascade",
         hooks: true,
       });
+      Table.belongsTo(models.table, {
+        as: "parentTable",
+        foreignKey: "parentTableId",
+      });
+      Table.hasMany(models.table, {
+        as: "mergedTables",
+        foreignKey: "parentTableId",
+      });
       Table.belongsToMany(models.user, {
         through: "table_staff",
         foreignKey: "tableId",
@@ -70,6 +78,17 @@ module.exports = (sequelize, DataTypes) => {
       maintenanceNotes: {
         type: DataTypes.TEXT,
         allowNull: true,
+      },
+      price: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0,
+        validate: {
+          min: {
+            args: [0],
+            msg: "Price cannot be negative!",
+          },
+        },
       },
     },
     {

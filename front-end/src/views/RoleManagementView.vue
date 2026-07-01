@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted } from "vue";
 import { VaButton, VaModal, VaCard, VaCardContent, VaInput } from "vuestic-ui";
 import roleAPI from "@/services/roleAPI";
@@ -110,9 +111,7 @@ const confirmAction = async () => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Role Management</h1>
-    </div>
+    <PageHeader title="Roles Management" />
     <div class="content-wrapper">
       <div class="action-bar">
         <VaButton preset="primary" @click="openCreate">Create Role</VaButton>
@@ -255,7 +254,7 @@ const confirmAction = async () => {
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
+  margin-top: 12px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);

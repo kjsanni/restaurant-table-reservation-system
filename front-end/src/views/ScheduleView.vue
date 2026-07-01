@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted } from "vue";
-import { VaSwitch } from "vuestic-ui";
+import { VaSwitch, VaButton, VaCard, VaCardContent, VaModal } from "vuestic-ui";
 import scheduleAPI from "@/services/scheduleAPI";
 
 const schedules = ref([]);
@@ -114,9 +115,7 @@ const exportPDF = async () => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Restaurant Schedule</h1>
-    </div>
+    <PageHeader title="Schedule" />
     <div class="content-wrapper">
       <div class="action-bar">
         <div class="export-bar">
@@ -207,37 +206,39 @@ const exportPDF = async () => {
         </div>
       </div>
 
-      <div v-if="showHolidayDialog" class="modal-overlay">
-        <div class="modal">
-          <h3 class="modal-title">Add Holiday</h3>
-          <div class="field">
-            <label class="field-label">Date</label>
-            <input type="date" v-model="newHoliday.date" class="field-input" />
-          </div>
-          <div class="field">
-            <label class="field-label">Description</label>
-            <input
-              type="text"
-              v-model="newHoliday.description"
-              placeholder="Holiday description"
-              class="field-input"
-            />
-          </div>
-          <div class="field">
-            <label class="field-label">Closed</label>
-            <VaSwitch v-model="newHoliday.isClosed" />
-          </div>
-          <div class="modal-actions">
-            <button
-              class="btn btn-secondary"
-              @click="showHolidayDialog = false"
+      <VaModal v-model="showHolidayDialog" title="Add Holiday" size="small">
+        <VaCard>
+          <VaCardContent>
+            <div class="field">
+              <label class="field-label">Date</label>
+              <input
+                type="date"
+                v-model="newHoliday.date"
+                class="field-input"
+              />
+            </div>
+            <div class="field">
+              <label class="field-label">Description</label>
+              <input
+                type="text"
+                v-model="newHoliday.description"
+                placeholder="Holiday description"
+                class="field-input"
+              />
+            </div>
+            <div class="field">
+              <label class="field-label">Closed</label>
+              <VaSwitch v-model="newHoliday.isClosed" />
+            </div>
+          </VaCardContent>
+          <template #actions>
+            <VaButton preset="secondary" @click="showHolidayDialog = false"
+              >Cancel</VaButton
             >
-              Cancel
-            </button>
-            <button class="btn btn-primary" @click="createHoliday">Save</button>
-          </div>
-        </div>
-      </div>
+            <VaButton preset="primary" @click="createHoliday">Save</VaButton>
+          </template>
+        </VaCard>
+      </VaModal>
     </div>
   </div>
 </template>
@@ -263,7 +264,7 @@ const exportPDF = async () => {
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
+  margin-top: 12px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
@@ -466,117 +467,6 @@ const exportPDF = async () => {
   color: var(--secondary-gray);
   font-family: "Inter-Light";
   font-size: 14px;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  transition: all 0.15s;
-}
-
-.btn-primary {
-  background-color: var(--primary-blue);
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #2563eb;
-}
-
-.btn-secondary {
-  background-color: #f3f4f6;
-  color: var(--primary-black);
-}
-
-.btn-secondary:hover {
-  background-color: #e5e7eb;
-}
-
-.btn-danger {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-.btn-danger:hover {
-  background-color: #fee2e2;
-}
-
-.btn-sm {
-  padding: 6px 12px;
-  font-size: 12px;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal {
-  background-color: white;
-  padding: 24px;
-  border-radius: 14px;
-  width: 90%;
-  max-width: 420px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-}
-
-.modal-title {
-  font-family: "Inter-Bold";
-  font-size: 18px;
-  color: var(--primary-black);
-  margin: 0 0 20px 0;
-}
-
-.field {
-  margin-bottom: 16px;
-}
-
-.field-label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 600;
-  font-family: "Inter-Medium";
-  font-size: 14px;
-  color: var(--primary-black);
-}
-
-.field-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
-  color: var(--primary-black);
-  box-sizing: border-box;
-}
-
-.field-input:focus {
-  outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
 }
 
 @media screen and (min-width: 1024px) {

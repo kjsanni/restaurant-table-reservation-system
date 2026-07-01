@@ -20,4 +20,7 @@ module.exports = {
       },
     ],
   },
+  globals: {
+    defineOptions: "readonly",
+  },
 };

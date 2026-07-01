@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from "@/components/PageHeader.vue";
 import { ref, computed, onMounted, watch } from "vue";
 import reservationAPI from "@/services/reservationAPI";
 
@@ -140,6 +141,7 @@ const getStackedY = (item, methodKey, mIndex) => {
 
 <template>
   <div class="main-wrapper">
+    <PageHeader title="Revenue Report" />
     <div class="header">
       <div class="header-content">
         <h1 class="page-title">Revenue Report</h1>
@@ -342,8 +344,8 @@ const getStackedY = (item, methodKey, mIndex) => {
 }
 
 .content-wrapper {
-  margin-top: 30px;
-  margin-bottom: 50px;
+  margin-top: 12px;
+  margin-bottom: var(--page-margin-y);
   margin-left: var(--x-spacing-mobile);
   margin-right: var(--x-spacing-mobile);
 }

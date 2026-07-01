@@ -85,10 +85,9 @@ const cancelReservation = async (item) => {
       emit("onCanceledReservation");
     } catch {
       // Cancellation failed
-    } finally {
-      closeConfirm();
-      return;
     }
+    closeConfirm();
+    return;
   }
   openConfirm(item, "Cancel this reservation?", "Cancel Reservation");
 };
@@ -100,10 +99,9 @@ const deleteReservation = async (item) => {
       emit("onCanceledReservation");
     } catch {
       // Deletion failed
-    } finally {
-      closeConfirm();
-      return;
     }
+    closeConfirm();
+    return;
   }
   openConfirm(item, "Permanently delete this reservation?", "Delete");
 };

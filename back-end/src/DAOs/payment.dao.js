@@ -15,11 +15,16 @@ const create = async (data) => {
 
 const getTotalPaid = async (reservationId) => {
   const result = await Payment.findOne({
-    attributes: [[fn("SUM", col("amount")), "total"]],
+    attributes: [
+      [fn("SUM", col("amount")), "total"],
+      [fn("SUM", col("discount")), "discountTotal"],
+    ],
     where: { reservationId },
     raw: true,
   });
-  return result?.total ? parseFloat(result.total) : 0;
+  const total = result?.total ? parseFloat(result.total) : 0;
+  const discountTotal = result?.discountTotal ? parseFloat(result.discountTotal) : 0;
+  return { total, discountTotal, finalTotal: total - discountTotal };
 };
 
 const remove = async (reservationId, id) => {

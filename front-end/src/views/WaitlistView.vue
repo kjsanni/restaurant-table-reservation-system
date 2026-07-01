@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted } from "vue";
 import {
   VaModal,
@@ -49,8 +50,11 @@ const loadData = async () => {
     ]);
     entries.value = entriesRes.data.entries;
     stats.value = statsRes.data.stats;
-  } catch {
-    // Load failed, data will remain empty
+  } catch (err) {
+    loadError.value =
+      err.response?.data?.message ||
+      err.message ||
+      "Failed to load waitlist. Please try again.";
   } finally {
     loading.value = false;
   }
@@ -180,13 +184,10 @@ onMounted(() => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Waitlist / Queue Management</h1>
-    </div>
+    <PageHeader title="Waitlist & Queue" />
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading waitlist...</p>
+        <LoadingSpinner text="Loading waitlist..." />
       </div>
       <template v-else>
         <div class="stats-row">
@@ -220,6 +221,11 @@ onMounted(() => {
           </div>
         </div>
 
+        <div v-if="loadError" class="error-banner" role="alert">
+          <span class="error-icon">⚠️</span>
+          <span>{{ loadError }}</span>
+          <button class="error-retry" @click="loadData">Retry</button>
+        </div>
         <div class="action-bar">
           <button class="btn btn-primary" @click="openAdd">
             + Add to Waitlist
@@ -454,7 +460,7 @@ onMounted(() => {
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
+  margin-top: 16px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
@@ -874,13 +880,40 @@ textarea.field-input {
   font-size: 12px;
 }
 
-@media screen and (min-width: 640px) {
-  .entries-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .stats-row {
-    grid-template-columns: repeat(4, 1fr);
-  }
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--card-radius);
+  margin-bottom: 16px;
+  font-family: "Inter-Medium";
+  font-size: 14px;
+  color: #991b1b;
+}
+
+.error-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.error-retry {
+  margin-left: auto;
+  padding: 6px 14px;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  background: white;
+  color: #dc2626;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.error-retry:hover {
+  background: #fef2f2;
 }
 
 @media screen and (min-width: 1024px) {

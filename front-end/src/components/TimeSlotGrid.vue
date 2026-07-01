@@ -1,35 +1,24 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import { VaButton, VaCard, VaChip } from 'vuestic-ui'
+<script setup>
+import { computed } from "vue";
+import { VaButton, VaCard, VaChip } from "vuestic-ui";
 
-export interface TimeSlot {
-  time: string
-  available: boolean
-  reserved: boolean
-  selected?: boolean
-}
-
-interface Props {
-  slots: TimeSlot[]
-  modelValue?: TimeSlot
-}
-
-const props = defineProps<Props>()
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: TimeSlot): void
-}>()
+const props = defineProps({
+  slots: Array,
+  modelValue: Object,
+});
+const emit = defineEmits(["update:modelValue"]);
 
 const selectedSlot = computed({
   get: () => props.modelValue,
   set: (val) => {
-    if (val) emit('update:modelValue', val)
+    if (val) emit("update:modelValue", val);
   },
-})
+});
 
-const selectSlot = (slot: TimeSlot) => {
-  if (!slot.available) return
-  selectedSlot.value = slot
-}
+const selectSlot = (slot) => {
+  if (!slot.available) return;
+  selectedSlot.value = slot;
+};
 </script>
 
 <template>
@@ -95,12 +84,12 @@ const selectSlot = (slot: TimeSlot) => {
 }
 
 .slot-time {
-  font-family: 'Inter-Medium';
+  font-family: "Inter-Medium";
   font-size: 15px;
 }
 
 .slot-status {
   font-size: 10px;
-  font-family: 'Inter-Medium';
+  font-family: "Inter-Medium";
 }
 </style>

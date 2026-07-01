@@ -3,6 +3,7 @@ import ReservationInfo from "@/components/ReservationInfo.vue";
 import ListContainer from "@/components/ListContainer.vue";
 import SearchIcon from "~icons/ant-design/search-outlined";
 import ClearIcon from "~icons/fluent/dismiss-16-filled";
+import { VaModal, VaButton } from "vuestic-ui";
 
 import reservationAPI from "@/services/reservationAPI";
 import logger from "@/utils/logger";
@@ -118,187 +119,134 @@ const confirmDelete = async () => {
 </script>
 
 <template>
-  <div class="main-wrapper">
-    <div class="header">
-      <div class="header-content">
-        <h1 class="page-title">Search Reservations</h1>
-        <div class="search-bar">
-          <span class="search-icon"><SearchIcon /></span>
-          <input
-            type="search"
-            class="search-input"
-            placeholder="Search by name, phone, email, date..."
-            v-model="searchVal"
-          />
-          <button
-            v-if="searchVal"
-            type="button"
-            class="clear-btn"
-            @click="clearSearch"
-          >
-            <ClearIcon />
-          </button>
-        </div>
-        <label class="notes-toggle">
-          <input type="checkbox" v-model="searchNotes" />
-          <span>Include notes in search</span>
-        </label>
+  <div class="search-container">
+    <div class="search-controls">
+      <div class="search-bar">
+        <span class="search-icon"><SearchIcon /></span>
+        <input
+          type="search"
+          class="search-input"
+          placeholder="Search by name, phone, email, date..."
+          v-model="searchVal"
+          aria-label="Search reservations"
+        />
+        <button
+          v-if="searchVal"
+          type="button"
+          class="clear-btn"
+          @click="clearSearch"
+          aria-label="Clear search"
+        >
+          <ClearIcon />
+        </button>
       </div>
+      <label class="notes-toggle">
+        <input type="checkbox" v-model="searchNotes" />
+        <span>Include notes in search</span>
+      </label>
     </div>
 
-    <div class="content-wrapper">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading reservations...</p>
+    <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading reservations...</p>
+    </div>
+
+    <div v-else class="results-container">
+      <div class="results-meta">
+        <span class="results-count">
+          {{ filteredReservations.length }}
+          {{ filteredReservations.length === 1 ? "result" : "results" }}
+        </span>
       </div>
 
-      <div v-else class="results-container">
-        <div class="results-meta">
-          <span class="results-count">
-            {{ filteredReservations.length }}
-            {{ filteredReservations.length === 1 ? "result" : "results" }}
-          </span>
-        </div>
-
-        <ListContainer
-          class="results-wrapper"
-          :collection="reservations"
-          :filteredCollection="filteredReservations"
-        >
-          <template #card="slotProps">
-            <div class="search-result-card">
-              <ReservationInfo
-                :reservation="slotProps.item"
-                :can-delete="canEditReservations"
-                :search-query="searchVal"
-                @on-delete="openDeleteModal"
-              />
-              <div
-                class="card-actions"
-                v-if="
-                  slotProps.item.resStatus === 'pending' && canEditReservations
-                "
+      <ListContainer
+        class="results-wrapper"
+        :collection="reservations"
+        :filteredCollection="filteredReservations"
+      >
+        <template #card="slotProps">
+          <div class="search-result-card">
+            <ReservationInfo
+              :reservation="slotProps.item"
+              :can-delete="canEditReservations"
+              :search-query="searchVal"
+              @on-delete="openDeleteModal"
+            />
+            <div
+              class="card-actions"
+              v-if="
+                slotProps.item.resStatus === 'pending' && canEditReservations
+              "
+            >
+              <button
+                class="action-btn no-show-btn"
+                @click="openNoShowModal(slotProps.item.id)"
               >
-                <button
-                  class="action-btn no-show-btn"
-                  @click="openNoShowModal(slotProps.item.id)"
-                >
-                  Mark No-Show
-                </button>
-              </div>
+                Mark No-Show
+              </button>
             </div>
-          </template>
-        </ListContainer>
+          </div>
+        </template>
+      </ListContainer>
 
-        <div
-          v-if="!loading && filteredReservations.length === 0"
-          class="empty-state"
-        >
-          <span class="empty-icon">🔍</span>
-          <p class="empty-text">
-            {{
-              searchVal
-                ? "No matching reservations found"
-                : "No reservations available"
-            }}
-          </p>
-        </div>
+      <div
+        v-if="!loading && filteredReservations.length === 0"
+        class="empty-state"
+      >
+        <span class="empty-icon">🔍</span>
+        <p class="empty-text">
+          {{
+            searchVal
+              ? "No matching reservations found"
+              : "No reservations available"
+          }}
+        </p>
       </div>
     </div>
 
-    <va-modal v-model="showDeleteModal" title="Confirm Delete" size="small">
+    <VaModal v-model="showDeleteModal" title="Confirm Delete" size="small">
       <template #content>
         <div class="confirm-content">
           <p>Are you sure you want to delete this reservation?</p>
           <div class="confirm-actions">
-            <va-button preset="secondary" @click="closeDeleteModal"
-              >Cancel</va-button
+            <VaButton preset="secondary" @click="closeDeleteModal"
+              >Cancel</VaButton
             >
-            <va-button preset="danger" @click="confirmDelete">Delete</va-button>
+            <VaButton preset="danger" @click="confirmDelete">Delete</VaButton>
           </div>
         </div>
       </template>
-    </va-modal>
+    </VaModal>
 
-    <va-modal v-model="showNoShowModal" title="Confirm No-Show" size="small">
+    <VaModal v-model="showNoShowModal" title="Confirm No-Show" size="small">
       <template #content>
         <div class="confirm-content">
           <p>Mark this reservation as a no-show?</p>
           <div class="confirm-actions">
-            <va-button preset="secondary" @click="closeNoShowModal"
-              >Cancel</va-button
+            <VaButton preset="secondary" @click="closeNoShowModal"
+              >Cancel</VaButton
             >
-            <va-button preset="warning" @click="confirmNoShow"
-              >Mark No-Show</va-button
+            <VaButton preset="warning" @click="confirmNoShow"
+              >Mark No-Show</VaButton
             >
           </div>
         </div>
       </template>
-    </va-modal>
+    </VaModal>
   </div>
 </template>
 
 <style scoped>
-.header {
+.search-container {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  position: relative;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/search-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
+  gap: 20px;
 }
 
-.header-content {
+.search-controls {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-}
-
-.page-title {
-  margin: 0;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-
-.content-wrapper {
-  margin-top: var(--page-margin-y);
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
-  padding: 0;
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 100px 20px;
-  gap: 16px;
-  color: var(--secondary-gray);
-  font-family: "Inter-Light";
-}
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  gap: 12px;
 }
 
 .search-bar {
@@ -372,7 +320,7 @@ const confirmDelete = async () => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 4px;
   font-family: "Inter-Medium";
   font-size: 13px;
   color: var(--secondary-gray);
@@ -431,23 +379,29 @@ const confirmDelete = async () => {
   font-size: 15px;
 }
 
-.test {
-  transition: opacity 0.5s ease, filter 0.5s ease;
-  filter: blur(var(--blur-val));
-  opacity: var(--opacity-val);
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 20px;
+  gap: 16px;
+  color: var(--secondary-gray);
+  font-family: "Inter-Light";
 }
 
-@media screen and (min-width: 1024px) {
-  .header-content {
-    margin-left: var(--x-spacing-desktop);
-    margin-bottom: 20px;
-  }
-  .page-title {
-    font-size: 45px;
-  }
-  .content-wrapper {
-    margin-left: var(--x-spacing-desktop);
-    margin-right: var(--x-spacing-desktop);
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--lighter-gray);
+  border-top-color: var(--primary-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -468,33 +422,6 @@ const confirmDelete = async () => {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-}
-
-.btn-cancel {
-  background-color: #e5e7eb;
-  color: var(--primary-black);
-}
-
-.btn-cancel:hover {
-  background-color: #d1d5db;
-}
-
-.btn-danger {
-  background-color: var(--primary-red);
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #dc2626;
-}
-
-.btn-warning {
-  background-color: #f59e0b;
-  color: white;
-}
-
-.btn-warning:hover {
-  background-color: #d97706;
 }
 
 .search-result-card {
@@ -527,5 +454,12 @@ const confirmDelete = async () => {
 
 .no-show-btn:hover {
   background-color: #d97706;
+}
+
+@media screen and (min-width: 1024px) {
+  .content-wrapper {
+    margin-left: var(--x-spacing-desktop);
+    margin-right: var(--x-spacing-desktop);
+  }
 }
 </style>

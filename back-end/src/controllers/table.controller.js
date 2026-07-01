@@ -112,6 +112,38 @@ const unassignStaffHandler = async (req, res) => {
   });
 };
 
+const mergeTablesHandler = async (req, res) => {
+  const { tableIds } = req.body;
+  const result = await tableService.mergeTables(tableDAO, tableIds);
+
+  return res.status(200).json({
+    success: true,
+    message: "Tables merged successfully!",
+    item: result,
+  });
+};
+
+const unmergeTableHandler = async (req, res) => {
+  const { tableId } = req.params;
+  const result = await tableService.unmergeTable(tableDAO, tableId);
+
+  return res.status(200).json({
+    success: true,
+    message: "Table unmerged successfully!",
+    item: result,
+  });
+};
+
+const calculatePriceHandler = async (req, res) => {
+  const { capacity } = req.body;
+  const price = tableService.getPriceForCapacity(capacity);
+
+  return res.status(200).json({
+    success: true,
+    price,
+  });
+};
+
 module.exports = {
   getAllHandler,
   registerHandler,
@@ -121,4 +153,7 @@ module.exports = {
   getWaitingStaffHandler,
   assignStaffHandler,
   unassignStaffHandler,
+  mergeTablesHandler,
+  unmergeTableHandler,
+  calculatePriceHandler,
 };

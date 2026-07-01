@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { VaButton, VaCard, VaCardContent, VaModal } from "vuestic-ui";
+import PageHeader from "@/components/PageHeader.vue";
 import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import customerAPI from "@/services/customerAPI";
 
 const route = useRoute();
+const router = useRouter();
 const customerId = route.params.id;
 
 const loading = ref(true);
@@ -107,7 +110,7 @@ const saveTags = async () => {
 };
 
 const navigateToNewReservation = () => {
-  window.location.href = `/new-reservation?customerId=${customerId}`;
+  router.push({ name: "new-reservation", query: { customerId } });
 };
 </script>
 
@@ -329,7 +332,7 @@ const navigateToNewReservation = () => {
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
+  margin-top: 12px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
