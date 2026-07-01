@@ -4,6 +4,16 @@
 
 This session modernized the restaurant table reservation system frontend to match a consistent design system (Inter font family, rounded cards, soft shadows, improved spacing, status chips, and spinner loading states). A backend bug preventing staff–table association lookups was also fixed.
 
+### Completed Work (2026-07-01)
+
+- Installed TypeScript ESLint parser for Vue component linting
+- Fixed TableView.vue unsafe finally block (return before finally)
+- Added table `price` field with DECIMAL(10,2) and validation
+- Added payment `discount` field with DECIMAL(10,2) and validation
+- Added table `parentTableId` for merged table hierarchy
+- Created LoadingSpinner.vue, ErrorBanner.vue, PageHeader.vue components
+- Verified all migrations with sequelize-cli
+
 ---
 
 ## Frontend Changes

@@ -16,7 +16,7 @@ related:
 # Database Schema
 
 > [!note] Migration Count
-> **24 migrations**, **15 Sequelize models**, MySQL 8+
+> **22 migrations**, **15 Sequelize models**, MySQL 8+
 
 ---
 
@@ -27,8 +27,8 @@ related:
 | `User` | `users` | Admin and customer accounts with roles |
 | `Customer` | `customers` | Guest profiles with loyalty tags |
 | `Reservation` | `reservations` | Table bookings (hybrid soft/hard delete) |
-| `Table` | `tables` | Restaurant tables (max capacity 8, status enum) |
-| `Payment` | `payments` | Transaction records with method classification |
+| `Table` | `tables` | Restaurant tables (max capacity 8, status enum, `price` field) |
+| `Payment` | `payments` | Transaction records with method classification, `discount` field |
 | `Waitlist` | `waitlist` | Pending guest queue |
 | `Role` | `roles` | RBAC role definitions with JSON permissions |
 | `Group` | `groups` | RBAC user groups with JSON permissions |
@@ -39,6 +39,15 @@ related:
 | `Holiday` | `holidays` | Closed/exception dates |
 | `Setting` | `settings` | Application configuration (JSON values) |
 | `RadiusUser` | `radius_users` | FreeRADIUS integration |
+
+---
+
+## Table Model Updates
+
+| Field | Type | Purpose |
+|---|---|---|
+| `price` | DECIMAL(10,2) | Table pricing for revenue tracking |
+| `parentTableId` | INTEGER | Self-reference for merged/combined tables |
 
 ---
 
@@ -89,6 +98,8 @@ ALTER TABLE `reservations` MODIFY COLUMN `resStatus` VARCHAR(50) NULL;
 
 ### Table
 - `belongsToMany(User, { through: 'table_staff' })`
+- `belongsTo(Table, { as: 'parentTable', foreignKey: 'parentTableId' })` — Self-reference for merged tables
+- `hasMany(Table, { as: 'mergedTables', foreignKey: 'parentTableId' })` — Child tables in a merge group
 
 ### Reservation
 - `belongsToMany(User, { through: 'reservation_staff' })`
