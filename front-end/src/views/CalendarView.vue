@@ -229,8 +229,10 @@ const loadFreeTables = async () => {
     freeTables.value = res.data.collection.filter(
       (t) => !t.reservationId && !t.isBlocked
     );
-  } catch {
+  } catch (err) {
+    logger.error("Failed to load free tables", { error: err.message });
     freeTables.value = [];
+    actionError.value = "Failed to load available tables.";
   }
 };
 
@@ -238,8 +240,10 @@ const loadWaitingStaff = async () => {
   try {
     const groupRes = await groupAPI.getGroupByName("waiting_staff");
     waitingStaffList.value = groupRes.data.group.Users || [];
-  } catch {
+  } catch (err) {
+    logger.error("Failed to load waiting staff", { error: err.message });
     waitingStaffList.value = [];
+    actionError.value = "Failed to load waiting staff.";
   }
 };
 
