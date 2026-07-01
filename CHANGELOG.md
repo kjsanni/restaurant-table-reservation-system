@@ -4,13 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [Unreleased] — 2026-06-29
+## [Unreleased] — 2026-07-01
 
-### Added — Comprehensive Documentation Update
-- **Obsidian Vault**: Created `docs/` directory with 13 interconnected markdown files
-- **New Topics**: RBAC system, payment system, heatmap analytics, no-show tracking, waitlist system docs
-- **Updated**: Architecture overview, frontend/backend architecture, database schema, key decisions
-- **Project Docs**: README, CHANGELOG, DEPLOYMENT-GUIDE, SECURITY_AUDIT_REPORT, SESSION_NOTES all updated
+### Added
+- **Table price field** — `price` DECIMAL(10,2) column on `tables` for pricing support
+- **Payment discount field** — `discount` DECIMAL(10,2) column on `payments` for discounts
+- **Table hierarchy** — `parentTableId` for merged table relationships
+- **LoadingSpinner component** — Reusable loading spinner with size variants
+- **ErrorBanner component** — Error display with optional retry callback
+- **PageHeader component** — Page headers with breadcrumb navigation
+
+### Fixed
+- **Linting** — Added TypeScript ESLint parser for Vue components
+- **TableView.vue** — Removed unsafe return in finally block
+- **TimeSlotGrid.vue** — Converted from TS to JS to match linter config
+- **Migration casing** — Fixed `Tables` → `tables` table name casing
 
 ---
 
