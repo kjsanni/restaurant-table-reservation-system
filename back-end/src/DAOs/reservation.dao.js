@@ -74,6 +74,12 @@ const updateCustomerTags = async (customerId, tags) => {
   return await customer.update({ tags: Array.isArray(tags) ? tags : [] });
 };
 
+const updateCustomer = async (customerId, updates) => {
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) return null;
+  return await customer.update(updates);
+};
+
 const getCustomerById = async (customerId) => {
   return await Customer.findByPk(customerId, {
     attributes: [
@@ -512,6 +518,7 @@ module.exports = {
   findCustomerByEmail,
   findOrCreateCustomer,
   updateCustomerTags,
+  updateCustomer,
   getCustomerById,
   getCustomerReservationHistory,
   getCustomerStats,

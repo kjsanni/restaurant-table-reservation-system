@@ -1,11 +1,11 @@
 "use strict";
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn("Tables", "parentTableId", {
+    await queryInterface.addColumn("tables", "parentTableId", {
       type: Sequelize.INTEGER,
       allowNull: true,
       references: {
-        model: "Tables",
+        model: "tables",
         key: "id",
       },
       onDelete: "SET NULL",
@@ -13,6 +13,6 @@ module.exports = {
     });
   },
   async down(queryInterface) {
-    await queryInterface.removeColumn("Tables", "parentTableId");
+    await queryInterface.removeColumn("tables", "parentTableId");
   },
 };
