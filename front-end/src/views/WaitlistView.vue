@@ -10,6 +10,7 @@ import {
   VaButton,
 } from "vuestic-ui";
 import waitlistAPI from "@/services/waitlistAPI";
+import logger from "@/utils/logger";
 import tableAPI from "@/services/tableAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
 
@@ -83,8 +84,10 @@ const openSeat = async (entry) => {
     freeTables.value = res.data.collection.filter(
       (t) => !t.reservationId && !t.isBlocked
     );
-  } catch {
+  } catch (err) {
+    logger.error("Failed to load free tables", { error: err.message });
     freeTables.value = [];
+    actionError.value = "Failed to load available tables.";
   }
   showPopup.value = true;
 };
@@ -169,7 +172,10 @@ const handleExpire = async () => {
   try {
     await waitlistAPI.expireOld();
     await loadData();
-  } catch (err) {}
+  } catch (err) {
+    logger.error("Failed to expire old waitlist entries", { error: err.message });
+    actionError.value = "Failed to process waitlist expiration.";
+  }
 };
 
 const formatTime = (time) => {

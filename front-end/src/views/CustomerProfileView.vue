@@ -16,6 +16,7 @@ import { useRoute, useRouter } from "vue-router";
 import customerAPI from "@/services/customerAPI";
 import reservationAPI from "@/services/reservationAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
+import logger from "@/utils/logger";
 
 const route = useRoute();
 const router = useRouter();
@@ -207,9 +208,10 @@ const saveTags = async () => {
     setTimeout(() => {
       showSaveMessage.value = false;
     }, 2000);
-  } catch {
+  } catch (err) {
+    logger.error("Failed to save customer tags", { error: err.message });
     showSaveMessage.value = true;
-    saveMessage.value = "Failed to save tags";
+    saveMessage.value = "Failed to save tags.";
   }
   editingTags.value = false;
 };

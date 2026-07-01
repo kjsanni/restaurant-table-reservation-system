@@ -11,6 +11,7 @@ import {
 import { ref, computed, onMounted } from "vue";
 import tableAPI from "@/services/tableAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
+import logger from "@/utils/logger";
 
 const tables = ref([]);
 const waitingStaff = ref([]);
@@ -87,8 +88,9 @@ const loadWaitingStaff = async () => {
   try {
     const res = await tableAPI.getWaitingStaff();
     waitingStaff.value = res.data.staff;
-  } catch {
-    // Load failed
+  } catch (err) {
+    logger.error("Failed to load waiting staff", { error: err.message });
+    loadError.value = "Failed to load waiting staff. Table assignment may be limited.";
   }
 };
 
