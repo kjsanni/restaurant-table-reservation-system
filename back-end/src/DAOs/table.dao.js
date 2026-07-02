@@ -1,6 +1,7 @@
 const db = require("../db/models");
 const Table = db.table;
 const Reservation = db.reservation;
+const Customer = db.customer;
 const User = db.user;
 
 const findAllTables = async () => {
