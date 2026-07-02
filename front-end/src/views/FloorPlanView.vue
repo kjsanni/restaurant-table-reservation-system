@@ -12,6 +12,7 @@ const loading = ref(true);
 const draggingReservation = ref(null);
 const assignPopupOpen = ref(false);
 const selectedTable = ref(null);
+const selectedLinkedTables = ref([]);
 const errorPopupOpen = ref(false);
 const errorMessage = ref("");
 
@@ -19,6 +20,32 @@ const pendingReservations = computed(() => {
   return (reservations.value || []).filter(
     (r) => r.resStatus === "pending" && !r.tableId
   );
+});
+
+const calculateCount = (people) => {
+  if (!people) return 1;
+  return Math.max(1, Math.ceil(people / 6));
+};
+
+const freeTablesList = computed(() => {
+  return (tables.value || [])
+    .filter((t) => !t.isOccupied && !t.isBlocked && !t.reservationId)
+    .sort((a, b) => a.id - b.id);
+});
+
+const tableMergeDisplayName = () => {
+  const primary = selectedTable.value
+    ? selectedTable.value.name || `T${selectedTable.value.id}`
+    : null;
+  if (!primary) return "";
+  const linked = selectedLinkedTables.value.map((t) => t.name || `T${t.id}`);
+  if (!linked.length) return primary;
+  return `${primary} + ${linked.join(" + ")}`;
+};
+
+const dragNeedsMerge = computed(() => {
+  if (!draggingReservation.value) return false;
+  return calculateCount(draggingReservation.value.people) > 1;
 });
 
 const loadData = async () => {
@@ -86,7 +113,7 @@ const onTableDragOver = (table, event) => {
   }
 };
 
-const onDragEnter = (table) => {
+const onTableDragEnter = (table) => {
   if (allowDrop(table)) {
     const idx = tables.value.findIndex((t) => t.id === table.id);
     const el = document.querySelectorAll(".table-block")[idx];
@@ -94,10 +121,37 @@ const onDragEnter = (table) => {
   }
 };
 
-const onDragLeave = (table) => {
+const onTableDragLeave = (table) => {
   const idx = tables.value.findIndex((t) => t.id === table.id);
   const el = document.querySelectorAll(".table-block")[idx];
   el?.classList.remove("drag-over");
+};
+
+const onTableClick = (table) => {
+  if (!draggingReservation.value) return;
+  if (!allowDrop(table)) return;
+  if (selectedTable.value?.id === table.id) return;
+
+  const requiredCount = calculateCount(draggingReservation.value.people);
+
+  if (!selectedTable.value) {
+    selectedTable.value = table;
+    selectedLinkedTables.value = requiredCount > 1 ? [] : [];
+  } else {
+    const alreadySelected = selectedLinkedTables.value.find(
+      (t) => t.id === table.id
+    );
+    if (alreadySelected) return;
+
+    selectedLinkedTables.value.push(table);
+  }
+
+  if (
+    selectedLinkedTables.value.length > 0 &&
+    selectedLinkedTables.value.length + 1 >= requiredCount
+  ) {
+    assignPopupOpen.value = true;
+  }
 };
 
 const onDrop = (table, event) => {
@@ -106,20 +160,32 @@ const onDrop = (table, event) => {
     .querySelectorAll(".table-block.drag-over")
     .forEach((el) => el.classList.remove("drag-over"));
   if (!allowDrop(table) || !draggingReservation.value) return;
+
+  const requiredCount = calculateCount(draggingReservation.value.people);
   selectedTable.value = table;
+  selectedLinkedTables.value = [];
+
+  if (requiredCount > 1) {
+    const candidates = freeTablesList.value.filter((t) => t.id !== table.id);
+    selectedLinkedTables.value = candidates.slice(0, requiredCount - 1);
+  }
+
   assignPopupOpen.value = true;
 };
 
 const confirmAssign = async () => {
   if (!draggingReservation.value || !selectedTable.value) return;
+
+  const tablesToAssign = [selectedTable.value, ...selectedLinkedTables.value];
+
   try {
-    await reservationAPI.chooseTable(
-      draggingReservation.value.id,
-      selectedTable.value.id
-    );
+    for (const table of tablesToAssign) {
+      await reservationAPI.chooseTable(draggingReservation.value.id, table.id);
+    }
     assignPopupOpen.value = false;
     draggingReservation.value = null;
     selectedTable.value = null;
+    selectedLinkedTables.value = [];
     await loadData();
   } catch (err) {
     logger.error("Assign table error", { error: err.message });
@@ -132,6 +198,7 @@ const closeAssign = () => {
   assignPopupOpen.value = false;
   selectedTable.value = null;
   draggingReservation.value = null;
+  selectedLinkedTables.value = [];
 };
 
 onMounted(loadData);
@@ -196,30 +263,51 @@ onMounted(loadData);
             <span class="legend-pill blocked">
               <span class="dot"></span> Blocked
             </span>
+            <span class="legend-pill merged" v-if="dragNeedsMerge">
+              <span class="dot"></span> Merged
+            </span>
           </div>
           <div class="plan-grid">
             <div
               v-for="table in tables"
               :key="table.id"
-              :class="['table-block', tableStatus(table)]"
+              :class="[
+                'table-block',
+                tableStatus(table),
+                {
+                  selected:
+                    selectedTable.value?.id === table.id ||
+                    selectedLinkedTables.value.some((t) => t.id === table.id),
+                },
+              ]"
               @dragover.prevent="onTableDragOver(table, $event)"
-              @dragenter.prevent="onDragEnter(table)"
-              @dragleave="onDragLeave(table)"
+              @dragenter.prevent="onTableDragEnter(table, $event)"
+              @dragleave.prevent="onTableDragLeave(table, $event)"
               @drop.prevent="onDrop(table, $event)"
+              @click="onTableClick(table)"
             >
               <div class="table-top">
                 <div class="table-id-row">
-                  <span class="table-id">{{ table.name || `T${table.id}` }}</span>
+                  <span class="table-id">{{
+                    table.name || `T${table.id}`
+                  }}</span>
                   <span
                     class="status-dot"
-                    :style="{ backgroundColor: statusColor(tableStatus(table)) }"
+                    :style="{
+                      backgroundColor: statusColor(tableStatus(table)),
+                    }"
                   ></span>
                 </div>
                 <span class="capacity">🪑 {{ table.capacity }}</span>
               </div>
+              <div class="linked-badge" v-if="table.linkedTableIds?.length">
+                Linked: {{ table.linkedTableIds.length + 1 }} tables
+              </div>
               <div v-if="table.reservationId" class="table-reservation">
                 <span class="res-name">
-                  {{ reservationForTable(table)?.name?.split(" ")[0] || "Guest" }}
+                  {{
+                    reservationForTable(table)?.name?.split(" ")[0] || "Guest"
+                  }}
                 </span>
                 <span class="res-time">
                   {{ reservationForTable(table)?.resTime?.slice(0, 5) }}
@@ -234,7 +322,17 @@ onMounted(loadData);
       </div>
 
       <p class="hint-bar">
-        Drag a pending reservation from the list onto a free table to assign it.
+        <template v-if="dragNeedsMerge">
+          <strong>
+            {{ draggingReservation?.people }} guests need
+            {{ calculateCount(draggingReservation?.people) }} tables.
+          </strong>
+          Drop on one table, then click extra tables to select them.
+        </template>
+        <template v-else>
+          Drag a pending reservation from the list onto a free table to assign
+          it.
+        </template>
       </p>
 
       <PopupBox
@@ -250,9 +348,18 @@ onMounted(loadData);
                 draggingReservation?.people
               }}
               guests) to
-              <strong>Table {{ selectedTable?.name || selectedTable?.id }}</strong
+              <strong>{{ tableMergeDisplayName() }}</strong
               >?
             </p>
+            <div v-if="selectedLinkedTables.value.length" class="merge-rows">
+              <div
+                class="merge-row"
+                v-for="tbl in selectedLinkedTables.value"
+                :key="tbl.id"
+              >
+                🪑 {{ tbl.name || `T${tbl.id}` }} (cap {{ tbl.capacity }})
+              </div>
+            </div>
             <div class="popup-actions">
               <button class="btn btn-outline" @click="closeAssign">
                 Cancel
@@ -275,7 +382,9 @@ onMounted(loadData);
           <div class="error-content">
             <p>{{ errorMessage }}</p>
             <div class="confirm-actions">
-              <button class="btn btn-secondary" @click="errorPopupOpen = false">OK</button>
+              <button class="btn btn-secondary" @click="errorPopupOpen = false">
+                OK
+              </button>
             </div>
           </div>
         </template>
@@ -402,7 +511,8 @@ onMounted(loadData);
   border-radius: 12px;
   padding: 12px;
   cursor: grab;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
   user-select: none;
 }
 
@@ -652,12 +762,54 @@ onMounted(loadData);
   color: var(--secondary-gray);
 }
 
+.selectable:hover {
+  border-color: var(--primary-blue);
+  background: #f8faff;
+}
+
+.table-block.selected {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.linked-badge {
+  margin-top: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-family: "Inter-Medium";
+  font-size: 11px;
+  align-self: flex-start;
+}
+
+.legend-pill.merged .dot {
+  background-color: #f59e0b;
+}
+
+.merge-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.merge-row {
+  font-family: "Inter-Medium";
+  font-size: 13px;
+}
+
 .hint-bar {
   text-align: center;
   font-family: "Inter-Light";
   font-size: 13px;
   color: var(--secondary-gray);
   margin-top: 18px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f8fafc;
 }
 
 .assign-content {

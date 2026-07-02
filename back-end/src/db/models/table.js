@@ -71,6 +71,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      linkedTableIds: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: null,
+      },
     },
     {
       sequelize,

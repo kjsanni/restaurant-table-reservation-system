@@ -7,7 +7,6 @@ import SidebarNavItem from "@/components/SidebarNavItem.vue";
 import HomeIcon from "~icons/fluent/home-16-regular";
 import PlusIcon from "~icons/fluent/add-16-regular";
 import CardListIcon from "~icons/bi/card-list";
-import SearchIcon from "~icons/ant-design/search-outlined";
 import TableIcon from "~icons/fluent/table-16-regular";
 import CalendarIcon from "~icons/fluent/calendar-day-16-regular";
 import StaffIcon from "~icons/fluent/people-16-regular";
@@ -142,29 +141,10 @@ onUnmounted(() => {
             <CardListIcon />
           </template>
         </SidebarNavItem>
-        <SidebarNavItem
-          v-if="isAuthenticated"
-          route-name="search"
-          text="Search"
-          :is-active="isActive('search')"
-        >
-          <template #icon>
-            <SearchIcon />
-          </template>
-        </SidebarNavItem>
       </div>
 
       <div class="nav-section">
         <div v-if="!isCollapsed" class="section-title">Staff</div>
-        <SidebarNavItem
-          route-name="add-table"
-          text="Add Table"
-          :is-active="isActive('add-table')"
-        >
-          <template #icon>
-            <PlusIcon />
-          </template>
-        </SidebarNavItem>
         <SidebarNavItem
           route-name="table-management"
           text="Tables"

@@ -16,6 +16,8 @@ import ChooseTable from "@/components/ChooseTable.vue";
 import AssignStaff from "@/components/AssignStaff.vue";
 import { useAuthStore } from "@/stores/auth";
 import { getApiErrorMessage } from "@/utils/apiError";
+import SearchIcon from "~icons/ant-design/search-outlined";
+import ClearIcon from "~icons/fluent/dismiss-16-filled";
 
 const schedules = ref([]);
 const holidays = ref([]);
@@ -25,6 +27,9 @@ const currentMonth = ref(new Date());
 const monthLabel = ref("");
 const calendarDays = ref([]);
 const socket = ref(null);
+
+const searchVal = ref("");
+const searchNotes = ref(true);
 
 const dayPopupOpen = ref(false);
 const selectedDay = ref(null);
@@ -194,8 +199,14 @@ const buildCalendarDays = (year, month) => {
     days.push({ date: null, isCurrentMonth: false });
   }
 
-  const scheduleMap = schedules.value.reduce((m, s) => m.set(s.dayOfWeek, s), new Map());
-  const holidayMap = holidays.value.reduce((m, h) => m.set(h.date, h), new Map());
+  const scheduleMap = schedules.value.reduce(
+    (m, s) => m.set(s.dayOfWeek, s),
+    new Map()
+  );
+  const holidayMap = holidays.value.reduce(
+    (m, h) => m.set(h.date, h),
+    new Map()
+  );
 
   for (let day = 1; day <= lastDay.getDate(); day++) {
     const date = new Date(year, month, day);
@@ -442,10 +453,33 @@ const currDate = computed(() => {
 const filterReservations = computed(() => {
   const dateStr = currentMonth.value.toISOString().split("T")[0];
   const prefix = dateStr.slice(0, 7);
-  return reservations.value.filter((r) => r.resDate && r.resDate.startsWith(prefix));
+  let filtered = reservations.value.filter(
+    (r) => r.resDate && r.resDate.startsWith(prefix)
+  );
+
+  const query = searchVal.value.trim().toLowerCase();
+  if (query) {
+    filtered = filtered.filter((item) => {
+      const searchableKeys = searchNotes.value
+        ? Object.keys(item)
+        : Object.keys(item).filter((key) => key !== "notes");
+
+      return searchableKeys.some((key) => {
+        const val = item[key];
+        if (val === null || val === undefined) return false;
+        return String(val).toLowerCase().includes(query);
+      });
+    });
+  }
+
+  return filtered;
 });
 
-const openPopup = ({ headerText }) => {
+const clearSearch = () => {
+  searchVal.value = "";
+};
+
+const openPopup = (headerText) => {
   isPopupOpen.value = true;
   popupHeaderText.value = headerText;
 };
@@ -503,6 +537,27 @@ const today = () => {
   <div class="main-wrapper">
     <div class="header">
       <h1>Reservations</h1>
+      <div class="search-bar">
+        <span class="search-icon"><SearchIcon /></span>
+        <input
+          type="search"
+          class="search-input"
+          placeholder="Search by name, phone, email, date..."
+          v-model="searchVal"
+        />
+        <button
+          v-if="searchVal"
+          type="button"
+          class="clear-btn"
+          @click="clearSearch"
+        >
+          <ClearIcon />
+        </button>
+        <label class="notes-toggle">
+          <input type="checkbox" v-model="searchNotes" />
+          <span>Include notes</span>
+        </label>
+      </div>
     </div>
     <div class="content-wrapper">
       <div class="date-controls">
@@ -527,16 +582,13 @@ const today = () => {
           >
             <template #card="slotProps">
               <div class="reservation-card">
-              <ReservationInfo
-                :reservation="slotProps.item"
-                :can-delete="canEditReservations"
-                @on-delete="openDeleteModal"
-              />
+                <ReservationInfo
+                  :reservation="slotProps.item"
+                  :can-delete="canEditReservations"
+                  @on-delete="openDeleteModal"
+                />
                 <div class="card-meta">
-                  <span
-                    class="status-badge"
-                    :class="slotProps.item.resStatus"
-                  >
+                  <span class="status-badge" :class="slotProps.item.resStatus">
                     {{ slotProps.item.resStatus }}
                   </span>
                   <span
@@ -668,8 +720,12 @@ const today = () => {
         <div class="confirm-content">
           <p>Are you sure you want to permanently delete this reservation?</p>
           <div class="confirm-actions">
-            <button class="btn btn-secondary" @click="closeDeleteModal">Cancel</button>
-            <button class="btn btn-danger" @click="confirmDelete">Delete</button>
+            <button class="btn btn-secondary" @click="closeDeleteModal">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmDelete">
+              Delete
+            </button>
           </div>
         </div>
       </template>
@@ -685,8 +741,12 @@ const today = () => {
         <div class="confirm-content">
           <p>Mark this reservation as a no-show?</p>
           <div class="confirm-actions">
-            <button class="btn btn-secondary" @click="closeNoShowModal">Cancel</button>
-            <button class="btn btn-warning" @click="confirmNoShow">Mark No-Show</button>
+            <button class="btn btn-secondary" @click="closeNoShowModal">
+              Cancel
+            </button>
+            <button class="btn btn-warning" @click="confirmNoShow">
+              Mark No-Show
+            </button>
           </div>
         </div>
       </template>
@@ -936,5 +996,103 @@ const today = () => {
 
 .btn-warning:hover {
   background-color: #d97706;
+}
+
+.search-bar {
+  position: relative;
+  max-width: 420px;
+  width: 100%;
+  margin-top: 12px;
+  margin-left: var(--x-spacing-mobile);
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--secondary-gray);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.search-icon :deep(svg) {
+  width: 20px;
+  height: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 42px 12px 44px;
+  border: 1px solid #f0f0f0;
+  border-radius: var(--input-radius);
+  font-family: "Inter-Light";
+  font-size: 15px;
+  color: var(--primary-black);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.clear-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--secondary-gray);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.clear-btn:hover {
+  background: #f3f4f6;
+  color: var(--primary-black);
+}
+
+.clear-btn :deep(svg) {
+  width: 18px;
+  height: 18px;
+}
+
+.notes-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  margin-left: var(--x-spacing-mobile);
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  color: var(--secondary-gray);
+  cursor: pointer;
+  user-select: none;
+}
+
+.notes-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary-blue);
+}
+
+@media screen and (min-width: 1024px) {
+  .search-bar {
+    margin-left: var(--x-spacing-desktop);
+  }
+  .notes-toggle {
+    margin-left: var(--x-spacing-desktop);
+  }
 }
 </style>

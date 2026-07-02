@@ -152,19 +152,13 @@ const chooseTable = async (
       message: "Given table is already reserved!",
     };
 
-  /**
-   *
-   * If the given reservation's party size is bigger than the table's capacity =>
-   *  throw Error
-   *  else => create the record
-   */
-  if (reservation.people > table.capacity)
-    throw {
-      status: 400,
-      message: "Reservation's party size is too big for this table!",
-    };
+  const neededTables = Math.ceil(
+    (reservation.people || 0) / Math.max(table.capacity, 1)
+  );
 
-  return await reservationDAO.setReservationTable(reservationId, tableId);
+  return await reservationDAO.setReservationTable(reservationId, tableId, {
+    neededTables,
+  });
 };
 
 module.exports = {

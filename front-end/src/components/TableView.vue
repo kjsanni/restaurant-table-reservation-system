@@ -249,8 +249,15 @@ const deleteReservation = async (item) => {
       <div class="confirm-content">
         <p>{{ confirmMessage }}</p>
         <div class="confirm-actions">
-          <button class="btn btn-secondary" @click="closeConfirm">Cancel</button>
-          <button class="btn btn-danger" @click="confirmTarget && cancelReservation(confirmTarget)">{{ confirmActionText }}</button>
+          <button class="btn btn-secondary" @click="closeConfirm">
+            Cancel
+          </button>
+          <button
+            class="btn btn-danger"
+            @click="confirmTarget && cancelReservation(confirmTarget)"
+          >
+            {{ confirmActionText }}
+          </button>
         </div>
       </div>
     </template>

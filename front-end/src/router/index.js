@@ -27,23 +27,6 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: "/new-reservation",
-      name: "new-reservation",
-      component: () => import("../views/NewReservationView.vue"),
-    },
-    {
-      path: "/search",
-      name: "search",
-      component: () => import("../views/SearchView.vue"),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: "/add-table",
-      name: "add-table",
-      component: () => import("../views/AddTableView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_tables" },
-    },
-    {
       path: "/admin/settings",
       name: "admin-settings",
       component: () => import("../views/AdminSettingsView.vue"),
@@ -143,7 +126,11 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated && !authStore.isLoading) {
+  if (
+    to.meta.requiresAuth &&
+    !authStore.isAuthenticated &&
+    !authStore.isLoading
+  ) {
     next({ name: "login" });
   } else if (to.meta.requiresAdmin && authStore.user?.role !== "admin") {
     next({ name: "home" });

@@ -76,7 +76,15 @@ const maxTotal = computed(() => {
 });
 
 const exportCSV = () => {
-  const headers = ["Period", "Total Revenue", "Transactions", "Cash", "Card", "Transfer", "Other"];
+  const headers = [
+    "Period",
+    "Total Revenue",
+    "Transactions",
+    "Cash",
+    "Card",
+    "Transfer",
+    "Other",
+  ];
   const rows = series.value.map((s) => {
     const cash = s.byMethod?.cash?.total || 0;
     const card = s.byMethod?.card?.total || 0;
@@ -153,15 +161,15 @@ const exportCSV = () => {
             <option value="month">By Month</option>
           </select>
 
-          <button class="export-btn" @click="exportCSV">
-            Export CSV
-          </button>
+          <button class="export-btn" @click="exportCSV">Export CSV</button>
         </div>
 
         <div class="summary-cards">
           <div class="summary-card">
             <span class="summary-label">Total Revenue</span>
-            <span class="summary-value">GHS {{ summary.totalRevenue.toFixed(2) }}</span>
+            <span class="summary-value"
+              >GHS {{ summary.totalRevenue.toFixed(2) }}</span
+            >
           </div>
           <div class="summary-card">
             <span class="summary-label">Transactions</span>
@@ -169,7 +177,9 @@ const exportCSV = () => {
           </div>
           <div class="summary-card">
             <span class="summary-label">Avg Transaction</span>
-            <span class="summary-value">GHS {{ summary.avgPayment.toFixed(2) }}</span>
+            <span class="summary-value"
+              >GHS {{ summary.avgPayment.toFixed(2) }}</span
+            >
           </div>
         </div>
 
@@ -201,7 +211,11 @@ const exportCSV = () => {
                 font-size="10"
                 fill="#6b7280"
               >
-                {{ item.periodLabel.length > 8 ? item.periodLabel.slice(0, 8) : item.periodLabel }}
+                {{
+                  item.periodLabel.length > 8
+                    ? item.periodLabel.slice(0, 8)
+                    : item.periodLabel
+                }}
               </text>
             </svg>
             <div v-else class="empty-chart">
@@ -213,10 +227,22 @@ const exportCSV = () => {
         <div class="chart-section">
           <h2 class="section-title">Revenue by Payment Method</h2>
           <div class="method-legend">
-            <span class="legend-item"><span class="legend-color" style="background:#22c55e"></span>Cash</span>
-            <span class="legend-item"><span class="legend-color" style="background:#3b82f6"></span>Card</span>
-            <span class="legend-item"><span class="legend-color" style="background:#f59e0b"></span>Transfer</span>
-            <span class="legend-item"><span class="legend-color" style="background:#8b5cf6"></span>Other</span>
+            <span class="legend-item"
+              ><span class="legend-color" style="background: #22c55e"></span
+              >Cash</span
+            >
+            <span class="legend-item"
+              ><span class="legend-color" style="background: #3b82f6"></span
+              >Card</span
+            >
+            <span class="legend-item"
+              ><span class="legend-color" style="background: #f59e0b"></span
+              >Transfer</span
+            >
+            <span class="legend-item"
+              ><span class="legend-color" style="background: #8b5cf6"></span
+              >Other</span
+            >
           </div>
           <div class="chart-container stacked">
             <svg
@@ -246,7 +272,11 @@ const exportCSV = () => {
                 font-size="10"
                 fill="#6b7280"
               >
-                {{ item.periodLabel.length > 8 ? item.periodLabel.slice(0, 8) : item.periodLabel }}
+                {{
+                  item.periodLabel.length > 8
+                    ? item.periodLabel.slice(0, 8)
+                    : item.periodLabel
+                }}
               </text>
             </svg>
             <div v-else class="empty-chart">

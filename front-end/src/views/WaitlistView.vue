@@ -256,7 +256,9 @@ onMounted(() => {
               </div>
               <div class="info-item">
                 <span class="info-icon">🕐</span>
-                <span>Desired: {{ formatTime(entry.desiredTime) || "ASAP" }}</span>
+                <span
+                  >Desired: {{ formatTime(entry.desiredTime) || "ASAP" }}</span
+                >
               </div>
               <div v-if="entry.notes" class="info-item notes-item">
                 <span class="info-icon">📝</span>
@@ -310,31 +312,64 @@ onMounted(() => {
             <div v-if="popupMode === 'add'" class="form-section">
               <div class="field">
                 <label class="field-label">Name *</label>
-                <input v-model="form.name" class="field-input" placeholder="Guest name" />
+                <input
+                  v-model="form.name"
+                  class="field-input"
+                  placeholder="Guest name"
+                />
               </div>
               <div class="field">
                 <label class="field-label">Party Size</label>
-                <input type="number" v-model="form.partySize" class="field-input" min="1" max="20" />
+                <input
+                  type="number"
+                  v-model="form.partySize"
+                  class="field-input"
+                  min="1"
+                  max="20"
+                />
               </div>
               <div class="field">
                 <label class="field-label">Phone</label>
-                <input v-model="form.phone" class="field-input" placeholder="Phone number" />
+                <input
+                  v-model="form.phone"
+                  class="field-input"
+                  placeholder="Phone number"
+                />
               </div>
               <div class="field">
                 <label class="field-label">Email</label>
-                <input v-model="form.email" class="field-input" placeholder="Email address" />
+                <input
+                  v-model="form.email"
+                  class="field-input"
+                  placeholder="Email address"
+                />
               </div>
               <div class="field">
                 <label class="field-label">Desired Time</label>
-                <input type="time" v-model="form.desiredTime" class="field-input" />
+                <input
+                  type="time"
+                  v-model="form.desiredTime"
+                  class="field-input"
+                />
               </div>
               <div class="field">
                 <label class="field-label">Notes</label>
-                <textarea v-model="form.notes" class="field-input" rows="2" placeholder="Special requests..."></textarea>
+                <textarea
+                  v-model="form.notes"
+                  class="field-input"
+                  rows="2"
+                  placeholder="Special requests..."
+                ></textarea>
               </div>
               <div class="popup-actions">
-                <button class="btn btn-secondary" @click="closePopup">Cancel</button>
-                <button class="btn btn-primary" @click="handleAdd" :disabled="actionLoading">
+                <button class="btn btn-secondary" @click="closePopup">
+                  Cancel
+                </button>
+                <button
+                  class="btn btn-primary"
+                  @click="handleAdd"
+                  :disabled="actionLoading"
+                >
                   {{ actionLoading ? "Adding..." : "Add to Waitlist" }}
                 </button>
               </div>
@@ -362,17 +397,27 @@ onMounted(() => {
                 </button>
               </div>
               <div class="popup-actions">
-                <button class="btn btn-secondary" @click="closePopup">Cancel</button>
+                <button class="btn btn-secondary" @click="closePopup">
+                  Cancel
+                </button>
               </div>
             </div>
 
             <div v-else-if="popupMode === 'cancel'" class="form-section">
               <p class="cancel-text">
-                Cancel waitlist entry for <strong>{{ selectedEntry?.name }}</strong>?
+                Cancel waitlist entry for
+                <strong>{{ selectedEntry?.name }}</strong
+                >?
               </p>
               <div class="popup-actions">
-                <button class="btn btn-secondary" @click="closePopup">Keep</button>
-                <button class="btn btn-danger" @click="handleCancel" :disabled="actionLoading">
+                <button class="btn btn-secondary" @click="closePopup">
+                  Keep
+                </button>
+                <button
+                  class="btn btn-danger"
+                  @click="handleCancel"
+                  :disabled="actionLoading"
+                >
                   {{ actionLoading ? "Cancelling..." : "Yes, Cancel" }}
                 </button>
               </div>
@@ -391,8 +436,15 @@ onMounted(() => {
           <div class="confirm-content">
             <p>Are you sure you want to delete this waitlist entry?</p>
             <div class="confirm-actions">
-              <button class="btn btn-secondary" @click="showDeleteModal = false">Cancel</button>
-              <button class="btn btn-danger" @click="confirmDelete">Delete</button>
+              <button
+                class="btn btn-secondary"
+                @click="showDeleteModal = false"
+              >
+                Cancel
+              </button>
+              <button class="btn btn-danger" @click="confirmDelete">
+                Delete
+              </button>
             </div>
           </div>
         </template>

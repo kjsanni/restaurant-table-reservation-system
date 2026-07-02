@@ -144,7 +144,9 @@ onMounted(loadData);
             :class="status"
           >
             <div class="summary-content">
-              <span class="summary-label">{{ paymentDisplayLabels[status] }}</span>
+              <span class="summary-label">{{
+                paymentDisplayLabels[status]
+              }}</span>
               <span class="summary-value">{{ summary[status] }}</span>
             </div>
             <div

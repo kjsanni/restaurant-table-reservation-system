@@ -197,11 +197,34 @@ const setReservationStatus = async (reservation, status) => {
   return await reservation.save();
 };
 
-const setReservationTable = async (reservationId, tableId) => {
+const setReservationTable = async (
+  reservationId,
+  tableId,
+  { neededTables = 1 } = {}
+) => {
+  const allFree = await Table.findAll({
+    where: {
+      isOccupied: false,
+    },
+  });
+
+  const selected = [tableId];
+  if (neededTables > 1) {
+    const linked = allFree
+      .filter((t) => t.id !== tableId)
+      .slice(0, neededTables - 1)
+      .map((t) => t.id);
+    selected.push(...linked);
+  }
+
+  const linkedTableIds = selected.filter((id) => id !== tableId);
+
   await Table.update(
     {
       isOccupied: true,
       reservationId: reservationId,
+      linkedTableIds:
+        linkedTableIds.length > 0 ? linkedTableIds : null,
     },
     {
       where: {
@@ -209,6 +232,21 @@ const setReservationTable = async (reservationId, tableId) => {
       },
     }
   );
+
+  if (linkedTableIds.length > 0) {
+    await Table.update(
+      {
+        isOccupied: true,
+        reservationId: reservationId,
+      },
+      {
+        where: {
+          id: linkedTableIds,
+        },
+      }
+    );
+  }
+
   return await Reservation.update(
     {
       resStatus: "seated",

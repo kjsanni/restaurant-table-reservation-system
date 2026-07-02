@@ -3,20 +3,6 @@ import NavItem from "@/components/NavItem.vue";
 
 import FoodIcon from "~icons/fluent/food-16-filled";
 import SearchIcon from "~icons/ant-design/search-outlined";
-import PlusIcon from "~icons/akar-icons/plus";
-import SettingsIcon from "~icons/fluent/settings-16-regular";
-import CalendarIcon from "~icons/fluent/calendar-day-16-regular";
-import TableIcon from "~icons/fluent/table-16-regular";
-import StaffIcon from "~icons/fluent/people-16-regular";
-import AuditIcon from "~icons/fluent/document-text-16-regular";
-import RolesIcon from "~icons/fluent/key-16-regular";
-import GroupIcon from "~icons/fluent/people-team-16-regular";
-import PaymentsIcon from "~icons/fluent/money-16-regular";
-import WaitlistIcon from "~icons/fluent/clock-16-regular";
-import ReportsIcon from "~icons/carbon/chart-bar";
-import FloorPlanIcon from "~icons/fluent/navigation-16-regular";
-import HeatmapIcon from "~icons/carbon/chart-area";
-</script>
 
 <template>
   <div class="nav-items">
@@ -37,16 +23,6 @@ import HeatmapIcon from "~icons/carbon/chart-area";
     <NavItem route-name="search" text="Search" :requires-auth="true">
       <template #icon>
         <SearchIcon />
-      </template>
-    </NavItem>
-    <NavItem
-      route-name="add-table"
-      text="Add Table"
-      :requires-auth="true"
-      :requires-permission="'manage_tables'"
-    >
-      <template #icon>
-        <PlusIcon />
       </template>
     </NavItem>
     <NavItem

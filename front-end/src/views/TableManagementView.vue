@@ -2,7 +2,10 @@
 import { ref, computed, onMounted } from "vue";
 import tableAPI from "@/services/tableAPI";
 import PopupBox from "@/components/PopupBox.vue";
-import { getApiErrorMessage } from "@/utils/apiError";
+import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
+import ErrorMessage from "@/components/ErrorMessage.vue";
+import SuccessMessage from "@/components/SuccessMessage.vue";
+import logger from "@/utils/logger";
 
 const tables = ref([]);
 const waitingStaff = ref([]);
@@ -18,6 +21,67 @@ const showErrorModal = ref(false);
 const errorMessage = ref("");
 
 const MAX_TABLES_PER_STAFF = 5;
+
+const showAddDialog = ref(false);
+const newTable = ref({
+  name: "",
+  capacity: "",
+});
+const addValidationErrors = ref(null);
+const addEmptyFieldsError = ref(null);
+const addIsSuccessful = ref(false);
+const addStaffList = ref([]);
+const addLoadingStaff = ref(false);
+const addSelectedStaffIds = ref([]);
+
+const openAddDialog = async () => {
+  showAddDialog.value = true;
+  addIsSuccessful.value = false;
+  addEmptyFieldsError.value = null;
+  addValidationErrors.value = null;
+  newTable.value = { name: "", capacity: "" };
+  addSelectedStaffIds.value = [];
+  await loadAddWaitingStaff();
+};
+
+const closeAddDialog = () => {
+  showAddDialog.value = false;
+};
+
+const loadAddWaitingStaff = async () => {
+  addLoadingStaff.value = true;
+  try {
+    const res = await tableAPI.getWaitingStaff();
+    addStaffList.value = res.data.staff;
+  } catch (err) {
+    addStaffList.value = [];
+  } finally {
+    addLoadingStaff.value = false;
+  }
+};
+
+const registerTable = async () => {
+  addValidationErrors.value = null;
+  addEmptyFieldsError.value = null;
+  addIsSuccessful.value = false;
+  try {
+    const payload = {
+      name: newTable.value.name,
+      capacity: newTable.value.capacity,
+      staffIds: addSelectedStaffIds.value,
+    };
+    await tableAPI.registerTable(payload);
+    addIsSuccessful.value = true;
+    addSelectedStaffIds.value = [];
+    await loadTables();
+    setTimeout(() => {
+      closeAddDialog();
+    }, 1200);
+  } catch (err) {
+    addEmptyFieldsError.value = getApiErrorMessage(err);
+    addValidationErrors.value = getApiErrors(err);
+  }
+};
 
 onMounted(async () => {
   await loadTables();
@@ -144,7 +208,8 @@ const availableStaffForAssign = computed(() => {
   if (!selectedTable.value) return [];
   const assignedStaffIds = selectedTable.value.Users?.map((u) => u.id) || [];
   return waitingStaff.value.filter(
-    (s) => !assignedStaffIds.includes(s.id) && s.tableCount < MAX_TABLES_PER_STAFF
+    (s) =>
+      !assignedStaffIds.includes(s.id) && s.tableCount < MAX_TABLES_PER_STAFF
   );
 });
 
@@ -156,7 +221,6 @@ const assignedStaffForTable = computed(() => {
 const staffAtLimit = (staff) => {
   return staff.tableCount >= MAX_TABLES_PER_STAFF;
 };
-
 </script>
 
 <template>
@@ -170,6 +234,11 @@ const staffAtLimit = (staff) => {
         <p>Loading tables...</p>
       </div>
       <div v-else class="tables-container">
+        <div class="actions-row">
+          <button class="btn btn-primary" @click="openAddDialog">
+            + Add Table
+          </button>
+        </div>
         <div class="table-grid">
           <div
             v-for="table in tables"
@@ -189,8 +258,23 @@ const staffAtLimit = (staff) => {
                   <span class="table-id">ID: {{ table.id }}</span>
                 </div>
               </div>
-              <span class="status-chip" :class="table.isBlocked ? 'blocked' : table.isOccupied ? 'occupied' : 'free'">
-                {{ table.isBlocked ? "Blocked" : table.isOccupied ? "Occupied" : "Free" }}
+              <span
+                class="status-chip"
+                :class="
+                  table.isBlocked
+                    ? 'blocked'
+                    : table.isOccupied
+                    ? 'occupied'
+                    : 'free'
+                "
+              >
+                {{
+                  table.isBlocked
+                    ? "Blocked"
+                    : table.isOccupied
+                    ? "Occupied"
+                    : "Free"
+                }}
               </span>
             </div>
 
@@ -199,7 +283,10 @@ const staffAtLimit = (staff) => {
                 <span class="meta-icon">👥</span>
                 <span class="meta-text">Capacity: {{ table.capacity }}</span>
               </div>
-              <div v-if="table.isBlocked && table.maintenanceNotes" class="blocked-reason">
+              <div
+                v-if="table.isBlocked && table.maintenanceNotes"
+                class="blocked-reason"
+              >
                 {{ table.maintenanceNotes }}
               </div>
             </div>
@@ -285,7 +372,9 @@ const staffAtLimit = (staff) => {
       <div v-if="showStaffDialog" class="modal-overlay">
         <div class="modal">
           <h3 class="modal-title">
-            {{ staffDialogMode === 'assign' ? 'Assign Staff' : 'Unassign Staff' }}
+            {{
+              staffDialogMode === "assign" ? "Assign Staff" : "Unassign Staff"
+            }}
           </h3>
           <p class="modal-subtitle">
             Table <strong>{{ selectedTable?.name }}</strong>
@@ -298,7 +387,8 @@ const staffAtLimit = (staff) => {
                 v-if="availableStaffForAssign.length === 0"
                 class="empty-msg"
               >
-                No available staff. All staff are either assigned or at the 5-table limit.
+                No available staff. All staff are either assigned or at the
+                5-table limit.
               </div>
               <button
                 v-for="staff in availableStaffForAssign"
@@ -317,10 +407,7 @@ const staffAtLimit = (staff) => {
           <div v-else class="field">
             <label class="field-label">Currently Assigned</label>
             <div class="staff-options">
-              <div
-                v-if="assignedStaffForTable.length === 0"
-                class="empty-msg"
-              >
+              <div v-if="assignedStaffForTable.length === 0" class="empty-msg">
                 No staff assigned to this table.
               </div>
               <button
@@ -347,12 +434,122 @@ const staffAtLimit = (staff) => {
         <div class="modal">
           <h3 class="modal-title">Confirm Unseat</h3>
           <p class="modal-subtitle">
-            Unseat table <strong>{{ confirmTarget?.name }}</strong>? This will mark the reservation as completed.
+            Unseat table <strong>{{ confirmTarget?.name }}</strong
+            >? This will mark the reservation as completed.
           </p>
           <div class="modal-actions">
-            <button class="btn btn-secondary" @click="closeConfirm">Cancel</button>
-            <button class="btn btn-danger" @click="confirmAction">Unseat</button>
+            <button class="btn btn-secondary" @click="closeConfirm">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmAction">
+              Unseat
+            </button>
           </div>
+        </div>
+      </div>
+
+      <div v-if="showAddDialog" class="modal-overlay">
+        <div class="modal modal-large">
+          <h3 class="modal-title">Add Table</h3>
+          <p class="modal-subtitle">
+            Create a new table and optionally assign waiting staff.
+          </p>
+
+          <form @submit.prevent="registerTable">
+            <div class="field">
+              <label class="field-label">Table Name</label>
+              <input
+                v-model="newTable.name"
+                type="text"
+                placeholder="Enter table name..."
+                class="field-input"
+              />
+              <div
+                v-if="
+                  addValidationErrors &&
+                  addValidationErrors.name &&
+                  addValidationErrors.name.length
+                "
+                class="field-error"
+              >
+                {{ addValidationErrors.name[0] }}
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Capacity</label>
+              <input
+                v-model="newTable.capacity"
+                type="number"
+                placeholder="Enter capacity..."
+                class="field-input"
+              />
+              <div
+                v-if="
+                  addValidationErrors &&
+                  addValidationErrors.capacity &&
+                  addValidationErrors.capacity.length
+                "
+                class="field-error"
+              >
+                {{ addValidationErrors.capacity[0] }}
+              </div>
+            </div>
+
+            <ErrorMessage
+              :error-flag="addEmptyFieldsError"
+              :error-message="addEmptyFieldsError"
+            />
+            <SuccessMessage
+              :is-successful="addIsSuccessful"
+              success-message="Table added successfully!"
+            />
+
+            <div class="staff-section">
+              <h3 class="staff-title">Assign Waiting Staff</h3>
+              <p class="staff-hint">
+                Each waiter can handle up to 5 tables. Staff already at capacity
+                are disabled.
+              </p>
+              <div v-if="addLoadingStaff" class="staff-loading">
+                Loading staff...
+              </div>
+              <div v-else-if="addStaffList.length === 0" class="staff-empty">
+                No waiting staff available.
+              </div>
+              <div v-else class="staff-grid">
+                <label
+                  v-for="staff in addStaffList"
+                  :key="staff.id"
+                  :class="['staff-chip', { disabled: staff.tableCount >= 5 }]"
+                >
+                  <input
+                    type="checkbox"
+                    :value="staff.id"
+                    :disabled="staff.tableCount >= 5"
+                    v-model="addSelectedStaffIds"
+                  />
+                  <span class="staff-name">{{ staff.username }}</span>
+                  <span :class="['staff-count', { full: staff.tableCount >= 5 }]">
+                    {{ staff.tableCount }}/5 tables
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                @click="closeAddDialog"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" :disabled="addIsSuccessful">
+                Save
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -448,7 +645,8 @@ const staffAtLimit = (staff) => {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
   box-shadow: var(--card-shadow);
 }
 
@@ -880,6 +1078,110 @@ const staffAtLimit = (staff) => {
   font-family: "Inter-Light";
   padding: 16px;
   font-size: 13px;
+}
+
+.actions-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.modal-large {
+  max-width: 520px;
+}
+
+.field-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  font-family: "Inter-Light";
+  font-size: 14px;
+  color: var(--primary-black);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.field-error {
+  color: #dc2626;
+  font-family: "Inter-Light";
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.staff-loading,
+.staff-empty {
+  font-family: "Inter-Light";
+  font-size: 13px;
+  color: var(--secondary-gray);
+  padding: 6px 0;
+}
+
+.staff-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.staff-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  color: var(--primary-black);
+  user-select: none;
+}
+
+.staff-chip:hover:not(.disabled) {
+  border-color: var(--primary-blue);
+  background: #eef2ff;
+}
+
+.staff-chip.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.staff-chip input[type="checkbox"] {
+  accent-color: var(--primary-blue);
+}
+
+.staff-chip input[type="checkbox"]:disabled {
+  accent-color: #9ca3af;
+}
+
+.staff-name {
+  font-weight: 500;
+}
+
+.staff-count {
+  font-family: "Inter-Light";
+  font-size: 11px;
+  color: var(--secondary-gray);
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.staff-count.full {
+  color: #dc2626;
+  background: #fef2f2;
+  font-weight: 600;
 }
 
 @media screen and (min-width: 1024px) {

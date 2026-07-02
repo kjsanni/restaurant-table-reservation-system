@@ -12,6 +12,7 @@ import { getApiErrors, getApiErrorMessage } from "@/utils/apiError";
 import paymentAPI from "@/services/paymentAPI";
 import reservationAPI from "@/services/reservationAPI";
 import getValues from "@/utils/getValues";
+import { computePaymentStatus } from "@/utils/paymentStatus";
 
 const props = defineProps({
   reservation: Object,
@@ -129,7 +130,9 @@ const addPayment = async () => {
     setTimeout(() => (paymentSuccess.value = false), 3000);
     emit("onEdited");
   } catch (err) {
-    paymentErrors.value = getApiErrors(err) || { amount: getApiErrorMessage(err, "Failed") };
+    paymentErrors.value = getApiErrors(err) || {
+      amount: getApiErrorMessage(err, "Failed"),
+    };
   }
 };
 
@@ -171,6 +174,14 @@ watch(
     }
   }
 );
+
+watch([totalPaid, () => reservation.value.expectedTotal.value], () => {
+  const status = computePaymentStatus({
+    totalPaid: totalPaid.value,
+    expectedTotal: reservation.value.expectedTotal.value,
+  });
+  reservation.value.paymentStatus.value = status;
+});
 
 onMounted(() => {
   if (props.reservation?.id) loadPayments();
@@ -319,11 +330,17 @@ const editReservation = async () => {
 
     <div v-if="showDeleteConfirm" class="confirm-overlay">
       <div class="confirm-box">
-        <p class="confirm-text">Are you sure you want to delete this payment?</p>
+        <p class="confirm-text">
+          Are you sure you want to delete this payment?
+        </p>
         <p v-if="removeError" class="confirm-error">{{ removeError }}</p>
         <div class="confirm-actions">
-          <button class="btn btn-secondary" @click="showDeleteConfirm = false">Cancel</button>
-          <button class="btn btn-danger" @click="confirmRemovePayment">Delete</button>
+          <button class="btn btn-secondary" @click="showDeleteConfirm = false">
+            Cancel
+          </button>
+          <button class="btn btn-danger" @click="confirmRemovePayment">
+            Delete
+          </button>
         </div>
       </div>
     </div>

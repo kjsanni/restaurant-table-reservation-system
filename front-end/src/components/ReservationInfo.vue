@@ -18,10 +18,14 @@ const props = defineProps({
 const emit = defineEmits(["onDelete"]);
 
 const highlightedNotes = computed(() => {
-  if (!props.searchQuery || !props.reservation?.notes) return props.reservation?.notes;
-  const escaped = props.reservation.notes.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(`(${escaped})`, 'gi');
-  return props.reservation.notes.replace(regex, '<mark>$1</mark>');
+  if (!props.searchQuery || !props.reservation?.notes)
+    return props.reservation?.notes;
+  const escaped = props.reservation.notes.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
+  );
+  const regex = new RegExp(`(${escaped})`, "gi");
+  return props.reservation.notes.replace(regex, "<mark>$1</mark>");
 });
 
 const customerLink = computed(() => {

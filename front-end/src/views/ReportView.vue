@@ -95,7 +95,11 @@ onMounted(() => {
           </div>
         </div>
         <div class="filters-actions">
-          <button class="btn btn-primary" @click="loadReport" :disabled="loading">
+          <button
+            class="btn btn-primary"
+            @click="loadReport"
+            :disabled="loading"
+          >
             {{ loading ? "Generating..." : "Generate Report" }}
           </button>
         </div>
@@ -103,7 +107,9 @@ onMounted(() => {
 
       <div class="export-bar">
         <button class="btn btn-secondary" @click="exportCSV">Export CSV</button>
-        <button class="btn btn-secondary" @click="exportPDF">Export Report</button>
+        <button class="btn btn-secondary" @click="exportPDF">
+          Export Report
+        </button>
       </div>
 
       <div v-if="loading" class="loading-state">
@@ -155,13 +161,13 @@ onMounted(() => {
               class="breakdown-row"
             >
               <span class="breakdown-method">{{ m.method }}</span>
-              <span class="breakdown-amount">GHS {{ m.total?.toFixed(2) }}</span>
+              <span class="breakdown-amount"
+                >GHS {{ m.total?.toFixed(2) }}</span
+              >
               <span class="breakdown-count">{{ m.count }}</span>
             </div>
           </div>
-          <div v-else class="empty-state">
-            No payment data available
-          </div>
+          <div v-else class="empty-state">No payment data available</div>
         </div>
       </div>
     </div>
