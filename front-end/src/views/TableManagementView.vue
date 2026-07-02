@@ -291,12 +291,21 @@ const staffAtLimit = (staff) => {
               </div>
             </div>
 
-            <div v-if="table.reservation && (table.reservation.Customer?.name || table.reservation.name)" class="reservation-section">
+            <div
+              v-if="
+                table.reservation &&
+                (table.reservation.Customer?.name || table.reservation.name)
+              "
+              class="reservation-section"
+            >
               <span class="section-label">Current Reservation</span>
               <div class="reservation-info">
-                <span class="reservation-name">{{ table.reservation.Customer?.name || table.reservation.name }}</span>
+                <span class="reservation-name">{{
+                  table.reservation.Customer?.name || table.reservation.name
+                }}</span>
                 <span class="reservation-meta">
-                  {{ table.reservation.people }} guests · {{ table.reservation.resTime }}
+                  {{ table.reservation.people }} guests ·
+                  {{ table.reservation.resTime }}
                 </span>
               </div>
             </div>

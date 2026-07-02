@@ -116,6 +116,25 @@ const handleCancelItem = async (item) => {
   await handleCancel();
 };
 
+const unseatReservation = async (reservation) => {
+  if (!reservation) return;
+  actionLoading.value = true;
+  actionError.value = "";
+  try {
+    const table = tables.value.find((t) => t.reservationId === reservation.id);
+    if (!table) {
+      actionError.value = "No table assigned to this reservation.";
+      return;
+    }
+    await tableAPI.freeTable(table.id);
+    await Promise.all([loadSchedule(), getTables()]);
+  } catch (err) {
+    actionError.value = getApiErrorMessage(err, "Failed to unseat reservation");
+  } finally {
+    actionLoading.value = false;
+  }
+};
+
 const MAX_VISIBLE = 3;
 
 onMounted(async () => {
@@ -650,6 +669,12 @@ const today = () => {
                     text="Mark No-Show"
                     color="#f59e0b"
                     @click="openNoShowModal(slotProps.item.id)"
+                  />
+                  <ButtonAction
+                    v-else-if="slotProps.item.resStatus === 'seated'"
+                    text="Unseat"
+                    color="#ef4444"
+                    @click="unseatReservation(slotProps.item)"
                   />
                   <ButtonAction
                     v-else-if="canEditReservations"
