@@ -8,6 +8,11 @@ const { validateCsrfToken } = require("../middleware/csrf");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 
 router
+  .route("/search")
+  .get(...protectedRoute("view_reservations", reservationController.searchHandler))
+  .all(httpMethodError);
+
+router
   .route("/")
   .get(...protectedRoute("view_reservations", reservationController.getAllHandler))
   .post(tryCatchHandler(reservationController.registerHandler), validateCsrfToken)

@@ -183,10 +183,18 @@ const chooseTable = async (
   });
 };
 
+const searchReservations = async (reservationDAO, query) => {
+  const term = query.trim();
+  if (!term) return [];
+  const results = await reservationDAO.searchReservations(term);
+  return results;
+};
+
 module.exports = {
   getAllReservations,
   registerReservation,
   editReservation,
   cancelReservation,
   chooseTable,
+  searchReservations,
 };

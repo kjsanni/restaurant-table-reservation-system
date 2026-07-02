@@ -292,6 +292,15 @@ const getHeatmapV2Handler = async (req, res) => {
   });
 };
 
+const searchHandler = async (req, res) => {
+  const query = req.query.q || "";
+  const results = await reservationService.searchReservations(reservationDAO, query);
+  return res.status(200).json({
+    success: true,
+    results,
+  });
+};
+
 const getStatsHandler = async (req, res) => {
   const filters = {};
   if (req.query.from) filters.from = req.query.from;
@@ -346,6 +355,5 @@ module.exports = {
   unassignStaffHandler,
   getPaymentSummaryHandler,
   getStatsHandler,
-  getRevenueTimeSeriesHandler,
-  searchNotesHandler,
+  searchHandler,
 };

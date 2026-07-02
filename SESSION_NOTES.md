@@ -330,5 +330,5 @@ Across all modernized pages:
 
 - `Suspense is an experimental feature` — Vue runtime warning (no functional impact)
 - `Booking a table is only available on the reservation date!` — backend business rule enforced during floor-plan drag-and-drop
-- `ERR_BAD_RESPONSE 500` on waitlist — backend server error unrelated to frontend changes
 - Duplicate `console.log` in `TheReservations.vue` (existing debug output)
+- `TableView.vue` is the only remaining table-row component in a card-based UI (now converted to cards)

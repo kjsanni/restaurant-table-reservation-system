@@ -119,7 +119,7 @@ const freeTable = async (reservationDAO, table) => {
 
   if (reservation) {
     const now = new Date();
-    const resDateTime = new Date(`${reservation.resDate}T${reservation.resTime || "00:00"}:00`);
+    const resDateTime = new Date(`${reservation.resDate}T${reservation.resTime || "00:00:00"}`);
     const nextStatus = resDateTime > now ? "pending" : "completed";
     return await reservation.update({ resStatus: nextStatus });
   }

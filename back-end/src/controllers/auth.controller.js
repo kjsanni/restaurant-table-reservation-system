@@ -227,13 +227,16 @@ const getAllUsersHandler = async (req, res) => {
   });
 };
 
+const VALID_USER_ROLES = ["admin", "manager", "staff"];
+
 const createStaffHandler = async (req, res) => {
   const { username, email, password, role, permissions } = req.body;
+  const normalizedRole = VALID_USER_ROLES.includes(role) ? role : "staff";
   const user = await authDAO.createStaffUser({
     username,
     email,
     password,
-    role: role || "staff",
+    role: normalizedRole,
     permissions,
   });
 
@@ -247,6 +250,10 @@ const createStaffHandler = async (req, res) => {
 const updateStaffHandler = async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
+
+  if (updates.role && !VALID_USER_ROLES.includes(updates.role)) {
+    throw { status: 400, message: "Invalid role!" };
+  }
 
   // Prevent admin from demoting themselves
   if (req.user.id === parseInt(id) && updates.role && updates.role !== "admin") {
