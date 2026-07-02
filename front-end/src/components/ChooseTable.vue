@@ -24,10 +24,7 @@ const chooseTable = async () => {
   errMsg.value = null;
   isSuccessful.value = false;
   try {
-    const res = await reservationAPI.chooseTable(
-      props.reservation.id,
-      payload.value
-    );
+    await reservationAPI.chooseTable(props.reservation.id, payload.value);
     logger.debug("Table chosen", { reservationId: props.reservation.id });
     isSuccessful.value = true;
     emit("onChosen");

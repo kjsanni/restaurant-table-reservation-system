@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import PageHeader from "@/components/PageHeader.vue";
 import { ref, computed, onMounted } from "vue";
-import { VaSelect, VaDataTable, VaButton } from "vuestic-ui";
+import { VaSelect, VaDataTable } from "vuestic-ui";
 import reservationAPI from "@/services/reservationAPI";
 
 const loading = ref(true);
@@ -94,6 +95,10 @@ onMounted(loadData);
 
 <template>
   <div class="main-wrapper">
+    <PageHeader
+      title="Payment Dashboard"
+      subtitle="Track payments and revenue"
+    />
     <div class="header">
       <h1>Payment Dashboard</h1>
     </div>

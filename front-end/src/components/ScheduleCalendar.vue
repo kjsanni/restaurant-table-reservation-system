@@ -1,52 +1,48 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { VaButton, VaChip, VaCard, VaCardContent } from 'vuestic-ui'
+import { computed } from "vue";
+import { VaButton, VaChip, VaCard, VaCardContent } from "vuestic-ui";
 
 export interface ScheduleDay {
-  dayOfWeek: string
-  label: string
-  openTime: string
-  closeTime: string
-  isClosed: boolean
-  slotDuration: number
+  dayOfWeek: string;
+  label: string;
+  openTime: string;
+  closeTime: string;
+  isClosed: boolean;
+  slotDuration: number;
 }
 
 interface Props {
-  days: ScheduleDay[]
-  modelValue?: ScheduleDay
+  days: ScheduleDay[];
+  modelValue?: ScheduleDay;
 }
 
-const props = defineProps<Props>()
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: ScheduleDay): void
-  (e: 'toggle', day: ScheduleDay): void
-  (e: 'edit', day: ScheduleDay): void
-}>()
+const props = defineProps<Props>();
+const emit = defineEmits(["update:modelValue", "toggle", "edit"]);
 
 const selectedDay = computed({
   get: () => props.modelValue,
-  set: (val) => {
-    if (val) emit('update:modelValue', val)
+  set: (val: ScheduleDay | undefined) => {
+    if (val) emit("update:modelValue", val);
   },
-})
+});
 
 const onToggle = (day: ScheduleDay) => {
-  emit('toggle', day)
-}
+  emit("toggle", day);
+};
 
 const onEdit = (day: ScheduleDay) => {
-  selectedDay.value = day
-  emit('edit', day)
-}
+  selectedDay.value = day;
+  emit("edit", day);
+};
 
 const formatTime = (time: string) => {
-  if (!time) return '--:--'
-  const [h, m] = time.split(':')
-  const hour = parseInt(h, 10)
-  const suffix = hour >= 12 ? 'PM' : 'AM'
-  const displayHour = hour % 12 || 12
-  return `${displayHour}:${m} ${suffix}`
-}
+  if (!time) return "--:--";
+  const [h, m] = time.split(":");
+  const hour = parseInt(h, 10);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${m} ${suffix}`;
+};
 </script>
 
 <template>
@@ -69,7 +65,7 @@ const formatTime = (time: string) => {
               :color="day.isClosed ? 'secondary' : 'success'"
               size="small"
             >
-              {{ day.isClosed ? 'Closed' : 'Open' }}
+              {{ day.isClosed ? "Closed" : "Open" }}
             </VaChip>
           </div>
           <div class="day-time">
@@ -84,7 +80,7 @@ const formatTime = (time: string) => {
               size="small"
               @click.stop="onToggle(day)"
             >
-              {{ day.isClosed ? 'Open' : 'Close' }}
+              {{ day.isClosed ? "Open" : "Close" }}
             </VaButton>
           </div>
         </div>
@@ -148,19 +144,19 @@ const formatTime = (time: string) => {
 }
 
 .day-label {
-  font-family: 'Inter-Medium';
+  font-family: "Inter-Medium";
   font-size: 14px;
   color: #04030f;
 }
 
 .day-time {
-  font-family: 'Inter-Light';
+  font-family: "Inter-Light";
   font-size: 13px;
   color: #686868;
 }
 
 .time-range {
-  font-family: 'Inter-Medium';
+  font-family: "Inter-Medium";
   color: #3b82f6;
 }
 

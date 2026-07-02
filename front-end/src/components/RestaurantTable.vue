@@ -17,7 +17,7 @@ const cssProps = computed(() => {
 
 const freeTable = async (id) => {
   try {
-    const res = await tableAPI.freeTable(id);
+    await tableAPI.freeTable(id);
     emit("onFreedTable");
     logger.debug("Table freed", { id });
   } catch (err) {

@@ -90,7 +90,8 @@ const loadWaitingStaff = async () => {
     waitingStaff.value = res.data.staff;
   } catch (err) {
     logger.error("Failed to load waiting staff", { error: err.message });
-    loadError.value = "Failed to load waiting staff. Table assignment may be limited.";
+    loadError.value =
+      "Failed to load waiting staff. Table assignment may be limited.";
   }
 };
 

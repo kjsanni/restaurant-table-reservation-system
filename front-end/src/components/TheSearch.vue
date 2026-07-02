@@ -15,6 +15,7 @@ const searchVal = ref("");
 const searchNotes = ref(true);
 const reservations = ref([]);
 const loading = ref(true);
+const loadError = ref("");
 const authStore = useAuthStore();
 const canEditReservations = computed(
   () => authStore.user?.permissions?.edit_reservations === true
@@ -35,6 +36,10 @@ const getReservations = async () => {
     );
   } catch (err) {
     logger.error("Failed to load reservations", { error: err.message });
+    loadError.value =
+      err.response?.data?.message ||
+      err.message ||
+      "Failed to load reservations. Please try again.";
   } finally {
     loading.value = false;
   }
@@ -403,6 +408,39 @@ const confirmDelete = async () => {
   to {
     transform: rotate(360deg);
   }
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--card-radius);
+  margin-bottom: 16px;
+}
+
+.error-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.error-retry {
+  margin-left: auto;
+  padding: 6px 14px;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  background: white;
+  color: #dc2626;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.error-retry:hover {
+  background: #fef2f2;
 }
 
 .confirm-content {

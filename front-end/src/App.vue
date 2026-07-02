@@ -204,56 +204,56 @@ onUnmounted(() => {
         </VaSidebar>
       </template>
 
-      <template #top>
-        <header class="app-topbar" :style="{ left: sidebarWidth }">
-          <div class="topbar-left">
-            <VaButton
-              preset="secondary"
-              size="small"
-              @click="toggleSidebar"
-              :aria-label="collapsed ? 'Expand menu' : 'Collapse menu'"
-            >
-              <template #icon>
-                <Icon
-                  :icon="collapsed ? 'mdi:menu-right' : 'mdi:menu-left'"
-                  width="16"
-                  height="16"
-                />
-              </template>
-            </VaButton>
-          </div>
-          <div class="topbar-center">
-            <span class="topbar-title">Restaurant Reservations</span>
-          </div>
-          <div class="topbar-right">
-            <template v-if="isAuthenticated">
-              <VaChip color="primary" size="small">{{ user?.username }}</VaChip>
-            </template>
-          </div>
-        </header>
-      </template>
-
       <template #default>
-        <div
-          v-if="sidebarVisible && windowWidth <= 768"
-          class="sidebar-backdrop"
-          @click="toggleSidebar"
-        ></div>
-        <main class="main-content" :style="{ paddingLeft: sidebarWidth }">
-          <RouterView v-slot="{ Component }">
-            <Transition name="fade" mode="out-in">
-              <component :is="Component" :key="$route.name" />
-            </Transition>
-          </RouterView>
-        </main>
+        <div class="content-wrapper">
+          <header class="app-topbar-integrated">
+            <div class="topbar-left">
+              <VaButton
+                preset="secondary"
+                size="small"
+                @click="toggleSidebar"
+                :aria-label="collapsed ? 'Expand menu' : 'Collapse menu'"
+              >
+                <template #icon>
+                  <Icon
+                    :icon="collapsed ? 'mdi-menu-right' : 'mdi-menu-left'"
+                    width="16"
+                    height="16"
+                  />
+                </template>
+              </VaButton>
+            </div>
+            <div class="topbar-center">
+              <span class="topbar-title">Restaurant Reservations</span>
+            </div>
+            <div class="topbar-right">
+              <template v-if="isAuthenticated">
+                <VaChip color="primary" size="small">{{ user?.username }}</VaChip>
+              </template>
+            </div>
+          </header>
+          
+          <div
+            v-if="sidebarVisible && windowWidth <= 768"
+            class="sidebar-backdrop"
+            @click="toggleSidebar"
+          ></div>
+          <main class="main-content" :style="{ paddingLeft: sidebarWidth }">
+            <RouterView v-slot="{ Component }">
+              <Transition name="fade" mode="out-in">
+                <component :is="Component" :key="$route.name" />
+              </Transition>
+            </RouterView>
+          </main>
 
-        <footer class="app-footer">
-          <span class="footer-text"
-            >&copy; {{ currentYear }} Vibespot Technologies Ltd. Made by: Kobina
-            John Sanni</span
-          >
-        </footer>
-      </template>
+          <footer class="app-footer">
+            <span class="footer-text"
+              >&copy; {{ currentYear }} Vibespot Technologies Ltd. Made by: Kobina
+              John Sanni</span
+            >
+          </footer>
+        </div>
+       </template>
     </VaLayout>
   </VaConfig>
 </template>
@@ -419,20 +419,16 @@ onUnmounted(() => {
   color: #fca5a5;
 }
 
-.app-topbar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 64px;
-  background: white;
-  border-bottom: 1px solid var(--restaurant-border);
+.app-topbar-integrated {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 64px;
+  background: var(--restaurant-cream);
+  border-bottom: 1px solid var(--restaurant-border);
   padding: 0 24px;
   gap: 16px;
   z-index: 40;
-  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .topbar-left {
@@ -449,10 +445,10 @@ onUnmounted(() => {
 }
 
 .topbar-title {
-  font-family: "Inter-Medium", sans-serif;
-  font-weight: 600;
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 700;
   font-size: 15px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   letter-spacing: 0.1px;
 }
 

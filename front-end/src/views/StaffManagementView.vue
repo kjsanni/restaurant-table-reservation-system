@@ -1,18 +1,27 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { VaBadge, VaButton, VaCard, VaCardContent, VaInput, VaModal, VaSelect } from "vuestic-ui"
-import { useAuthStore } from '@/stores/auth'
-import tableAPI from '@/services/tableAPI'
+import { ref, onMounted } from "vue";
+import PageHeader from "@/components/PageHeader.vue";
+import {
+  VaBadge,
+  VaButton,
+  VaCard,
+  VaCardContent,
+  VaInput,
+  VaModal,
+  VaSelect,
+} from "vuestic-ui";
+import { useAuthStore } from "@/stores/auth";
+import tableAPI from "@/services/tableAPI";
 
-const authStore = useAuthStore()
-const staff = ref([])
-const loading = ref(true)
-const showAddDialog = ref(false)
+const authStore = useAuthStore();
+const staff = ref([]);
+const loading = ref(true);
+const showAddDialog = ref(false);
 const newStaff = ref({
-  username: '',
-  email: '',
-  password: '',
-  role: 'staff',
+  username: "",
+  email: "",
+  password: "",
+  role: "staff",
   permissions: {
     view_reservations: true,
     edit_reservations: true,
@@ -20,58 +29,62 @@ const newStaff = ref({
     manage_schedule: false,
     manage_staff: false,
   },
-})
+});
 
 const roles = [
-  { label: 'Admin', value: 'admin' },
-  { label: 'Manager', value: 'manager' },
-  { label: 'Staff', value: 'staff' },
-] as const
-type Role = typeof roles[number]['value']
+  { label: "Admin", value: "admin" },
+  { label: "Manager", value: "manager" },
+  { label: "Staff", value: "staff" },
+] as const;
+type Role = typeof roles[number]["value"];
 
 const permissionKeys = [
-  { key: 'view_reservations', label: 'View Reservations' },
-  { key: 'edit_reservations', label: 'Edit Reservations' },
-  { key: 'manage_tables', label: 'Manage Tables' },
-  { key: 'manage_schedule', label: 'Manage Schedule' },
-  { key: 'manage_staff', label: 'Manage Staff' },
-]
+  { key: "view_reservations", label: "View Reservations" },
+  { key: "edit_reservations", label: "Edit Reservations" },
+  { key: "manage_tables", label: "Manage Tables" },
+  { key: "manage_schedule", label: "Manage Schedule" },
+  { key: "manage_staff", label: "Manage Staff" },
+];
 
-const selectedPermissions = ref<Record<string, boolean>>({})
-const featureAvailable = ref(false)
+const selectedPermissions = ref<Record<string, boolean>>({});
+const featureAvailable = ref(false);
 
 onMounted(async () => {
-  await loadStaff()
-})
+  await loadStaff();
+});
 
 const loadStaff = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const res = await tableAPI.getWaitingStaff()
-    staff.value = res.data.staff
+    const res = await tableAPI.getWaitingStaff();
+    staff.value = res.data.staff;
   } catch (err) {
-    console.error('Failed to load staff', err)
+    console.error("Failed to load staff", err);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const addStaff = async () => {
-  showAddDialog.value = false
-}
+  showAddDialog.value = false;
+};
 
-const deleteStaffMember = async () => {
-}
+const deleteStaffMember = async () => {};
 </script>
 
 <template>
   <div class="main-wrapper">
+    <PageHeader title="..." />
     <div class="header">
       <h1>Staff Management</h1>
     </div>
     <div class="content-wrapper">
       <div class="action-bar">
-        <VaButton preset="primary" @click="showAddDialog = true" :disabled="!featureAvailable">
+        <VaButton
+          preset="primary"
+          @click="showAddDialog = true"
+          :disabled="!featureAvailable"
+        >
           Add Staff
         </VaButton>
       </div>
@@ -131,12 +144,19 @@ const deleteStaffMember = async () => {
         <VaCard>
           <VaCardContent>
             <div class="feature-unavailable">
-              <VaBadge color="warning" class="mb-4">Coming Soon</VaBadge>
-              <p>Staff creation and removal will be available in a future update. Currently, staff are managed through the backend.</p>
+              <VaBadge color="info" class="mb-4">Read Only</VaBadge>
+              <p>
+                This panel shows the currently loaded staff assignments. Create,
+                update, or remove staff using the backend for now.
+              </p>
             </div>
             <div class="field">
               <label class="field-label">Username</label>
-              <VaInput v-model="newStaff.username" placeholder="Username" disabled />
+              <VaInput
+                v-model="newStaff.username"
+                placeholder="Username"
+                disabled
+              />
             </div>
             <div class="field">
               <label class="field-label">Email</label>
@@ -184,8 +204,7 @@ const deleteStaffMember = async () => {
   justify-content: flex-end;
   width: 100%;
   height: var(--header-height);
-  background: var(--lighter-gray)
-    url("@/assets/images/reservations-header.jpg");
+  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -218,7 +237,7 @@ const deleteStaffMember = async () => {
   padding: 80px 20px;
   gap: 16px;
   color: var(--secondary-gray);
-  font-family: 'Inter-Light';
+  font-family: "Inter-Light";
 }
 
 .spinner {
@@ -264,7 +283,7 @@ const deleteStaffMember = async () => {
   border-radius: 10px;
   background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
   color: var(--primary-blue);
-  font-family: 'Inter-Bold';
+  font-family: "Inter-Bold";
   font-size: 18px;
   display: flex;
   align-items: center;
@@ -278,7 +297,7 @@ const deleteStaffMember = async () => {
 }
 
 .staff-name {
-  font-family: 'Inter-Medium';
+  font-family: "Inter-Medium";
   font-size: 15px;
   color: var(--primary-black);
   margin: 0 0 4px 0;
@@ -289,7 +308,7 @@ const deleteStaffMember = async () => {
 }
 
 .staff-email {
-  font-family: 'Inter-Light';
+  font-family: "Inter-Light";
   font-size: 13px;
   color: var(--secondary-gray);
   margin: 0;
@@ -311,7 +330,7 @@ const deleteStaffMember = async () => {
 }
 
 .meta-label {
-  font-family: 'Inter-Medium';
+  font-family: "Inter-Medium";
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -329,7 +348,7 @@ const deleteStaffMember = async () => {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  font-family: 'Inter-Light';
+  font-family: "Inter-Light";
   color: var(--primary-black);
   cursor: not-allowed;
   opacity: 0.7;
@@ -346,7 +365,7 @@ const deleteStaffMember = async () => {
   text-align: center;
   padding: 40px;
   color: var(--secondary-gray);
-  font-family: 'Inter-Light';
+  font-family: "Inter-Light";
 }
 
 .field {
@@ -357,7 +376,7 @@ const deleteStaffMember = async () => {
   display: block;
   margin-bottom: 6px;
   font-weight: 600;
-  font-family: 'Inter-Medium';
+  font-family: "Inter-Medium";
   font-size: 14px;
   color: var(--primary-black);
 }

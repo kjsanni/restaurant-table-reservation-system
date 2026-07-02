@@ -15,19 +15,6 @@ const stats = ref({
 const loading = ref(true);
 const period = ref("week");
 
-const periodLabel = computed(() => {
-  switch (period.value) {
-    case "day":
-      return "Today";
-    case "week":
-      return "This Week";
-    case "month":
-      return "This Month";
-    default:
-      return "Custom";
-  }
-});
-
 const rateColor = computed(() => {
   const rate = parseFloat(stats.value.noShowRate);
   if (rate < 5) return "#22c55e";

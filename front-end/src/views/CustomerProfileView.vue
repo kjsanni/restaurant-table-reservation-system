@@ -8,7 +8,6 @@ import {
   VaInput,
   VaTextarea,
   VaAlert,
-  VaSelect,
 } from "vuestic-ui";
 import { Icon } from "@iconify/vue";
 import PageHeader from "@/components/PageHeader.vue";
@@ -104,7 +103,9 @@ const loadProfile = async () => {
     profile.value = res.data.profile;
   } catch (err: any) {
     errorMsg.value =
-      err.response?.data?.message || err.message || "Failed to load customer profile.";
+      err.response?.data?.message ||
+      err.message ||
+      "Failed to load customer profile.";
   } finally {
     loading.value = false;
   }
@@ -127,8 +128,10 @@ const openEditModal = () => {
 const saveCustomerDetails = async () => {
   editErrors.value = {};
   const errors: Record<string, string> = {};
-  if (!editForm.value.firstName.trim()) errors.firstName = "First name is required";
-  if (!editForm.value.lastName.trim()) errors.lastName = "Last name is required";
+  if (!editForm.value.firstName.trim())
+    errors.firstName = "First name is required";
+  if (!editForm.value.lastName.trim())
+    errors.lastName = "Last name is required";
   if (!editForm.value.email.trim()) errors.email = "Email is required";
   if (!editForm.value.phone.trim()) errors.phone = "Phone is required";
   if (Object.keys(errors).length > 0) {
@@ -140,7 +143,9 @@ const saveCustomerDetails = async () => {
     profile.value = { ...profile.value, customer: res.data.customer };
     showEditModal.value = false;
   } catch (err: any) {
-    editErrors.value = { submit: getApiErrorMessage(err, "Failed to save changes") };
+    editErrors.value = {
+      submit: getApiErrorMessage(err, "Failed to save changes"),
+    };
   }
 };
 
@@ -173,7 +178,9 @@ const createReservation = async () => {
     await loadProfile();
     router.push({ name: "reservations" });
   } catch (err: any) {
-    reservationErrors.value = { submit: getApiErrorMessage(err, "Failed to create reservation") };
+    reservationErrors.value = {
+      submit: getApiErrorMessage(err, "Failed to create reservation"),
+    };
   } finally {
     isSubmitting.value = false;
   }
@@ -238,11 +245,18 @@ onMounted(() => {
 <template>
   <div class="page-wrapper">
     <PageHeader
-      :title="`${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'Customer Profile'"
+      :title="
+        `${customer.firstName || ''} ${customer.lastName || ''}`.trim() ||
+        'Customer Profile'
+      "
       subtitle="View and manage customer details"
     >
       <template #actions>
-        <VaButton preset="primary" size="small" @click="showQuickReservation = true">
+        <VaButton
+          preset="primary"
+          size="small"
+          @click="showQuickReservation = true"
+        >
           <template #icon>
             <Icon icon="mdi:calendar-plus" width="16" height="16" />
           </template>
@@ -269,7 +283,10 @@ onMounted(() => {
             <h2>{{ customer.firstName }} {{ customer.lastName }}</h2>
             <p class="customer-email">{{ customer.email }}</p>
             <p class="customer-phone">{{ customer.phone }}</p>
-            <p v-if="formattedAddress !== 'No address on file'" class="customer-address">
+            <p
+              v-if="formattedAddress !== 'No address on file'"
+              class="customer-address"
+            >
               {{ formattedAddress }}
             </p>
             <div class="customer-stats-row">
@@ -282,13 +299,25 @@ onMounted(() => {
             </div>
           </div>
           <div class="profile-actions">
-            <button class="action-btn call-btn" @click="callCustomer" aria-label="Call customer">
+            <button
+              class="action-btn call-btn"
+              @click="callCustomer"
+              aria-label="Call customer"
+            >
               <Icon icon="mdi:phone" width="18" height="18" />
             </button>
-            <button class="action-btn email-btn" @click="emailCustomer" aria-label="Email customer">
+            <button
+              class="action-btn email-btn"
+              @click="emailCustomer"
+              aria-label="Email customer"
+            >
               <Icon icon="mdi:email-outline" width="18" height="18" />
             </button>
-            <button class="action-btn sms-btn" @click="smsCustomer" aria-label="SMS customer">
+            <button
+              class="action-btn sms-btn"
+              @click="smsCustomer"
+              aria-label="SMS customer"
+            >
               <Icon icon="mdi:message-text-outline" width="18" height="18" />
             </button>
             <button class="btn-primary" @click="openEditModal">
@@ -390,7 +419,9 @@ onMounted(() => {
             <h3>Notes & Observations</h3>
             <div class="notes-display" v-if="customer.notes">
               <p>{{ customer.notes }}</p>
-              <button class="btn-link" @click="openEditModal">Edit notes</button>
+              <button class="btn-link" @click="openEditModal">
+                Edit notes
+              </button>
             </div>
             <div v-else class="empty-state-small">
               No notes for this customer.
@@ -439,7 +470,11 @@ onMounted(() => {
       </template>
     </div>
 
-    <VaModal v-model="showQuickReservation" title="Quick Reservation" size="small">
+    <VaModal
+      v-model="showQuickReservation"
+      title="Quick Reservation"
+      size="small"
+    >
       <VaCard>
         <VaCardContent>
           <form @submit.prevent="createReservation" class="quick-res-form">
@@ -479,8 +514,14 @@ onMounted(() => {
           </form>
         </VaCardContent>
         <template #actions>
-          <VaButton preset="secondary" @click="showQuickReservation = false">Cancel</VaButton>
-          <VaButton preset="primary" @click="createReservation" :loading="isSubmitting">
+          <VaButton preset="secondary" @click="showQuickReservation = false"
+            >Cancel</VaButton
+          >
+          <VaButton
+            preset="primary"
+            @click="createReservation"
+            :loading="isSubmitting"
+          >
             Create Reservation
           </VaButton>
         </template>
@@ -514,31 +555,21 @@ onMounted(() => {
               label="Phone"
               :error-messages="editErrors.phone"
             />
-            <VaInput
-              v-model="editForm.address"
-              label="Address"
-            />
-            <VaInput
-              v-model="editForm.city"
-              label="City"
-            />
-            <VaTextarea
-              v-model="editForm.notes"
-              label="Notes"
-              :rows="3"
-            />
-            <VaAlert
-              v-if="editErrors.submit"
-              color="danger"
-              class="mb-4"
-            >
+            <VaInput v-model="editForm.address" label="Address" />
+            <VaInput v-model="editForm.city" label="City" />
+            <VaTextarea v-model="editForm.notes" label="Notes" :rows="3" />
+            <VaAlert v-if="editErrors.submit" color="danger" class="mb-4">
               {{ editErrors.submit }}
             </VaAlert>
           </form>
         </VaCardContent>
         <template #actions>
-          <VaButton preset="secondary" @click="showEditModal = false">Cancel</VaButton>
-          <VaButton preset="primary" @click="saveCustomerDetails">Save Changes</VaButton>
+          <VaButton preset="secondary" @click="showEditModal = false"
+            >Cancel</VaButton
+          >
+          <VaButton preset="primary" @click="saveCustomerDetails"
+            >Save Changes</VaButton
+          >
         </template>
       </VaCard>
     </VaModal>

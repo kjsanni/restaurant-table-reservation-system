@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted } from "vue";
-import { VaModal, VaCard, VaCardContent, VaAlert, VaInput, VaButton } from "vuestic-ui";
+import {
+  VaModal,
+  VaCard,
+  VaCardContent,
+  VaAlert,
+  VaInput,
+  VaButton,
+} from "vuestic-ui";
 import waitlistAPI from "@/services/waitlistAPI";
 import logger from "@/utils/logger";
 import tableAPI from "@/services/tableAPI";
@@ -34,6 +41,7 @@ const form = ref({
 const freeTables = ref([]);
 const actionLoading = ref(false);
 const actionError = ref("");
+const loadError = ref("");
 
 const loadData = async () => {
   loading.value = true;
@@ -168,7 +176,9 @@ const handleExpire = async () => {
     await waitlistAPI.expireOld();
     await loadData();
   } catch (err) {
-    logger.error("Failed to expire old waitlist entries", { error: err.message });
+    logger.error("Failed to expire old waitlist entries", {
+      error: err.message,
+    });
     actionError.value = "Failed to process waitlist expiration.";
   }
 };

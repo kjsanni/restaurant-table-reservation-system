@@ -6,7 +6,6 @@ module.exports = {
   extends: [
     "eslint:recommended",
     "plugin:vue/vue3-essential",
-    "@vue/eslint-config-typescript",
     "@vue/eslint-config-prettier",
   ],
   parserOptions: {
@@ -15,6 +14,8 @@ module.exports = {
   },
   rules: {
     "vue/no-unused-vars": "error",
+    "vue/valid-define-props": "off",
+    "vue/valid-define-emits": "off",
     "prettier/prettier": [
       "error",
       {
@@ -24,5 +25,6 @@ module.exports = {
   },
   globals: {
     defineOptions: "readonly",
+    process: "readonly",
   },
 };

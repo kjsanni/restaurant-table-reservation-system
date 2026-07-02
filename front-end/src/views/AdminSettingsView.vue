@@ -1,161 +1,190 @@
 <script setup lang="ts">
-import PageHeader from "@/components/PageHeader.vue"
-import { ref, computed, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { VaSwitch, VaCard, VaCardTitle, VaCardContent, VaButton, VaAlert } from 'vuestic-ui'
+import PageHeader from "@/components/PageHeader.vue";
+import { ref, computed, onMounted } from "vue";
+import { useAuthStore } from "@/stores/auth";
+import { VaSwitch } from "vuestic-ui";
 
-const authStore = useAuthStore()
-const loading = ref(true)
-const savingKeys = ref(new Set<string>())
-const savedKeys = ref(new Set<string>())
-const settingsMap = ref<Record<string, { key: string; label: string; category: string; type: string; description: string; value: boolean | number | string }>>({})
+const authStore = useAuthStore();
+const loading = ref(true);
+const savingKeys = ref(new Set<string>());
+const savedKeys = ref(new Set<string>());
+const settingsMap = ref<
+  Record<
+    string,
+    {
+      key: string;
+      label: string;
+      category: string;
+      type: string;
+      description: string;
+      value: boolean | number | string;
+    }
+  >
+>({});
 
-const settingsConfig: Record<string, {
-  label: string
-  category: string
-  type: string
-  description: string
-  unit?: string
-  min?: number
-  max?: number
-  step?: number
-}> = {
+const settingsConfig: Record<
+  string,
+  {
+    label: string;
+    category: string;
+    type: string;
+    description: string;
+    unit?: string;
+    min?: number;
+    max?: number;
+    step?: number;
+  }
+> = {
   customer_registration_enabled: {
-    label: 'Customer Registration',
-    category: 'Registration',
-    type: 'boolean',
-    description: 'Allow customers to create accounts and self-register',
+    label: "Customer Registration",
+    category: "Registration",
+    type: "boolean",
+    description: "Allow customers to create accounts and self-register",
   },
   reservation_slot_duration: {
-    label: 'Slot Duration',
-    category: 'Reservations',
-    type: 'number',
-    unit: 'minutes',
-    description: 'Default time increment for reservation bookings',
+    label: "Slot Duration",
+    category: "Reservations",
+    type: "number",
+    unit: "minutes",
+    description: "Default time increment for reservation bookings",
     min: 15,
     max: 180,
     step: 15,
   },
   max_party_size: {
-    label: 'Maximum Party Size',
-    category: 'Reservations',
-    type: 'number',
-    unit: 'guests',
-    description: 'Maximum number of people per reservation',
+    label: "Maximum Party Size",
+    category: "Reservations",
+    type: "number",
+    unit: "guests",
+    description: "Maximum number of people per reservation",
     min: 1,
     max: 100,
     step: 1,
   },
   allow_past_reservations: {
-    label: 'Past Reservations',
-    category: 'Reservations',
-    type: 'boolean',
-    description: 'Allow creating reservations for dates in the past',
+    label: "Past Reservations",
+    category: "Reservations",
+    type: "boolean",
+    description: "Allow creating reservations for dates in the past",
   },
   require_table_assignment: {
-    label: 'Require Table Assignment',
-    category: 'Reservations',
-    type: 'boolean',
-    description: 'Require a table assigned during reservation creation',
+    label: "Require Table Assignment",
+    category: "Reservations",
+    type: "boolean",
+    description: "Require a table assigned during reservation creation",
   },
-}
+};
 
 const categories = computed(() => {
-  const cats: string[] = []
-  const seen = new Set<string>()
+  const cats: string[] = [];
+  const seen = new Set<string>();
   Object.values(settingsConfig).forEach((s) => {
     if (!seen.has(s.category)) {
-      seen.add(s.category)
-      cats.push(s.category)
+      seen.add(s.category);
+      cats.push(s.category);
     }
-  })
-  return cats
-})
+  });
+  return cats;
+});
 
 onMounted(async () => {
-  await loadSettings()
-})
+  await loadSettings();
+});
 
 const loadSettings = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const data = await authStore.fetchSettings()
-    const map: Record<string, { key: string; label: string; category: string; type: string; description: string; value: boolean | number | string }> = {}
+    const data = await authStore.fetchSettings();
+    const map: Record<
+      string,
+      {
+        key: string;
+        label: string;
+        category: string;
+        type: string;
+        description: string;
+        value: boolean | number | string;
+      }
+    > = {};
     data.forEach((s: { key: string; value: string | boolean | number }) => {
-      let value = s.value
-      if (typeof value === 'string') {
-        if (value === 'true') value = true
-        else if (value === 'false') value = false
+      let value = s.value;
+      if (typeof value === "string") {
+        if (value === "true") value = true;
+        else if (value === "false") value = false;
         else {
-          const num = Number(value)
-          if (!isNaN(num)) value = num
+          const num = Number(value);
+          if (!isNaN(num)) value = num;
         }
       }
       map[s.key] = {
         ...settingsConfig[s.key],
         key: s.key,
         value,
-      }
-    })
-    settingsMap.value = map
+      };
+    });
+    settingsMap.value = map;
   } catch (e) {
-    console.error('Failed to load settings', e)
+    console.error("Failed to load settings", e);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const getByCategory = (category: string) => {
-  return Object.values(settingsMap.value).filter((s) => s.category === category)
-}
+  return Object.values(settingsMap.value).filter(
+    (s) => s.category === category
+  );
+};
 
 const markSaving = (key: string) => {
-  savingKeys.value.add(key)
-  savedKeys.value.delete(key)
-}
+  savingKeys.value.add(key);
+  savedKeys.value.delete(key);
+};
 
 const markSaved = (key: string) => {
-  savingKeys.value.delete(key)
-  savedKeys.value.add(key)
-  setTimeout(() => savedKeys.value.delete(key), 2000)
-}
+  savingKeys.value.delete(key);
+  savedKeys.value.add(key);
+  setTimeout(() => savedKeys.value.delete(key), 2000);
+};
 
-const updateValue = async (setting: { key: string; value: boolean | number | string }) => {
-  markSaving(setting.key)
+const updateValue = async (setting: {
+  key: string;
+  value: boolean | number | string;
+}) => {
+  markSaving(setting.key);
   try {
-    await authStore.updateSettings(setting.key, setting.value)
-    markSaved(setting.key)
+    await authStore.updateSettings(setting.key, setting.value);
+    markSaved(setting.key);
   } catch (e) {
-    console.error('Failed to update setting', e)
+    console.error("Failed to update setting", e);
   } finally {
-    savingKeys.value.delete(setting.key)
+    savingKeys.value.delete(setting.key);
   }
-}
-
-const handleToggle = (setting: { key: string; value: boolean | number | string }) => {
-  updateValue(setting)
-}
+};
 
 const handleNumberBlur = (setting: { key: string; value: number | string }) => {
   if (
     setting.value !== null &&
     setting.value !== undefined &&
-    setting.value !== ''
+    setting.value !== ""
   ) {
-    updateValue(setting)
+    updateValue(setting);
   }
-}
+};
 
-const adjustNumber = (setting: { key: string; value: number }, delta: number) => {
-  const config = settingsConfig[setting.key]
-  const current = Number(setting.value) || 0
-  let newVal = current + delta
-  if (config.min !== undefined) newVal = Math.max(config.min, newVal)
-  if (config.max !== undefined) newVal = Math.min(config.max, newVal)
-  if (config.step) newVal = Math.round(newVal / config.step) * config.step
-  setting.value = newVal
-  updateValue(setting)
-}
+const adjustNumber = (
+  setting: { key: string; value: number },
+  delta: number
+) => {
+  const config = settingsConfig[setting.key];
+  const current = Number(setting.value) || 0;
+  let newVal = current + delta;
+  if (config.min !== undefined) newVal = Math.max(config.min, newVal);
+  if (config.max !== undefined) newVal = Math.min(config.max, newVal);
+  if (config.step) newVal = Math.round(newVal / config.step) * config.step;
+  setting.value = newVal;
+  updateValue(setting);
+};
 </script>
 
 <template>
@@ -189,7 +218,9 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
                 <VaSwitch
                   v-if="setting.type === 'boolean'"
                   :model-value="setting.value as boolean"
-                  @update:model-value="(val) => updateValue({ ...setting, value: val })"
+                  @update:model-value="
+                    (val) => updateValue({ ...setting, value: val })
+                  "
                 />
 
                 <div
@@ -199,7 +230,12 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
                   <button
                     type="button"
                     class="num-btn"
-                    @click="adjustNumber(setting as { key: string; value: number }, -(settingsConfig[setting.key].step || 1))"
+                    @click="
+                      adjustNumber(
+                        setting as { key: string; value: number },
+                        -(settingsConfig[setting.key].step || 1)
+                      )
+                    "
                     :disabled="savingKeys.has(setting.key)"
                   >
                     −
@@ -217,12 +253,19 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
                   <button
                     type="button"
                     class="num-btn"
-                    @click="adjustNumber(setting as { key: string; value: number }, settingsConfig[setting.key].step || 1)"
+                    @click="
+                      adjustNumber(
+                        setting as { key: string; value: number },
+                        settingsConfig[setting.key].step || 1
+                      )
+                    "
                     :disabled="savingKeys.has(setting.key)"
                   >
                     +
                   </button>
-                  <span class="unit">{{ settingsConfig[setting.key].unit }}</span>
+                  <span class="unit">{{
+                    settingsConfig[setting.key].unit
+                  }}</span>
                 </div>
 
                 <span
@@ -283,26 +326,6 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray)
-    url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-
 .content-wrapper {
   margin-top: 12px;
   margin-bottom: var(--page-margin-y);
@@ -319,7 +342,7 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
   padding: 80px 20px;
   gap: 16px;
   color: var(--secondary-gray);
-  font-family: 'Inter-Light';
+  font-family: "Inter-Light";
 }
 
 .spinner {
@@ -352,7 +375,7 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
 }
 
 .category-title {
-  font-family: 'Inter-Bold';
+  font-family: "Inter-Bold";
   font-size: 18px;
   color: var(--primary-black);
   margin: 0 0 16px 0;
@@ -381,14 +404,14 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
 }
 
 .setting-label {
-  font-family: 'Inter-Medium';
+  font-family: "Inter-Medium";
   font-size: 15px;
   color: var(--primary-black);
   cursor: default;
 }
 
 .setting-description {
-  font-family: 'Inter-Light';
+  font-family: "Inter-Light";
   font-size: 13px;
   color: var(--secondary-gray);
   margin-top: 4px;
@@ -439,7 +462,7 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
   text-align: center;
   border: 1px solid var(--lighter-gray);
   border-radius: 8px;
-  font-family: 'Inter-Medium';
+  font-family: "Inter-Medium";
   font-size: 15px;
   color: var(--primary-black);
   background: var(--primary-white);
@@ -452,7 +475,7 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
 }
 
 .unit {
-  font-family: 'Inter-Light';
+  font-family: "Inter-Light";
   font-size: 13px;
   color: var(--secondary-gray);
   min-width: 50px;
@@ -460,7 +483,7 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
 
 .status-text {
   font-size: 12px;
-  font-family: 'Inter-Medium';
+  font-family: "Inter-Medium";
   min-width: 60px;
   text-align: right;
 }
@@ -492,7 +515,7 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
   background: #fafafa;
   border: 1px solid #f0f0f0;
   color: var(--primary-black);
-  font-family: 'Inter-Medium';
+  font-family: "Inter-Medium";
   font-size: 14px;
   text-decoration: none;
   transition: all 0.15s ease;
@@ -516,11 +539,6 @@ const adjustNumber = (setting: { key: string; value: number }, delta: number) =>
 }
 
 @media screen and (min-width: 1024px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
   .content-wrapper {
     margin-left: 200px;
     margin-right: 200px;

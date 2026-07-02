@@ -1,62 +1,127 @@
 <script setup lang="ts">
-import { VaAlert, VaButton, VaCard, VaCardContent, VaInput, VaTextarea } from "vuestic-ui"
-import PageHeader from "@/components/PageHeader.vue"
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import {
+  VaAlert,
+  VaButton,
+  VaCard,
+  VaCardContent,
+  VaInput,
+  VaTextarea,
+} from "vuestic-ui";
+import PageHeader from "@/components/PageHeader.vue";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
-import { getApiErrorMessage, getApiErrors } from '@/utils/apiError'
-import reservationAPI from '@/services/reservationAPI'
-import customerAPI from '@/services/customerAPI'
-import logger from '@/utils/logger'
+import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
+import reservationAPI from "@/services/reservationAPI";
+import customerAPI from "@/services/customerAPI";
+import logger from "@/utils/logger";
 
-const router = useRouter()
+const router = useRouter();
 
 const reservation = ref({
-  firstName: '',
-  lastName: '',
-  phone: '',
-  email: '',
-  resDate: '',
-  resTime: '',
-  people: '',
-  expectedTotal: '',
-  notes: '',
-})
+  firstName: "",
+  lastName: "",
+  phone: "",
+  email: "",
+  resDate: "",
+  resTime: "",
+  people: "",
+  expectedTotal: "",
+  notes: "",
+});
 
-const validationErrors = ref<Record<string, string[]> | null>(null)
-const isSuccessful = ref(false)
-const generalError = ref<string | null>(null)
+const validationErrors = ref<Record<string, string[]> | null>(null);
+const isSuccessful = ref(false);
+const generalError = ref<string | null>(null);
 
 const capitalize = (s: string) => {
-  const str = String(s || '').trim()
-  if (!str) return str
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
-}
+  const str = String(s || "").trim();
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
+const customerId = ref<number | null>(null);
+const visitCount = ref(0);
+const customerTags = ref<string[]>([]);
+const loyaltyLoaded = ref(false);
+
+const availableTags = [
+  { key: "vip", label: "VIP", color: "#f59e0b" },
+  { key: "allergy_dairy", label: "Dairy allergy", color: "#ef4444" },
+  { key: "allergy_nuts", label: "Nut allergy", color: "#ef4444" },
+  { key: "allergy_gluten", label: "Gluten-free", color: "#ef4444" },
+  { key: "allergy_shellfish", label: "Shellfish allergy", color: "#ef4444" },
+  { key: "birthday", label: "Birthday", color: "#3b82f6" },
+  { key: "anniversary", label: "Anniversary", color: "#ec4899" },
+  { key: "regular", label: "Regular", color: "#10b981" },
+];
+
+const loadCustomerLoyalty = async (email: string) => {
+  if (!email || !email.includes("@")) {
+    loyaltyLoaded.value = false;
+    return;
+  }
+  try {
+    const res = await customerAPI.findOrCreate({
+      email,
+      firstName: reservation.value.firstName,
+      lastName: reservation.value.lastName,
+      phone: reservation.value.phone,
+    });
+    const customer = res.data.customer;
+    customerId.value = customer.id;
+    visitCount.value = customer.visitCount || 0;
+    customerTags.value = customer.tags || [];
+    loyaltyLoaded.value = true;
+  } catch (err) {
+    logger.error("Failed to load customer loyalty", {
+      error: (err as Error).message,
+    });
+  }
+};
+
+const toggleTag = async (tagKey: string) => {
+  if (!customerId.value) return;
+  const idx = customerTags.value.indexOf(tagKey);
+  if (idx >= 0) {
+    customerTags.value.splice(idx, 1);
+  } else {
+    customerTags.value.push(tagKey);
+  }
+  try {
+    await customerAPI.updateTags(customerId.value, customerTags.value);
+  } catch (err) {
+    logger.error("Failed to update tags", { error: (err as Error).message });
+  }
+};
 
 const registerReservation = async () => {
-  isSuccessful.value = false
-  validationErrors.value = null
-  generalError.value = null
+  isSuccessful.value = false;
+  validationErrors.value = null;
+  generalError.value = null;
   try {
     const payload = {
       ...reservation.value,
       firstName: capitalize(reservation.value.firstName),
       lastName: capitalize(reservation.value.lastName),
-      phone: reservation.value.phone?.replace(/\D/g, '')?.slice(0, 15),
-    }
-    await reservationAPI.registerReservation(payload)
-    isSuccessful.value = true
-    setTimeout(() => router.push({ name: 'reservations' }), 1200)
+      phone: reservation.value.phone?.replace(/\D/g, "")?.slice(0, 15),
+    };
+    await reservationAPI.registerReservation(payload);
+    isSuccessful.value = true;
+    setTimeout(() => router.push({ name: "reservations" }), 1200);
   } catch (err) {
-    generalError.value = getApiErrorMessage(err)
-    validationErrors.value = getApiErrors(err)
+    generalError.value = getApiErrorMessage(err);
+    validationErrors.value = getApiErrors(err);
   }
-}
+};
 </script>
 
 <template>
   <div class="page-wrapper">
-    <PageHeader title="New Reservation" subtitle="Create a new table reservation" />
+    <PageHeader
+      title="New Reservation"
+      subtitle="Create a new table reservation"
+    />
     <div class="content-wrapper">
       <VaCard class="form-card">
         <VaCardContent>
@@ -88,6 +153,7 @@ const registerReservation = async () => {
                 type="email"
                 :error-messages="validationErrors?.email"
                 class="form-field"
+                @blur="loadCustomerLoyalty(reservation.email)"
               />
             </div>
             <div class="form-grid">
@@ -139,22 +205,54 @@ const registerReservation = async () => {
               >
                 Reservation confirmed! Redirecting...
               </VaAlert>
-              <VaAlert
-                v-if="generalError"
-                color="danger"
-                class="error-alert"
-              >
+              <VaAlert v-if="generalError" color="danger" class="error-alert">
                 {{ generalError }}
               </VaAlert>
               <div class="form-actions">
                 <VaButton type="submit" preset="primary" size="large">
                   Create Reservation
                 </VaButton>
-                <VaButton preset="secondary" size="large" @click="router.push({ name: 'reservations' })">
+                <VaButton
+                  preset="secondary"
+                  size="large"
+                  @click="router.push({ name: 'reservations' })"
+                >
                   Cancel
                 </VaButton>
               </div>
             </div>
+
+            <VaCard v-if="loyaltyLoaded" class="loyalty-section">
+              <VaCardContent>
+                <div class="section-header">
+                  <span class="section-icon">⭐</span>
+                  Loyalty ({{ visitCount }} visit{{
+                    visitCount !== 1 ? "s" : ""
+                  }})
+                </div>
+                <div class="tags-grid">
+                  <button
+                    v-for="tag in availableTags"
+                    :key="tag.key"
+                    type="button"
+                    class="tag-btn"
+                    :class="{ active: customerTags.includes(tag.key) }"
+                    :style="
+                      customerTags.includes(tag.key)
+                        ? {
+                            backgroundColor: tag.color,
+                            color: 'white',
+                            borderColor: tag.color,
+                          }
+                        : {}
+                    "
+                    @click="toggleTag(tag.key)"
+                  >
+                    {{ tag.label }}
+                  </button>
+                </div>
+              </VaCardContent>
+            </VaCard>
           </form>
         </VaCardContent>
       </VaCard>
@@ -218,6 +316,53 @@ const registerReservation = async () => {
 
 .error-alert {
   border-radius: 8px;
+}
+
+.loyalty-section {
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 14px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-family: "Inter-Medium";
+  font-size: 14px;
+  color: var(--restaurant-primary);
+}
+
+.section-icon {
+  font-size: 18px;
+}
+
+.tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag-btn {
+  padding: 8px 14px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.tag-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+}
+
+.tag-btn.active {
+  color: white;
+  border-color: transparent;
 }
 
 @media screen and (min-width: 640px) {

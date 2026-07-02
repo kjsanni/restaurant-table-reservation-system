@@ -173,7 +173,7 @@ const editReservation = async () => {
   generalErrors.value = null;
   isSuccessful.value = false;
   try {
-    const res = await reservationAPI.editReservation(
+    await reservationAPI.editReservation(
       props.reservation.id,
       getValues(reservation.value)
     );

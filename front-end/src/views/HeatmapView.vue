@@ -1,4 +1,5 @@
 <script setup>
+import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted } from "vue";
 import Heatmap2D from "@/components/Heatmap2D.vue";
 

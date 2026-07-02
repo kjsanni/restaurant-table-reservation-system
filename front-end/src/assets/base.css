@@ -1,29 +1,32 @@
 :root {
-  /* Restaurant Professional Palette */
-  --restaurant-primary: #0f172a;
-  --restaurant-secondary: #64748b;
-  --restaurant-accent: #0ea5e9;
-  --restaurant-success: #16a34a;
-  --restaurant-warning: #f59e0b;
-  --restaurant-danger: #dc2626;
-  --restaurant-background: #f8fafc;
+  /* Warm Modern Restaurant Palette - Professional with hospitality feel */
+  --restaurant-charcoal: #0f172a;
+  --restaurant-slate: #334155;
+  --restaurant-warm-gray: #64748b;
+  --restaurant-terracotta: #dc2626;
+  --restaurant-golden: #f59e0b;
+  --restaurant-amber: #fbbf24;
+  --restaurant-sage: #16a34a;
+  --restaurant-sky: #0ea5e9;
+  --restaurant-cream: #fefdf8;
+  --restaurant-stone: #f1f5f9;
   --restaurant-surface: #ffffff;
   --restaurant-border: #e2e8f0;
 
   /* Semantic colors */
-  --primary-red: var(--restaurant-danger);
-  --snow-white: #ffffff;
-  --primary-gray: var(--restaurant-secondary);
+  --primary-red: var(--restaurant-terracotta);
+  --snow-white: var(--restaurant-cream);
+  --primary-gray: var(--restaurant-warm-gray);
   --secondary-gray: #94a3b8;
-  --darker-gray: #1e293b;
-  --lighter-gray: #e2e8f0;
-  --light-pink: var(--restaurant-background);
-  --primary-black: var(--restaurant-primary);
-  --accent-red: var(--restaurant-danger);
-  --primary-blue: var(--restaurant-accent);
-  --primary-green: var(--restaurant-success);
-  --primary-white: #ffffff;
-  --darkened-color: rgba(0, 0, 0, 0.05);
+  --darker-gray: var(--restaurant-charcoal);
+  --lighter-gray: var(--restaurant-stone);
+  --light-pink: var(--restaurant-stone);
+  --primary-black: var(--restaurant-charcoal);
+  --accent-red: var(--restaurant-terracotta);
+  --primary-blue: var(--restaurant-sky);
+  --primary-green: var(--restaurant-sage);
+  --primary-white: var(--restaurant-cream);
+  --darkened-color: rgba(15, 23, 42, 0.04);
 
   /* Spacing & Typography */
   --top-spacing: 70px;
@@ -35,35 +38,37 @@
   --header-height: 70px;
   --page-margin-y: 24px;
   --page-margin-x: var(--x-spacing-mobile);
-  --card-radius: 10px;
-  --card-padding: 16px;
-  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  --btn-radius: 6px;
-  --btn-padding: 8px 16px;
-  --input-radius: 6px;
+  --card-radius: 12px;
+  --card-padding: 20px;
+  --card-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+  --btn-radius: 8px;
+  --btn-padding: 10px 20px;
+  --input-radius: 8px;
 
-  /* Luxury theme tokens (previously undefined — now defined) */
-  --luxury-charcoal: #1e293b;
-  --luxury-amber: #f59e0b;
-  --luxury-accent: #0ea5e9;
-  --luxury-slate: #475569;
+  /* Luxury theme tokens */
+  --luxury-charcoal: var(--restaurant-charcoal);
+  --luxury-amber: var(--restaurant-golden);
+  --luxury-accent: var(--restaurant-terracotta);
+  --luxury-slate: var(--restaurant-slate);
 
   /* Vuestic UI brand overrides */
-  --va-button-border-radius: 6px;
-  --va-button-content-px: 16px;
-  --va-button-content-py: 8px;
-  --va-input-wrapper-border-radius: 6px;
-  --va-card-border-radius: 10px;
-  --va-card-padding: 16px;
-  --va-modal-border-radius: 10px;
+  --va-button-border-radius: 8px;
+  --va-button-content-px: 20px;
+  --va-button-content-py: 10px;
+  --va-input-wrapper-border-radius: 8px;
+  --va-card-border-radius: 12px;
+  --va-card-padding: 20px;
+  --va-modal-border-radius: 12px;
   --va-sidebar-item-content-padding: 12px;
+  --va-sidebar-background: var(--restaurant-cream);
+  --va-navbar-background: var(--restaurant-charcoal);
 
-  --va-primary: var(--restaurant-primary);
-  --va-background: var(--restaurant-background);
-  --va-success: var(--restaurant-success);
-  --va-danger: var(--restaurant-danger);
-  --va-info: var(--restaurant-accent);
-  --va-warning: var(--restaurant-warning);
+  --va-primary: var(--restaurant-charcoal);
+  --va-background: var(--restaurant-stone);
+  --va-success: var(--restaurant-sage);
+  --va-danger: var(--restaurant-terracotta);
+  --va-info: var(--restaurant-sky);
+  --va-warning: var(--restaurant-golden);
 }
 
 *,
@@ -75,37 +80,93 @@
 
 a {
   text-decoration: none;
-  font-weight: bold;
-  color: var(--snow-white);
+  font-weight: 500;
+  color: var(--restaurant-terracotta);
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--restaurant-golden);
 }
 
 a:focus-visible {
-  outline: 2px solid var(--restaurant-accent);
+  outline: 2px solid var(--restaurant-terracotta);
   outline-offset: 2px;
   border-radius: 2px;
 }
 
-h1 {
+h1, h2, h3, h4, h5, h6 {
   margin: 0;
-  font-family: "Inter-Bold", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 2.25rem;
+  color: var(--restaurant-charcoal);
+}
+
+h2 {
+  font-size: 1.5rem;
+  color: var(--restaurant-slate);
+}
+
+h3 {
+  font-size: 1.25rem;
+  color: var(--restaurant-charcoal);
 }
 
 button {
   appearance: none;
   border: none;
+  font-family: "Lora", Georgia, serif;
+  cursor: pointer;
 }
 
 body {
   margin: 0;
-  color: var(--primary-black);
-  background: var(--light-pink);
+  color: var(--restaurant-charcoal);
+  background: linear-gradient(165deg, var(--restaurant-cream) 0%, var(--restaurant-stone) 100%);
   transition: color 0.5s, background-color 0.5s;
   line-height: 1.6;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  font-family: "Lora", Georgia, serif;
   font-size: 15px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Luxury hospitality card styling */
+.va-card {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.va-card:hover {
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+}
+
+.va-button--primary {
+  background: linear-gradient(135deg, var(--restaurant-charcoal) 0%, var(--restaurant-slate) 100%);
+  border: none;
+}
+
+.va-button--danger {
+  background: linear-gradient(135deg, var(--restaurant-terracotta) 0%, #b91c1c 100%);
+}
+
+.va-button--success {
+  background: linear-gradient(135deg, var(--restaurant-sage) 0%, #15803d 100%);
+}
+
+.va-sidebar {
+  background: var(--restaurant-cream);
+  border-right: 1px solid var(--restaurant-border);
+}
+
+.va-navbar {
+  background: var(--restaurant-charcoal);
+  border-bottom: 1px solid var(--restaurant-border);
 }
 
 /* Hide empty VaLayout areas */

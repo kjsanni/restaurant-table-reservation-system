@@ -1,34 +1,41 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { VaAlert, VaBadge, VaButton, VaCard, VaCardContent, VaCardTitle, VaInput } from "vuestic-ui"
+import { ref, onMounted } from "vue";
+import {
+  VaAlert,
+  VaBadge,
+  VaButton,
+  VaCard,
+  VaCardContent,
+  VaCardTitle,
+  VaInput,
+} from "vuestic-ui";
 
-import { getApiErrorMessage, getApiErrors } from '@/utils/apiError'
-import tableAPI from '@/services/tableAPI'
+import tableAPI from "@/services/tableAPI";
 
 const table = ref({
-  name: '',
-  capacity: '',
-})
+  name: "",
+  capacity: "",
+});
 
-const validationErrors = ref<Record<string, string[]> | null>(null)
-const emptyFieldsError = ref<string | null>(null)
-const isSuccessful = ref(false)
+const validationErrors = ref<Record<string, string[]> | null>(null);
+const emptyFieldsError = ref<string | null>(null);
 
-const featureEnabled = ref(false)
+const featureEnabled = ref(false);
 
 onMounted(async () => {
   try {
-    const res = await tableAPI.getWaitingStaff()
-    console.log('Table creation endpoint status check:', res)
-    featureEnabled.value = false
+    const res = await tableAPI.getWaitingStaff();
+    console.log("Table creation endpoint status check:", res);
+    featureEnabled.value = false;
   } catch {
-    featureEnabled.value = false
+    featureEnabled.value = false;
   }
-})
+});
 
 const submitTable = async () => {
-  emptyFieldsError.value = 'Table creation is not yet available. Please use the Floor Plan to manage tables.'
-}
+  emptyFieldsError.value =
+    "Table creation is not yet available. Please use the Floor Plan to manage tables.";
+};
 </script>
 
 <template>
@@ -44,13 +51,21 @@ const submitTable = async () => {
             <VaBadge color="warning" class="mb-4">Coming Soon</VaBadge>
             <p class="disabled-text">
               Table creation from this form is not yet available. Please use the
-              <RouterLink to="/floor-plan" class="inline-link">Floor Plan</RouterLink>
+              <RouterLink to="/floor-plan" class="inline-link"
+                >Floor Plan</RouterLink
+              >
               or
-              <RouterLink to="/tables/manage" class="inline-link">Table Management</RouterLink>
+              <RouterLink to="/tables/manage" class="inline-link"
+                >Table Management</RouterLink
+              >
               views for table operations.
             </p>
           </div>
-          <form @submit.prevent="submitTable" class="table-form" aria-disabled="true">
+          <form
+            @submit.prevent="submitTable"
+            class="table-form"
+            aria-disabled="true"
+          >
             <VaInput
               v-model="table.name"
               label="Table Name"
@@ -67,14 +82,12 @@ const submitTable = async () => {
               class="mb-4"
               disabled
             />
-            <VaAlert
-              v-if="emptyFieldsError"
-              color="danger"
-              class="mb-4"
-            >
+            <VaAlert v-if="emptyFieldsError" color="danger" class="mb-4">
               {{ emptyFieldsError }}
             </VaAlert>
-            <VaButton type="submit" preset="primary" block disabled>Submit</VaButton>
+            <VaButton type="submit" preset="primary" block disabled
+              >Submit</VaButton
+            >
           </form>
         </VaCardContent>
       </VaCard>
@@ -89,8 +102,7 @@ const submitTable = async () => {
   justify-content: flex-end;
   width: 100%;
   height: var(--header-height);
-  background: var(--lighter-gray)
-    url("@/assets/images/add-table-header.jpg");
+  background: var(--lighter-gray) url("@/assets/images/add-table-header.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -112,7 +124,7 @@ const submitTable = async () => {
 }
 
 .card-title {
-  font-family: 'Inter-Bold';
+  font-family: "Inter-Bold";
   font-size: 24px;
 }
 
@@ -128,7 +140,7 @@ const submitTable = async () => {
 }
 
 .disabled-text {
-  font-family: 'Inter-Light';
+  font-family: "Inter-Light";
   font-size: 14px;
   color: var(--secondary-gray);
   line-height: 1.5;

@@ -99,32 +99,33 @@ app.use(
     config: {
       colors: {
         variables: {
-          primary: '#04030f',
-          text: { inverted: '#edfdfb' },
-          secondary: '#686868',
-          gray: '#b9bab8',
-          success: '#22c55e',
-          info: '#3b82f6',
-          danger: '#ef4444',
+          primary: '#0f172a',
+          text: { inverted: '#fefdf8' },
+          secondary: '#64748b',
+          gray: '#94a3b8',
+          success: '#16a34a',
+          info: '#0ea5e9',
+          danger: '#dc2626',
+          warning: '#f59e0b',
           white: '#ffffff',
         },
       },
-      components: {
-        all: {
-          borderRadius: { defaultValue: '8px' },
+    },
+    components: {
+      all: {
+        borderRadius: { defaultValue: '8px' },
+      },
+      presets: {
+        VaButton: {
+          primary: { color: 'primary', size: 'medium' },
+          secondary: { preset: 'secondary', size: 'medium' },
+          danger: { color: 'danger', size: 'medium' },
         },
-        presets: {
-          VaButton: {
-            primary: { color: 'primary', size: 'medium' },
-            secondary: { preset: 'secondary', size: 'medium' },
-            danger: { color: 'danger', size: 'medium' },
-          },
-          VaCard: {
-            default: { radius: 'lg', shadow: true },
-          },
-          VaInput: {
-            default: { size: 'large' },
-          },
+        VaCard: {
+          default: { radius: 'lg', shadow: true },
+        },
+        VaInput: {
+          default: { size: 'large' },
         },
       },
     },

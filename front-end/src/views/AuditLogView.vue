@@ -23,13 +23,45 @@ const loadLogs = async () => {
 };
 
 const formatDate = (date) => {
-  return new Date(date).toLocaleString();
+  if (!date) return "";
+  const d = new Date(date);
+  return d.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+};
+
+const getActionClass = (action) => {
+  if (!action) return "action-default";
+  const map = {
+    created: "action-create",
+    updated: "action-update",
+    deleted: "action-delete",
+    cancelled: "action-cancel",
+    "logged in": "action-login",
+    "logged out": "action-logout",
+  };
+  const key = action.toLowerCase();
+  return map[key] || "action-default";
+};
+
+const readMore = (text, maxLength = 60) => {
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength) + "...";
 };
 </script>
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="Audit Logs" />
+    <PageHeader
+      title="Audit Logs"
+      subtitle="Track system activity and changes"
+    />
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -41,22 +73,48 @@ const formatDate = (date) => {
             <thead>
               <tr>
                 <th>Time</th>
+                <th>User</th>
                 <th>Action</th>
-                <th>Type</th>
-                <th>User ID</th>
+                <th>Entity</th>
+                <th>Changes</th>
+                <th>IP Address</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="log in logs" :key="log.id">
-                <td>{{ formatDate(log.createdAt) }}</td>
-                <td>{{ log.action }}</td>
+                <td class="time-cell">{{ formatDate(log.createdAt) }}</td>
+                <td>
+                  <span class="user-name">{{ log.userId }}</span>
+                  <span v-if="log.userRole" class="user-role">{{
+                    log.userRole
+                  }}</span>
+                </td>
+                <td>
+                  <span
+                    class="action-badge"
+                    :class="getActionClass(log.action)"
+                    >{{ log.action }}</span
+                  >
+                </td>
                 <td>
                   <span class="type-badge">{{ log.entityType }}</span>
+                  <span v-if="log.entityId" class="entity-id"
+                    >#{{ log.entityId }}</span
+                  >
                 </td>
-                <td>{{ log.userId }}</td>
+                <td class="changes-cell">
+                  <span
+                    v-if="log.changes"
+                    class="changes-text"
+                    :title="log.changes"
+                    >{{ readMore(log.changes, 80) }}</span
+                  >
+                  <span v-else class="no-changes">-</span>
+                </td>
+                <td class="ip-cell">{{ log.ipAddress || "-" }}</td>
               </tr>
               <tr v-if="!logs.length">
-                <td colspan="4" class="empty-row">No audit logs found</td>
+                <td colspan="6" class="empty-row">No audit logs found</td>
               </tr>
             </tbody>
           </table>
@@ -172,6 +230,93 @@ const formatDate = (date) => {
   color: var(--primary-blue);
   font-family: "Inter-Medium";
   font-size: 12px;
+}
+
+.user-name {
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  color: var(--primary-black);
+}
+
+.user-role {
+  display: block;
+  font-family: "Inter-Light";
+  font-size: 11px;
+  color: var(--secondary-gray);
+  text-transform: capitalize;
+}
+
+.action-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: "Inter-Medium";
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.action-create {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.action-update {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.action-delete,
+.action-cancel {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.action-login,
+.action-logout {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.action-default {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.entity-id {
+  font-family: "Inter-Light";
+  font-size: 11px;
+  color: var(--secondary-gray);
+  margin-left: 4px;
+}
+
+.changes-cell {
+  max-width: 300px;
+}
+
+.changes-text {
+  font-family: "Inter-Light";
+  font-size: 13px;
+  color: var(--primary-black);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 280px;
+}
+
+.no-changes {
+  color: var(--secondary-gray);
+  font-size: 13px;
+}
+
+.ip-cell {
+  font-family: "Inter-Light";
+  font-size: 12px;
+  color: var(--secondary-gray);
+}
+
+.time-cell {
+  white-space: nowrap;
 }
 
 .empty-row {

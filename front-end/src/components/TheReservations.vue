@@ -234,34 +234,6 @@ const buildCalendarDays = (year, month) => {
   loading.value = false;
 };
 
-const openDay = (day) => {
-  selectedDay.value = day;
-  dayPopupOpen.value = true;
-};
-
-const closeDayPopup = () => {
-  dayPopupOpen.value = false;
-  selectedDay.value = null;
-};
-
-const previousMonth = () => {
-  currentMonth.value = new Date(
-    currentMonth.value.getFullYear(),
-    currentMonth.value.getMonth() - 1,
-    1
-  );
-  loadSchedule();
-};
-
-const nextMonth = () => {
-  currentMonth.value = new Date(
-    currentMonth.value.getFullYear(),
-    currentMonth.value.getMonth() + 1,
-    1
-  );
-  loadSchedule();
-};
-
 const paymentColor = (status) => {
   switch (status) {
     case "paid":

@@ -3,6 +3,7 @@ import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted } from "vue";
 import { VaSwitch, VaButton, VaCard, VaCardContent, VaModal } from "vuestic-ui";
 import scheduleAPI from "@/services/scheduleAPI";
+import logger from "@/utils/logger";
 
 const schedules = ref([]);
 const holidays = ref([]);

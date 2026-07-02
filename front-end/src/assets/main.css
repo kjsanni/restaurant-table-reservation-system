@@ -1,31 +1,28 @@
 @import "./base.css";
 
-/* Clean restaurant theme fonts */
-@font-face {
-  font-family: "Inter-Bold";
-  src: local("Inter"), local("Arial"), sans-serif;
-}
-@font-face {
-  font-family: "Inter-Medium";
-  src: local("Inter"), local("Arial"), sans-serif;
-}
-@font-face {
-  font-family: "Inter-Light";
-  src: local("Inter"), local("Arial"), sans-serif;
-}
-
 /* Clean scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--restaurant-background);
+  background: var(--restaurant-stone);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--restaurant-secondary);
-  border-radius: 3px;
+  background: var(--restaurant-warm-gray);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--restaurant-primary);
+  background: var(--restaurant-terracotta);
+}
+
+/* Subtle ambient glow overlay for depth */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 20% 30%, rgba(251, 191, 36, 0.02) 0%, transparent 40%),
+              radial-gradient(circle at 80% 70%, rgba(220, 38, 38, 0.015) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 9999;
 }

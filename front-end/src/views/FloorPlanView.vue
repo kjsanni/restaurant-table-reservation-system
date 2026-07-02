@@ -6,11 +6,11 @@ import LoadingSpinner from "@/components/LoadingSpinner.vue";
 import tableAPI from "@/services/tableAPI";
 import reservationAPI from "@/services/reservationAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
-import logger from "@/utils/logger";
 
 const tables = ref([]);
 const reservations = ref([]);
 const loading = ref(true);
+const loadError = ref("");
 const draggingReservation = ref(null);
 const assignPopupOpen = ref(false);
 const selectedTable = ref(null);
@@ -33,6 +33,7 @@ const pendingReservations = computed(() => {
 
 const loadData = async () => {
   loading.value = true;
+  loadError.value = "";
   try {
     const [tRes, rRes] = await Promise.all([
       tableAPI.getTables(),
@@ -41,7 +42,10 @@ const loadData = async () => {
     tables.value = tRes.data.collection;
     reservations.value = rRes.data.collection;
   } catch (err) {
-    logger.error("Failed to load floor plan", { error: err.message });
+    loadError.value =
+      err.response?.data?.message ||
+      err.message ||
+      "Failed to load data. Please try again.";
   } finally {
     loading.value = false;
   }
@@ -183,7 +187,6 @@ const confirmAssign = async () => {
     selectedTable.value = null;
     await loadData();
   } catch (err) {
-    logger.error("Assign table error", { error: err.message });
     errorMessage.value = getApiErrorMessage(err, "Failed to assign table");
     errorPopupOpen.value = true;
   }
@@ -369,32 +372,6 @@ onMounted(loadData);
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--restaurant-primary);
-  position: relative;
-}
-
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 12px;
-  font-size: 28px;
-  color: white;
-  font-family: "Inter-Bold";
-}
-
-.content-wrapper {
-  margin-top: 12px;
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
-  padding: 0;
-}
-
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -404,21 +381,6 @@ onMounted(loadData);
   gap: 12px;
   color: var(--restaurant-secondary);
   font-family: "Inter-Light";
-}
-
-.spinner {
-  width: 28px;
-  height: 28px;
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--restaurant-accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .floor-layout {
@@ -432,8 +394,8 @@ onMounted(loadData);
   min-width: 220px;
   background: white;
   border: 1px solid var(--restaurant-border);
-  border-radius: var(--card-radius);
-  padding: var(--card-padding);
+  border-radius: 10px;
+  padding: 16px;
   max-height: calc(100vh - 240px);
   overflow-y: auto;
   box-shadow: var(--card-shadow);
@@ -444,8 +406,8 @@ onMounted(loadData);
   min-width: 0;
   background: white;
   border: 1px solid var(--restaurant-border);
-  border-radius: var(--card-radius);
-  padding: var(--card-padding);
+  border-radius: 10px;
+  padding: 16px;
   box-shadow: var(--card-shadow);
 }
 
@@ -462,6 +424,15 @@ onMounted(loadData);
   font-size: 14px;
   color: var(--restaurant-primary);
   margin: 0;
+}
+
+.badge {
+  font-family: "Inter-Medium";
+  font-size: 11px;
+  background: var(--restaurant-primary);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 999px;
 }
 
 .layout-selector {
@@ -488,13 +459,21 @@ onMounted(loadData);
   cursor: pointer;
 }
 
-.badge {
-  font-family: "Inter-Medium";
-  font-size: 11px;
-  background: var(--restaurant-primary);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 999px;
+.empty-state {
+  text-align: center;
+  padding: 20px 0;
+  color: var(--restaurant-secondary);
+  font-family: "Inter-Light";
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.empty-icon {
+  font-size: 20px;
+  opacity: 0.5;
 }
 
 .pending-list {
@@ -517,10 +496,6 @@ onMounted(loadData);
   background: white;
   border-color: var(--restaurant-accent);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
-
-.pending-card:active {
-  cursor: grabbing;
 }
 
 .pending-header {
@@ -581,23 +556,6 @@ onMounted(loadData);
   font-size: 10px;
   color: var(--restaurant-secondary);
   opacity: 0.6;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 20px 0;
-  color: var(--restaurant-secondary);
-  font-family: "Inter-Light";
-  font-size: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.empty-icon {
-  font-size: 20px;
-  opacity: 0.5;
 }
 
 .legend-bar {
@@ -670,12 +628,10 @@ onMounted(loadData);
 
 .table-block.occupied {
   border-left: 3px solid var(--restaurant-danger);
-  opacity: 0.85;
 }
 
 .table-block.blocked {
   border-left: 3px solid var(--restaurant-secondary);
-  opacity: 0.7;
 }
 
 .table-top {
@@ -785,30 +741,6 @@ onMounted(loadData);
   gap: 8px;
 }
 
-@media screen and (max-width: 860px) {
-  .floor-layout {
-    flex-direction: column;
-  }
-
-  .sidebar-panel {
-    width: 100%;
-    min-width: 100%;
-    max-height: 240px;
-  }
-}
-
-@media screen and (min-width: 861px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 36px;
-    margin-bottom: 15px;
-  }
-  .content-wrapper {
-    margin-left: 40px;
-    margin-right: 40px;
-  }
-}
-
 .error-banner {
   display: flex;
   align-items: center;
@@ -816,7 +748,7 @@ onMounted(loadData);
   padding: 16px 20px;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: var(--card-radius);
+  border-radius: 10px;
   margin-bottom: 20px;
   font-family: "Inter-Medium";
   font-size: 14px;
@@ -843,5 +775,17 @@ onMounted(loadData);
 
 .error-retry:hover {
   background: #fef2f2;
+}
+
+@media screen and (max-width: 860px) {
+  .floor-layout {
+    flex-direction: column;
+  }
+
+  .sidebar-panel {
+    width: 100%;
+    min-width: 100%;
+    max-height: 240px;
+  }
 }
 </style>

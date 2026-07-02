@@ -1,16 +1,22 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
+import PageHeader from "@/components/PageHeader.vue";
 import { io } from "socket.io-client";
 import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
 import groupAPI from "@/services/groupAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
+import logger from "@/utils/logger";
+import { paymentOptions, getPaymentStatusColor } from "@/constants";
 import {
-  paymentOptions,
-  getPaymentStatusColor,
-  getPaymentStatusLabel,
-} from "@/constants";
+  VaAlert,
+  VaButton,
+  VaCard,
+  VaCardContent,
+  VaInput,
+  VaModal,
+} from "vuestic-ui";
 
 const schedules = ref([]);
 const holidays = ref([]);
@@ -41,8 +47,8 @@ onMounted(async () => {
   socket.value = io("", {
     path: "/socket.io",
   });
-  socket.value.on("schedule-updated", () => loadSchedules());
-  socket.value.on("holiday-updated", () => loadHolidays());
+  socket.value.on("schedule-updated", () => loadSchedule());
+  socket.value.on("holiday-updated", () => loadSchedule());
 });
 
 onUnmounted(() => {
@@ -68,30 +74,6 @@ const loadSchedule = async () => {
   holidays.value = holidaysRes.data.holidays;
   reservations.value = reservationsRes.data.collection;
 
-  buildCalendarDays(year, month);
-};
-
-const loadSchedules = async () => {
-  const res = await scheduleAPI.getSchedules();
-  schedules.value = res.data.schedules;
-  buildCalendarDaysFromCurrent();
-};
-
-const loadHolidays = async () => {
-  const res = await scheduleAPI.getHolidays();
-  holidays.value = res.data.holidays;
-  buildCalendarDaysFromCurrent();
-};
-
-const loadReservations = async () => {
-  const res = await reservationAPI.getReservations();
-  reservations.value = res.data.collection;
-  buildCalendarDaysFromCurrent();
-};
-
-const buildCalendarDaysFromCurrent = () => {
-  const year = currentMonth.value.getFullYear();
-  const month = currentMonth.value.getMonth();
   buildCalendarDays(year, month);
 };
 
@@ -139,11 +121,6 @@ const buildCalendarDays = (year, month) => {
 const openDay = (day) => {
   selectedDay.value = day;
   dayPopupOpen.value = true;
-};
-
-const closeDayPopup = () => {
-  dayPopupOpen.value = false;
-  selectedDay.value = null;
 };
 
 const previousMonth = () => {
@@ -334,6 +311,7 @@ const handleReschedule = async () => {
 
 <template>
   <div class="main-wrapper">
+    <PageHeader title="..." />
     <div class="header">
       <h1>Schedule Calendar</h1>
     </div>
@@ -691,23 +669,13 @@ const handleReschedule = async () => {
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
 .header h1 {
   margin-left: var(--x-spacing-mobile);
   margin-bottom: 15px;
   font-size: 35px;
   color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
+  text-shadow: 1px 1px 2px var(--restaurant-charcoal);
+  font-family: "Playfair Display", Georgia, serif;
 }
 
 .content-wrapper {
@@ -722,7 +690,8 @@ const handleReschedule = async () => {
   margin-bottom: 15px;
   font-size: 35px;
   color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
+  text-shadow: 1px 1px 2px var(--restaurant-charcoal);
+  font-family: "Playfair Display", Georgia, serif;
 }
 
 .content-wrapper {
@@ -740,15 +709,15 @@ const handleReschedule = async () => {
   justify-content: center;
   padding: 100px 20px;
   gap: 16px;
-  color: var(--secondary-gray);
-  font-family: "Inter-Light";
+  color: var(--restaurant-warm-gray);
+  font-family: "Lora", Georgia, serif;
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
+  border: 3px solid var(--restaurant-stone);
+  border-top-color: var(--restaurant-terracotta);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -769,11 +738,11 @@ const handleReschedule = async () => {
 }
 
 .month-label {
-  font-family: "Inter-Bold";
+  font-family: "Playfair Display", Georgia, serif;
   font-size: 18px;
   min-width: 220px;
   text-align: center;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0;
 }
 
@@ -781,11 +750,11 @@ const handleReschedule = async () => {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--primary-white);
-  border: 1px solid #f0f0f0;
+  background: var(--restaurant-cream);
+  border: 1px solid var(--restaurant-border);
   cursor: pointer;
   font-size: 22px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -794,10 +763,10 @@ const handleReschedule = async () => {
 }
 
 .nav-btn:hover {
-  background: var(--primary-blue);
+  background: var(--restaurant-terracotta);
   color: white;
-  border-color: var(--primary-blue);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  border-color: var(--restaurant-terracotta);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
 }
 
 .nav-icon {
@@ -806,8 +775,8 @@ const handleReschedule = async () => {
 }
 
 .calendar-container {
-  background: var(--primary-white);
-  border: 1px solid #f0f0f0;
+  background: var(--restaurant-cream);
+  border: 1px solid var(--restaurant-border);
   border-radius: var(--card-radius);
   padding: var(--card-padding);
   box-shadow: var(--card-shadow);
@@ -821,24 +790,28 @@ const handleReschedule = async () => {
 
 .day-header {
   text-align: center;
-  font-family: "Inter-Bold";
+  font-family: "Playfair Display", Georgia, serif;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
   padding: 10px;
-  background: var(--primary-black);
+  background: linear-gradient(
+    135deg,
+    var(--restaurant-charcoal) 0%,
+    var(--restaurant-slate) 100%
+  );
   color: var(--snow-white);
   border-radius: 8px;
 }
 
 .calendar-day {
   min-height: 80px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--restaurant-border);
   border-radius: 8px;
   padding: 4px;
   font-size: 10px;
   position: relative;
-  background: var(--primary-white);
+  background: var(--restaurant-cream);
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
@@ -848,14 +821,14 @@ const handleReschedule = async () => {
 
 .calendar-day:hover {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-  border-color: var(--primary-blue);
+  border-color: var(--restaurant-terracotta);
   transform: translateY(-1px);
 }
 
 .day-number {
-  font-family: "Inter-Bold";
+  font-family: "Playfair Display", Georgia, serif;
   font-size: 13px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   text-align: right;
   line-height: 1;
   padding: 2px 4px;
@@ -866,12 +839,12 @@ const handleReschedule = async () => {
   text-align: center;
   padding: 3px 6px;
   border-radius: 6px;
-  font-family: "Inter-Medium";
+  font-family: "Lora", Georgia, serif;
   margin: 2px 0;
 }
 
 .closed-badge-closed {
-  color: #dc2626;
+  color: var(--restaurant-terracotta);
   background: #fef2f2;
 }
 
@@ -883,8 +856,8 @@ const handleReschedule = async () => {
 .hours-badge {
   font-size: 10px;
   text-align: center;
-  color: var(--secondary-gray);
-  font-family: "Inter-Medium";
+  color: var(--restaurant-warm-gray);
+  font-family: "Lora", Georgia, serif;
   padding: 2px 4px;
   background: #f3f4f6;
   border-radius: 4px;
@@ -919,9 +892,10 @@ const handleReschedule = async () => {
 }
 
 .res-name {
-  font-family: "Inter-Medium";
+  font-family: "Lora", Georgia, serif;
+  font-weight: 500;
   font-size: 10px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -941,8 +915,8 @@ const handleReschedule = async () => {
   align-items: center;
   gap: 4px;
   font-size: 9px;
-  color: var(--secondary-gray);
-  font-family: "Inter-Light";
+  color: var(--restaurant-warm-gray);
+  font-family: "Lora", Georgia, serif;
 }
 
 .res-time {
@@ -955,14 +929,16 @@ const handleReschedule = async () => {
 
 .res-overflow {
   font-size: 10px;
-  color: var(--primary-blue);
-  font-family: "Inter-Medium";
+  color: var(--restaurant-sky);
+  font-family: "Lora", Georgia, serif;
+  font-weight: 500;
   text-align: center;
   padding: 3px 0;
   cursor: pointer;
 }
 
 .res-overflow:hover {
+  color: var(--restaurant-terracotta);
   text-decoration: underline;
 }
 
@@ -993,11 +969,12 @@ const handleReschedule = async () => {
 }
 
 .popup-count {
-  font-family: "Inter-Bold";
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 700;
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   padding-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--restaurant-border);
   margin-bottom: 16px;
 }
 
@@ -1017,13 +994,14 @@ const handleReschedule = async () => {
 }
 
 .closed-state {
-  color: #dc2626;
-  font-family: "Inter-Medium";
+  color: var(--restaurant-terracotta);
+  font-family: "Lora", Georgia, serif;
+  font-weight: 500;
 }
 
 .empty-state {
-  color: var(--secondary-gray);
-  font-family: "Inter-Light";
+  color: var(--restaurant-warm-gray);
+  font-family: "Lora", Georgia, serif;
 }
 
 .diagram-popup {
@@ -1048,8 +1026,8 @@ const handleReschedule = async () => {
   width: 2px;
   background: linear-gradient(
     180deg,
-    var(--primary-blue) 0%,
-    var(--lighter-gray) 100%
+    var(--restaurant-terracotta) 0%,
+    var(--restaurant-stone) 100%
   );
   transform: translateX(-50%);
   opacity: 0.4;

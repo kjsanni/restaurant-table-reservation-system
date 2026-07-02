@@ -157,12 +157,6 @@ const openDrillDown = async (day) => {
     drillDownLoading.value = false;
   }
 };
-
-const closeDrillDown = () => {
-  drillDownOpen.value = false;
-  selectedDay.value = null;
-  drillDownHours.value = [];
-};
 </script>
 
 <template>

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { VaButton, VaCard, VaCardContent } from 'vuestic-ui'
-import { useRouter } from 'vue-router'
-import { Icon } from '@iconify/vue'
+import { VaButton, VaCard, VaCardContent } from "vuestic-ui";
+import { useRouter } from "vue-router";
+import { Icon } from "@iconify/vue";
 
-const router = useRouter()
+const router = useRouter();
 
-const changeRoute = (routeName: string) => router.push({ name: routeName })
+const changeRoute = (routeName: string) => router.push({ name: routeName });
 </script>
 
 <template>
@@ -15,12 +15,13 @@ const changeRoute = (routeName: string) => router.push({ name: routeName })
         <div class="badge">Restaurant Management</div>
         <h1 class="hero-title">Table Reservations Simplified</h1>
         <p class="hero-subtitle">
-          Streamline your restaurant operations with our intuitive booking platform.
-          Manage reservations, tables, staff, and payments from a single dashboard.
+          Streamline your restaurant operations with our intuitive booking
+          platform. Manage reservations, tables, staff, and payments from a
+          single dashboard.
         </p>
         <div class="hero-actions">
-          <VaButton 
-            preset="primary" 
+          <VaButton
+            preset="primary"
             size="large"
             class="cta-button"
             @click="changeRoute('new-reservation')"
@@ -30,8 +31,8 @@ const changeRoute = (routeName: string) => router.push({ name: routeName })
             </template>
             New Reservation
           </VaButton>
-          <VaButton 
-            preset="secondary" 
+          <VaButton
+            preset="secondary"
             size="large"
             class="cta-button"
             @click="changeRoute('search')"
@@ -58,28 +59,48 @@ const changeRoute = (routeName: string) => router.push({ name: routeName })
       <div class="features-grid">
         <VaCard class="feature-card" hoverable>
           <VaCardContent>
-            <Icon icon="mdi:table-multiple" width="48" height="48" class="feature-icon" />
+            <Icon
+              icon="mdi:table-multiple"
+              width="48"
+              height="48"
+              class="feature-icon"
+            />
             <h3>Floor Plan</h3>
             <p>Visual drag-and-drop seating management</p>
           </VaCardContent>
         </VaCard>
         <VaCard class="feature-card" hoverable>
           <VaCardContent>
-            <Icon icon="mdi:account-clock" width="48" height="48" class="feature-icon" />
+            <Icon
+              icon="mdi:account-clock"
+              width="48"
+              height="48"
+              class="feature-icon"
+            />
             <h3>Waitlist</h3>
             <p>Smart queue with auto-seating suggestions</p>
           </VaCardContent>
         </VaCard>
         <VaCard class="feature-card" hoverable>
           <VaCardContent>
-            <Icon icon="mdi:currency-usd" width="48" height="48" class="feature-icon" />
+            <Icon
+              icon="mdi:currency-usd"
+              width="48"
+              height="48"
+              class="feature-icon"
+            />
             <h3>Revenue Reports</h3>
             <p>Track payments and generate insights</p>
           </VaCardContent>
         </VaCard>
         <VaCard class="feature-card" hoverable>
           <VaCardContent>
-            <Icon icon="mdi:shield-account" width="48" height="48" class="feature-icon" />
+            <Icon
+              icon="mdi:shield-account"
+              width="48"
+              height="48"
+              class="feature-icon"
+            />
             <h3>Secure Access</h3>
             <p>Role-based permissions and audit logs</p>
           </VaCardContent>
@@ -219,23 +240,23 @@ const changeRoute = (routeName: string) => router.push({ name: routeName })
   .hero-section {
     padding: 80px var(--x-spacing-desktop) 60px;
   }
-  
+
   .hero-title {
     font-size: 48px;
   }
-  
+
   .hero-content {
     text-align: left;
   }
-  
+
   .hero-actions {
     justify-content: flex-start;
   }
-  
+
   .hero-visual {
     display: flex;
   }
-  
+
   .features-section {
     padding: 80px var(--x-spacing-desktop) 100px;
   }
