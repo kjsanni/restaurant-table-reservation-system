@@ -3,6 +3,7 @@ const Table = db.table;
 const Reservation = db.reservation;
 const Customer = db.customer;
 const User = db.user;
+const { fn, col } = db.sequelize;
 
 const findAllTables = async () => {
   return await Table.findAll({
@@ -14,7 +15,7 @@ const findAllTables = async () => {
           {
             model: Customer,
             attributes: [
-              [db.sequelize.fn("CONCAT", db.sequelize.col("Customer.firstName"), " ", db.sequelize.col("Customer.lastName")), "name"],
+              [fn("CONCAT", col("reservation->customer.firstName"), " ", col("reservation->customer.lastName")), "name"],
             ],
           },
         ],
