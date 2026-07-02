@@ -176,12 +176,11 @@ const onDrop = (table, event) => {
 const confirmAssign = async () => {
   if (!draggingReservation.value || !selectedTable.value) return;
 
-  const tablesToAssign = [selectedTable.value, ...selectedLinkedTables.value];
-
   try {
-    for (const table of tablesToAssign) {
-      await reservationAPI.chooseTable(draggingReservation.value.id, table.id);
-    }
+    await reservationAPI.chooseTable(
+      draggingReservation.value.id,
+      selectedTable.value.id
+    );
     assignPopupOpen.value = false;
     draggingReservation.value = null;
     selectedTable.value = null;
