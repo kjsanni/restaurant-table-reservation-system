@@ -91,8 +91,9 @@ const closePopup = () => {
   selectedReservation.value = null;
 };
 
-const passItemData = (item) => {
-  selectedReservation.value = item;
+const closeDeleteConfirm = () => {
+  showDeleteConfirm.value = false;
+  deleteTargetId.value = null;
 };
 
 const refreshData = async () => {
@@ -113,6 +114,34 @@ const loadData = async () => {
     logger.error("Failed to load payment dashboard", { error: err.message });
   } finally {
     loading.value = false;
+  }
+};
+
+const showDeleteConfirm = ref(false);
+const deleteTargetId = ref(null);
+
+const handleSelectedReservation = async (item) => {
+  if (!item?.id) return;
+  const action = item.action;
+  if (action === "edit") {
+    openPopup({ headerText: "Edit Reservation" });
+    selectedReservation.value = item;
+  } else if (action === "delete") {
+    deleteTargetId.value = item.id;
+    showDeleteConfirm.value = true;
+  }
+};
+
+const confirmDelete = async () => {
+  if (!deleteTargetId.value) return;
+  try {
+    await reservationAPI.cancelReservation(deleteTargetId.value);
+    await loadData();
+  } catch (err) {
+    logger.error("Delete failed", { error: err.message });
+  } finally {
+    showDeleteConfirm.value = false;
+    deleteTargetId.value = null;
   }
 };
 
@@ -204,9 +233,7 @@ onMounted(loadData);
           <TableView
             :fields="tableFields"
             :collection="filteredReservations"
-            @onOpen="openPopup"
-            @onSelectedReservation="passItemData"
-            @onCanceledReservation="loadData"
+            @onSelectedReservation="handleSelectedReservation"
           />
         </div>
       </div>
@@ -225,6 +252,27 @@ onMounted(loadData);
           :is-modal="true"
           @on-edited="refreshData"
         />
+      </template>
+    </PopupBox>
+
+    <PopupBox
+      :is-open="showDeleteConfirm"
+      header-text="Confirm Delete"
+      :is-closable="true"
+      @close-modal="closeDeleteConfirm"
+    >
+      <template #popup-content>
+        <div class="confirm-content">
+          <p>Are you sure you want to permanently delete this reservation?</p>
+          <div class="confirm-actions">
+            <button class="btn btn-secondary" @click="closeDeleteConfirm">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmDelete">
+              Delete
+            </button>
+          </div>
+        </div>
       </template>
     </PopupBox>
   </div>
@@ -455,5 +503,55 @@ onMounted(loadData);
     margin-left: 200px;
     margin-right: 200px;
   }
+}
+
+.confirm-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.confirm-content p {
+  font-family: "Inter-Medium";
+  font-size: 15px;
+  color: var(--primary-black);
+  margin: 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-danger {
+  background-color: var(--primary-red);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: var(--primary-black);
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  transition: all 0.15s;
 }
 </style>

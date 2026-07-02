@@ -68,7 +68,6 @@ related:
 ## Known Remaining Issues
 
 - Security audit identified **3 CRITICAL** and **7 HIGH** vulnerabilities (hardcoded JWT secret, default admin credentials, CORS misconfiguration)
-- `util yaml-js.js` missing module — backend dependency issue
 - `Suspense` experimental feature warning — Vue runtime warning
 - Duplicate `console.log` in `TheReservations.vue` (existing debug output)
 - `TableView.vue` is the only remaining table-row component in a card-based UI

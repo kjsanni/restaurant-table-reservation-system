@@ -267,9 +267,22 @@ Across all modernized pages:
 
 ---
 
+## Fixes Applied (Current Session)
+
+### 1. Removed Stale Documentation
+- Removed `yaml-js.js` reference from SESSION_NOTES.md and docs/900-Session-Summary.md (no such file exists in codebase)
+
+### 2. TableView.vue Design System Upgrade
+- Converted legacy table-row component to card-based layout
+- Added reservation cards with avatar, status chips, payment badges
+- Maintained all existing functionality (edit, cancel, seat, assign staff)
+- Updated PaymentDashboardView.vue to handle new card-based TableView emit format
+- Added delete confirmation modal support
+
+---
+
 ## Known Remaining Issues (not introduced this session)
 
-- `util yaml-js.js` missing module — backend dependency issue
 - `Suspense is an experimental feature` — Vue runtime warning (no functional impact)
 - `Booking a table is only available on the reservation date!` — backend business rule enforced during floor-plan drag-and-drop
 - `ERR_BAD_RESPONSE 500` on waitlist — backend server error unrelated to frontend changes

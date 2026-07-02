@@ -8,7 +8,9 @@ import logger from "@/utils/logger";
 import { useAuthStore } from "@/stores/auth";
 
 const authStore = useAuthStore();
-const canAddToWaitlist = computed(() => authStore.user?.role === "staff");
+const canAddToWaitlist = computed(
+  () => authStore.user?.role === "admin" || authStore.user?.role === "staff"
+);
 
 const entries = ref([]);
 const stats = ref({

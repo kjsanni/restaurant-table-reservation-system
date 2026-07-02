@@ -57,7 +57,9 @@ const canManageTables = computed(
   () => authStore.user?.permissions?.manage_tables === true
 );
 
-const canAddToWaitlist = computed(() => authStore.user?.role === "staff");
+const canAddToWaitlist = computed(
+  () => authStore.user?.role === "admin" || authStore.user?.role === "staff"
+);
 
 const showDeleteModal = ref(false);
 const deleteTargetId = ref(null);

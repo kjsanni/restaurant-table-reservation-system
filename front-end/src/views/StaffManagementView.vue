@@ -1,9 +1,13 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import authAPI from "@/services/authAPI";
+import roleAPI from "@/services/roleAPI";
+import logger from "@/utils/logger";
 
 const staff = ref([]);
 const loading = ref(true);
+const roles = ref([]);
+const rolesLoading = ref(true);
 const showAddDialog = ref(false);
 const newStaff = ref({
   username: "",
@@ -19,7 +23,6 @@ const newStaff = ref({
   },
 });
 
-const roles = ["admin", "manager", "staff"];
 const permissionKeys = [
   { key: "view_reservations", label: "View Reservations" },
   { key: "edit_reservations", label: "Edit Reservations" },
@@ -30,6 +33,7 @@ const permissionKeys = [
 
 onMounted(async () => {
   await loadStaff();
+  await loadRoles();
 });
 
 const loadStaff = async () => {
@@ -41,6 +45,18 @@ const loadStaff = async () => {
     logger.error("Failed to load staff", { error: err.message });
   } finally {
     loading.value = false;
+  }
+};
+
+const loadRoles = async () => {
+  rolesLoading.value = true;
+  try {
+    const res = await roleAPI.getAllRoles();
+    roles.value = res.data.roles || [];
+  } catch (err) {
+    logger.error("Failed to load roles", { error: err.message });
+  } finally {
+    rolesLoading.value = false;
   }
 };
 
