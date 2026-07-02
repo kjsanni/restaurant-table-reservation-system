@@ -291,6 +291,16 @@ const staffAtLimit = (staff) => {
               </div>
             </div>
 
+            <div v-if="table.reservation && (table.reservation.Customer?.name || table.reservation.name)" class="reservation-section">
+              <span class="section-label">Current Reservation</span>
+              <div class="reservation-info">
+                <span class="reservation-name">{{ table.reservation.Customer?.name || table.reservation.name }}</span>
+                <span class="reservation-meta">
+                  {{ table.reservation.people }} guests · {{ table.reservation.resTime }}
+                </span>
+              </div>
+            </div>
+
             <div class="staff-section" v-if="table.users && table.users.length">
               <span class="section-label">Assigned Staff</span>
               <div class="staff-list">
@@ -761,13 +771,53 @@ const staffAtLimit = (staff) => {
 }
 
 .blocked-reason {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 12px;
-  color: #6b7280;
-  background: #f3f4f6;
-  padding: 8px 10px;
-  border-radius: 6px;
-  margin-top: 4px;
+}
+
+.reservation-section {
+  margin-top: 10px;
+  padding: 10px;
+  background: #eff6ff;
+  border-radius: 10px;
+  border: 1px solid #bfdbfe;
+}
+
+.section-label {
+  font-family: "Inter-Medium";
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--secondary-gray);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.reservation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reservation-name {
+  font-family: "Inter-Bold";
+  font-size: 14px;
+  color: var(--primary-black);
+}
+
+.reservation-meta {
+  font-family: "Inter-Light";
+  font-size: 12px;
+  color: var(--secondary-gray);
+}
+
+.staff-section {
+  margin-top: 12px;
 }
 
 .table-actions {

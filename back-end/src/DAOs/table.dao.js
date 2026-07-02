@@ -9,6 +9,14 @@ const findAllTables = async () => {
     include: [
       {
         model: Reservation,
+        include: [
+          {
+            model: Customer,
+            attributes: [
+              [db.sequelize.fn("CONCAT", db.sequelize.col("Customer.firstName"), " ", db.sequelize.col("Customer.lastName")), "name"],
+            ],
+          },
+        ],
       },
       {
         model: User,
