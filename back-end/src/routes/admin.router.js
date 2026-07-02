@@ -8,7 +8,7 @@ const { adminActionLimiter } = require("../middleware/rateLimit");
 
 router
   .route("/logs/email")
-  .post(tryCatchHandler(protect), tryCatchHandler(admin), tryCatchHandler(adminActionLimiter), tryCatchHandler(adminController.emailLogsHandler))
+  .post(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(admin), tryCatchHandler(adminController.emailLogsHandler))
   .all(httpMethodError);
 
 module.exports = router;
