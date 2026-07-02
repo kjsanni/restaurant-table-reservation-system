@@ -5,6 +5,7 @@ const User = db.user;
 
 const findAllTables = async () => {
   return await Table.findAll({
+    attributes: { exclude: ["linkedTableIds"] },
     include: [
       {
         model: Reservation,
@@ -63,34 +64,14 @@ const freeTable = async (reservationDAO, table) => {
     await updateTable(table, {
       isOccupied: false,
       reservationId: null,
-      linkedTableIds: null,
     });
     return null;
-  }
-
-  const linkedIds = Array.isArray(table.linkedTableIds)
-    ? table.linkedTableIds
-    : [];
-  if (linkedIds.length > 0) {
-    await Table.update(
-      {
-        isOccupied: false,
-        reservationId: null,
-        linkedTableIds: null,
-      },
-      {
-        where: {
-          id: linkedIds,
-        },
-      }
-    );
   }
 
   const reservation = await reservationDAO.findReservationById(reservationId);
   await updateTable(table, {
     isOccupied: false,
     reservationId: null,
-    linkedTableIds: null,
   });
 
   if (reservation) {
