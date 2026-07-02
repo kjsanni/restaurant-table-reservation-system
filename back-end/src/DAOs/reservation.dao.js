@@ -141,16 +141,21 @@ const getCustomerStats = async (customerId) => {
 };
 
 const createReservation = async (resDetails) => {
-  const { resDate, resTime, people, notes, ...customerDetails } = resDetails;
+  const { resDate, resTime, people, notes, customerId, ...rest } = resDetails;
   const result = await db.sequelize.transaction(async (t) => {
-    const customer = await findOrCreateCustomer(customerDetails, t);
+    let finalCustomerId = customerId;
+
+    if (!finalCustomerId) {
+      const customer = await findOrCreateCustomer(rest, t);
+      finalCustomerId = customer.id;
+    }
 
     const reservation = await Reservation.create(
       {
         resDate: resDate,
         resTime: resTime,
         people: people,
-        customerId: customer.id,
+        customerId: finalCustomerId,
         paymentStatus: resDetails.paymentStatus || "unpaid",
         expectedTotal: parseFloat(resDetails.expectedTotal || 0),
         notes: notes || null,
