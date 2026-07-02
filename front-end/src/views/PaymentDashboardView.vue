@@ -4,6 +4,7 @@ import reservationAPI from "@/services/reservationAPI";
 import TableView from "@/components/TableView.vue";
 import PopupBox from "@/components/PopupBox.vue";
 import EditReservation from "@/components/EditReservation.vue";
+import logger from "@/utils/logger";
 
 const loading = ref(true);
 const reservations = ref([]);

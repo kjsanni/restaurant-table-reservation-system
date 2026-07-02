@@ -276,8 +276,8 @@ onMounted(loadData);
                 tableStatus(table),
                 {
                   selected:
-                    selectedTable.value?.id === table.id ||
-                    selectedLinkedTables.value.some((t) => t.id === table.id),
+                    selectedTable?.id === table.id ||
+                    selectedLinkedTables.some((t) => t.id === table.id),
                 },
               ]"
               @dragover.prevent="onTableDragOver(table, $event)"
@@ -351,10 +351,10 @@ onMounted(loadData);
               <strong>{{ tableMergeDisplayName() }}</strong
               >?
             </p>
-            <div v-if="selectedLinkedTables.value.length" class="merge-rows">
+            <div v-if="selectedLinkedTables.length" class="merge-rows">
               <div
                 class="merge-row"
-                v-for="tbl in selectedLinkedTables.value"
+                v-for="tbl in selectedLinkedTables"
                 :key="tbl.id"
               >
                 🪑 {{ tbl.name || `T${tbl.id}` }} (cap {{ tbl.capacity }})

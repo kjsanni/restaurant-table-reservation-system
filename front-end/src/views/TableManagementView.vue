@@ -530,7 +530,9 @@ const staffAtLimit = (staff) => {
                     v-model="addSelectedStaffIds"
                   />
                   <span class="staff-name">{{ staff.username }}</span>
-                  <span :class="['staff-count', { full: staff.tableCount >= 5 }]">
+                  <span
+                    :class="['staff-count', { full: staff.tableCount >= 5 }]"
+                  >
                     {{ staff.tableCount }}/5 tables
                   </span>
                 </label>
@@ -545,7 +547,11 @@ const staffAtLimit = (staff) => {
               >
                 Cancel
               </button>
-              <button type="submit" class="btn btn-primary" :disabled="addIsSuccessful">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                :disabled="addIsSuccessful"
+              >
                 Save
               </button>
             </div>
