@@ -640,7 +640,7 @@ const getReservationStats = async (filters = {}) => {
 };
 
 const searchReservations = async (term) => {
-  const like = `%${term.replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
+  const like = `%${term.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
   const where = {
     [Op.or]: [
       { resDate: { [Op.like]: like } },
