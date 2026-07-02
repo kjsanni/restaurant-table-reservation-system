@@ -36,7 +36,7 @@ const roles = [
   { label: "Manager", value: "manager" },
   { label: "Staff", value: "staff" },
 ] as const;
-type Role = typeof roles[number]["value"];
+type Role = (typeof roles)[number]["value"];
 
 const permissionKeys = [
   { key: "view_reservations", label: "View Reservations" },

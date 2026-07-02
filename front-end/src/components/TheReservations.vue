@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { VaButton, VaModal, VaCard, VaCardContent } from "vuestic-ui";
 import { io } from "socket.io-client";
 import scheduleAPI from "@/services/scheduleAPI";
@@ -15,6 +15,8 @@ import ChooseTable from "@/components/ChooseTable.vue";
 import AssignStaff from "@/components/AssignStaff.vue";
 import { useAuthStore } from "@/stores/auth";
 import { getApiErrorMessage } from "@/utils/apiError";
+import SearchIcon from "~icons/ant-design/search-outlined";
+import ClearIcon from "~icons/fluent/dismiss-16-filled";
 
 const schedules = ref([]);
 const holidays = ref([]);
@@ -55,6 +57,12 @@ const deleteTargetId = ref(null);
 const showNoShowModal = ref(false);
 const noShowTargetId = ref(null);
 
+const viewMode = ref("calendar");
+const searchVal = ref("");
+const searchNotes = ref(true);
+const searchLoading = ref(false);
+const searchResults = ref([]);
+
 const openDeleteModal = (id) => {
   deleteTargetId.value = id;
   showDeleteModal.value = true;
@@ -82,7 +90,7 @@ const confirmNoShow = async () => {
     await reservationAPI.editReservation(noShowTargetId.value, {
       resStatus: "missed",
     });
-    await loadSchedule();
+    await Promise.all([loadSchedule(), loadSearchResults()]);
   } catch (err) {
     actionError.value = getApiErrorMessage(err, "Failed to mark no-show");
   } finally {
@@ -96,7 +104,7 @@ const confirmDelete = async () => {
   actionLoading.value = true;
   try {
     await reservationAPI.cancelReservation(deleteTargetId.value);
-    await loadSchedule();
+    await Promise.all([loadSchedule(), loadSearchResults()]);
   } catch (err) {
     actionError.value = getApiErrorMessage(err, "Failed to delete reservation");
   } finally {
@@ -158,6 +166,50 @@ const loadSchedule = async () => {
   reservations.value = reservationsRes.data.collection;
 
   buildCalendarDays(year, month);
+};
+
+const loadSearchResults = async () => {
+  searchLoading.value = true;
+  try {
+    const params: Record<string, string> = {};
+    if (searchVal.value.trim()) {
+      params.q = searchVal.value.trim();
+    }
+    const res = await reservationAPI.getReservations(params);
+    let data = res.data.collection || [];
+    if (searchVal.value.trim()) {
+      const query = searchVal.value.trim().toLowerCase();
+      data = data.filter((item) => {
+        if (!searchNotes.value) {
+          const itemWithoutNotes = { ...item };
+          delete itemWithoutNotes.notes;
+          const keys = Object.keys(itemWithoutNotes);
+          return keys.some((key) => {
+            const val = item[key];
+            if (val === null || val === undefined) return false;
+            return String(val).toLowerCase().includes(query);
+          });
+        }
+        return Object.keys(item).some((key) => {
+          const val = item[key];
+          if (val === null || val === undefined) return false;
+          return String(val).toLowerCase().includes(query);
+        });
+      });
+    }
+    searchResults.value = data.filter(
+      (r) => r.resStatus !== "seated" && r.resStatus !== "completed"
+    );
+  } catch (err) {
+    searchResults.value = [];
+  } finally {
+    searchLoading.value = false;
+  }
+};
+
+const clearSearch = () => {
+  searchVal.value = "";
+  loadSearchResults();
 };
 
 const loadSchedules = async () => {
@@ -476,6 +528,18 @@ const today = () => {
   currentMonth.value = new Date();
   loadSchedule();
 };
+
+watch(searchVal, () => {
+  if (viewMode.value === "search") {
+    loadSearchResults();
+  }
+});
+
+watch(searchNotes, () => {
+  if (viewMode.value === "search") {
+    loadSearchResults();
+  }
+});
 </script>
 
 <template>
@@ -484,18 +548,38 @@ const today = () => {
       <h1>Reservations</h1>
     </div>
     <div class="content-wrapper">
-      <div class="date-controls">
-        <button class="nav-btn" @click="prev()">
-          <span class="nav-icon">‹</span>
+      <div class="tabs">
+        <button
+          class="tab-btn"
+          :class="{ active: viewMode === 'calendar' }"
+          @click="viewMode = 'calendar'"
+        >
+          Calendar
         </button>
-        <h2 class="date-label">Reservations for {{ currDate }}</h2>
-        <button class="nav-btn" @click="next()">
-          <span class="nav-icon">›</span>
+        <button
+          class="tab-btn"
+          :class="{ active: viewMode === 'search' }"
+          @click="
+            viewMode = 'search';
+            loadSearchResults();
+          "
+        >
+          Search All
         </button>
-        <button class="btn btn-primary btn-sm" @click="today()">Today</button>
       </div>
 
-      <div class="sections-row">
+      <div v-if="viewMode === 'calendar'" class="sections-row">
+        <div class="date-controls">
+          <button class="nav-btn" @click="prev()">
+            <span class="nav-icon">‹</span>
+          </button>
+          <h2 class="date-label">Reservations for {{ currDate }}</h2>
+          <button class="nav-btn" @click="next()">
+            <span class="nav-icon">›</span>
+          </button>
+          <button class="btn btn-primary btn-sm" @click="today()">Today</button>
+        </div>
+
         <div class="section-card reservations-card">
           <div class="card-header">
             <h2 class="section-title">Today's Reservations</h2>
@@ -540,7 +624,7 @@ const today = () => {
                     preset="primary"
                     color="#22c55e"
                     @click="
-                      openPopup('Choose Table');
+                      openPopup({ headerText: 'Choose Table' });
                       assignSelectedReservation(slotProps.item);
                     "
                   >
@@ -550,7 +634,7 @@ const today = () => {
                     preset="primary"
                     color="#3b82f6"
                     @click="
-                      openPopup('Edit Reservation');
+                      openPopup({ headerText: 'Edit Reservation' });
                       assignSelectedReservation(slotProps.item);
                     "
                   >
@@ -561,7 +645,7 @@ const today = () => {
                     preset="primary"
                     color="#f59e0b"
                     @click="
-                      openPopup('Assign Staff');
+                      openPopup({ headerText: 'Assign Staff' });
                       assignSelectedReservation(slotProps.item);
                     "
                   >
@@ -609,6 +693,93 @@ const today = () => {
               />
             </template>
           </GridContainer>
+        </div>
+      </div>
+
+      <div v-else class="search-container">
+        <div class="search-controls">
+          <div class="search-bar">
+            <span class="search-icon"><SearchIcon /></span>
+            <input
+              type="search"
+              class="search-input"
+              placeholder="Search by name, phone, email, date..."
+              v-model="searchVal"
+              aria-label="Search reservations"
+            />
+            <button
+              v-if="searchVal"
+              type="button"
+              class="clear-btn"
+              @click="clearSearch"
+              aria-label="Clear search"
+            >
+              <ClearIcon />
+            </button>
+          </div>
+          <label class="notes-toggle">
+            <input type="checkbox" v-model="searchNotes" />
+            <span>Include notes in search</span>
+          </label>
+        </div>
+
+        <div v-if="searchLoading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading reservations...</p>
+        </div>
+
+        <div v-else class="results-container">
+          <div class="results-meta">
+            <span class="results-count">
+              {{ searchResults.length }}
+              {{ searchResults.length === 1 ? "result" : "results" }}
+            </span>
+          </div>
+
+          <ListContainer
+            class="results-wrapper"
+            :collection="searchResults"
+            :filteredCollection="searchResults"
+          >
+            <template #card="slotProps">
+              <div class="search-result-card">
+                <ReservationInfo
+                  :reservation="slotProps.item"
+                  :can-delete="canEditReservations"
+                  :search-query="searchVal"
+                  @on-delete="openDeleteModal"
+                />
+                <div
+                  class="card-actions"
+                  v-if="
+                    slotProps.item.resStatus === 'pending' &&
+                    canEditReservations
+                  "
+                >
+                  <button
+                    class="action-btn no-show-btn"
+                    @click="openNoShowModal(slotProps.item.id)"
+                  >
+                    Mark No-Show
+                  </button>
+                </div>
+              </div>
+            </template>
+          </ListContainer>
+
+          <div
+            v-if="!searchLoading && searchResults.length === 0"
+            class="empty-state"
+          >
+            <span class="empty-icon">🔍</span>
+            <p class="empty-text">
+              {{
+                searchVal
+                  ? "No matching reservations found"
+                  : "No reservations available"
+              }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -701,6 +872,29 @@ const today = () => {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  color: var(--secondary-gray);
+  transition: all 0.15s;
+}
+
+.tab-btn.active {
+  background: var(--primary-blue);
+  color: white;
+  border-color: var(--primary-blue);
 }
 
 .date-controls {
@@ -944,5 +1138,264 @@ const today = () => {
   opacity: 0.92;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.search-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.search-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.search-bar {
+  position: relative;
+  max-width: 420px;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--secondary-gray);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.search-icon :deep(svg) {
+  width: 20px;
+  height: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 42px 12px 44px;
+  border: 1px solid #f0f0f0;
+  border-radius: var(--input-radius);
+  font-family: "Inter-Light";
+  font-size: 15px;
+  color: var(--primary-black);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.clear-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--secondary-gray);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.clear-btn:hover {
+  background: #f3f4f6;
+  color: var(--primary-black);
+}
+
+.clear-btn :deep(svg) {
+  width: 18px;
+  height: 18px;
+}
+
+.notes-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  color: var(--secondary-gray);
+  cursor: pointer;
+  user-select: none;
+}
+
+.notes-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary-blue);
+}
+
+.results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.results-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.results-count {
+  font-family: "Inter-Medium";
+  font-size: 14px;
+  color: var(--secondary-gray);
+}
+
+.results-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 60px 20px;
+  color: var(--secondary-gray);
+  font-family: "Inter-Light";
+}
+
+.empty-icon {
+  font-size: 36px;
+  opacity: 0.45;
+}
+
+.empty-text {
+  margin: 0;
+  font-size: 15px;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 20px;
+  gap: 16px;
+  color: var(--secondary-gray);
+  font-family: "Inter-Light";
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--lighter-gray);
+  border-top-color: var(--primary-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--card-radius);
+  margin-bottom: 16px;
+}
+
+.error-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.error-retry {
+  margin-left: auto;
+  padding: 6px 14px;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  background: white;
+  color: #dc2626;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.error-retry:hover {
+  background: #fef2f2;
+}
+
+.confirm-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.confirm-content p {
+  font-family: "Inter-Medium";
+  font-size: 15px;
+  color: var(--primary-black);
+  margin: 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.search-result-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-left: 15px;
+}
+
+.action-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-family: "Inter-Medium";
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.no-show-btn {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.no-show-btn:hover {
+  background-color: #d97706;
+}
+
+@media screen and (min-width: 1024px) {
+  .content-wrapper {
+    margin-left: var(--x-spacing-desktop);
+    margin-right: var(--x-spacing-desktop);
+  }
 }
 </style>

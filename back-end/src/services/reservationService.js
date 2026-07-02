@@ -1,6 +1,9 @@
 const dateTimeValidator = require("../utils/dateAndTimeValidator");
 
-const getAllReservations = async (reservationDAO) => {
+const getAllReservations = async (reservationDAO, filters = {}) => {
+  if (Object.keys(filters).length > 0) {
+    return await reservationDAO.searchReservations(filters);
+  }
   return await reservationDAO.findAllReservations();
 };
 

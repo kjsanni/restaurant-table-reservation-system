@@ -36,12 +36,6 @@ const router = createRouter({
       meta: { requiresAuth: true, title: "New Reservation" },
     },
     {
-      path: "/search",
-      name: "search",
-      component: () => import("../views/SearchView.vue"),
-      meta: { requiresAuth: true, title: "Search Reservations" },
-    },
-    {
       path: "/add-table",
       redirect: "/tables/manage",
     },

@@ -8,7 +8,7 @@ import { VaSkeleton } from "vuestic-ui";
   <div class="main-wrapper">
     <PageHeader
       title="Reservations"
-      subtitle="View and manage today's bookings"
+      subtitle="View calendar and search all bookings"
     />
     <div class="content-wrapper">
       <Suspense>

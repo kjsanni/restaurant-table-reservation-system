@@ -1,8 +1,8 @@
 import API from "./API";
 
 class ReservationAPI {
-  getReservations() {
-    return API.get("/reservations");
+  getReservations(params = {}) {
+    return API.get("/reservations", { params });
   }
   registerReservation(reservationData) {
     return API.post("/reservations", reservationData);

@@ -123,8 +123,8 @@ const handleKeydown = (event) => {
       }
       break;
     case "/":
-      if (isAuthenticated.value) {
-        router.push({ name: "search" });
+      if (isAuthenticated.value && route.name !== "reservations") {
+        router.push({ name: "reservations" });
       }
       break;
     case "t":

@@ -3,8 +3,15 @@ const reservationDAO = require("../DAOs/reservation.dao");
 const tableDAO = require("../DAOs/table.dao");
 
 const getAllHandler = async (req, res) => {
+  const filters = {};
+  if (req.query.q) filters.q = req.query.q;
+  if (req.query.from) filters.from = req.query.from;
+  if (req.query.to) filters.to = req.query.to;
+  if (req.query.status) filters.status = req.query.status;
+
   const reservations = await reservationService.getAllReservations(
-    reservationDAO
+    reservationDAO,
+    filters
   );
 
   return res.status(200).json({

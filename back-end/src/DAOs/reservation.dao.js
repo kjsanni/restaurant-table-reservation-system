@@ -26,6 +26,78 @@ const findAllReservations = async () => {
   return flattenArrayObjects(reservations);
 };
 
+const searchReservations = async (filters = {}) => {
+  const { q, from, to, status } = filters;
+  const where = {};
+
+  if (status) {
+    where.resStatus = status;
+  }
+
+  if (from) where.resDate = { ...where.resDate, [Op.gte]: from };
+  if (to) where.resDate = { ...where.resDate, [Op.lte]: to };
+
+  const include = [
+    {
+      model: Customer,
+      attributes: [
+        [fn("CONCAT", col("firstName"), " ", col("lastName")), "name"],
+        "email",
+        "phone",
+        "visitCount",
+        "lastVisitDate",
+        "tags",
+      ],
+    },
+  ];
+
+  if (q) {
+    const like = { [Op.like]: `%${q}%` };
+    where[Op.or] = [
+      { "$Customer.name$": like },
+      { "$Customer.email$": like },
+      { "$Customer.phone$": like },
+      { resDate: like },
+      { resTime: like },
+      { notes: { [Op.like]: `%${q}%` } },
+    ];
+  }
+
+  const reservations = await Reservation.findAll({
+    where,
+    include,
+    order: [["resDate", "ASC"], ["resTime", "ASC"]],
+  });
+
+  if (q) {
+    const term = q.toLowerCase();
+    return reservations
+      .map((r) => r.toJSON())
+      .filter((r) => {
+        const customer = r.Customer || {};
+        const searchable = [
+          customer.name,
+          customer.email,
+          customer.phone,
+          r.resDate,
+          r.resTime,
+          r.resStatus,
+          r.notes,
+          r.paymentStatus,
+        ];
+        return searchable.some(
+          (val) => val !== null && val !== undefined && String(val).toLowerCase().includes(term)
+        );
+      })
+      .map((r) => {
+        const { Customer, ...rest } = r;
+        return Customer ? { ...rest, Customer } : rest;
+      });
+  }
+
+  return flattenArrayObjects(reservations);
+};
+
 const findReservationById = async (reservationId) => {
   const reservation = await Reservation.findOne({
     where: {
@@ -519,5 +591,6 @@ module.exports = {
   getCustomerById,
   getCustomerReservationHistory,
   getCustomerStats,
+  searchReservations,
   searchReservationsByNotes,
 };
