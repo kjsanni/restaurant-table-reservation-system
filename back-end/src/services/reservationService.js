@@ -56,10 +56,20 @@ const isFieldEmpty = (payload) => {
 const registerReservation = async (reservationDAO, payload) => {
   isFieldEmpty(payload);
   validateTime(new Date(), payload.resDate, payload.resTime);
+
+  const customer = await reservationDAO.findOrCreateCustomer({
+    email: payload.email,
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    phone: payload.phone,
+  });
+
   const data = {
     ...payload,
+    customerId: customer.id,
     paymentStatus: payload.paymentStatus || "unpaid",
   };
+
   return await reservationDAO.createReservation(data);
 };
 
