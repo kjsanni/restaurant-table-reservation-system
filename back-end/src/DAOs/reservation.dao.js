@@ -21,6 +21,11 @@ const findAllReservations = async () => {
           "tags",
         ],
       },
+      {
+        model: Table,
+        attributes: ["id", "name", "capacity"],
+        required: false,
+      },
     ],
   });
   return flattenArrayObjects(reservations);

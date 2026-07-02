@@ -4,6 +4,7 @@ import PhoneIcon from "~icons/bxs/phone";
 import ClockIcon from "~icons/ant-design/clock-circle-outlined";
 import EmailIcon from "~icons/carbon/email";
 import GroupIcon from "~icons/clarity/group-solid";
+import TableIcon from "~icons/fluent/table-16-regular";
 import DeleteIcon from "~icons/fluent/delete-16-regular";
 import { RouterLink } from "vue-router";
 
@@ -16,6 +17,12 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["onDelete"]);
+
+const tableNames = computed(() => {
+  const tables = props.reservation?.tables;
+  if (!Array.isArray(tables) || tables.length === 0) return [];
+  return tables.map((t) => t.name || `T${t.id}`).join(" + ");
+});
 
 const highlightedNotes = computed(() => {
   if (!props.searchQuery || !props.reservation?.notes)
@@ -78,6 +85,10 @@ const customerLink = computed(() => {
       <div class="info-container">
         <GroupIcon class="icon" />
         <p>{{ props.reservation.people }}</p>
+      </div>
+      <div v-if="tableNames" class="info-container">
+        <TableIcon class="icon" />
+        <p>{{ tableNames }}</p>
       </div>
     </div>
     <div v-if="props.reservation.notes" class="notes-wrapper">
