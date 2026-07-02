@@ -325,7 +325,6 @@ onMounted(() => {
                   v-model="form.partySize"
                   class="field-input"
                   min="1"
-                  max="20"
                 />
               </div>
               <div class="field">
