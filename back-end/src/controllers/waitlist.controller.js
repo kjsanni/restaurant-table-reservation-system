@@ -29,6 +29,15 @@ const createHandler = async (req, res) => {
   return res.status(201).json({ success: true, message: "Added to waitlist", entry });
 };
 
+const createFromReservationHandler = async (req, res) => {
+  const { reservationId } = req.params;
+  const entry = await waitlistDAO.createFromReservation(reservationId);
+  if (!entry) {
+    return res.status(404).json({ success: false, message: "Reservation not found" });
+  }
+  return res.status(201).json({ success: true, message: "Reservation sent to waitlist", entry });
+};
+
 const seatHandler = async (req, res) => {
   const { id } = req.params;
   const entry = await waitlistDAO.markSeated(id);
@@ -62,6 +71,7 @@ module.exports = {
   getAllHandler,
   getStatsHandler,
   createHandler,
+  createFromReservationHandler,
   seatHandler,
   cancelHandler,
   deleteHandler,

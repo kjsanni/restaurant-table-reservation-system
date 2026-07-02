@@ -1,5 +1,7 @@
 const db = require("../db/models");
 const Waitlist = db.waitlist;
+const Reservation = db.reservation;
+const Customer = db.customer;
 const { Op } = db.Sequelize;
 
 const findById = async (id) => {
@@ -8,6 +10,34 @@ const findById = async (id) => {
 
 const createEntry = async (data) => {
   return await Waitlist.create(data);
+};
+
+const createFromReservation = async (reservationId) => {
+  const reservation = await Reservation.findByPk(reservationId, {
+    include: [
+      {
+        model: Customer,
+        attributes: ["firstName", "lastName", "phone", "email"],
+      },
+    ],
+  });
+
+  if (!reservation) {
+    return null;
+  }
+
+  const customer = reservation.Customer || {};
+  const name = [customer.firstName, customer.lastName].filter(Boolean).join(" ") || "Guest";
+
+  return await Waitlist.create({
+    name,
+    partySize: reservation.people || 2,
+    phone: customer.phone || null,
+    email: customer.email || null,
+    desiredTime: reservation.resTime || null,
+    notes: reservation.notes || null,
+    status: "waiting",
+  });
 };
 
 const updateEntry = async (id, updates) => {
@@ -76,6 +106,7 @@ const getStats = async () => {
 module.exports = {
   findById,
   createEntry,
+  createFromReservation,
   updateEntry,
   deleteEntry,
   getWaitingList,

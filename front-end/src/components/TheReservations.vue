@@ -5,6 +5,7 @@ import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
 import groupAPI from "@/services/groupAPI";
+import waitlistAPI from "@/services/waitlistAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import ListContainer from "@/components/ListContainer.vue";
 import ReservationInfo from "@/components/ReservationInfo.vue";
@@ -18,6 +19,7 @@ import { useAuthStore } from "@/stores/auth";
 import { getApiErrorMessage } from "@/utils/apiError";
 import SearchIcon from "~icons/ant-design/search-outlined";
 import ClearIcon from "~icons/fluent/dismiss-16-filled";
+import WaitlistIcon from "~icons/fluent/clock-16-regular";
 
 const schedules = ref([]);
 const holidays = ref([]);
@@ -54,6 +56,8 @@ const canEditReservations = computed(
 const canManageTables = computed(
   () => authStore.user?.permissions?.manage_tables === true
 );
+
+const canAddToWaitlist = computed(() => authStore.user?.role === "staff");
 
 const showDeleteModal = ref(false);
 const deleteTargetId = ref(null);
@@ -130,6 +134,20 @@ const unseatReservation = async (reservation) => {
     await Promise.all([loadSchedule(), getTables()]);
   } catch (err) {
     actionError.value = getApiErrorMessage(err, "Failed to unseat reservation");
+  } finally {
+    actionLoading.value = false;
+  }
+};
+
+const sendToWaitlist = async (reservation) => {
+  if (!reservation) return;
+  actionLoading.value = true;
+  actionError.value = "";
+  try {
+    await waitlistAPI.addFromReservation(reservation.id);
+    await loadSchedule();
+  } catch (err) {
+    actionError.value = getApiErrorMessage(err, "Failed to send to waitlist");
   } finally {
     actionLoading.value = false;
   }
@@ -664,6 +682,18 @@ const today = () => {
                     color="#ef4444"
                     @click="handleCancelItem(slotProps.item)"
                   />
+                  <ButtonAction
+                    v-if="
+                      slotProps.item.resStatus === 'pending' && canAddToWaitlist
+                    "
+                    text="Waitlist"
+                    color="#f59e0b"
+                    @click="sendToWaitlist(slotProps.item)"
+                  >
+                    <template #icon>
+                      <WaitlistIcon />
+                    </template>
+                  </ButtonAction>
                   <ButtonAction
                     v-if="slotProps.item.resStatus === 'pending'"
                     text="Mark No-Show"

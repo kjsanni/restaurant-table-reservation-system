@@ -25,6 +25,9 @@ class WaitlistAPI {
   expireOld() {
     return API.post("/waitlist/maintenance/expire");
   }
+  addFromReservation(reservationId) {
+    return API.post("/waitlist/from-reservation/" + reservationId);
+  }
 }
 
 export default new WaitlistAPI();

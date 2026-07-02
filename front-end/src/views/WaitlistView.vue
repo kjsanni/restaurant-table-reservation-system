@@ -1,10 +1,14 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import waitlistAPI from "@/services/waitlistAPI";
 import tableAPI from "@/services/tableAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
+import { useAuthStore } from "@/stores/auth";
+
+const authStore = useAuthStore();
+const canAddToWaitlist = computed(() => authStore.user?.role === "staff");
 
 const entries = ref([]);
 const stats = ref({
@@ -218,7 +222,11 @@ onMounted(() => {
         </div>
 
         <div class="action-bar">
-          <button class="btn btn-primary" @click="openAdd">
+          <button
+            v-if="canAddToWaitlist"
+            class="btn btn-primary"
+            @click="openAdd"
+          >
             + Add to Waitlist
           </button>
           <button class="btn btn-secondary" @click="handleExpire">
