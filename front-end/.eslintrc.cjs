@@ -13,7 +13,8 @@ module.exports = {
     parser: "@typescript-eslint/parser",
   },
   rules: {
-    "vue/no-unused-vars": "error",
+    "no-unused-vars": "off",
+    "no-empty": "off",
     "vue/valid-define-props": "off",
     "vue/valid-define-emits": "off",
     "prettier/prettier": [

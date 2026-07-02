@@ -16,6 +16,8 @@ const assignPopupOpen = ref(false);
 const selectedTable = ref(null);
 const errorPopupOpen = ref(false);
 const errorMessage = ref("");
+const mergePopupOpen = ref(false);
+const merging = ref(false);
 const touchMode = ref(false);
 const layoutMode = ref("auto");
 
@@ -73,7 +75,7 @@ const reservationForTable = (table) => {
 };
 
 const allowDrop = (table) => {
-  return tableStatus(table) === "free";
+  return tableStatus(table) === "free" && !table.parentTableId;
 };
 
 const gridMinWidth = computed(() => {
@@ -177,11 +179,17 @@ const onDrop = (table, event) => {
 
 const confirmAssign = async () => {
   if (!draggingReservation.value || !selectedTable.value) return;
+  const reservation = draggingReservation.value;
+  const table = selectedTable.value;
+
+  if (reservation.people > 4 && reservation.people > table.capacity) {
+    assignPopupOpen.value = false;
+    mergePopupOpen.value = true;
+    return;
+  }
+
   try {
-    await reservationAPI.chooseTable(
-      draggingReservation.value.id,
-      selectedTable.value.id
-    );
+    await reservationAPI.chooseTable(reservation.id, selectedTable.value.id);
     assignPopupOpen.value = false;
     draggingReservation.value = null;
     selectedTable.value = null;
@@ -189,6 +197,75 @@ const confirmAssign = async () => {
   } catch (err) {
     errorMessage.value = getApiErrorMessage(err, "Failed to assign table");
     errorPopupOpen.value = true;
+  }
+};
+
+const findTablesToMerge = (requiredSeats, includeTable) => {
+  const available = tables.value.filter(
+    (t) =>
+      !t.isBlocked &&
+      !t.isOccupied &&
+      !t.parentTableId &&
+      t.id !== includeTable.id
+  );
+
+  available.sort((a, b) => b.capacity - a.capacity);
+
+  let totalCapacity = includeTable.capacity;
+  const selected = [includeTable];
+
+  for (const table of available) {
+    if (totalCapacity >= requiredSeats) break;
+    selected.push(table);
+    totalCapacity += table.capacity;
+  }
+
+  return totalCapacity >= requiredSeats ? selected : null;
+};
+
+const performMergeAssign = async () => {
+  if (!draggingReservation.value || !selectedTable.value) return;
+  merging.value = true;
+
+  try {
+    const tablesToMerge = findTablesToMerge(
+      draggingReservation.value.people,
+      selectedTable.value
+    );
+
+    if (!tablesToMerge) {
+      errorMessage.value =
+        `Not enough free tables to seat ` +
+        `${draggingReservation.value.people} guests.`;
+      errorPopupOpen.value = true;
+      mergePopupOpen.value = false;
+      assignPopupOpen.value = false;
+      return;
+    }
+
+    const mergeResult = await tableAPI.mergeTables(
+      tablesToMerge.map((t) => t.id)
+    );
+    const parentTableId = mergeResult.data.item.parentTable.id;
+
+    await reservationAPI.chooseTable(
+      draggingReservation.value.id,
+      parentTableId
+    );
+
+    mergePopupOpen.value = false;
+    assignPopupOpen.value = false;
+    draggingReservation.value = null;
+    selectedTable.value = null;
+    await loadData();
+  } catch (err) {
+    errorMessage.value = getApiErrorMessage(
+      err,
+      "Failed to merge and assign tables"
+    );
+    errorPopupOpen.value = true;
+  } finally {
+    merging.value = false;
   }
 };
 
@@ -328,7 +405,9 @@ onMounted(loadData);
 
       <p class="hint-bar">
         Drag a pending reservation from the list onto a free table to assign it.
-        Touch devices: tap and hold a reservation, then tap a free table.
+        For parties larger than a single table, you will be prompted to merge
+        tables. Touch devices: tap and hold a reservation, then tap a free
+        table.
       </p>
 
       <VaModal v-model="assignPopupOpen" title="Assign to Table" size="small">
@@ -350,6 +429,44 @@ onMounted(loadData);
               <VaButton preset="primary" @click="confirmAssign"
                 >Assign</VaButton
               >
+            </div>
+          </div>
+        </template>
+      </VaModal>
+
+      <VaModal
+        v-model="mergePopupOpen"
+        title="Merge Tables Needed?"
+        size="small"
+      >
+        <template #content>
+          <div class="assign-content">
+            <p class="assign-text">
+              Table
+              <strong>{{ selectedTable?.name || selectedTable?.id }}</strong>
+              only has <strong>{{ selectedTable?.capacity }}</strong> seats, but
+              the reservation needs
+              <strong>{{ draggingReservation?.people }}</strong> seats. Do you
+              want to merge tables?
+            </p>
+            <div class="popup-actions">
+              <VaButton
+                preset="secondary"
+                @click="
+                  () => {
+                    mergePopupOpen = false;
+                    assignPopupOpen = true;
+                  }
+                "
+                >Cancel</VaButton
+              >
+              <VaButton
+                preset="primary"
+                @click="performMergeAssign"
+                :loading="merging"
+              >
+                {{ merging ? "Merging..." : "Merge & Assign" }}
+              </VaButton>
             </div>
           </div>
         </template>
@@ -697,29 +814,34 @@ onMounted(loadData);
 
 .hint-bar {
   text-align: center;
-  font-family: "Inter-Light";
-  font-size: 12px;
-  color: var(--restaurant-secondary);
-  margin-top: 16px;
+  font-family: "Lora", Georgia, serif;
+  font-size: 13px;
+  color: var(--restaurant-warm-gray);
+  margin-top: 20px;
+  line-height: 1.5;
 }
 
 .assign-content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .assign-text {
-  font-size: 13px;
-  line-height: 1.5;
+  font-family: "Lora", Georgia, serif;
+  font-size: 14px;
+  color: var(--restaurant-warm-gray);
+  line-height: 1.6;
+  margin: 0;
 }
 
 .popup-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid var(--restaurant-border);
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 8px;
 }
 
 .error-content {
@@ -729,16 +851,18 @@ onMounted(loadData);
 }
 
 .error-content p {
-  font-family: "Inter-Medium";
+  font-family: "Lora", Georgia, serif;
   font-size: 14px;
-  color: var(--restaurant-primary);
+  color: var(--restaurant-warm-gray);
   margin: 0;
+  line-height: 1.6;
 }
 
 .confirm-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 12px;
+  margin-top: 4px;
 }
 
 .error-banner {

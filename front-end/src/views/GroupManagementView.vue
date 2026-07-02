@@ -513,22 +513,29 @@ const confirmAction = async () => {
 }
 
 .field {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+}
+
+.field:last-of-type {
+  margin-bottom: 0;
 }
 
 .field-label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-weight: 600;
   font-family: "Inter-Medium";
-  font-size: 14px;
-  color: var(--primary-black);
+  font-size: 13px;
+  color: var(--restaurant-slate);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .permissions-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-top: 6px;
 }
 
 .permission-item {
@@ -540,9 +547,11 @@ const confirmAction = async () => {
 }
 
 .modal-subtitle {
-  font-family: "Inter-Medium";
+  font-family: "Lora", Georgia, serif;
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-warm-gray);
+  margin: 4px 0 22px 0;
+  line-height: 1.6;
 }
 
 @media screen and (min-width: 1024px) {

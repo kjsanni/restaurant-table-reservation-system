@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from "vue";
-import { VaButton, VaCard, VaChip } from "vuestic-ui";
+import { VaButton, VaCard, VaCardContent, VaChip } from "vuestic-ui";
 
 const props = defineProps({
   slots: Array,

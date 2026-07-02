@@ -42,6 +42,11 @@ const checkWindowWidth = () => {
     if (!sidebarVisible.value) {
       sidebarVisible.value = true;
     }
+  } else {
+    if (!sidebarVisible.value) {
+      sidebarVisible.value = true;
+      collapsed.value = false;
+    }
   }
 };
 
@@ -88,6 +93,11 @@ const sidebarWidth = computed(() => {
   if (!sidebarVisible.value) return "0px";
   if (collapsed.value) return "72px";
   return "260px";
+});
+
+const desktopMargin = computed(() => {
+  if (windowWidth.value <= 768) return "0px";
+  return sidebarWidth.value;
 });
 
 const logout = async () => {
@@ -173,7 +183,9 @@ onUnmounted(() => {
                   :to="{ name: item.routeName }"
                   class="nav-item"
                 >
-                  <Icon :icon="item.icon" width="20" height="20" />
+                  <template #icon>
+                    <Icon :icon="item.icon" width="20" height="20" />
+                  </template>
                   <span v-if="!collapsed" class="nav-text">{{
                     item.text
                   }}</span>
@@ -196,7 +208,9 @@ onUnmounted(() => {
                 @click="logout"
                 class="nav-item logout-item"
               >
-                <Icon icon="mdi:logout" width="20" height="20" />
+                <template #icon>
+                  <Icon icon="mdi:logout" width="20" height="20" />
+                </template>
                 <span v-if="!collapsed" class="nav-text">Logout</span>
               </VaSidebarItem>
             </div>
@@ -205,7 +219,7 @@ onUnmounted(() => {
       </template>
 
       <template #default>
-        <div class="content-wrapper">
+        <div class="content-wrapper" :style="{ marginLeft: desktopMargin }">
           <header class="app-topbar-integrated">
             <div class="topbar-left">
               <VaButton
@@ -228,17 +242,19 @@ onUnmounted(() => {
             </div>
             <div class="topbar-right">
               <template v-if="isAuthenticated">
-                <VaChip color="primary" size="small">{{ user?.username }}</VaChip>
+                <VaChip color="primary" size="small">{{
+                  user?.username
+                }}</VaChip>
               </template>
             </div>
           </header>
-          
+
           <div
             v-if="sidebarVisible && windowWidth <= 768"
             class="sidebar-backdrop"
             @click="toggleSidebar"
           ></div>
-          <main class="main-content" :style="{ paddingLeft: sidebarWidth }">
+          <main class="main-content">
             <RouterView v-slot="{ Component }">
               <Transition name="fade" mode="out-in">
                 <component :is="Component" :key="$route.name" />
@@ -248,27 +264,43 @@ onUnmounted(() => {
 
           <footer class="app-footer">
             <span class="footer-text"
-              >&copy; {{ currentYear }} Vibespot Technologies Ltd. Made by: Kobina
-              John Sanni</span
+              >&copy; {{ currentYear }} Vibespot Technologies Ltd. Made by:
+              Kobina John Sanni</span
             >
           </footer>
         </div>
-       </template>
+      </template>
     </VaLayout>
   </VaConfig>
 </template>
 
 <style scoped>
+:deep(.va-layout) {
+  overflow: visible;
+  height: auto;
+  min-height: 100vh;
+}
+
 :deep(.va-sidebar) {
+  background: var(--restaurant-charcoal) !important;
   border-right: 1px solid var(--restaurant-border);
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06) !important;
+}
+
+:deep(.va-sidebar__menu) {
+  background: transparent !important;
 }
 
 .app-sidebar {
   height: 100vh;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
   z-index: 50;
+}
+
+.content-wrapper {
+  transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-inner {
@@ -281,25 +313,26 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px 12px;
+  padding: 20px 14px;
   overflow-y: auto;
   overflow-x: hidden;
+  gap: 4px;
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 10px 18px;
+  gap: 12px;
+  padding: 8px 12px 18px;
   cursor: pointer;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 16px;
 }
 
 .logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
   background: white;
@@ -309,72 +342,95 @@ onUnmounted(() => {
 .brand {
   font-family: "Inter-Bold", sans-serif;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 18px;
   color: white;
   white-space: nowrap;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
 }
 
 .nav-section {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .nav-label {
   font-family: "Inter-Medium", sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: rgba(255, 255, 255, 0.5);
-  padding: 8px 12px 6px;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 10px 14px 8px;
   font-weight: 600;
 }
 
 .nav-item {
-  border-radius: 8px;
-  margin: 1px 6px;
-  padding: 0 10px;
-  height: 40px;
-  transition: all 0.15s ease;
+  border-radius: 10px;
+  margin: 0;
+  padding: 0 12px;
+  height: 44px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  transition: opacity 0.2s ease;
+}
+
+.nav-item:hover::before {
+  opacity: 1;
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.nav-item:deep(.va-sidebar-item__content) {
-  height: 40px;
-  padding: 0 8px;
+  transform: translateX(4px);
 }
 
 .nav-text {
   font-family: "Inter-Medium", sans-serif;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 500;
-  margin-left: 10px;
-  letter-spacing: 0.1px;
+  letter-spacing: 0.2px;
+  color: rgba(255, 255, 255, 0.85);
+  position: relative;
+  z-index: 1;
+}
+
+.nav-item:hover .nav-text {
+  color: white;
 }
 
 .sidebar-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .user-section {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px 12px;
+  gap: 12px;
+  padding: 10px 12px;
 }
 
 .user-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
   color: white;
   display: flex;
@@ -382,20 +438,20 @@ onUnmounted(() => {
   justify-content: center;
   font-family: "Inter-Bold", sans-serif;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
   flex-shrink: 0;
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
 }
 
 .user-name {
   font-family: "Inter-Medium", sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: white;
   white-space: nowrap;
@@ -406,16 +462,16 @@ onUnmounted(() => {
 .user-role {
   font-family: "Inter-Light", sans-serif;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.5);
   text-transform: capitalize;
 }
 
 .logout-item {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .logout-item:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.12);
   color: #fca5a5;
 }
 
@@ -429,12 +485,28 @@ onUnmounted(() => {
   padding: 0 24px;
   gap: 16px;
   z-index: 40;
+  position: sticky;
+  top: 0;
 }
 
 .topbar-left {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.topbar-left :deep(.va-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.topbar-left :deep(.va-button__content) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
 }
 
 .topbar-center {
@@ -459,10 +531,10 @@ onUnmounted(() => {
 }
 
 .main-content {
-  padding-top: 32px;
-  padding-bottom: 40px;
-  min-height: 100vh;
-  transition: padding-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1;
+  padding: 32px var(--x-spacing-mobile);
+  min-height: calc(100vh - 64px);
+  transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-backdrop {
@@ -488,17 +560,8 @@ onUnmounted(() => {
     transform: translateX(0);
   }
 
-  .app-topbar {
-    left: 0 !important;
-  }
-
-  :deep(.va-layout__area--right),
-  :deep(.va-layout__area--bottom) {
-    display: none;
-  }
-
   .main-content {
-    padding-left: 0 !important;
+    padding: 32px 16px;
   }
 
   .nav-label {
@@ -508,6 +571,14 @@ onUnmounted(() => {
   .sidebar-header {
     border-bottom: none;
     padding-bottom: 12px;
+  }
+
+  .sidebar-top {
+    padding: 16px 10px;
+  }
+
+  .nav-item {
+    height: 42px;
   }
 }
 
@@ -521,8 +592,8 @@ onUnmounted(() => {
 }
 
 .footer-text {
-  font-family: "Inter-Light", sans-serif;
+  font-family: "Lora", Georgia, serif;
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 </style>

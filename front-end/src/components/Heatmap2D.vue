@@ -467,7 +467,7 @@ const openDrillDown = async (day) => {
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-family: "Inter-Light";
 }
 
@@ -502,7 +502,7 @@ const openDrillDown = async (day) => {
   text-align: center;
   padding: 60px 20px;
   gap: 8px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-family: "Inter-Light";
 }
 
@@ -727,10 +727,11 @@ const openDrillDown = async (day) => {
 }
 
 .drill-date {
-  font-family: "Inter-Medium";
+  font-family: "Lora", Georgia, serif;
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-warm-gray);
   margin: 0;
+  font-weight: 600;
 }
 
 .hour-bars {

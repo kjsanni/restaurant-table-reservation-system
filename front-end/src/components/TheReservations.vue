@@ -886,33 +886,63 @@ const today = () => {
 }
 
 .confirm-content p {
-  font-family: "Inter-Medium";
-  font-size: 15px;
-  color: var(--primary-black);
+  font-family: "Lora", Georgia, serif;
+  font-size: 14px;
+  color: var(--restaurant-warm-gray);
   margin: 0;
+  line-height: 1.6;
 }
 
 .confirm-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
 }
 
 .btn-danger {
-  background-color: var(--primary-red);
-  color: white;
+  background: linear-gradient(
+    135deg,
+    var(--restaurant-terracotta) 0%,
+    #b91c1c 100%
+  );
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-danger:hover {
-  background-color: #dc2626;
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
 }
 
 .btn-warning {
-  background-color: #f59e0b;
-  color: white;
+  background: linear-gradient(
+    135deg,
+    var(--restaurant-golden) 0%,
+    #d97706 100%
+  );
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-warning:hover {
-  background-color: #d97706;
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
 }
 </style>

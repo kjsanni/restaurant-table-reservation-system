@@ -13,6 +13,13 @@
   --restaurant-surface: #ffffff;
   --restaurant-border: #e2e8f0;
 
+  /* Auth view semantic colors */
+  --restaurant-background: var(--restaurant-cream);
+  --restaurant-primary: var(--restaurant-charcoal);
+  --restaurant-secondary: var(--restaurant-warm-gray);
+  --restaurant-accent: var(--restaurant-terracotta);
+  --restaurant-success: var(--restaurant-sage);
+
   /* Semantic colors */
   --primary-red: var(--restaurant-terracotta);
   --snow-white: var(--restaurant-cream);
@@ -58,9 +65,17 @@
   --va-input-wrapper-border-radius: 8px;
   --va-card-border-radius: 12px;
   --va-card-padding: 20px;
-  --va-modal-border-radius: 12px;
+  --va-modal-border-radius: 16px;
+  --va-modal-padding-top: 1.75rem;
+  --va-modal-padding-right: 1.75rem;
+  --va-modal-padding-bottom: 1.75rem;
+  --va-modal-padding-left: 1.75rem;
+  --va-modal-dialog-box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  --va-modal-overlay-color: rgb(15, 23, 42);
+  --va-modal-overlay-opacity: 0.55;
+  --va-modal-overlay-background-blur-radius: 8px;
   --va-sidebar-item-content-padding: 12px;
-  --va-sidebar-background: var(--restaurant-cream);
+  --va-sidebar-background: var(--restaurant-charcoal);
   --va-navbar-background: var(--restaurant-charcoal);
 
   --va-primary: var(--restaurant-charcoal);
@@ -69,6 +84,15 @@
   --va-danger: var(--restaurant-terracotta);
   --va-info: var(--restaurant-sky);
   --va-warning: var(--restaurant-golden);
+  --va-background-primary: var(--restaurant-stone);
+  --va-background-secondary: var(--restaurant-surface);
+  --va-background-element: var(--restaurant-surface);
+  --va-background-border: var(--restaurant-border);
+  --va-text-primary: var(--restaurant-charcoal);
+  --va-text-inverted: var(--restaurant-cream);
+  --va-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+  --va-focus: var(--restaurant-sky);
+  --va-transparent: rgba(0, 0, 0, 0);
 }
 
 *,
@@ -137,6 +161,67 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Elegant modal animation keyframes */
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Universal modal refinements */
+.va-modal__overlay {
+  background: rgb(15, 23, 42) !important;
+  opacity: 0.55 !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+.va-modal__dialog {
+  border-radius: 16px !important;
+  box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(15, 23, 42, 0.06) !important;
+}
+.va-modal__title {
+  font-family: "Playfair Display", Georgia, serif !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  text-transform: none !important;
+  color: #0f172a !important;
+  margin-bottom: 0.5rem !important;
+}
+.va-modal__inner {
+  font-family: "Lora", Georgia, serif;
+}
+.va-modal__message {
+  font-family: "Lora", Georgia, serif;
+  font-size: 14px;
+  color: var(--restaurant-warm-gray);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+.va-modal__footer {
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 0.5rem;
+}
+.va-modal__close {
+  top: 0.75rem !important;
+  right: 0.75rem !important;
+  color: var(--restaurant-warm-gray) !important;
+}
+
+.va-modal .va-card {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.va-modal .va-card__content {
+  padding: 0 !important;
+}
+
 /* Luxury hospitality card styling */
 .va-card {
   transition: box-shadow 0.3s ease, transform 0.3s ease;
@@ -157,16 +242,6 @@ body {
 
 .va-button--success {
   background: linear-gradient(135deg, var(--restaurant-sage) 0%, #15803d 100%);
-}
-
-.va-sidebar {
-  background: var(--restaurant-cream);
-  border-right: 1px solid var(--restaurant-border);
-}
-
-.va-navbar {
-  background: var(--restaurant-charcoal);
-  border-bottom: 1px solid var(--restaurant-border);
 }
 
 /* Hide empty VaLayout areas */

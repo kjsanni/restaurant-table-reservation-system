@@ -1003,24 +1003,30 @@ const performMerge = async () => {
 
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
+  padding: 20px;
+  animation: modalFadeIn 0.25s ease;
 }
 
 .modal {
-  background-color: white;
-  padding: 24px;
-  border-radius: 14px;
-  width: 90%;
-  max-width: 420px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 28px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.28),
+    0 0 0 1px rgba(15, 23, 42, 0.06);
+  animation: modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .merge-modal {
@@ -1037,9 +1043,12 @@ const performMerge = async () => {
 
 .merge-section h4 {
   font-family: "Inter-Bold";
-  font-size: 14px;
-  color: var(--primary-black);
-  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: var(--restaurant-slate);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 10px 0;
 }
 
 .merge-selected-list {
@@ -1052,10 +1061,10 @@ const performMerge = async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  background-color: #e0e7ff;
-  color: #3730a3;
-  border-radius: 9999px;
+  padding: 5px 12px;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 999px;
   font-family: "Inter-Medium";
   font-size: 12px;
 }
@@ -1063,11 +1072,12 @@ const performMerge = async () => {
 .remove-merge-btn {
   background: none;
   border: none;
-  color: #3730a3;
+  color: #1e40af;
   cursor: pointer;
   font-size: 16px;
   padding: 0;
   line-height: 1;
+  transition: color 0.2s ease;
 }
 
 .remove-merge-btn:hover {
@@ -1082,143 +1092,184 @@ const performMerge = async () => {
 
 .merge-available-chip {
   display: inline-block;
-  padding: 4px 10px;
-  background-color: #f3f4f6;
-  color: var(--primary-black);
-  border-radius: 9999px;
+  padding: 5px 12px;
+  background: #f3f4f6;
+  color: var(--restaurant-charcoal);
+  border-radius: 999px;
   font-family: "Inter-Medium";
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s ease;
 }
 
 .merge-available-chip:hover {
-  background-color: #e5e7eb;
+  background: #e5e7eb;
 }
 
 .modal-title {
-  font-family: "Inter-Bold";
-  font-size: 18px;
-  color: var(--primary-black);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 20px;
+  color: var(--restaurant-charcoal);
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin: 0;
 }
 
 .modal-subtitle {
-  font-family: "Inter-Light";
+  font-family: "Lora", Georgia, serif;
   font-size: 14px;
-  color: var(--secondary-gray);
-  margin: 6px 0 20px 0;
+  color: var(--restaurant-warm-gray);
+  margin: 4px 0 22px 0;
+  line-height: 1.5;
 }
 
 .field {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+}
+
+.field:last-of-type {
+  margin-bottom: 0;
 }
 
 .field-label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-weight: 600;
   font-family: "Inter-Medium";
-  font-size: 14px;
-  color: var(--primary-black);
+  font-size: 13px;
+  color: var(--restaurant-slate);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .field-input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+  background: #f8fafc;
 }
 
 .field-input:focus {
   outline: none;
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: #ffffff;
 }
 
 .error-msg {
-  color: #dc2626;
+  color: var(--restaurant-terracotta);
   font-family: "Inter-Medium";
   font-size: 13px;
-  margin: 0 0 12px 0;
+  margin: 0 0 14px 0;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
 }
 
 .field-textarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   box-sizing: border-box;
   resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+  background: #f8fafc;
+  line-height: 1.5;
 }
 
 .field-textarea:focus {
   outline: none;
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: #ffffff;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #f1f5f9;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
+  padding: 10px 20px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-family: "Inter-Medium";
   font-size: 13px;
-  transition: all 0.15s;
+  transition: all 0.2s ease;
 }
 
 .btn-primary {
-  background-color: var(--primary-blue);
-  color: white;
+  background: linear-gradient(
+    135deg,
+    var(--restaurant-charcoal) 0%,
+    var(--restaurant-slate) 100%
+  );
+  color: #ffffff;
 }
 
 .btn-primary:hover {
-  background-color: #2563eb;
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
 }
 
 .btn-secondary {
   background-color: #f3f4f6;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .btn-secondary:hover {
   background-color: #e5e7eb;
+  transform: translateY(-1px);
 }
 
 .btn-warning {
-  background-color: #fef2f2;
-  color: #dc2626;
+  background: linear-gradient(
+    135deg,
+    var(--restaurant-terracotta) 0%,
+    #b91c1c 100%
+  );
+  color: #ffffff;
 }
 
 .btn-warning:hover {
-  background-color: #fee2e2;
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
 }
 
 .btn-danger {
-  background-color: #fef2f2;
-  color: #dc2626;
+  background: linear-gradient(
+    135deg,
+    var(--restaurant-terracotta) 0%,
+    #b91c1c 100%
+  );
+  color: #ffffff;
 }
 
 .btn-danger:hover {
-  background-color: #fee2e2;
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
 }
 
 .error-banner {
