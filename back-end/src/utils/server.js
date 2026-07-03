@@ -30,6 +30,18 @@ const { Server } = require("socket.io");
 const tryCatchHandler = require("../middleware/tryCatch");
 const { protect } = require("../middleware/auth");
 
+const requestTimeout = (timeout = 15000) => {
+  return (req, res, next) => {
+    res.setTimeout(timeout, () => {
+      res.status(444).json({
+        success: false,
+        message: "Request timeout",
+      });
+    });
+    next();
+  };
+};
+
 const createServer = () => {
   const app = express();
   const server = require("http").createServer(app);
@@ -59,17 +71,14 @@ const createServer = () => {
   app.use(requestLogger);
   app.use(requestMetrics);
   app.use(setCsrfCookie);
+  app.use(requestTimeout(15000));
 
   app.use(cors({
     origin: allowedOrigins,
     credentials: true,
   }));
-  app.use(express.json({ limit: "10kb" }));
-  app.use(express.urlencoded({ limit: "10kb", extended: true }));
-  app.use(helmet({
-    crossOriginResourcePolicy: false,
-    hsts: hstsEnabled,
-  }));
+  app.use(express.json({ limit: "5kb" }));
+  app.use(helmet({ crossOriginResourcePolicy: false }));
   app.use(cspHeaders);
   app.use(require("../middleware/sanitize").sanitize);
 

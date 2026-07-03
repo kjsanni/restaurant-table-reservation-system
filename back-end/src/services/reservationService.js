@@ -104,7 +104,17 @@ const editReservation = async (reservationId, reservationDAO, payload) => {
 };
 
 const cancelReservation = async (reservationId, reservationDAO) => {
-  return await reservationDAO.cancelReservation(reservationId, reservationDAO);
+  const reservation = await reservationDAO.findReservationById(reservationId);
+  if (!reservation) {
+    throw {
+      status: 404,
+      message: "Reservation not found!",
+    };
+  }
+  if (["cancelled", "seated", "completed", "missed"].includes(reservation.resStatus)) {
+    return await reservationDAO.destroyReservation(reservation);
+  }
+  return await reservationDAO.deleteReservation(reservation);
 };
 
 const compareResDateToCurrDate = (resDate, currDate) => {

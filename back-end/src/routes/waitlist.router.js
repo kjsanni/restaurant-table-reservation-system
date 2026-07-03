@@ -10,7 +10,7 @@ const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 router
   .route("/")
   .get(...protectedRoute("manage_tables", waitlistController.getAllHandler))
-  .post(tryCatchHandler(protect), tryCatchHandler(staff), validateCsrfToken, tryCatchHandler(waitlistController.createHandler))
+  .post(...writeRoute("manage_tables", waitlistController.createHandler))
   .all(httpMethodError);
 
 router
