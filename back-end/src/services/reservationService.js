@@ -166,8 +166,14 @@ const chooseTable = async (
   }
   /**
    *
-   * If the given table is already occupied throw an error
+   * If no table provided or table is already occupied throw an error
    */
+  if (!tableId || !table) {
+    throw {
+      status: 400,
+      message: "Please select a valid table!",
+    };
+  }
   if (table.isOccupied)
     throw {
       status: 400,
