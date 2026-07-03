@@ -36,7 +36,14 @@ const getGroupHandler = async (req, res) => {
 };
 
 const getGroupByNameHandler = async (req, res) => {
-  const group = await rbacService.getGroupByName(req.params.name);
+  const name = req.params.name;
+  if (!name || !/^[a-zA-Z0-9_-]{1,50}$/.test(name)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid group name format.",
+    });
+  }
+  const group = await rbacService.getGroupByName(name);
   return res.status(200).json({ success: true, group });
 };
 

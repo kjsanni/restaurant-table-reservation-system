@@ -58,33 +58,13 @@ router
   .all(httpMethodError);
 
 router
+  .route("/:id")
+  .patch(...writeRoute("manage_tables", tableController.editHandler))
+  .all(httpMethodError);
+
+router
   .route("/:id/position")
   .patch(...writeRoute("manage_tables", tableController.updatePositionHandler))
-  .all(httpMethodError);
-
-router
-  .route("/:id/delete")
-  .delete(...writeRoute("manage_tables", tableController.deleteHandler))
-  .all(httpMethodError);
-
-router
-  .route("/:tableId/events")
-  .get(...protectedRoute("manage_tables", tableController.getEventsHandler))
-  .all(httpMethodError);
-
-router
-  .route("/bulk/update")
-  .patch(...writeRoute("manage_tables", tableController.bulkUpdateHandler))
-  .all(httpMethodError);
-
-router
-  .route("/bulk/delete")
-  .delete(...writeRoute("manage_tables", tableController.bulkDeleteHandler))
-  .all(httpMethodError);
-
-router
-  .route("/bulk/assign")
-  .post(...writeRoute("manage_tables", tableController.bulkAssignHandler))
   .all(httpMethodError);
 
 module.exports = router;

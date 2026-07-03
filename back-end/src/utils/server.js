@@ -6,6 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const notFound = require("../middleware/notFound");
 const errorHandler = require("../middleware/errorHandler");
+const { Sentry } = require("../middleware/monitoring");
 const tableRouter = require("../routes/table.router");
 const reservationRouter = require("../routes/reservation.router");
 const authRouter = require("../routes/auth.router");
@@ -18,6 +19,7 @@ const reportRouter = require("../routes/report.router");
 const customerRouter = require("../routes/customer.router");
 const adminRouter = require("../routes/admin.router");
 const notificationRouter = require("../routes/notification.router");
+const emailTemplateRouter = require("../routes/emailTemplate.router");
 const { setCsrfCookie, CSRF_HEADER_NAME } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
 const { requestLogger } = require("../middleware/requestLogger");
@@ -25,43 +27,15 @@ const { logAction } = require("../middleware/auditLog");
 const { cspHeaders } = require("../middleware/csp");
 const { getCurrentSecret } = require("../utils/jwtRotation");
 const { Server } = require("socket.io");
+const tryCatchHandler = require("../middleware/tryCatch");
+const { protect } = require("../middleware/auth");
 
 const createServer = () => {
   const app = express();
-  const isProd = process.env.NODE_ENV === "production";
-  const sslEnabled = process.env.SSL_ENABLED === "true";
+  const server = require("http").createServer(app);
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
 
-  let server;
-  if (isProd && sslEnabled) {
-    try {
-      const sslCertPath = process.env.SSL_CERT_PATH;
-      const sslKeyPath = process.env.SSL_KEY_PATH;
-      if (sslCertPath && sslKeyPath && fs.existsSync(sslCertPath) && fs.existsSync(sslKeyPath)) {
-        const https = require("https");
-        const sslOptions = {
-          cert: fs.readFileSync(sslCertPath),
-          key: fs.readFileSync(sslKeyPath),
-        };
-        server = https.createServer(sslOptions, app);
-      } else {
-        console.warn("SSL enabled but certificate files not found, falling back to HTTP");
-        server = require("http").createServer(app);
-      }
-    } catch (err) {
-      console.warn("SSL configuration failed, falling back to HTTP:", err.message);
-      server = require("http").createServer(app);
-    }
-  } else {
-    server = require("http").createServer(app);
-  }
-
-  const hstsEnabled = isProd && sslEnabled ? {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true,
-  } : false;
-
-  app.set("trust proxy", 1);
   getCurrentSecret();
 
   const corsOrigins = process.env.CORS_ORIGINS?.split(",").filter(o => o.trim());
@@ -130,7 +104,11 @@ const createServer = () => {
   app.use("/api/v1/customers", logAction, customerRouter);
   app.use("/api/v1/admin", logAction, adminRouter);
   app.use("/api/v1/notifications", logAction, notificationRouter);
-  app.get("/api/v1/stats", (req, res) => {
+  app.use("/api/v1/email-templates", logAction, emailTemplateRouter);
+  if (process.env.SENTRY_DSN) {
+    app.use(Sentry.expressErrorHandler());
+  }
+  app.get("/api/v1/stats", tryCatchHandler(protect), (req, res, next) => {
     res.json({ success: true, stats: getStats() });
   });
   app.use(notFound);

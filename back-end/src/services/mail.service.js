@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const emailTemplateDAO = require("../DAOs/emailTemplate.dao");
 
 const buildTransporter = () => {
   const host = process.env.SMTP_HOST;
@@ -19,11 +20,13 @@ const buildTransporter = () => {
 };
 
 const renderTemplate = (template, data = {}) => {
-  if (!template) return "";
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] || "");
+  if (!template) return { subject: "", body: "" };
+  const subject = template.subject.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] || "");
+  const body = template.body.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] || "");
+  return { subject, body };
 };
 
-const templates = {
+const getDefaultTemplates = () => ({
   confirmation: {
     subject: "Reservation Confirmed - {{restaurantName}}",
     body: `Hi {{name}},\n\nYour reservation for {{date}} at {{time}} has been confirmed.\nParty size: {{partySize}}\nTable: {{table}}\n\nSee you soon!\n{{restaurantName}}`,
@@ -36,23 +39,45 @@ const templates = {
     subject: "Your reservation has been cancelled",
     body: `Hi {{name}},\n\nYour reservation for {{date}} at {{time}} has been cancelled.\nIf this was a mistake, please contact us.\n{{restaurantName}}`,
   },
-};
+});
 
 const sendMail = async (to, templateKey, data = {}) => {
-  const template = templates[templateKey] || templates.confirmation;
-  const subject = renderTemplate(template.subject, data);
-  const text = renderTemplate(template.body, data);
+  let template = await emailTemplateDAO.getTemplateByKey(templateKey);
+  if (!template || !template.isActive) {
+    template = getDefaultTemplates()[templateKey];
+    if (!template) template = getDefaultTemplates().confirmation;
+  }
+  const { subject, body } = renderTemplate(template, { ...data, restaurantName: process.env.RESTAURANT_NAME || "Restaurant" });
 
   const transporter = buildTransporter();
   await transporter.sendMail({
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to,
     subject,
-    text,
+    text: body,
   });
+};
+
+const sendReservationConfirmation = async (to, data) => {
+  await sendMail(to, "reservation_confirmation", data);
+};
+
+const sendReservationReminder = async (to, data) => {
+  await sendMail(to, "reservation_reminder", data);
+};
+
+const sendWaitlistOffer = async (to, data) => {
+  await sendMail(to, "waitlist_offer", data);
+};
+
+const sendNoShowAlert = async (to, data) => {
+  await sendMail(to, "no_show_alert", data);
 };
 
 module.exports = {
   sendMail,
-  templates,
+  sendReservationConfirmation,
+  sendReservationReminder,
+  sendWaitlistOffer,
+  sendNoShowAlert,
 };

@@ -1,4 +1,5 @@
 const reportService = require("../services/reportService");
+const PDFDocument = require("pdfkit");
 
 const getReservationReportHandler = async (req, res) => {
   const filters = {
@@ -31,10 +32,37 @@ const exportPDFHandler = async (req, res) => {
     paymentStatus: req.query.paymentStatus,
     resStatus: req.query.resStatus,
   };
-  const pdf = await reportService.exportPDF(filters);
+  const report = await reportService.getReservationReport(filters);
+
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "attachment; filename=reservations.pdf");
-  res.send(pdf);
+
+  const doc = new PDFDocument({ margin: 50 });
+  doc.pipe(res);
+
+  doc.fontSize(20).text("Reservation Report", { align: "center" });
+  doc.moveDown();
+  doc.fontSize(10).text(`Generated: ${new Date().toLocaleString()}`);
+  doc.text(`Period: ${filters.from || "N/A"} to ${filters.to || "N/A"}`);
+  doc.moveDown();
+  doc.text(`Total Reservations: ${report.totalReservations}`);
+  doc.moveDown();
+
+  if (report.stats && report.stats.paymentBreakdown) {
+    doc.text("Payment Breakdown:");
+    report.stats.paymentBreakdown.byMethod.forEach((m) => {
+      doc.text(`  ${m.method}: $${m.total.toFixed(2)} (${m.count} payments)`);
+    });
+    doc.text(`Total Revenue: $${report.stats.paymentBreakdown.total.toFixed(2)}`);
+    doc.moveDown();
+  }
+
+  doc.text("Reservations:");
+  report.reservations.forEach((r, i) => {
+    doc.text(`${i + 1}. ${r.resDate} ${r.resTime} - ${r.people} people - ${r.resStatus}`);
+  });
+
+  doc.end();
 };
 
 const getTurnTimeHandler = async (req, res) => {

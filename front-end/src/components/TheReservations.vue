@@ -951,12 +951,17 @@ const today = () => {
                   "
                 >
                   <ButtonAction
-                    v-if="ACTIVE_STATUSES.includes(slotProps.item.resStatus)"
+                    v-if="
+                      ['pending', 'missed', 'completed'].includes(
+                        slotProps.item.resStatus
+                      )
+                    "
                     text="Seat"
                     color="#22c55e"
                     @click="
                       openPopup('Choose Table');
                       assignSelectedReservation(slotProps.item);
+                      loadFreeTables();
                     "
                   />
                   <ButtonAction

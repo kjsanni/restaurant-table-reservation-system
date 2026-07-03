@@ -27,6 +27,7 @@ const findAllTables = async () => {
         attributes: ["id", "username", "email", "role"],
       },
     ],
+    order: [["positionY", "ASC"], ["positionX", "ASC"]],
   });
 };
 
@@ -187,156 +188,15 @@ const unassignStaffFromTable = async (tableId, userId) => {
   return { tableId, userId };
 };
 
-const getPriceForCapacity = (capacity) => {
-  const basePrice = parseFloat(process.env.TABLE_BASE_PRICE || 20);
-  const pricePerSeat = parseFloat(process.env.TABLE_PRICE_PER_ADDITIONAL_SEAT || 5);
-  if (capacity <= 6) {
-    return basePrice;
-  }
-  return basePrice + (capacity - 6) * pricePerSeat;
-};
-
-const mergeTables = async (tableIds) => {
-  if (!tableIds || tableIds.length < 2) {
-    throw { status: 400, message: "At least 2 tables required for merge!" };
-  }
-
-  const tables = await Table.findAll({
-    where: { id: tableIds },
-  });
-
-  if (tables.length !== tableIds.length) {
-    throw { status: 404, message: "One or more tables not found!" };
-  }
-
-  const hasBlocked = tables.some((t) => t.isBlocked);
-  if (hasBlocked) {
-    throw { status: 400, message: "Cannot merge blocked tables!" };
-  }
-
-  const hasOccupied = tables.some((t) => t.isOccupied);
-  if (hasOccupied) {
-    throw { status: 400, message: "Cannot merge occupied tables!" };
-  }
-
-  const hasParent = tables.some((t) => t.parentTableId);
-  if (hasParent) {
-    throw { status: 400, message: "Cannot merge tables that are already merged!" };
-  }
-
-  const mergedCapacity = tables.reduce((sum, t) => sum + (t.capacity || 0), 0);
-  const mergedPrice = tables.reduce((sum, t) => sum + (parseFloat(t.price) || 0), 0);
-  const primaryName = tables.map((t) => t.name).join(" + ");
-
-  const parentTable = await Table.create({
-    name: primaryName,
-    capacity: mergedCapacity,
-    price: mergedPrice,
-    isBlocked: false,
-    maintenanceNotes: `Merged from: ${tables.map((t) => t.name).join(", ")}`,
-  });
-
-  for (const table of tables) {
-    await table.update({ parentTableId: parentTable.id });
-  }
-
-  return {
-    parentTable,
-    mergedTables: tables.map((t) => t.id),
-  };
-};
-
-const unmergeTable = async (tableId) => {
-  const mergedTables = await Table.findAll({
-    where: { parentTableId: tableId },
-  });
-
-  if (mergedTables.length === 0) {
-    throw { status: 400, message: "Table is not a merged table!" };
-  }
-
-  for (const table of mergedTables) {
-    await table.update({ parentTableId: null });
-  }
-
-  const parentTable = await findTableById(tableId);
-  await parentTable.destroy();
-
-  return { unmergedTableIds: mergedTables.map((t) => t.id) };
-};
-
-const deleteTable = async (tableId) => {
-  const table = await findTableById(tableId);
+const updateTablePosition = async (id, positionX, positionY, floorPlanId = "default") => {
+  const table = await findTableById(id);
   if (!table) {
     throw { status: 404, message: "Table not found!" };
   }
-  if (table.isOccupied || table.reservationId) {
-    throw { status: 400, message: "Cannot delete an occupied table!" };
-  }
-  if (table.parentTableId) {
-    throw { status: 400, message: "Unmerge this table before deleting it!" };
-  }
-  await table.destroy();
-  return { id: tableId };
-};
-
-const bulkUpdate = async (ids, payload) => {
-  if (!Array.isArray(ids) || ids.length === 0) {
-    throw { status: 400, message: "No table IDs provided!" };
-  }
-  const result = await Table.update(payload, { where: { id: ids } });
-  return { count: result[0] };
-};
-
-const bulkDelete = async (ids) => {
-  if (!Array.isArray(ids) || ids.length === 0) {
-    throw { status: 400, message: "No table IDs provided!" };
-  }
-  const occupied = await Table.findAll({
-    where: { id: ids, [db.Sequelize.Op.or]: [{ isOccupied: true }, { reservationId: { [db.Sequelize.Op.not]: null } }] },
-  });
-  if (occupied.length > 0) {
-    throw { status: 400, message: "Cannot delete occupied tables!" };
-  }
-  const result = await Table.destroy({ where: { id: ids } });
-  return { count: result };
-};
-
-const bulkAssignStaff = async (ids, userId) => {
-  if (!Array.isArray(ids) || ids.length === 0) {
-    throw { status: 400, message: "No table IDs provided!" };
-  }
-  const tables = await Table.findAll({ where: { id: ids } });
-  const user = await User.findByPk(userId);
-  if (!user) {
-    throw { status: 404, message: "User not found!" };
-  }
-  for (const table of tables) {
-    const existing = await table.getUsers();
-    if (!existing.some((s) => s.id === userId)) {
-      await table.addUser(user);
-    }
-  }
-  return { count: tables.length };
-};
-
-const recordEvent = async (tableId, eventType, description, actorId) => {
-  return await TableEvent.create({
-    tableId,
-    eventType,
-    description: description ?? null,
-    actorId: actorId ?? null,
-  });
-};
-
-const getEvents = async (tableId, limit = 50) => {
-  return await TableEvent.findAll({
-    where: { tableId },
-    include: [
-      { model: User, attributes: ["id", "username"] },
-    ],
-    order: [["createdAt", "DESC"]],
-    limit,
+  return await table.update({
+    positionX,
+    positionY,
+    floorPlanId,
   });
 };
 
@@ -351,10 +211,4 @@ module.exports = {
   assignStaffToTable,
   unassignStaffFromTable,
   updateTablePosition,
-  deleteTable,
-  bulkUpdate,
-  bulkDelete,
-  bulkAssignStaff,
-  recordEvent,
-  getEvents,
 };

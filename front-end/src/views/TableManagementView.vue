@@ -4,6 +4,7 @@ import { RouterLink } from "vue-router";
 import tableAPI from "@/services/tableAPI";
 import { useAuthStore } from "@/stores/auth";
 import PopupBox from "@/components/PopupBox.vue";
+import FloorPlanEditor from "@/components/FloorPlanEditor.vue";
 import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
 import ErrorMessage from "@/components/ErrorMessage.vue";
 import SuccessMessage from "@/components/SuccessMessage.vue";
@@ -27,188 +28,7 @@ const showConfirmModal = ref(false);
 const confirmTarget = ref(null);
 const showErrorModal = ref(false);
 const errorMessage = ref("");
-const showQrModal = ref(false);
-const qrTable = ref(null);
-
-const editLayout = ref(false);
-const draggingTableId = ref(null);
-const dragOffset = ref({ x: 0, y: 0 });
-const savingPosition = ref(false);
-
-const SECTIONS = ["main", "bar", "patio", "terrace", "private"];
-const sectionFilter = ref("all");
-const displayTables = computed(() => {
-  if (sectionFilter.value === "all") return tables.value;
-  return tables.value.filter(
-    (t) => (t.section || "main") === sectionFilter.value
-  );
-});
-const sectionCounts = computed(() => {
-  const counts = { all: tables.value.length };
-  for (const s of SECTIONS) {
-    counts[s] = tables.value.filter((t) => (t.section || "main") === s).length;
-  }
-  return counts;
-});
-
-const updateTableSection = async (table, section) => {
-  try {
-    await tableAPI.bulkUpdate([table.id], { section });
-    table.section = section;
-  } catch (err) {
-    logger.error("Failed to update table section", { error: err.message });
-  }
-};
-
-const tableStyle = (table) => {
-  if (!editLayout.value) return {};
-  return {
-    position: "absolute",
-    left: (table.posX ?? 0) + "px",
-    top: (table.posY ?? 0) + "px",
-    width: "150px",
-  };
-};
-
-const startDrag = (event, table) => {
-  if (!editLayout.value) return;
-  draggingTableId.value = table.id;
-  const rect = event.currentTarget.getBoundingClientRect();
-  dragOffset.value = {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top,
-  };
-  window.addEventListener("mousemove", onDragMove);
-  window.addEventListener("mouseup", onDragEnd);
-};
-
-const onDragMove = (event) => {
-  if (!draggingTableId.value) return;
-  const canvas = document.querySelector(".layout-canvas");
-  if (!canvas) return;
-  const bounds = canvas.getBoundingClientRect();
-  let x = event.clientX - bounds.left - dragOffset.value.x;
-  let y = event.clientY - bounds.top - dragOffset.value.y;
-  x = Math.max(0, Math.min(x, canvas.clientWidth - 150));
-  y = Math.max(0, Math.min(y, canvas.clientHeight - 90));
-  const t = tables.value.find((tb) => tb.id === draggingTableId.value);
-  if (t) {
-    t.posX = Math.round(x);
-    t.posY = Math.round(y);
-  }
-};
-
-const onDragEnd = async () => {
-  window.removeEventListener("mousemove", onDragMove);
-  window.removeEventListener("mouseup", onDragEnd);
-  const id = draggingTableId.value;
-  draggingTableId.value = null;
-  if (id == null) return;
-  const t = tables.value.find((tb) => tb.id === id);
-  if (!t) return;
-  savingPosition.value = true;
-  try {
-    await tableAPI.updatePosition(id, t.posX, t.posY);
-  } catch (err) {
-    logger.error("Failed to save table position", { error: err.message });
-  } finally {
-    savingPosition.value = false;
-  }
-};
-
-const toggleLayout = () => {
-  editLayout.value = !editLayout.value;
-};
-
-const selectedTableIds = ref([]);
-const selectMode = ref(false);
-const bulkBarVisible = computed(
-  () => selectMode.value && selectedTableIds.value.length > 0
-);
-
-const toggleSelectMode = () => {
-  selectMode.value = !selectMode.value;
-  if (!selectMode.value) selectedTableIds.value = [];
-};
-
-const isSelected = (id) => selectedTableIds.value.includes(id);
-
-const toggleSelect = (id) => {
-  if (isSelected(id)) {
-    selectedTableIds.value = selectedTableIds.value.filter((x) => x !== id);
-  } else {
-    selectedTableIds.value = [...selectedTableIds.value, id];
-  }
-};
-
-const toggleSelectAll = () => {
-  if (selectedTableIds.value.length === tables.value.length) {
-    selectedTableIds.value = [];
-  } else {
-    selectedTableIds.value = tables.value.map((t) => t.id);
-  }
-};
-
-const bulkBusy = ref(false);
-
-const runBulk = async (fn, successMsg) => {
-  bulkBusy.value = true;
-  try {
-    await fn(selectedTableIds.value.slice());
-    showBulkSuccess.value = successMsg;
-    selectedTableIds.value = [];
-    await loadTables();
-  } catch (err) {
-    showErrorModal.value = true;
-    errorMessage.value = getApiErrorMessage(err);
-  } finally {
-    bulkBusy.value = false;
-    setTimeout(() => (showBulkSuccess.value = ""), 2500);
-  }
-};
-
-const bulkBlock = () =>
-  runBulk(
-    (ids) => tableAPI.bulkUpdate(ids, { isBlocked: true }),
-    "Tables blocked"
-  );
-const bulkUnblock = () =>
-  runBulk(
-    (ids) => tableAPI.bulkUpdate(ids, { isBlocked: false }),
-    "Tables unblocked"
-  );
-const bulkDeleteSelected = () => {
-  if (!confirm("Delete selected tables? Occupied tables will be skipped."))
-    return;
-  runBulk((ids) => tableAPI.bulkDelete(ids), "Tables deleted");
-};
-const bulkAssignSelected = () => {
-  if (!bulkAssignUserId.value) return;
-  runBulk(
-    (ids) => tableAPI.bulkAssign(ids, bulkAssignUserId.value),
-    "Staff assigned to tables"
-  );
-};
-
-const bulkAssignUserId = ref(null);
-const showBulkSuccess = ref("");
-const bulkStaffList = ref([]);
-
-const openBulkAssign = async () => {
-  showBulkAssignDialog.value = true;
-  bulkAssignUserId.value = null;
-  if (bulkStaffList.value.length === 0) {
-    try {
-      const res = await tableAPI.getWaitingStaff();
-      bulkStaffList.value = res?.data?.data ?? res?.data ?? [];
-    } catch (err) {
-      logger.error("Failed to load staff for bulk assign", {
-        error: err.message,
-      });
-    }
-  }
-};
-const showBulkAssignDialog = ref(false);
+const viewMode = ref("grid");
 
 const MAX_TABLES_PER_STAFF = 5;
 
@@ -412,97 +232,8 @@ const staffAtLimit = (staff) => {
   return staff.tableCount >= MAX_TABLES_PER_STAFF;
 };
 
-const occupancyStats = computed(() => {
-  const total = tables.value.length;
-  const occupied = tables.value.filter(
-    (t) => t.isOccupied && !t.isBlocked
-  ).length;
-  const blocked = tables.value.filter((t) => t.isBlocked).length;
-  const free = total - occupied - blocked;
-  const occupancyRate = total > 0 ? Math.round((occupied / total) * 100) : 0;
-  return { total, occupied, blocked, free, occupancyRate };
-});
-
-const isOverCapacity = (table) => {
-  const party = table.reservation?.people;
-  if (!party || !table.capacity) return false;
-  return Number(party) > Number(table.capacity);
-};
-
-const serverOverview = computed(() => {
-  const map = new Map();
-  tables.value.forEach((table) => {
-    (table.users || []).forEach((staff) => {
-      if (!map.has(staff.id)) {
-        map.set(staff.id, {
-          id: staff.id,
-          username: staff.username,
-          tables: [],
-        });
-      }
-      map.get(staff.id).tables.push(table.name || `T${table.id}`);
-    });
-  });
-  return Array.from(map.values()).sort(
-    (a, b) => b.tables.length - a.tables.length
-  );
-});
-
-const openQrModal = (table) => {
-  qrTable.value = table;
-  showQrModal.value = true;
-};
-
-const closeQrModal = () => {
-  showQrModal.value = false;
-  qrTable.value = null;
-};
-
-const showHistoryDialog = ref(false);
-const historyTable = ref(null);
-const tableEvents = ref([]);
-const historyLoading = ref(false);
-
-const openHistory = async (table) => {
-  historyTable.value = table;
-  showHistoryDialog.value = true;
-  historyLoading.value = true;
-  tableEvents.value = [];
-  try {
-    const res = await tableAPI.getEvents(table.id, 50);
-    tableEvents.value = res?.data?.events ?? res?.data?.data ?? [];
-  } catch (err) {
-    logger.error("Failed to load table history", { error: err.message });
-  } finally {
-    historyLoading.value = false;
-  }
-};
-
-const EVENT_LABELS = {
-  blocked: "Blocked",
-  unblocked: "Unblocked",
-  staff_assigned: "Staff assigned",
-  staff_unassigned: "Staff unassigned",
-  merged: "Merged",
-  unmerged: "Unmerged",
-  deleted: "Deleted",
-  moved: "Moved",
-};
-
-const eventLabel = (type) => EVENT_LABELS[type] || type;
-
-const formatEventTime = (ts) => {
-  if (!ts) return "";
-  const d = new Date(ts);
-  return d.toLocaleString();
-};
-
-const getQrCodeUrl = (table) => {
-  const baseUrl = window.location.origin;
-  const url = `${baseUrl}/self-service/table/${table.id}`;
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-    url
-  )}`;
+const handleTablesUpdated = async () => {
+  await loadTables();
 };
 </script>
 
@@ -576,14 +307,20 @@ const getQrCodeUrl = (table) => {
           <button class="btn btn-primary" @click="openAddDialog">
             + Add Table
           </button>
-          <button
-            v-if="canManageTables"
-            class="btn btn-secondary"
-            :class="{ active: selectMode }"
-            @click="toggleSelectMode"
-          >
-            {{ selectMode ? "Cancel Select" : "☑ Select" }}
-          </button>
+          <div class="view-toggle">
+            <button
+              :class="['toggle-btn', viewMode === 'grid' ? 'active' : '']"
+              @click="viewMode = 'grid'"
+            >
+              Grid View
+            </button>
+            <button
+              :class="['toggle-btn', viewMode === 'floorplan' ? 'active' : '']"
+              @click="viewMode = 'floorplan'"
+            >
+              Floor Plan
+            </button>
+          </div>
         </div>
 
         <div v-if="selectMode" class="bulk-bar">
@@ -819,6 +556,12 @@ const getQrCodeUrl = (table) => {
             </div>
           </div>
         </div>
+
+        <FloorPlanEditor
+          v-if="viewMode === 'floorplan'"
+          :tables="tables"
+          @tables-updated="handleTablesUpdated"
+        />
       </div>
 
       <div v-if="showMaintenanceDialog" class="modal-overlay">
@@ -1893,124 +1636,35 @@ const getQrCodeUrl = (table) => {
   font-weight: 600;
 }
 
-.add-btn {
-  font-family: var(--font-sans);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-}
-
-.occupancy-dashboard {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-}
-
-.stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
+.view-toggle {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  box-shadow: var(--shadow-sm);
+  gap: 8px;
+  margin-left: auto;
 }
 
-.stat-value {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: var(--text-2xl);
-  color: var(--ink);
-}
-
-.stat-label {
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--ink-muted);
-}
-
-.stat-free .stat-value {
-  color: var(--success);
-}
-
-.stat-occupied .stat-value {
-  color: var(--earth-600);
-}
-
-.stat-blocked .stat-value {
-  color: var(--rose-600);
-}
-
-.stat-rate .stat-value {
-  color: var(--sky-600);
-}
-
-.qr-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4);
-}
-
-.qr-subtitle {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  color: var(--ink-secondary);
-  margin: 0;
-}
-
-.qr-code-wrapper {
-  padding: var(--space-4);
+.toggle-btn {
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   background: white;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
-}
-
-.qr-image {
-  display: block;
-  width: 200px;
-  height: 200px;
-}
-
-.qr-url {
-  font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  color: var(--ink-muted);
-  word-break: break-all;
-  text-align: center;
-  margin: 0;
-}
-
-.qr-actions {
-  display: flex;
-  gap: var(--space-3);
-  width: 100%;
-  justify-content: center;
-}
-
-.btn-qr {
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--text-xs);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--ink-secondary);
-  border-radius: var(--radius-md);
+  font-family: "Inter-Medium";
+  font-size: 13px;
   cursor: pointer;
-  transition: all var(--duration-fast);
+  transition: all 0.15s;
 }
 
-.btn-qr:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+.toggle-btn.active {
+  background: var(--primary-blue);
+  color: white;
+  border-color: var(--primary-blue);
 }
 
-@media (min-width: 1024px) {
+@media screen and (min-width: 1024px) {
+  .header h1 {
+    margin-left: var(--x-spacing-desktop);
+    font-size: 45px;
+    margin-bottom: 20px;
+  }
   .content-wrapper {
     margin-top: var(--space-10);
     margin-bottom: var(--space-10);

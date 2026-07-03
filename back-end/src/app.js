@@ -7,6 +7,8 @@ const { client: redisClient } = require("./utils/cache");
 
 const { app, server } = createServer();
 
+server.setTimeout(30000);
+
 const init = async () => {
   try {
     await connect.connectDatabase();

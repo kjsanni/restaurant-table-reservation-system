@@ -95,31 +95,20 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         defaultValue: null,
       },
-      posX: {
+      positionX: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        defaultValue: null,
+        defaultValue: 0,
       },
-      posY: {
+      positionY: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        defaultValue: null,
-      },
-      shape: {
-        type: DataTypes.STRING(20),
-        allowNull: true,
-        defaultValue: "round",
-      },
-      section: {
-        type: DataTypes.STRING(40),
-        allowNull: true,
-        defaultValue: "main",
+        defaultValue: 0,
       },
       floorPlanId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING(50),
         allowNull: true,
-        defaultValue: null,
-        references: { model: "FloorPlans", key: "id" },
+        defaultValue: "default",
       },
     },
     {

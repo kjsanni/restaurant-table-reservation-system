@@ -1,9 +1,7 @@
 const tableService = require("../services/tableService");
 const tableDAO = require("../DAOs/table.dao");
 const reservationDAO = require("../DAOs/reservation.dao");
-const authDAO = require("../DAOs/auth.dao");
-
-const actorId = (req) => req.user?.id ?? null;
+const waitlistDAO = require("../DAOs/waitlist.dao");
 
 const getAllHandler = async (req, res) => {
   const tables = await tableService.getAllTables(tableDAO);
@@ -128,113 +126,33 @@ const unassignStaffHandler = async (req, res) => {
   });
 };
 
-const mergeTablesHandler = async (req, res) => {
-  const { tableIds } = req.body;
-  const result = await tableService.mergeTables(tableDAO, tableIds);
-  for (const id of tableIds) {
-    await tableService.recordEvent(tableDAO, id, "merged", null, actorId(req));
-  }
+const editHandler = async (req, res) => {
+  const { id } = req.params;
+  const { name, capacity } = req.body;
+  const table = await tableService.editTable(tableDAO, id, { name, capacity });
 
   return res.status(200).json({
     success: true,
-    message: "Tables merged successfully!",
-    item: result,
-  });
-};
-
-const unmergeTableHandler = async (req, res) => {
-  const { tableId } = req.params;
-  const result = await tableService.unmergeTable(tableDAO, tableId);
-  await tableService.recordEvent(tableDAO, tableId, "unmerged", null, actorId(req));
-
-  return res.status(200).json({
-    success: true,
-    message: "Table unmerged successfully!",
-    item: result,
-  });
-};
-
-const calculatePriceHandler = async (req, res) => {
-  const { capacity } = req.body;
-  const settings = await authDAO.getAllSettings();
-  const settingsMap = settings.reduce((acc, s) => {
-    acc[s.key] = s.value;
-    return acc;
-  }, {});
-  const price = tableService.getPriceForCapacity(capacity, settingsMap);
-
-  return res.status(200).json({
-    success: true,
-    price,
+    message: "Table updated successfully!",
+    item: table,
   });
 };
 
 const updatePositionHandler = async (req, res) => {
   const { id } = req.params;
-  const { posX, posY } = req.body;
-  const table = await tableService.updatePosition(tableDAO, id, posX, posY);
+  const { positionX, positionY, floorPlanId } = req.body;
+  const table = await tableService.updateTablePosition(
+    tableDAO,
+    id,
+    positionX,
+    positionY,
+    floorPlanId
+  );
 
   return res.status(200).json({
     success: true,
     message: "Table position updated!",
     item: table,
-  });
-};
-
-const deleteHandler = async (req, res) => {
-  const { id } = req.params;
-  await tableService.recordEvent(tableDAO, id, "deleted", null, actorId(req));
-  const result = await tableService.delete(tableDAO, id);
-  return res.status(200).json({
-    success: true,
-    message: "Table deleted!",
-    item: result,
-  });
-};
-
-const getEventsHandler = async (req, res) => {
-  const { tableId } = req.params;
-  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50;
-  const events = await tableService.getEvents(tableDAO, tableId, limit);
-  return res.status(200).json({
-    success: true,
-    events,
-  });
-};
-
-const bulkUpdateHandler = async (req, res) => {
-  const { ids, isBlocked, maintenanceNotes } = req.body;
-  const payload = {};
-  if (typeof isBlocked === "boolean") payload.isBlocked = isBlocked;
-  if (maintenanceNotes !== undefined) payload.maintenanceNotes = maintenanceNotes;
-  const result = await tableService.bulkUpdate(tableDAO, ids, payload, actorId(req));
-  return res.status(200).json({
-    success: true,
-    message: `Updated ${result.count} tables`,
-    count: result.count,
-  });
-};
-
-const bulkDeleteHandler = async (req, res) => {
-  const { ids } = req.body;
-  for (const id of ids) {
-    await tableService.recordEvent(tableDAO, id, "deleted", null, actorId(req));
-  }
-  const result = await tableService.bulkDelete(tableDAO, ids);
-  return res.status(200).json({
-    success: true,
-    message: `Deleted ${result.count} tables`,
-    count: result.count,
-  });
-};
-
-const bulkAssignHandler = async (req, res) => {
-  const { ids, userId } = req.body;
-  const result = await tableService.bulkAssignStaff(tableDAO, ids, userId);
-  return res.status(200).json({
-    success: true,
-    message: `Assigned staff to ${result.count} tables`,
-    count: result.count,
   });
 };
 
@@ -247,13 +165,6 @@ module.exports = {
   getWaitingStaffHandler,
   assignStaffHandler,
   unassignStaffHandler,
-  mergeTablesHandler,
-  unmergeTableHandler,
-  calculatePriceHandler,
+  editHandler,
   updatePositionHandler,
-  deleteHandler,
-  bulkUpdateHandler,
-  bulkDeleteHandler,
-  bulkAssignHandler,
-  getEventsHandler,
 };

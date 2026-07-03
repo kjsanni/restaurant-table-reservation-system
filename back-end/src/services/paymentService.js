@@ -1,5 +1,8 @@
 const paymentDAO = require("../DAOs/payment.dao");
 const reservationDAO = require("../DAOs/reservation.dao");
+const db = require("../db/models");
+const Payment = db.payment;
+const refundDAO = require("../DAOs/refund.dao");
 
 const classifyPaymentStatus = (totalPaid, expectedTotal) => {
   if (totalPaid <= 0) return "unpaid";

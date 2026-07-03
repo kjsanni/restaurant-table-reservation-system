@@ -127,6 +127,12 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresPermission: "view_audit_logs" },
     },
     {
+      path: "/admin/email-templates",
+      name: "email-template-list",
+      component: () => import("../views/EmailTemplateListView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "manage_settings" },
+    },
+    {
       path: "/admin/customers/:id",
       name: "customer-profile",
       component: () => import("../views/CustomerProfileView.vue"),
