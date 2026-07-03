@@ -254,6 +254,20 @@ const getPaymentSummaryHandler = async (req, res) => {
   });
 };
 
+const getStatsHandler = async (req, res) => {
+  const filters = {};
+  if (req.query.from) filters.from = req.query.from;
+  if (req.query.to) filters.to = req.query.to;
+  if (req.query.paymentStatus) filters.paymentStatus = req.query.paymentStatus;
+  if (req.query.resStatus) filters.resStatus = req.query.resStatus;
+
+  const stats = await reservationDAO.getReservationStats(filters);
+  return res.status(200).json({
+    success: true,
+    stats,
+  });
+};
+
 const getHeatmapV2Handler = async (req, res) => {
   const { mode = "date-hour", from, to } = req.query;
 
