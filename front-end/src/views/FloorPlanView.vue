@@ -51,10 +51,11 @@ const handleAssign = async ({ reservationId, tableId }) => {
     await reservationAPI.chooseTable(reservationId, tableId);
     assignPopupOpen.value = false;
     draggingReservation.value = null;
+    selectedTable.value = null;
     selectedLinkedTables.value = [];
     await loadData();
   } catch (err) {
-    logger.error("Assign table error", { error: err.message });
+    logger.error("Assign table error", { error: err.response?.data || err.message });
     errorMessage.value = getApiErrorMessage(err, "Failed to assign table");
     errorPopupOpen.value = true;
   }
