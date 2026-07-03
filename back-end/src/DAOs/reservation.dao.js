@@ -246,10 +246,15 @@ const searchCustomers = async (query) => {
 const getCustomerReservationHistory = async (customerId, limit = 50) => {
   return await Reservation.findAll({
     where: { customerId },
-    attributes: [
-      "resStatus",
-      [fn("SUM", col("expectedTotal")), "totalExpected"],
-      [fn("COUNT", col("id")), "totalVisits"],
+    order: [["resDate", "DESC"]],
+    limit,
+    attributes: ["id", "resDate", "resTime", "resStatus", "people", "paymentStatus", "expectedTotal", "notes"],
+    include: [
+      {
+        model: Table,
+        attributes: ["id", "name", "capacity"],
+        required: false,
+      },
     ],
     group: ["resStatus"],
     raw: true,
@@ -363,8 +368,8 @@ const destroyReservation = async (reservation) => {
   return await reservation.destroy();
 };
 
-const cancelReservation = async (reservationId, reservationDAO) => {
-  const reservation = await reservationDAO.findReservationById(reservationId);
+const cancelReservation = async (reservationId) => {
+  const reservation = await findReservationById(reservationId);
   if (!reservation) {
     throw {
       status: 404,
@@ -373,10 +378,10 @@ const cancelReservation = async (reservationId, reservationDAO) => {
   }
 
   if (["cancelled", "seated", "completed", "missed"].includes(reservation.resStatus)) {
-    return await reservationDAO.destroyReservation(reservation);
+    return await destroyReservation(reservation);
   }
 
-  return await reservationDAO.deleteReservation(reservation);
+  return await deleteReservation(reservation);
 };
 
 const setReservationStatus = async (reservation, status) => {
@@ -797,6 +802,7 @@ const getRecurringReservations = async (customerId) => {
 
 module.exports = {
   findAllReservations,
+  findReservationById,
   createReservation,
   updateReservation,
   recordStatusChange,
@@ -824,7 +830,11 @@ module.exports = {
   findCustomerByEmail,
   createCustomer,
   updateCustomerTags,
+  deleteReservation,
+  destroyReservation,
   cancelReservation,
   setReservationStatus,
   setReservationTable,
+  getCustomerReservationHistory,
+  getCustomerStats,
 };

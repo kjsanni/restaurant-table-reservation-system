@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         hooks: true,
       });
       Reservation.hasMany(models.table, {
+        foreignKey: "reservationId",
         onUpdate: "cascade",
         hooks: true,
       });
