@@ -1,6 +1,6 @@
 ---
 title: Changes Overview
-date: 2026-06-29
+date: 2026-07-02
 tags:
   - audit
   - changes
@@ -11,12 +11,13 @@ related:
   - "[[202-Backend-Architecture]]"
   - "[[302-Frontend-Architecture]]"
   - "[[900-Session-Summary]]"
+  - "[[Reservations-FloorPlan]]"
 ---
 
 # Changes Overview
 
 > [!info] Work Summary
-> **25 uncommitted files** in working tree across backend, frontend, docs, and deployment configs. ~8,921 insertions, ~4,123 deletions.
+> **23 uncommitted files** in working tree across backend, frontend, and docs.
 
 ---
 
@@ -25,84 +26,79 @@ related:
 ### Backend (`back-end/`)
 | File | Type | Description |
 |---|---|---|
-| `src/DAOs/reservation.dao.js` | Modified | Heatmap v2, staff assignment, expectedTotal |
-| `src/routes/reservation.router.js` | Modified | GET /:id, staff endpoints, heatmap-v2 |
-| `.env.production.example` | New | Production env template |
-| `ecosystem.config.js` | New | PM2 cluster config |
+| `src/controllers/admin.controller.js` | New | Admin log email handler |
+| `src/routes/admin.router.js` | New | Admin log email route |
+| `src/services/logEmail.service.js` | New | Nodemailer log attachment service |
+| `src/middleware/rateLimit.js` | Modified | Added `adminActionLimiter` |
+| `src/services/recurrence.service.js` | New | Recurrence expansion engine |
+| `src/DAOs/reservation.dao.js` | Modified | Added `getRecurringReservations`, loyalty DAOs |
+| `src/services/reservationService.js` | Modified | Added `getRecurringReservations` |
+| `src/controllers/reservation.controller.js` | Modified | Added `getRecurringHandler` |
+| `src/routes/reservation.router.js` | Modified | Added `GET /recurring` |
+| `src/db/migrations/20260702000003-add-reservation-recurrence.js` | New | Recurrence JSON column |
+| `src/db/models/reservation.js` | Modified | Added `recurrence` JSON |
+| `src/DAOs/payment.dao.js` | Modified | Added `updateSplits` |
+| `src/services/paymentService.js` | Modified | Split payment validation |
+| `src/db/migrations/20260702000004-add-payment-splits.js` | New | Splits JSON column |
+| `src/db/models/payment.js` | Modified | Added `splits` JSON |
+| `src/services/customerService.js` | Modified | Added loyalty services |
+| `src/controllers/customer.controller.js` | Modified | Added loyalty handlers |
+| `src/routes/customer.router.js` | Modified | Added loyalty routes |
+| `src/db/migrations/20260702000005-add-customer-loyalty-points.js` | New | Points + preferences columns |
+| `src/db/models/customer.js` | Modified | Added `points`, `preferences` |
+| `back-end/package.json` | Modified | Added `nodemailer` |
+| `back-end/src/services/recurrence.service.js` | New | Recurrence expansion engine |
+| `back-end/src/services/reservationStatusHistory.service.js` | New | Status history service |
+| `back-end/src/DAOs/permissionTemplate.dao.js` | New | Template DAO |
+| `back-end/src/DAOs/reservationStatusHistory.dao.js` | New | Status history DAO |
+| `back-end/src/services/waitlistService.js` | Modified | Uses `getBestMatch` |
+| `back-end/src/controllers/table.controller.js` | Modified | Emits `waitlist-offer` on table free |
 
 ### Frontend (`front-end/`)
 | File | Type | Description |
 |---|---|---|
-| `src/services/reservationAPI.js` | Modified | New API methods |
-| `src/views/HeatmapView.vue` | Modified | Heatmap improvements (~260 lines refactored) |
-| `src/components/Heatmap2D.vue` | New | 2D date-hour heatmap component |
-| `src/views/RevenueReportView.vue` | New | Revenue dashboard with SVG charts |
-| `.env.production` | New | Production frontend env |
-| `start-frontend.sh` | New | Dev startup script |
+| `src/services/adminAPI.js` | New | Admin log email API |
+| `src/components/AppToast.vue` | New | Toast notification component |
+| `src/stores/toast.js` | New | Toast Pinia store |
+| `src/App.vue` | Modified | Mounted `AppToast` |
+| `src/views/AdminSettingsView.vue` | Modified | Email logs button + toast |
+| `src/views/StaffManagementView.vue` | Modified | Role select fix + error handling |
+| `src/services/reservationAPI.js` | Modified | Added `getRecurring()` |
+| `src/views/NewReservationView.vue` | Modified | Recurrence UI |
+| `src/components/EditReservation.vue` | Modified | Split payment UI |
+| `src/services/customerAPI.js` | Modified | Loyalty methods |
+| `src/views/CustomerProfileView.vue` | Modified | Loyalty + preferences UI |
+| `src/services/roleAPI.js` | Modified | Template CRUD methods |
+| `src/views/RoleManagementView.vue` | Modified | Template picker UI |
+| `src/components/AppToast.vue` | New | Toast notifications |
+| `src/components/WaitlistOfferBanner.vue` | New | Waitlist auto-promotion banner |
+| `src/components/ReservationTimeline.vue` | New | Status timeline component |
+| `src/stores/toast.js` | New | Toast Pinia store |
+| `src/App.vue` | Modified | Mounted AppToast + WaitlistOfferBanner + socket init |
 
-### Root Level
+### Docs
 | File | Type | Description |
 |---|---|---|
-| `CHANGELOG.md` | New | Version changelog |
-| `DEPLOYMENT-GUIDE.md` | New | Production deployment instructions |
-| `SECURITY_AUDIT_REPORT.md` | New | Security audit findings |
-| `SESSION_NOTES.md` | New | Session changelog |
-| `deploy-prod.sh` | New | Production deploy script with rollback |
-| `apache-production.conf` | New | Apache reverse proxy |
-| `nginx-production.conf` | New | Nginx reverse proxy |
-| `ecosystem.config.js` | New | PM2 config (root) |
-| `docs/` | New | Obsidian documentation vault (13 files) |
-| `package-lock.json` | New | Dependency lockfile |
-| `restaurant-table-reservation-system.code-workspace` | New | VS Code workspace |
+| `docs/Reservations-FloorPlan.md` | New | 14-feature implementation plan |
 
 ---
 
-## Staged Changes Detail
+## Schema Changes
 
-### `reservation.dao.js`
-- Added `expectedTotal` to `findAllReservations` attributes
-- Added `getHeatmapV2(from, to, mode)` for 2D analytics
-- Added staff assignment methods: `getAssignedStaff`, `assignStaff`, `unassignStaff`
-
-### `reservation.router.js`
-- Added `GET /:reservationId` single reservation endpoint
-- Added `/:reservationId/staff` and `/:reservationId/staff/:userId` staff endpoints
-- Added `GET /heatmap-v2` endpoint
-
-### `reservationAPI.js`
-- Added `getHeatmapV2()`, `getOne()`, staff assignment/unassignment methods
-
-### `HeatmapView.vue`
-- Refactored from ~260 lines to concise implementation
-- Added defensive `Array.isArray` fallback
-- Added spinner loading state
-- Rounded cells with hover scale + blue border ring
-- Tooltip text on hover
-- Count label shown inside cell when > 0
-
-### New: `Heatmap2D.vue`
-- Two-mode heatmap: `date-hour` matrix and `calendar` daily summary
-- Color scale legend (gray → blue → red)
-- Date range picker
-- Hover tooltips with exact counts
-
-### New: `RevenueReportView.vue`
-- Preset range buttons (Today / Week / Month / Custom)
-- Granularity selector (Day / Week / Month)
-- Summary cards: Total Revenue, Total Transactions, Avg Transaction
-- SVG bar chart for total sales
-- SVG stacked bar chart for payment method breakdown
-- CSV export
-- Admin-only route: `/admin/reports/revenue`
-
----
-
-## Change Categories
-
-| Category | Files | Impact |
+| Migration | Table | Change |
 |---|---|---|
-| Backend features | 2 | High |
-| Frontend features | 4 | High |
-| Deployment | 6 | Ops |
-| Documentation | 13 | Maintenance |
-| Config | 3 | Ops |
+| `20260702000003` | `reservations` | Added `recurrence` JSON |
+| `20260702000004` | `payments` | Added `splits` JSON |
+| `20260702000005` | `customers` | Added `points` INT, `preferences` JSON |
+| `20260703000001` | `permission_templates` | New templates table |
+| `20260703000002` | `reservation_status_history` | New history table |
+| `20260703000003` | `reservations` | Added `mergedFromTableIds` JSON |
+
+---
+
+## Security & Infrastructure
+
+- Added `adminActionLimiter` (3 req/hr) to `POST /api/v1/admin/logs/email`
+- Added log cleanup: keeps 5 most recent `.log` files before emailing
+- Fixed frontend `ReferenceError: logger is not defined` in `AdminSettingsView.vue`
+- Fixed role select binding in `StaffManagementView.vue` to send valid enum values

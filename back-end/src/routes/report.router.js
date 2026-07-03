@@ -20,4 +20,9 @@ router
   .get(...protectedRoute("view_reservations", reportController.exportPDFHandler))
   .all(httpMethodError);
 
+router
+  .route("/turn-time")
+  .get(...protectedRoute("view_reservations", reportController.getTurnTimeHandler))
+  .all(httpMethodError);
+
 module.exports = router;

@@ -24,12 +24,19 @@ const reservation = ref({
   expectedTotal: "",
   paymentStatus: "unpaid",
   notes: "",
+  recurrence: null,
 });
 
 const customerId = ref(null);
 const visitCount = ref(0);
 const customerTags = ref([]);
 const loyaltyLoaded = ref(false);
+
+const isRecurring = ref(false);
+const recurrenceFrequency = ref("weekly");
+const recurrenceInterval = ref(1);
+const recurrenceUntil = ref("");
+const recurrenceByDay = ref([]);
 
 const availableTags = [
   { key: "vip", label: "⭐ VIP", color: "#f59e0b" },
@@ -129,6 +136,18 @@ const registerReservation = async () => {
       lastName: capitalize(reservation.value.lastName),
       phone: cleanPhone(reservation.value.phone),
     };
+
+    if (isRecurring.value) {
+      payload.recurrence = {
+        frequency: recurrenceFrequency.value,
+        interval: Number(recurrenceInterval.value) || 1,
+        until: recurrenceUntil.value || null,
+        byDay: recurrenceByDay.value || [],
+      };
+    } else {
+      payload.recurrence = null;
+    }
+
     const res = await reservationAPI.registerReservation(payload);
     logger.debug("Reservation created", { id: res?.data?.id });
     isSuccessful.value = true;
@@ -143,7 +162,13 @@ const registerReservation = async () => {
       expectedTotal: "",
       paymentStatus: "unpaid",
       notes: "",
+      recurrence: null,
     };
+    isRecurring.value = false;
+    recurrenceFrequency.value = "weekly";
+    recurrenceInterval.value = 1;
+    recurrenceUntil.value = "";
+    recurrenceByDay.value = [];
     customerId.value = null;
     visitCount.value = 0;
     customerTags.value = [];
@@ -265,6 +290,40 @@ const registerReservation = async () => {
               rows="3"
               placeholder="Anniversary, window seat, allergies..."
             ></textarea>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="recurrence-header">
+            <label class="field-label">Recurring Reservation</label>
+            <input type="checkbox" v-model="isRecurring" />
+          </div>
+          <div v-if="isRecurring" class="fields-grid">
+            <div class="field">
+              <label class="field-label">Frequency</label>
+              <select v-model="recurrenceFrequency" class="field-input">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Interval</label>
+              <input
+                v-model="recurrenceInterval"
+                type="number"
+                min="1"
+                class="field-input"
+              />
+            </div>
+            <div class="field">
+              <label class="field-label">Repeat Until</label>
+              <input
+                v-model="recurrenceUntil"
+                type="date"
+                class="field-input"
+              />
+            </div>
           </div>
         </div>
 
@@ -511,6 +570,30 @@ textarea.field-input {
   .fields-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+.recurrence-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.recurrence-header .field-label {
+  margin: 0;
+}
+
+.recurrence-header input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-blue);
+  cursor: pointer;
+}
+
+.loyalty-section {
+  border: 1px dashed var(--primary-blue);
+  background: #f8fafc;
 }
 
 @media screen and (min-width: 1024px) {

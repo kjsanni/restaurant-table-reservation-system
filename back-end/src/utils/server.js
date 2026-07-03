@@ -17,6 +17,7 @@ const paymentRouter = require("../routes/payment.router");
 const reportRouter = require("../routes/report.router");
 const customerRouter = require("../routes/customer.router");
 const adminRouter = require("../routes/admin.router");
+const notificationRouter = require("../routes/notification.router");
 const { setCsrfCookie, CSRF_HEADER_NAME } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
 const { requestLogger } = require("../middleware/requestLogger");
@@ -128,6 +129,7 @@ const createServer = () => {
   app.use("/api/v1/reports", logAction, reportRouter);
   app.use("/api/v1/customers", logAction, customerRouter);
   app.use("/api/v1/admin", logAction, adminRouter);
+  app.use("/api/v1/notifications", logAction, notificationRouter);
   app.get("/api/v1/stats", (req, res) => {
     res.json({ success: true, stats: getStats() });
   });

@@ -46,6 +46,12 @@ class ReservationAPI {
   search(query) {
     return API.get("/reservations/search", { params: { q: query } });
   }
+  getRecurring(filters = {}) {
+    return API.get("/reservations/recurring", { params: filters });
+  }
+  getStatusHistory(reservationId) {
+    return API.get("/reservations/" + reservationId + "/status-history");
+  }
 }
 
 export default new ReservationAPI();

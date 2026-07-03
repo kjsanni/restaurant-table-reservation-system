@@ -34,16 +34,9 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(100),
         allowNull: true,
       },
-      discount: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-        defaultValue: 0,
-        validate: {
-          min: {
-            args: [0],
-            msg: "Discount cannot be negative!",
-          },
-        },
+      splits: {
+        type: DataTypes.JSON,
+        allowNull: true,
       },
     },
     {

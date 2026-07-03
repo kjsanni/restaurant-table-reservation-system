@@ -25,14 +25,51 @@ const getReservationReport = async (filters = {}) => {
   };
 };
 
-const csvCell = (value) => {
-  const str = value === null || value === undefined ? "" : String(value);
-  // Wrap in quotes and double internal quotes; wrapping a cell whose value
-  // starts with = + - @ makes CSV readers treat it as literal text instead
-  // of executing a formula (formula-injection defence).
-  const needsQuote = /[",\n]/.test(str) || /^=[+\-@]/.test(str);
-  const safe = str.replace(/"/g, '""');
-  return needsQuote ? `"${safe}"` : safe;
+const getTurnTimeReport = async (filters = {}) => {
+  const where = {};
+  if (filters.from) where.resDate = { ...where.resDate, [Op.gte]: filters.from };
+  if (filters.to) where.resDate = { ...where.resDate, [Op.lte]: filters.to };
+
+  const results = await reservationDAO.findAllReservationsRaw(where);
+  const eligible = results.filter((r) => r.seatedAt && r.completedAt);
+
+  const turnTimes = eligible.map((r) => {
+    const seated = new Date(r.seatedAt).getTime();
+    const completed = new Date(r.completedAt).getTime();
+    const minutes = (completed - seated) / (1000 * 60);
+    return {
+      reservationId: r.id,
+      tableId: r.tableId,
+      tableName: r.tableName,
+      resDate: r.resDate,
+      seatedAt: r.seatedAt,
+      completedAt: r.completedAt,
+      turnMinutes: Math.round(minutes),
+    };
+  });
+
+  const total = turnTimes.length;
+  const avg = total ? Math.round(turnTimes.reduce((sum, t) => sum + t.turnMinutes, 0) / total) : 0;
+  const byTable = {};
+  turnTimes.forEach((t) => {
+    const key = t.tableId || "unknown";
+    if (!byTable[key]) byTable[key] = { tableId: key, tableName: t.tableName, times: [] };
+    byTable[key].times.push(t.turnMinutes);
+  });
+
+  const tableSummaries = Object.values(byTable).map(({ tableId, tableName, times }) => {
+    const sum = times.reduce((a, b) => a + b, 0);
+    return {
+      tableId,
+      tableName,
+      count: times.length,
+      avg: Math.round(sum / times.length),
+      min: Math.min(...times),
+      max: Math.max(...times),
+    };
+  });
+
+  return { total, avg, turnTimes, tableSummaries };
 };
 
 const exportCSV = async (filters = {}) => {
@@ -85,6 +122,7 @@ const exportPDF = async (filters = {}) => {
 
 module.exports = {
   getReservationReport,
+  getTurnTimeReport,
   exportCSV,
   exportPDF,
 };

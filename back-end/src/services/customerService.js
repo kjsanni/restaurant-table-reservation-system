@@ -23,8 +23,33 @@ const findOrCreateCustomer = async (customerDetails) => {
   return await reservationDAO.findOrCreateCustomer(customerDetails);
 };
 
+const incrementVisit = async (customerId) => {
+  return await reservationDAO.incrementCustomerVisit(customerId);
+};
+
+const addPoints = async (customerId, points) => {
+  return await reservationDAO.addCustomerPoints(customerId, points);
+};
+
+const redeemPoints = async (customerId, points) => {
+  return await reservationDAO.redeemCustomerPoints(customerId, points);
+};
+
+const updatePreferences = async (customerId, preferences) => {
+  return await reservationDAO.updateCustomerPreferences(customerId, preferences);
+};
+
+const searchCustomers = async (query) => {
+  return await reservationDAO.searchCustomers(query);
+};
+
 module.exports = {
   getCustomerLoyalty,
   updateCustomerTags,
   findOrCreateCustomer,
+  incrementVisit,
+  addPoints,
+  redeemPoints,
+  updatePreferences,
+  searchCustomers,
 };

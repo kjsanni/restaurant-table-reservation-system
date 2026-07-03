@@ -1,5 +1,6 @@
 const roleDAO = require("../DAOs/role.dao");
 const groupDAO = require("../DAOs/group.dao");
+const templateDAO = require("../DAOs/permissionTemplate.dao");
 
 const getAllRoles = async () => {
   return await roleDAO.findAllRoles();
@@ -93,6 +94,45 @@ const removeUserFromGroup = async (groupId, userId) => {
   return result;
 };
 
+const getAllTemplates = async () => {
+  return await templateDAO.findAllTemplates();
+};
+
+const getTemplate = async (id) => {
+  const template = await templateDAO.findTemplateById(id);
+  if (!template) throw { status: 404, message: "Template not found!" };
+  return template;
+};
+
+const createTemplate = async (templateData) => {
+  const existing = await templateDAO.findTemplateByName(templateData.name);
+  if (existing) {
+    throw { status: 400, message: "Template with this name already exists!" };
+  }
+  return await templateDAO.createTemplate(templateData);
+};
+
+const updateTemplate = async (id, updates) => {
+  if (updates.name) {
+    const existing = await templateDAO.findTemplateByName(updates.name);
+    if (existing && existing.id !== id) {
+      throw { status: 400, message: "Template with this name already exists!" };
+    }
+  }
+  const template = await templateDAO.updateTemplate(id, updates);
+  if (!template) throw { status: 404, message: "Template not found!" };
+  return template;
+};
+
+const deleteTemplate = async (id) => {
+  await templateDAO.deleteTemplate(id);
+  return true;
+};
+
+const searchTemplates = async (query) => {
+  return await templateDAO.searchTemplates(query);
+};
+
 module.exports = {
   getAllRoles,
   getRole,
@@ -108,4 +148,11 @@ module.exports = {
   deleteGroup,
   addUserToGroup,
   removeUserFromGroup,
+  getAllTemplates,
+  getTemplate,
+  createTemplate,
+  updateTemplate,
+  deleteTemplate,
+  searchTemplates,
 };
+

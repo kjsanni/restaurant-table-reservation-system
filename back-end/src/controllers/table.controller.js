@@ -52,6 +52,15 @@ const freeTableHandler = async (req, res) => {
   const io = req.app.get("io");
   if (io) {
     io.emit("table-freed", { tableId, reservationId: info?.id });
+
+    const suggestion = await waitlistDAO.getBestMatch(tableId);
+    if (suggestion) {
+      io.emit("waitlist-offer", {
+        tableId,
+        waitlistEntry: suggestion,
+        offerExpiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      });
+    }
   }
 
   return res.status(200).json({

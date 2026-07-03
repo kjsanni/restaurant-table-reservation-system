@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import waitlistAPI from "@/services/waitlistAPI";
 import tableAPI from "@/services/tableAPI";
+import customerAPI from "@/services/customerAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
@@ -38,6 +39,11 @@ const form = ref({
   notes: "",
 });
 
+const customerSearch = ref("");
+const customerResults = ref([]);
+const selectedCustomer = ref(null);
+const searchDebounce = ref(null);
+
 const freeTables = ref([]);
 const actionLoading = ref(false);
 const actionError = ref("");
@@ -61,6 +67,9 @@ const loadData = async () => {
 const openAdd = () => {
   popupMode.value = "add";
   selectedEntry.value = null;
+  selectedCustomer.value = null;
+  customerSearch.value = "";
+  customerResults.value = [];
   form.value = {
     name: "",
     partySize: 2,
@@ -70,6 +79,36 @@ const openAdd = () => {
     notes: "",
   };
   showPopup.value = true;
+};
+
+const searchCustomer = async () => {
+  if (searchDebounce.value) clearTimeout(searchDebounce.value);
+  const q = customerSearch.value.trim();
+  if (!q) {
+    customerResults.value = [];
+    return;
+  }
+  searchDebounce.value = setTimeout(async () => {
+    try {
+      const res = await customerAPI.search(q);
+      customerResults.value = res.data.customers || [];
+    } catch (err) {
+      logger.error("Customer search failed", { error: err.message });
+    }
+  }, 300);
+};
+
+const selectCustomer = (customer) => {
+  selectedCustomer.value = customer;
+  customerResults.value = [];
+  customerSearch.value = `${customer.firstName} ${customer.lastName}`;
+  form.value.name = `${customer.firstName} ${customer.lastName}`;
+  if (customer.phone) form.value.phone = customer.phone;
+  if (customer.email) form.value.email = customer.email;
+  if (customer.visitCount)
+    form.value.notes = `${
+      form.value.notes ? form.value.notes + " | " : ""
+    }Returning guest (${customer.visitCount} visits)`;
 };
 
 const openSeat = async (entry) => {
@@ -338,6 +377,31 @@ onMounted(() => {
             <div v-if="actionError" class="error-msg">{{ actionError }}</div>
 
             <div v-if="popupMode === 'add'" class="form-section">
+              <div class="field">
+                <label class="field-label">Find Existing Customer</label>
+                <input
+                  v-model="customerSearch"
+                  class="field-input"
+                  placeholder="Search by name, email, or phone..."
+                  @input="searchCustomer"
+                />
+                <div v-if="customerResults.length" class="customer-results">
+                  <div
+                    v-for="customer in customerResults"
+                    :key="customer.id"
+                    class="customer-result-item"
+                    @click="selectCustomer(customer)"
+                  >
+                    <span class="customer-name"
+                      >{{ customer.firstName }} {{ customer.lastName }}</span
+                    >
+                    <span class="customer-meta"
+                      >{{ customer.email }} ·
+                      {{ customer.visitCount }} visits</span
+                    >
+                  </div>
+                </div>
+              </div>
               <div class="field">
                 <label class="field-label">Name *</label>
                 <input
@@ -792,6 +856,39 @@ onMounted(() => {
   gap: var(--space-2);
   padding-top: var(--space-3);
   border-top: 1px solid var(--border);
+}
+
+.customer-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.customer-result-item {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customer-result-item:hover {
+  background: #f9fafb;
+}
+
+.customer-name {
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  color: var(--primary-black);
+}
+
+.customer-meta {
+  font-family: "Inter-Light";
+  font-size: 12px;
+  color: var(--secondary-gray);
 }
 
 .popup-body {

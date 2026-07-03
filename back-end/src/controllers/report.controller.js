@@ -37,8 +37,19 @@ const exportPDFHandler = async (req, res) => {
   res.send(pdf);
 };
 
+const getTurnTimeHandler = async (req, res) => {
+  const filters = {
+    from: req.query.from,
+    to: req.query.to,
+    tableIds: req.query.tableIds,
+  };
+  const report = await reportService.getTurnTimeReport(filters);
+  return res.status(200).json({ success: true, report });
+};
+
 module.exports = {
   getReservationReportHandler,
   exportCSVHandler,
   exportPDFHandler,
+  getTurnTimeHandler,
 };

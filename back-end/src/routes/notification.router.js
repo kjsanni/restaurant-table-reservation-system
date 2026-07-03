@@ -3,46 +3,11 @@ const router = express.Router();
 const tryCatchHandler = require("../middleware/tryCatch");
 const httpMethodError = require("../middleware/httpMethodError");
 const notificationController = require("../controllers/notification.controller");
-const { protect, admin } = require("../middleware/auth");
-const { validateCsrfToken } = require("../middleware/csrf");
+const { writeRoute } = require("../utils/routeHelpers");
 
 router
-  .route("/email/test")
-  .post(
-    tryCatchHandler(protect),
-    tryCatchHandler(admin),
-    validateCsrfToken,
-    tryCatchHandler(notificationController.sendTestEmailHandler)
-  )
-  .all(httpMethodError);
-
-router
-  .route("/email")
-  .post(
-    tryCatchHandler(protect),
-    tryCatchHandler(admin),
-    validateCsrfToken,
-    tryCatchHandler(notificationController.sendEmailHandler)
-  )
-  .all(httpMethodError);
-
-router
-  .route("/email/template")
-  .post(
-    tryCatchHandler(protect),
-    tryCatchHandler(admin),
-    validateCsrfToken,
-    tryCatchHandler(notificationController.sendTemplateHandler)
-  )
-  .all(httpMethodError);
-
-router
-  .route("/templates")
-  .get(
-    tryCatchHandler(protect),
-    tryCatchHandler(admin),
-    tryCatchHandler(notificationController.getTemplatesHandler)
-  )
+  .route("/reminders/schedule")
+  .post(...writeRoute("manage_staff", notificationController.scheduleRemindersHandler))
   .all(httpMethodError);
 
 module.exports = router;

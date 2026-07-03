@@ -90,11 +90,60 @@ const newPayment = ref({
   paidBy: "",
   reference: "",
 });
+const useSplits = ref(false);
+const splits = ref([]);
 const paymentErrors = ref({});
 const paymentSuccess = ref(false);
 const showDeleteConfirm = ref(false);
 const deleteTargetId = ref(null);
 const removeError = ref("");
+
+const splitMethods = [
+  { value: "cash", label: "Cash" },
+  { value: "card", label: "Card" },
+  { value: "transfer", label: "Transfer" },
+  { value: "other", label: "Other" },
+];
+
+const totalSplitAmount = computed(() => {
+  return splits.value.reduce(
+    (sum, split) => sum + (parseFloat(split.amount) || 0),
+    0
+  );
+});
+
+const addSplit = () => {
+  splits.value.push({
+    method: "cash",
+    amount: "",
+    paidBy: "",
+    reference: "",
+    tip: "",
+  });
+};
+
+const removeSplit = (index) => {
+  splits.value.splice(index, 1);
+};
+
+const toggleUseSplits = () => {
+  useSplits.value = !useSplits.value;
+  if (!useSplits.value) {
+    splits.value = [];
+  }
+};
+
+const clearPaymentForm = () => {
+  newPayment.value = {
+    amount: "",
+    method: "cash",
+    paidBy: "",
+    reference: "",
+  };
+  useSplits.value = false;
+  splits.value = [];
+  paymentErrors.value = {};
+};
 
 const loadPayments = async () => {
   if (!props.reservation?.id) return;
@@ -111,21 +160,51 @@ const addPayment = async () => {
   paymentErrors.value = {};
   paymentSuccess.value = false;
   if (!props.reservation?.id) return;
+
+  const amount = parseFloat(newPayment.value.amount);
+  if (!amount || amount <= 0) {
+    paymentErrors.value = { amount: "Invalid payment amount" };
+    return;
+  }
+
+  if (useSplits.value) {
+    const totalSplit = totalSplitAmount.value;
+    if (Math.abs(totalSplit - amount) > 0.01) {
+      paymentErrors.value = {
+        splits: `Split amounts (${totalSplit.toFixed(
+          2
+        )}) must equal the payment amount (${amount.toFixed(2)}).`,
+      };
+      return;
+    }
+    if (splits.value.length === 0) {
+      paymentErrors.value = { splits: "Add at least one split." };
+      return;
+    }
+  }
+
   try {
-    const res = await paymentAPI.addPayment(props.reservation.id, {
-      amount: newPayment.value.amount,
-      method: newPayment.value.method,
+    const payload = {
+      amount,
+      method: useSplits.value ? "split" : newPayment.value.method,
       paidBy: newPayment.value.paidBy || null,
       reference: newPayment.value.reference || null,
-    });
-    payments.value = Array.isArray(res.data.payments) ? res.data.payments : [];
-    totalPaid.value = parseFloat(res.data.totalPaid) || 0;
-    newPayment.value = {
-      amount: "",
-      method: "cash",
-      paidBy: "",
-      reference: "",
     };
+
+    if (useSplits.value) {
+      payload.splits = splits.value.map((split) => ({
+        method: split.method || "cash",
+        amount: parseFloat(split.amount || 0),
+        paidBy: split.paidBy || null,
+        reference: split.reference || null,
+        tip: split.tip ? parseFloat(split.tip) : 0,
+      }));
+    }
+
+    const res = await paymentAPI.addPayment(props.reservation.id, payload);
+    payments.value = Array.isArray(res.data.payments) ? res.data.payments : [];
+    totalPaid.value = res.data.totalPaid || 0;
+    clearPaymentForm();
     paymentSuccess.value = true;
     setTimeout(() => (paymentSuccess.value = false), 3000);
     emit("onEdited");
@@ -263,6 +342,22 @@ const editReservation = async () => {
               <span v-if="pay.reference" class="payment-ref"
                 >Ref: {{ pay.reference }}</span
               >
+              <div
+                v-if="pay.splits && pay.splits.length"
+                class="splits-breakdown"
+              >
+                <span
+                  v-for="(split, idx) in pay.splits"
+                  :key="idx"
+                  class="split-chip"
+                >
+                  {{ split.method }}: GHS
+                  {{ parseFloat(split.amount).toFixed(2) }}
+                  <span v-if="split.tip"
+                    >(tip GHS {{ parseFloat(split.tip).toFixed(2) }})</span
+                  >
+                </span>
+              </div>
             </div>
             <button
               class="remove-pay-btn"
@@ -286,7 +381,7 @@ const editReservation = async () => {
               placeholder="0.00"
             />
           </div>
-          <div class="form-group inline">
+          <div v-if="!useSplits" class="form-group inline">
             <label class="form-label">Method</label>
             <select class="form-select" v-model="newPayment.method">
               <option value="cash">Cash</option>
@@ -295,7 +390,7 @@ const editReservation = async () => {
               <option value="other">Other</option>
             </select>
           </div>
-          <div class="form-group inline">
+          <div v-if="!useSplits" class="form-group inline">
             <label class="form-label">Paid By</label>
             <input
               type="text"
@@ -304,7 +399,7 @@ const editReservation = async () => {
               placeholder="Name"
             />
           </div>
-          <div class="form-group inline">
+          <div v-if="!useSplits" class="form-group inline">
             <label class="form-label">Reference</label>
             <input
               type="text"
@@ -312,6 +407,77 @@ const editReservation = async () => {
               v-model="newPayment.reference"
               placeholder="Ref #"
             />
+          </div>
+          <div class="form-group inline checkbox-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                v-model="useSplits"
+                @change="toggleUseSplits"
+              />
+              <span>Split payment</span>
+            </label>
+          </div>
+          <div v-if="useSplits" class="splits-section">
+            <div
+              v-for="(split, index) in splits"
+              :key="index"
+              class="split-row"
+            >
+              <select class="form-select" v-model="split.method">
+                <option
+                  v-for="opt in splitMethods"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
+                  {{ opt.label }}
+                </option>
+              </select>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-select"
+                v-model="split.amount"
+                placeholder="0.00"
+              />
+              <input
+                type="text"
+                class="form-select"
+                v-model="split.paidBy"
+                placeholder="Name"
+              />
+              <input
+                type="text"
+                class="form-select"
+                v-model="split.reference"
+                placeholder="Ref #"
+              />
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-select"
+                v-model="split.tip"
+                placeholder="Tip"
+              />
+              <button
+                type="button"
+                class="remove-split-btn"
+                @click="removeSplit(index)"
+              >
+                ×
+              </button>
+            </div>
+            <button type="button" class="add-split-btn" @click="addSplit">
+              + Add Split
+            </button>
+            <div class="split-summary">
+              <span>Total split: GHS {{ totalSplitAmount.toFixed(2) }}</span>
+              <span v-if="newPayment.amount"
+                >of GHS {{ parseFloat(newPayment.amount).toFixed(2) }}</span
+              >
+            </div>
           </div>
           <button type="submit" class="add-pay-btn">Add</button>
         </form>
@@ -583,5 +749,90 @@ const editReservation = async () => {
   .add-payment-form .form-group.inline {
     flex: 1 1 160px;
   }
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-family: "Inter-Medium";
+  color: var(--primary-black);
+  cursor: pointer;
+}
+
+.splits-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.split-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.split-row .form-select {
+  flex: 1 1 120px;
+  min-width: 100px;
+}
+
+.remove-split-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #991b1b;
+  cursor: pointer;
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-split-btn {
+  align-self: flex-start;
+  padding: 8px 12px;
+  border: 1px dashed var(--primary-blue);
+  background: white;
+  color: var(--primary-blue);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+}
+
+.split-summary {
+  font-size: 13px;
+  font-family: "Inter-Medium";
+  color: var(--secondary-gray);
+  display: flex;
+  gap: 8px;
+}
+
+.splits-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.split-chip {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-family: "Inter-Medium";
 }
 </style>

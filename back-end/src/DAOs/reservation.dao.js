@@ -183,12 +183,64 @@ const getCustomerById = async (customerId) => {
       "visitCount",
       "lastVisitDate",
       "tags",
+      "points",
+      "preferences",
     ],
   });
   if (customer && !Array.isArray(customer.tags)) {
     customer.tags = [];
   }
   return customer;
+};
+
+const incrementCustomerVisit = async (customerId) => {
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) return null;
+  await customer.increment("visitCount", { by: 1 });
+  await customer.update({ lastVisitDate: new Date() });
+  return customer;
+};
+
+const addCustomerPoints = async (customerId, points) => {
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) return null;
+  const nextPoints = (customer.points || 0) + points;
+  await customer.update({ points: nextPoints });
+  return customer;
+};
+
+const redeemCustomerPoints = async (customerId, points) => {
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) return null;
+  const current = customer.points || 0;
+  if (current < points) {
+    throw { status: 400, message: "Insufficient loyalty points." };
+  }
+  await customer.update({ points: current - points });
+  return customer;
+};
+
+const updateCustomerPreferences = async (customerId, preferences) => {
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) return null;
+  return await customer.update({ preferences: preferences || {} });
+};
+
+const searchCustomers = async (query) => {
+  const { Op } = db.Sequelize;
+  const like = `%${query.replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
+  return await Customer.findAll({
+    where: {
+      [Op.or]: [
+        { firstName: { [Op.like]: like } },
+        { lastName: { [Op.like]: like } },
+        { email: { [Op.like]: like } },
+        { phone: { [Op.like]: like } },
+      ],
+    },
+    limit: 20,
+    attributes: ["id", "firstName", "lastName", "email", "phone", "visitCount"],
+  });
 };
 
 const getCustomerReservationHistory = async (customerId, limit = 50) => {
@@ -261,6 +313,8 @@ const createReservation = async (resDetails) => {
   return result;
 };
 
+const statusHistoryDAO = require("../DAOs/reservationStatusHistory.dao");
+
 const updateReservation = async (reservationId, resDetails) => {
   const [result, metadata] = await Reservation.update(resDetails, {
     where: {
@@ -269,6 +323,36 @@ const updateReservation = async (reservationId, resDetails) => {
   });
 
   return result;
+};
+
+const recordStatusChange = async (reservationId, fromStatus, toStatus, actorId, metadata = {}) => {
+  return await statusHistoryDAO.addHistory({
+    reservationId,
+    fromStatus,
+    toStatus,
+    actorId,
+    actorType: actorId ? "user" : "system",
+    metadata,
+  });
+};
+
+const getStatusHistory = async (reservationId) => {
+  return await statusHistoryDAO.getHistoryByReservation(reservationId);
+};
+
+const mergeReservationTables = async (reservationId, tableIds) => {
+  const reservation = await Reservation.findByPk(reservationId);
+  if (!reservation) return null;
+  const uniqueIds = Array.from(new Set((tableIds || []).map((id) => parseInt(id, 10)))).filter(Boolean);
+  await reservation.update({ mergedFromTableIds: uniqueIds });
+  return reservation;
+};
+
+const unmergeReservationTables = async (reservationId) => {
+  const reservation = await Reservation.findByPk(reservationId);
+  if (!reservation) return null;
+  await reservation.update({ mergedFromTableIds: null });
+  return reservation;
 };
 
 const deleteReservation = async (reservation) => {
@@ -681,33 +765,49 @@ const searchReservations = async (term) => {
   });
 };
 
+const getRecurringReservations = async (customerId) => {
+  const { Op } = db.Sequelize;
+  const reservations = await Reservation.findAll({
+    where: {
+      customerId,
+      recurrence: {
+        [Op.not]: null,
+      },
+    },
+    order: [["resDate", "ASC"]],
+    attributes: ["id", "resDate", "resTime", "people", "recurrence"],
+  });
+
+  return reservations.map((reservation) => {
+    const recurrence = reservation.recurrence || {};
+    return {
+      id: reservation.id,
+      resDate: reservation.resDate,
+      resTime: reservation.resTime,
+      people: reservation.people,
+      recurrence: {
+        frequency: recurrence.frequency || null,
+        interval: recurrence.interval || null,
+        until: recurrence.until || null,
+        byDay: recurrence.byDay || [],
+      },
+    };
+  });
+};
+
 module.exports = {
   findAllReservations,
   createReservation,
   updateReservation,
-  deleteReservation,
-  destroyReservation,
-  cancelReservation,
-  findReservationById,
-  setReservationTable,
-  setReservationStatus,
-  getReservationsHeatmap,
-  getHeatmapV2,
-  getPaymentStatusCounts,
-  bulkCancel,
-  bulkUpdate,
-  getAssignedStaff,
-  assignStaff,
-  unassignStaff,
-  findAllReservationsRaw,
-  getReservationStats,
-  createCustomer,
-  findCustomerByEmail,
-  findOrCreateCustomer,
-  updateCustomerTags,
-  updateCustomer,
+  recordStatusChange,
+  getStatusHistory,
+  mergeReservationTables,
+  unmergeReservationTables,
   getCustomerById,
-  getCustomerReservationHistory,
-  getCustomerStats,
-  searchReservations,
+  incrementCustomerVisit,
+  addCustomerPoints,
+  redeemCustomerPoints,
+  updateCustomerPreferences,
+  searchCustomers,
+  getRecurringReservations,
 };

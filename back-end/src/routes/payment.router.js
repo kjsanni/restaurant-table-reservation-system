@@ -6,6 +6,11 @@ const paymentController = require("../controllers/payment.controller");
 const { protectedRoute } = require("../utils/routeHelpers");
 
 router
+  .route("/:reservationId/payments/:id/refund")
+  .post(...writeRoute("manage_staff", paymentController.refundPaymentHandler))
+  .all(httpMethodError);
+
+router
   .route("/history")
   .get(...protectedRoute("view_reservations", paymentController.getHistoryHandler))
   .all(httpMethodError);

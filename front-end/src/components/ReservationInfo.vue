@@ -89,6 +89,9 @@ const customerLink = computed(() => {
         <p>{{ tableNames }}</p>
       </div>
     </div>
+    <div v-if="props.reservation.occasion" class="occasion-badge">
+      🎉 {{ props.reservation.occasion }}
+    </div>
     <div v-if="props.reservation.notes" class="notes-wrapper">
       <p class="notes-label">Notes:</p>
       <p class="notes-text" v-html="highlightedNotes"></p>
@@ -170,6 +173,14 @@ const customerLink = computed(() => {
 .notes-wrapper {
   margin-top: 8px;
   padding-left: 25px;
+}
+
+.occasion-badge {
+  margin-top: 8px;
+  padding-left: 25px;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  color: #92400e;
 }
 
 .notes-label {

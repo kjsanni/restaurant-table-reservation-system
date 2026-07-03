@@ -3,6 +3,7 @@ const waitlistDAO = require("../DAOs/waitlist.dao");
 const getAllHandler = async (req, res) => {
   const filters = {};
   if (req.query.desiredTime) filters.desiredTime = req.query.desiredTime;
+  if (req.query.customerId) filters.customerId = req.query.customerId;
   const entries = await waitlistDAO.getWaitingList(filters);
   return res.status(200).json({ success: true, entries });
 };

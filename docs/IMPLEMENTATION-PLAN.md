@@ -231,6 +231,14 @@ see original plan in `docs/IMPLEMENTATION-PLAN.md` (lines 455–518).
 | Floor Plan Drag-and-Drop | ✅ Complete |
 | Customer Profile | ✅ Complete |
 | Search Notes Indexing | ✅ Complete |
+| Admin Log Email (one-shot) | ✅ Complete |
+| Recurring Reservations | ✅ Complete |
+| Split Bills / Multiple Payments | ✅ Complete |
+| Customer Loyalty & Visit Tracking | ✅ Complete |
+| Permission Templates | ✅ Complete |
+| Waitlist Auto-Promotion | ✅ Complete |
+| Reservation Status Timeline | ✅ Complete |
+| Table Combining / Merging | ✅ Complete |
 
 ---
 
@@ -246,12 +254,14 @@ see original plan in `docs/IMPLEMENTATION-PLAN.md` (lines 455–518).
 - Frontend: Vitest + Vue Test Utils for components with mock API
 - E2E: Playwright smoke tests for each new page
 
-### Rollout Order (Completed)
+### Rollout Order
 1. **Week 1:** Security hardening, login lockout, audit logging
 2. **Week 2:** RBAC system, role/group management UI
 3. **Week 3:** Payment tracking + revenue reports
 4. **Week 4:** Heatmap 2D, no-show widget, waitlist auto-seat
 5. **Week 5:** Sidebar redesign, UI standardization
+6. **Week 6:** Recurring reservations, split bills, customer loyalty
+7. **Week 7:** Permission templates, waitlist auto-promotion, status timeline, table merging
 
 ### Backlog / Out of Scope
 - Table layout visual editor (admin drag to position tables)

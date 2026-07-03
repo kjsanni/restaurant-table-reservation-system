@@ -47,4 +47,17 @@ router
   .delete(...writeRoute("manage_groups", rbacController.removeUserFromGroupHandler))
   .all(httpMethodError);
 
+router
+  .route("/permission-templates")
+  .get(...protectedRoute("manage_roles", rbacController.getAllTemplatesHandler))
+  .post(...writeRoute("manage_roles", rbacController.createTemplateHandler))
+  .all(httpMethodError);
+
+router
+  .route("/permission-templates/:id")
+  .get(...protectedRoute("manage_roles", rbacController.getTemplateHandler))
+  .patch(...writeRoute("manage_roles", rbacController.updateTemplateHandler))
+  .delete(...writeRoute("manage_roles", rbacController.deleteTemplateHandler))
+  .all(httpMethodError);
+
 module.exports = router;

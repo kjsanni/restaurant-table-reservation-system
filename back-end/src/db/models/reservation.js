@@ -83,6 +83,18 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      occasion: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+      },
+      recurrence: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
+      mergedFromTableIds: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
     },
     {
       sequelize,

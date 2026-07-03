@@ -3,8 +3,6 @@ import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import customerAPI from "@/services/customerAPI";
 import PopupBox from "@/components/PopupBox.vue";
-import SuccessMessage from "@/components/SuccessMessage.vue";
-import PageHeader from "@/components/PageHeader.vue";
 
 const route = useRoute();
 const customerId = route.params.id;
@@ -24,6 +22,12 @@ const stats = computed(
       statusBreakdown: [],
     }
 );
+
+const points = computed(() => customer.value?.points ?? 0);
+const preferences = computed(() => customer.value?.preferences || {});
+const redeemPointsValue = ref(0);
+const redeemError = ref("");
+const redeemSuccess = ref(false);
 
 const statusColors = {
   pending: "#f59e0b",
@@ -48,11 +52,6 @@ const newTag = ref("");
 const tagInput = ref(null);
 const saveMessage = ref("");
 const showSaveMessage = ref(false);
-
-const formattedAddress = computed(() => {
-  if (!customer.value) return "";
-  return `${customer.value.address || ""}, ${customer.value.city || ""}`;
-});
 
 const loadProfile = async () => {
   loading.value = true;
@@ -120,6 +119,50 @@ const saveTags = async () => {
 const navigateToNewReservation = () => {
   window.location.href = `/new-reservation?customerId=${customerId}`;
 };
+
+const markVisit = async () => {
+  try {
+    await customerAPI.incrementVisit(customerId);
+    await loadProfile();
+  } catch {
+    errorMsg.value = "Failed to mark visit.";
+  }
+};
+
+const submitRedeem = async () => {
+  redeemError.value = "";
+  redeemSuccess.value = false;
+  if (!redeemPointsValue.value || redeemPointsValue.value <= 0) {
+    redeemError.value = "Enter a valid points amount.";
+    return;
+  }
+  if (redeemPointsValue.value > points.value) {
+    redeemError.value = "Customer does not have enough points.";
+    return;
+  }
+  try {
+    await customerAPI.redeemPoints(customerId, redeemPointsValue.value);
+    redeemSuccess.value = true;
+    redeemPointsValue.value = 0;
+    await loadProfile();
+  } catch {
+    redeemError.value = "Failed to redeem points.";
+  }
+};
+
+const savePreferences = async () => {
+  try {
+    await customerAPI.updatePreferences(customerId, preferences.value);
+    showSaveMessage.value = true;
+    saveMessage.value = "Preferences saved";
+    setTimeout(() => {
+      showSaveMessage.value = false;
+    }, 2000);
+  } catch {
+    showSaveMessage.value = true;
+    saveMessage.value = "Failed to save preferences";
+  }
+};
 </script>
 
 <template>
@@ -155,6 +198,9 @@ const navigateToNewReservation = () => {
               </span>
               <span class="stat-badge no-show">
                 <strong>{{ stats.noShowRate }}%</strong> no-show rate
+              </span>
+              <span class="stat-badge loyalty">
+                <strong>{{ points }}</strong> points
               </span>
             </div>
           </div>
@@ -250,6 +296,87 @@ const navigateToNewReservation = () => {
                   {{ res.notes }}
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h3>Loyalty</h3>
+            <div class="loyalty-row">
+              <div class="loyalty-stat">
+                <span class="stat-value">{{ points }}</span>
+                <span class="stat-label">Points</span>
+              </div>
+              <div class="loyalty-actions">
+                <button class="btn-small" @click="markVisit">+ Visit</button>
+                <button class="btn-small" @click="addPoints">+ Points</button>
+              </div>
+            </div>
+            <div class="redeem-row">
+              <input
+                type="number"
+                v-model="redeemPointsValue"
+                placeholder="Points to redeem"
+                class="redeem-input"
+              />
+              <button class="btn-small danger" @click="submitRedeem">
+                Redeem
+              </button>
+            </div>
+            <div v-if="redeemError" class="save-message error">
+              {{ redeemError }}
+            </div>
+            <div v-if="redeemSuccess" class="save-message success">
+              Redeemed successfully
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h3>Preferences</h3>
+            <div class="preferences-grid">
+              <label class="pref-item">
+                <input
+                  type="checkbox"
+                  v-model="preferences.emailReminders"
+                  @change="savePreferences"
+                />
+                <span>Email reminders</span>
+              </label>
+              <label class="pref-item">
+                <input
+                  type="checkbox"
+                  v-model="preferences.smsReminders"
+                  @change="savePreferences"
+                />
+                <span>SMS reminders</span>
+              </label>
+              <label class="pref-item">
+                <input
+                  type="checkbox"
+                  v-model="preferences.quietHours"
+                  @change="savePreferences"
+                />
+                <span>Quiet hours</span>
+              </label>
+              <label class="pref-item">
+                <input
+                  type="checkbox"
+                  v-model="preferences.disableAll"
+                  @change="savePreferences"
+                />
+                <span>Disable all reminders</span>
+              </label>
+            </div>
+            <div class="save-row">
+              <button class="btn-link" @click="savePreferences">
+                Save preferences
+              </button>
+              <span
+                v-if="showSaveMessage"
+                class="save-message"
+                :class="saveMessage.includes('Failed') ? 'error' : 'success'"
+              >
+                {{ saveMessage }}
+              </span>
             </div>
           </div>
 
@@ -435,6 +562,11 @@ const navigateToNewReservation = () => {
 .stat-badge.no-show {
   background: #fef3c7;
   color: #92400e;
+}
+
+.stat-badge.loyalty {
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .profile-actions {
@@ -723,6 +855,67 @@ const navigateToNewReservation = () => {
   font-size: 13px;
   color: var(--ink);
   margin-left: auto;
+}
+
+.loyalty-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.loyalty-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.redeem-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.redeem-input {
+  padding: 8px 10px;
+  border: 1px solid var(--lighter-gray);
+  border-radius: 8px;
+  font-family: "Inter-Light";
+  font-size: 13px;
+  width: 180px;
+}
+
+.btn-small.danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.btn-small.danger:hover {
+  background: #fecaca;
+}
+
+.preferences-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pref-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  color: var(--primary-black);
+  cursor: pointer;
+}
+
+.save-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .empty-state-small {

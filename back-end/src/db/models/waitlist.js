@@ -3,11 +3,20 @@ const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
   class Waitlist extends Model {
-    static associate(models) {}
+    static associate(models) {
+      Waitlist.belongsTo(models.customer, {
+        foreignKey: "customerId",
+        as: "customer",
+      });
+    }
   }
 
   Waitlist.init(
     {
+      customerId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       name: {
         type: DataTypes.STRING(100),
         allowNull: false,

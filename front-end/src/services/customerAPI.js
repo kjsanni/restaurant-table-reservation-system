@@ -16,6 +16,23 @@ class CustomerAPI {
   findOrCreate(customerData) {
     return API.post("/customers/find-or-create", customerData);
   }
+  incrementVisit(customerId) {
+    return API.post("/customers/" + customerId + "/visits");
+  }
+  addPoints(customerId, points) {
+    return API.post("/customers/" + customerId + "/points", { points });
+  }
+  redeemPoints(customerId, points) {
+    return API.post("/customers/" + customerId + "/points/redeem", { points });
+  }
+  updatePreferences(customerId, preferences) {
+    return API.patch("/customers/" + customerId + "/preferences", {
+      preferences,
+    });
+  }
+  search(query) {
+    return API.get("/customers/search", { params: { q: query } });
+  }
 }
 
 export default new CustomerAPI();

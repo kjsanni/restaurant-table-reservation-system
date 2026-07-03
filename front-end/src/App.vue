@@ -2,6 +2,29 @@
 import TheSidebar from "@/components/TheSidebar.vue";
 import TheFooter from "@/components/TheFooter.vue";
 import AppToast from "@/components/AppToast.vue";
+import WaitlistOfferBanner from "@/components/WaitlistOfferBanner.vue";
+import { onMounted, onUnmounted } from "vue";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
+
+window.__socket__ = socket;
+
+onMounted(() => {
+  socket.on("connect", () => {
+    console.log("Socket connected:", socket.id);
+  });
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected");
+  });
+});
+
+onUnmounted(() => {
+  socket.disconnect();
+  delete window.__socket__;
+});
 </script>
 
 <template>
@@ -16,6 +39,7 @@ import AppToast from "@/components/AppToast.vue";
     </main>
     <TheFooter />
     <AppToast />
+    <WaitlistOfferBanner @seated="socket.emit('waitlist-offer-accepted')" />
   </div>
 </template>
 

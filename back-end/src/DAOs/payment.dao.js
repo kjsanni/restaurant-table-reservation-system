@@ -6,11 +6,24 @@ const findByReservation = async (reservationId) => {
   return await Payment.findAll({
     where: { reservationId },
     order: [["paidAt", "DESC"]],
+    attributes: ["id", "reservationId", "amount", "method", "paidBy", "reference", "paidAt", "splits"],
   });
 };
 
 const create = async (data) => {
   return await Payment.create(data);
+};
+
+const updateSplits = async (reservationId, id, splits) => {
+  const payment = await Payment.findOne({ where: { id, reservationId } });
+  if (!payment) return null;
+  const totalSplit = (splits || []).reduce((sum, split) => sum + parseFloat(split.amount || 0), 0);
+  const allowedTotal = parseFloat(payment.amount || 0);
+  if (totalSplit > allowedTotal + 0.001 || totalSplit < allowedTotal - 0.001) {
+    throw { status: 400, message: `Split amounts must sum to the payment amount (${allowedTotal.toFixed(2)}).` };
+  }
+  await payment.update({ splits: splits || [] });
+  return payment;
 };
 
 const getTotalPaid = async (reservationId) => {
@@ -138,6 +151,7 @@ const getRevenueTimeSeries = async (from, to, granularity = "day") => {
 module.exports = {
   findByReservation,
   create,
+  updateSplits,
   getTotalPaid,
   remove,
   getPaymentHistory,
