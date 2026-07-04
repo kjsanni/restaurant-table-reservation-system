@@ -3,11 +3,21 @@ const Role = db.role;
 const { Op } = db.Sequelize;
 
 const findAllRoles = async () => {
-  return await Role.findAll({ order: [["id", "ASC"]] });
+  const roles = await Role.findAll({ order: [["id", "ASC"]] });
+  return roles.map((r) => {
+    if (!r.permissions || typeof r.permissions !== "object") {
+      r.permissions = {};
+    }
+    return r;
+  });
 };
 
 const findRoleById = async (id) => {
-  return await Role.findByPk(id);
+  const role = await Role.findByPk(id);
+  if (role && (!role.permissions || typeof role.permissions !== "object")) {
+    role.permissions = {};
+  }
+  return role;
 };
 
 const findRoleByName = async (name) => {

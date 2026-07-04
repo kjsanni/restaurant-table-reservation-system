@@ -4,11 +4,17 @@ const User = db.user;
 const { Op } = db.Sequelize;
 
 const findAllGroups = async () => {
-  return await Group.findAll({ order: [["id", "ASC"]] });
+  const groups = await Group.findAll({ order: [["id", "ASC"]] });
+  return groups.map((g) => {
+    if (!g.permissions || typeof g.permissions !== "object") {
+      g.permissions = {};
+    }
+    return g;
+  });
 };
 
 const findGroupById = async (id) => {
-  return await Group.findByPk(id, {
+  const group = await Group.findByPk(id, {
     include: [
       {
         model: User,
@@ -17,6 +23,10 @@ const findGroupById = async (id) => {
       },
     ],
   });
+  if (group && (!group.permissions || typeof group.permissions !== "object")) {
+    group.permissions = {};
+  }
+  return group;
 };
 
 const findGroupByName = async (name) => {

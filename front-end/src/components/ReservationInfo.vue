@@ -25,14 +25,12 @@ const tableNames = computed(() => {
 });
 
 const highlightedNotes = computed(() => {
-  if (!props.searchQuery || !props.reservation?.notes)
-    return props.reservation?.notes;
-  const escaped = props.reservation.notes.replace(
-    /[.*+?^${}()|[\]\\]/g,
-    "\\$&"
-  );
+  if (!props.searchQuery) return props.reservation?.notes || "";
+  const notes = props.reservation?.notes;
+  if (!notes) return "";
+  const escaped = notes.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const regex = new RegExp(`(${escaped})`, "gi");
-  return props.reservation.notes.replace(regex, "<mark>$1</mark>");
+  return notes.replace(regex, "<mark>$1</mark>");
 });
 
 const customerLink = computed(() => {

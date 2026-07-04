@@ -58,6 +58,13 @@ const loadProfile = async () => {
   errorMsg.value = "";
   try {
     const res = await customerAPI.getProfile(customerId);
+    if (res.data.profile?.customer) {
+      res.data.profile.customer.tags = Array.isArray(
+        res.data.profile.customer.tags
+      )
+        ? res.data.profile.customer.tags
+        : [];
+    }
     profile.value = res.data.profile;
   } catch {
     errorMsg.value = "Failed to load customer profile.";
@@ -81,14 +88,16 @@ const startEditingTags = () => {
 const addTag = () => {
   const tag = newTag.value.trim();
   if (!tag || !customer.value?.tags) return;
-  if (customer.value.tags.includes(tag)) return;
-  customer.value.tags = [...customer.value.tags, tag];
+  const tags = Array.isArray(customer.value.tags) ? customer.value.tags : [];
+  if (tags.includes(tag)) return;
+  customer.value.tags = [...tags, tag];
   newTag.value = "";
   saveTags();
 };
 
 const removeTag = (tag) => {
-  customer.value.tags = customer.value.tags.filter((t) => t !== tag);
+  const tags = Array.isArray(customer.value?.tags) ? customer.value.tags : [];
+  customer.value.tags = tags.filter((t) => t !== tag);
   saveTags();
 };
 

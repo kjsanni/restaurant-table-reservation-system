@@ -80,7 +80,7 @@ const updateCustomerTags = async (customerId, tags) => {
 };
 
 const getCustomerById = async (customerId) => {
-  return await Customer.findByPk(customerId, {
+  const customer = await Customer.findByPk(customerId, {
     attributes: [
       "id",
       "firstName",
@@ -92,6 +92,10 @@ const getCustomerById = async (customerId) => {
       "tags",
     ],
   });
+  if (customer && !Array.isArray(customer.tags)) {
+    customer.tags = [];
+  }
+  return customer;
 };
 
 const getCustomerReservationHistory = async (customerId, limit = 50) => {

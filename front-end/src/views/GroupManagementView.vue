@@ -89,7 +89,10 @@ const openEdit = (group) => {
   form.value = {
     name: group.name,
     description: group.description || "",
-    permissions: group.permissions || {},
+    permissions:
+      typeof group.permissions === "object" && group.permissions !== null
+        ? group.permissions
+        : {},
   };
   showDialog.value = true;
 };
@@ -196,12 +199,12 @@ const confirmAction = async () => {
               <span class="meta-label">Permissions</span>
               <div class="perm-grid">
                 <span
-                  v-for="(enabled, key) in group.permissions"
+                  v-for="(enabled, key) in group.permissions || {}"
                   :key="key"
                   class="perm-tag"
                   :class="{ active: enabled }"
                 >
-                  {{ key.replace(/_/g, " ") }}
+                  {{ typeof key === "string" ? key.replace(/_/g, " ") : key }}
                 </span>
               </div>
             </div>
