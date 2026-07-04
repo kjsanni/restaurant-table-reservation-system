@@ -28,9 +28,11 @@ const createServer = () => {
   const server = require("http").createServer(app);
   
   getCurrentSecret();
+  const corsOrigins = process.env.CORS_ORIGINS?.split(",").filter(o => o.trim());
+  const allowedOrigins = corsOrigins.length > 0 ? corsOrigins : ["http://localhost:8080"];
   const io = new Server(server, {
     cors: {
-      origin: process.env.CORS_ORIGINS?.split(",").filter(o => o.trim()).join(",") || "http://localhost:8080",
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
     },
   });
