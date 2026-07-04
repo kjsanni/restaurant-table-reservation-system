@@ -3,10 +3,10 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.sequelize.query(
-      "ALTER TABLE reservations MODIFY COLUMN resStatus ENUM('pending', 'seated', 'missed', 'cancelled') NOT NULL DEFAULT 'pending'"
+      "ALTER TABLE Reservations MODIFY COLUMN resStatus ENUM('pending', 'seated', 'missed', 'cancelled') NOT NULL DEFAULT 'pending'"
     );
 
-    await queryInterface.addColumn("reservations", "paymentStatus", {
+    await queryInterface.addColumn("Reservations", "paymentStatus", {
       type: Sequelize.ENUM("deposit", "partial", "paid", "unpaid"),
       allowNull: false,
       defaultValue: "unpaid",
@@ -14,8 +14,8 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.removeColumn("reservations", "paymentStatus");
-    await queryInterface.changeColumn("reservations", "resStatus", {
+    await queryInterface.removeColumn("Reservations", "paymentStatus");
+    await queryInterface.changeColumn("Reservations", "resStatus", {
       type: Sequelize.ENUM("pending", "seated", "missed"),
       defaultValue: "pending",
     });

@@ -12,7 +12,7 @@ module.exports = {
       reservationId: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: "reservations", key: "id" },
+        references: { model: "Reservations", key: "id" },
         onDelete: "CASCADE",
       },
       amount: {
