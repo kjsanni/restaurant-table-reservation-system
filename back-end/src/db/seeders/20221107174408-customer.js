@@ -11,6 +11,8 @@ module.exports = {
           lastName: "Hristov",
           email: "johndoe@example.com",
           phone: "123456789",
+          tags: JSON.stringify([]),
+          visitCount: 0,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
