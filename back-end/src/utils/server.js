@@ -24,6 +24,7 @@ const { Server } = require("socket.io");
 
 const createServer = () => {
   const app = express();
+  app.set("trust proxy", 1);
   const server = require("http").createServer(app);
   
   getCurrentSecret();
