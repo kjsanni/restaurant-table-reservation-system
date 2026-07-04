@@ -2,8 +2,20 @@ const helmet = require("helmet");
 
 const getCspDirectives = () => {
   const isDev = process.env.NODE_ENV !== "production";
-  const frontendOrigin = process.env.FRONTEND_URL || "http://localhost:8080";
-  const backendOrigin = process.env.API_URL || "http://localhost:8000";
+  const corsOrigins = (process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  const defaultFrontend = isDev ? "http://localhost:8080" : "http://192.168.88.10";
+  const defaultBackend = isDev ? "http://localhost:8000" : "http://192.168.88.10";
+
+  const frontendOrigin = process.env.FRONTEND_URL || defaultFrontend;
+  const backendOrigin = process.env.API_URL || defaultBackend;
+
+  const connectSrc = isDev
+    ? ["'self'", "ws:", "http://localhost:*", "http://127.0.0.1:*", backendOrigin, frontendOrigin, ...corsOrigins]
+    : ["'self'", "ws:", backendOrigin, frontendOrigin, ...corsOrigins];
 
   const directives = {
     defaultSrc: ["'self'"],
@@ -13,16 +25,12 @@ const getCspDirectives = () => {
     styleSrc: ["'self'", "'unsafe-inline'"],
     imgSrc: ["'self'", "data:", "https:", "http:"],
     fontSrc: ["'self'", "data:"],
-    connectSrc: ["'self", backendOrigin, frontendOrigin],
+    connectSrc,
     frameAncestors: ["'none'"],
     baseUri: ["'self'"],
     formAction: ["'self'"],
     upgradeInsecureRequests: isDev ? [] : ["'self'"],
   };
-
-  if (isDev) {
-    directives.connectSrc.push("ws:", "http://localhost:*", "http://127.0.0.1:*");
-  }
 
   return directives;
 };
