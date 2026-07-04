@@ -28,6 +28,7 @@ const createServer = () => {
   const server = require("http").createServer(app);
   
   getCurrentSecret();
+
   const corsOrigins = process.env.CORS_ORIGINS?.split(",").filter(o => o.trim());
   const allowedOrigins = corsOrigins.length > 0 ? corsOrigins : ["http://localhost:8080"];
   const io = new Server(server, {
@@ -48,8 +49,6 @@ const createServer = () => {
   app.use(requestMetrics);
   app.use(setCsrfCookie);
 
-  const corsOrigins = process.env.CORS_ORIGINS?.split(",").filter(o => o.trim());
-  const allowedOrigins = corsOrigins.length > 0 ? corsOrigins : ["http://localhost:8080"];
   app.use(cors({
     origin: allowedOrigins,
     credentials: true,
