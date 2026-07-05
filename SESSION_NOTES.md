@@ -279,6 +279,41 @@ Across all modernized pages:
 - Updated PaymentDashboardView.vue to handle new card-based TableView emit format
 - Added delete confirmation modal support
 
+### 3. Production Socket.io WebSocket Fix
+**Problem:** `NS_ERROR_WEBSOCKET_CONNECTION_REFUSED` + HTTP 400 on `/socket.io/`
+**Root causes (3x):**
+1. `apache-production.conf` used `RewriteRule` placed AFTER `ProxyPass /`, so catch-all frontend proxy intercepted `/socket.io/` requests before the rewrite rule
+2. The active production config (`/etc/apache2/sites-available/nguni.conf`) had a broken `ProxyPass /socket.io/ ws://127.0.0.1:8000/socket.io/$1` where `$1` was literal, not a regex capture
+3. Backend ran in PM2 **cluster mode** (`-i max` = 4 workers), causing Engine.IO sessions to be unknown when requests hit different workers → `{"code":1,"message":"Session ID unknown"}`
+4. Dotenv loaded `.env` first with empty `CORS_ORIGINS=`, then `.env.production` with `override: false`, so origin never updated
+
+**Fixes:**
+- **`apache-production.conf`:** Replaced broken rewrite-based proxy with `ProxyPassMatch "^/socket.io/(.*)" ws://127.0.0.1:8000/socket.io/$1` placed BEFORE `ProxyPass /`
+- **`deploy-prod.sh` + `ecosystem.config.js`:** Changed `instances: 'max'` → `instances: 1` (single instance required for Socket.io sticky sessions without Redis adapter)
+- **`back-end/config/config.js`:** Changed `override: false` → `override: true` so `.env.production` properly overrides `.env`
+- **`back-end/.env.production`:** Updated `CORS_ORIGINS` to `http://192.168.88.10`
+- **Production server `/etc/apache2/sites-available/nguni.conf`:** Deployed correct `ProxyPassMatch` via SSH
+- **Production PM2:** Restarted `nguni-backend` in single-instance mode (`-i 1`)
+
+**Verification:**
+- `curl http://192.168.88.10/socket.io/?EIO=4&transport=polling` → HTTP 200, body: `0{"sid":"...","upgrades":["websocket"],...}`
+- Backend logs: `Client connected: J-EjU10zkHJUonsNAAAB`
+
+### 4. Production Table Link Bug (RBAC Permissions)
+**Problem:** Clicking "Tables" in sidebar navigated to `/tables/manage/` but showed nothing. Permission guard blocked the route.
+**Root cause:** `back-end/src/DAOs/role.dao.js` returned permissions stored as JSON strings (from seeders using `JSON.stringify`) without parsing. `Object.assign(mergedPermissions, role.permissions)` on a string created a mangled object with numeric keys (`"0":"{","1":"\"",...`). The RBAC check saw keys existed and accepted it as valid, but `permissions["manage_tables"]` was `undefined`.
+
+**Fix:**
+- Added `normalizePermissions()` helper in `role.dao.js` that parses stringified JSON before using it
+- Applied `normalizePermissions()` in `findAllRoles()`, `findRoleById()`, `findRoleByName()`, and `getRolePermissions()`
+- Deployed fixed file to production via SSH
+- Verified `GET /api/v1/auth/me` returns proper permissions object
+
+**Verification:**
+- `GET /api/v1/auth/me → 200`
+- `permissions: {"view_reservations":true,"edit_reservations":true,"manage_tables":true,...}`
+- Navigation to `/tables/manage` succeeds via browser
+
 ---
 
 ## Known Remaining Issues (not introduced this session)

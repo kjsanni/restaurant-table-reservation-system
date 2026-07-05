@@ -58,7 +58,7 @@ pm2 delete rtrs-frontend 2>/dev/null || true
 
 # Start backend
 cd $BACKEND_DIR
-pm2 start src/app.js --name rtrs-backend -i max --env production
+pm2 start src/app.js --name rtrs-backend -i 1 --env production
 
 # Start frontend
 cd ../$FRONTEND_DIR
