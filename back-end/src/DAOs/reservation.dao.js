@@ -228,7 +228,11 @@ const updateCustomerPreferences = async (customerId, preferences) => {
 
 const searchCustomers = async (query) => {
   const { Op } = db.Sequelize;
-  const like = `%${query.replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
+  const escapedQuery = query
+    .replace(/\\/g, "\\\\")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+  const like = `%${escapedQuery}%`;
   return await Customer.findAll({
     where: {
       [Op.or]: [
