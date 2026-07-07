@@ -1,29 +1,16 @@
-<script setup lang="ts">
-import { ref, computed } from "vue";
+<script setup>
+import { computed } from "vue";
+import ButtonAction from "@/components/ButtonAction.vue";
+import NotFoundResource from "@/components/NotFoundResource.vue";
+import { getPaymentStatusLabel, getPaymentStatusColor } from "@/constants";
 import { useAuthStore } from "@/stores/auth";
-import reservationAPI from "@/services/reservationAPI";
-import { getPaymentStatusColor, getPaymentStatusLabel } from "@/constants";
 
-const props = defineProps({
+defineProps({
   fields: Object,
   collection: Array,
 });
 
-const emit = defineEmits([
-  "onOpen",
-  "onSelectedReservation",
-  "onCanceledReservation",
-]);
-
-const showNotes = (item) => {
-  if (item.notes) {
-    notesPopup.value = true;
-    notesContent.value = item.notes;
-  }
-};
-
-const notesPopup = ref(false);
-const notesContent = ref("");
+const emit = defineEmits(["onSelectedReservation"]);
 
 const authStore = useAuthStore();
 const canManageTables = computed(
@@ -33,17 +20,6 @@ const canEditReservations = computed(
   () => authStore.user?.permissions?.edit_reservations === true
 );
 
-const passItemData = (item) => {
-  emit("onSelectedReservation", item);
-};
-
-const openPopup = (text) => {
-  emit("onOpen", {
-    isOpen: true,
-    headerText: text,
-  });
-};
-
 const getFieldValue = (item, fieldKey) => {
   const val = item[fieldKey];
   if (fieldKey === "resStatus" || fieldKey === "paymentStatus") {
@@ -51,101 +27,55 @@ const getFieldValue = (item, fieldKey) => {
   }
   return val || "";
 };
-
-const toUpperCase = (str) => {
-  return str.toUpperCase();
-};
-
-const isResStatusMissed = (resStatus) => {
-  return resStatus === "missed";
-};
-
-const showConfirm = ref(false);
-const confirmTarget = ref(null);
-const confirmMessage = ref("");
-const confirmActionText = ref("Confirm");
-
-const openConfirm = (item, message, actionText = "Confirm") => {
-  confirmTarget.value = item;
-  confirmMessage.value = message;
-  confirmActionText.value = actionText;
-  showConfirm.value = true;
-};
-
-const closeConfirm = () => {
-  showConfirm.value = false;
-  confirmTarget.value = null;
-  confirmMessage.value = "";
-};
-
-const cancelReservation = async (item) => {
-  if (confirmTarget.value?.id === item.id) {
-    try {
-      await reservationAPI.cancelReservation(item.id);
-      emit("onCanceledReservation");
-    } catch {
-      // Cancellation failed
-    }
-    closeConfirm();
-    return;
-  }
-  openConfirm(item, "Cancel this reservation?", "Cancel Reservation");
-};
-
-const deleteReservation = async (item) => {
-  if (confirmTarget.value?.id === item.id) {
-    try {
-      await reservationAPI.cancelReservation(item.id);
-      emit("onCanceledReservation");
-    } catch {
-      // Deletion failed
-    }
-    closeConfirm();
-    return;
-  }
-  openConfirm(item, "Permanently delete this reservation?", "Delete");
-};
 </script>
 
 <template>
-  <div class="main-wrapper">
-    <table v-if="props.collection.length !== 0">
-      <thead>
-        <tr class="header-row">
-          <th v-for="field in props.fields" :key="field">
-            {{ field }}
-          </th>
-          <th>Payment</th>
-          <th>Loyalty</th>
-          <th>Notes</th>
-          <th>#</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="body-row" v-for="item in props.collection" :key="item">
-          <td v-for="fieldKey in Object.keys(props.fields)" :key="fieldKey">
-            {{ getFieldValue(item, fieldKey) }}
-          </td>
-          <td>
+  <div class="table-view-container">
+    <div v-if="collection.length === 0" class="empty-state">
+      <NotFoundResource text="No Reservations" position="relative" />
+    </div>
+    <div v-else class="reservations-grid">
+      <div v-for="item in collection" :key="item.id" class="res-card">
+        <div class="res-header">
+          <div class="res-avatar">
+            {{ (item.name || "G")[0]?.toUpperCase() }}
+          </div>
+          <div class="res-info">
+            <span class="res-name">{{ item.name || "Guest" }}</span>
+            <span class="res-id">#{{ item.id }}</span>
+          </div>
+          <span class="status-chip" :class="item.resStatus">
+            {{ getFieldValue(item, "resStatus") }}
+          </span>
+        </div>
+
+        <div class="res-details">
+          <div
+            class="detail-row"
+            v-for="fieldKey in Object.keys(fields)"
+            :key="fieldKey"
+          >
+            <span class="detail-label">{{ fields[fieldKey] }}</span>
+            <span class="detail-value">{{
+              getFieldValue(item, fieldKey)
+            }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Payment</span>
             <span
-              class="payment-badge"
+              class="payment-chip"
               :style="{
-                backgroundColor:
-                  getPaymentStatusColor(item.paymentStatus) || '#9ca3af',
+                backgroundColor: getPaymentStatusColor(item.paymentStatus),
               }"
             >
-              {{
-                getPaymentStatusLabel(item.paymentStatus) || item.paymentStatus
-              }}
+              {{ getPaymentStatusLabel(item.paymentStatus) }}
             </span>
-          </td>
-          <td>
-            <div class="loyalty-cell">
+          </div>
+          <div class="detail-row" v-if="item.visitCount || item.tags?.length">
+            <span class="detail-label">Customer</span>
+            <div class="loyalty-info">
               <span v-if="item.visitCount" class="visit-count">
                 {{ item.visitCount }} visits
-              </span>
-              <span v-if="item.lastVisitDate" class="last-visit">
-                Last: {{ new Date(item.lastVisitDate).toLocaleDateString() }}
               </span>
               <div v-if="item.tags?.length" class="tag-chips">
                 <span v-for="tag in item.tags" :key="tag" class="loyalty-tag">
@@ -153,108 +83,223 @@ const deleteReservation = async (item) => {
                 </span>
               </div>
             </div>
-          </td>
-          <td>
-            <VaButton
-              v-if="item.notes"
-              icon="description"
-              preset="secondary"
-              @click="showNotes(item)"
-              title="View notes"
-            />
-          </td>
-          <td>
-            <div
-              v-if="['pending', 'missed'].includes(item.resStatus)"
-              class="actions"
-            >
-              <VaButton
-                text="Seat"
-                color="success"
-                @click="
-                  openPopup('Choose Table');
-                  passItemData(item);
-                "
-              />
-              <VaButton
-                text="Edit"
-                color="primary"
-                @click="
-                  openPopup('Edit Reservation');
-                  passItemData(item);
-                "
-              />
-              <VaButton
-                v-if="canManageTables"
-                text="Assign"
-                color="warning"
-                @click="
-                  openPopup('Assign Staff');
-                  passItemData(item);
-                "
-              />
-              <VaButton
-                text="Cancel"
-                color="danger"
-                @click="cancelReservation(item)"
-              />
-            </div>
-            <div class="actions" v-else-if="canEditReservations">
-              <VaButton
-                text="Delete"
-                color="danger"
-                @click="deleteReservation(item)"
-              />
-            </div>
-            <div class="status" v-else>
-              <p
-                :class="
-                  isResStatusMissed(item.resStatus) ? 'redColor' : 'blueColor'
-                "
-              >
-                {{ toUpperCase(item.resStatus) }}
-              </p>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <VaAlert v-else type="warning" class="test">No Reservations</VaAlert>
-  </div>
+          </div>
+        </div>
 
-  <VaModal v-model="showConfirm" title="Confirm" size="small">
-    <VaCard>
-      <VaCardContent>
-        <p>{{ confirmMessage }}</p>
-      </VaCardContent>
-      <template #actions>
-        <VaButton preset="secondary" @click="closeConfirm">Cancel</VaButton>
-        <VaButton
-          preset="danger"
-          @click="confirmTarget && cancelReservation(confirmTarget)"
+        <div
+          class="res-actions"
+          v-if="['pending', 'missed'].includes(item.resStatus)"
         >
-          {{ confirmActionText }}
-        </VaButton>
-      </template>
-    </VaCard>
-  </VaModal>
-
-  <VaModal v-model="notesPopup" title="Reservation Notes" size="small">
-    <VaCard>
-      <VaCardContent>
-        <p>{{ notesContent }}</p>
-      </VaCardContent>
-    </VaCard>
-  </VaModal>
+          <ButtonAction
+            text="Seat"
+            color="#22c55e"
+            @click="
+              emit('onSelectedReservation', { ...item, action: 'choose-table' })
+            "
+          />
+          <ButtonAction
+            text="Edit"
+            color="#3b82f6"
+            @click="emit('onSelectedReservation', { ...item, action: 'edit' })"
+          />
+          <ButtonAction
+            v-if="canManageTables"
+            text="Assign"
+            color="#f59e0b"
+            @click="
+              emit('onSelectedReservation', { ...item, action: 'assign-staff' })
+            "
+          />
+          <ButtonAction
+            text="Cancel"
+            color="#ef4444"
+            @click="
+              emit('onSelectedReservation', { ...item, action: 'cancel' })
+            "
+          />
+        </div>
+        <div class="res-actions" v-else-if="canEditReservations">
+          <ButtonAction
+            text="Delete"
+            color="#ef4444"
+            @click="
+              emit('onSelectedReservation', { ...item, action: 'delete' })
+            "
+          />
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.notes-popup-content {
+.table-view-container {
+  width: 100%;
+}
+
+.reservations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.res-card {
+  background: var(--primary-white);
+  border: 1px solid #f0f0f0;
+  border-radius: var(--card-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.2s ease;
+}
+
+.res-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.res-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.res-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
+  color: var(--primary-blue);
+  font-family: "Inter-Bold";
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.res-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.res-name {
   font-family: "Inter-Medium";
-  font-size: 15px;
+  font-size: 14px;
   color: var(--primary-black);
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
+}
+
+.res-id {
+  font-family: "Inter-Light";
+  font-size: 12px;
+  color: var(--secondary-gray);
+}
+
+.status-chip {
+  font-family: "Inter-Medium";
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-transform: capitalize;
+  color: white;
+}
+
+.status-chip.pending {
+  background: #3b82f6;
+}
+
+.status-chip.seated {
+  background: #22c55e;
+}
+
+.status-chip.cancelled {
+  background: #ef4444;
+}
+
+.status-chip.completed {
+  background: #9ca3af;
+}
+
+.status-chip.missed {
+  background: #f59e0b;
+}
+
+.res-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-label {
+  font-family: "Inter-Light";
+  font-size: 12px;
+  color: var(--secondary-gray);
+}
+
+.detail-value {
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  color: var(--primary-black);
+}
+
+.payment-chip {
+  font-family: "Inter-Medium";
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: white;
+  text-transform: uppercase;
+}
+
+.loyalty-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.visit-count {
+  font-family: "Inter-Light";
+  font-size: 11px;
+  color: var(--secondary-gray);
+}
+
+.tag-chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.loyalty-tag {
+  font-family: "Inter-Light";
+  font-size: 10px;
+  background: #e5e7eb;
+  color: var(--primary-black);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.res-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.empty-state {
+  padding: 40px 20px;
 }
 </style>

@@ -1,22 +1,15 @@
-<script setup lang="ts">
-import PageHeader from "@/components/PageHeader.vue";
-import {
-  VaModal,
-  VaCard,
-  VaCardContent,
-  VaButton,
-  VaTextarea,
-  VaAlert,
-} from "vuestic-ui";
+<script setup>
 import { ref, computed, onMounted } from "vue";
 import tableAPI from "@/services/tableAPI";
-import { getApiErrorMessage } from "@/utils/apiError";
+import PopupBox from "@/components/PopupBox.vue";
+import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
+import ErrorMessage from "@/components/ErrorMessage.vue";
+import SuccessMessage from "@/components/SuccessMessage.vue";
 import logger from "@/utils/logger";
 
 const tables = ref([]);
 const waitingStaff = ref([]);
 const loading = ref(true);
-const loadError = ref("");
 const showMaintenanceDialog = ref(false);
 const selectedTable = ref(null);
 const maintenanceNotes = ref("");
@@ -26,15 +19,69 @@ const showConfirmModal = ref(false);
 const confirmTarget = ref(null);
 const showErrorModal = ref(false);
 const errorMessage = ref("");
-const showAddTableDialog = ref(false);
-const showMergeDialog = ref(false);
-const newTable = ref({ name: "", capacity: "", price: "" });
-const addTableError = ref("");
-const mergeSelectedIds = ref([]);
 
 const MAX_TABLES_PER_STAFF = 5;
-const BASE_PRICE = 20;
-const PRICE_PER_ADDITIONAL_SEAT = 5;
+
+const showAddDialog = ref(false);
+const newTable = ref({
+  name: "",
+  capacity: "",
+});
+const addValidationErrors = ref(null);
+const addEmptyFieldsError = ref(null);
+const addIsSuccessful = ref(false);
+const addStaffList = ref([]);
+const addLoadingStaff = ref(false);
+const addSelectedStaffIds = ref([]);
+
+const openAddDialog = async () => {
+  showAddDialog.value = true;
+  addIsSuccessful.value = false;
+  addEmptyFieldsError.value = null;
+  addValidationErrors.value = null;
+  newTable.value = { name: "", capacity: "" };
+  addSelectedStaffIds.value = [];
+  await loadAddWaitingStaff();
+};
+
+const closeAddDialog = () => {
+  showAddDialog.value = false;
+};
+
+const loadAddWaitingStaff = async () => {
+  addLoadingStaff.value = true;
+  try {
+    const res = await tableAPI.getWaitingStaff();
+    addStaffList.value = res.data.staff;
+  } catch (err) {
+    addStaffList.value = [];
+  } finally {
+    addLoadingStaff.value = false;
+  }
+};
+
+const registerTable = async () => {
+  addValidationErrors.value = null;
+  addEmptyFieldsError.value = null;
+  addIsSuccessful.value = false;
+  try {
+    const payload = {
+      name: newTable.value.name,
+      capacity: newTable.value.capacity,
+      staffIds: addSelectedStaffIds.value,
+    };
+    await tableAPI.registerTable(payload);
+    addIsSuccessful.value = true;
+    addSelectedStaffIds.value = [];
+    await loadTables();
+    setTimeout(() => {
+      closeAddDialog();
+    }, 1200);
+  } catch (err) {
+    addEmptyFieldsError.value = getApiErrorMessage(err);
+    addValidationErrors.value = getApiErrors(err);
+  }
+};
 
 onMounted(async () => {
   await loadTables();
@@ -43,44 +90,13 @@ onMounted(async () => {
 
 const loadTables = async () => {
   loading.value = true;
-  loadError.value = "";
   try {
     const res = await tableAPI.getTables();
     tables.value = res.data.collection;
   } catch (err) {
-    loadError.value =
-      err.response?.data?.message ||
-      err.message ||
-      "Failed to load data. Please try again.";
+    logger.error("Failed to load tables", { error: err.message });
   } finally {
     loading.value = false;
-  }
-};
-
-const openAddTableDialog = () => {
-  showAddTableDialog.value = true;
-};
-
-const addTable = async () => {
-  addTableError.value = "";
-  if (!newTable.value.name.trim() || !newTable.value.capacity) {
-    addTableError.value = "Table name and capacity are required.";
-    return;
-  }
-  try {
-    await tableAPI.createTable({
-      name: newTable.value.name.trim(),
-      capacity: parseInt(newTable.value.capacity, 10),
-      price:
-        parseFloat(newTable.value.price) ||
-        calculatePrice(parseInt(newTable.value.capacity, 10)),
-    });
-    showAddTableDialog.value = false;
-    newTable.value = { name: "", capacity: "", price: "" };
-    await loadTables();
-  } catch (err) {
-    addTableError.value =
-      err.response?.data?.message || err.message || "Failed to create table.";
   }
 };
 
@@ -90,41 +106,45 @@ const loadWaitingStaff = async () => {
     waitingStaff.value = res.data.staff;
   } catch (err) {
     logger.error("Failed to load waiting staff", { error: err.message });
-    loadError.value =
-      "Failed to load waiting staff. Table assignment may be limited.";
   }
 };
 
-const calculatePrice = (capacity) => {
-  if (capacity <= 6) {
-    return BASE_PRICE;
+const blockTable = async (table) => {
+  if (table.isBlocked) {
+    await tableAPI.unblockTable(table.id);
+  } else {
+    selectedTable.value = table;
+    showMaintenanceDialog.value = true;
   }
-  return BASE_PRICE + (capacity - 6) * PRICE_PER_ADDITIONAL_SEAT;
+  await loadTables();
 };
 
-const onCapacityChange = () => {
-  if (!newTable.value.price) {
-    newTable.value.price = String(
-      calculatePrice(parseInt(newTable.value.capacity, 10))
-    );
-  }
-};
-
-const openMergeDialog = () => {
-  mergeSelectedIds.value = [];
-  showMergeDialog.value = true;
-};
-
-const unmergeTable = async (table) => {
-  try {
-    await tableAPI.unmergeTable(table.id);
+const confirmBlock = async () => {
+  if (selectedTable.value) {
+    await tableAPI.blockTable(selectedTable.value.id, maintenanceNotes.value);
+    showMaintenanceDialog.value = false;
+    maintenanceNotes.value = "";
     await loadTables();
-  } catch (err) {
-    showError(getApiErrorMessage(err, "Failed to unmerge table"));
   }
 };
 
-const openConfirm = (table) => {
+const unseatTable = async (table) => {
+  openConfirm(table);
+};
+
+const openAssignStaff = (table) => {
+  selectedTable.value = table;
+  staffDialogMode.value = "assign";
+  showStaffDialog.value = true;
+};
+
+const openUnassignStaff = (table) => {
+  selectedTable.value = table;
+  staffDialogMode.value = "unassign";
+  showStaffDialog.value = true;
+};
+
+const openConfirm = (table, action) => {
   confirmTarget.value = table;
   showConfirmModal.value = true;
 };
@@ -201,45 +221,6 @@ const assignedStaffForTable = computed(() => {
 const staffAtLimit = (staff) => {
   return staff.tableCount >= MAX_TABLES_PER_STAFF;
 };
-
-const isMergedTable = (table) => {
-  return table.parentTableId !== null;
-};
-
-const availableTablesForMerge = computed(() => {
-  return tables.value.filter(
-    (t) => !t.isBlocked && !t.isOccupied && !t.parentTableId
-  );
-});
-
-const selectedMergeTables = computed(() => {
-  return tables.value.filter((t) => mergeSelectedIds.value.includes(t.id));
-});
-
-const toggleMergeSelection = (table) => {
-  const idx = mergeSelectedIds.value.indexOf(table.id);
-  if (idx > -1) {
-    mergeSelectedIds.value.splice(idx, 1);
-  } else {
-    mergeSelectedIds.value.push(table.id);
-  }
-};
-
-const closeMergeDialog = () => {
-  showMergeDialog.value = false;
-  mergeSelectedIds.value = [];
-};
-
-const performMerge = async () => {
-  if (mergeSelectedIds.value.length < 2) return;
-  try {
-    await tableAPI.mergeTables(mergeSelectedIds.value);
-    closeMergeDialog();
-    await loadTables();
-  } catch (err) {
-    showError(getApiErrorMessage(err, "Failed to merge tables"));
-  }
-};
 </script>
 
 <template>
@@ -248,373 +229,372 @@ const performMerge = async () => {
       <h1>Table Management</h1>
     </div>
     <div class="content-wrapper">
-      <div v-if="loadError" class="error-banner" role="alert">
-        <span class="error-icon">⚠️</span>
-        <span>{{ loadError }}</span>
-        <button class="error-retry" @click="loadTables">Retry</button>
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading tables...</p>
       </div>
-      <div v-else>
-        <div v-if="loading" class="loading-state">
-          <div class="spinner"></div>
-          <p>Loading tables...</p>
+      <div v-else class="tables-container">
+        <div class="actions-row">
+          <button class="btn btn-primary" @click="openAddDialog">
+            + Add Table
+          </button>
         </div>
-        <div v-else class="tables-container">
-          <div class="table-header-actions">
-            <button class="action-btn btn-merge" @click="openMergeDialog">
-              Merge Tables
-            </button>
-            <button class="action-btn btn-add" @click="openAddTableDialog">
-              + Add Table
-            </button>
-          </div>
-          <div class="table-grid">
-            <div
-              v-for="table in tables"
-              :key="table.id"
-              class="table-card"
-              :class="{
-                blocked: table.isBlocked,
-                occupied: !table.isBlocked && table.isOccupied,
-                available: !table.isBlocked && !table.isOccupied,
-              }"
-            >
-              <div class="table-header">
-                <div class="table-identity">
-                  <span class="table-icon">🍽️</span>
-                  <div class="table-title-group">
-                    <h3 class="table-name">{{ table.name }}</h3>
-                    <span class="table-id">ID: {{ table.id }}</span>
-                  </div>
+        <div class="table-grid">
+          <div
+            v-for="table in tables"
+            :key="table.id"
+            class="table-card"
+            :class="{
+              blocked: table.isBlocked,
+              occupied: !table.isBlocked && table.isOccupied,
+              available: !table.isBlocked && !table.isOccupied,
+            }"
+          >
+            <div class="table-header">
+              <div class="table-identity">
+                <span class="table-icon">🍽️</span>
+                <div class="table-title-group">
+                  <h3 class="table-name">{{ table.name }}</h3>
+                  <span class="table-id">ID: {{ table.id }}</span>
                 </div>
-                <span
-                  class="status-chip"
-                  :class="
-                    table.isBlocked
-                      ? 'blocked'
-                      : table.isOccupied
-                      ? 'occupied'
-                      : 'free'
-                  "
-                >
-                  {{
-                    table.isBlocked
-                      ? "Blocked"
-                      : table.isOccupied
-                      ? "Occupied"
-                      : "Free"
-                  }}
+              </div>
+              <span
+                class="status-chip"
+                :class="
+                  table.isBlocked
+                    ? 'blocked'
+                    : table.isOccupied
+                    ? 'occupied'
+                    : 'free'
+                "
+              >
+                {{
+                  table.isBlocked
+                    ? "Blocked"
+                    : table.isOccupied
+                    ? "Occupied"
+                    : "Free"
+                }}
+              </span>
+            </div>
+
+            <div class="table-meta">
+              <div class="meta-item">
+                <span class="meta-icon">👥</span>
+                <span class="meta-text">Capacity: {{ table.capacity }}</span>
+              </div>
+              <div
+                v-if="table.isBlocked && table.maintenanceNotes"
+                class="blocked-reason"
+              >
+                {{ table.maintenanceNotes }}
+              </div>
+            </div>
+
+            <div
+              v-if="
+                table.reservation &&
+                (table.reservation.Customer?.name || table.reservation.name)
+              "
+              class="reservation-section"
+            >
+              <span class="section-label">Current Reservation</span>
+              <div class="reservation-info">
+                <span class="reservation-name">{{
+                  table.reservation.Customer?.name || table.reservation.name
+                }}</span>
+                <span class="reservation-meta">
+                  {{ table.reservation.people }} guests ·
+                  {{ table.reservation.resTime }}
                 </span>
               </div>
+            </div>
 
-              <div class="table-meta">
-                <div class="meta-item">
-                  <span class="meta-icon">👥</span>
-                  <span class="meta-text">Capacity: {{ table.capacity }}</span>
-                </div>
-                <div class="meta-item" v-if="table.price">
-                  <span class="meta-icon">💰</span>
-                  <span class="meta-text">Price: ${{ table.price }}</span>
-                </div>
-                <div
-                  v-if="table.isBlocked && table.maintenanceNotes"
-                  class="blocked-reason"
+            <div class="staff-section" v-if="table.users && table.users.length">
+              <span class="section-label">Assigned Staff</span>
+              <div class="staff-list">
+                <span
+                  v-for="staff in table.users"
+                  :key="staff.id"
+                  class="staff-chip"
                 >
-                  {{ table.maintenanceNotes }}
-                </div>
-              </div>
-
-              <div
-                class="staff-section"
-                v-if="table.users && table.users.length"
-              >
-                <span class="section-label">Assigned Staff</span>
-                <div class="staff-list">
-                  <span
-                    v-for="staff in table.users"
-                    :key="staff.id"
-                    class="staff-chip"
+                  {{ staff.username }}
+                  <button
+                    class="remove-staff-btn"
+                    @click.stop="openUnassignStaff(table, staff.id)"
+                    title="Unassign"
                   >
-                    {{ staff.username }}
-                    <button
-                      class="remove-staff-btn"
-                      @click.stop="openUnassignStaff(table)"
-                      title="Unassign"
-                    >
-                      ×
-                    </button>
-                  </span>
-                </div>
+                    ×
+                  </button>
+                </span>
               </div>
+            </div>
 
-              <div class="table-actions">
-                <button
-                  class="action-btn"
-                  :class="table.isBlocked ? 'btn-unblock' : 'btn-block'"
-                  @click="blockTable(table)"
-                >
-                  {{ table.isBlocked ? "Unblock" : "Block" }}
-                </button>
-                <button
-                  v-if="isMergedTable(table)"
-                  class="action-btn btn-unmerge"
-                  @click="unmergeTable(table)"
-                >
-                  Unmerge
-                </button>
-                <button
-                  v-if="!table.users || table.users.length === 0"
-                  class="action-btn btn-staff"
-                  @click="openAssignStaff(table)"
-                  :disabled="table.isBlocked"
-                >
-                  👤 Assign Staff
-                </button>
-                <button
-                  v-if="table.isOccupied && !table.isBlocked"
-                  class="action-btn btn-unseat"
-                  @click="unseatTable(table)"
-                  title="Customer left — free the table"
-                >
-                  ✅ Unseat
-                </button>
-              </div>
+            <div class="table-actions">
+              <button
+                class="action-btn"
+                :class="table.isBlocked ? 'btn-unblock' : 'btn-block'"
+                @click="blockTable(table)"
+              >
+                {{ table.isBlocked ? "Unblock" : "Block" }}
+              </button>
+              <button
+                v-if="!table.users || table.users.length === 0"
+                class="action-btn btn-staff"
+                @click="openAssignStaff(table)"
+                :disabled="table.isBlocked"
+              >
+                👤 Assign Staff
+              </button>
+              <button
+                v-if="table.isOccupied && !table.isBlocked"
+                class="action-btn btn-unseat"
+                @click="unseatTable(table)"
+                title="Customer left — free the table"
+              >
+                ✅ Unseat
+              </button>
             </div>
           </div>
         </div>
+      </div>
 
-        <div v-if="showAddTableDialog" class="modal-overlay">
-          <div class="modal">
-            <h3 class="modal-title">Add New Table</h3>
+      <div v-if="showMaintenanceDialog" class="modal-overlay">
+        <div class="modal">
+          <h3 class="modal-title">Block Table</h3>
+          <p class="modal-subtitle">
+            Blocking <strong>{{ selectedTable?.name }}</strong>
+          </p>
+          <div class="field">
+            <label class="field-label">Maintenance Notes</label>
+            <textarea
+              v-model="maintenanceNotes"
+              placeholder="Reason for blocking..."
+              class="field-textarea"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="modal-actions">
+            <button
+              class="btn btn-secondary"
+              @click="showMaintenanceDialog = false"
+            >
+              Cancel
+            </button>
+            <button class="btn btn-warning" @click="confirmBlock">
+              Block Table
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="showStaffDialog" class="modal-overlay">
+        <div class="modal">
+          <h3 class="modal-title">
+            {{
+              staffDialogMode === "assign" ? "Assign Staff" : "Unassign Staff"
+            }}
+          </h3>
+          <p class="modal-subtitle">
+            Table <strong>{{ selectedTable?.name }}</strong>
+          </p>
+
+          <div v-if="staffDialogMode === 'assign'" class="field">
+            <label class="field-label">Select Staff Member</label>
+            <div class="staff-options">
+              <div
+                v-if="availableStaffForAssign.length === 0"
+                class="empty-msg"
+              >
+                No available staff. All staff are either assigned or at the
+                5-table limit.
+              </div>
+              <button
+                v-for="staff in availableStaffForAssign"
+                :key="staff.id"
+                class="staff-option-btn"
+                @click="assignStaff(staff.id)"
+              >
+                <span class="staff-option-name">{{ staff.username }}</span>
+                <span class="staff-option-count">
+                  {{ staff.tableCount }}/{{ MAX_TABLES_PER_STAFF }} tables
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div v-else class="field">
+            <label class="field-label">Currently Assigned</label>
+            <div class="staff-options">
+              <div v-if="assignedStaffForTable.length === 0" class="empty-msg">
+                No staff assigned to this table.
+              </div>
+              <button
+                v-for="staff in assignedStaffForTable"
+                :key="staff.id"
+                class="staff-option-btn assigned"
+                @click="unassignStaff(staff.id)"
+              >
+                <span class="staff-option-name">{{ staff.username }}</span>
+                <span class="unassign-hint">Click to remove</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closeStaffDialog">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="showConfirmModal" class="modal-overlay">
+        <div class="modal">
+          <h3 class="modal-title">Confirm Unseat</h3>
+          <p class="modal-subtitle">
+            Unseat table <strong>{{ confirmTarget?.name }}</strong
+            >? This will mark the reservation as completed.
+          </p>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closeConfirm">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmAction">
+              Unseat
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="showAddDialog" class="modal-overlay">
+        <div class="modal modal-large">
+          <h3 class="modal-title">Add Table</h3>
+          <p class="modal-subtitle">
+            Create a new table and optionally assign waiting staff.
+          </p>
+
+          <form @submit.prevent="registerTable">
             <div class="field">
               <label class="field-label">Table Name</label>
               <input
                 v-model="newTable.name"
-                placeholder="e.g., Table 1"
+                type="text"
+                placeholder="Enter table name..."
                 class="field-input"
               />
+              <div
+                v-if="
+                  addValidationErrors &&
+                  addValidationErrors.name &&
+                  addValidationErrors.name.length
+                "
+                class="field-error"
+              >
+                {{ addValidationErrors.name[0] }}
+              </div>
             </div>
+
             <div class="field">
               <label class="field-label">Capacity</label>
               <input
                 v-model="newTable.capacity"
                 type="number"
-                min="1"
-                placeholder="Number of seats"
-                class="field-input"
-                @change="onCapacityChange"
-              />
-            </div>
-            <div class="field">
-              <label class="field-label">Price ($)</label>
-              <input
-                v-model="newTable.price"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Auto-calculated if empty"
+                placeholder="Enter capacity..."
                 class="field-input"
               />
+              <div
+                v-if="
+                  addValidationErrors &&
+                  addValidationErrors.capacity &&
+                  addValidationErrors.capacity.length
+                "
+                class="field-error"
+              >
+                {{ addValidationErrors.capacity[0] }}
+              </div>
             </div>
-            <p v-if="addTableError" class="error-msg">{{ addTableError }}</p>
+
+            <ErrorMessage
+              :error-flag="addEmptyFieldsError"
+              :error-message="addEmptyFieldsError"
+            />
+            <SuccessMessage
+              :is-successful="addIsSuccessful"
+              success-message="Table added successfully!"
+            />
+
+            <div class="staff-section">
+              <h3 class="staff-title">Assign Waiting Staff</h3>
+              <p class="staff-hint">
+                Each waiter can handle up to 5 tables. Staff already at capacity
+                are disabled.
+              </p>
+              <div v-if="addLoadingStaff" class="staff-loading">
+                Loading staff...
+              </div>
+              <div v-else-if="addStaffList.length === 0" class="staff-empty">
+                No waiting staff available.
+              </div>
+              <div v-else class="staff-grid">
+                <label
+                  v-for="staff in addStaffList"
+                  :key="staff.id"
+                  :class="['staff-chip', { disabled: staff.tableCount >= 5 }]"
+                >
+                  <input
+                    type="checkbox"
+                    :value="staff.id"
+                    :disabled="staff.tableCount >= 5"
+                    v-model="addSelectedStaffIds"
+                  />
+                  <span class="staff-name">{{ staff.username }}</span>
+                  <span
+                    :class="['staff-count', { full: staff.tableCount >= 5 }]"
+                  >
+                    {{ staff.tableCount }}/5 tables
+                  </span>
+                </label>
+              </div>
+            </div>
+
             <div class="modal-actions">
               <button
+                type="button"
                 class="btn btn-secondary"
-                @click="showAddTableDialog = false"
+                @click="closeAddDialog"
               >
                 Cancel
               </button>
-              <button class="btn btn-primary" @click="addTable">
-                Add Table
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="showMaintenanceDialog" class="modal-overlay">
-          <div class="modal">
-            <h3 class="modal-title">Block Table</h3>
-            <p class="modal-subtitle">
-              Blocking <strong>{{ selectedTable?.name }}</strong>
-            </p>
-            <div class="field">
-              <label class="field-label">Maintenance Notes</label>
-              <textarea
-                v-model="maintenanceNotes"
-                placeholder="Reason for blocking..."
-                class="field-textarea"
-                rows="3"
-              ></textarea>
-            </div>
-            <div class="modal-actions">
               <button
-                class="btn btn-secondary"
-                @click="showMaintenanceDialog = false"
-              >
-                Cancel
-              </button>
-              <button class="btn btn-warning" @click="confirmBlock">
-                Block Table
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="showStaffDialog" class="modal-overlay">
-          <div class="modal">
-            <h3 class="modal-title">
-              {{
-                staffDialogMode === "assign" ? "Assign Staff" : "Unassign Staff"
-              }}
-            </h3>
-            <p class="modal-subtitle">
-              Table <strong>{{ selectedTable?.name }}</strong>
-            </p>
-
-            <div v-if="staffDialogMode === 'assign'" class="field">
-              <label class="field-label">Select Staff Member</label>
-              <div class="staff-options">
-                <div
-                  v-if="availableStaffForAssign.length === 0"
-                  class="empty-msg"
-                >
-                  No available staff. All staff are either assigned or at the
-                  5-table limit.
-                </div>
-                <button
-                  v-for="staff in availableStaffForAssign"
-                  :key="staff.id"
-                  class="staff-option-btn"
-                  @click="assignStaff(staff.id)"
-                >
-                  <span class="staff-option-name">{{ staff.username }}</span>
-                  <span class="staff-option-count">
-                    {{ staff.tableCount }}/{{ MAX_TABLES_PER_STAFF }} tables
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            <div v-else class="field">
-              <label class="field-label">Currently Assigned</label>
-              <div class="staff-options">
-                <div
-                  v-if="assignedStaffForTable.length === 0"
-                  class="empty-msg"
-                >
-                  No staff assigned to this table.
-                </div>
-                <button
-                  v-for="staff in assignedStaffForTable"
-                  :key="staff.id"
-                  class="staff-option-btn assigned"
-                  @click="unassignStaff(staff.id)"
-                >
-                  <span class="staff-option-name">{{ staff.username }}</span>
-                  <span class="unassign-hint">Click to remove</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="modal-actions">
-              <button class="btn btn-secondary" @click="closeStaffDialog">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="showConfirmModal" class="modal-overlay">
-          <div class="modal">
-            <h3 class="modal-title">Confirm Unseat</h3>
-            <p class="modal-subtitle">
-              Unseat table <strong>{{ confirmTarget?.name }}</strong
-              >? This will mark the reservation as completed.
-            </p>
-            <div class="modal-actions">
-              <button class="btn btn-secondary" @click="closeConfirm">
-                Cancel
-              </button>
-              <button class="btn btn-danger" @click="confirmAction">
-                Unseat
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="showMergeDialog" class="modal-overlay">
-          <div class="modal merge-modal">
-            <h3 class="modal-title">Merge Tables</h3>
-            <div class="merge-content">
-              <div class="merge-section">
-                <h4>Selected Tables ({{ selectedMergeTables.length }})</h4>
-                <div class="merge-selected-list">
-                  <span
-                    v-for="table in selectedMergeTables"
-                    :key="table.id"
-                    class="merge-selected-chip"
-                  >
-                    {{ table.name }} ({{ table.capacity }} seats)
-                    <button
-                      @click="toggleMergeSelection(table)"
-                      class="remove-merge-btn"
-                    >
-                      ×
-                    </button>
-                  </span>
-                </div>
-                <p v-if="selectedMergeTables.length === 0" class="empty-msg">
-                  No tables selected
-                </p>
-              </div>
-
-              <div class="merge-section">
-                <h4>Available Tables</h4>
-                <div class="merge-available-list">
-                  <span
-                    v-for="table in availableTablesForMerge"
-                    :key="table.id"
-                    class="merge-available-chip"
-                    @click="toggleMergeSelection(table)"
-                  >
-                    {{ table.name }} ({{ table.capacity }} seats)
-                  </span>
-                </div>
-                <p
-                  v-if="availableTablesForMerge.length === 0"
-                  class="empty-msg"
-                >
-                  No tables available for merging
-                </p>
-              </div>
-            </div>
-            <div class="modal-actions">
-              <button class="btn btn-secondary" @click="closeMergeDialog">
-                Cancel
-              </button>
-              <button
+                type="submit"
                 class="btn btn-primary"
-                @click="performMerge"
-                :disabled="selectedMergeTables.length < 2"
+                :disabled="addIsSuccessful"
               >
-                Merge Tables
+                Save
               </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
-  </div>
 
-  <VaModal v-model="showErrorModal" title="Error" size="small">
-    <VaCard>
-      <VaCardContent>
-        <p>{{ errorMessage }}</p>
-      </VaCardContent>
-      <template #actions>
-        <VaButton preset="secondary" @click="closeError">OK</VaButton>
+    <PopupBox
+      :is-open="showErrorModal"
+      header-text="Error"
+      :is-closable="true"
+      @close-modal="closeError"
+    >
+      <template #popup-content>
+        <div class="error-content">
+          <p>{{ errorMessage }}</p>
+          <div class="confirm-actions">
+            <button class="btn btn-secondary" @click="closeError">OK</button>
+          </div>
+        </div>
       </template>
-    </VaCard>
-  </VaModal>
+    </PopupBox>
+  </div>
 </template>
 
 <style scoped>
@@ -800,13 +780,53 @@ const performMerge = async () => {
 }
 
 .blocked-reason {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 12px;
-  color: #6b7280;
-  background: #f3f4f6;
-  padding: 8px 10px;
-  border-radius: 6px;
-  margin-top: 4px;
+}
+
+.reservation-section {
+  margin-top: 10px;
+  padding: 10px;
+  background: #eff6ff;
+  border-radius: 10px;
+  border: 1px solid #bfdbfe;
+}
+
+.section-label {
+  font-family: "Inter-Medium";
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--secondary-gray);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.reservation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reservation-name {
+  font-family: "Inter-Bold";
+  font-size: 14px;
+  color: var(--primary-black);
+}
+
+.reservation-meta {
+  font-family: "Inter-Light";
+  font-size: 12px;
+  color: var(--secondary-gray);
+}
+
+.staff-section {
+  margin-top: 12px;
 }
 
 .table-actions {
@@ -865,37 +885,6 @@ const performMerge = async () => {
 
 .btn-unseat:hover {
   background-color: #a7f3d0;
-}
-
-.btn-merge {
-  padding: 8px 16px;
-  background-color: #8b5cf6;
-  color: white;
-  border: none;
-  border-radius: var(--btn-radius);
-  cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  margin-right: 12px;
-}
-
-.btn-merge:hover {
-  background-color: #7c3aed;
-}
-
-.btn-unmerge {
-  padding: 6px 12px;
-  background-color: #f59e0b;
-  color: white;
-  border: none;
-  border-radius: var(--btn-radius);
-  cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 12px;
-}
-
-.btn-unmerge:hover {
-  background-color: #d97706;
 }
 
 .staff-section {
@@ -1003,330 +992,149 @@ const performMerge = async () => {
 
 .modal-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
-  padding: 20px;
-  animation: modalFadeIn 0.25s ease;
 }
 
 .modal {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  padding: 28px;
-  border-radius: 16px;
-  width: 100%;
-  max-width: 440px;
-  box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.28),
-    0 0 0 1px rgba(15, 23, 42, 0.06);
-  animation: modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.merge-modal {
-  max-width: 500px;
-}
-
-.merge-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.merge-section h4 {
-  font-family: "Inter-Bold";
-  font-size: 13px;
-  color: var(--restaurant-slate);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 10px 0;
-}
-
-.merge-selected-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.merge-selected-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  background: #dbeafe;
-  color: #1e40af;
-  border-radius: 999px;
-  font-family: "Inter-Medium";
-  font-size: 12px;
-}
-
-.remove-merge-btn {
-  background: none;
-  border: none;
-  color: #1e40af;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0;
-  line-height: 1;
-  transition: color 0.2s ease;
-}
-
-.remove-merge-btn:hover {
-  color: #1e1b4b;
-}
-
-.merge-available-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.merge-available-chip {
-  display: inline-block;
-  padding: 5px 12px;
-  background: #f3f4f6;
-  color: var(--restaurant-charcoal);
-  border-radius: 999px;
-  font-family: "Inter-Medium";
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.merge-available-chip:hover {
-  background: #e5e7eb;
+  background-color: white;
+  padding: 24px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
 .modal-title {
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 20px;
-  color: var(--restaurant-charcoal);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-family: "Inter-Bold";
+  font-size: 18px;
+  color: var(--primary-black);
   margin: 0;
 }
 
 .modal-subtitle {
-  font-family: "Lora", Georgia, serif;
+  font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-warm-gray);
-  margin: 4px 0 22px 0;
-  line-height: 1.5;
+  color: var(--secondary-gray);
+  margin: 6px 0 20px 0;
 }
 
 .field {
-  margin-bottom: 18px;
-}
-
-.field:last-of-type {
-  margin-bottom: 0;
+  margin-bottom: 16px;
 }
 
 .field-label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-weight: 600;
   font-family: "Inter-Medium";
-  font-size: 13px;
-  color: var(--restaurant-slate);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.field-input {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
-  box-sizing: border-box;
-  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
-  background: #f8fafc;
-}
-
-.field-input:focus {
-  outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background: #ffffff;
-}
-
-.error-msg {
-  color: var(--restaurant-terracotta);
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  margin: 0 0 14px 0;
-  padding: 10px 14px;
-  background: #fef2f2;
-  border-radius: 10px;
-  border: 1px solid #fecaca;
+  color: var(--primary-black);
 }
 
 .field-textarea {
   width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--primary-black);
   box-sizing: border-box;
   resize: vertical;
-  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
-  background: #f8fafc;
-  line-height: 1.5;
 }
 
 .field-textarea:focus {
   outline: none;
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 18px;
-  border-top: 1px solid #f1f5f9;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   font-family: "Inter-Medium";
   font-size: 13px;
-  transition: all 0.2s ease;
+  transition: all 0.15s;
 }
 
 .btn-primary {
-  background: linear-gradient(
-    135deg,
-    var(--restaurant-charcoal) 0%,
-    var(--restaurant-slate) 100%
-  );
-  color: #ffffff;
+  background-color: var(--primary-blue);
+  color: white;
 }
 
 .btn-primary:hover {
-  opacity: 0.92;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+  background-color: #2563eb;
 }
 
 .btn-secondary {
   background-color: #f3f4f6;
-  color: var(--restaurant-charcoal);
+  color: var(--primary-black);
 }
 
 .btn-secondary:hover {
   background-color: #e5e7eb;
-  transform: translateY(-1px);
 }
 
 .btn-warning {
-  background: linear-gradient(
-    135deg,
-    var(--restaurant-terracotta) 0%,
-    #b91c1c 100%
-  );
-  color: #ffffff;
+  background-color: #fef2f2;
+  color: #dc2626;
 }
 
 .btn-warning:hover {
-  opacity: 0.92;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+  background-color: #fee2e2;
 }
 
 .btn-danger {
-  background: linear-gradient(
-    135deg,
-    var(--restaurant-terracotta) 0%,
-    #b91c1c 100%
-  );
-  color: #ffffff;
+  background-color: #fef2f2;
+  color: #dc2626;
 }
 
 .btn-danger:hover {
-  opacity: 0.92;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+  background-color: #fee2e2;
 }
 
-.error-banner {
+.error-content {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: var(--card-radius);
-  margin-bottom: 20px;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.error-content p {
   font-family: "Inter-Medium";
-  font-size: 14px;
-  color: #991b1b;
+  font-size: 15px;
+  color: var(--primary-black);
+  margin: 0;
 }
 
-.error-icon {
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.error-retry {
-  margin-left: auto;
-  padding: 6px 14px;
-  border: 1px solid #dc2626;
-  border-radius: 6px;
-  background: white;
-  color: #dc2626;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.error-retry:hover {
-  background: #fef2f2;
-}
-
-.table-header-actions {
+.confirm-actions {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 16px;
+  gap: 10px;
 }
 
-.btn-add {
-  padding: 8px 16px;
-  background-color: var(--primary-blue);
-  color: white;
-  border: none;
-  border-radius: var(--btn-radius);
-  cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-}
-
-.btn-add:hover {
-  background-color: #2563eb;
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .empty-msg {
@@ -1335,6 +1143,110 @@ const performMerge = async () => {
   font-family: "Inter-Light";
   padding: 16px;
   font-size: 13px;
+}
+
+.actions-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.modal-large {
+  max-width: 520px;
+}
+
+.field-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  font-family: "Inter-Light";
+  font-size: 14px;
+  color: var(--primary-black);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.field-error {
+  color: #dc2626;
+  font-family: "Inter-Light";
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.staff-loading,
+.staff-empty {
+  font-family: "Inter-Light";
+  font-size: 13px;
+  color: var(--secondary-gray);
+  padding: 6px 0;
+}
+
+.staff-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.staff-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  color: var(--primary-black);
+  user-select: none;
+}
+
+.staff-chip:hover:not(.disabled) {
+  border-color: var(--primary-blue);
+  background: #eef2ff;
+}
+
+.staff-chip.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.staff-chip input[type="checkbox"] {
+  accent-color: var(--primary-blue);
+}
+
+.staff-chip input[type="checkbox"]:disabled {
+  accent-color: #9ca3af;
+}
+
+.staff-name {
+  font-weight: 500;
+}
+
+.staff-count {
+  font-family: "Inter-Light";
+  font-size: 11px;
+  color: var(--secondary-gray);
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.staff-count.full {
+  color: #dc2626;
+  background: #fef2f2;
+  font-weight: 600;
 }
 
 @media screen and (min-width: 1024px) {

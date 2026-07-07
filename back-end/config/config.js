@@ -1,6 +1,6 @@
 const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
-require("dotenv").config({ path: path.resolve(__dirname, "../.env." + (process.env.NODE_ENV || "development")), override: false });
+require("dotenv").config({ path: path.resolve(__dirname, "../.env"), override: false });
+require("dotenv").config({ path: path.resolve(__dirname, "../.env." + (process.env.NODE_ENV || "development")), override: true });
 
 module.exports = {
   development: {

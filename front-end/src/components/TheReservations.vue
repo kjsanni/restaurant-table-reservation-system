@@ -1,13 +1,15 @@
-<script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import { VaButton, VaModal, VaCard, VaCardContent } from "vuestic-ui";
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { io } from "socket.io-client";
 import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
 import groupAPI from "@/services/groupAPI";
+import waitlistAPI from "@/services/waitlistAPI";
+import PopupBox from "@/components/PopupBox.vue";
 import ListContainer from "@/components/ListContainer.vue";
 import ReservationInfo from "@/components/ReservationInfo.vue";
+import ButtonAction from "@/components/ButtonAction.vue";
 import GridContainer from "@/components/GridContainer.vue";
 import RestaurantTable from "@/components/RestaurantTable.vue";
 import EditReservation from "@/components/EditReservation.vue";
@@ -17,6 +19,7 @@ import { useAuthStore } from "@/stores/auth";
 import { getApiErrorMessage } from "@/utils/apiError";
 import SearchIcon from "~icons/ant-design/search-outlined";
 import ClearIcon from "~icons/fluent/dismiss-16-filled";
+import WaitlistIcon from "~icons/fluent/clock-16-regular";
 
 const schedules = ref([]);
 const holidays = ref([]);
@@ -26,6 +29,9 @@ const currentMonth = ref(new Date());
 const monthLabel = ref("");
 const calendarDays = ref([]);
 const socket = ref(null);
+
+const searchVal = ref("");
+const searchNotes = ref(true);
 
 const dayPopupOpen = ref(false);
 const selectedDay = ref(null);
@@ -51,17 +57,15 @@ const canManageTables = computed(
   () => authStore.user?.permissions?.manage_tables === true
 );
 
+const canAddToWaitlist = computed(
+  () => authStore.user?.role === "admin" || authStore.user?.role === "staff"
+);
+
 const showDeleteModal = ref(false);
 const deleteTargetId = ref(null);
 
 const showNoShowModal = ref(false);
 const noShowTargetId = ref(null);
-
-const viewMode = ref("calendar");
-const searchVal = ref("");
-const searchNotes = ref(true);
-const searchLoading = ref(false);
-const searchResults = ref([]);
 
 const openDeleteModal = (id) => {
   deleteTargetId.value = id;
@@ -90,7 +94,7 @@ const confirmNoShow = async () => {
     await reservationAPI.editReservation(noShowTargetId.value, {
       resStatus: "missed",
     });
-    await Promise.all([loadSchedule(), loadSearchResults()]);
+    await loadSchedule();
   } catch (err) {
     actionError.value = getApiErrorMessage(err, "Failed to mark no-show");
   } finally {
@@ -104,7 +108,7 @@ const confirmDelete = async () => {
   actionLoading.value = true;
   try {
     await reservationAPI.cancelReservation(deleteTargetId.value);
-    await Promise.all([loadSchedule(), loadSearchResults()]);
+    await loadSchedule();
   } catch (err) {
     actionError.value = getApiErrorMessage(err, "Failed to delete reservation");
   } finally {
@@ -116,6 +120,39 @@ const confirmDelete = async () => {
 const handleCancelItem = async (item) => {
   actionReservation.value = item;
   await handleCancel();
+};
+
+const unseatReservation = async (reservation) => {
+  if (!reservation) return;
+  actionLoading.value = true;
+  actionError.value = "";
+  try {
+    const table = tables.value.find((t) => t.reservationId === reservation.id);
+    if (!table) {
+      actionError.value = "No table assigned to this reservation.";
+      return;
+    }
+    await tableAPI.freeTable(table.id);
+    await Promise.all([loadSchedule(), getTables()]);
+  } catch (err) {
+    actionError.value = getApiErrorMessage(err, "Failed to unseat reservation");
+  } finally {
+    actionLoading.value = false;
+  }
+};
+
+const sendToWaitlist = async (reservation) => {
+  if (!reservation) return;
+  actionLoading.value = true;
+  actionError.value = "";
+  try {
+    await waitlistAPI.addFromReservation(reservation.id);
+    await loadSchedule();
+  } catch (err) {
+    actionError.value = getApiErrorMessage(err, "Failed to send to waitlist");
+  } finally {
+    actionLoading.value = false;
+  }
 };
 
 const MAX_VISIBLE = 3;
@@ -166,50 +203,6 @@ const loadSchedule = async () => {
   reservations.value = reservationsRes.data.collection;
 
   buildCalendarDays(year, month);
-};
-
-const loadSearchResults = async () => {
-  searchLoading.value = true;
-  try {
-    const params: Record<string, string> = {};
-    if (searchVal.value.trim()) {
-      params.q = searchVal.value.trim();
-    }
-    const res = await reservationAPI.getReservations(params);
-    let data = res.data.collection || [];
-    if (searchVal.value.trim()) {
-      const query = searchVal.value.trim().toLowerCase();
-      data = data.filter((item) => {
-        if (!searchNotes.value) {
-          const itemWithoutNotes = { ...item };
-          delete itemWithoutNotes.notes;
-          const keys = Object.keys(itemWithoutNotes);
-          return keys.some((key) => {
-            const val = item[key];
-            if (val === null || val === undefined) return false;
-            return String(val).toLowerCase().includes(query);
-          });
-        }
-        return Object.keys(item).some((key) => {
-          const val = item[key];
-          if (val === null || val === undefined) return false;
-          return String(val).toLowerCase().includes(query);
-        });
-      });
-    }
-    searchResults.value = data.filter(
-      (r) => r.resStatus !== "seated" && r.resStatus !== "completed"
-    );
-  } catch (err) {
-    searchResults.value = [];
-  } finally {
-    searchLoading.value = false;
-  }
-};
-
-const clearSearch = () => {
-  searchVal.value = "";
-  loadSearchResults();
 };
 
 const loadSchedules = async () => {
@@ -284,6 +277,34 @@ const buildCalendarDays = (year, month) => {
 
   calendarDays.value = days;
   loading.value = false;
+};
+
+const openDay = (day) => {
+  selectedDay.value = day;
+  dayPopupOpen.value = true;
+};
+
+const closeDayPopup = () => {
+  dayPopupOpen.value = false;
+  selectedDay.value = null;
+};
+
+const previousMonth = () => {
+  currentMonth.value = new Date(
+    currentMonth.value.getFullYear(),
+    currentMonth.value.getMonth() - 1,
+    1
+  );
+  loadSchedule();
+};
+
+const nextMonth = () => {
+  currentMonth.value = new Date(
+    currentMonth.value.getFullYear(),
+    currentMonth.value.getMonth() + 1,
+    1
+  );
+  loadSchedule();
 };
 
 const paymentColor = (status) => {
@@ -471,12 +492,33 @@ const currDate = computed(() => {
 const filterReservations = computed(() => {
   const dateStr = currentMonth.value.toISOString().split("T")[0];
   const prefix = dateStr.slice(0, 7);
-  return reservations.value.filter(
+  let filtered = reservations.value.filter(
     (r) => r.resDate && r.resDate.startsWith(prefix)
   );
+
+  const query = searchVal.value.trim().toLowerCase();
+  if (query) {
+    filtered = filtered.filter((item) => {
+      const searchableKeys = searchNotes.value
+        ? Object.keys(item)
+        : Object.keys(item).filter((key) => key !== "notes");
+
+      return searchableKeys.some((key) => {
+        const val = item[key];
+        if (val === null || val === undefined) return false;
+        return String(val).toLowerCase().includes(query);
+      });
+    });
+  }
+
+  return filtered;
 });
 
-const openPopup = ({ headerText }) => {
+const clearSearch = () => {
+  searchVal.value = "";
+};
+
+const openPopup = (headerText) => {
   isPopupOpen.value = true;
   popupHeaderText.value = headerText;
 };
@@ -528,58 +570,47 @@ const today = () => {
   currentMonth.value = new Date();
   loadSchedule();
 };
-
-watch(searchVal, () => {
-  if (viewMode.value === "search") {
-    loadSearchResults();
-  }
-});
-
-watch(searchNotes, () => {
-  if (viewMode.value === "search") {
-    loadSearchResults();
-  }
-});
 </script>
 
 <template>
   <div class="main-wrapper">
     <div class="header">
       <h1>Reservations</h1>
+      <div class="search-bar">
+        <span class="search-icon"><SearchIcon /></span>
+        <input
+          type="search"
+          class="search-input"
+          placeholder="Search by name, phone, email, date..."
+          v-model="searchVal"
+        />
+        <button
+          v-if="searchVal"
+          type="button"
+          class="clear-btn"
+          @click="clearSearch"
+        >
+          <ClearIcon />
+        </button>
+        <label class="notes-toggle">
+          <input type="checkbox" v-model="searchNotes" />
+          <span>Include notes</span>
+        </label>
+      </div>
     </div>
     <div class="content-wrapper">
-      <div class="tabs">
-        <button
-          class="tab-btn"
-          :class="{ active: viewMode === 'calendar' }"
-          @click="viewMode = 'calendar'"
-        >
-          Calendar
+      <div class="date-controls">
+        <button class="nav-btn" @click="prev()">
+          <span class="nav-icon">‹</span>
         </button>
-        <button
-          class="tab-btn"
-          :class="{ active: viewMode === 'search' }"
-          @click="
-            viewMode = 'search';
-            loadSearchResults();
-          "
-        >
-          Search All
+        <h2 class="date-label">Reservations for {{ currDate }}</h2>
+        <button class="nav-btn" @click="next()">
+          <span class="nav-icon">›</span>
         </button>
+        <button class="btn btn-primary btn-sm" @click="today()">Today</button>
       </div>
 
-      <div v-if="viewMode === 'calendar'" class="sections-row">
-        <div class="date-controls">
-          <button class="nav-btn" @click="prev()">
-            <span class="nav-icon">‹</span>
-          </button>
-          <h2 class="date-label">Reservations for {{ currDate }}</h2>
-          <button class="nav-btn" @click="next()">
-            <span class="nav-icon">›</span>
-          </button>
-          <button class="btn btn-primary btn-sm" @click="today()">Today</button>
-        </div>
-
+      <div class="sections-row">
         <div class="section-card reservations-card">
           <div class="card-header">
             <h2 class="section-title">Today's Reservations</h2>
@@ -617,63 +648,72 @@ watch(searchNotes, () => {
                     canManageTables
                   "
                 >
-                  <VaButton
+                  <ButtonAction
                     v-if="
                       ['pending', 'missed'].includes(slotProps.item.resStatus)
                     "
-                    preset="primary"
+                    text="Seat"
                     color="#22c55e"
                     @click="
-                      openPopup({ headerText: 'Choose Table' });
+                      openPopup('Choose Table');
                       assignSelectedReservation(slotProps.item);
                     "
-                  >
-                    Seat
-                  </VaButton>
-                  <VaButton
-                    preset="primary"
+                  />
+                  <ButtonAction
+                    text="Edit"
                     color="#3b82f6"
                     @click="
-                      openPopup({ headerText: 'Edit Reservation' });
+                      openPopup('Edit Reservation');
                       assignSelectedReservation(slotProps.item);
                     "
-                  >
-                    Edit
-                  </VaButton>
-                  <VaButton
+                  />
+                  <ButtonAction
                     v-if="canManageTables"
-                    preset="primary"
+                    text="Assign"
                     color="#f59e0b"
                     @click="
-                      openPopup({ headerText: 'Assign Staff' });
+                      openPopup('Assign Staff');
                       assignSelectedReservation(slotProps.item);
                     "
-                  >
-                    Assign
-                  </VaButton>
-                  <VaButton
+                  />
+                  <ButtonAction
                     v-if="
                       ['pending', 'missed'].includes(slotProps.item.resStatus)
                     "
-                    preset="danger"
+                    text="Cancel"
+                    color="#ef4444"
                     @click="handleCancelItem(slotProps.item)"
+                  />
+                  <ButtonAction
+                    v-if="
+                      slotProps.item.resStatus === 'pending' && canAddToWaitlist
+                    "
+                    text="Waitlist"
+                    color="#f59e0b"
+                    @click="sendToWaitlist(slotProps.item)"
                   >
-                    Cancel
-                  </VaButton>
-                  <VaButton
+                    <template #icon>
+                      <WaitlistIcon />
+                    </template>
+                  </ButtonAction>
+                  <ButtonAction
                     v-if="slotProps.item.resStatus === 'pending'"
-                    preset="warning"
+                    text="Mark No-Show"
+                    color="#f59e0b"
                     @click="openNoShowModal(slotProps.item.id)"
-                  >
-                    Mark No-Show
-                  </VaButton>
-                  <VaButton
+                  />
+                  <ButtonAction
+                    v-else-if="slotProps.item.resStatus === 'seated'"
+                    text="Unseat"
+                    color="#ef4444"
+                    @click="unseatReservation(slotProps.item)"
+                  />
+                  <ButtonAction
                     v-else-if="canEditReservations"
-                    preset="danger"
+                    text="Delete"
+                    color="#ef4444"
                     @click="openDeleteModal(slotProps.item.id)"
-                  >
-                    Delete
-                  </VaButton>
+                  />
                 </div>
               </div>
             </template>
@@ -695,151 +735,79 @@ watch(searchNotes, () => {
           </GridContainer>
         </div>
       </div>
-
-      <div v-else class="search-container">
-        <div class="search-controls">
-          <div class="search-bar">
-            <span class="search-icon"><SearchIcon /></span>
-            <input
-              type="search"
-              class="search-input"
-              placeholder="Search by name, phone, email, date..."
-              v-model="searchVal"
-              aria-label="Search reservations"
-            />
-            <button
-              v-if="searchVal"
-              type="button"
-              class="clear-btn"
-              @click="clearSearch"
-              aria-label="Clear search"
-            >
-              <ClearIcon />
-            </button>
-          </div>
-          <label class="notes-toggle">
-            <input type="checkbox" v-model="searchNotes" />
-            <span>Include notes in search</span>
-          </label>
-        </div>
-
-        <div v-if="searchLoading" class="loading-state">
-          <div class="spinner"></div>
-          <p>Loading reservations...</p>
-        </div>
-
-        <div v-else class="results-container">
-          <div class="results-meta">
-            <span class="results-count">
-              {{ searchResults.length }}
-              {{ searchResults.length === 1 ? "result" : "results" }}
-            </span>
-          </div>
-
-          <ListContainer
-            class="results-wrapper"
-            :collection="searchResults"
-            :filteredCollection="searchResults"
-          >
-            <template #card="slotProps">
-              <div class="search-result-card">
-                <ReservationInfo
-                  :reservation="slotProps.item"
-                  :can-delete="canEditReservations"
-                  :search-query="searchVal"
-                  @on-delete="openDeleteModal"
-                />
-                <div
-                  class="card-actions"
-                  v-if="
-                    slotProps.item.resStatus === 'pending' &&
-                    canEditReservations
-                  "
-                >
-                  <button
-                    class="action-btn no-show-btn"
-                    @click="openNoShowModal(slotProps.item.id)"
-                  >
-                    Mark No-Show
-                  </button>
-                </div>
-              </div>
-            </template>
-          </ListContainer>
-
-          <div
-            v-if="!searchLoading && searchResults.length === 0"
-            class="empty-state"
-          >
-            <span class="empty-icon">🔍</span>
-            <p class="empty-text">
-              {{
-                searchVal
-                  ? "No matching reservations found"
-                  : "No reservations available"
-              }}
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <VaModal v-model="isPopupOpen" :title="popupHeaderText" size="large">
-      <VaCard>
-        <VaCardContent>
-          <EditReservation
-            v-if="popupHeaderText === 'Edit Reservation'"
-            :reservation="selectedReservation"
-            @on-edited="refreshReservations(true)"
-          />
-          <ChooseTable
-            v-else-if="popupHeaderText === 'Choose Table'"
-            :free-tables="freeTables"
-            :reservation="selectedReservation"
-            @on-chosen="
-              refreshTables();
-              getReservations();
-            "
-          />
-          <AssignStaff
-            v-else-if="popupHeaderText === 'Assign Staff'"
-            :reservation="selectedReservation"
-            @on-assigned="refreshReservations()"
-            @on-unassigned="refreshReservations()"
-          />
-        </VaCardContent>
-      </VaCard>
-    </VaModal>
+    <PopupBox
+      :is-open="isPopupOpen"
+      :header-text="popupHeaderText"
+      :is-closable="true"
+      @close-modal="isPopupOpen = false"
+    >
+      <template #popup-content>
+        <EditReservation
+          v-if="popupHeaderText === 'Edit Reservation'"
+          :reservation="selectedReservation"
+          @on-edited="refreshReservations(true)"
+        />
+        <ChooseTable
+          v-else-if="popupHeaderText === 'Choose Table'"
+          :free-tables="freeTables"
+          :reservation="selectedReservation"
+          @on-chosen="
+            refreshTables();
+            getReservations();
+          "
+        />
+        <AssignStaff
+          v-else-if="popupHeaderText === 'Assign Staff'"
+          :reservation="selectedReservation"
+          @on-assigned="refreshReservations()"
+          @on-unassigned="refreshReservations()"
+        />
+      </template>
+    </PopupBox>
 
-    <VaModal v-model="showDeleteModal" title="Confirm Delete" size="small">
-      <VaCard>
-        <VaCardContent>
+    <PopupBox
+      :is-open="showDeleteModal"
+      header-text="Confirm Delete"
+      :is-closable="true"
+      @close-modal="closeDeleteModal"
+    >
+      <template #popup-content>
+        <div class="confirm-content">
           <p>Are you sure you want to permanently delete this reservation?</p>
-        </VaCardContent>
-        <template #actions>
-          <VaButton preset="secondary" @click="closeDeleteModal"
-            >Cancel</VaButton
-          >
-          <VaButton preset="danger" @click="confirmDelete">Delete</VaButton>
-        </template>
-      </VaCard>
-    </VaModal>
+          <div class="confirm-actions">
+            <button class="btn btn-secondary" @click="closeDeleteModal">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmDelete">
+              Delete
+            </button>
+          </div>
+        </div>
+      </template>
+    </PopupBox>
 
-    <VaModal v-model="showNoShowModal" title="Confirm No-Show" size="small">
-      <VaCard>
-        <VaCardContent>
+    <PopupBox
+      :is-open="showNoShowModal"
+      header-text="Confirm No-Show"
+      :is-closable="true"
+      @close-modal="closeNoShowModal"
+    >
+      <template #popup-content>
+        <div class="confirm-content">
           <p>Mark this reservation as a no-show?</p>
-        </VaCardContent>
-        <template #actions>
-          <VaButton preset="secondary" @click="closeNoShowModal"
-            >Cancel</VaButton
-          >
-          <VaButton preset="warning" @click="confirmNoShow"
-            >Mark No-Show</VaButton
-          >
-        </template>
-      </VaCard>
-    </VaModal>
+          <div class="confirm-actions">
+            <button class="btn btn-secondary" @click="closeNoShowModal">
+              Cancel
+            </button>
+            <button class="btn btn-warning" @click="confirmNoShow">
+              Mark No-Show
+            </button>
+          </div>
+        </div>
+      </template>
+    </PopupBox>
   </div>
 </template>
 
@@ -872,29 +840,6 @@ watch(searchNotes, () => {
   display: flex;
   flex-direction: column;
   gap: 20px;
-}
-
-.tabs {
-  display: flex;
-  gap: 8px;
-}
-
-.tab-btn {
-  padding: 8px 16px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  background: white;
-  cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  color: var(--secondary-gray);
-  transition: all 0.15s;
-}
-
-.tab-btn.active {
-  background: var(--primary-blue);
-  color: white;
-  border-color: var(--primary-blue);
 }
 
 .date-controls {
@@ -1080,82 +1025,42 @@ watch(searchNotes, () => {
 }
 
 .confirm-content p {
-  font-family: "Lora", Georgia, serif;
-  font-size: 14px;
-  color: var(--restaurant-warm-gray);
+  font-family: "Inter-Medium";
+  font-size: 15px;
+  color: var(--primary-black);
   margin: 0;
-  line-height: 1.6;
 }
 
 .confirm-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  gap: 10px;
 }
 
 .btn-danger {
-  background: linear-gradient(
-    135deg,
-    var(--restaurant-terracotta) 0%,
-    #b91c1c 100%
-  );
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 20px;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  background-color: var(--primary-red);
+  color: white;
 }
 
 .btn-danger:hover {
-  opacity: 0.92;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+  background-color: #dc2626;
 }
 
 .btn-warning {
-  background: linear-gradient(
-    135deg,
-    var(--restaurant-golden) 0%,
-    #d97706 100%
-  );
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 20px;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  background-color: #f59e0b;
+  color: white;
 }
 
 .btn-warning:hover {
-  opacity: 0.92;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-}
-
-.search-container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.search-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  background-color: #d97706;
 }
 
 .search-bar {
   position: relative;
   max-width: 420px;
   width: 100%;
+  margin-top: 12px;
+  margin-left: var(--x-spacing-mobile);
 }
 
 .search-icon {
@@ -1223,7 +1128,8 @@ watch(searchNotes, () => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 10px;
+  margin-left: var(--x-spacing-mobile);
   font-family: "Inter-Medium";
   font-size: 13px;
   color: var(--secondary-gray);
@@ -1238,164 +1144,12 @@ watch(searchNotes, () => {
   accent-color: var(--primary-blue);
 }
 
-.results-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.results-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.results-count {
-  font-family: "Inter-Medium";
-  font-size: 14px;
-  color: var(--secondary-gray);
-}
-
-.results-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 60px 20px;
-  color: var(--secondary-gray);
-  font-family: "Inter-Light";
-}
-
-.empty-icon {
-  font-size: 36px;
-  opacity: 0.45;
-}
-
-.empty-text {
-  margin: 0;
-  font-size: 15px;
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 100px 20px;
-  gap: 16px;
-  color: var(--secondary-gray);
-  font-family: "Inter-Light";
-}
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.error-banner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: var(--card-radius);
-  margin-bottom: 16px;
-}
-
-.error-icon {
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.error-retry {
-  margin-left: auto;
-  padding: 6px 14px;
-  border: 1px solid #dc2626;
-  border-radius: 6px;
-  background: white;
-  color: #dc2626;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.error-retry:hover {
-  background: #fef2f2;
-}
-
-.confirm-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.confirm-content p {
-  font-family: "Inter-Medium";
-  font-size: 15px;
-  color: var(--primary-black);
-  margin: 0;
-}
-
-.confirm-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.search-result-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.card-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding-left: 15px;
-}
-
-.action-btn {
-  padding: 6px 14px;
-  border: none;
-  border-radius: 6px;
-  font-family: "Inter-Medium";
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.no-show-btn {
-  background-color: #f59e0b;
-  color: white;
-}
-
-.no-show-btn:hover {
-  background-color: #d97706;
-}
-
 @media screen and (min-width: 1024px) {
-  .content-wrapper {
+  .search-bar {
     margin-left: var(--x-spacing-desktop);
-    margin-right: var(--x-spacing-desktop);
+  }
+  .notes-toggle {
+    margin-left: var(--x-spacing-desktop);
   }
 }
 </style>

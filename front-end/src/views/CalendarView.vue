@@ -1,22 +1,17 @@
-<script setup lang="ts">
+<script setup>
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import PageHeader from "@/components/PageHeader.vue";
 import { io } from "socket.io-client";
 import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
 import groupAPI from "@/services/groupAPI";
+import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
-import logger from "@/utils/logger";
-import { paymentOptions, getPaymentStatusColor } from "@/constants";
 import {
-  VaAlert,
-  VaButton,
-  VaCard,
-  VaCardContent,
-  VaInput,
-  VaModal,
-} from "vuestic-ui";
+  paymentOptions,
+  getPaymentStatusColor,
+  getPaymentStatusLabel,
+} from "@/constants";
 
 const schedules = ref([]);
 const holidays = ref([]);
@@ -47,8 +42,8 @@ onMounted(async () => {
   socket.value = io("", {
     path: "/socket.io",
   });
-  socket.value.on("schedule-updated", () => loadSchedule());
-  socket.value.on("holiday-updated", () => loadSchedule());
+  socket.value.on("schedule-updated", () => loadSchedules());
+  socket.value.on("holiday-updated", () => loadHolidays());
 });
 
 onUnmounted(() => {
@@ -74,6 +69,30 @@ const loadSchedule = async () => {
   holidays.value = holidaysRes.data.holidays;
   reservations.value = reservationsRes.data.collection;
 
+  buildCalendarDays(year, month);
+};
+
+const loadSchedules = async () => {
+  const res = await scheduleAPI.getSchedules();
+  schedules.value = res.data.schedules;
+  buildCalendarDaysFromCurrent();
+};
+
+const loadHolidays = async () => {
+  const res = await scheduleAPI.getHolidays();
+  holidays.value = res.data.holidays;
+  buildCalendarDaysFromCurrent();
+};
+
+const loadReservations = async () => {
+  const res = await reservationAPI.getReservations();
+  reservations.value = res.data.collection;
+  buildCalendarDaysFromCurrent();
+};
+
+const buildCalendarDaysFromCurrent = () => {
+  const year = currentMonth.value.getFullYear();
+  const month = currentMonth.value.getMonth();
   buildCalendarDays(year, month);
 };
 
@@ -121,6 +140,11 @@ const buildCalendarDays = (year, month) => {
 const openDay = (day) => {
   selectedDay.value = day;
   dayPopupOpen.value = true;
+};
+
+const closeDayPopup = () => {
+  dayPopupOpen.value = false;
+  selectedDay.value = null;
 };
 
 const previousMonth = () => {
@@ -206,10 +230,8 @@ const loadFreeTables = async () => {
     freeTables.value = res.data.collection.filter(
       (t) => !t.reservationId && !t.isBlocked
     );
-  } catch (err) {
-    logger.error("Failed to load free tables", { error: err.message });
+  } catch {
     freeTables.value = [];
-    actionError.value = "Failed to load available tables.";
   }
 };
 
@@ -217,10 +239,8 @@ const loadWaitingStaff = async () => {
   try {
     const groupRes = await groupAPI.getGroupByName("waiting_staff");
     waitingStaffList.value = groupRes.data.group.Users || [];
-  } catch (err) {
-    logger.error("Failed to load waiting staff", { error: err.message });
+  } catch {
     waitingStaffList.value = [];
-    actionError.value = "Failed to load waiting staff.";
   }
 };
 
@@ -311,7 +331,6 @@ const handleReschedule = async () => {
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="..." />
     <div class="header">
       <h1>Schedule Calendar</h1>
     </div>
@@ -402,258 +421,285 @@ const handleReschedule = async () => {
         </div>
       </div>
 
-      <VaModal
-        v-model="dayPopupOpen"
-        :title="selectedDay ? 'Reservations — ' + selectedDay.dateStr : ''"
+      <PopupBox
+        :is-open="dayPopupOpen"
+        :header-text="
+          selectedDay ? 'Reservations — ' + selectedDay.dateStr : ''
+        "
+        :is-closable="true"
+        @close-modal="closeDayPopup"
       >
-        <VaCard>
-          <VaCardContent>
-            <div v-if="selectedDay" class="day-popup">
-              <div v-if="selectedDay.isClosed" class="popup-state closed-state">
-                <span class="state-icon">🔒</span>
-                <p>Restaurant is closed this day.</p>
-              </div>
+        <template #popup-content>
+          <div v-if="selectedDay" class="day-popup">
+            <div v-if="selectedDay.isClosed" class="popup-state closed-state">
+              <span class="state-icon">🔒</span>
+              <p>Restaurant is closed this day.</p>
+            </div>
+            <div
+              v-else-if="(selectedDay.reservations?.length || 0) === 0"
+              class="popup-state empty-state"
+            >
+              <span class="state-icon">📅</span>
+              <p>No reservations for this day.</p>
+            </div>
+            <div v-else>
               <div
-                v-else-if="(selectedDay.reservations?.length || 0) === 0"
-                class="popup-state empty-state"
+                v-if="activeAction && actionReservation"
+                class="action-panel"
               >
-                <span class="state-icon">📅</span>
-                <p>No reservations for this day.</p>
-              </div>
-              <div v-else>
-                <div
-                  v-if="activeAction && actionReservation"
-                  class="action-panel"
-                >
-                  <div class="action-header">
-                    <h3 class="action-title">{{ actionTitle }}</h3>
-                    <VaButton preset="secondary" @click="closeAction"
-                      >← Back</VaButton
+                <div class="action-header">
+                  <h3 class="action-title">{{ actionTitle }}</h3>
+                  <button class="action-back" @click="closeAction">
+                    ← Back
+                  </button>
+                </div>
+                <div v-if="actionError" class="action-error">
+                  {{ actionError }}
+                </div>
+
+                <div v-if="activeAction === 'cancel'" class="action-body">
+                  <p class="action-text">
+                    Cancel reservation for
+                    <strong>{{ actionReservation.name || "Guest" }}</strong> on
+                    {{ actionReservation.resTime?.slice(0, 5) }}?
+                  </p>
+                  <div class="action-buttons">
+                    <button
+                      class="btn btn-danger"
+                      @click="handleCancel"
+                      :disabled="actionLoading"
                     >
-                  </div>
-                  <VaAlert v-if="actionError" color="danger">{{
-                    actionError
-                  }}</VaAlert>
-
-                  <div v-if="activeAction === 'cancel'" class="action-body">
-                    <p class="action-text">
-                      Cancel reservation for
-                      <strong>{{ actionReservation.name || "Guest" }}</strong>
-                      on {{ actionReservation.resTime?.slice(0, 5) }}?
-                    </p>
-                    <div class="action-buttons">
-                      <VaButton
-                        preset="danger"
-                        @click="handleCancel"
-                        :disabled="actionLoading"
-                      >
-                        {{ actionLoading ? "Cancelling..." : "Yes, Cancel" }}
-                      </VaButton>
-                    </div>
-                  </div>
-
-                  <div
-                    v-else-if="activeAction === 'payment'"
-                    class="action-body"
-                  >
-                    <p class="action-text">
-                      Current:
-                      <span
-                        class="payment-status"
-                        :style="{
-                          color: getPaymentStatusColor(
-                            actionReservation.paymentStatus || 'unpaid'
-                          ),
-                        }"
-                        >{{ actionReservation.paymentStatus || "unpaid" }}</span
-                      >
-                    </p>
-                    <div class="payment-options">
-                      <VaButton
-                        v-for="opt in paymentOptions"
-                        :key="opt.value"
-                        :color="
-                          (actionReservation.paymentStatus || 'unpaid') ===
-                          opt.value
-                            ? 'primary'
-                            : 'secondary'
-                        "
-                        @click="handlePaymentChange(opt.value)"
-                        :disabled="actionLoading"
-                      >
-                        {{ opt.label }}
-                      </VaButton>
-                    </div>
-                  </div>
-
-                  <div v-else-if="activeAction === 'table'" class="action-body">
-                    <p class="action-text">Assign a free table:</p>
-                    <div v-if="freeTables.length === 0" class="empty-msg">
-                      No free tables available
-                    </div>
-                    <div class="table-grid">
-                      <VaButton
-                        v-for="table in freeTables"
-                        :key="table.id"
-                        preset="secondary"
-                        @click="handleAssignTable(table.id)"
-                        :disabled="actionLoading"
-                      >
-                        Table {{ table.name || table.id }}
-                      </VaButton>
-                    </div>
-                  </div>
-
-                  <div v-else-if="activeAction === 'staff'" class="action-body">
-                    <p class="action-text">Assign waiting staff:</p>
-                    <div v-if="waitingStaffList.length === 0" class="empty-msg">
-                      No waiting staff available
-                    </div>
-                    <div class="staff-list-actions">
-                      <VaButton
-                        v-for="staff in waitingStaffList"
-                        :key="staff.id"
-                        preset="secondary"
-                        @click="handleAssignStaff(staff.id)"
-                        :disabled="actionLoading"
-                      >
-                        {{ staff.username }}
-                      </VaButton>
-                    </div>
-                  </div>
-
-                  <div
-                    v-else-if="activeAction === 'reschedule'"
-                    class="action-body"
-                  >
-                    <div class="field-group">
-                      <label class="field-label">New Date</label>
-                      <VaInput type="date" v-model="newResDate" />
-                    </div>
-                    <div class="field-group">
-                      <label class="field-label">New Time</label>
-                      <VaInput type="time" v-model="newResTime" />
-                    </div>
-                    <div class="action-buttons">
-                      <VaButton
-                        preset="primary"
-                        @click="handleReschedule"
-                        :disabled="actionLoading"
-                      >
-                        {{ actionLoading ? "Saving..." : "Reschedule" }}
-                      </VaButton>
-                    </div>
+                      {{ actionLoading ? "Cancelling..." : "Yes, Cancel" }}
+                    </button>
                   </div>
                 </div>
-                <div v-else class="diagram-popup">
-                  <div class="popup-count">
-                    {{ selectedDay.reservations.length }} reservation{{
-                      selectedDay.reservations.length > 1 ? "s" : ""
-                    }}
-                  </div>
-                  <div class="diagram-track">
-                    <div class="diagram-line"></div>
-                    <div
-                      v-for="(res, idx) in selectedDay.reservations"
-                      :key="res.id"
-                      :class="['diagram-row', idx % 2 === 0 ? 'left' : 'right']"
+
+                <div v-else-if="activeAction === 'payment'" class="action-body">
+                  <p class="action-text">
+                    Current:
+                    <span
+                      class="payment-status"
+                      :style="{
+                        color: getPaymentStatusColor(
+                          actionReservation.paymentStatus || 'unpaid'
+                        ),
+                      }"
+                      >{{ actionReservation.paymentStatus || "unpaid" }}</span
                     >
-                      <div class="diagram-node">
+                  </p>
+                  <div class="payment-options">
+                    <button
+                      v-for="opt in paymentOptions"
+                      :key="opt.value"
+                      :class="[
+                        'pay-btn',
+                        {
+                          active:
+                            (actionReservation.paymentStatus || 'unpaid') ===
+                            opt.value,
+                        },
+                      ]"
+                      :style="{
+                        borderColor: getPaymentStatusColor(opt.value),
+                        color:
+                          (actionReservation.paymentStatus || 'unpaid') ===
+                          opt.value
+                            ? getPaymentStatusColor(opt.value)
+                            : '',
+                        backgroundColor:
+                          (actionReservation.paymentStatus || 'unpaid') ===
+                          opt.value
+                            ? getPaymentStatusColor(opt.value) + '18'
+                            : '',
+                      }"
+                      @click="handlePaymentChange(opt.value)"
+                      :disabled="actionLoading"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </div>
+                </div>
+
+                <div v-else-if="activeAction === 'table'" class="action-body">
+                  <p class="action-text">Assign a free table:</p>
+                  <div v-if="freeTables.length === 0" class="empty-msg">
+                    No free tables available
+                  </div>
+                  <div class="table-grid">
+                    <button
+                      v-for="table in freeTables"
+                      :key="table.id"
+                      class="table-btn"
+                      @click="handleAssignTable(table.id)"
+                      :disabled="actionLoading"
+                    >
+                      Table {{ table.name || table.id }}
+                    </button>
+                  </div>
+                </div>
+
+                <div v-else-if="activeAction === 'staff'" class="action-body">
+                  <p class="action-text">Assign waiting staff:</p>
+                  <div v-if="waitingStaffList.length === 0" class="empty-msg">
+                    No waiting staff available
+                  </div>
+                  <div class="staff-list-actions">
+                    <button
+                      v-for="staff in waitingStaffList"
+                      :key="staff.id"
+                      class="staff-btn"
+                      @click="handleAssignStaff(staff.id)"
+                      :disabled="actionLoading"
+                    >
+                      {{ staff.username }}
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  v-else-if="activeAction === 'reschedule'"
+                  class="action-body"
+                >
+                  <div class="field-group">
+                    <label class="field-label">New Date</label>
+                    <input
+                      type="date"
+                      v-model="newResDate"
+                      class="action-input"
+                    />
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">New Time</label>
+                    <input
+                      type="time"
+                      v-model="newResTime"
+                      class="action-input"
+                    />
+                  </div>
+                  <div class="action-buttons">
+                    <button
+                      class="btn btn-primary"
+                      @click="handleReschedule"
+                      :disabled="actionLoading"
+                    >
+                      {{ actionLoading ? "Saving..." : "Reschedule" }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="diagram-popup">
+                <div class="popup-count">
+                  {{ selectedDay.reservations.length }} reservation{{
+                    selectedDay.reservations.length > 1 ? "s" : ""
+                  }}
+                </div>
+                <div class="diagram-track">
+                  <div class="diagram-line"></div>
+                  <div
+                    v-for="(res, idx) in selectedDay.reservations"
+                    :key="res.id"
+                    :class="['diagram-row', idx % 2 === 0 ? 'left' : 'right']"
+                  >
+                    <div class="diagram-node">
+                      <span
+                        class="diagram-dot"
+                        :style="{
+                          backgroundColor: statusColor(
+                            res.resStatus || 'pending'
+                          ),
+                        }"
+                      ></span>
+                    </div>
+                    <div class="diagram-card">
+                      <div class="timeline-card-header">
+                        <span class="timeline-name">{{
+                          res.name || "Guest"
+                        }}</span>
                         <span
-                          class="diagram-dot"
+                          class="timeline-status"
                           :style="{
                             backgroundColor: statusColor(
                               res.resStatus || 'pending'
                             ),
                           }"
-                        ></span>
+                        >
+                          {{ res.resStatus || "pending" }}
+                        </span>
                       </div>
-                      <div class="diagram-card">
-                        <div class="timeline-card-header">
-                          <span class="timeline-name">{{
-                            res.name || "Guest"
+                      <div class="timeline-card-body">
+                        <div class="timeline-row">
+                          <span class="timeline-icon">🕐</span>
+                          <span class="timeline-text">{{
+                            res.resTime?.slice(0, 5)
                           }}</span>
+                          <span class="timeline-spacer"></span>
+                          <span class="timeline-icon">👥</span>
+                          <span class="timeline-text"
+                            >{{ res.people || "?" }} guests</span
+                          >
+                        </div>
+                        <div class="timeline-row">
+                          <span class="timeline-icon">💳</span>
                           <span
-                            class="timeline-status"
+                            class="timeline-payment"
                             :style="{
-                              backgroundColor: statusColor(
-                                res.resStatus || 'pending'
+                              color: getPaymentStatusColor(
+                                res.paymentStatus || 'unpaid'
                               ),
                             }"
                           >
-                            {{ res.resStatus || "pending" }}
+                            {{ res.paymentStatus || "unpaid" }}
                           </span>
                         </div>
-                        <div class="timeline-card-body">
-                          <div class="timeline-row">
-                            <span class="timeline-icon">🕐</span>
-                            <span class="timeline-text">{{
-                              res.resTime?.slice(0, 5)
-                            }}</span>
-                            <span class="timeline-spacer"></span>
-                            <span class="timeline-icon">👥</span>
-                            <span class="timeline-text"
-                              >{{ res.people || "?" }} guests</span
-                            >
-                          </div>
-                          <div class="timeline-row">
-                            <span class="timeline-icon">💳</span>
-                            <span
-                              class="timeline-payment"
-                              :style="{
-                                color: getPaymentStatusColor(
-                                  res.paymentStatus || 'unpaid'
-                                ),
-                              }"
-                            >
-                              {{ res.paymentStatus || "unpaid" }}
-                            </span>
-                          </div>
-                          <div v-if="res.email" class="timeline-row">
-                            <span class="timeline-icon">✉️</span>
-                            <span
-                              class="timeline-text timeline-email"
-                              :title="res.email"
-                            >
-                              {{ res.email }}
-                            </span>
-                          </div>
-                          <div v-if="res.phone" class="timeline-row">
-                            <span class="timeline-icon">📞</span>
-                            <span class="timeline-text">{{ res.phone }}</span>
-                          </div>
-                          <div class="diagram-actions">
-                            <VaButton
-                              icon="close"
-                              preset="secondary"
-                              @click.stop="openAction('cancel', res)"
-                              title="Cancel"
-                            />
-                            <VaButton
-                              icon="payment"
-                              preset="secondary"
-                              @click.stop="openAction('payment', res)"
-                              title="Payment"
-                            />
-                            <VaButton
-                              icon="table_restaurant"
-                              preset="secondary"
-                              @click.stop="openAction('table', res)"
-                              title="Assign Table"
-                            />
-                            <VaButton
-                              icon="person"
-                              preset="secondary"
-                              @click.stop="openAction('staff', res)"
-                              title="Assign Staff"
-                            />
-                            <VaButton
-                              icon="event"
-                              preset="secondary"
-                              @click.stop="openAction('reschedule', res)"
-                              title="Reschedule"
-                            />
-                          </div>
+                        <div v-if="res.email" class="timeline-row">
+                          <span class="timeline-icon">✉️</span>
+                          <span
+                            class="timeline-text timeline-email"
+                            :title="res.email"
+                          >
+                            {{ res.email }}
+                          </span>
+                        </div>
+                        <div v-if="res.phone" class="timeline-row">
+                          <span class="timeline-icon">📞</span>
+                          <span class="timeline-text">{{ res.phone }}</span>
+                        </div>
+                        <div class="diagram-actions">
+                          <button
+                            class="action-btn cancel"
+                            @click.stop="openAction('cancel', res)"
+                            title="Cancel"
+                          >
+                            ✕
+                          </button>
+                          <button
+                            class="action-btn payment"
+                            @click.stop="openAction('payment', res)"
+                            title="Payment"
+                          >
+                            💳
+                          </button>
+                          <button
+                            class="action-btn table"
+                            @click.stop="openAction('table', res)"
+                            title="Assign Table"
+                          >
+                            🪑
+                          </button>
+                          <button
+                            class="action-btn staff"
+                            @click.stop="openAction('staff', res)"
+                            title="Assign Staff"
+                          >
+                            👤
+                          </button>
+                          <button
+                            class="action-btn reschedule"
+                            @click.stop="openAction('reschedule', res)"
+                            title="Reschedule"
+                          >
+                            📅
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -661,21 +707,31 @@ const handleReschedule = async () => {
                 </div>
               </div>
             </div>
-          </VaCardContent>
-        </VaCard>
-      </VaModal>
+          </div>
+        </template>
+      </PopupBox>
     </div>
   </div>
 </template>
 
 <style scoped>
+.header {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100%;
+  height: var(--header-height);
+  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
 .header h1 {
   margin-left: var(--x-spacing-mobile);
   margin-bottom: 15px;
   font-size: 35px;
   color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--restaurant-charcoal);
-  font-family: "Playfair Display", Georgia, serif;
+  text-shadow: 1px 1px 2px var(--primary-black);
 }
 
 .content-wrapper {
@@ -690,8 +746,7 @@ const handleReschedule = async () => {
   margin-bottom: 15px;
   font-size: 35px;
   color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--restaurant-charcoal);
-  font-family: "Playfair Display", Georgia, serif;
+  text-shadow: 1px 1px 2px var(--primary-black);
 }
 
 .content-wrapper {
@@ -709,15 +764,15 @@ const handleReschedule = async () => {
   justify-content: center;
   padding: 100px 20px;
   gap: 16px;
-  color: var(--restaurant-warm-gray);
-  font-family: "Lora", Georgia, serif;
+  color: var(--secondary-gray);
+  font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--restaurant-stone);
-  border-top-color: var(--restaurant-terracotta);
+  border: 3px solid var(--lighter-gray);
+  border-top-color: var(--primary-blue);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -738,11 +793,11 @@ const handleReschedule = async () => {
 }
 
 .month-label {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Inter-Bold";
   font-size: 18px;
   min-width: 220px;
   text-align: center;
-  color: var(--restaurant-charcoal);
+  color: var(--primary-black);
   margin: 0;
 }
 
@@ -750,11 +805,11 @@ const handleReschedule = async () => {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--restaurant-cream);
-  border: 1px solid var(--restaurant-border);
+  background: var(--primary-white);
+  border: 1px solid #f0f0f0;
   cursor: pointer;
   font-size: 22px;
-  color: var(--restaurant-charcoal);
+  color: var(--primary-black);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -763,10 +818,10 @@ const handleReschedule = async () => {
 }
 
 .nav-btn:hover {
-  background: var(--restaurant-terracotta);
+  background: var(--primary-blue);
   color: white;
-  border-color: var(--restaurant-terracotta);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  border-color: var(--primary-blue);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
 .nav-icon {
@@ -775,8 +830,8 @@ const handleReschedule = async () => {
 }
 
 .calendar-container {
-  background: var(--restaurant-cream);
-  border: 1px solid var(--restaurant-border);
+  background: var(--primary-white);
+  border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
   box-shadow: var(--card-shadow);
@@ -790,28 +845,24 @@ const handleReschedule = async () => {
 
 .day-header {
   text-align: center;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Inter-Bold";
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
   padding: 10px;
-  background: linear-gradient(
-    135deg,
-    var(--restaurant-charcoal) 0%,
-    var(--restaurant-slate) 100%
-  );
+  background: var(--primary-black);
   color: var(--snow-white);
   border-radius: 8px;
 }
 
 .calendar-day {
   min-height: 80px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid #f0f0f0;
   border-radius: 8px;
   padding: 4px;
   font-size: 10px;
   position: relative;
-  background: var(--restaurant-cream);
+  background: var(--primary-white);
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
@@ -821,14 +872,14 @@ const handleReschedule = async () => {
 
 .calendar-day:hover {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-  border-color: var(--restaurant-terracotta);
+  border-color: var(--primary-blue);
   transform: translateY(-1px);
 }
 
 .day-number {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Inter-Bold";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--primary-black);
   text-align: right;
   line-height: 1;
   padding: 2px 4px;
@@ -839,12 +890,12 @@ const handleReschedule = async () => {
   text-align: center;
   padding: 3px 6px;
   border-radius: 6px;
-  font-family: "Lora", Georgia, serif;
+  font-family: "Inter-Medium";
   margin: 2px 0;
 }
 
 .closed-badge-closed {
-  color: var(--restaurant-terracotta);
+  color: #dc2626;
   background: #fef2f2;
 }
 
@@ -856,8 +907,8 @@ const handleReschedule = async () => {
 .hours-badge {
   font-size: 10px;
   text-align: center;
-  color: var(--restaurant-warm-gray);
-  font-family: "Lora", Georgia, serif;
+  color: var(--secondary-gray);
+  font-family: "Inter-Medium";
   padding: 2px 4px;
   background: #f3f4f6;
   border-radius: 4px;
@@ -892,10 +943,9 @@ const handleReschedule = async () => {
 }
 
 .res-name {
-  font-family: "Lora", Georgia, serif;
-  font-weight: 500;
+  font-family: "Inter-Medium";
   font-size: 10px;
-  color: var(--restaurant-charcoal);
+  color: var(--primary-black);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -915,8 +965,8 @@ const handleReschedule = async () => {
   align-items: center;
   gap: 4px;
   font-size: 9px;
-  color: var(--restaurant-warm-gray);
-  font-family: "Lora", Georgia, serif;
+  color: var(--secondary-gray);
+  font-family: "Inter-Light";
 }
 
 .res-time {
@@ -929,16 +979,14 @@ const handleReschedule = async () => {
 
 .res-overflow {
   font-size: 10px;
-  color: var(--restaurant-sky);
-  font-family: "Lora", Georgia, serif;
-  font-weight: 500;
+  color: var(--primary-blue);
+  font-family: "Inter-Medium";
   text-align: center;
   padding: 3px 0;
   cursor: pointer;
 }
 
 .res-overflow:hover {
-  color: var(--restaurant-terracotta);
   text-decoration: underline;
 }
 
@@ -969,12 +1017,11 @@ const handleReschedule = async () => {
 }
 
 .popup-count {
-  font-family: "Playfair Display", Georgia, serif;
-  font-weight: 700;
+  font-family: "Inter-Bold";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--primary-black);
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--restaurant-border);
+  border-bottom: 1px solid #f0f0f0;
   margin-bottom: 16px;
 }
 
@@ -994,14 +1041,13 @@ const handleReschedule = async () => {
 }
 
 .closed-state {
-  color: var(--restaurant-terracotta);
-  font-family: "Lora", Georgia, serif;
-  font-weight: 500;
+  color: #dc2626;
+  font-family: "Inter-Medium";
 }
 
 .empty-state {
-  color: var(--restaurant-warm-gray);
-  font-family: "Lora", Georgia, serif;
+  color: var(--secondary-gray);
+  font-family: "Inter-Light";
 }
 
 .diagram-popup {
@@ -1026,8 +1072,8 @@ const handleReschedule = async () => {
   width: 2px;
   background: linear-gradient(
     180deg,
-    var(--restaurant-terracotta) 0%,
-    var(--restaurant-stone) 100%
+    var(--primary-blue) 0%,
+    var(--lighter-gray) 100%
   );
   transform: translateX(-50%);
   opacity: 0.4;

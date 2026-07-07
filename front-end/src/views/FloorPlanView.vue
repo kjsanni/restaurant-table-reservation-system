@@ -1,31 +1,20 @@
-<script setup lang="ts">
-import PageHeader from "@/components/PageHeader.vue";
+<script setup>
 import { ref, computed, onMounted } from "vue";
-import { VaModal, VaButton } from "vuestic-ui";
-import LoadingSpinner from "@/components/LoadingSpinner.vue";
 import tableAPI from "@/services/tableAPI";
 import reservationAPI from "@/services/reservationAPI";
+import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
+import logger from "@/utils/logger";
 
 const tables = ref([]);
 const reservations = ref([]);
 const loading = ref(true);
-const loadError = ref("");
 const draggingReservation = ref(null);
 const assignPopupOpen = ref(false);
 const selectedTable = ref(null);
+const selectedLinkedTables = ref([]);
 const errorPopupOpen = ref(false);
 const errorMessage = ref("");
-const mergePopupOpen = ref(false);
-const merging = ref(false);
-const touchMode = ref(false);
-const layoutMode = ref("auto");
-
-const layoutModes = [
-  { label: "Auto Grid", value: "auto" },
-  { label: "Compact", value: "compact" },
-  { label: "Wide", value: "wide" },
-];
 
 const pendingReservations = computed(() => {
   return (reservations.value || []).filter(
@@ -33,9 +22,34 @@ const pendingReservations = computed(() => {
   );
 });
 
+const calculateCount = (people) => {
+  if (!people) return 1;
+  return Math.max(1, Math.ceil(people / 6));
+};
+
+const freeTablesList = computed(() => {
+  return (tables.value || [])
+    .filter((t) => !t.isOccupied && !t.isBlocked && !t.reservationId)
+    .sort((a, b) => a.id - b.id);
+});
+
+const tableMergeDisplayName = () => {
+  const primary = selectedTable.value
+    ? selectedTable.value.name || `T${selectedTable.value.id}`
+    : null;
+  if (!primary) return "";
+  const linked = selectedLinkedTables.value.map((t) => t.name || `T${t.id}`);
+  if (!linked.length) return primary;
+  return `${primary} + ${linked.join(" + ")}`;
+};
+
+const dragNeedsMerge = computed(() => {
+  if (!draggingReservation.value) return false;
+  return calculateCount(draggingReservation.value.people) > 1;
+});
+
 const loadData = async () => {
   loading.value = true;
-  loadError.value = "";
   try {
     const [tRes, rRes] = await Promise.all([
       tableAPI.getTables(),
@@ -44,10 +58,7 @@ const loadData = async () => {
     tables.value = tRes.data.collection;
     reservations.value = rRes.data.collection;
   } catch (err) {
-    loadError.value =
-      err.response?.data?.message ||
-      err.message ||
-      "Failed to load data. Please try again.";
+    logger.error("Failed to load floor plan", { error: err.message });
   } finally {
     loading.value = false;
   }
@@ -75,19 +86,8 @@ const reservationForTable = (table) => {
 };
 
 const allowDrop = (table) => {
-  return tableStatus(table) === "free" && !table.parentTableId;
+  return tableStatus(table) === "free";
 };
-
-const gridMinWidth = computed(() => {
-  switch (layoutMode.value) {
-    case "compact":
-      return "140px";
-    case "wide":
-      return "220px";
-    default:
-      return "170px";
-  }
-});
 
 const onDragStart = (reservation, event) => {
   draggingReservation.value = reservation;
@@ -102,46 +102,6 @@ const onDragEnd = () => {
   document
     .querySelectorAll(".table-block.drag-over")
     .forEach((el) => el.classList.remove("drag-over"));
-  touchMode.value = false;
-};
-
-const onTouchStart = (reservation, event) => {
-  touchMode.value = true;
-  draggingReservation.value = reservation;
-  event.preventDefault();
-};
-
-const onTouchMove = (event) => {
-  if (!draggingReservation.value || !touchMode.value) return;
-  const touch = event.touches[0];
-  const el = document.elementFromPoint(touch.clientX, touch.clientY);
-  document
-    .querySelectorAll(".table-block.drag-over")
-    .forEach((elem) => elem.classList.remove("drag-over"));
-  const tableBlock = el?.closest(".table-block");
-  if (tableBlock) {
-    tableBlock.classList.add("drag-over");
-  }
-};
-
-const onTouchEnd = (event) => {
-  if (!draggingReservation.value || !touchMode.value) return;
-  const touch = event.changedTouches[0];
-  const el = document.elementFromPoint(touch.clientX, touch.clientY);
-  const tableBlock = el?.closest(".table-block");
-  document
-    .querySelectorAll(".table-block.drag-over")
-    .forEach((elem) => elem.classList.remove("drag-over"));
-  if (tableBlock) {
-    const tableId = parseInt(tableBlock.dataset.tableId);
-    const table = tables.value.find((t) => t.id === tableId);
-    if (table && allowDrop(table)) {
-      selectedTable.value = table;
-      assignPopupOpen.value = true;
-    }
-  }
-  draggingReservation.value = null;
-  touchMode.value = false;
 };
 
 const onTableDragOver = (table, event) => {
@@ -153,7 +113,7 @@ const onTableDragOver = (table, event) => {
   }
 };
 
-const onDragEnter = (table) => {
+const onTableDragEnter = (table) => {
   if (allowDrop(table)) {
     const idx = tables.value.findIndex((t) => t.id === table.id);
     const el = document.querySelectorAll(".table-block")[idx];
@@ -161,10 +121,37 @@ const onDragEnter = (table) => {
   }
 };
 
-const onDragLeave = (table) => {
+const onTableDragLeave = (table) => {
   const idx = tables.value.findIndex((t) => t.id === table.id);
   const el = document.querySelectorAll(".table-block")[idx];
   el?.classList.remove("drag-over");
+};
+
+const onTableClick = (table) => {
+  if (!draggingReservation.value) return;
+  if (!allowDrop(table)) return;
+  if (selectedTable.value?.id === table.id) return;
+
+  const requiredCount = calculateCount(draggingReservation.value.people);
+
+  if (!selectedTable.value) {
+    selectedTable.value = table;
+    selectedLinkedTables.value = requiredCount > 1 ? [] : [];
+  } else {
+    const alreadySelected = selectedLinkedTables.value.find(
+      (t) => t.id === table.id
+    );
+    if (alreadySelected) return;
+
+    selectedLinkedTables.value.push(table);
+  }
+
+  if (
+    selectedLinkedTables.value.length > 0 &&
+    selectedLinkedTables.value.length + 1 >= requiredCount
+  ) {
+    assignPopupOpen.value = true;
+  }
 };
 
 const onDrop = (table, event) => {
@@ -173,99 +160,36 @@ const onDrop = (table, event) => {
     .querySelectorAll(".table-block.drag-over")
     .forEach((el) => el.classList.remove("drag-over"));
   if (!allowDrop(table) || !draggingReservation.value) return;
+
+  const requiredCount = calculateCount(draggingReservation.value.people);
   selectedTable.value = table;
+  selectedLinkedTables.value = [];
+
+  if (requiredCount > 1) {
+    const candidates = freeTablesList.value.filter((t) => t.id !== table.id);
+    selectedLinkedTables.value = candidates.slice(0, requiredCount - 1);
+  }
+
   assignPopupOpen.value = true;
 };
 
 const confirmAssign = async () => {
   if (!draggingReservation.value || !selectedTable.value) return;
-  const reservation = draggingReservation.value;
-  const table = selectedTable.value;
-
-  if (reservation.people > 4 && reservation.people > table.capacity) {
-    assignPopupOpen.value = false;
-    mergePopupOpen.value = true;
-    return;
-  }
 
   try {
-    await reservationAPI.chooseTable(reservation.id, selectedTable.value.id);
-    assignPopupOpen.value = false;
-    draggingReservation.value = null;
-    selectedTable.value = null;
-    await loadData();
-  } catch (err) {
-    errorMessage.value = getApiErrorMessage(err, "Failed to assign table");
-    errorPopupOpen.value = true;
-  }
-};
-
-const findTablesToMerge = (requiredSeats, includeTable) => {
-  const available = tables.value.filter(
-    (t) =>
-      !t.isBlocked &&
-      !t.isOccupied &&
-      !t.parentTableId &&
-      t.id !== includeTable.id
-  );
-
-  available.sort((a, b) => b.capacity - a.capacity);
-
-  let totalCapacity = includeTable.capacity;
-  const selected = [includeTable];
-
-  for (const table of available) {
-    if (totalCapacity >= requiredSeats) break;
-    selected.push(table);
-    totalCapacity += table.capacity;
-  }
-
-  return totalCapacity >= requiredSeats ? selected : null;
-};
-
-const performMergeAssign = async () => {
-  if (!draggingReservation.value || !selectedTable.value) return;
-  merging.value = true;
-
-  try {
-    const tablesToMerge = findTablesToMerge(
-      draggingReservation.value.people,
-      selectedTable.value
-    );
-
-    if (!tablesToMerge) {
-      errorMessage.value =
-        `Not enough free tables to seat ` +
-        `${draggingReservation.value.people} guests.`;
-      errorPopupOpen.value = true;
-      mergePopupOpen.value = false;
-      assignPopupOpen.value = false;
-      return;
-    }
-
-    const mergeResult = await tableAPI.mergeTables(
-      tablesToMerge.map((t) => t.id)
-    );
-    const parentTableId = mergeResult.data.item.parentTable.id;
-
     await reservationAPI.chooseTable(
       draggingReservation.value.id,
-      parentTableId
+      selectedTable.value.id
     );
-
-    mergePopupOpen.value = false;
     assignPopupOpen.value = false;
     draggingReservation.value = null;
     selectedTable.value = null;
+    selectedLinkedTables.value = [];
     await loadData();
   } catch (err) {
-    errorMessage.value = getApiErrorMessage(
-      err,
-      "Failed to merge and assign tables"
-    );
+    logger.error("Assign table error", { error: err.message });
+    errorMessage.value = getApiErrorMessage(err, "Failed to assign table");
     errorPopupOpen.value = true;
-  } finally {
-    merging.value = false;
   }
 };
 
@@ -273,6 +197,7 @@ const closeAssign = () => {
   assignPopupOpen.value = false;
   selectedTable.value = null;
   draggingReservation.value = null;
+  selectedLinkedTables.value = [];
 };
 
 onMounted(loadData);
@@ -280,33 +205,19 @@ onMounted(loadData);
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="Floor Plan" />
+    <div class="header">
+      <h1>Floor Plan</h1>
+    </div>
     <div class="content-wrapper">
-      <div v-if="loadError" class="error-banner" role="alert">
-        <span class="error-icon">⚠️</span>
-        <span>{{ loadError }}</span>
-        <button class="error-retry" @click="loadData">Retry</button>
-      </div>
       <div v-if="loading" class="loading-state">
-        <LoadingSpinner text="Loading floor plan..." />
+        <div class="spinner"></div>
+        <p>Loading floor plan...</p>
       </div>
       <div v-else class="floor-layout">
         <aside class="sidebar-panel">
           <div class="panel-header">
             <h2>Pending Reservations</h2>
             <span class="badge">{{ pendingReservations.length }}</span>
-          </div>
-          <div class="layout-selector">
-            <label class="layout-label">Layout:</label>
-            <select v-model="layoutMode" class="layout-select">
-              <option
-                v-for="mode in layoutModes"
-                :key="mode.value"
-                :value="mode.value"
-              >
-                {{ mode.label }}
-              </option>
-            </select>
           </div>
           <div v-if="pendingReservations.length === 0" class="empty-state">
             <span class="empty-icon">📭</span>
@@ -320,9 +231,6 @@ onMounted(loadData);
               draggable="true"
               @dragstart="onDragStart(res, $event)"
               @dragend="onDragEnd"
-              @touchstart="onTouchStart(res, $event)"
-              @touchmove="onTouchMove"
-              @touchend="onTouchEnd"
             >
               <div class="pending-header">
                 <span class="pending-avatar">
@@ -338,7 +246,7 @@ onMounted(loadData);
               <div v-if="res.notes" class="pending-notes">
                 {{ res.notes }}
               </div>
-              <div class="drag-hint">Drag or tap to assign</div>
+              <div class="drag-hint">Drag onto a free table</div>
             </div>
           </div>
         </aside>
@@ -354,22 +262,28 @@ onMounted(loadData);
             <span class="legend-pill blocked">
               <span class="dot"></span> Blocked
             </span>
+            <span class="legend-pill merged" v-if="dragNeedsMerge">
+              <span class="dot"></span> Merged
+            </span>
           </div>
-          <div
-            class="plan-grid"
-            :style="{
-              gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}, 1fr))`,
-            }"
-          >
+          <div class="plan-grid">
             <div
               v-for="table in tables"
               :key="table.id"
-              :class="['table-block', tableStatus(table)]"
-              :data-table-id="table.id"
+              :class="[
+                'table-block',
+                tableStatus(table),
+                {
+                  selected:
+                    selectedTable?.id === table.id ||
+                    selectedLinkedTables.some((t) => t.id === table.id),
+                },
+              ]"
               @dragover.prevent="onTableDragOver(table, $event)"
-              @dragenter.prevent="onDragEnter(table)"
-              @dragleave="onDragLeave(table)"
+              @dragenter.prevent="onTableDragEnter(table, $event)"
+              @dragleave.prevent="onTableDragLeave(table, $event)"
               @drop.prevent="onDrop(table, $event)"
+              @click="onTableClick(table)"
             >
               <div class="table-top">
                 <div class="table-id-row">
@@ -384,6 +298,9 @@ onMounted(loadData);
                   ></span>
                 </div>
                 <span class="capacity">🪑 {{ table.capacity }}</span>
+              </div>
+              <div class="linked-badge" v-if="table.linkedTableIds?.length">
+                Linked: {{ table.linkedTableIds.length + 1 }} tables
               </div>
               <div v-if="table.reservationId" class="table-reservation">
                 <span class="res-name">
@@ -404,116 +321,145 @@ onMounted(loadData);
       </div>
 
       <p class="hint-bar">
-        Drag a pending reservation from the list onto a free table to assign it.
-        For parties larger than a single table, you will be prompted to merge
-        tables. Touch devices: tap and hold a reservation, then tap a free
-        table.
+        <template v-if="dragNeedsMerge">
+          <strong>
+            {{ draggingReservation?.people }} guests need
+            {{ calculateCount(draggingReservation?.people) }} tables.
+          </strong>
+          Drop on one table, then click extra tables to select them.
+        </template>
+        <template v-else>
+          Drag a pending reservation from the list onto a free table to assign
+          it.
+        </template>
       </p>
 
-      <VaModal v-model="assignPopupOpen" title="Assign to Table" size="small">
-        <template #content>
+      <PopupBox
+        :is-open="assignPopupOpen"
+        header-text="Assign to Table"
+        :is-closable="true"
+        @close-modal="closeAssign"
+      >
+        <template #popup-content>
           <div class="assign-content">
             <p class="assign-text">
               Assign <strong>{{ draggingReservation?.name }}</strong> ({{
                 draggingReservation?.people
               }}
               guests) to
-              <strong
-                >Table {{ selectedTable?.name || selectedTable?.id }}</strong
+              <strong>{{ tableMergeDisplayName() }}</strong
               >?
             </p>
+            <div v-if="selectedLinkedTables.length" class="merge-rows">
+              <div
+                class="merge-row"
+                v-for="tbl in selectedLinkedTables"
+                :key="tbl.id"
+              >
+                🪑 {{ tbl.name || `T${tbl.id}` }} (cap {{ tbl.capacity }})
+              </div>
+            </div>
             <div class="popup-actions">
-              <VaButton preset="secondary" @click="closeAssign"
-                >Cancel</VaButton
-              >
-              <VaButton preset="primary" @click="confirmAssign"
-                >Assign</VaButton
-              >
+              <button class="btn btn-outline" @click="closeAssign">
+                Cancel
+              </button>
+              <button class="btn btn-primary" @click="confirmAssign">
+                Assign
+              </button>
             </div>
           </div>
         </template>
-      </VaModal>
+      </PopupBox>
 
-      <VaModal
-        v-model="mergePopupOpen"
-        title="Merge Tables Needed?"
-        size="small"
+      <PopupBox
+        :is-open="errorPopupOpen"
+        header-text="Error"
+        :is-closable="true"
+        @close-modal="errorPopupOpen = false"
       >
-        <template #content>
-          <div class="assign-content">
-            <p class="assign-text">
-              Table
-              <strong>{{ selectedTable?.name || selectedTable?.id }}</strong>
-              only has <strong>{{ selectedTable?.capacity }}</strong> seats, but
-              the reservation needs
-              <strong>{{ draggingReservation?.people }}</strong> seats. Do you
-              want to merge tables?
-            </p>
-            <div class="popup-actions">
-              <VaButton
-                preset="secondary"
-                @click="
-                  () => {
-                    mergePopupOpen = false;
-                    assignPopupOpen = true;
-                  }
-                "
-                >Cancel</VaButton
-              >
-              <VaButton
-                preset="primary"
-                @click="performMergeAssign"
-                :loading="merging"
-              >
-                {{ merging ? "Merging..." : "Merge & Assign" }}
-              </VaButton>
-            </div>
-          </div>
-        </template>
-      </VaModal>
-
-      <VaModal v-model="errorPopupOpen" title="Error" size="small">
-        <template #content>
+        <template #popup-content>
           <div class="error-content">
             <p>{{ errorMessage }}</p>
             <div class="confirm-actions">
-              <VaButton preset="secondary" @click="errorPopupOpen = false"
-                >OK</VaButton
-              >
+              <button class="btn btn-secondary" @click="errorPopupOpen = false">
+                OK
+              </button>
             </div>
           </div>
         </template>
-      </VaModal>
+      </PopupBox>
     </div>
   </div>
 </template>
 
 <style scoped>
+.header {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100%;
+  height: var(--header-height);
+  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+.header h1 {
+  margin-left: var(--x-spacing-mobile);
+  margin-bottom: 15px;
+  font-size: 35px;
+  color: var(--snow-white);
+  text-shadow: 1px 1px 2px var(--primary-black);
+}
+
+.content-wrapper {
+  margin-top: var(--page-margin-y);
+  margin-bottom: var(--page-margin-y);
+  margin-left: var(--page-margin-x);
+  margin-right: var(--page-margin-x);
+  padding: 0;
+}
+
 .loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
-  gap: 12px;
-  color: var(--restaurant-secondary);
+  padding: 100px 20px;
+  gap: 16px;
+  color: var(--secondary-gray);
   font-family: "Inter-Light";
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--lighter-gray);
+  border-top-color: var(--primary-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .floor-layout {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   align-items: stretch;
 }
 
 .sidebar-panel {
-  width: 240px;
-  min-width: 220px;
-  background: white;
-  border: 1px solid var(--restaurant-border);
-  border-radius: 10px;
-  padding: 16px;
-  max-height: calc(100vh - 240px);
+  width: 260px;
+  min-width: 240px;
+  background: var(--primary-white);
+  border: 1px solid #f0f0f0;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  max-height: calc(100vh - 260px);
   overflow-y: auto;
   box-shadow: var(--card-shadow);
 }
@@ -521,10 +467,10 @@ onMounted(loadData);
 .plan-panel {
   flex: 1;
   min-width: 0;
-  background: white;
-  border: 1px solid var(--restaurant-border);
-  border-radius: 10px;
-  padding: 16px;
+  background: var(--primary-white);
+  border: 1px solid #f0f0f0;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
   box-shadow: var(--card-shadow);
 }
 
@@ -532,104 +478,70 @@ onMounted(loadData);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .panel-header h2 {
   font-family: "Inter-Bold";
-  font-size: 14px;
-  color: var(--restaurant-primary);
+  font-size: 15px;
+  color: var(--primary-black);
   margin: 0;
 }
 
 .badge {
   font-family: "Inter-Medium";
-  font-size: 11px;
-  background: var(--restaurant-primary);
+  font-size: 12px;
+  background: var(--primary-blue);
   color: white;
-  padding: 2px 8px;
+  padding: 2px 10px;
   border-radius: 999px;
-}
-
-.layout-selector {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.layout-label {
-  font-family: "Inter-Medium";
-  font-size: 12px;
-  color: var(--restaurant-secondary);
-}
-
-.layout-select {
-  flex: 1;
-  padding: 5px 8px;
-  border: 1px solid var(--restaurant-border);
-  border-radius: 6px;
-  font-family: "Inter-Light";
-  font-size: 12px;
-  background: white;
-  cursor: pointer;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 20px 0;
-  color: var(--restaurant-secondary);
-  font-family: "Inter-Light";
-  font-size: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.empty-icon {
-  font-size: 20px;
-  opacity: 0.5;
 }
 
 .pending-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .pending-card {
-  background: #f8fafc;
-  border: 1px solid var(--restaurant-border);
-  border-radius: 8px;
-  padding: 10px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 12px;
   cursor: grab;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
   user-select: none;
 }
 
 .pending-card:hover {
   background: white;
-  border-color: var(--restaurant-accent);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border-color: var(--primary-blue);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
+  transform: translateY(-1px);
+}
+
+.pending-card:active {
+  cursor: grabbing;
+  transform: translateY(0);
 }
 
 .pending-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 10px;
+  margin-bottom: 6px;
 }
 
 .pending-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: var(--restaurant-accent);
-  color: white;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
+  color: var(--primary-blue);
   font-family: "Inter-Bold";
-  font-size: 12px;
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -645,8 +557,8 @@ onMounted(loadData);
 
 .pending-name {
   font-family: "Inter-Medium";
-  font-size: 12px;
-  color: var(--restaurant-primary);
+  font-size: 13px;
+  color: var(--primary-black);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -654,15 +566,15 @@ onMounted(loadData);
 
 .pending-meta {
   font-family: "Inter-Light";
-  font-size: 11px;
-  color: var(--restaurant-secondary);
+  font-size: 12px;
+  color: var(--secondary-gray);
 }
 
 .pending-notes {
   font-family: "Inter-Light";
-  font-size: 11px;
-  color: var(--restaurant-warning);
-  margin-bottom: 4px;
+  font-size: 12px;
+  color: #f59e0b;
+  margin-bottom: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -670,85 +582,121 @@ onMounted(loadData);
 
 .drag-hint {
   font-family: "Inter-Light";
-  font-size: 10px;
-  color: var(--restaurant-secondary);
+  font-size: 11px;
+  color: var(--secondary-gray);
+  opacity: 0.7;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 24px 0;
+  color: var(--secondary-gray);
+  font-family: "Inter-Light";
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.empty-icon {
+  font-size: 22px;
   opacity: 0.6;
+}
+
+.plan-panel {
+  flex: 1;
+  min-width: 0;
+  background: var(--primary-white);
+  border: 1px solid #f0f0f0;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 .legend-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .legend-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 6px 12px;
   border-radius: 999px;
   font-family: "Inter-Medium";
-  font-size: 11px;
-  background: #f1f5f9;
-  color: var(--restaurant-primary);
+  font-size: 12px;
+  background: #f3f4f6;
+  color: var(--primary-black);
 }
 
 .legend-pill .dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
+  display: inline-block;
 }
 
 .legend-pill.free .dot {
-  background-color: var(--restaurant-success);
+  background-color: #22c55e;
 }
 
 .legend-pill.occupied .dot {
-  background-color: var(--restaurant-danger);
+  background-color: #ef4444;
 }
 
 .legend-pill.blocked .dot {
-  background-color: var(--restaurant-secondary);
+  background-color: #6c757d;
 }
 
 .plan-grid {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
 }
 
 .table-block {
   background: white;
-  border: 1px solid var(--restaurant-border);
-  border-radius: 8px;
-  padding: 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 14px;
   transition: all 0.2s ease;
-  min-height: 100px;
+  min-height: 110px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .table-block:hover {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
 }
 
 .table-block.free {
-  border-left: 3px solid var(--restaurant-success);
+  border-color: #22c55e;
+  background: linear-gradient(180deg, #f6fef9 0%, #ffffff 100%);
 }
 
 .table-block.free.drag-over {
-  border-color: var(--restaurant-success);
-  background: #f0fdf4;
-  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.3);
+  border-color: #16a34a;
+  background: #dcfce7;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35);
+  transform: translateY(-1px);
 }
 
 .table-block.occupied {
-  border-left: 3px solid var(--restaurant-danger);
+  border-color: #ef4444;
+  background: linear-gradient(180deg, #fff5f5 0%, #ffffff 100%);
+  opacity: 0.9;
 }
 
 .table-block.blocked {
-  border-left: 3px solid var(--restaurant-secondary);
+  border-color: #6c757d;
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  opacity: 0.7;
 }
 
 .table-top {
@@ -760,31 +708,32 @@ onMounted(loadData);
 .table-id-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .table-id {
   font-family: "Inter-Bold";
-  font-size: 14px;
-  color: var(--restaurant-primary);
+  font-size: 15px;
+  color: var(--primary-black);
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
 }
 
 .capacity {
   font-family: "Inter-Light";
-  font-size: 11px;
-  color: var(--restaurant-secondary);
+  font-size: 12px;
+  color: var(--secondary-gray);
 }
 
 .table-reservation {
   margin-top: auto;
-  padding-top: 6px;
-  border-top: 1px solid var(--restaurant-border);
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -792,113 +741,128 @@ onMounted(loadData);
 
 .res-name {
   font-family: "Inter-Medium";
-  font-size: 12px;
-  color: var(--restaurant-danger);
+  font-size: 13px;
+  color: #ef4444;
 }
 
 .res-time {
   font-family: "Inter-Light";
-  font-size: 11px;
-  color: var(--restaurant-secondary);
+  font-size: 12px;
+  color: var(--secondary-gray);
 }
 
 .table-empty {
   margin-top: auto;
-  padding-top: 6px;
-  border-top: 1px dashed var(--restaurant-border);
+  padding-top: 8px;
+  border-top: 1px dashed #f0f0f0;
   text-align: center;
   font-family: "Inter-Medium";
+  font-size: 12px;
+  color: var(--secondary-gray);
+}
+
+.selectable:hover {
+  border-color: var(--primary-blue);
+  background: #f8faff;
+}
+
+.table-block.selected {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.linked-badge {
+  margin-top: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-family: "Inter-Medium";
   font-size: 11px;
-  color: var(--restaurant-secondary);
+  align-self: flex-start;
+}
+
+.legend-pill.merged .dot {
+  background-color: #f59e0b;
+}
+
+.merge-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.merge-row {
+  font-family: "Inter-Medium";
+  font-size: 13px;
 }
 
 .hint-bar {
   text-align: center;
-  font-family: "Lora", Georgia, serif;
+  font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
-  margin-top: 20px;
-  line-height: 1.5;
+  color: var(--secondary-gray);
+  margin-top: 18px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f8fafc;
 }
 
 .assign-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
 }
 
 .assign-text {
-  font-family: "Lora", Georgia, serif;
   font-size: 14px;
-  color: var(--restaurant-warm-gray);
-  line-height: 1.6;
-  margin: 0;
+  line-height: 1.5;
 }
 
 .popup-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
-  margin-top: 8px;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--lighter-gray);
 }
 
-.error-content {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.loading {
+  text-align: center;
+  padding: 60px;
+  font-family: "Inter-Light";
 }
 
-.error-content p {
-  font-family: "Lora", Georgia, serif;
-  font-size: 14px;
-  color: var(--restaurant-warm-gray);
-  margin: 0;
-  line-height: 1.6;
-}
-
-.confirm-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 4px;
-}
-
-.error-banner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 10px;
-  margin-bottom: 20px;
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--lighter-gray);
+  color: var(--primary-black);
+  border-radius: 8px;
+  padding: 8px 16px;
   font-family: "Inter-Medium";
-  font-size: 14px;
-  color: #991b1b;
+  font-size: 13px;
 }
 
-.error-icon {
-  font-size: 18px;
-  flex-shrink: 0;
+.btn-outline:hover {
+  background-color: #f3f4f6;
 }
 
-.error-retry {
-  margin-left: auto;
-  padding: 6px 14px;
-  border: 1px solid #dc2626;
-  border-radius: 6px;
-  background: white;
-  color: #dc2626;
+.btn-primary {
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
   font-family: "Inter-Medium";
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.15s;
 }
 
-.error-retry:hover {
-  background: #fef2f2;
+.btn-primary:hover {
+  background-color: #2563eb;
 }
 
 @media screen and (max-width: 860px) {
@@ -909,7 +873,42 @@ onMounted(loadData);
   .sidebar-panel {
     width: 100%;
     min-width: 100%;
-    max-height: 240px;
+    max-height: 260px;
   }
+
+  .plan-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}
+
+@media screen and (min-width: 861px) {
+  .header h1 {
+    margin-left: var(--x-spacing-desktop);
+    font-size: 45px;
+    margin-bottom: 20px;
+  }
+  .content-wrapper {
+    margin-left: 200px;
+    margin-right: 200px;
+  }
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.error-content p {
+  font-family: "Inter-Medium";
+  font-size: 15px;
+  color: var(--primary-black);
+  margin: 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 </style>

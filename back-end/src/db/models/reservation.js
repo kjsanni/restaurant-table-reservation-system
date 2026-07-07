@@ -62,10 +62,6 @@ module.exports = (sequelize, DataTypes) => {
             args: [1],
             msg: "One person at least!",
           },
-          max: {
-            args: [20],
-            msg: "Maximum 20 people per reservation!",
-          },
         },
       },
       resStatus: {
@@ -91,6 +87,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "reservation",
+      tableName: "Reservations",
     }
   );
   return Reservation;

@@ -4,7 +4,7 @@ module.exports = {
       name: 'rtrs-backend',
       cwd: './back-end',
       script: './src/app.js',
-      instances: 'max',
+      instances: 1,
       exec_mode: 'cluster',
       env: {
         NODE_ENV: 'production',

@@ -1,14 +1,5 @@
-<script setup lang="ts">
-import PageHeader from "@/components/PageHeader.vue";
+<script setup>
 import { ref, onMounted } from "vue";
-import {
-  VaButton,
-  VaModal,
-  VaCard,
-  VaCardContent,
-  VaInput,
-  VaSelect,
-} from "vuestic-ui";
 import groupAPI from "@/services/groupAPI";
 import authAPI from "@/services/authAPI";
 
@@ -59,7 +50,7 @@ const loadGroups = async () => {
     const res = await groupAPI.getAllGroups();
     groups.value = res.data.groups;
   } catch (err) {
-    console.error("Failed to load groups", err);
+    logger.error("Failed to load groups", { error: err.message });
   } finally {
     loading.value = false;
   }
@@ -70,7 +61,7 @@ const loadUsers = async () => {
     const res = await authAPI.getUsers();
     users.value = res.data.users;
   } catch (err) {
-    console.error("Failed to load users", err);
+    logger.error("Failed to load users", { error: err.message });
   }
 };
 
@@ -98,7 +89,10 @@ const openEdit = (group) => {
   form.value = {
     name: group.name,
     description: group.description || "",
-    permissions: group.permissions || {},
+    permissions:
+      typeof group.permissions === "object" && group.permissions !== null
+        ? group.permissions
+        : {},
   };
   showDialog.value = true;
 };
@@ -155,10 +149,14 @@ const confirmAction = async () => {
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="Groups Management" />
+    <div class="header">
+      <h1>Group Management</h1>
+    </div>
     <div class="content-wrapper">
       <div class="action-bar">
-        <VaButton preset="primary" @click="openCreate">Create Group</VaButton>
+        <button class="btn btn-primary" @click="openCreate">
+          Create Group
+        </button>
       </div>
 
       <div v-if="loading" class="loading-state">
@@ -171,24 +169,24 @@ const confirmAction = async () => {
             <div class="group-title-row">
               <h3 class="group-name">{{ group.name }}</h3>
               <div class="group-actions">
-                <VaButton
-                  preset="secondary"
-                  size="small"
+                <button
+                  class="btn btn-secondary btn-sm"
                   @click="openAddUser(group)"
-                  >Add User</VaButton
                 >
-                <VaButton
-                  preset="secondary"
-                  size="small"
+                  Add User
+                </button>
+                <button
+                  class="btn btn-secondary btn-sm"
                   @click="openEdit(group)"
-                  >Edit</VaButton
                 >
-                <VaButton
-                  preset="danger"
-                  size="small"
+                  Edit
+                </button>
+                <button
+                  class="btn btn-danger btn-sm"
                   @click="deleteGroup(group)"
-                  >Delete</VaButton
                 >
+                  Delete
+                </button>
               </div>
             </div>
             <p v-if="group.description" class="group-description">
@@ -201,12 +199,12 @@ const confirmAction = async () => {
               <span class="meta-label">Permissions</span>
               <div class="perm-grid">
                 <span
-                  v-for="(enabled, key) in group.permissions"
+                  v-for="(enabled, key) in group.permissions || {}"
                   :key="key"
                   class="perm-tag"
                   :class="{ active: enabled }"
                 >
-                  {{ key.replace(/_/g, " ") }}
+                  {{ typeof key === "string" ? key.replace(/_/g, " ") : key }}
                 </span>
               </div>
             </div>
@@ -234,89 +232,76 @@ const confirmAction = async () => {
         </div>
       </div>
 
-      <VaModal
-        v-model="showDialog"
-        :title="editingGroup ? 'Edit Group' : 'Create Group'"
-        size="small"
-      >
-        <VaCard>
-          <VaCardContent>
-            <div class="field">
-              <VaInput
-                v-model="form.name"
-                label="Name"
-                placeholder="Group name"
-              />
+      <div v-if="showDialog" class="modal-overlay">
+        <div class="modal">
+          <h3 class="modal-title">
+            {{ editingGroup ? "Edit Group" : "Create Group" }}
+          </h3>
+          <div class="field">
+            <label>Name</label>
+            <input v-model="form.name" placeholder="Group name" />
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <input v-model="form.description" placeholder="Description" />
+          </div>
+          <div class="field">
+            <label>Permissions</label>
+            <div class="permissions-grid">
+              <label
+                v-for="perm in permissionKeys"
+                :key="perm.key"
+                class="permission-item"
+              >
+                <input type="checkbox" v-model="form.permissions[perm.key]" />
+                {{ perm.label }}
+              </label>
             </div>
-            <div class="field">
-              <VaInput
-                v-model="form.description"
-                label="Description"
-                placeholder="Description"
-              />
-            </div>
-            <div class="field">
-              <label class="field-label">Permissions</label>
-              <div class="permissions-grid">
-                <label
-                  v-for="perm in permissionKeys"
-                  :key="perm.key"
-                  class="permission-item"
-                >
-                  <input type="checkbox" v-model="form.permissions[perm.key]" />
-                  {{ perm.label }}
-                </label>
-              </div>
-            </div>
-          </VaCardContent>
-          <template #actions>
-            <VaButton preset="secondary" @click="showDialog = false"
-              >Cancel</VaButton
-            >
-            <VaButton preset="primary" @click="saveGroup">Save</VaButton>
-          </template>
-        </VaCard>
-      </VaModal>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="showDialog = false">
+              Cancel
+            </button>
+            <button class="btn btn-primary" @click="saveGroup">Save</button>
+          </div>
+        </div>
+      </div>
 
-      <VaModal v-model="showUserDialog" title="Add User to Group" size="small">
-        <VaCard>
-          <VaCardContent>
-            <div class="field">
-              <VaSelect
-                v-model="userForm.userId"
-                label="Select User"
-                :options="
-                  users.map((u) => ({
-                    label: `${u.username} (${u.role})`,
-                    value: u.id,
-                  }))
-                "
-                placeholder="-- Select user --"
-              />
-            </div>
-          </VaCardContent>
-          <template #actions>
-            <VaButton preset="secondary" @click="showUserDialog = false"
-              >Cancel</VaButton
-            >
-            <VaButton preset="primary" @click="addUser">Add</VaButton>
-          </template>
-        </VaCard>
-      </VaModal>
+      <div v-if="showUserDialog" class="modal-overlay">
+        <div class="modal">
+          <h3 class="modal-title">Add User to {{ selectedGroup?.name }}</h3>
+          <div class="field">
+            <label>Select User</label>
+            <select v-model="userForm.userId">
+              <option value="">-- Select user --</option>
+              <option v-for="u in users" :key="u.id" :value="u.id">
+                {{ u.username }} ({{ u.role }})
+              </option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="showUserDialog = false">
+              Cancel
+            </button>
+            <button class="btn btn-primary" @click="addUser">Add</button>
+          </div>
+        </div>
+      </div>
 
-      <VaModal v-model="showConfirmModal" title="Confirm" size="small">
-        <VaCard>
-          <VaCardContent>
-            <p class="modal-subtitle">{{ confirmMessage }}</p>
-          </VaCardContent>
-          <template #actions>
-            <VaButton preset="secondary" @click="showConfirmModal = false"
-              >Cancel</VaButton
-            >
-            <VaButton preset="danger" @click="confirmAction">Confirm</VaButton>
-          </template>
-        </VaCard>
-      </VaModal>
+      <div v-if="showConfirmModal" class="modal-overlay">
+        <div class="modal">
+          <h3 class="modal-title">Confirm</h3>
+          <p class="modal-subtitle">{{ confirmMessage }}</p>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="showConfirmModal = false">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmAction">
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -342,7 +327,7 @@ const confirmAction = async () => {
 }
 
 .content-wrapper {
-  margin-top: 12px;
+  margin-top: var(--page-margin-y);
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
@@ -505,6 +490,51 @@ const confirmAction = async () => {
   gap: 8px;
 }
 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background-color: var(--primary-blue);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: var(--primary-black);
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+.btn-danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.btn-danger:hover {
+  background-color: #fee2e2;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
 .empty-state {
   text-align: center;
   padding: 40px;
@@ -512,30 +542,70 @@ const confirmAction = async () => {
   font-family: "Inter-Light";
 }
 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 480px;
+}
+
+.modal-title {
+  font-family: "Inter-Bold";
+  font-size: 18px;
+  color: var(--primary-black);
+  margin: 0 0 20px 0;
+}
+
 .field {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
-.field:last-of-type {
-  margin-bottom: 0;
-}
-
-.field-label {
+.field label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-weight: 600;
   font-family: "Inter-Medium";
-  font-size: 13px;
-  color: var(--restaurant-slate);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 14px;
+  color: var(--primary-black);
+}
+
+.field input,
+.field select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--lighter-gray);
+  border-radius: 8px;
+  font-family: "Inter-Light";
+  font-size: 14px;
+  color: var(--primary-black);
+  box-sizing: border-box;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .permissions-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-top: 6px;
 }
 
 .permission-item {
@@ -546,12 +616,11 @@ const confirmAction = async () => {
   font-family: "Inter-Light";
 }
 
-.modal-subtitle {
-  font-family: "Lora", Georgia, serif;
-  font-size: 14px;
-  color: var(--restaurant-warm-gray);
-  margin: 4px 0 22px 0;
-  line-height: 1.6;
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 @media screen and (min-width: 1024px) {

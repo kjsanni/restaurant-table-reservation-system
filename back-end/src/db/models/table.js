@@ -90,10 +90,16 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+      linkedTableIds: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: null,
+      },
     },
     {
       sequelize,
       modelName: "table",
+      tableName: "Tables",
       indexes: [
         {
           unique: true,

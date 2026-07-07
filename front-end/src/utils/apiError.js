@@ -2,7 +2,18 @@ export const getApiErrorMessage = (
   error,
   fallback = "Something went wrong. Please try again."
 ) => {
-  return error?.response?.data?.message || error?.message || fallback;
+  const data = error?.response?.data;
+
+  if (data?.errors && typeof data.errors === "object") {
+    const messages = Object.values(data.errors)
+      .flat()
+      .filter(Boolean)
+      .slice(0, 3)
+      .join("; ");
+    if (messages) return messages;
+  }
+
+  return data?.message || error?.message || fallback;
 };
 
 export const getApiErrors = (error) => {

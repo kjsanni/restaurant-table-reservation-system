@@ -79,21 +79,29 @@ const cancelHandler = async (req, res) => {
 };
 
 const chooseTableHandler = async (req, res) => {
-  const reservationId = req.params.reservationId;
-  const { tableId } = req.body;
+  try {
+    const reservationId = req.params.reservationId;
+    const { tableId } = req.body;
 
-  const info = await reservationService.chooseTable(
-    reservationId,
-    tableId,
-    reservationDAO,
-    tableDAO
-  );
+    const info = await reservationService.chooseTable(
+      reservationId,
+      tableId,
+      reservationDAO,
+      tableDAO
+    );
 
-  return res.status(200).json({
-    success: true,
-    message: "Successfully chosen your table!",
-    item: info,
-  });
+    return res.status(200).json({
+      success: true,
+      message: "Successfully chosen your table!",
+      item: info,
+    });
+  } catch (err) {
+    const status = err?.status || 400;
+    return res.status(status).json({
+      success: false,
+      message: err?.message || "Failed to assign table.",
+    });
+  }
 };
 
 const getHeatmapHandler = async (req, res) => {

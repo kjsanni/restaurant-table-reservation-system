@@ -39,12 +39,12 @@ const loginHandler = async (req, res) => {
   const ipAddress = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;
   const result = await authService.loginUser(authDAO, payload, authDAO, ipAddress);
 
-  const isProd = process.env.NODE_ENV === "production";
+  const isSecure = req.secure || false;
   const cookieBase = {
     httpOnly: true,
-    secure: isProd,
+    secure: isSecure,
     path: "/",
-    sameSite: isProd ? "lax" : false,
+    sameSite: isSecure ? "lax" : false,
   };
 
   res.cookie("token", result.token, {
@@ -133,9 +133,11 @@ const logoutHandler = async (req, res) => {
     // ignore token revocation errors during logout
   }
 
+  const isSecure = req.secure || false;
   const cookieOpts = {
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === "production" ? "lax" : false,
+    secure: isSecure,
+    sameSite: isSecure ? "lax" : false,
     path: "/",
   };
 

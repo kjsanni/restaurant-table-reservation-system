@@ -21,6 +21,11 @@ const findAllReservations = async () => {
           "tags",
         ],
       },
+      {
+        model: Table,
+        attributes: ["id", "name", "capacity"],
+        required: false,
+      },
     ],
   });
   return flattenArrayObjects(reservations);
@@ -153,7 +158,7 @@ const updateCustomer = async (customerId, updates) => {
 };
 
 const getCustomerById = async (customerId) => {
-  return await Customer.findByPk(customerId, {
+  const customer = await Customer.findByPk(customerId, {
     attributes: [
       "id",
       "firstName",
@@ -165,6 +170,10 @@ const getCustomerById = async (customerId) => {
       "tags",
     ],
   });
+  if (customer && !Array.isArray(customer.tags)) {
+    customer.tags = [];
+  }
+  return customer;
 };
 
 const getCustomerReservationHistory = async (customerId, limit = 50) => {
@@ -210,16 +219,21 @@ const getCustomerStats = async (customerId) => {
   };
 };
 const createReservation = async (resDetails) => {
-  const { resDate, resTime, people, notes, ...customerDetails } = resDetails;
+  const { resDate, resTime, people, notes, customerId, ...rest } = resDetails;
   const result = await db.sequelize.transaction(async (t) => {
-    const customer = await findOrCreateCustomer(customerDetails, t);
+    let finalCustomerId = customerId;
+
+    if (!finalCustomerId) {
+      const customer = await findOrCreateCustomer(rest, t);
+      finalCustomerId = customer.id;
+    }
 
     const reservation = await Reservation.create(
       {
         resDate: resDate,
         resTime: resTime,
         people: people,
-        customerId: customer.id,
+        customerId: finalCustomerId,
         paymentStatus: resDetails.paymentStatus || "unpaid",
         expectedTotal: parseFloat(resDetails.expectedTotal || 0),
         notes: notes || null,
@@ -271,11 +285,34 @@ const setReservationStatus = async (reservation, status) => {
   return await reservation.save();
 };
 
-const setReservationTable = async (reservationId, tableId) => {
+const setReservationTable = async (
+  reservationId,
+  tableId,
+  { neededTables = 1 } = {}
+) => {
+  const allFree = await Table.findAll({
+    where: {
+      isOccupied: false,
+    },
+  });
+
+  const selected = [tableId];
+  if (neededTables > 1) {
+    const linked = allFree
+      .filter((t) => t.id !== tableId)
+      .slice(0, neededTables - 1)
+      .map((t) => t.id);
+    selected.push(...linked);
+  }
+
+  const linkedTableIds = selected.filter((id) => id !== tableId);
+
   await Table.update(
     {
       isOccupied: true,
       reservationId: reservationId,
+      linkedTableIds:
+        linkedTableIds.length > 0 ? linkedTableIds : null,
     },
     {
       where: {
@@ -283,6 +320,21 @@ const setReservationTable = async (reservationId, tableId) => {
       },
     }
   );
+
+  if (linkedTableIds.length > 0) {
+    await Table.update(
+      {
+        isOccupied: true,
+        reservationId: reservationId,
+      },
+      {
+        where: {
+          id: linkedTableIds,
+        },
+      }
+    );
+  }
+
   return await Reservation.update(
     {
       resStatus: "seated",

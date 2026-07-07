@@ -1,7 +1,5 @@
-<script setup lang="ts">
-import PageHeader from "@/components/PageHeader.vue";
+<script setup>
 import { ref, onMounted } from "vue";
-import { VaButton, VaModal, VaCard, VaCardContent, VaInput } from "vuestic-ui";
 import roleAPI from "@/services/roleAPI";
 
 const roles = ref([]);
@@ -43,7 +41,7 @@ const loadRoles = async () => {
     const res = await roleAPI.getAllRoles();
     roles.value = res.data.roles;
   } catch (err) {
-    console.error("Failed to load roles", err);
+    logger.error("Failed to load roles", { error: err.message });
   } finally {
     loading.value = false;
   }
@@ -111,10 +109,12 @@ const confirmAction = async () => {
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="Roles Management" />
+    <div class="header">
+      <h1>Role Management</h1>
+    </div>
     <div class="content-wrapper">
       <div class="action-bar">
-        <VaButton preset="primary" @click="openCreate">Create Role</VaButton>
+        <button class="btn btn-primary" @click="openCreate">Create Role</button>
       </div>
 
       <div v-if="loading" class="loading-state">
@@ -130,21 +130,19 @@ const confirmAction = async () => {
                 <span v-if="role.isSystem" class="system-badge">System</span>
               </h3>
               <div class="role-actions">
-                <VaButton
-                  preset="secondary"
-                  size="small"
+                <button
+                  class="btn btn-secondary btn-sm"
                   @click="openEdit(role)"
                 >
                   Edit
-                </VaButton>
-                <VaButton
+                </button>
+                <button
                   v-if="!role.isSystem"
-                  preset="danger"
-                  size="small"
+                  class="btn btn-danger btn-sm"
                   @click="deleteRole(role)"
                 >
                   Delete
-                </VaButton>
+                </button>
               </div>
             </div>
             <p v-if="role.description" class="role-description">
@@ -156,12 +154,12 @@ const confirmAction = async () => {
             <span class="meta-label">Permissions</span>
             <div class="perm-grid">
               <span
-                v-for="(enabled, key) in role.permissions"
+                v-for="(enabled, key) in role.permissions || {}"
                 :key="key"
                 class="perm-tag"
                 :class="{ active: enabled }"
               >
-                {{ key.replace(/_/g, " ") }}
+                {{ typeof key === "string" ? key.replace(/_/g, " ") : key }}
               </span>
             </div>
           </div>
@@ -172,63 +170,55 @@ const confirmAction = async () => {
         </div>
       </div>
 
-      <VaModal
-        v-model="showDialog"
-        :title="editingRole ? 'Edit Role' : 'Create Role'"
-        size="small"
-      >
-        <VaCard>
-          <VaCardContent>
-            <div class="field">
-              <VaInput
-                v-model="form.name"
-                label="Name"
-                placeholder="Role name"
-              />
+      <div v-if="showDialog" class="modal-overlay">
+        <div class="modal">
+          <h3 class="modal-title">
+            {{ editingRole ? "Edit Role" : "Create Role" }}
+          </h3>
+          <div class="field">
+            <label>Name</label>
+            <input v-model="form.name" placeholder="Role name" />
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <input v-model="form.description" placeholder="Description" />
+          </div>
+          <div class="field">
+            <label>Permissions</label>
+            <div class="permissions-grid">
+              <label
+                v-for="perm in permissionKeys"
+                :key="perm.key"
+                class="permission-item"
+              >
+                <input type="checkbox" v-model="form.permissions[perm.key]" />
+                {{ perm.label }}
+              </label>
             </div>
-            <div class="field">
-              <VaInput
-                v-model="form.description"
-                label="Description"
-                placeholder="Description"
-              />
-            </div>
-            <div class="field">
-              <label class="field-label">Permissions</label>
-              <div class="permissions-grid">
-                <label
-                  v-for="perm in permissionKeys"
-                  :key="perm.key"
-                  class="permission-item"
-                >
-                  <input type="checkbox" v-model="form.permissions[perm.key]" />
-                  {{ perm.label }}
-                </label>
-              </div>
-            </div>
-          </VaCardContent>
-          <template #actions>
-            <VaButton preset="secondary" @click="showDialog = false"
-              >Cancel</VaButton
-            >
-            <VaButton preset="primary" @click="saveRole">Save</VaButton>
-          </template>
-        </VaCard>
-      </VaModal>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="showDialog = false">
+              Cancel
+            </button>
+            <button class="btn btn-primary" @click="saveRole">Save</button>
+          </div>
+        </div>
+      </div>
 
-      <VaModal v-model="showConfirmModal" title="Confirm" size="small">
-        <VaCard>
-          <VaCardContent>
-            <p class="modal-subtitle">{{ confirmMessage }}</p>
-          </VaCardContent>
-          <template #actions>
-            <VaButton preset="secondary" @click="showConfirmModal = false"
-              >Cancel</VaButton
-            >
-            <VaButton preset="danger" @click="confirmAction">Confirm</VaButton>
-          </template>
-        </VaCard>
-      </VaModal>
+      <div v-if="showConfirmModal" class="modal-overlay">
+        <div class="modal">
+          <h3 class="modal-title">Confirm</h3>
+          <p class="modal-subtitle">{{ confirmMessage }}</p>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="showConfirmModal = false">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="confirmAction">
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -254,7 +244,7 @@ const confirmAction = async () => {
 }
 
 .content-wrapper {
-  margin-top: 12px;
+  margin-top: var(--page-margin-y);
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
@@ -390,6 +380,51 @@ const confirmAction = async () => {
   gap: 8px;
 }
 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background-color: var(--primary-blue);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: var(--primary-black);
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+.btn-danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.btn-danger:hover {
+  background-color: #fee2e2;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
 .empty-state {
   text-align: center;
   padding: 40px;
@@ -397,30 +432,68 @@ const confirmAction = async () => {
   font-family: "Inter-Light";
 }
 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 480px;
+}
+
+.modal-title {
+  font-family: "Inter-Bold";
+  font-size: 18px;
+  color: var(--primary-black);
+  margin: 0 0 20px 0;
+}
+
 .field {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
-.field:last-of-type {
-  margin-bottom: 0;
-}
-
-.field-label {
+.field label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-weight: 600;
   font-family: "Inter-Medium";
-  font-size: 13px;
-  color: var(--restaurant-slate);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 14px;
+  color: var(--primary-black);
+}
+
+.field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--lighter-gray);
+  border-radius: 8px;
+  font-family: "Inter-Light";
+  font-size: 14px;
+  color: var(--primary-black);
+  box-sizing: border-box;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .permissions-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-top: 4px;
 }
 
 .permission-item {
@@ -431,12 +504,11 @@ const confirmAction = async () => {
   font-family: "Inter-Light";
 }
 
-.modal-subtitle {
-  font-family: "Lora", Georgia, serif;
-  font-size: 14px;
-  color: var(--restaurant-warm-gray);
-  margin: 4px 0 22px 0;
-  line-height: 1.6;
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 @media screen and (min-width: 1024px) {

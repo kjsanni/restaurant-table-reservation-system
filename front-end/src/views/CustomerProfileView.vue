@@ -1,29 +1,16 @@
-<script setup lang="ts">
+<script setup>
 import { ref, computed, onMounted } from "vue";
-import {
-  VaButton,
-  VaCard,
-  VaCardContent,
-  VaModal,
-  VaInput,
-  VaTextarea,
-  VaAlert,
-} from "vuestic-ui";
-import { Icon } from "@iconify/vue";
-import PageHeader from "@/components/PageHeader.vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import customerAPI from "@/services/customerAPI";
-import reservationAPI from "@/services/reservationAPI";
-import { getApiErrorMessage } from "@/utils/apiError";
-import logger from "@/utils/logger";
+import PopupBox from "@/components/PopupBox.vue";
+import SuccessMessage from "@/components/SuccessMessage.vue";
 
 const route = useRoute();
-const router = useRouter();
-const customerId = route.params.id as string;
+const customerId = route.params.id;
 
 const loading = ref(true);
 const errorMsg = ref("");
-const profile = ref<any>(null);
+const profile = ref(null);
 
 const customer = computed(() => profile.value?.customer || {});
 const history = computed(() => profile.value?.history || []);
@@ -55,136 +42,42 @@ const statusLabels = {
   missed: "No-Show",
 };
 
-const initials = computed(() => {
-  const first = customer.value?.firstName?.charAt(0) || "";
-  const last = customer.value?.lastName?.charAt(0) || "";
-  return (first + last).toUpperCase();
-});
-
-const formattedAddress = computed(() => {
-  if (!customer.value) return "";
-  const parts = [customer.value.address, customer.value.city].filter(Boolean);
-  return parts.join(", ") || "No address on file";
-});
-
 const editingTags = ref(false);
 const newTag = ref("");
 const tagInput = ref(null);
 const saveMessage = ref("");
 const showSaveMessage = ref(false);
 
-const showEditModal = ref(false);
-const editForm = ref({
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  address: "",
-  city: "",
-  notes: "",
+const formattedAddress = computed(() => {
+  if (!customer.value) return "";
+  return `${customer.value.address || ""}, ${customer.value.city || ""}`;
 });
-const editErrors = ref<Record<string, string>>({});
-
-const showQuickReservation = ref(false);
-const reservationForm = ref({
-  resDate: "",
-  resTime: "",
-  people: "",
-  notes: "",
-});
-const reservationErrors = ref<Record<string, string>>({});
-const isSubmitting = ref(false);
 
 const loadProfile = async () => {
   loading.value = true;
   errorMsg.value = "";
   try {
     const res = await customerAPI.getProfile(customerId);
+    if (res.data.profile?.customer) {
+      res.data.profile.customer.tags = Array.isArray(
+        res.data.profile.customer.tags
+      )
+        ? res.data.profile.customer.tags
+        : [];
+    }
     profile.value = res.data.profile;
-  } catch (err: any) {
-    errorMsg.value =
-      err.response?.data?.message ||
-      err.message ||
-      "Failed to load customer profile.";
+  } catch {
+    errorMsg.value = "Failed to load customer profile.";
   } finally {
     loading.value = false;
   }
 };
 
-const openEditModal = () => {
-  editForm.value = {
-    firstName: customer.value.firstName || "",
-    lastName: customer.value.lastName || "",
-    email: customer.value.email || "",
-    phone: customer.value.phone || "",
-    address: customer.value.address || "",
-    city: customer.value.city || "",
-    notes: customer.value.notes || "",
-  };
-  editErrors.value = {};
-  showEditModal.value = true;
-};
-
-const saveCustomerDetails = async () => {
-  editErrors.value = {};
-  const errors: Record<string, string> = {};
-  if (!editForm.value.firstName.trim())
-    errors.firstName = "First name is required";
-  if (!editForm.value.lastName.trim())
-    errors.lastName = "Last name is required";
-  if (!editForm.value.email.trim()) errors.email = "Email is required";
-  if (!editForm.value.phone.trim()) errors.phone = "Phone is required";
-  if (Object.keys(errors).length > 0) {
-    editErrors.value = errors;
-    return;
+onMounted(() => {
+  if (customerId) {
+    loadProfile();
   }
-  try {
-    const res = await customerAPI.updateCustomer(customerId, editForm.value);
-    profile.value = { ...profile.value, customer: res.data.customer };
-    showEditModal.value = false;
-  } catch (err: any) {
-    editErrors.value = {
-      submit: getApiErrorMessage(err, "Failed to save changes"),
-    };
-  }
-};
-
-const createReservation = async () => {
-  reservationErrors.value = {};
-  const errors: Record<string, string> = {};
-  if (!reservationForm.value.resDate) errors.resDate = "Date is required";
-  if (!reservationForm.value.resTime) errors.resTime = "Time is required";
-  if (!reservationForm.value.people) errors.people = "Party size is required";
-  if (Object.keys(errors).length > 0) {
-    reservationErrors.value = errors;
-    return;
-  }
-  isSubmitting.value = true;
-  try {
-    await reservationAPI.registerReservation({
-      firstName: customer.value.firstName,
-      lastName: customer.value.lastName,
-      phone: customer.value.phone,
-      email: customer.value.email,
-      resDate: reservationForm.value.resDate,
-      resTime: reservationForm.value.resTime,
-      people: reservationForm.value.people,
-      notes: reservationForm.value.notes,
-      expectedTotal: "",
-      paymentStatus: "unpaid",
-    });
-    showQuickReservation.value = false;
-    reservationForm.value = { resDate: "", resTime: "", people: "", notes: "" };
-    await loadProfile();
-    router.push({ name: "reservations" });
-  } catch (err: any) {
-    reservationErrors.value = {
-      submit: getApiErrorMessage(err, "Failed to create reservation"),
-    };
-  } finally {
-    isSubmitting.value = false;
-  }
-};
+});
 
 const startEditingTags = () => {
   editingTags.value = true;
@@ -195,76 +88,44 @@ const startEditingTags = () => {
 const addTag = () => {
   const tag = newTag.value.trim();
   if (!tag || !customer.value?.tags) return;
-  if (customer.value.tags.includes(tag)) return;
-  customer.value.tags = [...customer.value.tags, tag];
+  const tags = Array.isArray(customer.value.tags) ? customer.value.tags : [];
+  if (tags.includes(tag)) return;
+  customer.value.tags = [...tags, tag];
   newTag.value = "";
   saveTags();
 };
 
-const removeTag = (tag: string) => {
-  customer.value.tags = customer.value.tags.filter((t) => t !== tag);
+const removeTag = (tag) => {
+  const tags = Array.isArray(customer.value?.tags) ? customer.value.tags : [];
+  customer.value.tags = tags.filter((t) => t !== tag);
   saveTags();
 };
 
 const saveTags = async () => {
   try {
-    const res = await customerAPI.updateTags(customerId, customer.value.tags);
-    profile.value = { ...profile.value, customer: res.data.customer };
+    await customerAPI.updateTags(customerId, customer.value.tags);
     showSaveMessage.value = true;
     saveMessage.value = "Tags saved";
     setTimeout(() => {
       showSaveMessage.value = false;
     }, 2000);
-  } catch (err) {
-    logger.error("Failed to save customer tags", { error: err.message });
+  } catch {
     showSaveMessage.value = true;
-    saveMessage.value = "Failed to save tags.";
+    saveMessage.value = "Failed to save tags";
   }
   editingTags.value = false;
 };
 
-const callCustomer = () => {
-  window.location.href = `tel:${customer.value.phone}`;
+const navigateToNewReservation = () => {
+  window.location.href = `/new-reservation?customerId=${customerId}`;
 };
-
-const emailCustomer = () => {
-  window.location.href = `mailto:${customer.value.email}`;
-};
-
-const smsCustomer = () => {
-  window.location.href = `sms:${customer.value.phone}`;
-};
-
-onMounted(() => {
-  if (customerId) {
-    loadProfile();
-  }
-});
 </script>
 
 <template>
-  <div class="page-wrapper">
-    <PageHeader
-      :title="
-        `${customer.firstName || ''} ${customer.lastName || ''}`.trim() ||
-        'Customer Profile'
-      "
-      subtitle="View and manage customer details"
-    >
-      <template #actions>
-        <VaButton
-          preset="primary"
-          size="small"
-          @click="showQuickReservation = true"
-        >
-          <template #icon>
-            <Icon icon="mdi:calendar-plus" width="16" height="16" />
-          </template>
-          Quick Reservation
-        </VaButton>
-      </template>
-    </PageHeader>
-
+  <div class="main-wrapper">
+    <div class="header">
+      <h1>Customer Profile</h1>
+    </div>
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -276,19 +137,16 @@ onMounted(() => {
         <button class="retry-btn" @click="loadProfile">Retry</button>
       </div>
 
-      <template v-else-if="customer.id">
+      <template v-else-if="customer">
         <div class="profile-header">
-          <div class="customer-avatar">{{ initials }}</div>
+          <div class="customer-avatar">
+            {{ customer.firstName?.charAt(0)
+            }}{{ customer.lastName?.charAt(0) }}
+          </div>
           <div class="customer-meta">
             <h2>{{ customer.firstName }} {{ customer.lastName }}</h2>
             <p class="customer-email">{{ customer.email }}</p>
             <p class="customer-phone">{{ customer.phone }}</p>
-            <p
-              v-if="formattedAddress !== 'No address on file'"
-              class="customer-address"
-            >
-              {{ formattedAddress }}
-            </p>
             <div class="customer-stats-row">
               <span class="stat-badge">
                 <strong>{{ stats.totalVisits }}</strong> visits
@@ -299,30 +157,8 @@ onMounted(() => {
             </div>
           </div>
           <div class="profile-actions">
-            <button
-              class="action-btn call-btn"
-              @click="callCustomer"
-              aria-label="Call customer"
-            >
-              <Icon icon="mdi:phone" width="18" height="18" />
-            </button>
-            <button
-              class="action-btn email-btn"
-              @click="emailCustomer"
-              aria-label="Email customer"
-            >
-              <Icon icon="mdi:email-outline" width="18" height="18" />
-            </button>
-            <button
-              class="action-btn sms-btn"
-              @click="smsCustomer"
-              aria-label="SMS customer"
-            >
-              <Icon icon="mdi:message-text-outline" width="18" height="18" />
-            </button>
-            <button class="btn-primary" @click="openEditModal">
-              <Icon icon="mdi:pencil-outline" width="16" height="16" />
-              Edit
+            <button class="btn-primary" @click="navigateToNewReservation">
+              New Reservation
             </button>
           </div>
         </div>
@@ -416,20 +252,6 @@ onMounted(() => {
           </div>
 
           <div class="section-card">
-            <h3>Notes & Observations</h3>
-            <div class="notes-display" v-if="customer.notes">
-              <p>{{ customer.notes }}</p>
-              <button class="btn-link" @click="openEditModal">
-                Edit notes
-              </button>
-            </div>
-            <div v-else class="empty-state-small">
-              No notes for this customer.
-              <button class="btn-link" @click="openEditModal">Add notes</button>
-            </div>
-          </div>
-
-          <div class="section-card">
             <h3>Visit Statistics</h3>
             <div class="stats-grid">
               <div class="stat-card">
@@ -468,122 +290,49 @@ onMounted(() => {
           </div>
         </div>
       </template>
+
+      <PopupBox
+        :is-open="false"
+        header-text="Quick Reservation"
+        :is-closable="true"
+      >
+        <template #popup-content>
+          <p>Quick reservation form would open here.</p>
+        </template>
+      </PopupBox>
     </div>
-
-    <VaModal
-      v-model="showQuickReservation"
-      title="Quick Reservation"
-      size="small"
-    >
-      <VaCard>
-        <VaCardContent>
-          <form @submit.prevent="createReservation" class="quick-res-form">
-            <div class="form-row">
-              <VaInput
-                v-model="reservationForm.resDate"
-                label="Date"
-                type="date"
-                :error-messages="reservationErrors.resDate"
-              />
-              <VaInput
-                v-model="reservationForm.resTime"
-                label="Time"
-                type="time"
-                :error-messages="reservationErrors.resTime"
-              />
-            </div>
-            <VaInput
-              v-model="reservationForm.people"
-              label="Party Size"
-              type="number"
-              min="1"
-              :error-messages="reservationErrors.people"
-            />
-            <VaTextarea
-              v-model="reservationForm.notes"
-              label="Special Requests"
-              :rows="3"
-            />
-            <VaAlert
-              v-if="reservationErrors.submit"
-              color="danger"
-              class="mb-4"
-            >
-              {{ reservationErrors.submit }}
-            </VaAlert>
-          </form>
-        </VaCardContent>
-        <template #actions>
-          <VaButton preset="secondary" @click="showQuickReservation = false"
-            >Cancel</VaButton
-          >
-          <VaButton
-            preset="primary"
-            @click="createReservation"
-            :loading="isSubmitting"
-          >
-            Create Reservation
-          </VaButton>
-        </template>
-      </VaCard>
-    </VaModal>
-
-    <VaModal v-model="showEditModal" title="Edit Customer" size="small">
-      <VaCard>
-        <VaCardContent>
-          <form @submit.prevent="saveCustomerDetails" class="edit-form">
-            <div class="form-row">
-              <VaInput
-                v-model="editForm.firstName"
-                label="First Name"
-                :error-messages="editErrors.firstName"
-              />
-              <VaInput
-                v-model="editForm.lastName"
-                label="Last Name"
-                :error-messages="editErrors.lastName"
-              />
-            </div>
-            <VaInput
-              v-model="editForm.email"
-              label="Email"
-              type="email"
-              :error-messages="editErrors.email"
-            />
-            <VaInput
-              v-model="editForm.phone"
-              label="Phone"
-              :error-messages="editErrors.phone"
-            />
-            <VaInput v-model="editForm.address" label="Address" />
-            <VaInput v-model="editForm.city" label="City" />
-            <VaTextarea v-model="editForm.notes" label="Notes" :rows="3" />
-            <VaAlert v-if="editErrors.submit" color="danger" class="mb-4">
-              {{ editErrors.submit }}
-            </VaAlert>
-          </form>
-        </VaCardContent>
-        <template #actions>
-          <VaButton preset="secondary" @click="showEditModal = false"
-            >Cancel</VaButton
-          >
-          <VaButton preset="primary" @click="saveCustomerDetails"
-            >Save Changes</VaButton
-          >
-        </template>
-      </VaCard>
-    </VaModal>
   </div>
 </template>
 
 <style scoped>
-.page-wrapper {
-  min-height: calc(100vh - var(--header-height));
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100%;
+  height: var(--header-height);
+  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+.header h1 {
+  margin-left: var(--x-spacing-mobile);
+  margin-bottom: 15px;
+  font-size: 35px;
+  color: var(--snow-white);
+  text-shadow: 1px 1px 2px var(--primary-black);
 }
 
 .content-wrapper {
-  margin-top: 12px;
+  margin-top: var(--page-margin-y);
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
@@ -639,7 +388,7 @@ onMounted(() => {
 
 .profile-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 20px;
   background: white;
   padding: 24px;
@@ -676,8 +425,7 @@ onMounted(() => {
 }
 
 .customer-email,
-.customer-phone,
-.customer-address {
+.customer-phone {
   margin: 2px 0;
   font-family: "Inter-Light";
   font-size: 14px;
@@ -710,34 +458,10 @@ onMounted(() => {
 .profile-actions {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
-}
-
-.action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid var(--restaurant-border);
-  background: white;
-  color: var(--primary-black);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.action-btn:hover {
-  background: #f9fafb;
-  border-color: var(--primary-blue);
-  color: var(--primary-blue);
 }
 
 .btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  padding: 10px 16px;
   border: none;
   border-radius: 8px;
   background: var(--primary-blue);
@@ -956,14 +680,6 @@ onMounted(() => {
   font-style: italic;
 }
 
-.notes-display p {
-  margin: 0;
-  font-family: "Inter-Light";
-  font-size: 14px;
-  color: var(--primary-black);
-  line-height: 1.5;
-}
-
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -1034,29 +750,15 @@ onMounted(() => {
   font-family: "Inter-Light";
 }
 
-.quick-res-form,
-.edit-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
 @media screen and (min-width: 1024px) {
-  .content-wrapper {
+  .header h1 {
     margin-left: var(--x-spacing-desktop);
-    margin-right: var(--x-spacing-desktop);
+    font-size: 45px;
+    margin-bottom: 20px;
   }
-}
-
-@media screen and (max-width: 640px) {
-  .form-row {
-    grid-template-columns: 1fr;
+  .content-wrapper {
+    margin-left: 200px;
+    margin-right: 200px;
   }
 }
 </style>

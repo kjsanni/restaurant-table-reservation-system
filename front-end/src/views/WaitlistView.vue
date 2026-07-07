@@ -1,18 +1,16 @@
-<script setup lang="ts">
-import PageHeader from "@/components/PageHeader.vue";
-import { ref, onMounted } from "vue";
-import {
-  VaModal,
-  VaCard,
-  VaCardContent,
-  VaAlert,
-  VaInput,
-  VaButton,
-} from "vuestic-ui";
+<script setup>
+import { ref, computed, onMounted } from "vue";
 import waitlistAPI from "@/services/waitlistAPI";
-import logger from "@/utils/logger";
 import tableAPI from "@/services/tableAPI";
+import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
+import logger from "@/utils/logger";
+import { useAuthStore } from "@/stores/auth";
+
+const authStore = useAuthStore();
+const canAddToWaitlist = computed(
+  () => authStore.user?.role === "admin" || authStore.user?.role === "staff"
+);
 
 const entries = ref([]);
 const stats = ref({
@@ -41,7 +39,6 @@ const form = ref({
 const freeTables = ref([]);
 const actionLoading = ref(false);
 const actionError = ref("");
-const loadError = ref("");
 
 const loadData = async () => {
   loading.value = true;
@@ -53,10 +50,7 @@ const loadData = async () => {
     entries.value = entriesRes.data.entries;
     stats.value = statsRes.data.stats;
   } catch (err) {
-    loadError.value =
-      err.response?.data?.message ||
-      err.message ||
-      "Failed to load waitlist. Please try again.";
+    logger.error("Failed to load waitlist", { error: err.message });
   } finally {
     loading.value = false;
   }
@@ -85,10 +79,8 @@ const openSeat = async (entry) => {
     freeTables.value = res.data.collection.filter(
       (t) => !t.reservationId && !t.isBlocked
     );
-  } catch (err) {
-    logger.error("Failed to load free tables", { error: err.message });
+  } catch {
     freeTables.value = [];
-    actionError.value = "Failed to load available tables.";
   }
   showPopup.value = true;
 };
@@ -163,8 +155,7 @@ const confirmDelete = async () => {
     await waitlistAPI.deleteEntry(deleteTargetId.value);
     await loadData();
   } catch (err) {
-    logger.error("Failed to delete waitlist entry", { error: err.message });
-    actionError.value = "Failed to delete entry. Please try again.";
+    logger.error("Failed to delete", { error: err.message });
   } finally {
     showDeleteModal.value = false;
     deleteTargetId.value = null;
@@ -176,10 +167,7 @@ const handleExpire = async () => {
     await waitlistAPI.expireOld();
     await loadData();
   } catch (err) {
-    logger.error("Failed to expire old waitlist entries", {
-      error: err.message,
-    });
-    actionError.value = "Failed to process waitlist expiration.";
+    logger.error("Failed to expire entries", { error: err.message });
   }
 };
 
@@ -195,10 +183,13 @@ onMounted(() => {
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="Waitlist & Queue" />
+    <div class="header">
+      <h1>Waitlist / Queue Management</h1>
+    </div>
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
-        <LoadingSpinner text="Loading waitlist..." />
+        <div class="spinner"></div>
+        <p>Loading waitlist...</p>
       </div>
       <template v-else>
         <div class="stats-row">
@@ -232,13 +223,12 @@ onMounted(() => {
           </div>
         </div>
 
-        <div v-if="loadError" class="error-banner" role="alert">
-          <span class="error-icon">⚠️</span>
-          <span>{{ loadError }}</span>
-          <button class="error-retry" @click="loadData">Retry</button>
-        </div>
         <div class="action-bar">
-          <button class="btn btn-primary" @click="openAdd">
+          <button
+            v-if="canAddToWaitlist"
+            class="btn btn-primary"
+            @click="openAdd"
+          >
             + Add to Waitlist
           </button>
           <button class="btn btn-secondary" @click="handleExpire">
@@ -313,139 +303,161 @@ onMounted(() => {
         </div>
       </template>
 
-      <VaModal
-        v-model="showPopup"
-        :title="
+      <PopupBox
+        :is-open="showPopup"
+        :header-text="
           popupMode === 'add'
             ? 'Add to Waitlist'
             : popupMode === 'seat'
             ? 'Seat Guest'
             : 'Cancel Entry'
         "
-        size="small"
+        :is-closable="true"
+        @close-modal="closePopup"
       >
-        <VaCard>
-          <VaCardContent>
-            <div class="popup-body">
-              <VaAlert v-if="actionError" color="danger">{{
-                actionError
-              }}</VaAlert>
+        <template #popup-content>
+          <div class="popup-body">
+            <div v-if="actionError" class="error-msg">{{ actionError }}</div>
 
-              <div v-if="popupMode === 'add'" class="form-section">
-                <div class="field">
-                  <VaInput
-                    v-model="form.name"
-                    label="Name *"
-                    placeholder="Guest name"
-                  />
-                </div>
-                <div class="field">
-                  <VaInput
-                    type="number"
-                    v-model="form.partySize"
-                    label="Party Size"
-                    min="1"
-                    max="20"
-                  />
-                </div>
-                <div class="field">
-                  <VaInput
-                    v-model="form.phone"
-                    label="Phone"
-                    placeholder="Phone number"
-                  />
-                </div>
-                <div class="field">
-                  <VaInput
-                    v-model="form.email"
-                    label="Email"
-                    placeholder="Email address"
-                  />
-                </div>
-                <div class="field">
-                  <VaInput
-                    type="time"
-                    v-model="form.desiredTime"
-                    label="Desired Time"
-                  />
-                </div>
-                <div class="field">
-                  <VaInput
-                    v-model="form.notes"
-                    label="Notes"
-                    placeholder="Special requests..."
-                  />
-                </div>
+            <div v-if="popupMode === 'add'" class="form-section">
+              <div class="field">
+                <label class="field-label">Name *</label>
+                <input
+                  v-model="form.name"
+                  class="field-input"
+                  placeholder="Guest name"
+                />
               </div>
-
-              <div v-else-if="popupMode === 'seat'" class="form-section">
-                <p class="seat-info">
-                  Assign a table to
-                  <strong>{{ selectedEntry?.name }}</strong> ({{
-                    selectedEntry?.partySize
-                  }}
-                  guests)
-                </p>
-                <div v-if="freeTables.length === 0" class="empty-msg">
-                  No free tables available
-                </div>
-                <div class="table-grid">
-                  <VaButton
-                    v-for="table in freeTables"
-                    :key="table.id"
-                    preset="secondary"
-                    @click="handleSeat(table.id)"
-                    :disabled="actionLoading"
-                  >
-                    Table {{ table.name || table.id }}
-                  </VaButton>
-                </div>
+              <div class="field">
+                <label class="field-label">Party Size</label>
+                <input
+                  type="number"
+                  v-model="form.partySize"
+                  class="field-input"
+                  min="1"
+                />
               </div>
-
-              <div v-else-if="popupMode === 'cancel'" class="form-section">
-                <p class="cancel-text">
-                  Cancel waitlist entry for
-                  <strong>{{ selectedEntry?.name }}</strong
-                  >?
-                </p>
+              <div class="field">
+                <label class="field-label">Phone</label>
+                <input
+                  v-model="form.phone"
+                  class="field-input"
+                  placeholder="Phone number"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label">Email</label>
+                <input
+                  v-model="form.email"
+                  class="field-input"
+                  placeholder="Email address"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label">Desired Time</label>
+                <input
+                  type="time"
+                  v-model="form.desiredTime"
+                  class="field-input"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label">Notes</label>
+                <textarea
+                  v-model="form.notes"
+                  class="field-input"
+                  rows="2"
+                  placeholder="Special requests..."
+                ></textarea>
+              </div>
+              <div class="popup-actions">
+                <button class="btn btn-secondary" @click="closePopup">
+                  Cancel
+                </button>
+                <button
+                  class="btn btn-primary"
+                  @click="handleAdd"
+                  :disabled="actionLoading"
+                >
+                  {{ actionLoading ? "Adding..." : "Add to Waitlist" }}
+                </button>
               </div>
             </div>
-          </VaCardContent>
-          <template #actions>
-            <VaButton preset="secondary" @click="closePopup">Cancel</VaButton>
-            <VaButton
-              v-if="popupMode === 'add'"
-              preset="primary"
-              @click="handleAdd"
-              :disabled="actionLoading"
-            >
-              {{ actionLoading ? "Adding..." : "Add to Waitlist" }}
-            </VaButton>
-            <VaButton
-              v-if="popupMode === 'cancel'"
-              preset="danger"
-              @click="handleCancel"
-              :disabled="actionLoading"
-            >
-              {{ actionLoading ? "Cancelling..." : "Yes, Cancel" }}
-            </VaButton>
-          </template>
-        </VaCard>
-      </VaModal>
 
-      <VaModal v-model="showDeleteModal" title="Confirm Delete" size="small">
-        <VaCard>
-          <VaCardContent>
+            <div v-else-if="popupMode === 'seat'" class="form-section">
+              <p class="seat-info">
+                Assign a table to <strong>{{ selectedEntry?.name }}</strong> ({{
+                  selectedEntry?.partySize
+                }}
+                guests)
+              </p>
+              <div v-if="freeTables.length === 0" class="empty-msg">
+                No free tables available
+              </div>
+              <div class="table-grid">
+                <button
+                  v-for="table in freeTables"
+                  :key="table.id"
+                  class="table-btn"
+                  @click="handleSeat(table.id)"
+                  :disabled="actionLoading"
+                >
+                  Table {{ table.name || table.id }}
+                </button>
+              </div>
+              <div class="popup-actions">
+                <button class="btn btn-secondary" @click="closePopup">
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            <div v-else-if="popupMode === 'cancel'" class="form-section">
+              <p class="cancel-text">
+                Cancel waitlist entry for
+                <strong>{{ selectedEntry?.name }}</strong
+                >?
+              </p>
+              <div class="popup-actions">
+                <button class="btn btn-secondary" @click="closePopup">
+                  Keep
+                </button>
+                <button
+                  class="btn btn-danger"
+                  @click="handleCancel"
+                  :disabled="actionLoading"
+                >
+                  {{ actionLoading ? "Cancelling..." : "Yes, Cancel" }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </PopupBox>
+
+      <PopupBox
+        :is-open="showDeleteModal"
+        header-text="Confirm Delete"
+        :is-closable="true"
+        @close-modal="showDeleteModal = false"
+      >
+        <template #popup-content>
+          <div class="confirm-content">
             <p>Are you sure you want to delete this waitlist entry?</p>
-          </VaCardContent>
-          <template #actions>
-            <VaButton preset="secondary" @click="showDeleteModal = false"
-              >Cancel</VaButton
-            >
-            <VaButton preset="danger" @click="confirmDelete">Delete</VaButton>
-          </template>
-        </VaCard>
-      </VaModal>
+            <div class="confirm-actions">
+              <button
+                class="btn btn-secondary"
+                @click="showDeleteModal = false"
+              >
+                Cancel
+              </button>
+              <button class="btn btn-danger" @click="confirmDelete">
+                Delete
+              </button>
+            </div>
+          </div>
+        </template>
+      </PopupBox>
     </div>
   </div>
 </template>
@@ -471,7 +483,7 @@ onMounted(() => {
 }
 
 .content-wrapper {
-  margin-top: 16px;
+  margin-top: var(--page-margin-y);
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
@@ -891,40 +903,13 @@ textarea.field-input {
   font-size: 12px;
 }
 
-.error-banner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: var(--card-radius);
-  margin-bottom: 16px;
-  font-family: "Inter-Medium";
-  font-size: 14px;
-  color: #991b1b;
-}
-
-.error-icon {
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.error-retry {
-  margin-left: auto;
-  padding: 6px 14px;
-  border: 1px solid #dc2626;
-  border-radius: 6px;
-  background: white;
-  color: #dc2626;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.error-retry:hover {
-  background: #fef2f2;
+@media screen and (min-width: 640px) {
+  .entries-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stats-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 @media screen and (min-width: 1024px) {

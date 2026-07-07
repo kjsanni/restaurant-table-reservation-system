@@ -118,3 +118,13 @@ All notable changes to this project will be documented in this file.
 - `Waitlist` model + migration
 - Waitlist CRUD endpoints
 - Stats endpoint for waitlist summary
+
+### Fixed — Production Socket.io WebSocket (2026-07-05)
+- Fixed Apache `ProxyPassMatch` ordering in `apache-production.conf`
+- Fixed PM2 cluster mode causing Engine.IO session loss → changed to single instance
+- Fixed dotenv override order in `back-end/config/config.js` so `.env.production` values take precedence
+- Fixed `CORS_ORIGINS` in `.env.production` to actual production IP
+
+### Fixed — Production RBAC Permissions Bug (2026-07-05)
+- Added `normalizePermissions()` in `back-end/src/DAOs/role.dao.js` to parse stringified JSON permissions
+- Fixed `/tables/manage` route being blocked due to mangled permission object

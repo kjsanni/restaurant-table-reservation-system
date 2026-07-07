@@ -1,13 +1,24 @@
 const db = require("../db/models");
 const Table = db.table;
 const Reservation = db.reservation;
+const Customer = db.customer;
 const User = db.user;
+const { fn, col } = db.sequelize;
 
 const findAllTables = async () => {
   return await Table.findAll({
+    attributes: { exclude: ["linkedTableIds"] },
     include: [
       {
         model: Reservation,
+        include: [
+          {
+            model: Customer,
+            attributes: [
+              [fn("CONCAT", col("reservation->customer.firstName"), " ", col("reservation->customer.lastName")), "name"],
+            ],
+          },
+        ],
       },
       {
         model: User,
@@ -63,18 +74,41 @@ const freeTable = async (reservationDAO, table) => {
     await updateTable(table, {
       isOccupied: false,
       reservationId: null,
+      linkedTableIds: null,
     });
     return null;
+  }
+
+  const linkedIds = Array.isArray(table.linkedTableIds)
+    ? table.linkedTableIds
+    : [];
+  if (linkedIds.length > 0) {
+    await Table.update(
+      {
+        isOccupied: false,
+        reservationId: null,
+        linkedTableIds: null,
+      },
+      {
+        where: {
+          id: linkedIds,
+        },
+      }
+    );
   }
 
   const reservation = await reservationDAO.findReservationById(reservationId);
   await updateTable(table, {
     isOccupied: false,
     reservationId: null,
+    linkedTableIds: null,
   });
 
   if (reservation) {
-    return await reservation.update({ resStatus: "completed" });
+    const now = new Date();
+    const resDateTime = new Date(`${reservation.resDate}T${reservation.resTime || "00:00"}:00`);
+    const nextStatus = resDateTime > now ? "pending" : "completed";
+    return await reservation.update({ resStatus: nextStatus });
   }
   return null;
 };

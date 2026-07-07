@@ -2,16 +2,40 @@ const db = require("../db/models");
 const Role = db.role;
 const { Op } = db.Sequelize;
 
+const normalizePermissions = (permissions) => {
+  if (!permissions) return {};
+  if (typeof permissions === "string") {
+    try {
+      const parsed = JSON.parse(permissions);
+      if (typeof parsed === "object" && parsed !== null) return parsed;
+    } catch {}
+  }
+  if (typeof permissions === "object" && permissions !== null) return permissions;
+  return {};
+};
+
 const findAllRoles = async () => {
-  return await Role.findAll({ order: [["id", "ASC"]] });
+  const roles = await Role.findAll({ order: [["id", "ASC"]] });
+  return roles.map((r) => {
+    r.permissions = normalizePermissions(r.permissions);
+    return r;
+  });
 };
 
 const findRoleById = async (id) => {
-  return await Role.findByPk(id);
+  const role = await Role.findByPk(id);
+  if (role) {
+    role.permissions = normalizePermissions(role.permissions);
+  }
+  return role;
 };
 
 const findRoleByName = async (name) => {
-  return await Role.findOne({ where: { name } });
+  const role = await Role.findOne({ where: { name } });
+  if (role) {
+    role.permissions = normalizePermissions(role.permissions);
+  }
+  return role;
 };
 
 const createRole = async (roleData) => {
@@ -55,14 +79,14 @@ const getRolePermissions = async (userId) => {
 
   if (user.groups && user.groups.length > 0) {
     user.groups.forEach((group) => {
-      if (group.permissions) {
-        Object.assign(mergedPermissions, group.permissions);
-      }
+      const groupPerms = normalizePermissions(group.permissions);
+      Object.assign(mergedPermissions, groupPerms);
     });
   }
 
-  if (user.permissions) {
-    Object.assign(mergedPermissions, user.permissions);
+  const userPerms = normalizePermissions(user.permissions);
+  if (Object.keys(userPerms).length > 0) {
+    Object.assign(mergedPermissions, userPerms);
   }
 
   return mergedPermissions;

@@ -84,6 +84,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "customer",
+      tableName: "Customers",
       indexes: [
         {
           unique: true,

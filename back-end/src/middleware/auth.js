@@ -101,6 +101,17 @@ const staff = (req, res, next) => {
   }
 };
 
+const staffOnly = (req, res, next) => {
+  if (req.user && req.user.role === "staff") {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: "Staff-only access required!",
+    });
+  }
+};
+
 const requirePermission = (permission) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -121,4 +132,4 @@ const requirePermission = (permission) => {
   };
 };
 
-module.exports = { protect, admin, staff, requirePermission };
+module.exports = { protect, admin, staff, staffOnly, requirePermission };
