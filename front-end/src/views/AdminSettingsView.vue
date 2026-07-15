@@ -157,6 +157,17 @@ const loadSettings = async () => {
         value,
       };
     });
+
+    Object.entries(settingsConfig).forEach(([key, config]) => {
+      if (!map[key]) {
+        map[key] = {
+          ...config,
+          key,
+          value: config.type === "number" ? config.min ?? 0 : false,
+        };
+      }
+    });
+
     settingsMap.value = map;
 
     const emailSetting = data.find(
