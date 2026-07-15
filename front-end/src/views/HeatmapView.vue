@@ -26,42 +26,24 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.header {
+.main-wrapper {
+  min-height: 100vh;
+  background: var(--restaurant-background);
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
 }
 
 .content-wrapper {
-  margin-top: 12px;
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
+  flex: 1;
+  margin: var(--space-6) var(--x-spacing-mobile);
+  padding: 0;
+  max-width: 1400px;
+  width: 100%;
 }
 
-@media screen and (min-width: 1024px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
+@media (min-width: 1024px) {
   .content-wrapper {
-    margin-left: 200px;
-    margin-right: 200px;
+    margin: var(--space-8) var(--x-spacing-desktop);
   }
 }
 </style>
