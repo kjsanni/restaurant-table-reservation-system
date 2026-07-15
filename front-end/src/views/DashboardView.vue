@@ -13,11 +13,13 @@ const router = useRouter();
 
 const loading = ref(true);
 const today = ref(new Date().toISOString().split("T")[0]);
-const thirtyDaysAgo = ref(() => {
-  const d = new Date();
-  d.setDate(d.getDate() - 30);
-  return d.toISOString().split("T")[0];
-});
+const thirtyDaysAgo = ref(
+  (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split("T")[0];
+  })()
+);
 
 const stats = ref({
   todayReservations: 0,
