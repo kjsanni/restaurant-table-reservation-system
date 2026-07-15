@@ -26,10 +26,10 @@ const paymentDisplayLabels = {
 };
 
 const paymentBarColors = {
-  unpaid: "#9ca3af",
-  deposit: "#3b82f6",
+  unpaid: "#9a9389",
+  deposit: "#d97706",
   partial: "#f59e0b",
-  paid: "#22c55e",
+  paid: "#365314",
 };
 
 const filterPaymentStatus = ref(null);
@@ -291,18 +291,19 @@ onMounted(loadData);
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
+  padding: var(--space-20) var(--space-5);
+  gap: var(--space-4);
   color: var(--ink-muted);
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
 }
 
 .spinner {
   width: 32px;
   height: 32px;
   border: 3px solid var(--border);
-  border-top-color: var(--sky-600);
-  border-radius: 50%;
+  border-top-color: var(--accent);
+  border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -315,54 +316,56 @@ onMounted(loadData);
 .dashboard-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .summary-section {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .summary-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-4);
   padding: var(--card-padding);
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border);
   border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
 }
 
 .summary-card.total {
-  background-color: #1f2937;
+  background-color: var(--ink);
   color: white;
-  border-color: #1f2937;
+  border-color: var(--ink);
 }
 
 .summary-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .summary-label {
-  font-family: "Inter-Light";
-  font-size: 13px;
-  color: #9ca3af;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .summary-card.total .summary-label {
-  color: #d1d5db;
+  color: var(--neutral-200);
 }
 
 .summary-value {
-  font-family: "Inter-Bold";
-  font-size: 28px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-3xl, 1.75rem);
   color: var(--ink);
 }
 
@@ -373,98 +376,104 @@ onMounted(loadData);
 .summary-indicator {
   width: 4px;
   height: 36px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm, 2px);
   flex-shrink: 0;
 }
 
 .dashboard-card {
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border);
   border-radius: var(--card-radius);
   padding: var(--card-padding);
   box-shadow: var(--card-shadow);
 }
 
 .card-title {
-  font-family: "Inter-Bold";
-  font-size: 18px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-lg);
   color: var(--ink);
-  margin: 0 0 20px 0;
+  margin: 0 0 var(--space-5) 0;
 }
 
 .chart-card {
-  margin-bottom: 4px;
+  margin-bottom: var(--space-1);
 }
 
 .bar-chart {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3-5);
 }
 
 .bar-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .bar-label {
   width: 140px;
   text-align: right;
-  font-size: 14px;
-  font-family: "Inter-Medium";
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  font-weight: 500;
   color: var(--ink);
 }
 
 .bar-track {
   flex: 1;
   height: 36px;
-  background-color: #f3f4f6;
-  border-radius: 8px;
+  background-color: var(--neutral-100);
+  border-radius: var(--radius-lg);
   position: relative;
   overflow: hidden;
 }
 
 .bar-fill {
   height: 100%;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   transition: width 0.5s ease;
   min-width: 2px;
 }
 
 .bar-value {
   position: absolute;
-  right: 12px;
+  right: var(--space-3);
   top: 50%;
   transform: translateY(-50%);
-  font-family: "Inter-Bold";
-  font-size: 14px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-sm);
   color: var(--ink);
   z-index: 1;
 }
 
 .table-card .filters {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
   flex-wrap: wrap;
 }
 
 .filter-select {
-  padding: 10px 14px;
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
-  background-color: white;
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: var(--text-sm);
+  background-color: var(--surface);
   min-width: 180px;
   color: var(--ink);
+  transition: border-color var(--duration-150) var(--ease-in-out),
+    box-shadow var(--duration-150) var(--ease-in-out);
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: var(--sky-600);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 @media screen and (min-width: 640px) {
@@ -480,8 +489,9 @@ onMounted(loadData);
 }
 
 .confirm-content p {
-  font-family: "Inter-Medium";
-  font-size: 15px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--text-base);
   color: var(--ink);
   margin: 0;
 }
@@ -523,6 +533,6 @@ onMounted(loadData);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 500;
-  transition: all var(--duration-fast) var(--ease-in-out);
+  transition: all var(--duration-150) var(--ease-in-out);
 }
 </style>

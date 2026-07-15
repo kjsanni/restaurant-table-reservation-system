@@ -138,18 +138,19 @@ const readMore = (text, maxLength = 60) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
+  padding: var(--space-20) var(--space-5);
+  gap: var(--space-4);
   color: var(--ink-muted);
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
 }
 
 .spinner {
   width: 32px;
   height: 32px;
   border: 3px solid var(--border);
-  border-top-color: var(--sky-600);
-  border-radius: 50%;
+  border-top-color: var(--accent);
+  border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -161,7 +162,7 @@ const readMore = (text, maxLength = 60) => {
 
 .table-card {
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border);
   border-radius: var(--card-radius);
   overflow: hidden;
   box-shadow: var(--card-shadow);
@@ -174,29 +175,30 @@ const readMore = (text, maxLength = 60) => {
 .log-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: "Inter-Light";
-  font-size: 14px;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: var(--text-sm);
 }
 
 .log-table th,
 .log-table td {
-  padding: 14px 16px;
+  padding: var(--space-3-5) var(--space-4);
   text-align: left;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .log-table th {
-  background-color: #fafafa;
+  background-color: var(--surface-sunken);
   color: var(--ink-muted);
-  font-family: "Inter-Medium";
-  font-size: 12px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  font-weight: 600;
 }
 
 .log-table tbody tr:hover {
-  background-color: #fafafa;
+  background-color: var(--surface-sunken);
 }
 
 .log-table tbody tr:last-child td {
@@ -205,69 +207,73 @@ const readMore = (text, maxLength = 60) => {
 
 .type-badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background-color: #eef2ff;
-  color: var(--sky-600);
-  font-family: "Inter-Medium";
-  font-size: 12px;
+  padding: var(--space-1) var(--space-2-5);
+  border-radius: var(--radius-sm, 6px);
+  background-color: var(--accent-soft);
+  color: var(--accent-text);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--text-xs);
 }
 
 .user-name {
-  font-family: "Inter-Medium";
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--text-sm);
   color: var(--ink);
 }
 
 .user-role {
   display: block;
-  font-family: "Inter-Light";
-  font-size: 11px;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
   text-transform: capitalize;
 }
 
 .action-badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-family: "Inter-Medium";
-  font-size: 12px;
+  padding: var(--space-1) var(--space-2-5);
+  border-radius: var(--radius-sm, 6px);
+  font-family: var(--font-sans);
   font-weight: 500;
+  font-size: var(--text-xs);
 }
 
 .action-create {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--earth-50);
+  color: var(--earth-600);
 }
 
 .action-update {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--accent-soft);
+  color: var(--accent-text);
 }
 
 .action-delete,
 .action-cancel {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--rose-50);
+  color: var(--rose-600);
 }
 
 .action-login,
 .action-logout {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--neutral-100);
+  color: var(--ink-secondary);
 }
 
 .action-default {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--neutral-100);
+  color: var(--ink-secondary);
 }
 
 .entity-id {
-  font-family: "Inter-Light";
-  font-size: 11px;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
-  margin-left: 4px;
+  margin-left: var(--space-1);
 }
 
 .changes-cell {
@@ -275,8 +281,9 @@ const readMore = (text, maxLength = 60) => {
 }
 
 .changes-text {
-  font-family: "Inter-Light";
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: var(--text-sm);
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
@@ -287,12 +294,13 @@ const readMore = (text, maxLength = 60) => {
 
 .no-changes {
   color: var(--ink-muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .ip-cell {
-  font-family: "Inter-Light";
-  font-size: 12px;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
 }
 
@@ -303,6 +311,6 @@ const readMore = (text, maxLength = 60) => {
 .empty-row {
   text-align: center;
   color: var(--ink-muted);
-  padding: 40px;
+  padding: var(--space-10);
 }
 </style>

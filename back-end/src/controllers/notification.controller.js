@@ -55,7 +55,13 @@ const sendTemplateHandler = async (req, res) => {
 const getTemplatesHandler = async (req, res) => {
   const templates = await emailService.getEmailTemplates();
   const theme = await emailService.getEmailTheme();
-  return res.status(200).json({ success: true, templates, theme });
+  const defaults = emailService.getEmailTemplateDefaults();
+  return res.status(200).json({
+    success: true,
+    templates,
+    theme,
+    defaults,
+  });
 };
 
 module.exports = {

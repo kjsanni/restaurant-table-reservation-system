@@ -408,7 +408,7 @@ const exportPDF = async () => {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--sky-600);
+  color: var(--accent-text);
   background: var(--neutral-100);
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-full);

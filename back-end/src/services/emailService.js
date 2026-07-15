@@ -6,6 +6,28 @@ const EMAIL_SETTING_KEY = "email_server";
 const EMAIL_THEME_KEY = "email_theme";
 const EMAIL_TEMPLATES_KEY = "email_templates";
 
+const DEFAULT_EMAIL_THEME = {
+  brandName: "Restaurant",
+  logoUrl: "",
+  primaryColor: "#d97706",
+  footerText: "",
+};
+
+const DEFAULT_EMAIL_TEMPLATES = {
+  reservation_confirmation: {
+    subject: "Reservation Confirmed – {{customer_name}}",
+    html: "<p>Hi {{customer_name}},</p><p>Your reservation at <strong>{{brandName}}</strong> is confirmed for <strong>{{reservation_time}}</strong> for {{party_size}} guests at table {{table_name}}.</p><p>We look forward to seeing you!</p>",
+  },
+  reservation_cancelled: {
+    subject: "Reservation Cancelled – {{customer_name}}",
+    html: "<p>Hi {{customer_name}},</p><p>Your reservation for <strong>{{reservation_time}}</strong> has been cancelled. If this was a mistake, please contact us to rebook.</p>",
+  },
+  waitlist_promoted: {
+    subject: "A Table is Ready – {{customer_name}}",
+    html: "<p>Hi {{customer_name}},</p><p>Good news! A table is now ready for your party of {{party_size}}. Please arrive within the next 15 minutes to claim it.</p>",
+  },
+};
+
 const getEmailConfig = async () => {
   try {
     const setting = await db.setting.findOne({
@@ -33,11 +55,11 @@ const getEmailTheme = async () => {
     const setting = await db.setting.findOne({
       where: { key: EMAIL_THEME_KEY },
     });
-    if (!setting) return { brandName: "Restaurant", primaryColor: "#3b82f6", footerText: "" };
-    return setting.value || {};
+    if (!setting) return { ...DEFAULT_EMAIL_THEME };
+    return { ...DEFAULT_EMAIL_THEME, ...(setting.value || {}) };
   } catch (err) {
     logger.error("Failed to read email_theme setting", { error: err.message });
-    return { brandName: "Restaurant", primaryColor: "#3b82f6", footerText: "" };
+    return { ...DEFAULT_EMAIL_THEME };
   }
 };
 
@@ -46,19 +68,18 @@ const getEmailTemplates = async () => {
     const setting = await db.setting.findOne({
       where: { key: EMAIL_TEMPLATES_KEY },
     });
-    if (!setting) {
-      return {
-        reservation_confirmation: { subject: "Reservation Confirmed", html: "<p>Your reservation is confirmed.</p>" },
-        reservation_cancelled: { subject: "Reservation Cancelled", html: "<p>Your reservation was cancelled.</p>" },
-        waitlist_promoted: { subject: "Table Ready", html: "<p>A table is ready for you.</p>" },
-      };
-    }
-    return setting.value || {};
+    if (!setting) return { ...DEFAULT_EMAIL_TEMPLATES };
+    return { ...DEFAULT_EMAIL_TEMPLATES, ...(setting.value || {}) };
   } catch (err) {
     logger.error("Failed to read email_templates setting", { error: err.message });
-    return {};
+    return { ...DEFAULT_EMAIL_TEMPLATES };
   }
 };
+
+const getEmailTemplateDefaults = () => ({
+  theme: { ...DEFAULT_EMAIL_THEME },
+  templates: JSON.parse(JSON.stringify(DEFAULT_EMAIL_TEMPLATES)),
+});
 
 const buildTransporter = (config) => {
   return nodemailer.createTransport({
@@ -126,9 +147,12 @@ module.exports = {
   EMAIL_SETTING_KEY,
   EMAIL_THEME_KEY,
   EMAIL_TEMPLATES_KEY,
+  DEFAULT_EMAIL_THEME,
+  DEFAULT_EMAIL_TEMPLATES,
   getEmailConfig,
   getEmailTheme,
   getEmailTemplates,
+  getEmailTemplateDefaults,
   buildTransporter,
   renderTemplate,
   sendEmail,

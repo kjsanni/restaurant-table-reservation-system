@@ -244,18 +244,19 @@ const confirmAction = async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
+  padding: var(--space-20) var(--space-5);
+  gap: var(--space-4);
   color: var(--ink-muted);
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
 }
 
 .spinner {
   width: 32px;
   height: 32px;
   border: 3px solid var(--border);
-  border-top-color: var(--sky-600);
-  border-radius: 50%;
+  border-top-color: var(--accent);
+  border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -268,58 +269,61 @@ const confirmAction = async () => {
 .roles-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .role-card {
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border);
   border-radius: var(--card-radius);
   padding: var(--card-padding);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
   box-shadow: var(--card-shadow);
 }
 
 .role-header {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .role-title-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
 .role-name {
-  font-family: "Inter-Bold";
-  font-size: 16px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-base);
   color: var(--ink);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2-5);
 }
 
 .system-badge {
   font-size: 11px;
-  background-color: #f3f4f6;
-  color: #6b7280;
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-family: "Inter-Medium";
+  background-color: var(--neutral-100);
+  color: var(--ink-secondary);
+  padding: var(--space-0-5) var(--space-2-5);
+  border-radius: var(--radius-sm, 6px);
+  font-family: var(--font-sans);
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 
 .role-description {
-  font-family: "Inter-Light";
-  font-size: 14px;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: var(--text-sm);
   color: var(--ink-muted);
   margin: 0;
 }
@@ -327,12 +331,13 @@ const confirmAction = async () => {
 .meta-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .meta-label {
-  font-family: "Inter-Medium";
-  font-size: 12px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--ink-muted);
@@ -341,157 +346,169 @@ const confirmAction = async () => {
 .perm-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .perm-tag {
   font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background-color: #f3f4f6;
+  padding: var(--space-1) var(--space-2-5);
+  border-radius: var(--radius-sm, 6px);
+  background-color: var(--neutral-100);
   color: var(--ink-muted);
-  font-family: "Inter-Medium";
+  font-family: var(--font-sans);
+  font-weight: 500;
   text-transform: capitalize;
 }
 
 .perm-tag.active {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: var(--earth-50);
+  color: var(--earth-600);
 }
 
 .role-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  transition: all 0.15s;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  transition: all var(--duration-150) var(--ease-in-out);
 }
 
 .btn-primary {
-  background-color: var(--sky-600);
+  background: linear-gradient(135deg, var(--ink) 0%, var(--ink-secondary) 100%);
   color: white;
+  box-shadow: var(--shadow-sm);
 }
 
-.btn-primary:hover {
-  background-color: #2563eb;
+.btn-primary:hover:not(:disabled) {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background-color: #f3f4f6;
+  background-color: var(--neutral-50);
   color: var(--ink);
+  border: 1px solid var(--border);
 }
 
-.btn-secondary:hover {
-  background-color: #e5e7eb;
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--neutral-100);
 }
 
 .btn-danger {
-  background-color: #fef2f2;
-  color: #dc2626;
+  background-color: var(--rose-50);
+  color: var(--rose-600);
 }
 
-.btn-danger:hover {
-  background-color: #fee2e2;
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--rose-100);
 }
 
 .btn-sm {
-  padding: 6px 12px;
-  font-size: 12px;
+  padding: var(--space-1-5) var(--space-3);
+  font-size: var(--text-xs);
 }
 
 .empty-state {
   text-align: center;
-  padding: 40px;
+  padding: var(--space-10);
   color: var(--ink-muted);
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
 }
 
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: var(--z-modal, 1000);
 }
 
 .modal {
-  background-color: white;
-  padding: 24px;
-  border-radius: 12px;
+  background-color: var(--surface);
+  padding: var(--space-6);
+  border-radius: var(--card-radius);
   width: 90%;
   max-width: 480px;
+  box-shadow: var(--shadow-xl, var(--shadow-md));
 }
 
 .modal-title {
-  font-family: "Inter-Bold";
-  font-size: 18px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-lg);
   color: var(--ink);
-  margin: 0 0 20px 0;
+  margin: 0 0 var(--space-5) 0;
 }
 
 .field {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .field label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: var(--space-1-5);
   font-weight: 600;
-  font-family: "Inter-Medium";
-  font-size: 14px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--text-sm);
   color: var(--ink);
 }
 
 .field input {
   width: 100%;
-  padding: 10px 12px;
+  padding: var(--space-3) var(--space-3);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: var(--text-sm);
   color: var(--ink);
+  background: var(--surface);
   box-sizing: border-box;
+  transition: border-color var(--duration-150) var(--ease-in-out),
+    box-shadow var(--duration-150) var(--ease-in-out);
 }
 
 .field input:focus {
   outline: none;
-  border-color: var(--sky-600);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .permissions-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: var(--space-2-5);
 }
 
 .permission-item {
-  font-size: 13px;
+  font-size: var(--text-sm);
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-family: "Inter-Light";
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-weight: 300;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 8px;
+  gap: var(--space-2-5);
+  margin-top: var(--space-2);
 }
 </style>

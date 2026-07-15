@@ -20,6 +20,7 @@ export const authenticatedNavItems: NavItem[] = [
   { routeName: 'calendar', text: 'Calendar', icon: 'mdi:calendar', requiresAuth: true },
   { routeName: 'staff-management', text: 'Staff', icon: 'mdi:account-group', requiresAuth: true },
   { routeName: 'floor-plan', text: 'Floor Plan', icon: 'mdi:map', requiresAuth: true },
+  { routeName: 'floorplan-editor', text: 'Floor Plan Editor', icon: 'mdi:map-edit', requiresAuth: true, requiresPermission: 'manage_tables' },
   { routeName: 'waitlist', text: 'Waitlist', icon: 'mdi:clock', requiresAuth: true },
   { routeName: 'reports', text: 'Reports', icon: 'mdi:chart-bar', requiresAuth: true },
   { routeName: 'heatmap', text: 'Heatmap', icon: 'mdi:chart-area', requiresAuth: true },

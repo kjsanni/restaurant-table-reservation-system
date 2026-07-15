@@ -1,12 +1,19 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { RouterLink } from "vue-router";
 import tableAPI from "@/services/tableAPI";
+import { useAuthStore } from "@/stores/auth";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
 import ErrorMessage from "@/components/ErrorMessage.vue";
 import SuccessMessage from "@/components/SuccessMessage.vue";
 import logger from "@/utils/logger";
 import PageHeader from "@/components/PageHeader.vue";
+
+const authStore = useAuthStore();
+const canManageTables = computed(
+  () => authStore.user?.permissions?.manage_tables === true
+);
 
 const tables = ref([]);
 const waitingStaff = ref([]);
@@ -234,6 +241,13 @@ const staffAtLimit = (staff) => {
       </div>
       <div v-else class="tables-container">
         <div class="actions-row">
+          <RouterLink
+            v-if="canManageTables"
+            to="/admin/floorplan"
+            class="btn btn-secondary floorplan-link"
+          >
+            🗺️ Floor Plan Editor
+          </RouterLink>
           <button class="btn btn-primary" @click="openAddDialog">
             + Add Table
           </button>
@@ -1120,7 +1134,14 @@ const staffAtLimit = (staff) => {
 .actions-row {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
   margin-bottom: var(--space-4);
+}
+
+.floorplan-link {
+  margin-right: auto;
+  text-decoration: none;
 }
 
 .modal-large {
