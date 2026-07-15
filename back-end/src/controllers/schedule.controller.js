@@ -190,7 +190,7 @@ const exportSchedulePDFHandler = async (req, res) => {
   try {
     const browser = await puppeteer.launch({ args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
     const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
     await browser.close();
 
@@ -198,7 +198,10 @@ const exportSchedulePDFHandler = async (req, res) => {
     res.setHeader("Content-Disposition", "attachment; filename=schedule-export.pdf");
     return res.status(200).send(pdfBuffer);
   } catch (err) {
-    try { await browser.close(); } catch {}
+    if (browser) {
+      try { await browser.close(); } catch {}
+    }
+    console.error("PDF export failed:", err);
     return res.status(500).json({
       success: false,
       message: "Failed to generate PDF",

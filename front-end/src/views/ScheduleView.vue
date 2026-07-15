@@ -103,14 +103,19 @@ const exportCSV = async () => {
 };
 
 const exportPDF = async () => {
-  const res = await scheduleAPI.exportSchedulePDF();
-  const url = window.URL.createObjectURL(new Blob([res.data]));
-  const link = document.createElement("a");
-  link.href = url;
-  link.setAttribute("download", "schedule.pdf");
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+  try {
+    const res = await scheduleAPI.exportSchedulePDF();
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "schedule.pdf");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (err) {
+    console.error("Failed to export PDF:", err);
+    alert("Failed to export PDF. Please try again.");
+  }
 };
 </script>
 
