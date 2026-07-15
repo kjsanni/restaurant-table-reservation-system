@@ -36,7 +36,7 @@ const reservationStats = ref({});
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: "GHS",
   }).format(value);
 };
 
