@@ -1,4 +1,5 @@
 const scheduleDAO = require("../DAOs/schedule.dao");
+const puppeteer = require("puppeteer");
 
 const escapeHtml = (str) => {
   if (!str) return "";
@@ -155,27 +156,54 @@ const exportSchedulePDFHandler = async (req, res) => {
   const schedules = await scheduleDAO.getAllSchedules();
   const holidays = await scheduleDAO.getAllHolidays();
 
-  let html = "<html><body>";
-  html += "<h1>Restaurant Schedule</h1>";
-  html += "<h2>Weekly Hours</h2>";
-  html += "<table border='1' cellpadding='5'><tr><th>Day</th><th>Open</th><th>Close</th><th>Slots</th><th>Status</th></tr>";
+  const html = `
+    <html>
+      <head>
+        <meta charset="UTF-8" />
+        <title>Restaurant Schedule</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
+          h1 { font-size: 20px; margin-bottom: 4px; }
+          h2 { font-size: 16px; margin-top: 18px; margin-bottom: 8px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+          th, td { border: 1px solid #d1d5db; padding: 8px 10px; text-align: left; font-size: 13px; }
+          th { background: #f3f4f6; }
+        </style>
+      </head>
+      <body>
+        <h1>Restaurant Schedule</h1>
+        <h2>Weekly Hours</h2>
+        <table>
+          <tr><th>Day</th><th>Open</th><th>Close</th><th>Slots</th><th>Status</th></tr>
+          ${schedules.map(s => `<tr><td>${escapeHtml(s.dayOfWeek)}</td><td>${escapeHtml(s.openTime)}</td><td>${escapeHtml(s.closeTime)}</td><td>${escapeHtml(s.slotDuration)} min</td><td>${escapeHtml(s.isClosed ? "Closed" : "Open")}</td></tr>`).join("")}
+        </table>
 
-  schedules.forEach((s) => {
-    html += `<tr><td>${escapeHtml(s.dayOfWeek)}</td><td>${escapeHtml(s.openTime)}</td><td>${escapeHtml(s.closeTime)}</td><td>${escapeHtml(s.slotDuration)}min</td><td>${escapeHtml(s.isClosed ? "Closed" : "Open")}</td></tr>`;
-  });
+        <h2>Holidays</h2>
+        <table>
+          <tr><th>Date</th><th>Open</th><th>Close</th><th>Status</th><th>Description</th></tr>
+          ${holidays.map(h => `<tr><td>${escapeHtml(h.date)}</td><td>${escapeHtml(h.openTime || "-")}</td><td>${escapeHtml(h.closeTime || "-")}</td><td>${escapeHtml(h.isClosed ? "Closed" : "Special Hours")}</td><td>${escapeHtml(h.description || "")}</td></tr>`).join("")}
+        </table>
+      </body>
+    </html>
+  `;
 
-  html += "</table><h2>Holidays</h2>";
-  html += "<table border='1' cellpadding='5'><tr><th>Date</th><th>Open</th><th>Close</th><th>Status</th><th>Description</th></tr>";
+  try {
+    const browser = await puppeteer.launch({ args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+    const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
+    await browser.close();
 
-  holidays.forEach((h) => {
-    html += `<tr><td>${escapeHtml(h.date)}</td><td>${escapeHtml(h.openTime || "-")}</td><td>${escapeHtml(h.closeTime || "-")}</td><td>${escapeHtml(h.isClosed ? "Closed" : "Special Hours")}</td><td>${escapeHtml(h.description)}</td></tr>`;
-  });
-
-  html += "</table></body></html>";
-
-  res.setHeader("Content-Type", "text/html");
-  res.setHeader("Content-Disposition", "attachment; filename=schedule-export.html");
-  return res.status(200).send(html);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=schedule-export.pdf");
+    return res.status(200).send(pdfBuffer);
+  } catch (err) {
+    try { await browser.close(); } catch {}
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate PDF",
+    });
+  }
 };
 
 module.exports = {
