@@ -5,6 +5,7 @@ import reservationAPI from "@/services/reservationAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
+import PageHeader from "@/components/PageHeader.vue";
 
 const tables = ref([]);
 const reservations = ref([]);
@@ -205,9 +206,7 @@ onMounted(loadData);
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Floor Plan</h1>
-    </div>
+    <PageHeader title="Floor Plan" subtitle="Visual table layout and seating" />
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -393,25 +392,6 @@ onMounted(loadData);
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-
 .content-wrapper {
   margin-top: var(--page-margin-y);
   margin-bottom: var(--page-margin-y);
@@ -878,18 +858,6 @@ onMounted(loadData);
 
   .plan-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  }
-}
-
-@media screen and (min-width: 861px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
-  .content-wrapper {
-    margin-left: 200px;
-    margin-right: 200px;
   }
 }
 

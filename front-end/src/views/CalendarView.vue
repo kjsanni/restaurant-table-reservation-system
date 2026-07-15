@@ -7,6 +7,7 @@ import tableAPI from "@/services/tableAPI";
 import groupAPI from "@/services/groupAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
+import PageHeader from "@/components/PageHeader.vue";
 import {
   paymentOptions,
   getPaymentStatusColor,
@@ -331,9 +332,10 @@ const handleReschedule = async () => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Schedule Calendar</h1>
-    </div>
+    <PageHeader
+      title="Schedule Calendar"
+      subtitle="View and manage reservations by date"
+    />
     <div class="content-wrapper">
       <div class="calendar-header">
         <button @click="previousMonth" class="nav-btn">
@@ -715,40 +717,6 @@ const handleReschedule = async () => {
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-
-.content-wrapper {
-  margin-top: var(--page-margin-y);
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
-  padding: 0;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-
 .content-wrapper {
   margin-top: 24px;
   margin-bottom: 24px;
@@ -1418,23 +1386,5 @@ const handleReschedule = async () => {
 
 .action-btn.reschedule {
   color: #d97706;
-}
-
-@media screen and (min-width: 1024px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
-  .content-wrapper {
-    margin-left: 40px;
-    margin-right: 40px;
-  }
-  .calendar-day {
-    min-height: 90px;
-  }
-  .res-name {
-    font-size: 11px;
-  }
 }
 </style>
