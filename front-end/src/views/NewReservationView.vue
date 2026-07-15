@@ -316,7 +316,7 @@ const registerReservation = async () => {
 }
 
 .form-section {
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -326,7 +326,7 @@ const registerReservation = async () => {
 .section-title {
   font-family: "Inter-Bold";
   font-size: 16px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0 0 16px 0;
 }
 
@@ -345,7 +345,7 @@ const registerReservation = async () => {
 .field-label {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 
 .field-input {
@@ -354,7 +354,7 @@ const registerReservation = async () => {
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   background: white;
   width: 100%;
   box-sizing: border-box;
@@ -362,7 +362,7 @@ const registerReservation = async () => {
 
 .field-input:focus {
   outline: none;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
@@ -385,7 +385,7 @@ textarea.field-input {
 .loyalty-badge {
   font-family: "Inter-Medium";
   font-size: 13px;
-  background: var(--primary-blue);
+  background: var(--color-info-600);
   color: white;
   padding: 6px 14px;
   border-radius: 10px;
@@ -409,7 +409,7 @@ textarea.field-input {
 }
 
 .tag-btn:hover {
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   transform: translateY(-1px);
 }
 
@@ -437,7 +437,7 @@ textarea.field-input {
   font-family: "Inter-Medium";
   font-size: 15px;
   transition: all 0.15s;
-  background-color: var(--primary-blue);
+  background-color: var(--color-info-600);
   color: white;
   width: 100%;
   max-width: 300px;

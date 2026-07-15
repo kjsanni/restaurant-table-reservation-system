@@ -21,7 +21,7 @@ defineProps({
   cursor: pointer;
   font-family: "Inter-Medium";
   font-size: 14px;
-  background: var(--primary-blue, #3b82f6);
+  background: var(--color-info-600);
   color: white;
   transition: all 0.15s;
 }

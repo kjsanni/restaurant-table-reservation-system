@@ -326,15 +326,15 @@ const confirmAction = async () => {
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
+  border: 3px solid var(--restaurant-border);
+  border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -352,7 +352,7 @@ const confirmAction = async () => {
 }
 
 .group-card {
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -379,14 +379,14 @@ const confirmAction = async () => {
 .group-name {
   font-family: "Inter-Bold";
   font-size: 16px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0;
 }
 
 .group-description {
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   margin: 0;
 }
 
@@ -407,7 +407,7 @@ const confirmAction = async () => {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 
 .perm-grid {
@@ -421,7 +421,7 @@ const confirmAction = async () => {
   padding: 4px 10px;
   border-radius: 6px;
   background-color: #f3f4f6;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-family: "Inter-Medium";
   text-transform: capitalize;
 }
@@ -485,7 +485,7 @@ const confirmAction = async () => {
 }
 
 .btn-primary {
-  background-color: var(--primary-blue);
+  background-color: var(--color-info-600);
   color: white;
 }
 
@@ -495,7 +495,7 @@ const confirmAction = async () => {
 
 .btn-secondary {
   background-color: #f3f4f6;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .btn-secondary:hover {
@@ -519,7 +519,7 @@ const confirmAction = async () => {
 .empty-state {
   text-align: center;
   padding: 40px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-family: "Inter-Light";
 }
 
@@ -547,7 +547,7 @@ const confirmAction = async () => {
 .modal-title {
   font-family: "Inter-Bold";
   font-size: 18px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0 0 20px 0;
 }
 
@@ -561,25 +561,25 @@ const confirmAction = async () => {
   font-weight: 600;
   font-family: "Inter-Medium";
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .field input,
 .field select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   box-sizing: border-box;
 }
 
 .field input:focus,
 .field select:focus {
   outline: none;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 

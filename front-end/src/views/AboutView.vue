@@ -49,7 +49,7 @@ import PageHeader from "@/components/PageHeader.vue";
 .about p {
   font-family: "Inter-Light";
   font-size: 16px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   line-height: 1.6;
 }
 

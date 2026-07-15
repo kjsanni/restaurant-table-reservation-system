@@ -113,13 +113,13 @@ const submitTable = async () => {
 .disabled-text {
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   line-height: 1.5;
   margin: 0;
 }
 
 .inline-link {
-  color: var(--primary-blue);
+  color: var(--color-info-600);
   text-decoration: underline;
   font-weight: normal;
 }

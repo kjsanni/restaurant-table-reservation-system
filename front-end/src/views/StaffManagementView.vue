@@ -221,15 +221,15 @@ const deleteStaffMember = async (id) => {
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
+  border: 3px solid var(--restaurant-border);
+  border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -247,7 +247,7 @@ const deleteStaffMember = async (id) => {
 }
 
 .staff-card {
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   border-radius: 12px;
   padding: 20px;
@@ -267,7 +267,7 @@ const deleteStaffMember = async (id) => {
   height: 44px;
   border-radius: 10px;
   background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
-  color: var(--primary-blue);
+  color: var(--color-info-600);
   font-family: "Inter-Bold";
   font-size: 18px;
   display: flex;
@@ -284,7 +284,7 @@ const deleteStaffMember = async (id) => {
 .staff-name {
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0 0 4px 0;
   display: flex;
   align-items: center;
@@ -295,7 +295,7 @@ const deleteStaffMember = async (id) => {
 .staff-email {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   margin: 0;
 }
 
@@ -319,7 +319,7 @@ const deleteStaffMember = async (id) => {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 
 .perm-grid {
@@ -334,12 +334,12 @@ const deleteStaffMember = async (id) => {
   gap: 8px;
   font-size: 13px;
   font-family: "Inter-Light";
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   cursor: pointer;
 }
 
 .perm-item input {
-  accent-color: var(--primary-blue);
+  accent-color: var(--color-info-600);
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -360,7 +360,7 @@ const deleteStaffMember = async (id) => {
 }
 
 .btn-primary {
-  background-color: var(--primary-blue);
+  background-color: var(--color-info-600);
   color: white;
 }
 
@@ -379,7 +379,7 @@ const deleteStaffMember = async (id) => {
 
 .btn-secondary {
   background-color: #f3f4f6;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .btn-secondary:hover {
@@ -394,7 +394,7 @@ const deleteStaffMember = async (id) => {
 .empty-state {
   text-align: center;
   padding: 40px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-family: "Inter-Light";
 }
 
@@ -422,7 +422,7 @@ const deleteStaffMember = async (id) => {
 .modal-title {
   font-family: "Inter-Bold";
   font-size: 18px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0 0 20px 0;
 }
 
@@ -436,34 +436,34 @@ const deleteStaffMember = async (id) => {
   font-weight: 600;
   font-family: "Inter-Medium";
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .modal-input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   box-sizing: border-box;
 }
 
 .modal-input:focus {
   outline: none;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .modal-select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   background-color: white;
   box-sizing: border-box;
   cursor: pointer;
@@ -471,7 +471,7 @@ const deleteStaffMember = async (id) => {
 
 .modal-select:focus {
   outline: none;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 

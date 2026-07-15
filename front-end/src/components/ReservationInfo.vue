@@ -102,9 +102,9 @@ const customerLink = computed(() => {
   justify-content: center;
   flex-direction: column;
   width: 100%;
-  background-color: var(--primary-white);
+  background-color: var(--restaurant-surface);
   padding: 10px 15px;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 10px;
 }
 
@@ -130,12 +130,12 @@ const customerLink = computed(() => {
   font-size: 16px;
   margin: 0;
   flex: 1;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   text-decoration: none;
 }
 
 .names:hover {
-  color: var(--primary-blue);
+  color: var(--color-info-600);
   text-decoration: underline;
 }
 
@@ -175,7 +175,7 @@ const customerLink = computed(() => {
 .notes-label {
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   margin: 0 0 4px 0;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -184,7 +184,7 @@ const customerLink = computed(() => {
 .notes-text {
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0;
   line-height: 1.4;
   word-break: break-word;

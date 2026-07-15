@@ -407,15 +407,15 @@ onMounted(loadData);
   justify-content: center;
   padding: 100px 20px;
   gap: 16px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
+  border: 3px solid var(--restaurant-border);
+  border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -435,7 +435,7 @@ onMounted(loadData);
 .sidebar-panel {
   width: 260px;
   min-width: 240px;
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -447,7 +447,7 @@ onMounted(loadData);
 .plan-panel {
   flex: 1;
   min-width: 0;
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -465,14 +465,14 @@ onMounted(loadData);
 .panel-header h2 {
   font-family: "Inter-Bold";
   font-size: 15px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0;
 }
 
 .badge {
   font-family: "Inter-Medium";
   font-size: 12px;
-  background: var(--primary-blue);
+  background: var(--color-info-600);
   color: white;
   padding: 2px 10px;
   border-radius: 999px;
@@ -497,7 +497,7 @@ onMounted(loadData);
 
 .pending-card:hover {
   background: white;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
   transform: translateY(-1px);
 }
@@ -519,7 +519,7 @@ onMounted(loadData);
   height: 34px;
   border-radius: 10px;
   background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
-  color: var(--primary-blue);
+  color: var(--color-info-600);
   font-family: "Inter-Bold";
   font-size: 14px;
   display: flex;
@@ -538,7 +538,7 @@ onMounted(loadData);
 .pending-name {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -547,7 +547,7 @@ onMounted(loadData);
 .pending-meta {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 
 .pending-notes {
@@ -563,14 +563,14 @@ onMounted(loadData);
 .drag-hint {
   font-family: "Inter-Light";
   font-size: 11px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   opacity: 0.7;
 }
 
 .empty-state {
   text-align: center;
   padding: 24px 0;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-family: "Inter-Light";
   font-size: 13px;
   display: flex;
@@ -587,7 +587,7 @@ onMounted(loadData);
 .plan-panel {
   flex: 1;
   min-width: 0;
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   border-radius: 14px;
   padding: 20px;
@@ -610,7 +610,7 @@ onMounted(loadData);
   font-family: "Inter-Medium";
   font-size: 12px;
   background: #f3f4f6;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .legend-pill .dot {
@@ -694,7 +694,7 @@ onMounted(loadData);
 .table-id {
   font-family: "Inter-Bold";
   font-size: 15px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .status-dot {
@@ -707,7 +707,7 @@ onMounted(loadData);
 .capacity {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 
 .table-reservation {
@@ -728,7 +728,7 @@ onMounted(loadData);
 .res-time {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 
 .table-empty {
@@ -738,16 +738,16 @@ onMounted(loadData);
   text-align: center;
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 
 .selectable:hover {
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   background: #f8faff;
 }
 
 .table-block.selected {
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
@@ -784,7 +784,7 @@ onMounted(loadData);
   text-align: center;
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   margin-top: 18px;
   padding: 10px;
   border-radius: 8px;
@@ -807,7 +807,7 @@ onMounted(loadData);
   justify-content: flex-end;
   gap: 10px;
   padding-top: 12px;
-  border-top: 1px solid var(--lighter-gray);
+  border-top: 1px solid var(--restaurant-border);
 }
 
 .loading {
@@ -818,8 +818,8 @@ onMounted(loadData);
 
 .btn-outline {
   background-color: transparent;
-  border: 1px solid var(--lighter-gray);
-  color: var(--primary-black);
+  border: 1px solid var(--restaurant-border);
+  color: var(--restaurant-charcoal);
   border-radius: 8px;
   padding: 8px 16px;
   font-family: "Inter-Medium";
@@ -831,7 +831,7 @@ onMounted(loadData);
 }
 
 .btn-primary {
-  background-color: var(--primary-blue);
+  background-color: var(--color-info-600);
   color: white;
   border: none;
   border-radius: 8px;
@@ -870,7 +870,7 @@ onMounted(loadData);
 .error-content p {
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0;
 }
 

@@ -95,7 +95,7 @@ const breadcrumbs = computed(() => {
   font-family: var(--font-serif);
   font-size: var(--text-2xl);
   font-weight: 700;
-  color: var(--snow-white);
+  color: var(--restaurant-cream);
   margin: 0 0 var(--space-1) 0;
   letter-spacing: var(--tracking-tight);
   line-height: var(--leading-tight);

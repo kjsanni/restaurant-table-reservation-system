@@ -91,7 +91,7 @@ onMounted(loadStats);
 
 <style scoped>
 .no-show-widget {
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -108,18 +108,18 @@ onMounted(loadStats);
 .widget-title {
   font-family: "Inter-Bold";
   font-size: 16px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0;
 }
 
 .period-select {
   padding: 6px 10px;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 6px;
   font-family: "Inter-Medium";
   font-size: 12px;
   background-color: white;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .widget-loading {
@@ -131,8 +131,8 @@ onMounted(loadStats);
 .spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
+  border: 2px solid var(--restaurant-border);
+  border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -159,7 +159,7 @@ onMounted(loadStats);
 .metric-label {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
@@ -167,7 +167,7 @@ onMounted(loadStats);
 .metric-value {
   font-family: "Inter-Bold";
   font-size: 22px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .metric-value.no-show {

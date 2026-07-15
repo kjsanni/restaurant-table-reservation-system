@@ -23,8 +23,8 @@ defineProps({
 }
 
 .spinner {
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
+  border: 3px solid var(--restaurant-border);
+  border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -49,7 +49,7 @@ defineProps({
 .loading-text {
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   margin: 0;
 }
 

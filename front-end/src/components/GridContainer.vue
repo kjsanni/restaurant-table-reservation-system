@@ -20,7 +20,7 @@ const props = defineProps({
 
 <style scoped>
 .main-wrapper {
-  background-color: var(--primary-white);
+  background-color: var(--restaurant-surface);
   border: 1px solid var(--primary-gray);
   border-radius: 10px;
   padding: 15px;

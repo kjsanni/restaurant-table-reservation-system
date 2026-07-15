@@ -100,8 +100,8 @@ const freeTable = async (id) => {
 }
 .free-table-button:hover {
   background-color: #ffffff;
-  border-color: var(--primary-blue);
-  color: var(--primary-blue);
+  border-color: var(--color-info-600);
+  color: var(--color-info-600);
 }
 .content {
   display: flex;
@@ -123,12 +123,12 @@ const freeTable = async (id) => {
 .circle {
   width: 12px;
   height: 12px;
-  background-color: var(--primary-white);
+  background-color: var(--restaurant-surface);
   border: 2px solid #94a3b8;
   border-radius: 100%;
 }
 .blackColor {
-  background-color: var(--primary-black);
+  background-color: var(--restaurant-charcoal);
 }
 
 @media screen and (min-width: 1024px) {

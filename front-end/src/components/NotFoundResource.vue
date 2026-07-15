@@ -26,9 +26,9 @@ const props = defineProps({
   width: 100%;
   gap: 10px;
   padding: 50px;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 10px;
-  background-color: var(--primary-white);
+  background-color: var(--restaurant-surface);
 }
 
 .main-wrapper .content {
@@ -36,6 +36,6 @@ const props = defineProps({
   justify-content: center;
   align-items: center;
   gap: 15px;
-  color: var(--lighter-gray);
+  color: var(--restaurant-border);
 }
 </style>

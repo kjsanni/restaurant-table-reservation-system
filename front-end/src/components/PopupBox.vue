@@ -41,7 +41,7 @@ const emit = defineEmits(["close-modal"]);
   z-index: 1000;
 }
 .popup-window {
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border-radius: 14px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   max-width: 90vw;
@@ -65,7 +65,7 @@ const emit = defineEmits(["close-modal"]);
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 .popup-body {
   padding: 20px;

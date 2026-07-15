@@ -495,15 +495,15 @@ const sendTestEmail = async () => {
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
+  border: 3px solid var(--restaurant-border);
+  border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -521,7 +521,7 @@ const sendTestEmail = async () => {
 }
 
 .settings-card {
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -531,7 +531,7 @@ const sendTestEmail = async () => {
 .category-title {
   font-family: "Inter-Bold";
   font-size: 18px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0 0 16px 0;
 }
 
@@ -560,14 +560,14 @@ const sendTestEmail = async () => {
 .setting-label {
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   cursor: default;
 }
 
 .setting-description {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   margin-top: 4px;
 }
 
@@ -588,9 +588,9 @@ const sendTestEmail = async () => {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  border: 1px solid var(--lighter-gray);
-  background: var(--primary-white);
-  color: var(--primary-black);
+  border: 1px solid var(--restaurant-border);
+  background: var(--restaurant-surface);
+  color: var(--restaurant-charcoal);
   font-size: 18px;
   display: flex;
   align-items: center;
@@ -600,9 +600,9 @@ const sendTestEmail = async () => {
 }
 
 .num-btn:hover:not(:disabled) {
-  background: var(--primary-blue);
+  background: var(--color-info-600);
   color: white;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
 }
 
 .num-btn:disabled {
@@ -614,24 +614,24 @@ const sendTestEmail = async () => {
   width: 76px;
   height: 34px;
   text-align: center;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 8px;
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--primary-black);
-  background: var(--primary-white);
+  color: var(--restaurant-charcoal);
+  background: var(--restaurant-surface);
 }
 
 .num-input:focus {
   outline: none;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .unit {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   min-width: 50px;
 }
 
@@ -643,7 +643,7 @@ const sendTestEmail = async () => {
 }
 
 .status-text.saving {
-  color: var(--primary-blue);
+  color: var(--color-info-600);
 }
 
 .status-text.saved {
@@ -670,7 +670,7 @@ const sendTestEmail = async () => {
 .email-field label {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 
 .field-input {
@@ -679,7 +679,7 @@ const sendTestEmail = async () => {
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   background: white;
   width: 100%;
   box-sizing: border-box;
@@ -687,7 +687,7 @@ const sendTestEmail = async () => {
 
 .field-input:focus {
   outline: none;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
@@ -716,7 +716,7 @@ const sendTestEmail = async () => {
 }
 
 .btn-primary {
-  background-color: var(--primary-blue);
+  background-color: var(--color-info-600);
   color: white;
 }
 
@@ -726,7 +726,7 @@ const sendTestEmail = async () => {
 
 .btn-secondary {
   background-color: #f3f4f6;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .btn-secondary:hover {
@@ -754,7 +754,7 @@ const sendTestEmail = async () => {
 .test-title {
   font-family: "Inter-Bold";
   font-size: 15px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0 0 4px 0;
 }
 
@@ -796,7 +796,7 @@ const sendTestEmail = async () => {
   border-radius: 10px;
   background: #fafafa;
   border: 1px solid #f0f0f0;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   font-family: "Inter-Medium";
   font-size: 14px;
   text-decoration: none;
@@ -804,9 +804,9 @@ const sendTestEmail = async () => {
 }
 
 .action-card:hover {
-  background: var(--primary-blue);
+  background: var(--color-info-600);
   color: white;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
 }
 
 .action-icon {

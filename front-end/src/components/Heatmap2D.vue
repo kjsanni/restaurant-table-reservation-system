@@ -274,7 +274,7 @@ const openDrillDown = async (day) => {
                       backgroundColor: cellColor(data.matrix[dIdx][hIdx]),
                       color:
                         data.matrix[dIdx][hIdx] > 0
-                          ? 'var(--primary-black)'
+                          ? 'var(--restaurant-charcoal)'
                           : 'transparent',
                     }"
                     :title="`${date} ${hour}: ${data.matrix[dIdx][hIdx]} reservations`"
@@ -421,7 +421,7 @@ const openDrillDown = async (day) => {
 
 .mode-btn {
   padding: 8px 16px;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 8px;
   background: white;
   font-family: "Inter-Medium";
@@ -435,9 +435,9 @@ const openDrillDown = async (day) => {
 }
 
 .mode-btn.active {
-  background: var(--primary-blue);
+  background: var(--color-info-600);
   color: white;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
 }
 
 .date-range {
@@ -448,15 +448,15 @@ const openDrillDown = async (day) => {
 
 .date-input {
   padding: 8px 10px;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .range-arrow {
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-size: 14px;
 }
 
@@ -474,8 +474,8 @@ const openDrillDown = async (day) => {
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
+  border: 3px solid var(--restaurant-border);
+  border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -490,7 +490,7 @@ const openDrillDown = async (day) => {
   width: 48px;
   height: 48px;
   margin-bottom: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 
 .error-state,
@@ -509,7 +509,7 @@ const openDrillDown = async (day) => {
 .retry-btn {
   margin-top: 12px;
   padding: 8px 16px;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 8px;
   background: white;
   font-family: "Inter-Medium";
@@ -533,7 +533,7 @@ const openDrillDown = async (day) => {
 .legend-label {
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -563,7 +563,7 @@ const openDrillDown = async (day) => {
 .legend-ticks span {
   font-family: "Inter-Bold";
   font-size: 10px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .legend-calendar {
@@ -574,7 +574,7 @@ const openDrillDown = async (day) => {
 }
 
 .heatmap-card {
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -605,7 +605,7 @@ const openDrillDown = async (day) => {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   border-radius: 8px;
 }
 
@@ -615,7 +615,7 @@ const openDrillDown = async (day) => {
   padding: 10px;
   font-family: "Inter-Medium";
   font-size: 11px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -637,7 +637,7 @@ const openDrillDown = async (day) => {
 .matrix-cell:hover {
   transform: scale(1.08);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   z-index: 2;
 }
 
@@ -645,7 +645,7 @@ const openDrillDown = async (day) => {
   font-family: "Inter-Bold";
   font-size: 12px;
   font-weight: 700;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   text-shadow: 0 0 2px rgba(255, 255, 255, 0.4);
 }
 
@@ -659,7 +659,7 @@ const openDrillDown = async (day) => {
   padding: 8px;
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   border-radius: 6px;
 }
 
@@ -669,7 +669,7 @@ const openDrillDown = async (day) => {
   padding: 8px 10px;
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -683,7 +683,7 @@ const openDrillDown = async (day) => {
 }
 
 .calendar-day {
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: 16px 12px;
@@ -705,19 +705,19 @@ const openDrillDown = async (day) => {
 .day-date {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 
 .day-count {
   font-family: "Inter-Bold";
   font-size: 24px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .day-peak {
   font-family: "Inter-Light";
   font-size: 11px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 
 .drill-down {
@@ -750,7 +750,7 @@ const openDrillDown = async (day) => {
   width: 50px;
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   text-align: right;
 }
 
@@ -773,7 +773,7 @@ const openDrillDown = async (day) => {
   text-align: right;
   font-family: "Inter-Bold";
   font-size: 12px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 @media screen and (max-width: 1024px) {

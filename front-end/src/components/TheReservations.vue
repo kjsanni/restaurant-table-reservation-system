@@ -818,7 +818,8 @@ const today = () => {
   justify-content: flex-end;
   width: 100%;
   height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
+  background: var(--restaurant-border)
+    url("@/assets/images/reservations-header.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -827,8 +828,8 @@ const today = () => {
   margin-left: var(--x-spacing-mobile);
   margin-bottom: 15px;
   font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
+  color: var(--restaurant-cream);
+  text-shadow: 1px 1px 2px var(--restaurant-charcoal);
 }
 
 .content-wrapper {
@@ -853,7 +854,7 @@ const today = () => {
 .date-label {
   font-family: "Inter-Bold";
   font-size: 18px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0;
   min-width: 240px;
   text-align: center;
@@ -863,11 +864,11 @@ const today = () => {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   cursor: pointer;
   font-size: 24px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -876,9 +877,9 @@ const today = () => {
 }
 
 .nav-btn:hover {
-  background: var(--primary-blue);
+  background: var(--color-info-600);
   color: white;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
 }
 
 .nav-icon {
@@ -893,7 +894,7 @@ const today = () => {
 }
 
 .section-card {
-  background: var(--primary-white);
+  background: var(--restaurant-surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -907,7 +908,7 @@ const today = () => {
 .section-title {
   font-family: "Inter-Bold";
   font-size: 16px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0;
 }
 
@@ -931,7 +932,7 @@ const today = () => {
 }
 
 .btn-primary {
-  background-color: var(--primary-blue);
+  background-color: var(--color-info-600);
   color: white;
 }
 
@@ -1027,7 +1028,7 @@ const today = () => {
 .confirm-content p {
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0;
 }
 
@@ -1068,7 +1069,7 @@ const today = () => {
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -1086,7 +1087,7 @@ const today = () => {
   border-radius: var(--input-radius);
   font-family: "Inter-Light";
   font-size: 15px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   background: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -1094,7 +1095,7 @@ const today = () => {
 
 .search-input:focus {
   outline: none;
-  border-color: var(--primary-blue);
+  border-color: var(--color-info-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
@@ -1106,7 +1107,7 @@ const today = () => {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   display: flex;
   align-items: center;
   padding: 4px;
@@ -1116,7 +1117,7 @@ const today = () => {
 
 .clear-btn:hover {
   background: #f3f4f6;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
 }
 
 .clear-btn :deep(svg) {
@@ -1132,7 +1133,7 @@ const today = () => {
   margin-left: var(--x-spacing-mobile);
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   cursor: pointer;
   user-select: none;
 }
@@ -1141,7 +1142,7 @@ const today = () => {
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: var(--primary-blue);
+  accent-color: var(--color-info-600);
 }
 
 @media screen and (min-width: 1024px) {

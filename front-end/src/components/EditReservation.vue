@@ -365,7 +365,7 @@ const editReservation = async () => {
 }
 .form-select {
   padding: 10px;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 6px;
   font-size: 14px;
   font-family: "Inter-Light";
@@ -376,7 +376,7 @@ const editReservation = async () => {
 
 .payments-section {
   width: 100%;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 10px;
   padding: 16px;
   margin-bottom: 15px;
@@ -409,7 +409,7 @@ const editReservation = async () => {
   align-items: center;
   justify-content: space-between;
   background: #f9fafb;
-  border: 1px solid var(--lighter-gray);
+  border: 1px solid var(--restaurant-border);
   border-radius: 8px;
   padding: 8px 12px;
 }
@@ -434,11 +434,11 @@ const editReservation = async () => {
 }
 .payment-by {
   font-size: 12px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
 }
 .payment-ref {
   font-size: 11px;
-  color: var(--secondary-gray);
+  color: var(--restaurant-warm-gray);
   font-family: "Inter-Light";
 }
 .remove-pay-btn {
@@ -501,7 +501,7 @@ const editReservation = async () => {
 .confirm-text {
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--primary-black);
+  color: var(--restaurant-charcoal);
   margin: 0 0 20px 0;
 }
 
