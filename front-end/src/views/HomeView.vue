@@ -42,6 +42,17 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
             </template>
             Find Reservation
           </VaButton>
+          <VaButton
+            preset="primary"
+            size="large"
+            class="cta-button"
+            @click="changeRoute('login')"
+          >
+            <template #icon>
+              <Icon icon="mdi:login" width="20" height="20" />
+            </template>
+            Login
+          </VaButton>
         </div>
       </div>
       <div class="hero-visual">

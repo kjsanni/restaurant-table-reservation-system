@@ -1,45 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import {
-  createVuesticEssential,
-  VaButton,
-  VaInput,
-  VaAlert,
-  VaModal,
-  VaCard,
-  VaCardContent,
-  VaCardTitle,
-  VaCardActions,
-  VaDataTable,
-  VaSidebar,
-  VaSidebarItem,
-  VaNavbar,
-  VaLayout,
-  VaForm,
-  VaSelect,
-  VaSwitch,
-  VaChip,
-  VaBadge,
-  VaTooltip,
-  VaSkeleton,
-  VaIcon,
-  VaConfig,
-  VaFileUpload,
-  VaDropdown,
-  VaDropdownItem,
-  VaDivider,
-  VaTextarea,
-  VaAccordion,
-  VaCollapse,
-  VaCollapseItem,
-  VaTabs,
-  VaTab,
-  VaRating,
-  VaAvatar,
-  VaImage,
-  VaProgressBar,
-  VaSpinner,
-} from 'vuestic-ui'
+import { createVuestic } from 'vuestic-ui'
 import 'vuestic-ui/css'
 import App from './App.vue'
 import router from './router'
@@ -48,54 +9,10 @@ import './assets/main.css'
 const pinia = createPinia()
 const app = createApp(App)
 
-const components = {
-  VaButton,
-  VaInput,
-  VaAlert,
-  VaModal,
-  VaCard,
-  VaCardContent,
-  VaCardTitle,
-  VaCardActions,
-  VaDataTable,
-  VaSidebar,
-  VaSidebarItem,
-  VaNavbar,
-  VaLayout,
-  VaForm,
-  VaSelect,
-  VaSwitch,
-  VaChip,
-  VaBadge,
-  VaTooltip,
-  VaSkeleton,
-  VaIcon,
-  VaConfig,
-  VaFileUpload,
-  VaDropdown,
-  VaDropdownItem,
-  VaDivider,
-  VaTextarea,
-  VaAccordion,
-  VaCollapse,
-  VaCollapseItem,
-  VaTabs,
-  VaTab,
-  VaRating,
-  VaAvatar,
-  VaImage,
-  VaProgressBar,
-  VaSpinner,
-}
-
-Object.entries(components).forEach(([name, comp]) => {
-  app.component(name, comp)
-})
-
 app.use(pinia)
 app.use(router)
 app.use(
-  createVuesticEssential({
+  createVuestic({
     config: {
       colors: {
         variables: {
@@ -124,7 +41,7 @@ app.use(
         presets: {
           VaButton: {
             primary: { color: 'primary', size: 'medium' },
-            secondary: { preset: 'secondary', size: 'medium' },
+            secondary: { color: 'secondary', size: 'medium' },
             danger: { color: 'danger', size: 'medium' },
           },
           VaCard: {

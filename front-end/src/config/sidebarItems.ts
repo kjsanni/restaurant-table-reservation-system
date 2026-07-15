@@ -10,6 +10,7 @@ export interface NavItem {
 
 export const guestNavItems: NavItem[] = [
   { routeName: 'home', text: 'Home', icon: 'mdi:home' },
+  { routeName: 'login', text: 'Login', icon: 'mdi:login' },
   { routeName: 'new-reservation', text: 'New Reservation', icon: 'mdi:calendar-plus' },
 ]
 
