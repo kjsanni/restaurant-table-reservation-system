@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import tableAPI from "@/services/tableAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
+import PageHeader from "@/components/PageHeader.vue";
 
 const tables = ref([]);
 const loading = ref(true);
@@ -116,9 +117,10 @@ onUnmounted(() => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Floor Plan Editor</h1>
-    </div>
+    <PageHeader
+      title="Floor Plan Editor"
+      subtitle="Design and customize table layout"
+    />
     <div class="content-wrapper">
       <div class="toolbar">
         <p class="hint">
@@ -162,24 +164,6 @@ onUnmounted(() => {
 
 <style scoped>
 .header {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height, 200px);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile, 16px);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white, #fff);
-  text-shadow: 1px 1px 2px var(--primary-black, #000);
-}
-.content-wrapper {
   margin: 50px var(--x-spacing-mobile, 16px);
   display: flex;
   flex-direction: column;

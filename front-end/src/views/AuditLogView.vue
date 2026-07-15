@@ -125,25 +125,6 @@ const readMore = (text, maxLength = 60) => {
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-
 .content-wrapper {
   margin-top: 12px;
   margin-bottom: var(--page-margin-y);
@@ -323,17 +304,5 @@ const readMore = (text, maxLength = 60) => {
   text-align: center;
   color: var(--secondary-gray);
   padding: 40px;
-}
-
-@media screen and (min-width: 1024px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
-  .content-wrapper {
-    margin-left: 200px;
-    margin-right: 200px;
-  }
 }
 </style>

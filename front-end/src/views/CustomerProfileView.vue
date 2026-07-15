@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 import customerAPI from "@/services/customerAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import SuccessMessage from "@/components/SuccessMessage.vue";
+import PageHeader from "@/components/PageHeader.vue";
 
 const route = useRoute();
 const customerId = route.params.id;
@@ -123,9 +124,10 @@ const navigateToNewReservation = () => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Customer Profile</h1>
-    </div>
+    <PageHeader
+      title="Customer Profile"
+      subtitle="View customer details and history"
+    />
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -309,26 +311,6 @@ const navigateToNewReservation = () => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-}
-
-.header {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
 }
 
 .content-wrapper {
@@ -748,17 +730,5 @@ const navigateToNewReservation = () => {
   padding: 24px;
   color: var(--secondary-gray);
   font-family: "Inter-Light";
-}
-
-@media screen and (min-width: 1024px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
-  .content-wrapper {
-    margin-left: 200px;
-    margin-right: 200px;
-  }
 }
 </style>

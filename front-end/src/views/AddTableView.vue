@@ -40,9 +40,7 @@ const submitTable = async () => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Add Table</h1>
-    </div>
+    <PageHeader title="Add Table" subtitle="Create a new table" />
     <div class="content-wrapper">
       <VaCard>
         <VaCardTitle class="card-title">Add Table</VaCardTitle>
@@ -98,24 +96,6 @@ const submitTable = async () => {
 <style scoped>
 .header {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/add-table-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-
-.content-wrapper {
   margin-top: 12px;
   margin-bottom: var(--page-margin-y);
   margin-left: var(--page-margin-x);
@@ -155,17 +135,5 @@ const submitTable = async () => {
 
 .inline-link:hover {
   color: #2563eb;
-}
-
-@media screen and (min-width: 1024px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
-  .content-wrapper {
-    margin-left: 200px;
-    margin-right: 200px;
-  }
 }
 </style>
