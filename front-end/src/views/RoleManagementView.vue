@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import roleAPI from "@/services/roleAPI";
+import logger from "@/utils/logger";
 
 const roles = ref([]);
 const loading = ref(true);

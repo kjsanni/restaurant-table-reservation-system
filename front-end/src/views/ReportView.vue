@@ -42,11 +42,11 @@ const exportCSV = async () => {
 
 const exportPDF = async () => {
   const res = await reportAPI.exportPDF(filters.value);
-  const blob = new Blob([res.data], { type: "text/plain" });
+  const blob = new Blob([res.data], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "reservations.txt";
+  a.download = "reservations.pdf";
   a.click();
   URL.revokeObjectURL(url);
 };

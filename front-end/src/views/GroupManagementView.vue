@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import groupAPI from "@/services/groupAPI";
 import authAPI from "@/services/authAPI";
+import logger from "@/utils/logger";
 
 const groups = ref([]);
 const users = ref([]);

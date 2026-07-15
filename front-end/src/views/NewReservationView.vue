@@ -9,6 +9,7 @@ import ErrorMessage from "@/components/ErrorMessage.vue";
 import SaveIcon from "~icons/fluent/save-16-regular";
 import logger from "@/utils/logger";
 import getValues from "@/utils/getValues";
+import { validateReservation } from "@/utils/validation";
 
 const reservation = ref({
   firstName: "",
@@ -96,6 +97,12 @@ const registerReservation = async () => {
   isSuccessful.value = false;
   validationErrors.value = null;
   generalError.value = null;
+  const clientErrors = validateReservation(reservation.value);
+  if (clientErrors.length) {
+    generalError.value = clientErrors[0];
+    validationErrors.value = clientErrors;
+    return;
+  }
   try {
     const payload = {
       ...reservation.value,

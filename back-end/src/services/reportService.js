@@ -1,6 +1,7 @@
 const paymentService = require("../services/paymentService");
 const reservationDAO = require("../DAOs/reservation.dao");
 const { Op, fn, col } = require("../db/models");
+const { generateTextPdf } = require("../utils/pdfGenerator");
 
 const getReservationReport = async (filters = {}) => {
   const where = {};
@@ -35,16 +36,29 @@ const exportCSV = async (filters = {}) => {
 
 const exportPDF = async (filters = {}) => {
   const report = await getReservationReport(filters);
-  let text = "RESERVATION REPORT\n";
-  text += "==================\n\n";
-  text += `Generated: ${new Date().toLocaleString()}\n`;
-  text += `Total Reservations: ${report.totalReservations}\n\n`;
-  text += "PAYMENT BREAKDOWN\n";
-  report.paymentBreakdown.byMethod.forEach((m) => {
-    text += `  ${m.method}: $${m.total.toFixed(2)} (${m.count} payments)\n`;
+  const lines = [];
+  lines.push("RESERVATION REPORT");
+  lines.push("==================");
+  lines.push("");
+  lines.push(`Generated: ${new Date().toLocaleString()}`);
+  const range =
+    [filters.from, filters.to].filter(Boolean).join(" to ") || "All dates";
+  lines.push(`Period: ${range}`);
+  lines.push(`Total Reservations: ${report.totalReservations}`);
+  lines.push("");
+  lines.push("PAYMENT BREAKDOWN");
+  (report.paymentBreakdown.byMethod || []).forEach((m) => {
+    lines.push(
+      `  ${m.method}: GHS ${Number(m.total || 0).toFixed(2)} (${m.count} payments)`
+    );
   });
-  text += `\nTotal Revenue: $${report.paymentBreakdown.totalRevenue.toFixed(2)}\n`;
-  return text;
+  lines.push(
+    `Total Revenue: GHS ${Number(report.paymentBreakdown.totalRevenue || 0).toFixed(2)}`
+  );
+  lines.push(
+    `Average Payment: GHS ${Number(report.paymentBreakdown.avgPayment || 0).toFixed(2)}`
+  );
+  return generateTextPdf(lines);
 };
 
 module.exports = {

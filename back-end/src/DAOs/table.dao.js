@@ -52,6 +52,17 @@ const updateTable = async (table, payload) => {
   return await table.update(payload);
 };
 
+const updateTablePosition = async (id, posX, posY) => {
+  const table = await findTableById(id);
+  if (!table) {
+    throw { status: 404, message: "Table not found!" };
+  }
+  return await table.update({
+    posX: posX == null ? null : Number(posX),
+    posY: posY == null ? null : Number(posY),
+  });
+};
+
 const blockTable = async (id, notes = null) => {
   const table = await findTableById(id);
   if (!table) {
@@ -262,4 +273,5 @@ module.exports = {
   getWaitingStaff,
   assignStaffToTable,
   unassignStaffFromTable,
+  updateTablePosition,
 };

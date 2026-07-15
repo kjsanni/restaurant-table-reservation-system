@@ -57,4 +57,9 @@ router
   .post(...protectedRoute("manage_tables", tableController.calculatePriceHandler))
   .all(httpMethodError);
 
+router
+  .route("/:id/position")
+  .patch(...writeRoute("manage_tables", tableController.updatePositionHandler))
+  .all(httpMethodError);
+
 module.exports = router;

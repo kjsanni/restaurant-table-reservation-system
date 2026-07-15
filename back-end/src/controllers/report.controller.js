@@ -32,8 +32,8 @@ const exportPDFHandler = async (req, res) => {
     resStatus: req.query.resStatus,
   };
   const pdf = await reportService.exportPDF(filters);
-  res.setHeader("Content-Type", "text/plain");
-  res.setHeader("Content-Disposition", "attachment; filename=reservations.txt");
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", "attachment; filename=reservations.pdf");
   res.send(pdf);
 };
 

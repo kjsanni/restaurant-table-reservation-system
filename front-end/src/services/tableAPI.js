@@ -37,6 +37,9 @@ class TableAPI {
   updateTable(tableId, data) {
     return API.patch("/tables/" + tableId, data);
   }
+  updatePosition(tableId, posX, posY) {
+    return API.patch("/tables/" + tableId + "/position", { posX, posY });
+  }
 }
 
 export default new TableAPI();

@@ -3,11 +3,26 @@ import PageHeader from "@/components/PageHeader.vue";
 import { ref, computed, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { VaSwitch } from "vuestic-ui";
+import notificationAPI from "@/services/notificationAPI";
 
 const authStore = useAuthStore();
 const loading = ref(true);
 const savingKeys = ref(new Set<string>());
 const savedKeys = ref(new Set<string>());
+
+const emailConfig = ref({
+  host: "",
+  port: 587,
+  secure: false,
+  user: "",
+  pass: "",
+  from: "",
+});
+const emailSaving = ref(false);
+const emailSaved = ref(false);
+const emailTestTo = ref("");
+const emailTestStatus = ref<"" | "sending" | "sent" | "error">("");
+const emailTestMessage = ref("");
 const settingsMap = ref<
   Record<
     string,
@@ -123,6 +138,25 @@ const loadSettings = async () => {
       };
     });
     settingsMap.value = map;
+
+    const emailSetting = data.find(
+      (s: { key: string; value: any }) => s.key === "email_server"
+    );
+    if (emailSetting && emailSetting.value) {
+      const v =
+        typeof emailSetting.value === "string"
+          ? JSON.parse(emailSetting.value)
+          : emailSetting.value;
+      emailConfig.value = {
+        host: "",
+        port: 587,
+        secure: false,
+        user: "",
+        pass: "",
+        from: "",
+        ...v,
+      };
+    }
   } catch (e) {
     console.error("Failed to load settings", e);
   } finally {
@@ -184,6 +218,37 @@ const adjustNumber = (
   if (config.step) newVal = Math.round(newVal / config.step) * config.step;
   setting.value = newVal;
   updateValue(setting);
+};
+
+const saveEmailConfig = async () => {
+  emailSaving.value = true;
+  emailSaved.value = false;
+  try {
+    await authStore.updateSettings("email_server", {
+      ...emailConfig.value,
+      port: Number(emailConfig.value.port) || 587,
+    });
+    emailSaved.value = true;
+    setTimeout(() => (emailSaved.value = false), 2000);
+  } catch (e) {
+    console.error("Failed to save email config", e);
+  } finally {
+    emailSaving.value = false;
+  }
+};
+
+const sendTestEmail = async () => {
+  emailTestStatus.value = "sending";
+  emailTestMessage.value = "";
+  try {
+    await notificationAPI.sendTestEmail(emailTestTo.value);
+    emailTestStatus.value = "sent";
+    emailTestMessage.value = "Test email sent successfully.";
+  } catch (e: any) {
+    emailTestStatus.value = "error";
+    emailTestMessage.value =
+      e?.response?.data?.message || "Failed to send test email.";
+  }
 };
 </script>
 
@@ -280,6 +345,95 @@ const adjustNumber = (
                 >
               </div>
             </div>
+          </div>
+        </div>
+
+        <div class="settings-card email-card">
+          <h2 class="category-title">Email Server (SMTP)</h2>
+          <p class="setting-description">
+            SMTP credentials are stored in the database and used to send
+            reservation and notification emails.
+          </p>
+          <div class="email-grid">
+            <div class="email-field">
+              <label>SMTP Host</label>
+              <input
+                v-model="emailConfig.host"
+                class="field-input"
+                placeholder="smtp.example.com"
+              />
+            </div>
+            <div class="email-field">
+              <label>Port</label>
+              <input
+                v-model.number="emailConfig.port"
+                type="number"
+                class="field-input"
+              />
+            </div>
+            <div class="email-field checkbox-field">
+              <label>Use TLS / SSL (secure)</label>
+              <input v-model="emailConfig.secure" type="checkbox" />
+            </div>
+            <div class="email-field">
+              <label>Username</label>
+              <input
+                v-model="emailConfig.user"
+                class="field-input"
+                placeholder="user@example.com"
+              />
+            </div>
+            <div class="email-field">
+              <label>Password</label>
+              <input
+                v-model="emailConfig.pass"
+                type="password"
+                class="field-input"
+                placeholder="••••••••"
+              />
+            </div>
+            <div class="email-field">
+              <label>From Address</label>
+              <input
+                v-model="emailConfig.from"
+                class="field-input"
+                placeholder="noreply@restaurant.com"
+              />
+            </div>
+          </div>
+          <div class="email-actions">
+            <button
+              class="btn btn-primary"
+              @click="saveEmailConfig"
+              :disabled="emailSaving"
+            >
+              {{ emailSaving ? "Saving..." : "Save Email Settings" }}
+            </button>
+            <span v-if="emailSaved" class="status-text saved">Saved</span>
+          </div>
+
+          <div class="email-test">
+            <h3 class="test-title">Send Test Email</h3>
+            <div class="test-row">
+              <input
+                v-model="emailTestTo"
+                class="field-input"
+                placeholder="test@example.com"
+              />
+              <button
+                class="btn btn-secondary"
+                @click="sendTestEmail"
+                :disabled="emailTestStatus === 'sending'"
+              >
+                {{ emailTestStatus === "sending" ? "Sending..." : "Send Test" }}
+              </button>
+            </div>
+            <p
+              v-if="emailTestMessage"
+              :class="['test-message', emailTestStatus]"
+            >
+              {{ emailTestMessage }}
+            </p>
           </div>
         </div>
 
@@ -494,6 +648,134 @@ const adjustNumber = (
 
 .status-text.saved {
   color: var(--primary-green);
+}
+
+.email-card {
+  margin-top: 4px;
+}
+
+.email-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.email-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.email-field label {
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  color: var(--secondary-gray);
+}
+
+.field-input {
+  padding: 10px 14px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  font-family: "Inter-Light";
+  font-size: 14px;
+  color: var(--primary-black);
+  background: white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.checkbox-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-field input {
+  width: 18px;
+  height: 18px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background-color: var(--primary-blue);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: var(--primary-black);
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.email-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.email-test {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.test-title {
+  font-family: "Inter-Bold";
+  font-size: 15px;
+  color: var(--primary-black);
+  margin: 0 0 4px 0;
+}
+
+.test-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.test-message {
+  font-size: 13px;
+  margin-top: 10px;
+  font-family: "Inter-Medium";
+}
+
+.test-message.sent {
+  color: var(--primary-green);
+}
+
+.test-message.error {
+  color: #dc2626;
 }
 
 .quick-actions-card {

@@ -70,6 +70,7 @@ const createServer = () => {
     cors: {
       origin: allowedOrigins,
       methods: ["GET", "POST"],
+      credentials: true,
     },
   });
 
@@ -89,6 +90,7 @@ const createServer = () => {
     credentials: true,
   }));
   app.use(express.json({ limit: "10kb" }));
+  app.use(express.urlencoded({ limit: "10kb", extended: true }));
   app.use(helmet({
     crossOriginResourcePolicy: false,
     hsts: hstsEnabled,
@@ -125,6 +127,7 @@ const createServer = () => {
   app.use("/api/v1/payments", logAction, paymentRouter);
   app.use("/api/v1/reports", logAction, reportRouter);
   app.use("/api/v1/customers", logAction, customerRouter);
+  app.use("/api/v1/notifications", require("../routes/notification.router"));
   app.get("/api/v1/stats", (req, res) => {
     res.json({ success: true, stats: getStats() });
   });

@@ -144,6 +144,18 @@ const calculatePriceHandler = async (req, res) => {
   });
 };
 
+const updatePositionHandler = async (req, res) => {
+  const { id } = req.params;
+  const { posX, posY } = req.body;
+  const table = await tableService.updatePosition(tableDAO, id, posX, posY);
+
+  return res.status(200).json({
+    success: true,
+    message: "Table position updated!",
+    item: table,
+  });
+};
+
 module.exports = {
   getAllHandler,
   registerHandler,
@@ -156,4 +168,5 @@ module.exports = {
   mergeTablesHandler,
   unmergeTableHandler,
   calculatePriceHandler,
+  updatePositionHandler,
 };

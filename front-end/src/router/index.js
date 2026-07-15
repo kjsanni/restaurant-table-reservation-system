@@ -74,6 +74,18 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresPermission: "manage_tables" },
     },
     {
+      path: "/admin/floorplan",
+      name: "floorplan-editor",
+      component: () => import("../views/FloorPlanEditorView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "manage_tables" },
+    },
+    {
+      path: "/admin/email-templates",
+      name: "email-templates",
+      component: () => import("../views/EmailTemplatesView.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+    {
       path: "/staff/manage",
       name: "staff-management",
       component: () => import("../views/StaffManagementView.vue"),

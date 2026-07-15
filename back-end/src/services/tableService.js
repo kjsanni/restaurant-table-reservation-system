@@ -46,6 +46,10 @@ const unmergeTable = async (tableDAO, tableId) => {
   return await tableDAO.unmergeTable(tableId);
 };
 
+const updatePosition = async (tableDAO, tableId, posX, posY) => {
+  return await tableDAO.updateTablePosition(tableId, posX, posY);
+};
+
 module.exports = {
   getAllTables,
   registerTable,
@@ -56,4 +60,5 @@ module.exports = {
   getPriceForCapacity,
   mergeTables,
   unmergeTable,
+  updatePosition,
 };
