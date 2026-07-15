@@ -163,12 +163,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.header {
-  margin: 50px var(--x-spacing-mobile, 16px);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
 .toolbar {
   display: flex;
   align-items: center;

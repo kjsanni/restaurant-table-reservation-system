@@ -8,6 +8,7 @@ import SuccessMessage from "@/components/SuccessMessage.vue";
 import ErrorMessage from "@/components/ErrorMessage.vue";
 import SaveIcon from "~icons/fluent/save-16-regular";
 import logger from "@/utils/logger";
+import PageHeader from "@/components/PageHeader.vue";
 import getValues from "@/utils/getValues";
 import { validateReservation } from "@/utils/validation";
 
@@ -143,9 +144,7 @@ const registerReservation = async () => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>New Reservation</h1>
-    </div>
+    <PageHeader title="New Reservation" subtitle="Create a new booking" />
     <div class="content-wrapper">
       <form @submit.prevent="registerReservation" class="reservation-form">
         <div class="form-section">
@@ -300,26 +299,6 @@ const registerReservation = async () => {
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: 200px;
-  background: var(--lighter-gray)
-    url("@/assets/images/new-reservation-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-
 .content-wrapper {
   margin-top: 50px;
   margin-bottom: 50px;
@@ -482,11 +461,6 @@ textarea.field-input {
 }
 
 @media screen and (min-width: 1024px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
   .content-wrapper {
     margin-left: 200px;
     margin-right: 200px;

@@ -184,21 +184,6 @@ onMounted(() => {
   margin-left: var(--page-margin-x);
   margin-right: var(--page-margin-x);
   padding: 0;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-
-.content-wrapper {
-  margin-top: 50px;
-  margin-bottom: 50px;
-  margin-left: var(--x-spacing-mobile);
-  margin-right: var(--x-spacing-mobile);
-  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 20px;

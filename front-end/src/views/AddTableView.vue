@@ -94,15 +94,6 @@ const submitTable = async () => {
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  margin-top: 12px;
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
-  padding: 0;
-}
-
 .card-title {
   font-family: "Inter-Bold";
   font-size: 24px;
