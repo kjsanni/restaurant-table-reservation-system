@@ -133,9 +133,9 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresPermission: "view_reservations" },
     },
     {
-      path: "/about",
-      name: "about",
-      component: () => import("../views/AboutView.vue"),
+      path: "/dashboard",
+      name: "dashboard",
+      redirect: "/",
     },
     {
       path: "/:pathMatch(.*)*",

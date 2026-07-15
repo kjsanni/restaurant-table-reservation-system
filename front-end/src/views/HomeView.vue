@@ -1,38 +1,106 @@
 <script setup lang="ts">
-import { VaButton, VaCard, VaCardContent } from "vuestic-ui";
+import { VaButton, VaCard, VaCardContent, VaChip } from "vuestic-ui";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
 import { ref, onMounted } from "vue";
 import reservationAPI from "@/services/reservationAPI";
 import waitlistAPI from "@/services/waitlistAPI";
+import paymentAPI from "@/services/paymentAPI";
+import tableAPI from "@/services/tableAPI";
 
 const router = useRouter();
 const authStore = useAuthStore();
+
 const loading = ref(true);
-const todayReservations = ref(0);
-const waitlistCount = ref(0);
-const recent = ref([]);
+const today = ref(new Date().toISOString().split("T")[0]);
+const thirtyDaysAgo = ref(
+  (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split("T")[0];
+  })()
+);
+
+const stats = ref({
+  todayReservations: 0,
+  waitlistCount: 0,
+  revenue: 0,
+  occupancyRate: 0,
+  totalTables: 0,
+  occupiedTables: 0,
+});
+
+const recentReservations = ref([]);
+const reservationStats = ref({});
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "GHS",
+  }).format(value);
+};
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return "—";
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const getStatusColor = (status: string) => {
+  const colors: Record<string, string> = {
+    confirmed: "primary",
+    seated: "success",
+    cancelled: "danger",
+    completed: "info",
+    missed: "warning",
+    waiting: "warning",
+  };
+  return colors[status] || "secondary";
+};
 
 const loadData = async () => {
   if (!authStore.isAuthenticated) return;
   loading.value = true;
   try {
-    const today = new Date().toISOString().split("T")[0];
-    const [todayRes, waitlistStats, recentRes] = await Promise.all([
-      reservationAPI
-        .getReservations({ resDate: today })
-        .catch(() => ({ data: { collection: [] } })),
-      waitlistAPI.getStats().catch(() => ({ data: { stats: { waiting: 0 } } })),
-      reservationAPI
-        .getReservations({})
-        .catch(() => ({ data: { collection: [] } })),
+    const [resStats, waitlistStats, revenueStats, tables] = await Promise.all([
+      reservationAPI.getReservationStats({
+        from: thirtyDaysAgo.value,
+        to: today.value,
+      }),
+      waitlistAPI.getStats(),
+      paymentAPI.getRevenueStats(thirtyDaysAgo.value, today.value),
+      tableAPI.getTables().catch(() => ({ data: { collection: [] } })),
     ]);
-    todayReservations.value = todayRes.data.collection?.length || 0;
-    waitlistCount.value = waitlistStats.data.stats?.waiting || 0;
-    recent.value = (recentRes.data.collection || []).slice(0, 5);
-  } catch {
-    // ignore
+
+    reservationStats.value = resStats.data.stats || {};
+
+    const todayRes = await reservationAPI.getReservations({
+      resDate: today.value,
+    });
+    stats.value.todayReservations = todayRes.data.collection?.length || 0;
+
+    stats.value.waitlistCount = waitlistStats.data.stats?.waiting || 0;
+    stats.value.revenue = revenueStats.data.stats?.totalRevenue || 0;
+
+    const tableList = tables.data.collection || [];
+    stats.value.totalTables = tableList.length;
+    stats.value.occupiedTables = tableList.filter(
+      (t: any) => t.reservationId && !t.isBlocked
+    ).length;
+    stats.value.occupancyRate =
+      stats.value.totalTables > 0
+        ? Math.round(
+            (stats.value.occupiedTables / stats.value.totalTables) * 100
+          )
+        : 0;
+
+    const recent = await reservationAPI.getReservations({});
+    recentReservations.value = (recent.data.collection || []).slice(0, 8);
+  } catch (err) {
+    console.error("Failed to load dashboard", err);
   } finally {
     loading.value = false;
   }
@@ -42,7 +110,7 @@ onMounted(() => {
   loadData();
 });
 
-const changeRoute = (routeName: string) => router.push({ name: routeName });
+const navigateTo = (routeName: string) => router.push({ name: routeName });
 </script>
 
 <template>
@@ -60,7 +128,7 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
         <VaButton
           preset="primary"
           size="large"
-          @click="changeRoute('new-reservation')"
+          @click="navigateTo('new-reservation')"
         >
           <template #icon>
             <Icon icon="mdi:calendar-plus" width="20" height="20" />
@@ -71,78 +139,201 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading...</p>
+        <p>Loading dashboard...</p>
       </div>
 
       <div v-else class="preview-content">
-        <div class="stat-cards">
+        <div class="stats-grid">
           <VaCard class="stat-card" hoverable>
             <VaCardContent>
-              <div class="stat-icon today-icon">
-                <Icon icon="mdi:calendar-today" width="24" height="24" />
+              <div class="stat-header">
+                <div class="stat-icon today-icon">
+                  <Icon icon="mdi:calendar-today" width="24" height="24" />
+                </div>
+                <VaChip color="primary" size="small">Today</VaChip>
               </div>
-              <div class="stat-value">{{ todayReservations }}</div>
+              <div class="stat-value">{{ stats.todayReservations }}</div>
               <div class="stat-label">Today's Reservations</div>
             </VaCardContent>
           </VaCard>
 
           <VaCard class="stat-card" hoverable>
             <VaCardContent>
-              <div class="stat-icon waitlist-icon">
-                <Icon icon="mdi:clock-outline" width="24" height="24" />
+              <div class="stat-header">
+                <div class="stat-icon waitlist-icon">
+                  <Icon icon="mdi:clock-outline" width="24" height="24" />
+                </div>
+                <VaChip color="warning" size="small">Active</VaChip>
               </div>
-              <div class="stat-value">{{ waitlistCount }}</div>
+              <div class="stat-value">{{ stats.waitlistCount }}</div>
               <div class="stat-label">Waitlist</div>
             </VaCardContent>
           </VaCard>
 
-          <VaCard
-            class="stat-card"
-            hoverable
-            @click="changeRoute('reservations')"
-          >
+          <VaCard class="stat-card" hoverable>
             <VaCardContent>
-              <div class="stat-icon reservations-icon">
-                <Icon icon="mdi:format-list-bulleted" width="24" height="24" />
+              <div class="stat-header">
+                <div class="stat-icon revenue-icon">
+                  <Icon icon="mdi:currency-usd" width="24" height="24" />
+                </div>
+                <VaChip color="success" size="small">30 days</VaChip>
               </div>
-              <div class="stat-value">{{ recent.length }}</div>
-              <div class="stat-label">Recent Bookings</div>
+              <div class="stat-value">{{ formatCurrency(stats.revenue) }}</div>
+              <div class="stat-label">Revenue</div>
+            </VaCardContent>
+          </VaCard>
+
+          <VaCard class="stat-card" hoverable>
+            <VaCardContent>
+              <div class="stat-header">
+                <div class="stat-icon occupancy-icon">
+                  <Icon icon="mdi:chart-donut" width="24" height="24" />
+                </div>
+                <VaChip
+                  :color="stats.occupancyRate > 80 ? 'danger' : 'primary'"
+                  size="small"
+                >
+                  {{ stats.occupancyRate }}%
+                </VaChip>
+              </div>
+              <div class="stat-value">
+                {{ stats.occupiedTables }}/{{ stats.totalTables }}
+              </div>
+              <div class="stat-label">Table Occupancy</div>
             </VaCardContent>
           </VaCard>
         </div>
 
-        <VaCard class="recent-card">
-          <VaCardContent>
-            <div class="recent-header">
-              <h2 class="recent-title">Recent Reservations</h2>
-              <VaButton
-                preset="secondary"
-                size="small"
-                @click="changeRoute('reservations')"
-              >
-                View All
-              </VaButton>
-            </div>
-            <div v-if="recent.length === 0" class="empty-state-inline">
-              <p>No reservations yet.</p>
-            </div>
-            <div v-else class="recent-list">
-              <div v-for="res in recent" :key="res.id" class="recent-item">
-                <div class="recent-info">
-                  <div class="recent-name">
-                    {{ res.Customer?.name || "Guest" }}
-                  </div>
-                  <div class="recent-meta">
-                    {{ res.resDate }} at {{ res.resTime?.slice(0, 5) }}
-                  </div>
-                </div>
-                <div class="recent-party">
-                  {{ res.people }} {{ res.people === 1 ? "guest" : "guests" }}
-                </div>
+        <div class="dashboard-sections">
+          <VaCard class="recent-card">
+            <VaCardContent>
+              <div class="section-header">
+                <h2 class="section-title">Recent Reservations</h2>
+                <VaButton
+                  preset="secondary"
+                  size="small"
+                  @click="navigateTo('reservations')"
+                >
+                  View All
+                </VaButton>
               </div>
-            </div>
-          </VaCardContent>
-        </VaCard>
+              <div
+                v-if="recentReservations.length === 0"
+                class="empty-state-inline"
+              >
+                <p>No reservations yet.</p>
+              </div>
+              <div v-else class="recent-table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Customer</th>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>Party</th>
+                      <th>Status</th>
+                      <th>Payment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="res in recentReservations" :key="res.id">
+                      <td>#{{ res.id }}</td>
+                      <td>{{ res.Customer?.name || "Guest" }}</td>
+                      <td>{{ formatDate(res.resDate) }}</td>
+                      <td>{{ res.resTime?.slice(0, 5) || "—" }}</td>
+                      <td>{{ res.people }}</td>
+                      <td>
+                        <VaChip
+                          :color="getStatusColor(res.resStatus)"
+                          size="small"
+                        >
+                          {{ res.resStatus }}
+                        </VaChip>
+                      </td>
+                      <td>
+                        <VaChip
+                          :color="
+                            res.paymentStatus === 'paid' ? 'success' : 'warning'
+                          "
+                          size="small"
+                        >
+                          {{ res.paymentStatus }}
+                        </VaChip>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </VaCardContent>
+          </VaCard>
+
+          <div class="quick-actions">
+            <VaCard
+              class="action-card"
+              hoverable
+              @click="navigateTo('new-reservation')"
+            >
+              <VaCardContent>
+                <div class="action-icon">
+                  <Icon icon="mdi:calendar-plus" width="32" height="32" />
+                </div>
+                <div class="action-text">
+                  <div class="action-title">New Reservation</div>
+                  <div class="action-subtitle">Create a booking</div>
+                </div>
+              </VaCardContent>
+            </VaCard>
+
+            <VaCard
+              class="action-card"
+              hoverable
+              @click="navigateTo('waitlist')"
+            >
+              <VaCardContent>
+                <div class="action-icon">
+                  <Icon icon="mdi:clock-outline" width="32" height="32" />
+                </div>
+                <div class="action-text">
+                  <div class="action-title">Waitlist</div>
+                  <div class="action-subtitle">Manage queue</div>
+                </div>
+              </VaCardContent>
+            </VaCard>
+
+            <VaCard
+              class="action-card"
+              hoverable
+              @click="navigateTo('table-management')"
+            >
+              <VaCardContent>
+                <div class="action-icon">
+                  <Icon icon="mdi:table" width="32" height="32" />
+                </div>
+                <div class="action-text">
+                  <div class="action-title">Tables</div>
+                  <div class="action-subtitle">Manage seating</div>
+                </div>
+              </VaCardContent>
+            </VaCard>
+
+            <VaCard
+              class="action-card"
+              hoverable
+              @click="navigateTo('schedule')"
+            >
+              <VaCardContent>
+                <div class="action-icon">
+                  <Icon icon="mdi:calendar-clock" width="32" height="32" />
+                </div>
+                <div class="action-text">
+                  <div class="action-title">Schedule</div>
+                  <div class="action-subtitle">Hours & holidays</div>
+                </div>
+              </VaCardContent>
+            </VaCard>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -161,7 +352,7 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
               preset="primary"
               size="large"
               class="cta-button"
-              @click="changeRoute('new-reservation')"
+              @click="navigateTo('new-reservation')"
             >
               <template #icon>
                 <Icon icon="mdi:calendar-plus" width="20" height="20" />
@@ -172,7 +363,7 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
               preset="secondary"
               size="large"
               class="cta-button"
-              @click="changeRoute('login')"
+              @click="navigateTo('login')"
             >
               <template #icon>
                 <Icon icon="mdi:login" width="20" height="20" />
@@ -326,30 +517,43 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
   gap: var(--space-8);
 }
 
-.stat-cards {
+.stats-grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
 @media (min-width: 640px) {
-  .stat-cards {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 .stat-card {
   background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  transition: transform var(--duration-200) var(--ease-out),
-    box-shadow var(--duration-200) var(--ease-out);
+  transition: transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
 }
 
 .stat-icon {
@@ -359,34 +563,30 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--space-4);
 }
 
 .today-icon {
-  background: linear-gradient(135deg, var(--sky-100) 0%, var(--sky-200) 100%);
-  color: var(--sky-600);
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-info-600);
 }
 
 .waitlist-icon {
-  background: linear-gradient(
-    135deg,
-    var(--accent-100) 0%,
-    var(--accent-200) 100%
-  );
-  color: var(--accent-600);
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--color-warm-600);
 }
 
-.reservations-icon {
-  background: linear-gradient(
-    135deg,
-    var(--brand-100) 0%,
-    var(--brand-200) 100%
-  );
-  color: var(--brand-700);
+.revenue-icon {
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--color-success-600);
+}
+
+.occupancy-icon {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--color-accent-600);
 }
 
 .stat-value {
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   font-size: var(--text-3xl);
   font-weight: 700;
   color: var(--ink);
@@ -397,26 +597,38 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 .stat-label {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--ink-secondary);
   font-weight: 500;
+}
+
+.dashboard-sections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 1024px) {
+  .dashboard-sections {
+    grid-template-columns: 2fr 1fr;
+  }
 }
 
 .recent-card {
   background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
 
-.recent-header {
+.section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--space-5);
 }
 
-.recent-title {
-  font-family: var(--font-sans);
+.section-title {
+  font-family: var(--font-serif);
   font-size: var(--text-xl);
   font-weight: 700;
   color: var(--ink);
@@ -424,43 +636,74 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
   letter-spacing: var(--tracking-tight);
 }
 
+.recent-table-wrapper {
+  overflow-x: auto;
+}
+
 .empty-state-inline {
   text-align: center;
   padding: var(--space-10);
-  color: var(--ink-muted);
+  color: var(--ink-secondary);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
 }
 
-.recent-item {
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.action-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.action-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-50);
+  color: var(--ink);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid var(--border-subtle);
-}
-.recent-item:last-child {
-  border-bottom: none;
+  justify-content: center;
+  margin-bottom: var(--space-4);
 }
 
-.recent-name {
+.action-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.action-title {
   font-family: var(--font-sans);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--ink);
 }
 
-.recent-meta {
+.action-subtitle {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--ink-muted);
-}
-
-.recent-party {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--ink-muted);
+  color: var(--ink-secondary);
 }
 
 .public-landing {
