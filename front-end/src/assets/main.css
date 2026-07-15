@@ -1,19 +1,52 @@
 @import "./base.css";
 
+/* ─── Ambient Atmosphere ─── */
+body {
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--glow-warm);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.8;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--glow-cool);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
+
 ::-webkit-scrollbar-track {
-  background: var(--color-primary-50);
+  background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary-300);
+  background: var(--neutral-300);
   border-radius: var(--radius-full);
+  border: 2px solid var(--background);
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-400);
+  background: var(--neutral-400);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--neutral-500);
 }
 
 /* ─── Reset & Base ─── */
@@ -27,63 +60,105 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-}
-
-body {
-  margin: 0;
-  color: var(--restaurant-charcoal);
-  background: var(--restaurant-background);
-  line-height: var(--leading-normal);
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--background-warm);
+  line-height: var(--leading-normal);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+#app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
 /* ─── Typography ─── */
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
-  font-family: var(--font-serif);
-  font-weight: 700;
+  font-family: var(--font-sans);
+  font-weight: 650;
   letter-spacing: var(--tracking-tight);
-  line-height: var(--leading-tight);
-  color: var(--restaurant-charcoal);
+  line-height: var(--leading-snug);
+  color: var(--ink);
 }
 
-h1 { font-size: var(--text-4xl); }
-h2 { font-size: var(--text-3xl); }
-h3 { font-size: var(--text-2xl); }
-h4 { font-size: var(--text-xl); }
-h5 { font-size: var(--text-lg); }
-h6 { font-size: var(--text-base); }
+h1 {
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  letter-spacing: var(--tracking-tighter);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+}
+
+h4 {
+  font-size: var(--text-xl);
+  font-weight: 650;
+}
+
+h5 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+h6 {
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
 
 p {
   margin: 0;
   line-height: var(--leading-relaxed);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 a {
-  color: var(--restaurant-accent);
+  color: var(--accent);
   text-decoration: none;
   font-weight: 500;
-  transition: color var(--duration-fast) var(--ease-in-out);
+  transition: color var(--duration-150) var(--ease-in-out);
 }
+
 a:hover {
-  color: var(--restaurant-golden);
+  color: var(--accent-hover);
 }
+
 a:focus-visible {
-  outline: 2px solid var(--restaurant-accent);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
-button {
-  appearance: none;
-  border: none;
-  font-family: var(--font-sans);
-  cursor: pointer;
+strong, b {
+  font-weight: 650;
+  color: var(--ink);
+}
+
+small {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
 }
 
 /* ─── Images ─── */
@@ -97,79 +172,227 @@ img {
 input, textarea, select {
   font-family: var(--font-sans);
   font-size: var(--text-base);
+  line-height: var(--leading-normal);
 }
 
-/* ─── Modal Refinements ─── */
+/* ─── Selection ─── */
+::selection {
+  background: var(--brand-200);
+  color: var(--brand-900);
+}
+
+/* ─── Focus Global ─── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── VaModal Refinements ─── */
 .va-modal__overlay {
-  background: var(--color-primary-900) !important;
-  opacity: 0.55 !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  background: rgba(26, 20, 16, 0.55) !important;
+  backdrop-filter: blur(16px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.2) !important;
 }
+
 .va-modal__dialog {
-  border-radius: var(--radius-xl) !important;
-  box-shadow: var(--shadow-xl) !important;
+  border-radius: var(--radius-2xl) !important;
+  box-shadow: var(--shadow-2xl) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
 }
+
 .va-modal__title {
-  font-family: var(--font-serif) !important;
-  font-size: var(--text-2xl) !important;
+  font-family: var(--font-sans) !important;
+  font-size: var(--text-xl) !important;
   font-weight: 700 !important;
   letter-spacing: var(--tracking-tight) !important;
-  color: var(--restaurant-charcoal) !important;
+  color: var(--ink) !important;
   margin-bottom: var(--space-4) !important;
 }
+
 .va-modal__inner {
   font-family: var(--font-sans);
   font-size: var(--text-base);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
+
 .va-modal__message {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-muted);
   line-height: var(--leading-relaxed);
   margin-bottom: var(--space-6);
 }
+
 .va-modal__footer {
   padding-top: var(--space-4);
-  border-top: 1px solid var(--restaurant-border);
+  border-top: 1px solid var(--border-subtle);
   margin-top: var(--space-4);
 }
+
 .va-modal__close {
   top: var(--space-4) !important;
   right: var(--space-4) !important;
-  color: var(--restaurant-secondary) !important;
+  color: var(--ink-muted) !important;
 }
+
 .va-modal .va-card {
   border: none !important;
   box-shadow: none !important;
   background: transparent !important;
 }
+
 .va-modal .va-card__content {
   padding: 0 !important;
 }
 
-/* ─── Card Refinements ─── */
+/* ─── VaCard Refinements ─── */
 .va-card {
-  transition: box-shadow var(--duration-normal) var(--ease-out),
-              transform var(--duration-normal) var(--ease-out);
-}
-.va-card:hover {
-  box-shadow: var(--shadow-lg);
+  transition: box-shadow var(--duration-200) var(--ease-out),
+              transform var(--duration-200) var(--ease-out),
+              border-color var(--duration-200) var(--ease-out);
+  border: 1px solid var(--border-subtle) !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
-/* ─── Button Refinements ─── */
+.va-card:hover {
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--border) !important;
+}
+
+/* ─── VaButton Refinements ─── */
 .va-button--primary {
-  background: linear-gradient(135deg, var(--restaurant-charcoal) 0%, var(--restaurant-slate) 100%);
-  border: none;
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
+  background: linear-gradient(135deg, var(--brand-700) 0%, var(--brand-600) 100%) !important;
+  border: none !important;
+  font-weight: 600 !important;
+  letter-spacing: var(--tracking-wide) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all var(--duration-150) var(--ease-in-out) !important;
 }
+
+.va-button--primary:hover {
+  background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-500) 100%) !important;
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-1px);
+}
+
 .va-button--danger {
-  background: linear-gradient(135deg, var(--restaurant-terracotta) 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, var(--rose-500) 0%, var(--rose-600) 100%) !important;
+  border: none !important;
 }
+
 .va-button--success {
-  background: linear-gradient(135deg, var(--restaurant-sage) 0%, #15803d 100%);
+  background: linear-gradient(135deg, var(--earth-500) 0%, var(--earth-600) 100%) !important;
+  border: none !important;
+}
+
+.va-button--plain {
+  color: var(--ink-secondary) !important;
+}
+
+.va-button--plain:hover {
+  background: var(--neutral-100) !important;
+  color: var(--ink) !important;
+}
+
+/* ─── VaInput Refinements ─── */
+.va-input-wrapper {
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  transition: all var(--duration-150) var(--ease-in-out) !important;
+}
+
+.va-input-wrapper:hover {
+  border-color: var(--neutral-300) !important;
+}
+
+.va-input-wrapper:focus-within {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-soft) !important;
+}
+
+.va-input {
+  font-family: var(--font-sans) !important;
+  font-size: var(--text-base) !important;
+  color: var(--ink) !important;
+  line-height: var(--leading-normal) !important;
+}
+
+.va-input::placeholder {
+  color: var(--ink-subtle) !important;
+}
+
+/* ─── VaSelect Refinements ─── */
+.va-select {
+  border-radius: var(--radius-lg) !important;
+}
+
+/* ─── VaChip Refinements ─── */
+.va-chip {
+  border-radius: var(--radius-full) !important;
+  font-weight: 500 !important;
+  letter-spacing: var(--tracking-wide) !important;
+  font-size: var(--text-xs) !important;
+}
+
+/* ─── VaTable Refinements ─── */
+.va-table {
+  border-radius: var(--radius-xl) !important;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.va-table thead th {
+  background: var(--neutral-50) !important;
+  font-weight: 600 !important;
+  font-size: var(--text-xs) !important;
+  letter-spacing: var(--tracking-wider) !important;
+  text-transform: uppercase !important;
+  color: var(--ink-muted) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.va-table tbody tr {
+  transition: background var(--duration-150) var(--ease-in-out) !important;
+}
+
+.va-table tbody tr:hover {
+  background: var(--surface-sunken) !important;
+}
+
+/* ─── VaSidebar Refinements ─── */
+.va-sidebar {
+  border-right: 1px solid var(--border-subtle) !important;
+}
+
+.va-sidebar__item {
+  border-radius: var(--radius-lg) !important;
+  margin: var(--space-1) var(--space-2) !important;
+  transition: all var(--duration-150) var(--ease-in-out) !important;
+}
+
+.va-sidebar__item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.va-sidebar__item--active {
+  background: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 3px 0 0 var(--accent) !important;
+}
+
+/* ─── VaNotification Refinements ─── */
+.va-notification {
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* ─── VaToast Refinements ─── */
+.va-toast {
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xl) !important;
 }
 
 /* ─── Layout ─── */
@@ -178,13 +401,25 @@ input, textarea, select {
   display: none !important;
 }
 
-/* ─── Ambient depth ─── */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(ellipse at 15% 20%, rgba(251, 191, 36, 0.025) 0%, transparent 50%),
-              radial-gradient(ellipse at 85% 80%, rgba(220, 38, 38, 0.02) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
+/* ─── Utility ─── */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.glass-dark {
+  background: rgba(26, 20, 16, 0.75);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
 }

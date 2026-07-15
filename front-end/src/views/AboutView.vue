@@ -19,8 +19,8 @@ import PageHeader from "@/components/PageHeader.vue";
 
 <style scoped>
 .main-wrapper {
-  min-height: calc(100vh - var(--header-height));
-  background: var(--restaurant-background);
+  min-height: calc(100vh - 64px);
+  background: var(--background);
 }
 
 .content-wrapper {
@@ -42,21 +42,21 @@ import PageHeader from "@/components/PageHeader.vue";
 .about h1 {
   font-family: "Inter-Bold";
   font-size: 28px;
-  color: var(--restaurant-primary);
+  color: var(--primary);
   margin-bottom: 16px;
 }
 
 .about p {
   font-family: "Inter-Light";
   font-size: 16px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   line-height: 1.6;
 }
 
 @media screen and (min-width: 1024px) {
   .content-wrapper {
-    margin-left: var(--x-spacing-desktop);
-    margin-right: var(--x-spacing-desktop);
+    margin-left: var(--space-8);
+    margin-right: var(--space-8);
   }
 }
 </style>

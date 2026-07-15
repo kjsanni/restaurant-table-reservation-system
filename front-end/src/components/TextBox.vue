@@ -36,7 +36,7 @@ const emit = defineEmits(["update:input"]);
 .text-box-label {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 .text-box-input {
   padding: 10px 14px;

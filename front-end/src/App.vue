@@ -284,11 +284,11 @@ onUnmounted(() => {
 :deep(.va-sidebar) {
   background: linear-gradient(
     180deg,
-    var(--color-primary-900) 0%,
-    #1a2332 100%
+    var(--brand-900) 0%,
+    #120e0b 100%
   ) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
-  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.15) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 4px 0 32px rgba(26, 20, 16, 0.25) !important;
 }
 
 :deep(.va-sidebar__menu) {
@@ -417,10 +417,11 @@ onUnmounted(() => {
   color: white !important;
   background: linear-gradient(
     90deg,
-    rgba(251, 191, 36, 0.15) 0%,
-    rgba(220, 38, 38, 0.08) 100%
+    rgba(217, 119, 6, 0.18) 0%,
+    rgba(180, 83, 9, 0.08) 100%
   ) !important;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  box-shadow: inset 3px 0 0 var(--accent) !important;
 }
 .nav-item:deep(.va-sidebar-item--active::before) {
   opacity: 1;
@@ -513,15 +514,15 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   height: 64px;
-  background: var(--restaurant-surface);
-  border-bottom: 1px solid var(--restaurant-border);
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid var(--border-subtle);
   padding: 0 var(--space-6);
   gap: var(--space-4);
   z-index: var(--z-sticky);
   position: sticky;
   top: 0;
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
 }
 
 .topbar-left {
@@ -553,10 +554,10 @@ onUnmounted(() => {
 }
 
 .topbar-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: var(--text-base);
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   letter-spacing: var(--tracking-tight);
 }
 
@@ -568,17 +569,21 @@ onUnmounted(() => {
 
 .main-content {
   flex: 1;
-  padding: var(--space-8) var(--x-spacing-mobile);
+  padding: var(--space-8) var(--space-6);
   min-height: calc(100vh - 64px);
-  transition: margin-left var(--duration-normal) var(--ease-in-out);
+  transition: margin-left var(--duration-300) var(--ease-out);
+  position: relative;
+  z-index: 1;
 }
 
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(26, 20, 16, 0.45);
   z-index: var(--z-overlay);
-  transition: opacity var(--duration-normal) var(--ease-in-out);
+  transition: opacity var(--duration-300) var(--ease-out);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 @media screen and (max-width: 768px) {
@@ -619,17 +624,20 @@ onUnmounted(() => {
 }
 
 .app-footer {
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-5) var(--space-6);
   text-align: center;
-  border-top: 1px solid var(--restaurant-border);
-  background: var(--restaurant-surface);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface);
   margin-left: 0;
-  transition: margin-left var(--duration-normal) var(--ease-in-out);
+  transition: margin-left var(--duration-300) var(--ease-out);
+  position: relative;
+  z-index: 1;
 }
 
 .footer-text {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--color-primary-400);
+  color: var(--ink-muted);
+  font-weight: 450;
 }
 </style>

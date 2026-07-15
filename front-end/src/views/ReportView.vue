@@ -196,14 +196,14 @@ onMounted(() => {
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--restaurant-border);
+  border: 3px solid var(--border);
   border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -216,7 +216,7 @@ onMounted(() => {
 }
 
 .filters-card {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -226,7 +226,7 @@ onMounted(() => {
 .card-title {
   font-family: "Inter-Bold";
   font-size: 18px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 20px 0;
 }
 
@@ -245,7 +245,7 @@ onMounted(() => {
 .field-label {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .field-input {
@@ -254,7 +254,7 @@ onMounted(() => {
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   background: white;
 }
 
@@ -305,7 +305,7 @@ onMounted(() => {
 }
 
 .report-metric {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: 12px;
   padding: 20px;
@@ -333,7 +333,7 @@ onMounted(() => {
 .metric-label {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -341,11 +341,11 @@ onMounted(() => {
 .metric-value {
   font-family: "Inter-Bold";
   font-size: 24px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .breakdown-card {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: 14px;
   padding: 24px;
@@ -373,20 +373,20 @@ onMounted(() => {
 .breakdown-method {
   font-family: "Inter-Medium";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   text-transform: capitalize;
 }
 
 .breakdown-amount {
   font-family: "Inter-Bold";
   font-size: 15px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .breakdown-count {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   background: #f3f4f6;
   padding: 2px 8px;
   border-radius: 6px;
@@ -395,7 +395,7 @@ onMounted(() => {
 .empty-state {
   text-align: center;
   padding: 30px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
   font-size: 14px;
 }
@@ -429,7 +429,7 @@ onMounted(() => {
 
 .btn-secondary {
   background-color: #f3f4f6;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .btn-secondary:hover {

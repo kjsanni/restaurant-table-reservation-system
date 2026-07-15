@@ -187,8 +187,8 @@ onMounted(loadTemplates);
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid var(--restaurant-border);
-  border-top-color: var(--restaurant-accent);
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
   border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
@@ -200,7 +200,7 @@ onMounted(loadTemplates);
 .loading-state p {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 .templates-container {
@@ -211,8 +211,8 @@ onMounted(loadTemplates);
 
 .theme-card,
 .template-card {
-  background: var(--restaurant-surface);
-  border: 1px solid var(--restaurant-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   box-shadow: var(--shadow-sm);
@@ -227,7 +227,7 @@ onMounted(loadTemplates);
   font-family: var(--font-serif);
   font-size: var(--text-lg);
   margin: 0 0 var(--space-4) 0;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .field {
@@ -241,25 +241,25 @@ onMounted(loadTemplates);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 .field-input {
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   width: 100%;
   box-sizing: border-box;
-  background: var(--restaurant-surface);
-  color: var(--restaurant-charcoal);
+  background: var(--surface);
+  color: var(--ink);
   transition: border-color var(--duration-fast) var(--ease-in-out),
     box-shadow var(--duration-fast) var(--ease-in-out);
 }
 .field-input:focus {
   outline: none;
-  border-color: var(--restaurant-accent);
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
@@ -267,7 +267,7 @@ onMounted(loadTemplates);
   width: 64px;
   height: 44px;
   padding: var(--space-1);
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   cursor: pointer;
 }
@@ -288,14 +288,14 @@ onMounted(loadTemplates);
 .test-section {
   margin-top: var(--space-6);
   padding-top: var(--space-5);
-  border-top: 1px solid var(--restaurant-border);
+  border-top: 1px solid var(--border);
 }
 
 .test-title {
   font-family: var(--font-serif);
   font-size: var(--text-base);
   margin: 0 0 var(--space-3) 0;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .test-row {
@@ -325,11 +325,7 @@ onMounted(loadTemplates);
   transition: all var(--duration-fast) var(--ease-in-out);
 }
 .btn-primary {
-  background: linear-gradient(
-    135deg,
-    var(--restaurant-charcoal) 0%,
-    var(--restaurant-slate) 100%
-  );
+  background: linear-gradient(135deg, var(--ink) 0%, var(--ink-secondary) 100%);
   color: white;
   box-shadow: var(--shadow-sm);
 }
@@ -339,8 +335,8 @@ onMounted(loadTemplates);
 }
 .btn-secondary {
   background: var(--color-primary-50);
-  color: var(--restaurant-charcoal);
-  border: 1px solid var(--restaurant-border);
+  color: var(--ink);
+  border: 1px solid var(--border);
 }
 .btn-secondary:hover {
   background: var(--color-primary-100);

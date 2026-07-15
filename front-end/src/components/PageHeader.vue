@@ -42,30 +42,46 @@ const breadcrumbs = computed(() => {
 <style scoped>
 .app-page-header {
   width: 100%;
-  padding: var(--space-6) var(--x-spacing-mobile) var(--space-5);
+  padding: var(--space-6) var(--space-6) var(--space-5);
   background: linear-gradient(
     135deg,
-    var(--luxury-charcoal, var(--restaurant-primary)) 0%,
-    var(--luxury-slate, var(--darker-gray)) 100%
+    var(--brand-900) 0%,
+    var(--brand-800) 100%
   );
   position: relative;
   overflow: hidden;
 }
 
+.app-page-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+      ellipse at 0% 0%,
+      rgba(217, 119, 6, 0.12) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 100% 100%,
+      rgba(180, 83, 9, 0.08) 0%,
+      transparent 55%
+    );
+  pointer-events: none;
+}
+
 .app-page-header::after {
   content: "";
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 1px;
   background: linear-gradient(
     90deg,
     transparent,
-    var(--restaurant-accent),
+    rgba(217, 119, 6, 0.35),
     transparent
   );
-  opacity: 0.5;
 }
 
 .header-content {
@@ -77,14 +93,16 @@ const breadcrumbs = computed(() => {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
   font-family: var(--font-sans);
   font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.55);
+  letter-spacing: var(--tracking-wide);
 }
 
 .breadcrumb-separator {
-  opacity: 0.35;
+  opacity: 0.4;
+  font-weight: 300;
 }
 
 .breadcrumb-item {
@@ -92,30 +110,32 @@ const breadcrumbs = computed(() => {
 }
 
 .page-title {
-  font-family: var(--font-serif);
-  font-size: var(--text-2xl);
+  font-family: var(--font-sans);
+  font-size: var(--text-3xl);
   font-weight: 700;
-  color: var(--restaurant-cream);
-  margin: 0 0 var(--space-1) 0;
+  color: #ffffff;
+  margin: 0 0 var(--space-2) 0;
   letter-spacing: var(--tracking-tight);
-  line-height: var(--leading-tight);
+  line-height: var(--leading-snug);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .page-subtitle {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.7);
   margin: 0;
   line-height: var(--leading-relaxed);
+  max-width: 640px;
 }
 
 @media screen and (min-width: 640px) {
   .app-page-header {
-    padding: var(--space-7) var(--x-spacing-desktop) var(--space-5);
+    padding: var(--space-8) var(--space-8) var(--space-6);
   }
 
   .page-title {
-    font-size: var(--text-3xl);
+    font-size: var(--text-4xl);
   }
 
   .page-subtitle {
@@ -125,11 +145,11 @@ const breadcrumbs = computed(() => {
 
 @media screen and (min-width: 1024px) {
   .app-page-header {
-    padding: var(--space-8) var(--x-spacing-desktop) var(--space-6);
+    padding: var(--space-10) var(--space-10) var(--space-8);
   }
 
   .page-title {
-    font-size: var(--text-3xl);
+    font-size: 42px;
   }
 }
 </style>

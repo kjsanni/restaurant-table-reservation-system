@@ -102,9 +102,9 @@ const customerLink = computed(() => {
   justify-content: center;
   flex-direction: column;
   width: 100%;
-  background-color: var(--restaurant-surface);
+  background-color: var(--surface);
   padding: 10px 15px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 10px;
 }
 
@@ -130,7 +130,7 @@ const customerLink = computed(() => {
   font-size: 16px;
   margin: 0;
   flex: 1;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   text-decoration: none;
 }
 
@@ -175,7 +175,7 @@ const customerLink = computed(() => {
 .notes-label {
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   margin: 0 0 4px 0;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -184,7 +184,7 @@ const customerLink = computed(() => {
 .notes-text {
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
   line-height: 1.4;
   word-break: break-word;

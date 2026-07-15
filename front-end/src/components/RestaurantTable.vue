@@ -123,12 +123,12 @@ const freeTable = async (id) => {
 .circle {
   width: 12px;
   height: 12px;
-  background-color: var(--restaurant-surface);
+  background-color: var(--surface);
   border: 2px solid #94a3b8;
   border-radius: 100%;
 }
 .blackColor {
-  background-color: var(--restaurant-charcoal);
+  background-color: var(--ink);
 }
 
 @media screen and (min-width: 1024px) {

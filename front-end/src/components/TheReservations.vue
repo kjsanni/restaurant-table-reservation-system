@@ -817,19 +817,18 @@ const today = () => {
   flex-direction: column;
   justify-content: flex-end;
   width: 100%;
-  height: var(--header-height);
-  background: var(--restaurant-border)
-    url("@/assets/images/reservations-header.jpg");
+  height: 64px;
+  background: var(--border) url("@/assets/images/reservations-header.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
 }
 .header h1 {
-  margin-left: var(--x-spacing-mobile);
+  margin-left: var(--space-6);
   margin-bottom: 15px;
   font-size: 35px;
-  color: var(--restaurant-cream);
-  text-shadow: 1px 1px 2px var(--restaurant-charcoal);
+  color: var(--neutral-50);
+  text-shadow: 1px 1px 2px var(--ink);
 }
 
 .content-wrapper {
@@ -854,7 +853,7 @@ const today = () => {
 .date-label {
   font-family: "Inter-Bold";
   font-size: 18px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
   min-width: 240px;
   text-align: center;
@@ -864,11 +863,11 @@ const today = () => {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   cursor: pointer;
   font-size: 24px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -894,7 +893,7 @@ const today = () => {
 }
 
 .section-card {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -908,7 +907,7 @@ const today = () => {
 .section-title {
   font-family: "Inter-Bold";
   font-size: 16px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
 }
 
@@ -947,13 +946,13 @@ const today = () => {
 
 @media screen and (min-width: 1024px) {
   .header h1 {
-    margin-left: var(--x-spacing-desktop);
+    margin-left: var(--space-8);
     font-size: 45px;
     margin-bottom: 20px;
   }
   .content-wrapper {
-    margin-left: var(--x-spacing-desktop);
-    margin-right: var(--x-spacing-desktop);
+    margin-left: var(--space-8);
+    margin-right: var(--space-8);
   }
   .sections-row {
     grid-template-columns: 1fr;
@@ -1028,7 +1027,7 @@ const today = () => {
 .confirm-content p {
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
 }
 
@@ -1061,7 +1060,7 @@ const today = () => {
   max-width: 420px;
   width: 100%;
   margin-top: 12px;
-  margin-left: var(--x-spacing-mobile);
+  margin-left: var(--space-6);
 }
 
 .search-icon {
@@ -1069,7 +1068,7 @@ const today = () => {
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -1087,7 +1086,7 @@ const today = () => {
   border-radius: var(--input-radius);
   font-family: "Inter-Light";
   font-size: 15px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   background: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -1107,7 +1106,7 @@ const today = () => {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   display: flex;
   align-items: center;
   padding: 4px;
@@ -1117,7 +1116,7 @@ const today = () => {
 
 .clear-btn:hover {
   background: #f3f4f6;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .clear-btn :deep(svg) {
@@ -1130,10 +1129,10 @@ const today = () => {
   align-items: center;
   gap: 8px;
   margin-top: 10px;
-  margin-left: var(--x-spacing-mobile);
+  margin-left: var(--space-6);
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   cursor: pointer;
   user-select: none;
 }
@@ -1147,10 +1146,10 @@ const today = () => {
 
 @media screen and (min-width: 1024px) {
   .search-bar {
-    margin-left: var(--x-spacing-desktop);
+    margin-left: var(--space-8);
   }
   .notes-toggle {
-    margin-left: var(--x-spacing-desktop);
+    margin-left: var(--space-8);
   }
 }
 </style>

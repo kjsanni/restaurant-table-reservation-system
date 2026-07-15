@@ -407,14 +407,14 @@ onMounted(loadData);
   justify-content: center;
   padding: 100px 20px;
   gap: 16px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--restaurant-border);
+  border: 3px solid var(--border);
   border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -435,7 +435,7 @@ onMounted(loadData);
 .sidebar-panel {
   width: 260px;
   min-width: 240px;
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -447,7 +447,7 @@ onMounted(loadData);
 .plan-panel {
   flex: 1;
   min-width: 0;
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -465,7 +465,7 @@ onMounted(loadData);
 .panel-header h2 {
   font-family: "Inter-Bold";
   font-size: 15px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
 }
 
@@ -538,7 +538,7 @@ onMounted(loadData);
 .pending-name {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -547,7 +547,7 @@ onMounted(loadData);
 .pending-meta {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .pending-notes {
@@ -563,14 +563,14 @@ onMounted(loadData);
 .drag-hint {
   font-family: "Inter-Light";
   font-size: 11px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   opacity: 0.7;
 }
 
 .empty-state {
   text-align: center;
   padding: 24px 0;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
   font-size: 13px;
   display: flex;
@@ -587,7 +587,7 @@ onMounted(loadData);
 .plan-panel {
   flex: 1;
   min-width: 0;
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: 14px;
   padding: 20px;
@@ -610,7 +610,7 @@ onMounted(loadData);
   font-family: "Inter-Medium";
   font-size: 12px;
   background: #f3f4f6;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .legend-pill .dot {
@@ -694,7 +694,7 @@ onMounted(loadData);
 .table-id {
   font-family: "Inter-Bold";
   font-size: 15px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .status-dot {
@@ -707,7 +707,7 @@ onMounted(loadData);
 .capacity {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .table-reservation {
@@ -728,7 +728,7 @@ onMounted(loadData);
 .res-time {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .table-empty {
@@ -738,7 +738,7 @@ onMounted(loadData);
   text-align: center;
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .selectable:hover {
@@ -784,7 +784,7 @@ onMounted(loadData);
   text-align: center;
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   margin-top: 18px;
   padding: 10px;
   border-radius: 8px;
@@ -807,7 +807,7 @@ onMounted(loadData);
   justify-content: flex-end;
   gap: 10px;
   padding-top: 12px;
-  border-top: 1px solid var(--restaurant-border);
+  border-top: 1px solid var(--border);
 }
 
 .loading {
@@ -818,8 +818,8 @@ onMounted(loadData);
 
 .btn-outline {
   background-color: transparent;
-  border: 1px solid var(--restaurant-border);
-  color: var(--restaurant-charcoal);
+  border: 1px solid var(--border);
+  color: var(--ink);
   border-radius: 8px;
   padding: 8px 16px;
   font-family: "Inter-Medium";
@@ -870,7 +870,7 @@ onMounted(loadData);
 .error-content p {
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
 }
 

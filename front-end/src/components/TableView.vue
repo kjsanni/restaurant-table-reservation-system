@@ -144,7 +144,7 @@ const getFieldValue = (item, fieldKey) => {
 }
 
 .res-card {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: 16px;
@@ -191,13 +191,13 @@ const getFieldValue = (item, fieldKey) => {
 .res-name {
   font-family: "Inter-Medium";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .res-id {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .status-chip {
@@ -244,13 +244,13 @@ const getFieldValue = (item, fieldKey) => {
 .detail-label {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .detail-value {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .payment-chip {
@@ -272,7 +272,7 @@ const getFieldValue = (item, fieldKey) => {
 .visit-count {
   font-family: "Inter-Light";
   font-size: 11px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .tag-chips {
@@ -286,7 +286,7 @@ const getFieldValue = (item, fieldKey) => {
   font-family: "Inter-Light";
   font-size: 10px;
   background: #e5e7eb;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   padding: 2px 8px;
   border-radius: 6px;
 }

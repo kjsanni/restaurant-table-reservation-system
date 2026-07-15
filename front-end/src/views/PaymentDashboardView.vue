@@ -293,14 +293,14 @@ onMounted(loadData);
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--restaurant-border);
+  border: 3px solid var(--border);
   border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -330,7 +330,7 @@ onMounted(loadData);
   justify-content: space-between;
   gap: 16px;
   padding: var(--card-padding);
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
@@ -363,7 +363,7 @@ onMounted(loadData);
 .summary-value {
   font-family: "Inter-Bold";
   font-size: 28px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .summary-card.total .summary-value {
@@ -378,7 +378,7 @@ onMounted(loadData);
 }
 
 .dashboard-card {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -388,7 +388,7 @@ onMounted(loadData);
 .card-title {
   font-family: "Inter-Bold";
   font-size: 18px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 20px 0;
 }
 
@@ -413,7 +413,7 @@ onMounted(loadData);
   text-align: right;
   font-size: 14px;
   font-family: "Inter-Medium";
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .bar-track {
@@ -439,7 +439,7 @@ onMounted(loadData);
   transform: translateY(-50%);
   font-family: "Inter-Bold";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   z-index: 1;
 }
 
@@ -452,13 +452,13 @@ onMounted(loadData);
 
 .filter-select {
   padding: 10px 14px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
   background-color: white;
   min-width: 180px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .filter-select:focus {
@@ -482,7 +482,7 @@ onMounted(loadData);
 .confirm-content p {
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
 }
 
@@ -503,7 +503,7 @@ onMounted(loadData);
 
 .btn-secondary {
   background-color: #f3f4f6;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .btn-secondary:hover {

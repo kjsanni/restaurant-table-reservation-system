@@ -599,14 +599,14 @@ const staffAtLimit = (staff) => {
 <style scoped>
 .main-wrapper {
   min-height: 100vh;
-  background: var(--restaurant-background);
+  background: var(--background);
   display: flex;
   flex-direction: column;
 }
 
 .content-wrapper {
   flex: 1;
-  margin: var(--space-6) var(--x-spacing-mobile);
+  margin: var(--space-6) var(--space-6);
   padding: 0;
   max-width: 1400px;
   width: 100%;
@@ -614,7 +614,7 @@ const staffAtLimit = (staff) => {
 
 @media (min-width: 1024px) {
   .content-wrapper {
-    margin: var(--space-8) var(--x-spacing-desktop);
+    margin: var(--space-8) var(--space-8);
   }
 }
 
@@ -630,8 +630,8 @@ const staffAtLimit = (staff) => {
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid var(--restaurant-border);
-  border-top-color: var(--restaurant-accent);
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
   border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
@@ -645,7 +645,7 @@ const staffAtLimit = (staff) => {
 .loading-state p {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 .tables-container {
@@ -660,8 +660,8 @@ const staffAtLimit = (staff) => {
 }
 
 .table-card {
-  background: var(--restaurant-surface);
-  border: 1px solid var(--restaurant-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   display: flex;
@@ -724,14 +724,14 @@ const staffAtLimit = (staff) => {
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: var(--text-sm);
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
 }
 
 .table-id {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 .status-chip {
@@ -780,7 +780,7 @@ const staffAtLimit = (staff) => {
 .meta-text {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 .blocked-reason {
@@ -806,7 +806,7 @@ const staffAtLimit = (staff) => {
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   margin-bottom: var(--space-2);
   display: block;
 }
@@ -821,13 +821,13 @@ const staffAtLimit = (staff) => {
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: var(--text-sm);
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .reservation-meta {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 .staff-section {
@@ -911,20 +911,20 @@ const staffAtLimit = (staff) => {
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--restaurant-surface);
+  background: var(--surface);
   cursor: pointer;
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   transition: all var(--duration-fast) var(--ease-in-out);
 }
 
 .staff-option-btn:hover {
   background: var(--color-primary-50);
-  border-color: var(--restaurant-accent);
+  border-color: var(--accent);
 }
 
 .staff-option-btn.assigned {
@@ -944,7 +944,7 @@ const staffAtLimit = (staff) => {
 .staff-option-count {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 .unassign-hint {
@@ -965,27 +965,27 @@ const staffAtLimit = (staff) => {
 }
 
 .modal {
-  background-color: var(--restaurant-surface);
+  background-color: var(--surface);
   padding: var(--space-6);
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 420px;
   box-shadow: var(--shadow-xl);
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
 }
 
 .modal-title {
   font-family: var(--font-serif);
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
 }
 
 .modal-subtitle {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   margin: var(--space-2) 0 0 0;
 }
 
@@ -1003,18 +1003,18 @@ const staffAtLimit = (staff) => {
   font-weight: 600;
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .field-textarea {
   width: 100%;
   padding: var(--space-3);
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-charcoal);
-  background: var(--restaurant-surface);
+  color: var(--ink);
+  background: var(--surface);
   box-sizing: border-box;
   transition: border-color var(--duration-fast) var(--ease-in-out),
     box-shadow var(--duration-fast) var(--ease-in-out);
@@ -1023,7 +1023,7 @@ const staffAtLimit = (staff) => {
 
 .field-textarea:focus {
   outline: none;
-  border-color: var(--restaurant-accent);
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
@@ -1050,11 +1050,7 @@ const staffAtLimit = (staff) => {
 }
 
 .btn-primary {
-  background: linear-gradient(
-    135deg,
-    var(--restaurant-charcoal) 0%,
-    var(--restaurant-slate) 100%
-  );
+  background: linear-gradient(135deg, var(--ink) 0%, var(--ink-secondary) 100%);
   color: white;
   box-shadow: var(--shadow-sm);
 }
@@ -1066,8 +1062,8 @@ const staffAtLimit = (staff) => {
 
 .btn-secondary {
   background: var(--color-primary-50);
-  color: var(--restaurant-charcoal);
-  border: 1px solid var(--restaurant-border);
+  color: var(--ink);
+  border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
@@ -1102,7 +1098,7 @@ const staffAtLimit = (staff) => {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
 }
 
@@ -1119,7 +1115,7 @@ const staffAtLimit = (staff) => {
 
 .empty-msg {
   text-align: center;
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   font-family: var(--font-sans);
   padding: var(--space-4);
   font-size: var(--text-xs);
@@ -1138,12 +1134,12 @@ const staffAtLimit = (staff) => {
 .field-input {
   width: 100%;
   padding: var(--space-3);
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-charcoal);
-  background: var(--restaurant-surface);
+  color: var(--ink);
+  background: var(--surface);
   box-shadow: var(--shadow-xs);
   transition: border-color var(--duration-fast) var(--ease-in-out),
     box-shadow var(--duration-fast) var(--ease-in-out);
@@ -1151,7 +1147,7 @@ const staffAtLimit = (staff) => {
 
 .field-input:focus {
   outline: none;
-  border-color: var(--restaurant-accent);
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
@@ -1166,7 +1162,7 @@ const staffAtLimit = (staff) => {
 .staff-empty {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   padding: var(--space-2) 0;
 }
 
@@ -1175,20 +1171,20 @@ const staffAtLimit = (staff) => {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  background: var(--restaurant-surface);
-  border: 1px solid var(--restaurant-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-in-out);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   user-select: none;
 }
 
 .staff-chip:hover:not(.disabled) {
-  border-color: var(--restaurant-accent);
+  border-color: var(--accent);
   background: var(--color-primary-50);
 }
 
@@ -1206,7 +1202,7 @@ const staffAtLimit = (staff) => {
 .staff-count {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   background: var(--color-primary-100);
   padding: 2px var(--space-2);
   border-radius: var(--radius-full);

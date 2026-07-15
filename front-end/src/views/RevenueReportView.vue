@@ -317,7 +317,7 @@ const getStackedY = (item, methodKey) => {
 <style scoped>
 .main-wrapper {
   min-height: 100vh;
-  background: var(--restaurant-border);
+  background: var(--border);
 }
 
 }
@@ -325,8 +325,8 @@ const getStackedY = (item, methodKey) => {
 .content-wrapper {
   margin-top: 12px;
   margin-bottom: var(--page-margin-y);
-  margin-left: var(--x-spacing-mobile);
-  margin-right: var(--x-spacing-mobile);
+  margin-left: var(--space-6);
+  margin-right: var(--space-6);
 }
 
 .loading-state {
@@ -336,14 +336,14 @@ const getStackedY = (item, methodKey) => {
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid var(--restaurant-border);
+  border: 3px solid var(--border);
   border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -374,7 +374,7 @@ const getStackedY = (item, methodKey) => {
 
 .preset-btn {
   padding: 8px 16px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   background: white;
   font-family: "Inter-Medium";
@@ -401,11 +401,11 @@ const getStackedY = (item, methodKey) => {
 
 .date-input {
   padding: 8px 10px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .date-input:disabled {
@@ -414,18 +414,18 @@ const getStackedY = (item, methodKey) => {
 }
 
 .range-separator {
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-size: 14px;
 }
 
 .granularity-select {
   padding: 8px 10px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-family: "Inter-Medium";
   font-size: 13px;
   background: white;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin-left: auto;
 }
 
@@ -465,7 +465,7 @@ const getStackedY = (item, methodKey) => {
 .summary-label {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
@@ -473,7 +473,7 @@ const getStackedY = (item, methodKey) => {
 .summary-value {
   font-family: "Inter-Bold";
   font-size: 24px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .chart-section {
@@ -487,7 +487,7 @@ const getStackedY = (item, methodKey) => {
 .section-title {
   font-family: "Inter-Bold";
   font-size: 16px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 20px 0;
 }
 
@@ -504,7 +504,7 @@ const getStackedY = (item, methodKey) => {
 .empty-chart {
   text-align: center;
   padding: 40px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
@@ -521,7 +521,7 @@ const getStackedY = (item, methodKey) => {
   gap: 6px;
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .legend-color {

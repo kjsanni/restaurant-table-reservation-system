@@ -327,14 +327,14 @@ const navigateToNewReservation = () => {
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid var(--restaurant-border);
+  border: 3px solid var(--border);
   border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -349,14 +349,14 @@ const navigateToNewReservation = () => {
 .error-state {
   text-align: center;
   padding: 60px 20px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
 .retry-btn {
   margin-top: 12px;
   padding: 8px 16px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   background: white;
   font-family: "Inter-Medium";
@@ -403,7 +403,7 @@ const navigateToNewReservation = () => {
   margin: 0 0 4px;
   font-family: "Inter-Bold";
   font-size: 20px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .customer-email,
@@ -411,7 +411,7 @@ const navigateToNewReservation = () => {
   margin: 2px 0;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .customer-stats-row {
@@ -429,7 +429,7 @@ const navigateToNewReservation = () => {
   background: #f3f4f6;
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .stat-badge.no-show {
@@ -492,7 +492,7 @@ const navigateToNewReservation = () => {
   margin: 0 0 12px;
   font-family: "Inter-Bold";
   font-size: 16px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .save-message {
@@ -551,7 +551,7 @@ const navigateToNewReservation = () => {
 .tag-input-row input {
   flex: 1;
   padding: 8px 10px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 13px;
@@ -569,7 +569,7 @@ const navigateToNewReservation = () => {
 }
 
 .no-tags {
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
   font-size: 13px;
 }
@@ -600,19 +600,19 @@ const navigateToNewReservation = () => {
 .history-date {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .history-time {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .history-people {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .history-meta {
@@ -644,21 +644,21 @@ const navigateToNewReservation = () => {
   background: #e5e7eb;
   font-family: "Inter-Medium";
   font-size: 11px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   text-transform: capitalize;
 }
 
 .history-total {
   font-family: "Inter-Bold";
   font-size: 12px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin-left: auto;
 }
 
 .history-notes {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-style: italic;
 }
 
@@ -683,13 +683,13 @@ const navigateToNewReservation = () => {
 .stat-value {
   font-family: "Inter-Bold";
   font-size: 24px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .stat-label {
   font-family: "Inter-Medium";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   text-transform: uppercase;
 }
 
@@ -714,21 +714,21 @@ const navigateToNewReservation = () => {
 .breakdown-count {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   min-width: 40px;
 }
 
 .breakdown-revenue {
   font-family: "Inter-Bold";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin-left: auto;
 }
 
 .empty-state-small {
   text-align: center;
   padding: 24px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 </style>

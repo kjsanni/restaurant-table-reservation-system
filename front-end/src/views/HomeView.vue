@@ -249,19 +249,19 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 
 <style scoped>
 .home-container {
-  min-height: calc(100vh - var(--header-height));
-  background: var(--restaurant-background);
+  min-height: 100vh;
+  background: var(--background-warm);
 }
 
 .dashboard-preview {
-  padding: var(--space-8) var(--x-spacing-mobile);
-  max-width: 1400px;
+  padding: var(--space-8) var(--space-6);
+  max-width: var(--content-max-width);
   margin: 0 auto;
 }
 
 @media (min-width: 1024px) {
   .dashboard-preview {
-    padding: var(--space-10) var(--x-spacing-desktop);
+    padding: var(--space-10) var(--space-8);
   }
 }
 
@@ -275,10 +275,10 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 }
 
 .preview-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--text-3xl);
   font-weight: 700;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 var(--space-2) 0;
   letter-spacing: var(--tracking-tight);
 }
@@ -286,7 +286,7 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 .preview-subtitle {
   font-family: var(--font-sans);
   font-size: var(--text-base);
-  color: var(--restaurant-secondary);
+  color: var(--ink-muted);
   margin: 0;
 }
 
@@ -302,8 +302,8 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid var(--restaurant-border);
-  border-top-color: var(--restaurant-accent);
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
   border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
@@ -317,7 +317,7 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 .loading-state p {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 .preview-content {
@@ -339,12 +339,12 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 }
 
 .stat-card {
-  background: var(--restaurant-surface);
-  border: 1px solid var(--restaurant-border);
-  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
-  transition: transform var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out);
+  transition: transform var(--duration-200) var(--ease-out),
+    box-shadow var(--duration-200) var(--ease-out);
 }
 
 .stat-card:hover {
@@ -363,25 +363,33 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 }
 
 .today-icon {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--color-info-600);
+  background: linear-gradient(135deg, var(--sky-100) 0%, var(--sky-200) 100%);
+  color: var(--sky-600);
 }
 
 .waitlist-icon {
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--color-warm-600);
+  background: linear-gradient(
+    135deg,
+    var(--accent-100) 0%,
+    var(--accent-200) 100%
+  );
+  color: var(--accent-600);
 }
 
 .reservations-icon {
-  background: rgba(220, 38, 38, 0.1);
-  color: var(--color-accent-600);
+  background: linear-gradient(
+    135deg,
+    var(--brand-100) 0%,
+    var(--brand-200) 100%
+  );
+  color: var(--brand-700);
 }
 
 .stat-value {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--text-3xl);
   font-weight: 700;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin-bottom: var(--space-1);
   letter-spacing: var(--tracking-tight);
 }
@@ -389,14 +397,14 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 .stat-label {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-muted);
   font-weight: 500;
 }
 
 .recent-card {
-  background: var(--restaurant-surface);
-  border: 1px solid var(--restaurant-border);
-  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
 }
 
@@ -408,10 +416,10 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 }
 
 .recent-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--text-xl);
   font-weight: 700;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
   letter-spacing: var(--tracking-tight);
 }
@@ -419,14 +427,9 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 .empty-state-inline {
   text-align: center;
   padding: var(--space-10);
-  color: var(--restaurant-secondary);
+  color: var(--ink-muted);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-}
-
-.recent-list {
-  display: flex;
-  flex-direction: column;
 }
 
 .recent-item {
@@ -434,36 +437,30 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
   align-items: center;
   justify-content: space-between;
   padding: var(--space-4) 0;
-  border-bottom: 1px solid var(--restaurant-border);
+  border-bottom: 1px solid var(--border-subtle);
 }
 .recent-item:last-child {
   border-bottom: none;
-}
-
-.recent-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
 }
 
 .recent-name {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .recent-meta {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-muted);
 }
 
 .recent-party {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--restaurant-secondary);
+  color: var(--ink-muted);
 }
 
 .public-landing {
@@ -475,16 +472,28 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
   align-items: center;
   justify-content: center;
   gap: var(--space-10);
-  padding: var(--space-20) var(--x-spacing-mobile) var(--space-16);
+  padding: var(--space-20) var(--space-6) var(--space-16);
   flex-wrap: wrap;
   max-width: 1200px;
   margin: 0 auto;
+  position: relative;
+}
+
+.hero-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--glow-warm);
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 .hero-content {
   flex: 1;
   max-width: 540px;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .badge {
@@ -493,8 +502,8 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
   padding: var(--space-2) var(--space-4);
   background: linear-gradient(
     135deg,
-    var(--restaurant-charcoal) 0%,
-    var(--restaurant-slate) 100%
+    var(--brand-800) 0%,
+    var(--brand-700) 100%
   );
   color: white;
   font-family: var(--font-sans);
@@ -503,23 +512,24 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
   border-radius: var(--radius-full);
   margin-bottom: var(--space-6);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  box-shadow: var(--shadow-sm);
+  letter-spacing: 0.12em;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .hero-title {
-  font-family: var(--font-serif);
-  font-size: var(--text-4xl);
-  color: var(--restaurant-charcoal);
+  font-family: var(--font-sans);
+  font-size: var(--text-5xl);
+  color: var(--ink);
   margin: 0 0 var(--space-4) 0;
   line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
+  letter-spacing: var(--tracking-tighter);
+  font-weight: 750;
 }
 
 .hero-subtitle {
   font-family: var(--font-sans);
   font-size: var(--text-lg);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   margin: 0 0 var(--space-8) 0;
   line-height: var(--leading-relaxed);
 }
@@ -535,19 +545,25 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
   font-family: var(--font-sans);
   font-weight: 600;
   letter-spacing: var(--tracking-wide);
+  height: 52px;
+  padding: 0 var(--space-8);
+  border-radius: var(--radius-lg);
 }
 
 .hero-visual {
   flex: 1;
   display: none;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .hero-image {
   max-width: 100%;
   height: auto;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--border-subtle);
 }
 
 @media screen and (min-width: 1024px) {
@@ -565,52 +581,57 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 }
 
 .features-section {
-  padding: var(--space-16) var(--x-spacing-mobile) var(--space-20);
+  padding: var(--space-16) var(--space-6) var(--space-20);
   text-align: center;
   max-width: 1200px;
   margin: 0 auto;
+  position: relative;
 }
 
 .section-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--text-3xl);
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 var(--space-10) 0;
   letter-spacing: var(--tracking-tight);
+  font-weight: 700;
 }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--space-6);
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
 .feature-card {
-  transition: transform var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out);
+  transition: transform var(--duration-200) var(--ease-spring),
+    box-shadow var(--duration-200) var(--ease-out);
+  text-align: left;
 }
 .feature-card:hover {
   transform: translateY(-6px);
+  box-shadow: var(--shadow-xl);
 }
 
 .feature-icon {
-  color: var(--restaurant-accent);
+  color: var(--accent);
   margin-bottom: var(--space-4);
 }
 
 .feature-card h3 {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--text-lg);
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 var(--space-2) 0;
+  font-weight: 650;
 }
 
 .feature-card p {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-muted);
   margin: 0;
   line-height: var(--leading-relaxed);
 }

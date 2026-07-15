@@ -28,14 +28,14 @@ import { VaSkeleton } from "vuestic-ui";
 <style scoped>
 .main-wrapper {
   min-height: 100vh;
-  background: var(--restaurant-background);
+  background: var(--background);
   display: flex;
   flex-direction: column;
 }
 
 .content-wrapper {
   flex: 1;
-  margin: var(--space-6) var(--x-spacing-mobile);
+  margin: var(--space-6) var(--space-6);
   padding: 0;
   max-width: 1400px;
   width: 100%;
@@ -45,13 +45,13 @@ import { VaSkeleton } from "vuestic-ui";
   padding: var(--space-20) var(--space-6);
   display: flex;
   justify-content: center;
-  background: var(--restaurant-background);
+  background: var(--background);
   min-height: 60vh;
 }
 
 @media (min-width: 1024px) {
   .content-wrapper {
-    margin: var(--space-8) var(--x-spacing-desktop);
+    margin: var(--space-8) var(--space-8);
   }
 }
 </style>

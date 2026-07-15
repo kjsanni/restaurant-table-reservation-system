@@ -154,7 +154,7 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   padding: 10px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
   background-color: #fafafa;
 }

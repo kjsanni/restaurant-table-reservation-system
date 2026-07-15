@@ -495,14 +495,14 @@ const sendTestEmail = async () => {
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--restaurant-border);
+  border: 3px solid var(--border);
   border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -521,7 +521,7 @@ const sendTestEmail = async () => {
 }
 
 .settings-card {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -531,7 +531,7 @@ const sendTestEmail = async () => {
 .category-title {
   font-family: "Inter-Bold";
   font-size: 18px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 16px 0;
 }
 
@@ -560,14 +560,14 @@ const sendTestEmail = async () => {
 .setting-label {
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   cursor: default;
 }
 
 .setting-description {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   margin-top: 4px;
 }
 
@@ -588,9 +588,9 @@ const sendTestEmail = async () => {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  border: 1px solid var(--restaurant-border);
-  background: var(--restaurant-surface);
-  color: var(--restaurant-charcoal);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
   font-size: 18px;
   display: flex;
   align-items: center;
@@ -614,12 +614,12 @@ const sendTestEmail = async () => {
   width: 76px;
   height: 34px;
   text-align: center;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--restaurant-charcoal);
-  background: var(--restaurant-surface);
+  color: var(--ink);
+  background: var(--surface);
 }
 
 .num-input:focus {
@@ -631,7 +631,7 @@ const sendTestEmail = async () => {
 .unit {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   min-width: 50px;
 }
 
@@ -670,7 +670,7 @@ const sendTestEmail = async () => {
 .email-field label {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .field-input {
@@ -679,7 +679,7 @@ const sendTestEmail = async () => {
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   background: white;
   width: 100%;
   box-sizing: border-box;
@@ -726,7 +726,7 @@ const sendTestEmail = async () => {
 
 .btn-secondary {
   background-color: #f3f4f6;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .btn-secondary:hover {
@@ -754,7 +754,7 @@ const sendTestEmail = async () => {
 .test-title {
   font-family: "Inter-Bold";
   font-size: 15px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 4px 0;
 }
 
@@ -796,7 +796,7 @@ const sendTestEmail = async () => {
   border-radius: 10px;
   background: #fafafa;
   border: 1px solid #f0f0f0;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   font-family: "Inter-Medium";
   font-size: 14px;
   text-decoration: none;

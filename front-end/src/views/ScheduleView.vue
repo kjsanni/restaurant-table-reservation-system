@@ -247,14 +247,14 @@ const exportPDF = async () => {
 <style scoped>
 .main-wrapper {
   min-height: 100vh;
-  background: var(--restaurant-background);
+  background: var(--background);
   display: flex;
   flex-direction: column;
 }
 
 .content-wrapper {
   flex: 1;
-  margin: var(--space-6) var(--x-spacing-mobile);
+  margin: var(--space-6) var(--space-6);
   padding: 0;
   max-width: 1400px;
   width: 100%;
@@ -262,7 +262,7 @@ const exportPDF = async () => {
 
 @media (min-width: 1024px) {
   .content-wrapper {
-    margin: var(--space-8) var(--x-spacing-desktop);
+    margin: var(--space-8) var(--space-8);
   }
 }
 
@@ -289,8 +289,8 @@ const exportPDF = async () => {
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid var(--restaurant-border);
-  border-top-color: var(--restaurant-accent);
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
   border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
@@ -304,7 +304,7 @@ const exportPDF = async () => {
 .loading-state p {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 .schedules-container {
@@ -314,8 +314,8 @@ const exportPDF = async () => {
 }
 
 .section-card {
-  background: var(--restaurant-surface);
-  border: 1px solid var(--restaurant-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   box-shadow: var(--shadow-sm);
@@ -325,7 +325,7 @@ const exportPDF = async () => {
   font-family: var(--font-serif);
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 var(--space-5) 0;
   letter-spacing: var(--tracking-tight);
 }
@@ -342,7 +342,7 @@ const exportPDF = async () => {
   gap: var(--space-4);
   padding: var(--space-4);
   background: var(--color-primary-50);
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   transition: background var(--duration-fast) var(--ease-in-out);
 }
@@ -356,7 +356,7 @@ const exportPDF = async () => {
   font-weight: 600;
   width: 110px;
   font-size: var(--text-sm);
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .time-inputs {
@@ -368,12 +368,12 @@ const exportPDF = async () => {
 
 .time-input {
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-charcoal);
-  background: var(--restaurant-surface);
+  color: var(--ink);
+  background: var(--surface);
   min-width: 140px;
   transition: border-color var(--duration-fast) var(--ease-in-out),
     box-shadow var(--duration-fast) var(--ease-in-out);
@@ -381,18 +381,18 @@ const exportPDF = async () => {
 
 .time-input:focus {
   outline: none;
-  border-color: var(--restaurant-accent);
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .time-input:disabled {
   background: var(--color-primary-100);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   cursor: not-allowed;
 }
 
 .time-separator {
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   font-size: var(--text-sm);
   font-family: var(--font-sans);
 }
@@ -432,7 +432,7 @@ const exportPDF = async () => {
   align-items: center;
   padding: var(--space-4);
   background: var(--color-primary-50);
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
 }
 
@@ -447,13 +447,13 @@ const exportPDF = async () => {
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: var(--text-sm);
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .holiday-desc {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 .closed-badge {
@@ -477,7 +477,7 @@ const exportPDF = async () => {
 .empty-state {
   text-align: center;
   padding: var(--space-8);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
 }
@@ -496,7 +496,7 @@ const exportPDF = async () => {
   font-weight: 600;
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-slate);
+  color: var(--ink-secondary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -504,11 +504,11 @@ const exportPDF = async () => {
 .field-input {
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   box-sizing: border-box;
   transition: border-color var(--duration-fast) var(--ease-in-out),
     box-shadow var(--duration-fast) var(--ease-in-out),
@@ -518,8 +518,8 @@ const exportPDF = async () => {
 
 .field-input:focus {
   outline: none;
-  border-color: var(--restaurant-accent);
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-  background: var(--restaurant-surface);
+  background: var(--surface);
 }
 </style>

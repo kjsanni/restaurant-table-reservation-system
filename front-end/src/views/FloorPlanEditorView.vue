@@ -173,7 +173,7 @@ onUnmounted(() => {
 .hint {
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   margin: 0;
 }
 .canvas {
@@ -190,7 +190,7 @@ onUnmounted(() => {
   width: 150px;
   height: 150px;
   border-radius: 12px;
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border-left: 4px solid #22c55e;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   display: flex;
@@ -220,12 +220,12 @@ onUnmounted(() => {
 .table-name {
   font-family: "Inter-Bold";
   font-size: 16px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 .table-meta {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 .table-status {
   font-family: "Inter-Medium";
@@ -247,7 +247,7 @@ onUnmounted(() => {
   justify-content: center;
   gap: 12px;
   padding: 80px 20px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
   border-radius: 12px;
 }
@@ -259,7 +259,7 @@ onUnmounted(() => {
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--restaurant-border);
+  border: 3px solid var(--border);
   border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -282,7 +282,7 @@ onUnmounted(() => {
 }
 .btn-secondary {
   background-color: #f3f4f6;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 .btn-secondary:hover {
   background-color: #e5e7eb;

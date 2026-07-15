@@ -149,8 +149,8 @@ const handleRegister = async () => {
   padding: var(--space-6) var(--space-4);
   background: linear-gradient(
     135deg,
-    var(--restaurant-cream) 0%,
-    var(--restaurant-stone) 100%
+    var(--background-warm) 0%,
+    var(--neutral-100) 100%
   );
   position: relative;
   overflow: hidden;
@@ -159,14 +159,14 @@ const handleRegister = async () => {
 .auth-wrapper::before {
   content: "";
   position: absolute;
-  top: -50%;
-  right: -30%;
-  width: 600px;
-  height: 600px;
+  top: -40%;
+  right: -25%;
+  width: 700px;
+  height: 700px;
   background: radial-gradient(
     circle,
-    rgba(251, 191, 36, 0.06) 0%,
-    transparent 70%
+    rgba(217, 119, 6, 0.08) 0%,
+    transparent 65%
   );
   border-radius: 50%;
   pointer-events: none;
@@ -175,14 +175,14 @@ const handleRegister = async () => {
 .auth-wrapper::after {
   content: "";
   position: absolute;
-  bottom: -40%;
-  left: -20%;
-  width: 500px;
-  height: 500px;
+  bottom: -35%;
+  left: -15%;
+  width: 550px;
+  height: 550px;
   background: radial-gradient(
     circle,
-    rgba(220, 38, 38, 0.04) 0%,
-    transparent 70%
+    rgba(180, 83, 9, 0.06) 0%,
+    transparent 65%
   );
   border-radius: 50%;
   pointer-events: none;
@@ -191,13 +191,13 @@ const handleRegister = async () => {
 .auth-card {
   width: 100%;
   max-width: 420px;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--restaurant-border);
-  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-xl);
   position: relative;
   z-index: 1;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px) saturate(1.25);
 }
 
 .auth-header {
@@ -212,7 +212,8 @@ const handleRegister = async () => {
   gap: var(--space-2);
   margin-bottom: var(--space-6);
   padding: var(--space-2) var(--space-4);
-  background: var(--color-primary-50);
+  background: var(--brand-50);
+  border: 1px solid var(--brand-200);
   border-radius: var(--radius-full);
 }
 
@@ -224,23 +225,24 @@ const handleRegister = async () => {
   font-family: var(--font-sans);
   font-weight: 700;
   font-size: var(--text-sm);
-  color: var(--restaurant-charcoal);
+  color: var(--brand-800);
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
 .auth-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--text-3xl);
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 var(--space-2) 0;
   letter-spacing: var(--tracking-tight);
+  font-weight: 700;
 }
 
 .auth-subtitle {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-muted);
   margin: 0;
 }
 
@@ -262,7 +264,7 @@ const handleRegister = async () => {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   margin: 0 0 var(--space-2) 0;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -280,7 +282,7 @@ const handleRegister = async () => {
 .requirements-list li {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   transition: color var(--duration-fast) var(--ease-in-out);
   display: flex;
   align-items: center;
@@ -288,7 +290,7 @@ const handleRegister = async () => {
 }
 
 .requirements-list li.requirement-met {
-  color: var(--color-success-600);
+  color: var(--earth-600);
 }
 
 .auth-alert {
@@ -311,19 +313,19 @@ const handleRegister = async () => {
   text-align: center;
   margin-top: var(--space-6);
   padding-top: var(--space-5);
-  border-top: 1px solid var(--restaurant-border);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .auth-link {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--restaurant-accent);
+  color: var(--accent);
   text-decoration: none;
   transition: color var(--duration-fast) var(--ease-in-out);
 }
 .auth-link:hover {
-  color: var(--restaurant-golden);
+  color: var(--accent-hover);
   text-decoration: underline;
 }
 </style>

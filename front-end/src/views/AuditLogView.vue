@@ -140,14 +140,14 @@ const readMore = (text, maxLength = 60) => {
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--restaurant-border);
+  border: 3px solid var(--border);
   border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -160,7 +160,7 @@ const readMore = (text, maxLength = 60) => {
 }
 
 .table-card {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   overflow: hidden;
@@ -187,7 +187,7 @@ const readMore = (text, maxLength = 60) => {
 
 .log-table th {
   background-color: #fafafa;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Medium";
   font-size: 12px;
   text-transform: uppercase;
@@ -216,14 +216,14 @@ const readMore = (text, maxLength = 60) => {
 .user-name {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .user-role {
   display: block;
   font-family: "Inter-Light";
   font-size: 11px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   text-transform: capitalize;
 }
 
@@ -266,7 +266,7 @@ const readMore = (text, maxLength = 60) => {
 .entity-id {
   font-family: "Inter-Light";
   font-size: 11px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   margin-left: 4px;
 }
 
@@ -277,7 +277,7 @@ const readMore = (text, maxLength = 60) => {
 .changes-text {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -286,14 +286,14 @@ const readMore = (text, maxLength = 60) => {
 }
 
 .no-changes {
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-size: 13px;
 }
 
 .ip-cell {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .time-cell {
@@ -302,7 +302,7 @@ const readMore = (text, maxLength = 60) => {
 
 .empty-row {
   text-align: center;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   padding: 40px;
 }
 </style>

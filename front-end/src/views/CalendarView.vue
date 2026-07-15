@@ -720,8 +720,8 @@ const handleReschedule = async () => {
 .content-wrapper {
   margin-top: 24px;
   margin-bottom: 24px;
-  margin-left: var(--x-spacing-mobile);
-  margin-right: var(--x-spacing-mobile);
+  margin-left: var(--space-6);
+  margin-right: var(--space-6);
   padding: 0;
 }
 
@@ -732,14 +732,14 @@ const handleReschedule = async () => {
   justify-content: center;
   padding: 100px 20px;
   gap: 16px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--restaurant-border);
+  border: 3px solid var(--border);
   border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -765,7 +765,7 @@ const handleReschedule = async () => {
   font-size: 18px;
   min-width: 220px;
   text-align: center;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
 }
 
@@ -773,11 +773,11 @@ const handleReschedule = async () => {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   cursor: pointer;
   font-size: 22px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -798,7 +798,7 @@ const handleReschedule = async () => {
 }
 
 .calendar-container {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -818,8 +818,8 @@ const handleReschedule = async () => {
   text-transform: uppercase;
   letter-spacing: 1px;
   padding: 10px;
-  background: var(--restaurant-charcoal);
-  color: var(--restaurant-cream);
+  background: var(--ink);
+  color: var(--neutral-50);
   border-radius: 8px;
 }
 
@@ -830,7 +830,7 @@ const handleReschedule = async () => {
   padding: 4px;
   font-size: 10px;
   position: relative;
-  background: var(--restaurant-surface);
+  background: var(--surface);
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
@@ -847,7 +847,7 @@ const handleReschedule = async () => {
 .day-number {
   font-family: "Inter-Bold";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   text-align: right;
   line-height: 1;
   padding: 2px 4px;
@@ -875,7 +875,7 @@ const handleReschedule = async () => {
 .hours-badge {
   font-size: 10px;
   text-align: center;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Medium";
   padding: 2px 4px;
   background: #f3f4f6;
@@ -895,7 +895,7 @@ const handleReschedule = async () => {
   border-radius: 4px;
   padding: 3px 6px;
   font-size: 10px;
-  border-left: 3px solid var(--restaurant-warm-gray);
+  border-left: 3px solid var(--ink-muted);
   transition: background-color 0.15s;
 }
 
@@ -913,7 +913,7 @@ const handleReschedule = async () => {
 .res-name {
   font-family: "Inter-Medium";
   font-size: 10px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -933,7 +933,7 @@ const handleReschedule = async () => {
   align-items: center;
   gap: 4px;
   font-size: 9px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
@@ -987,7 +987,7 @@ const handleReschedule = async () => {
 .popup-count {
   font-family: "Inter-Bold";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   padding-bottom: 12px;
   border-bottom: 1px solid #f0f0f0;
   margin-bottom: 16px;
@@ -1014,7 +1014,7 @@ const handleReschedule = async () => {
 }
 
 .empty-state {
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
@@ -1041,7 +1041,7 @@ const handleReschedule = async () => {
   background: linear-gradient(
     180deg,
     var(--color-info-600) 0%,
-    var(--restaurant-border) 100%
+    var(--border) 100%
   );
   transform: translateX(-50%);
   opacity: 0.4;
@@ -1082,7 +1082,7 @@ const handleReschedule = async () => {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  box-shadow: 0 0 0 4px var(--restaurant-surface);
+  box-shadow: 0 0 0 4px var(--surface);
 }
 
 .diagram-card {
@@ -1120,7 +1120,7 @@ const handleReschedule = async () => {
 .timeline-name {
   font-family: "Inter-Bold";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .timeline-status {
@@ -1154,7 +1154,7 @@ const handleReschedule = async () => {
 }
 
 .timeline-text {
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
   font-size: 12px;
 }
@@ -1178,7 +1178,7 @@ const handleReschedule = async () => {
 
 .action-panel {
   padding: 10px;
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border-radius: 10px;
 }
 
@@ -1192,7 +1192,7 @@ const handleReschedule = async () => {
 .action-title {
   font-family: "Inter-Bold";
   font-size: 16px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .action-back {
@@ -1291,7 +1291,7 @@ const handleReschedule = async () => {
 }
 
 .empty-msg {
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-style: italic;
   padding: 10px 0;
   font-family: "Inter-Light";
@@ -1314,7 +1314,7 @@ const handleReschedule = async () => {
   cursor: pointer;
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   transition: all 0.15s;
 }
 
@@ -1333,7 +1333,7 @@ const handleReschedule = async () => {
   font-size: 12px;
   margin-bottom: 6px;
   font-weight: 600;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   font-family: "Inter-Medium";
 }
 
@@ -1344,7 +1344,7 @@ const handleReschedule = async () => {
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   box-sizing: border-box;
 }
 

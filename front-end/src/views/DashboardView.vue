@@ -325,14 +325,14 @@ const navigateTo = (route: string) => {
 <style scoped>
 .main-wrapper {
   min-height: 100vh;
-  background: var(--restaurant-background);
+  background: var(--background);
   display: flex;
   flex-direction: column;
 }
 
 .content-wrapper {
   flex: 1;
-  margin: var(--space-6) var(--x-spacing-mobile);
+  margin: var(--space-6) var(--space-6);
   max-width: 1400px;
   width: 100%;
 }
@@ -349,8 +349,8 @@ const navigateTo = (route: string) => {
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid var(--restaurant-border);
-  border-top-color: var(--restaurant-accent);
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
   border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
@@ -364,7 +364,7 @@ const navigateTo = (route: string) => {
 .loading-state p {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 
 .dashboard-content {
@@ -391,13 +391,13 @@ const navigateTo = (route: string) => {
   }
 
   .content-wrapper {
-    margin: var(--space-8) var(--x-spacing-desktop);
+    margin: var(--space-8) var(--space-8);
   }
 }
 
 .stat-card {
-  background: var(--restaurant-surface);
-  border: 1px solid var(--restaurant-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   transition: transform var(--duration-normal) var(--ease-out),
@@ -449,7 +449,7 @@ const navigateTo = (route: string) => {
   font-family: var(--font-serif);
   font-size: var(--text-3xl);
   font-weight: 700;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin-bottom: var(--space-1);
   letter-spacing: var(--tracking-tight);
 }
@@ -457,7 +457,7 @@ const navigateTo = (route: string) => {
 .stat-label {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   font-weight: 500;
 }
 
@@ -474,8 +474,8 @@ const navigateTo = (route: string) => {
 }
 
 .recent-card {
-  background: var(--restaurant-surface);
-  border: 1px solid var(--restaurant-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
@@ -491,7 +491,7 @@ const navigateTo = (route: string) => {
   font-family: var(--font-serif);
   font-size: var(--text-xl);
   font-weight: 700;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
   letter-spacing: var(--tracking-tight);
 }
@@ -503,7 +503,7 @@ const navigateTo = (route: string) => {
 .empty-state-inline {
   text-align: center;
   padding: var(--space-10);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
 }
@@ -521,8 +521,8 @@ const navigateTo = (route: string) => {
 }
 
 .action-card {
-  background: var(--restaurant-surface);
-  border: 1px solid var(--restaurant-border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
@@ -540,7 +540,7 @@ const navigateTo = (route: string) => {
   height: 56px;
   border-radius: var(--radius-md);
   background: var(--color-primary-50);
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -557,12 +557,12 @@ const navigateTo = (route: string) => {
   font-family: var(--font-sans);
   font-size: var(--text-base);
   font-weight: 600;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .action-subtitle {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--restaurant-secondary);
+  color: var(--ink-secondary);
 }
 </style>

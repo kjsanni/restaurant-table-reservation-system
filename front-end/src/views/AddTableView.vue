@@ -113,7 +113,7 @@ const submitTable = async () => {
 .disabled-text {
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   line-height: 1.5;
   margin: 0;
 }

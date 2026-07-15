@@ -302,8 +302,8 @@ const registerReservation = async () => {
 .content-wrapper {
   margin-top: 50px;
   margin-bottom: 50px;
-  margin-left: var(--x-spacing-mobile);
-  margin-right: var(--x-spacing-mobile);
+  margin-left: var(--space-6);
+  margin-right: var(--space-6);
   padding: 0;
 }
 
@@ -316,7 +316,7 @@ const registerReservation = async () => {
 }
 
 .form-section {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -326,7 +326,7 @@ const registerReservation = async () => {
 .section-title {
   font-family: "Inter-Bold";
   font-size: 16px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 16px 0;
 }
 
@@ -345,7 +345,7 @@ const registerReservation = async () => {
 .field-label {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .field-input {
@@ -354,7 +354,7 @@ const registerReservation = async () => {
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   background: white;
   width: 100%;
   box-sizing: border-box;

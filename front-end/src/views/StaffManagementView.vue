@@ -221,14 +221,14 @@ const deleteStaffMember = async (id) => {
   justify-content: center;
   padding: 80px 20px;
   gap: 16px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--restaurant-border);
+  border: 3px solid var(--border);
   border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -247,7 +247,7 @@ const deleteStaffMember = async (id) => {
 }
 
 .staff-card {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: 12px;
   padding: 20px;
@@ -284,7 +284,7 @@ const deleteStaffMember = async (id) => {
 .staff-name {
   font-family: "Inter-Medium";
   font-size: 15px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 4px 0;
   display: flex;
   align-items: center;
@@ -295,7 +295,7 @@ const deleteStaffMember = async (id) => {
 .staff-email {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   margin: 0;
 }
 
@@ -319,7 +319,7 @@ const deleteStaffMember = async (id) => {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
 }
 
 .perm-grid {
@@ -334,7 +334,7 @@ const deleteStaffMember = async (id) => {
   gap: 8px;
   font-size: 13px;
   font-family: "Inter-Light";
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   cursor: pointer;
 }
 
@@ -379,7 +379,7 @@ const deleteStaffMember = async (id) => {
 
 .btn-secondary {
   background-color: #f3f4f6;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .btn-secondary:hover {
@@ -394,7 +394,7 @@ const deleteStaffMember = async (id) => {
 .empty-state {
   text-align: center;
   padding: 40px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   font-family: "Inter-Light";
 }
 
@@ -422,7 +422,7 @@ const deleteStaffMember = async (id) => {
 .modal-title {
   font-family: "Inter-Bold";
   font-size: 18px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0 0 20px 0;
 }
 
@@ -436,17 +436,17 @@ const deleteStaffMember = async (id) => {
   font-weight: 600;
   font-family: "Inter-Medium";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .modal-input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   box-sizing: border-box;
 }
 
@@ -459,11 +459,11 @@ const deleteStaffMember = async (id) => {
 .modal-select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   background-color: white;
   box-sizing: border-box;
   cursor: pointer;

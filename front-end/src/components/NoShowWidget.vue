@@ -91,7 +91,7 @@ onMounted(loadStats);
 
 <style scoped>
 .no-show-widget {
-  background: var(--restaurant-surface);
+  background: var(--surface);
   border: 1px solid #f0f0f0;
   border-radius: var(--card-radius);
   padding: var(--card-padding);
@@ -108,18 +108,18 @@ onMounted(loadStats);
 .widget-title {
   font-family: "Inter-Bold";
   font-size: 16px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
   margin: 0;
 }
 
 .period-select {
   padding: 6px 10px;
-  border: 1px solid var(--restaurant-border);
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-family: "Inter-Medium";
   font-size: 12px;
   background-color: white;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .widget-loading {
@@ -131,7 +131,7 @@ onMounted(loadStats);
 .spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid var(--restaurant-border);
+  border: 2px solid var(--border);
   border-top-color: var(--color-info-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -159,7 +159,7 @@ onMounted(loadStats);
 .metric-label {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: var(--restaurant-warm-gray);
+  color: var(--ink-muted);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
@@ -167,7 +167,7 @@ onMounted(loadStats);
 .metric-value {
   font-family: "Inter-Bold";
   font-size: 22px;
-  color: var(--restaurant-charcoal);
+  color: var(--ink);
 }
 
 .metric-value.no-show {
