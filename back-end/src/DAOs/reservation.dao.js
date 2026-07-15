@@ -557,9 +557,9 @@ const searchReservationsByNotes = async (query) => {
   const reservations = await db.sequelize.query(
     `SELECT r.id, r.customerId, r.resDate, r.resTime, r.resStatus, r.people, r.paymentStatus, r.expectedTotal, r.notes, 
      c.firstName, c.lastName, c.email, c.phone, c.tags,
-     MATCH(r.notes) AGAINST (:searchTerm IN NATURAL LANGUAGE MODE) as relevance
-     FROM reservations r
-     JOIN customers c ON r.customerId = c.id
+      MATCH(r.notes) AGAINST (:searchTerm IN NATURAL LANGUAGE MODE) as relevance
+      FROM Reservations r
+      JOIN customers c ON r.customerId = c.id
      WHERE MATCH(r.notes) AGAINST (:searchTerm IN NATURAL LANGUAGE MODE)
      ORDER BY relevance DESC
      LIMIT 50`,
