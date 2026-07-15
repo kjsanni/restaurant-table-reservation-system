@@ -1,17 +1,22 @@
-# RTRS Production Deployment Guide - Debian (IP-based)
+# RTRS Production Deployment Guide - IP-based
+
+## Overview
+
+This guide covers deploying the Restaurant Table Reservation System to a production server using only an IP address. No domain name or DNS is required.
 
 ## Prerequisites
 
-- Debian 11+ server
+- Debian 11+ / Ubuntu 20.04+ server
 - Root/sudo access
+- Static public IP address
 - MySQL/MariaDB database
 - Node.js 18+
 - PM2 (`npm install -g pm2`)
-- Apache with `proxy`, `proxy_http`, `proxy_wstunnel`, `rewrite`, `headers` modules
+- Apache or Nginx
 
 ---
 
-## 1. Install System Dependencies
+## 1. Server Preparation
 
 ```bash
 sudo apt update && sudo apt upgrade -y
@@ -27,15 +32,17 @@ sudo npm install -g pm2
 sudo apt install -y apache2
 sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers
 sudo systemctl restart apache2
+
+# OR install Nginx
+# sudo apt install -y nginx
 ```
 
 ---
 
-## 2. Configure MySQL
+## 2. Database Setup
 
 ```bash
 sudo mysql_secure_installation
-
 sudo mysql -u root -p
 ```
 
@@ -62,6 +69,7 @@ chmod +x deploy-prod.sh
 
 The `deploy-prod.sh` script:
 - Installs dependencies for backend and frontend
+- Builds frontend for production
 - Runs database migrations
 - Seeds default roles, groups, and admin user
 - Performs rollback on migration failure
@@ -86,8 +94,8 @@ DB_PASSWORD=secure-password
 DB_NAME=rtrs_production
 PORT=8000
 
-# CORS: Set your actual domain(s), comma-separated
-CORS_ORIGINS=https://yourdomain.com
+# CORS: Use your server IP, comma-separated for multiple IPs
+CORS_ORIGINS=http://192.168.1.100,http://203.0.113.10
 
 # App
 NODE_ENV=production
@@ -104,9 +112,8 @@ cp .env.production .env
 
 ## 5. PM2 Configuration
 
-The project includes `ecosystem.config.js` for PM2:
-
 ```bash
+cd /var/www/rtrs/back-end
 pm2 start ecosystem.config.js --env production
 pm2 save
 pm2 startup
@@ -120,24 +127,20 @@ pm2 startup
 
 ---
 
-## 6. Configure Apache for IP Access
+## 6. Configure Web Server for IP Access
 
-```bash
-sudo a2ensite rtrs-ip.conf
-sudo systemctl reload apache2
-```
+### Apache
 
-If not exists, create it:
 ```bash
 sudo tee /etc/apache2/sites-available/rtrs-ip.conf > /dev/null << 'EOF'
 <VirtualHost *:80>
     ServerName localhost
-    ServerAlias *
 
     # Security headers
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set X-XSS-Protection "1; mode=block"
     Header always set X-Content-Type-Options "nosniff"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 
     # Backend API
     ProxyPreserveHost On
@@ -149,7 +152,7 @@ sudo tee /etc/apache2/sites-available/rtrs-ip.conf > /dev/null << 'EOF'
     RewriteCond %{REQUEST_URI} ^/socket.io [NC]
     RewriteRule /(.*) ws://localhost:8000/$1 [P,L]
 
-    # Frontend (served by PM2/Nginx or Vite preview)
+    # Frontend
     ProxyPass / http://localhost:8080/
     ProxyPassReverse / http://localhost:8080/
 
@@ -157,13 +160,89 @@ sudo tee /etc/apache2/sites-available/rtrs-ip.conf > /dev/null << 'EOF'
     CustomLog ${APACHE_LOG_DIR}/rtrs-access.log combined
 </VirtualHost>
 EOF
+
+sudo a2ensite rtrs-ip.conf
+sudo systemctl reload apache2
 ```
 
-For Nginx, use `nginx-production.conf` in the project root.
+### Nginx
+
+```bash
+sudo tee /etc/nginx/sites-available/rtrs-ip.conf > /dev/null << 'EOF'
+server {
+    listen 80;
+    server_name _;
+
+    client_max_body_size 50M;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    # Backend API
+    location /api {
+        proxy_pass http://localhost:8000/api;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # WebSocket support
+    location /socket.io {
+        proxy_pass http://localhost:8000/socket.io;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+
+    # Frontend
+    location / {
+        proxy_pass http://localhost:8080/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+EOF
+
+sudo ln -s /etc/nginx/sites-available/rtrs-ip.conf /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+```
 
 ---
 
-## 7. Seed Database
+## 7. Build and Serve Frontend
+
+```bash
+cd /var/www/rtrs/front-end
+npm install
+npm run build
+
+# Option A: Serve with a simple static server
+sudo npm install -g serve
+serve -s dist -l 8080
+
+# Option B: Use PM2 to keep it running
+pm2 start serve --name rtrs-frontend -- -s dist -l 8080
+pm2 save
+```
+
+---
+
+## 8. Seed Database
 
 ```bash
 cd /var/www/rtrs/back-end
@@ -176,10 +255,11 @@ This seeds:
 - Default groups: `Front of House`, `Kitchen`, `Management`, `waiting_staff`
 - Default schedule templates
 - Initial admin user (`admin@rtrs.com` / `admin123`)
+- Default settings including table pricing defaults
 
 ---
 
-## 8. Firewall Setup
+## 9. Firewall Setup
 
 ```bash
 sudo ufw allow 80/tcp
@@ -189,19 +269,18 @@ sudo ufw --force enable
 
 ---
 
-## 9. Access Application
+## 10. Access Application
 
 After deployment, access via:
 - `http://YOUR_SERVER_IP/` - Main application
 - `http://YOUR_SERVER_IP/api/v1` - API endpoints
-- `http://YOUR_SERVER_IP/api/v1/stats` - Performance metrics
 - `http://YOUR_SERVER_IP/api/v1/health` - Health check
 
 **⚠️ Change default admin credentials immediately!**
 
 ---
 
-## 10. Maintenance Commands
+## 11. Maintenance Commands
 
 ```bash
 # Check PM2 services
@@ -222,11 +301,11 @@ cd /var/www/rtrs && git pull && ./deploy-prod.sh
 ## Security Notes
 
 1. **JWT Secret**: Generate with `openssl rand -hex 32`. Never use the default.
-2. **CORS**: Set `CORS_ORIGINS` to your actual domain(s) in production.
+2. **CORS**: Set `CORS_ORIGINS` to your actual server IP(s) in production.
 3. **Database**: Use strong passwords. Never expose MySQL to public internet.
 4. **Admin Credentials**: Change after first login.
 5. **Firewall**: Only expose ports 80/443. Keep SSH restricted.
-6. **HTTPS**: Configure SSL certificate (Let's Encrypt) for production.
+6. **HTTPS**: Configure SSL certificate for production. For IP-based HTTPS, use a self-signed certificate or a cloud provider's SSL service.
 
 ---
 
@@ -240,13 +319,19 @@ curl http://localhost:8000/api/v1/health
 curl http://localhost:8000/api/v1/csrf-token
 
 # Test with credentials (must set cookie)
-curl -c cookies.txt -b cookies.txt http://localhost:8000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@rtrs.com","password":"admin123"}'
+curl -c cookies.txt -b cookies.txt http://localhost:8000/api/v1/auth/login   -H "Content-Type: application/json"   -d '{"email":"admin@rtrs.com","password":"admin123"}'
 
 # Get CSRF token from cookie and test protected route
 XSRF_TOKEN=$(grep XSRF-TOKEN cookies.txt | awk '{print $7}')
-curl -c cookies.txt -b cookies.txt \
-  -H "x-xsrf-token: $XSRF_TOKEN" \
-  http://localhost:8000/api/v1/reservations
+curl -c cookies.txt -b cookies.txt   -H "x-xsrf-token: $XSRF_TOKEN"   http://localhost:8000/api/v1/reservations
 ```
+
+---
+
+## IP-Based Access Notes
+
+- No DNS or domain name is required.
+- Access the app using the server's public IP: `http://203.0.113.10/`
+- If the server IP changes, update `CORS_ORIGINS` in `back-end/.env` and restart PM2.
+- For mobile/tablet access on the same network, use the server's LAN IP: `http://192.168.1.50/`
+- SSL certificates for IP addresses require special handling; self-signed certs are acceptable for internal use.
