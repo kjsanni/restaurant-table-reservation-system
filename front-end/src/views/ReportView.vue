@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import reportAPI from "@/services/reportAPI";
+import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
+import PageHeader from "@/components/PageHeader.vue";
 
 const report = ref(null);
 const filters = ref({
@@ -58,9 +60,10 @@ onMounted(() => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Reports &amp; Export</h1>
-    </div>
+    <PageHeader
+      title="Reports"
+      subtitle="Generate and export reservation reports"
+    />
     <div class="content-wrapper">
       <div class="filters-card">
         <h2 class="card-title">Filters</h2>
@@ -175,25 +178,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
-}
-
 .content-wrapper {
   margin-top: var(--page-margin-y);
   margin-bottom: var(--page-margin-y);
@@ -470,18 +454,6 @@ onMounted(() => {
 @media screen and (min-width: 640px) {
   .filters-grid {
     grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media screen and (min-width: 1024px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
-  .content-wrapper {
-    margin-left: 200px;
-    margin-right: 200px;
   }
 }
 </style>

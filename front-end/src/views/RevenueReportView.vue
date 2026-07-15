@@ -141,13 +141,10 @@ const getStackedY = (item, methodKey) => {
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="Revenue Report" />
-    <div class="header">
-      <div class="header-content">
-        <h1 class="page-title">Revenue Report</h1>
-      </div>
-    </div>
-
+    <PageHeader
+      title="Revenue Report"
+      subtitle="Financial insights and analytics"
+    />
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -323,24 +320,6 @@ const getStackedY = (item, methodKey) => {
   background: var(--lighter-gray);
 }
 
-.header {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
 }
 
 .content-wrapper {
@@ -549,17 +528,5 @@ const getStackedY = (item, methodKey) => {
   width: 12px;
   height: 12px;
   border-radius: 3px;
-}
-
-@media screen and (min-width: 1024px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
-  .content-wrapper {
-    margin-left: var(--x-spacing-desktop);
-    margin-right: var(--x-spacing-desktop);
-  }
 }
 </style>
