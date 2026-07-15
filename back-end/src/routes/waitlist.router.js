@@ -19,13 +19,13 @@ router
   .all(httpMethodError);
 
 router
-  .route("/:id/seat")
-  .post(...writeRoute("manage_tables", waitlistController.seatHandler))
+  .route("/maintenance/expire")
+  .post(...writeRoute("manage_tables", waitlistController.expireOldHandler))
   .all(httpMethodError);
 
 router
-  .route("/:id/cancel")
-  .post(...writeRoute("manage_tables", waitlistController.cancelHandler))
+  .route("/from-reservation/:reservationId")
+  .post(tryCatchHandler(staffOnly), validateCsrfToken, tryCatchHandler(waitlistController.createFromReservationHandler))
   .all(httpMethodError);
 
 router
@@ -34,13 +34,13 @@ router
   .all(httpMethodError);
 
 router
-  .route("/maintenance/expire")
-  .post(...writeRoute("manage_tables", waitlistController.expireOldHandler))
+  .route("/:id/seat")
+  .post(...writeRoute("manage_tables", waitlistController.seatHandler))
   .all(httpMethodError);
 
 router
-  .route("/from-reservation/:reservationId")
-  .post(tryCatchHandler(staffOnly), validateCsrfToken, tryCatchHandler(waitlistController.createFromReservationHandler))
+  .route("/:id/cancel")
+  .post(...writeRoute("manage_tables", waitlistController.cancelHandler))
   .all(httpMethodError);
 
 module.exports = router;

@@ -18,6 +18,21 @@ router
   .all(httpMethodError);
 
 router
+  .route("/merge")
+  .post(...writeRoute("manage_tables", tableController.mergeTablesHandler))
+  .all(httpMethodError);
+
+router
+  .route("/price")
+  .post(...protectedRoute("manage_tables", tableController.calculatePriceHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:tableId")
+  .delete(...writeRoute("manage_tables", tableController.freeTableHandler))
+  .all(httpMethodError);
+
+router
   .route("/:tableId/staff")
   .post(...writeRoute("manage_tables", tableController.assignStaffHandler))
   .all(httpMethodError);
@@ -28,8 +43,8 @@ router
   .all(httpMethodError);
 
 router
-  .route("/:tableId")
-  .delete(...writeRoute("manage_tables", tableController.freeTableHandler))
+  .route("/:tableId/unmerge")
+  .post(...writeRoute("manage_tables", tableController.unmergeTableHandler))
   .all(httpMethodError);
 
 router
@@ -40,21 +55,6 @@ router
 router
   .route("/:id/unblock")
   .patch(...writeRoute("manage_tables", tableController.unblockTableHandler))
-  .all(httpMethodError);
-
-router
-  .route("/merge")
-  .post(...writeRoute("manage_tables", tableController.mergeTablesHandler))
-  .all(httpMethodError);
-
-router
-  .route("/:tableId/unmerge")
-  .post(...writeRoute("manage_tables", tableController.unmergeTableHandler))
-  .all(httpMethodError);
-
-router
-  .route("/price")
-  .post(...protectedRoute("manage_tables", tableController.calculatePriceHandler))
   .all(httpMethodError);
 
 router

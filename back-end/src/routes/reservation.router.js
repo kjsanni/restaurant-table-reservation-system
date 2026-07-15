@@ -65,6 +65,11 @@ router
   .all(httpMethodError);
 
 router
+  .route("/search-notes")
+  .get(...protectedRoute("view_reservations", reservationController.searchNotesHandler))
+  .all(httpMethodError);
+
+router
   .route("/:reservationId")
   .get(...protectedRoute("view_reservations", reservationController.getOneHandler))
   .patch(...writeRoute("edit_reservations", reservationController.editHandler))
@@ -80,11 +85,6 @@ router
 router
   .route("/:reservationId/staff/:userId")
   .delete(...writeRoute("manage_tables", reservationController.unassignStaffHandler))
-  .all(httpMethodError);
-
-router
-  .route("/search-notes")
-  .get(...protectedRoute("view_reservations", reservationController.searchNotesHandler))
   .all(httpMethodError);
 
 module.exports = router;
