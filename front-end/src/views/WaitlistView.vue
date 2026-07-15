@@ -6,6 +6,8 @@ import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
 import { useAuthStore } from "@/stores/auth";
+import PageHeader from "@/components/PageHeader.vue";
+import { Icon } from "@iconify/vue";
 
 const authStore = useAuthStore();
 const canAddToWaitlist = computed(
@@ -183,9 +185,7 @@ onMounted(() => {
 
 <template>
   <div class="main-wrapper">
-    <div class="header">
-      <h1>Waitlist / Queue Management</h1>
-    </div>
+    <PageHeader title="Waitlist" subtitle="Manage guest queue and seating" />
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -194,28 +194,36 @@ onMounted(() => {
       <template v-else>
         <div class="stats-row">
           <div class="stat-pill waiting">
-            <span class="stat-icon">⏳</span>
+            <span class="stat-icon"
+              ><Icon icon="mdi:clock-outline" width="20" height="20"
+            /></span>
             <div class="stat-text">
               <span class="stat-number">{{ stats.waiting }}</span>
               <span class="stat-label">Waiting</span>
             </div>
           </div>
           <div class="stat-pill seated">
-            <span class="stat-icon">✅</span>
+            <span class="stat-icon"
+              ><Icon icon="mdi:check-circle" width="20" height="20"
+            /></span>
             <div class="stat-text">
               <span class="stat-number">{{ stats.seated }}</span>
               <span class="stat-label">Seated</span>
             </div>
           </div>
           <div class="stat-pill expired">
-            <span class="stat-icon">⌛</span>
+            <span class="stat-icon"
+              ><Icon icon="mdi:clock-alert" width="20" height="20"
+            /></span>
             <div class="stat-text">
               <span class="stat-number">{{ stats.expired }}</span>
               <span class="stat-label">Expired</span>
             </div>
           </div>
           <div class="stat-pill total">
-            <span class="stat-icon">📊</span>
+            <span class="stat-icon"
+              ><Icon icon="mdi:chart-bar" width="20" height="20"
+            /></span>
             <div class="stat-text">
               <span class="stat-number">{{ stats.total }}</span>
               <span class="stat-label">Total</span>
@@ -237,7 +245,9 @@ onMounted(() => {
         </div>
 
         <div v-if="entries.length === 0" class="empty-state">
-          <span class="empty-icon">📭</span>
+          <span class="empty-icon"
+            ><Icon icon="mdi:inbox" width="48" height="48"
+          /></span>
           <p>No one on the waitlist</p>
         </div>
         <div v-else class="entries-grid">
@@ -257,21 +267,29 @@ onMounted(() => {
 
             <div class="entry-body">
               <div v-if="entry.phone" class="info-item">
-                <span class="info-icon">📞</span>
+                <span class="info-icon"
+                  ><Icon icon="mdi:phone" width="16" height="16"
+                /></span>
                 <span>{{ entry.phone }}</span>
               </div>
               <div v-if="entry.email" class="info-item">
-                <span class="info-icon">✉️</span>
+                <span class="info-icon"
+                  ><Icon icon="mdi:email" width="16" height="16"
+                /></span>
                 <span>{{ entry.email }}</span>
               </div>
               <div class="info-item">
-                <span class="info-icon">🕐</span>
+                <span class="info-icon"
+                  ><Icon icon="mdi:clock-outline" width="16" height="16"
+                /></span>
                 <span
                   >Desired: {{ formatTime(entry.desiredTime) || "ASAP" }}</span
                 >
               </div>
               <div v-if="entry.notes" class="info-item notes-item">
-                <span class="info-icon">📝</span>
+                <span class="info-icon"
+                  ><Icon icon="mdi:note-text" width="16" height="16"
+                /></span>
                 <span>{{ entry.notes }}</span>
               </div>
             </div>
@@ -282,21 +300,21 @@ onMounted(() => {
                 @click="openSeat(entry)"
                 title="Seat Guest"
               >
-                🪑 Seat
+                <Icon icon="mdi:seat" width="16" height="16" /> Seat
               </button>
               <button
                 class="btn btn-danger btn-sm"
                 @click="openCancel(entry)"
                 title="Cancel"
               >
-                ✕
+                <Icon icon="mdi:close" width="16" height="16" />
               </button>
               <button
                 class="btn btn-outline btn-sm"
                 @click="handleDelete(entry)"
                 title="Delete"
               >
-                🗑
+                <Icon icon="mdi:delete" width="16" height="16" />
               </button>
             </div>
           </div>
@@ -463,34 +481,25 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.header {
+.main-wrapper {
+  min-height: 100vh;
+  background: var(--restaurant-background);
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
+  flex: 1;
+  margin: var(--space-6) var(--x-spacing-mobile);
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  max-width: 1400px;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .content-wrapper {
+    margin: var(--space-8) var(--x-spacing-desktop);
+  }
 }
 
 .loading-state {
@@ -498,18 +507,16 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 100px 20px;
-  gap: 16px;
-  color: var(--secondary-gray);
-  font-family: "Inter-Light";
+  padding: var(--space-20) var(--space-6);
+  gap: var(--space-4);
 }
 
 .spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
-  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--restaurant-border);
+  border-top-color: var(--restaurant-accent);
+  border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -519,26 +526,71 @@ onMounted(() => {
   }
 }
 
+.loading-state p {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--restaurant-secondary);
+}
+
 .stats-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+@media (min-width: 640px) {
+  .stats-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .stat-pill {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--primary-white);
-  border: 1px solid #f0f0f0;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--restaurant-surface);
+  border: 1px solid var(--restaurant-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.stat-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-icon {
-  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+}
+
+.waiting .stat-icon {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--color-warm-600);
+}
+
+.seated .stat-icon {
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--color-success-600);
+}
+
+.expired .stat-icon {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--color-accent-600);
+}
+
+.total .stat-icon {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-info-600);
 }
 
 .stat-text {
@@ -548,103 +600,115 @@ onMounted(() => {
 }
 
 .stat-number {
-  font-family: "Inter-Bold";
-  font-size: 22px;
-  color: var(--primary-black);
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--restaurant-charcoal);
+  letter-spacing: var(--tracking-tight);
 }
 
 .stat-label {
-  font-family: "Inter-Medium";
-  font-size: 11px;
-  color: var(--secondary-gray);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--restaurant-secondary);
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
 }
 
 .stat-pill.waiting {
-  border-left: 4px solid #f59e0b;
+  border-left: 4px solid var(--color-warm-500);
 }
 
 .stat-pill.seated {
-  border-left: 4px solid #22c55e;
+  border-left: 4px solid var(--color-success-600);
 }
 
 .stat-pill.expired {
-  border-left: 4px solid #ef4444;
+  border-left: 4px solid var(--color-accent-600);
 }
 
 .stat-pill.total {
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid var(--color-info-500);
 }
 
 .action-bar {
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
   flex-wrap: wrap;
+  margin-bottom: var(--space-6);
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
-  color: var(--secondary-gray);
-  font-family: "Inter-Light";
-  font-size: 15px;
+  padding: var(--space-16) var(--space-6);
+  color: var(--restaurant-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .empty-icon {
-  font-size: 32px;
-  opacity: 0.5;
+  opacity: 0.4;
+  color: var(--restaurant-secondary);
 }
 
 .entries-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .entries-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .entry-card {
-  background: var(--primary-white);
-  border: 1px solid #f0f0f0;
-  border-radius: 14px;
-  padding: 18px;
+  background: var(--restaurant-surface);
+  border: 1px solid var(--restaurant-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
 }
 
 .entry-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .entry-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .guest-identity {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-3);
   min-width: 0;
 }
 
 .guest-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
-  color: var(--primary-blue);
-  font-family: "Inter-Bold";
-  font-size: 15px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-100);
+  color: var(--restaurant-charcoal);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -654,118 +718,125 @@ onMounted(() => {
 .guest-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
 .guest-name {
-  font-family: "Inter-Medium";
-  font-size: 15px;
-  color: var(--primary-black);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--restaurant-charcoal);
 }
 
 .party-badge {
-  font-family: "Inter-Medium";
-  font-size: 12px;
-  background: #eef2ff;
-  color: var(--primary-blue);
-  padding: 2px 10px;
-  border-radius: 10px;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  background: var(--color-primary-50);
+  color: var(--restaurant-secondary);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
   display: inline-block;
   width: fit-content;
 }
 
 .status-badge {
-  font-family: "Inter-Medium";
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
   white-space: nowrap;
   text-transform: capitalize;
   flex-shrink: 0;
 }
 
 .status-badge.waiting {
-  background: #fffbeb;
-  color: #b45309;
+  background: var(--color-warm-100);
+  color: var(--color-warm-600);
 }
 
 .entry-body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .info-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-family: "Inter-Light";
-  font-size: 13px;
-  color: var(--secondary-gray);
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--restaurant-secondary);
 }
 
 .info-icon {
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  color: var(--restaurant-secondary);
   flex-shrink: 0;
 }
 
 .info-item.notes-item {
-  background: #fffbeb;
+  background: var(--color-warm-50);
   color: #92400e;
-  padding: 8px 10px;
-  border-radius: 8px;
-  margin-top: 4px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-2);
 }
 
 .entry-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid #f0f0f0;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--restaurant-border);
 }
 
 .popup-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .form-section {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .field-label {
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  color: var(--primary-black);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--restaurant-charcoal);
 }
 
 .field-input {
-  padding: 10px 14px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
-  color: var(--primary-black);
-  background: white;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--restaurant-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--restaurant-charcoal);
+  background: var(--restaurant-surface);
   width: 100%;
   box-sizing: border-box;
+  transition: border-color var(--duration-fast) var(--ease-in-out),
+    box-shadow var(--duration-fast) var(--ease-in-out);
 }
 
 .field-input:focus {
   outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--restaurant-accent);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 textarea.field-input {
@@ -773,65 +844,66 @@ textarea.field-input {
 }
 
 .seat-info {
-  font-size: 14px;
-  color: var(--primary-black);
-  margin-bottom: 4px;
-  line-height: 1.5;
+  font-size: var(--text-sm);
+  color: var(--restaurant-charcoal);
+  margin-bottom: var(--space-2);
+  line-height: var(--leading-relaxed);
 }
 
 .cancel-text {
-  font-size: 14px;
-  color: var(--primary-black);
-  margin-bottom: 4px;
-  line-height: 1.5;
+  font-size: var(--text-sm);
+  color: var(--restaurant-charcoal);
+  margin-bottom: var(--space-2);
+  line-height: var(--leading-relaxed);
 }
 
 .empty-msg {
   text-align: center;
-  color: var(--secondary-gray);
-  font-family: "Inter-Light";
-  padding: 20px;
+  color: var(--restaurant-secondary);
+  font-family: var(--font-sans);
+  padding: var(--space-4);
 }
 
 .error-msg {
-  background: #fef2f2;
-  color: #dc2626;
-  padding: 10px;
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 13px;
+  background: var(--color-accent-50);
+  color: var(--color-accent-600);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
 }
 
 .popup-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #f0f0f0;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--restaurant-border);
 }
 
 .table-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 8px;
-  margin: 10px 0;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
 }
 
 .table-btn {
-  padding: 10px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  background: white;
+  padding: var(--space-3);
+  border: 1px solid var(--restaurant-border);
+  border-radius: var(--radius-md);
+  background: var(--restaurant-surface);
   cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  transition: all 0.2s;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: all var(--duration-fast) var(--ease-in-out);
 }
 
 .table-btn:hover:not(:disabled) {
-  background: #eef2ff;
-  border-color: var(--primary-blue);
-  color: var(--primary-blue);
+  background: var(--color-primary-50);
+  border-color: var(--restaurant-accent);
+  color: var(--restaurant-accent);
 }
 
 .table-btn:disabled {
@@ -843,103 +915,92 @@ textarea.field-input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  transition: all 0.15s;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: all var(--duration-fast) var(--ease-in-out);
 }
 
 .btn-primary {
-  background-color: var(--primary-blue);
+  background: linear-gradient(
+    135deg,
+    var(--restaurant-charcoal) 0%,
+    var(--restaurant-slate) 100%
+  );
   color: white;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  background-color: #2563eb;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background-color: #f3f4f6;
-  color: var(--primary-black);
+  background: var(--color-primary-50);
+  color: var(--restaurant-charcoal);
+  border: 1px solid var(--restaurant-border);
 }
 
 .btn-secondary:hover {
-  background-color: #e5e7eb;
+  background: var(--color-primary-100);
 }
 
 .btn-danger {
-  background-color: #fef2f2;
-  color: #dc2626;
+  background: var(--color-accent-50);
+  color: var(--color-accent-600);
 }
 
 .btn-danger:hover {
-  background-color: #fee2e2;
+  background: var(--color-accent-100);
 }
 
 .btn-success {
-  background-color: #d1fae5;
-  color: #065f46;
+  background: var(--color-success-50);
+  color: var(--color-success-600);
 }
 
 .btn-success:hover {
-  background-color: #a7f3d0;
+  background: var(--color-success-100);
 }
 
 .btn-outline {
-  background-color: transparent;
-  border: 1px solid #f0f0f0;
-  color: var(--primary-black);
+  background: transparent;
+  border: 1px solid var(--restaurant-border);
+  color: var(--restaurant-charcoal);
 }
 
 .btn-outline:hover {
-  background-color: #f9fafb;
+  background: var(--color-primary-50);
 }
 
 .btn-sm {
-  padding: 6px 12px;
-  font-size: 12px;
-}
-
-@media screen and (min-width: 640px) {
-  .entries-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .stats-row {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media screen and (min-width: 1024px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
-  .content-wrapper {
-    margin-left: 200px;
-    margin-right: 200px;
-  }
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
 }
 
 .confirm-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-4);
 }
 
 .confirm-content p {
-  font-family: "Inter-Medium";
-  font-size: 15px;
-  color: var(--primary-black);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--restaurant-charcoal);
   margin: 0;
 }
 
 .confirm-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: var(--space-2);
 }
 </style>

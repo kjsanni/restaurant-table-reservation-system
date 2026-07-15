@@ -245,40 +245,36 @@ const exportPDF = async () => {
 </template>
 
 <style scoped>
-.header {
+.main-wrapper {
+  min-height: 100vh;
+  background: var(--restaurant-background);
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  width: 100%;
-  height: var(--header-height);
-  background: var(--lighter-gray) url("@/assets/images/reservations-header.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-}
-.header h1 {
-  margin-left: var(--x-spacing-mobile);
-  margin-bottom: 15px;
-  font-size: 35px;
-  color: var(--snow-white);
-  text-shadow: 1px 1px 2px var(--primary-black);
 }
 
 .content-wrapper {
-  margin-top: 12px;
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
+  flex: 1;
+  margin: var(--space-6) var(--x-spacing-mobile);
   padding: 0;
+  max-width: 1400px;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .content-wrapper {
+    margin: var(--space-8) var(--x-spacing-desktop);
+  }
 }
 
 .action-bar {
-  margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-6);
 }
 
 .export-bar {
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .loading-state {
@@ -286,18 +282,16 @@ const exportPDF = async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 100px 20px;
-  gap: 16px;
-  color: var(--secondary-gray);
-  font-family: "Inter-Light";
+  padding: var(--space-20) var(--space-6);
+  gap: var(--space-4);
 }
 
 .spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--lighter-gray);
-  border-top-color: var(--primary-blue);
-  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--restaurant-border);
+  border-top-color: var(--restaurant-accent);
+  border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -307,183 +301,189 @@ const exportPDF = async () => {
   }
 }
 
+.loading-state p {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--restaurant-secondary);
+}
+
 .schedules-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .section-card {
-  background: var(--primary-white);
-  border: 1px solid #f0f0f0;
-  border-radius: var(--card-radius);
-  padding: var(--card-padding);
-  box-shadow: var(--card-shadow);
+  background: var(--restaurant-surface);
+  border: 1px solid var(--restaurant-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
 }
 
 .section-title {
-  font-family: "Inter-Bold";
-  font-size: 18px;
-  color: var(--primary-black);
-  margin: 0 0 20px 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--restaurant-charcoal);
+  margin: 0 0 var(--space-5) 0;
+  letter-spacing: var(--tracking-tight);
 }
 
 .schedule-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .schedule-item {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 16px;
-  background: #fafafa;
-  border: 1px solid #f0f0f0;
-  border-radius: 10px;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-primary-50);
+  border: 1px solid var(--restaurant-border);
+  border-radius: var(--radius-md);
+  transition: background var(--duration-fast) var(--ease-in-out);
+}
+
+.schedule-item:hover {
+  background: var(--color-primary-100);
 }
 
 .day-label {
-  font-family: "Inter-Medium";
+  font-family: var(--font-sans);
+  font-weight: 600;
   width: 110px;
-  font-size: 14px;
-  color: var(--primary-black);
+  font-size: var(--text-sm);
+  color: var(--restaurant-charcoal);
 }
 
 .time-inputs {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   flex: 1;
 }
 
 .time-input {
-  padding: 10px 14px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
-  color: var(--primary-black);
-  background: white;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--restaurant-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--restaurant-charcoal);
+  background: var(--restaurant-surface);
   min-width: 140px;
+  transition: border-color var(--duration-fast) var(--ease-in-out),
+    box-shadow var(--duration-fast) var(--ease-in-out);
 }
 
 .time-input:focus {
   outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--restaurant-accent);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .time-input:disabled {
-  background: #f3f4f6;
-  color: var(--secondary-gray);
+  background: var(--color-primary-100);
+  color: var(--restaurant-secondary);
   cursor: not-allowed;
 }
 
 .time-separator {
-  color: var(--secondary-gray);
-  font-size: 13px;
-  font-family: "Inter-Medium");
+  color: var(--restaurant-secondary);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
 }
 
 .schedule-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .slot-badge {
-  font-family: "Inter-Medium";
-  font-size: 12px;
-  color: var(--primary-blue);
-  background: #eef2ff;
-  padding: 4px 10px;
-  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-info-600);
+  background: var(--color-primary-100);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
 }
 
 .holidays-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .holiday-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .holiday-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
-  background: #fafafa;
-  border: 1px solid #f0f0f0;
-  border-radius: 10px;
+  padding: var(--space-4);
+  background: var(--color-primary-50);
+  border: 1px solid var(--restaurant-border);
+  border-radius: var(--radius-md);
 }
 
 .holiday-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
 .holiday-date {
-  font-family: "Inter-Medium";
-  font-size: 14px;
-  color: var(--primary-black);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--restaurant-charcoal);
 }
 
 .holiday-desc {
-  font-family: "Inter-Light";
-  font-size: 14px;
-  color: var(--secondary-gray);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--restaurant-secondary);
 }
 
 .closed-badge {
-  font-size: 11px;
-  padding: 3px 10px;
-  border-radius: 6px;
-  background-color: #fef2f2;
-  color: #dc2626;
-  font-family: "Inter-Medium";
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--color-accent-50);
+  color: var(--color-accent-600);
 }
 
 .open-badge {
-  font-size: 11px;
-  padding: 3px 10px;
-  border-radius: 6px;
-  background-color: #d1fae5;
-  color: #065f46;
-  font-family: "Inter-Medium";
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--color-success-50);
+  color: var(--color-success-600);
 }
 
 .empty-state {
   text-align: center;
-  padding: 30px;
-  color: var(--secondary-gray);
-  font-family: "Inter-Light";
-  font-size: 14px;
-}
-
-@media screen and (min-width: 1024px) {
-  .header h1 {
-    margin-left: var(--x-spacing-desktop);
-    font-size: 45px;
-    margin-bottom: 20px;
-  }
-  .content-wrapper {
-    margin-left: 200px;
-    margin-right: 200px;
-  }
+  padding: var(--space-8);
+  color: var(--restaurant-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
 }
 
 .field {
-  margin-bottom: 18px;
+  margin-bottom: var(--space-5);
 }
 
 .field:last-of-type {
@@ -492,32 +492,34 @@ const exportPDF = async () => {
 
 .field-label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
   font-weight: 600;
-  font-family: "Inter-Medium";
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
   color: var(--restaurant-slate);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
 }
 
 .field-input {
   width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  font-family: "Inter-Light";
-  font-size: 14px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--restaurant-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
   color: var(--restaurant-charcoal);
   box-sizing: border-box;
-  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
-  background: #f8fafc;
+  transition: border-color var(--duration-fast) var(--ease-in-out),
+    box-shadow var(--duration-fast) var(--ease-in-out),
+    background-color var(--duration-fast) var(--ease-in-out);
+  background: var(--color-primary-50);
 }
 
 .field-input:focus {
   outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background: #ffffff;
+  border-color: var(--restaurant-accent);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  background: var(--restaurant-surface);
 }
 </style>

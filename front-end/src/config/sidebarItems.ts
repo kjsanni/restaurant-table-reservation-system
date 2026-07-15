@@ -15,6 +15,7 @@ export const guestNavItems: NavItem[] = [
 
 export const authenticatedNavItems: NavItem[] = [
   { routeName: 'reservations', text: 'Reservations', icon: 'mdi:format-list-bulleted', requiresAuth: true },
+  { routeName: 'dashboard', text: 'Dashboard', icon: 'mdi:view-dashboard', requiresAuth: true },
   { routeName: 'table-management', text: 'Tables', icon: 'mdi:table', requiresAuth: true },
   { routeName: 'schedule', text: 'Schedule', icon: 'mdi:calendar', requiresAuth: true },
   { routeName: 'calendar', text: 'Calendar', icon: 'mdi:calendar', requiresAuth: true },
