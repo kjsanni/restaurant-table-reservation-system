@@ -10,7 +10,6 @@ export interface NavItem {
 
 export const guestNavItems: NavItem[] = [
   { routeName: 'home', text: 'Home', icon: 'mdi:home' },
-  { routeName: 'login', text: 'Login', icon: 'mdi:login' },
   { routeName: 'new-reservation', text: 'New Reservation', icon: 'mdi:calendar-plus' },
 ]
 
@@ -32,4 +31,5 @@ export const adminNavItems: NavItem[] = [
   { routeName: 'group-management', text: 'Groups', icon: 'mdi:account-group', requiresAuth: true },
   { routeName: 'payment-dashboard', text: 'Payments', icon: 'mdi:currency-usd', requiresAuth: true, requiresAdmin: true },
   { routeName: 'audit-logs', text: 'Audit', icon: 'mdi:file-document-text', requiresAuth: true },
+  { routeName: 'email-templates', text: 'Email Templates', icon: 'mdi:email', requiresAuth: true, requiresAdmin: true },
 ]

@@ -28,28 +28,30 @@ import { VaSkeleton } from "vuestic-ui";
 <style scoped>
 .main-wrapper {
   min-height: 100vh;
-  background: linear-gradient(180deg, #fffef8 0%, #fff8f0 100%);
+  background: var(--restaurant-background);
   display: flex;
   flex-direction: column;
 }
 
 .content-wrapper {
   flex: 1;
-  margin: 16px var(--x-spacing-mobile);
+  margin: var(--space-6) var(--x-spacing-mobile);
   padding: 0;
+  max-width: 1400px;
+  width: 100%;
 }
 
 .loading-state {
-  padding: 60px;
+  padding: var(--space-20) var(--space-6);
   display: flex;
   justify-content: center;
-  background: linear-gradient(180deg, #fffef8 0%, #fff8f0 100%);
-  min-height: 100vh;
+  background: var(--restaurant-background);
+  min-height: 60vh;
 }
 
-@media screen and (min-width: 1024px) {
+@media (min-width: 1024px) {
   .content-wrapper {
-    margin: 60px var(--x-spacing-desktop);
+    margin: var(--space-8) var(--x-spacing-desktop);
   }
 }
 </style>

@@ -4,6 +4,7 @@ import { createVuestic } from 'vuestic-ui'
 import 'vuestic-ui/css'
 import App from './App.vue'
 import router from './router'
+import './assets/design-system.css'
 import './assets/main.css'
 
 const pinia = createPinia()

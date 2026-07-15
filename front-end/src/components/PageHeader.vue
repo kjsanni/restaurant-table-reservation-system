@@ -42,7 +42,7 @@ const breadcrumbs = computed(() => {
 <style scoped>
 .app-page-header {
   width: 100%;
-  padding: 24px var(--x-spacing-mobile) 16px;
+  padding: var(--space-6) var(--x-spacing-mobile) var(--space-5);
   background: linear-gradient(
     135deg,
     var(--luxury-charcoal, var(--restaurant-primary)) 0%,
@@ -58,14 +58,14 @@ const breadcrumbs = computed(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
+  height: 2px;
   background: linear-gradient(
     90deg,
     transparent,
     var(--restaurant-accent),
     transparent
   );
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .header-content {
@@ -76,59 +76,60 @@ const breadcrumbs = computed(() => {
 .breadcrumbs {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-family: "Inter-Medium";
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .breadcrumb-separator {
-  opacity: 0.4;
+  opacity: 0.35;
 }
 
 .breadcrumb-item {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .page-title {
-  font-family: "Inter-Bold";
-  font-size: 28px;
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--snow-white);
-  margin: 0 0 4px 0;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  margin: 0 0 var(--space-1) 0;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
 }
 
 .page-subtitle {
-  font-family: "Inter-Light";
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.65);
   margin: 0;
+  line-height: var(--leading-relaxed);
 }
 
 @media screen and (min-width: 640px) {
   .app-page-header {
-    padding: 28px var(--x-spacing-desktop) 20px;
+    padding: var(--space-7) var(--x-spacing-desktop) var(--space-5);
   }
 
   .page-title {
-    font-size: 32px;
+    font-size: var(--text-3xl);
   }
 
   .page-subtitle {
-    font-size: 15px;
+    font-size: var(--text-base);
   }
 }
 
 @media screen and (min-width: 1024px) {
   .app-page-header {
-    padding: 32px var(--x-spacing-desktop) 24px;
+    padding: var(--space-8) var(--x-spacing-desktop) var(--space-6);
   }
 
   .page-title {
-    font-size: 36px;
+    font-size: var(--text-3xl);
   }
 }
 </style>

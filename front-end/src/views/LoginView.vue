@@ -126,57 +126,100 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
-  background: var(--restaurant-background);
+  padding: var(--space-6) var(--space-4);
+  background: linear-gradient(
+    135deg,
+    var(--restaurant-cream) 0%,
+    var(--restaurant-stone) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-wrapper::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    circle,
+    rgba(251, 191, 36, 0.06) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.auth-wrapper::after {
+  content: "";
+  position: absolute;
+  bottom: -40%;
+  left: -20%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(
+    circle,
+    rgba(220, 38, 38, 0.04) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 380px;
-  border-radius: 8px;
-  border: 2px solid var(--restaurant-border);
-  box-shadow: 4px 4px 0 var(--restaurant-border);
-}
-
-.auth-card:hover {
-  box-shadow: 6px 6px 0 var(--restaurant-border);
+  max-width: 400px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--restaurant-border);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
 }
 
 .auth-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-8);
 }
 
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-primary-50);
+  border-radius: var(--radius-full);
 }
 
 .brand-icon {
-  font-size: 28px;
+  font-size: 20px;
 }
 
 .brand-text {
-  font-family: "Inter-Bold", monospace;
-  font-size: 20px;
-  color: var(--restaurant-primary);
-  letter-spacing: 0.15em;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--restaurant-charcoal);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
 .auth-title {
-  font-family: "Inter-Bold", -apple-system, sans-serif;
-  font-size: 28px;
-  color: var(--restaurant-primary);
-  margin: 0 0 4px 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  color: var(--restaurant-charcoal);
+  margin: 0 0 var(--space-2) 0;
+  letter-spacing: var(--tracking-tight);
 }
 
 .auth-subtitle {
-  font-family: "Inter-Light", sans-serif;
-  font-size: 14px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
   color: var(--restaurant-secondary);
   margin: 0;
 }
@@ -184,7 +227,7 @@ const handleLogin = async () => {
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-5);
 }
 
 .auth-input {
@@ -192,37 +235,44 @@ const handleLogin = async () => {
 }
 
 .auth-alert {
-  border-radius: 6px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
 }
 
 .lockout-text {
-  font-family: "Inter-Medium", sans-serif;
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .auth-submit {
-  font-family: "Inter-Bold", sans-serif;
-  font-size: 14px;
-  letter-spacing: 0.05em;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  margin-top: 8px;
+  margin-top: var(--space-2);
+  height: 48px;
+  border-radius: var(--radius-md);
 }
 
 .auth-footer {
   text-align: center;
-  margin-top: 24px;
-  padding-top: 16px;
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
   border-top: 1px solid var(--restaurant-border);
 }
 
 .auth-link {
-  font-family: "Inter-Medium", sans-serif;
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--restaurant-accent);
   text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-in-out);
 }
-
 .auth-link:hover {
+  color: var(--restaurant-golden);
   text-decoration: underline;
 }
 </style>

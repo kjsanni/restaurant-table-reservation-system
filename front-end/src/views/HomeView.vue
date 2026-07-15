@@ -2,8 +2,10 @@
 import { VaButton, VaCard, VaCardContent } from "vuestic-ui";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
+import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
+const authStore = useAuthStore();
 
 const changeRoute = (routeName: string) => router.push({ name: routeName });
 </script>
@@ -32,18 +34,8 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
             New Reservation
           </VaButton>
           <VaButton
+            v-if="!authStore.isAuthenticated"
             preset="secondary"
-            size="large"
-            class="cta-button"
-            @click="changeRoute('search')"
-          >
-            <template #icon>
-              <Icon icon="mdi:magnify" width="20" height="20" />
-            </template>
-            Find Reservation
-          </VaButton>
-          <VaButton
-            preset="primary"
             size="large"
             class="cta-button"
             @click="changeRoute('login')"
@@ -124,62 +116,78 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 <style scoped>
 .home-container {
   min-height: calc(100vh - var(--header-height));
-  background: linear-gradient(180deg, #fffef8 0%, #fff8f0 100%);
+  background: linear-gradient(
+    180deg,
+    var(--restaurant-cream) 0%,
+    var(--restaurant-stone) 100%
+  );
 }
 
 .hero-section {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 40px;
-  padding: 60px var(--x-spacing-mobile) 40px;
+  gap: var(--space-10);
+  padding: var(--space-20) var(--x-spacing-mobile) var(--space-16);
   flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .hero-content {
   flex: 1;
-  max-width: 500px;
+  max-width: 540px;
   text-align: center;
 }
 
 .badge {
-  display: inline-block;
-  padding: 6px 12px;
-  background: var(--restaurant-accent);
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  background: linear-gradient(
+    135deg,
+    var(--restaurant-charcoal) 0%,
+    var(--restaurant-slate) 100%
+  );
   color: white;
-  font-family: "Inter-Medium";
-  font-size: 12px;
-  border-radius: 20px;
-  margin-bottom: 24px;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-6);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.1em;
+  box-shadow: var(--shadow-sm);
 }
 
 .hero-title {
-  font-family: "Inter-Bold", Inter, -apple-system, sans-serif;
-  font-size: 36px;
-  color: var(--restaurant-primary);
-  margin: 0 0 16px 0;
-  line-height: 1.2;
+  font-family: var(--font-serif);
+  font-size: var(--text-4xl);
+  color: var(--restaurant-charcoal);
+  margin: 0 0 var(--space-4) 0;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
 }
 
 .hero-subtitle {
-  font-family: "Inter-Light";
-  font-size: 16px;
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
   color: var(--restaurant-secondary);
-  margin: 0 0 32px 0;
-  line-height: 1.6;
+  margin: 0 0 var(--space-8) 0;
+  line-height: var(--leading-relaxed);
 }
 
 .hero-actions {
   display: flex;
-  gap: 16px;
+  gap: var(--space-4);
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .cta-button {
-  font-family: "Inter-Medium";
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
 }
 
 .hero-visual {
@@ -189,71 +197,82 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
 }
 
 .feature-highlight {
-  padding: 30px;
+  padding: var(--space-10);
   background: white;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  color: var(--restaurant-primary);
+  gap: var(--space-4);
+  color: var(--restaurant-charcoal);
+  border: 1px solid var(--restaurant-border);
+  transition: transform var(--duration-slow) var(--ease-out),
+    box-shadow var(--duration-slow) var(--ease-out);
+}
+.feature-highlight:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
 }
 
 .features-section {
-  padding: 60px var(--x-spacing-mobile) 80px;
+  padding: var(--space-16) var(--x-spacing-mobile) var(--space-20);
   text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .section-title {
-  font-family: "Inter-Bold";
-  font-size: 28px;
-  color: var(--restaurant-primary);
-  margin: 0 0 40px 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  color: var(--restaurant-charcoal);
+  margin: 0 0 var(--space-10) 0;
+  letter-spacing: var(--tracking-tight);
 }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-6);
   max-width: 1000px;
   margin: 0 auto;
 }
 
 .feature-card {
-  transition: transform 0.3s;
+  transition: transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
 }
-
 .feature-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
 }
 
 .feature-icon {
   color: var(--restaurant-accent);
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .feature-card h3 {
-  font-family: "Inter-Bold";
-  font-size: 18px;
-  color: var(--restaurant-primary);
-  margin: 0 0 8px 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  color: var(--restaurant-charcoal);
+  margin: 0 0 var(--space-2) 0;
 }
 
 .feature-card p {
-  font-family: "Inter-Light";
-  font-size: 14px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
   color: var(--restaurant-secondary);
   margin: 0;
+  line-height: var(--leading-relaxed);
 }
 
 @media screen and (min-width: 1024px) {
   .hero-section {
-    padding: 80px var(--x-spacing-desktop) 60px;
+    padding: var(--space-24) var(--x-spacing-desktop) var(--space-20);
   }
 
   .hero-title {
-    font-size: 48px;
+    font-size: var(--text-4xl);
   }
 
   .hero-content {
@@ -269,7 +288,7 @@ const changeRoute = (routeName: string) => router.push({ name: routeName });
   }
 
   .features-section {
-    padding: 80px var(--x-spacing-desktop) 100px;
+    padding: var(--space-20) var(--x-spacing-desktop) var(--space-24);
   }
 }
 </style>

@@ -1,83 +1,149 @@
 :root {
-  /* Warm Modern Restaurant Palette - Professional with hospitality feel */
-  --restaurant-charcoal: #0f172a;
-  --restaurant-slate: #334155;
-  --restaurant-warm-gray: #64748b;
-  --restaurant-terracotta: #dc2626;
-  --restaurant-golden: #f59e0b;
-  --restaurant-amber: #fbbf24;
-  --restaurant-sage: #16a34a;
-  --restaurant-sky: #0ea5e9;
+  /* ─── Design Tokens ─── */
+  /* Primary palette */
+  --color-primary-50: #f8fafc;
+  --color-primary-100: #f1f5f9;
+  --color-primary-200: #e2e8f0;
+  --color-primary-300: #cbd5e1;
+  --color-primary-400: #94a3b8;
+  --color-primary-500: #64748b;
+  --color-primary-600: #475569;
+  --color-primary-700: #334155;
+  --color-primary-800: #1e293b;
+  --color-primary-900: #0f172a;
+
+  /* Accent palette */
+  --color-accent-50: #fef2f2;
+  --color-accent-100: #fee2e2;
+  --color-accent-200: #fecaca;
+  --color-accent-300: #fca5a5;
+  --color-accent-400: #f87171;
+  --color-accent-500: #ef4444;
+  --color-accent-600: #dc2626;
+  --color-accent-700: #b91c1c;
+
+  /* Warm palette */
+  --color-warm-50: #fffbeb;
+  --color-warm-100: #fef3c7;
+  --color-warm-200: #fde68a;
+  --color-warm-300: #fcd34d;
+  --color-warm-400: #fbbf24;
+  --color-warm-500: #f59e0b;
+  --color-warm-600: #d97706;
+
+  /* Success palette */
+  --color-success-50: #f0fdf4;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+
+  /* Info palette */
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+
+  /* Semantic aliases */
+  --restaurant-charcoal: var(--color-primary-900);
+  --restaurant-slate: var(--color-primary-700);
+  --restaurant-warm-gray: var(--color-primary-500);
+  --restaurant-terracotta: var(--color-accent-600);
+  --restaurant-golden: var(--color-warm-500);
+  --restaurant-amber: var(--color-warm-400);
+  --restaurant-sage: var(--color-success-600);
+  --restaurant-sky: var(--color-info-500);
   --restaurant-cream: #fefdf8;
-  --restaurant-stone: #f1f5f9;
+  --restaurant-stone: #f8fafc;
   --restaurant-surface: #ffffff;
   --restaurant-border: #e2e8f0;
 
-  /* Auth view semantic colors */
-  --restaurant-background: var(--restaurant-cream);
+  /* Semantic mappings */
   --restaurant-primary: var(--restaurant-charcoal);
   --restaurant-secondary: var(--restaurant-warm-gray);
   --restaurant-accent: var(--restaurant-terracotta);
   --restaurant-success: var(--restaurant-sage);
+  --restaurant-background: var(--restaurant-cream);
 
-  /* Semantic colors */
-  --primary-red: var(--restaurant-terracotta);
-  --snow-white: var(--restaurant-cream);
-  --primary-gray: var(--restaurant-warm-gray);
-  --secondary-gray: #94a3b8;
-  --darker-gray: var(--restaurant-charcoal);
-  --lighter-gray: var(--restaurant-stone);
-  --light-pink: var(--restaurant-stone);
-  --primary-black: var(--restaurant-charcoal);
-  --accent-red: var(--restaurant-terracotta);
-  --primary-blue: var(--restaurant-sky);
-  --primary-green: var(--restaurant-sage);
-  --primary-white: var(--restaurant-cream);
-  --darkened-color: rgba(15, 23, 42, 0.04);
+  /* Typography */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
 
-  /* Spacing & Typography */
-  --top-spacing: 70px;
-  --x-spacing-desktop: 24px;
-  --x-spacing-mobile: 16px;
-  --opacity-val: 0;
-  --blur-val: 0;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
 
-  --header-height: 70px;
-  --page-margin-y: 24px;
-  --page-margin-x: var(--x-spacing-mobile);
-  --card-radius: 12px;
-  --card-padding: 20px;
-  --card-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
-  --btn-radius: 8px;
-  --btn-padding: 10px 20px;
-  --input-radius: 8px;
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
 
-  /* Luxury theme tokens */
-  --luxury-charcoal: var(--restaurant-charcoal);
-  --luxury-amber: var(--restaurant-golden);
-  --luxury-accent: var(--restaurant-terracotta);
-  --luxury-slate: var(--restaurant-slate);
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.05em;
 
-  /* Vuestic UI brand overrides */
-  --va-button-border-radius: 8px;
-  --va-button-content-px: 20px;
-  --va-button-content-py: 10px;
-  --va-input-wrapper-border-radius: 8px;
-  --va-card-border-radius: 12px;
-  --va-card-padding: 20px;
-  --va-modal-border-radius: 16px;
-  --va-modal-padding-top: 1.75rem;
-  --va-modal-padding-right: 1.75rem;
-  --va-modal-padding-bottom: 1.75rem;
-  --va-modal-padding-left: 1.75rem;
-  --va-modal-dialog-box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(15, 23, 42, 0.06);
-  --va-modal-overlay-color: rgb(15, 23, 42);
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  --x-spacing-mobile: var(--space-4);
+  --x-spacing-desktop: var(--space-6);
+  --page-margin-y: var(--space-6);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 8px 32px rgba(15, 23, 42, 0.10);
+  --shadow-xl: 0 16px 48px rgba(15, 23, 42, 0.12);
+
+  /* Transitions */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+
+  /* Z-index */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-sidebar: 250;
+  --z-modal: 300;
+  --z-overlay: 400;
+
+  /* Vuestic overrides */
+  --va-button-border-radius: var(--radius-md);
+  --va-button-content-px: var(--space-5);
+  --va-button-content-py: var(--space-3);
+  --va-input-wrapper-border-radius: var(--radius-md);
+  --va-card-border-radius: var(--radius-lg);
+  --va-card-padding: var(--space-6);
+  --va-modal-border-radius: var(--radius-xl);
+  --va-modal-padding: var(--space-8);
+  --va-modal-dialog-box-shadow: var(--shadow-xl);
+  --va-modal-overlay-color: var(--color-primary-900);
   --va-modal-overlay-opacity: 0.55;
-  --va-modal-overlay-background-blur-radius: 8px;
-  --va-sidebar-item-content-padding: 12px;
-  --va-sidebar-background: var(--restaurant-charcoal);
-  --va-navbar-background: var(--restaurant-charcoal);
-
+  --va-modal-overlay-background-blur-radius: 12px;
+  --va-sidebar-item-content-padding: var(--space-3) var(--space-4);
+  --va-sidebar-background: var(--color-primary-900);
+  --va-navbar-background: var(--color-primary-900);
   --va-primary: var(--restaurant-charcoal);
   --va-background: var(--restaurant-stone);
   --va-success: var(--restaurant-sage);
@@ -90,162 +156,7 @@
   --va-background-border: var(--restaurant-border);
   --va-text-primary: var(--restaurant-charcoal);
   --va-text-inverted: var(--restaurant-cream);
-  --va-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+  --va-shadow: var(--shadow-md);
   --va-focus: var(--restaurant-sky);
   --va-transparent: rgba(0, 0, 0, 0);
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-}
-
-a {
-  text-decoration: none;
-  font-weight: 500;
-  color: var(--restaurant-terracotta);
-  transition: color 0.2s ease;
-}
-
-a:hover {
-  color: var(--restaurant-golden);
-}
-
-a:focus-visible {
-  outline: 2px solid var(--restaurant-terracotta);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  margin: 0;
-  font-family: "Playfair Display", Georgia, serif;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-h1 {
-  font-size: 2.25rem;
-  color: var(--restaurant-charcoal);
-}
-
-h2 {
-  font-size: 1.5rem;
-  color: var(--restaurant-slate);
-}
-
-h3 {
-  font-size: 1.25rem;
-  color: var(--restaurant-charcoal);
-}
-
-button {
-  appearance: none;
-  border: none;
-  font-family: "Lora", Georgia, serif;
-  cursor: pointer;
-}
-
-body {
-  margin: 0;
-  color: var(--restaurant-charcoal);
-  background: linear-gradient(165deg, var(--restaurant-cream) 0%, var(--restaurant-stone) 100%);
-  transition: color 0.5s, background-color 0.5s;
-  line-height: 1.6;
-  font-family: "Lora", Georgia, serif;
-  font-size: 15px;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Elegant modal animation keyframes */
-@keyframes modalFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes modalSlideUp {
-  from { opacity: 0; transform: translateY(16px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* Universal modal refinements */
-.va-modal__overlay {
-  background: rgb(15, 23, 42) !important;
-  opacity: 0.55 !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-}
-.va-modal__dialog {
-  border-radius: 16px !important;
-  box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(15, 23, 42, 0.06) !important;
-}
-.va-modal__title {
-  font-family: "Playfair Display", Georgia, serif !important;
-  font-size: 20px !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
-  text-transform: none !important;
-  color: #0f172a !important;
-  margin-bottom: 0.5rem !important;
-}
-.va-modal__inner {
-  font-family: "Lora", Georgia, serif;
-}
-.va-modal__message {
-  font-family: "Lora", Georgia, serif;
-  font-size: 14px;
-  color: var(--restaurant-warm-gray);
-  line-height: 1.6;
-  margin-bottom: 1.25rem;
-}
-.va-modal__footer {
-  padding-top: 1rem;
-  border-top: 1px solid #f1f5f9;
-  margin-top: 0.5rem;
-}
-.va-modal__close {
-  top: 0.75rem !important;
-  right: 0.75rem !important;
-  color: var(--restaurant-warm-gray) !important;
-}
-
-.va-modal .va-card {
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-.va-modal .va-card__content {
-  padding: 0 !important;
-}
-
-/* Luxury hospitality card styling */
-.va-card {
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-}
-
-.va-card:hover {
-  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
-}
-
-.va-button--primary {
-  background: linear-gradient(135deg, var(--restaurant-charcoal) 0%, var(--restaurant-slate) 100%);
-  border: none;
-}
-
-.va-button--danger {
-  background: linear-gradient(135deg, var(--restaurant-terracotta) 0%, #b91c1c 100%);
-}
-
-.va-button--success {
-  background: linear-gradient(135deg, var(--restaurant-sage) 0%, #15803d 100%);
-}
-
-/* Hide empty VaLayout areas */
-.va-layout__area--right,
-.va-layout__area--bottom {
-  display: none !important;
 }
