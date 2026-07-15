@@ -1,13 +1,13 @@
 "use strict";
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn("tables", "price", {
+    await queryInterface.addColumn("Tables", "price", {
       type: Sequelize.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0,
     });
   },
   async down(queryInterface) {
-    await queryInterface.removeColumn("tables", "price");
+    await queryInterface.removeColumn("Tables", "price");
   },
 };
