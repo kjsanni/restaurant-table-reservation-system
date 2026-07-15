@@ -415,7 +415,7 @@ onMounted(loadData);
   width: 32px;
   height: 32px;
   border: 3px solid var(--border);
-  border-top-color: var(--color-info-600);
+  border-top-color: var(--sky-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -472,7 +472,7 @@ onMounted(loadData);
 .badge {
   font-family: "Inter-Medium";
   font-size: 12px;
-  background: var(--color-info-600);
+  background: var(--sky-600);
   color: white;
   padding: 2px 10px;
   border-radius: 999px;
@@ -497,7 +497,7 @@ onMounted(loadData);
 
 .pending-card:hover {
   background: white;
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
   transform: translateY(-1px);
 }
@@ -519,7 +519,7 @@ onMounted(loadData);
   height: 34px;
   border-radius: 10px;
   background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
-  color: var(--color-info-600);
+  color: var(--sky-600);
   font-family: "Inter-Bold";
   font-size: 14px;
   display: flex;
@@ -742,12 +742,12 @@ onMounted(loadData);
 }
 
 .selectable:hover {
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
   background: #f8faff;
 }
 
 .table-block.selected {
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
@@ -831,7 +831,7 @@ onMounted(loadData);
 }
 
 .btn-primary {
-  background-color: var(--color-info-600);
+  background-color: var(--sky-600);
   color: white;
   border: none;
   border-radius: 8px;

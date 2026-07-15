@@ -48,7 +48,7 @@ const emit = defineEmits(["update:input"]);
 }
 .text-box-input:focus {
   outline: none;
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 </style>

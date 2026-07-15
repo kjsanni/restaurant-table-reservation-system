@@ -21,24 +21,24 @@ const props = defineProps({
 <style scoped>
 .main-wrapper {
   background-color: var(--surface);
-  border: 1px solid var(--primary-gray);
-  border-radius: 10px;
-  padding: 15px;
-  transition: all 1.5s;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  transition: all var(--duration-200) var(--ease-out);
 }
 .grid-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-gap: 15px;
+  gap: var(--space-4);
   grid-auto-rows: 1fr;
 }
 
 @media screen and (min-width: 1024px) {
   .main-wrapper {
-    padding: 30px;
+    padding: var(--space-8);
   }
   .grid-container {
-    grid-gap: 30px;
+    gap: var(--space-6);
   }
 }
 </style>

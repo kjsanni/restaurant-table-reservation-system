@@ -461,11 +461,7 @@ onUnmounted(() => {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  background: linear-gradient(
-    135deg,
-    var(--color-warm-400),
-    var(--color-warm-500)
-  );
+  background: linear-gradient(135deg, var(--accent-400), var(--accent-500));
   color: white;
   display: flex;
   align-items: center;

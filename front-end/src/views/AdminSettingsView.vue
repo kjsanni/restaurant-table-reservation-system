@@ -88,6 +88,26 @@ const settingsConfig: Record<
     type: "boolean",
     description: "Require a table assigned during reservation creation",
   },
+  table_base_price: {
+    label: "Table Base Price",
+    category: "Pricing",
+    type: "number",
+    unit: "GHS",
+    description: "Base price per table",
+    min: 0,
+    max: 1000,
+    step: 1,
+  },
+  table_price_per_additional_seat: {
+    label: "Price Per Additional Seat",
+    category: "Pricing",
+    type: "number",
+    unit: "GHS",
+    description: "Extra charge per seat beyond 6 guests",
+    min: 0,
+    max: 100,
+    step: 1,
+  },
 };
 
 const categories = computed(() => {
@@ -481,11 +501,13 @@ const sendTestEmail = async () => {
 
 <style scoped>
 .content-wrapper {
-  margin-top: 12px;
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
+  flex: 1;
+  margin: var(--page-margin-y) var(--page-margin-x);
   padding: 0;
+  max-width: var(--content-max-width);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .loading-state {
@@ -496,15 +518,15 @@ const sendTestEmail = async () => {
   padding: 80px 20px;
   gap: 16px;
   color: var(--ink-muted);
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
 }
 
 .spinner {
   width: 32px;
   height: 32px;
   border: 3px solid var(--border);
-  border-top-color: var(--color-info-600);
-  border-radius: 50%;
+  border-top-color: var(--accent);
+  border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -517,39 +539,47 @@ const sendTestEmail = async () => {
 .settings-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .settings-card {
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--card-radius);
   padding: var(--card-padding);
   box-shadow: var(--card-shadow);
 }
 
 .category-title {
-  font-family: "Inter-Bold";
-  font-size: 18px;
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: 650;
   color: var(--ink);
-  margin: 0 0 16px 0;
+  margin: 0 0 var(--space-5) 0;
+  letter-spacing: var(--tracking-tight);
 }
 
 .settings-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .setting-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  padding: 14px 16px;
-  border-radius: 10px;
-  background-color: #fafafa;
-  border: 1px solid #f0f0f0;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--neutral-50);
+  border: 1px solid var(--border-subtle);
+  transition: all var(--duration-fast) var(--ease-in-out);
+}
+
+.setting-item:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
 }
 
 .setting-info {
@@ -558,36 +588,38 @@ const sendTestEmail = async () => {
 }
 
 .setting-label {
-  font-family: "Inter-Medium";
-  font-size: 15px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
   color: var(--ink);
   cursor: default;
 }
 
 .setting-description {
-  font-family: "Inter-Light";
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
   color: var(--ink-muted);
-  margin-top: 4px;
+  margin-top: var(--space-1);
+  line-height: var(--leading-relaxed);
 }
 
 .setting-action {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   flex-shrink: 0;
 }
 
 .number-control {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .num-btn {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--ink);
@@ -596,13 +628,13 @@ const sendTestEmail = async () => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--duration-fast) var(--ease-in-out);
 }
 
 .num-btn:hover:not(:disabled) {
-  background: var(--color-info-600);
+  background: var(--accent);
   color: white;
-  border-color: var(--color-info-600);
+  border-color: var(--accent);
 }
 
 .num-btn:disabled {
@@ -615,122 +647,133 @@ const sendTestEmail = async () => {
   height: 34px;
   text-align: center;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  font-family: "Inter-Medium";
-  font-size: 15px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--ink);
   background: var(--surface);
 }
 
 .num-input:focus {
   outline: none;
-  border-color: var(--color-info-600);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .unit {
-  font-family: "Inter-Light";
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
   color: var(--ink-muted);
   min-width: 50px;
 }
 
 .status-text {
-  font-size: 12px;
-  font-family: "Inter-Medium";
+  font-size: var(--text-xs);
+  font-family: var(--font-sans);
+  font-weight: 500;
   min-width: 60px;
   text-align: right;
 }
 
 .status-text.saving {
-  color: var(--color-info-600);
+  color: var(--accent);
 }
 
 .status-text.saved {
-  color: var(--primary-green);
+  color: var(--earth-600);
 }
 
 .email-card {
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 .email-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-top: 8px;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
 }
 
 .email-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .email-field label {
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-secondary);
 }
 
 .field-input {
-  padding: 10px 14px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
   color: var(--ink);
-  background: white;
+  background: var(--surface);
   width: 100%;
   box-sizing: border-box;
+  transition: border-color var(--duration-fast) var(--ease-in-out),
+    box-shadow var(--duration-fast) var(--ease-in-out);
 }
 
 .field-input:focus {
   outline: none;
-  border-color: var(--color-info-600);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .checkbox-field {
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .checkbox-field input {
   width: 18px;
   height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent);
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 20px;
+  padding: var(--space-3) var(--space-5);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  transition: all 0.15s;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: all var(--duration-fast) var(--ease-in-out);
 }
 
 .btn-primary {
-  background-color: var(--color-info-600);
+  background: linear-gradient(135deg, var(--ink) 0%, var(--ink-secondary) 100%);
   color: white;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  background-color: #2563eb;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background-color: #f3f4f6;
+  background: var(--neutral-50);
   color: var(--ink);
+  border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
-  background-color: #e5e7eb;
+  background: var(--neutral-100);
 }
 
 .btn:disabled {
@@ -741,92 +784,81 @@ const sendTestEmail = async () => {
 .email-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 16px;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
 }
 
 .email-test {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .test-title {
-  font-family: "Inter-Bold";
-  font-size: 15px;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 650;
   color: var(--ink);
-  margin: 0 0 4px 0;
+  margin: 0 0 var(--space-2) 0;
 }
 
 .test-row {
   display: flex;
-  gap: 10px;
-  margin-top: 8px;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
 }
 
 .test-message {
-  font-size: 13px;
-  margin-top: 10px;
-  font-family: "Inter-Medium";
+  font-size: var(--text-sm);
+  margin-top: var(--space-3);
+  font-family: var(--font-sans);
+  font-weight: 500;
 }
 
 .test-message.sent {
-  color: var(--primary-green);
+  color: var(--earth-600);
 }
 
 .test-message.error {
-  color: #dc2626;
+  color: var(--rose-600);
 }
 
 .quick-actions-card {
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 .actions-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .action-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 10px;
-  background: #fafafa;
-  border: 1px solid #f0f0f0;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--neutral-50);
+  border: 1px solid var(--border-subtle);
   color: var(--ink);
-  font-family: "Inter-Medium";
-  font-size: 14px;
   text-decoration: none;
-  transition: all 0.15s ease;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: all var(--duration-fast) var(--ease-in-out);
 }
 
 .action-card:hover {
-  background: var(--color-info-600);
-  color: white;
-  border-color: var(--color-info-600);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
-.action-icon {
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-@media screen and (min-width: 640px) {
-  .actions-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media screen and (min-width: 1024px) {
+@media (min-width: 1024px) {
   .content-wrapper {
-    margin-left: 200px;
-    margin-right: 200px;
-  }
-  .setting-item {
-    padding: 16px 20px;
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-10);
   }
 }
 </style>

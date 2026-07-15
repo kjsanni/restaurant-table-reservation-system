@@ -1,6 +1,7 @@
 const tableService = require("../services/tableService");
 const tableDAO = require("../DAOs/table.dao");
 const reservationDAO = require("../DAOs/reservation.dao");
+const authDAO = require("../DAOs/auth.dao");
 
 const getAllHandler = async (req, res) => {
   const tables = await tableService.getAllTables(tableDAO);
@@ -136,7 +137,12 @@ const unmergeTableHandler = async (req, res) => {
 
 const calculatePriceHandler = async (req, res) => {
   const { capacity } = req.body;
-  const price = tableService.getPriceForCapacity(capacity);
+  const settings = await authDAO.getAllSettings();
+  const settingsMap = settings.reduce((acc, s) => {
+    acc[s.key] = s.value;
+    return acc;
+  }, {});
+  const price = tableService.getPriceForCapacity(capacity, settingsMap);
 
   return res.status(200).json({
     success: true,

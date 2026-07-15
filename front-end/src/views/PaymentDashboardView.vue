@@ -301,7 +301,7 @@ onMounted(loadData);
   width: 32px;
   height: 32px;
   border: 3px solid var(--border);
-  border-top-color: var(--color-info-600);
+  border-top-color: var(--sky-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -463,7 +463,7 @@ onMounted(loadData);
 
 .filter-select:focus {
   outline: none;
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
@@ -493,33 +493,36 @@ onMounted(loadData);
 }
 
 .btn-danger {
-  background-color: var(--primary-red);
-  color: white;
+  background: var(--rose-50);
+  color: var(--rose-600);
+  border: 1px solid var(--rose-200);
 }
 
 .btn-danger:hover {
-  background-color: #dc2626;
+  background: var(--rose-100);
 }
 
 .btn-secondary {
-  background-color: #f3f4f6;
+  background: var(--neutral-50);
   color: var(--ink);
+  border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
-  background-color: #e5e7eb;
+  background: var(--neutral-100);
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  transition: all 0.15s;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: all var(--duration-fast) var(--ease-in-out);
 }
 </style>

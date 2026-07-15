@@ -279,7 +279,7 @@ onMounted(loadTemplates);
 }
 
 .saved-indicator {
-  color: var(--color-success-600);
+  color: var(--earth-600);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 500;
@@ -308,10 +308,10 @@ onMounted(loadTemplates);
   font-size: var(--text-sm);
 }
 .test-msg.sent {
-  color: var(--color-success-600);
+  color: var(--earth-600);
 }
 .test-msg.error {
-  color: var(--color-accent-600);
+  color: var(--rose-600);
 }
 
 .btn {
@@ -334,12 +334,12 @@ onMounted(loadTemplates);
   transform: translateY(-1px);
 }
 .btn-secondary {
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
   color: var(--ink);
   border: 1px solid var(--border);
 }
 .btn-secondary:hover {
-  background: var(--color-primary-100);
+  background: var(--neutral-100);
 }
 .btn:disabled {
   opacity: 0.6;

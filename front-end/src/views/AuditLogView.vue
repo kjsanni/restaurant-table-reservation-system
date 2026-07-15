@@ -148,7 +148,7 @@ const readMore = (text, maxLength = 60) => {
   width: 32px;
   height: 32px;
   border: 3px solid var(--border);
-  border-top-color: var(--color-info-600);
+  border-top-color: var(--sky-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -208,7 +208,7 @@ const readMore = (text, maxLength = 60) => {
   padding: 4px 10px;
   border-radius: 6px;
   background-color: #eef2ff;
-  color: var(--color-info-600);
+  color: var(--sky-600);
   font-family: "Inter-Medium";
   font-size: 12px;
 }

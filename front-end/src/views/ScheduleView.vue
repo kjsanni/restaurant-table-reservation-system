@@ -254,16 +254,12 @@ const exportPDF = async () => {
 
 .content-wrapper {
   flex: 1;
-  margin: var(--space-6) var(--space-6);
+  margin: var(--page-margin-y) var(--page-margin-x);
   padding: 0;
-  max-width: 1400px;
+  max-width: var(--content-max-width);
   width: 100%;
-}
-
-@media (min-width: 1024px) {
-  .content-wrapper {
-    margin: var(--space-8) var(--space-8);
-  }
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .action-bar {
@@ -322,9 +318,9 @@ const exportPDF = async () => {
 }
 
 .section-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--text-lg);
-  font-weight: 700;
+  font-weight: 650;
   color: var(--ink);
   margin: 0 0 var(--space-5) 0;
   letter-spacing: var(--tracking-tight);
@@ -341,14 +337,14 @@ const exportPDF = async () => {
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-4);
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   transition: background var(--duration-fast) var(--ease-in-out);
 }
 
 .schedule-item:hover {
-  background: var(--color-primary-100);
+  background: var(--neutral-100);
 }
 
 .day-label {
@@ -382,11 +378,11 @@ const exportPDF = async () => {
 .time-input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .time-input:disabled {
-  background: var(--color-primary-100);
+  background: var(--neutral-100);
   color: var(--ink-secondary);
   cursor: not-allowed;
 }
@@ -407,8 +403,8 @@ const exportPDF = async () => {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--color-info-600);
-  background: var(--color-primary-100);
+  color: var(--sky-600);
+  background: var(--neutral-100);
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-full);
 }
@@ -431,7 +427,7 @@ const exportPDF = async () => {
   justify-content: space-between;
   align-items: center;
   padding: var(--space-4);
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
 }
@@ -461,8 +457,8 @@ const exportPDF = async () => {
   font-weight: 600;
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-full);
-  background: var(--color-accent-50);
-  color: var(--color-accent-600);
+  background: var(--rose-50);
+  color: var(--rose-600);
 }
 
 .open-badge {
@@ -470,8 +466,8 @@ const exportPDF = async () => {
   font-weight: 600;
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-full);
-  background: var(--color-success-50);
-  color: var(--color-success-600);
+  background: var(--earth-50);
+  color: var(--earth-600);
 }
 
 .empty-state {
@@ -513,13 +509,20 @@ const exportPDF = async () => {
   transition: border-color var(--duration-fast) var(--ease-in-out),
     box-shadow var(--duration-fast) var(--ease-in-out),
     background-color var(--duration-fast) var(--ease-in-out);
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
 }
 
 .field-input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 0 0 3px var(--accent-soft);
   background: var(--surface);
+}
+
+@media (min-width: 1024px) {
+  .content-wrapper {
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-10);
+  }
 }
 </style>

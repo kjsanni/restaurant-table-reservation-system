@@ -575,22 +575,22 @@ onMounted(() => {
 
 .waiting .stat-icon {
   background: rgba(245, 158, 11, 0.1);
-  color: var(--color-warm-600);
+  color: var(--accent-600);
 }
 
 .seated .stat-icon {
   background: rgba(22, 163, 74, 0.1);
-  color: var(--color-success-600);
+  color: var(--earth-600);
 }
 
 .expired .stat-icon {
   background: rgba(220, 38, 38, 0.1);
-  color: var(--color-accent-600);
+  color: var(--rose-600);
 }
 
 .total .stat-icon {
   background: rgba(59, 130, 246, 0.1);
-  color: var(--color-info-600);
+  color: var(--sky-600);
 }
 
 .stat-text {
@@ -617,19 +617,19 @@ onMounted(() => {
 }
 
 .stat-pill.waiting {
-  border-left: 4px solid var(--color-warm-500);
+  border-left: 4px solid var(--accent-500);
 }
 
 .stat-pill.seated {
-  border-left: 4px solid var(--color-success-600);
+  border-left: 4px solid var(--earth-600);
 }
 
 .stat-pill.expired {
-  border-left: 4px solid var(--color-accent-600);
+  border-left: 4px solid var(--rose-600);
 }
 
 .stat-pill.total {
-  border-left: 4px solid var(--color-info-500);
+  border-left: 4px solid var(--sky-500);
 }
 
 .action-bar {
@@ -704,7 +704,7 @@ onMounted(() => {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  background: var(--color-primary-100);
+  background: var(--neutral-100);
   color: var(--ink);
   font-family: var(--font-sans);
   font-weight: 700;
@@ -732,7 +732,7 @@ onMounted(() => {
 .party-badge {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
   color: var(--ink-secondary);
   padding: 2px var(--space-2);
   border-radius: var(--radius-full);
@@ -752,8 +752,8 @@ onMounted(() => {
 }
 
 .status-badge.waiting {
-  background: var(--color-warm-100);
-  color: var(--color-warm-600);
+  background: var(--accent-100);
+  color: var(--accent-600);
 }
 
 .entry-body {
@@ -779,7 +779,7 @@ onMounted(() => {
 }
 
 .info-item.notes-item {
-  background: var(--color-warm-50);
+  background: var(--accent-50);
   color: #92400e;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
@@ -865,8 +865,8 @@ textarea.field-input {
 }
 
 .error-msg {
-  background: var(--color-accent-50);
-  color: var(--color-accent-600);
+  background: var(--rose-50);
+  color: var(--rose-600);
   padding: var(--space-3);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
@@ -901,7 +901,7 @@ textarea.field-input {
 }
 
 .table-btn:hover:not(:disabled) {
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -938,31 +938,31 @@ textarea.field-input {
 }
 
 .btn-secondary {
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
   color: var(--ink);
   border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
-  background: var(--color-primary-100);
+  background: var(--neutral-100);
 }
 
 .btn-danger {
-  background: var(--color-accent-50);
-  color: var(--color-accent-600);
+  background: var(--rose-50);
+  color: var(--rose-600);
 }
 
 .btn-danger:hover {
-  background: var(--color-accent-100);
+  background: var(--rose-100);
 }
 
 .btn-success {
-  background: var(--color-success-50);
-  color: var(--color-success-600);
+  background: var(--earth-50);
+  color: var(--earth-600);
 }
 
 .btn-success:hover {
-  background: var(--color-success-100);
+  background: var(--earth-100);
 }
 
 .btn-outline {
@@ -972,7 +972,7 @@ textarea.field-input {
 }
 
 .btn-outline:hover {
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
 }
 
 .btn-sm {

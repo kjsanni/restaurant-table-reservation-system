@@ -606,16 +606,12 @@ const staffAtLimit = (staff) => {
 
 .content-wrapper {
   flex: 1;
-  margin: var(--space-6) var(--space-6);
+  margin: var(--page-margin-y) var(--page-margin-x);
   padding: 0;
-  max-width: 1400px;
+  max-width: var(--content-max-width);
   width: 100%;
-}
-
-@media (min-width: 1024px) {
-  .content-wrapper {
-    margin: var(--space-8) var(--space-8);
-  }
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .loading-state {
@@ -679,17 +675,17 @@ const staffAtLimit = (staff) => {
 }
 
 .table-card.available {
-  border-left: 4px solid var(--color-success-600);
+  border-left: 4px solid var(--earth-600);
 }
 
 .table-card.occupied {
-  border-left: 4px solid var(--color-accent-600);
+  border-left: 4px solid var(--rose-600);
   opacity: 0.9;
 }
 
 .table-card.blocked {
-  border-left: 4px solid var(--color-primary-500);
-  background: var(--color-primary-50);
+  border-left: 4px solid var(--neutral-500);
+  background: var(--neutral-50);
 }
 
 .table-header {
@@ -745,18 +741,18 @@ const staffAtLimit = (staff) => {
 }
 
 .status-chip.free {
-  background: var(--color-success-50);
-  color: var(--color-success-600);
+  background: var(--earth-50);
+  color: var(--earth-600);
 }
 
 .status-chip.occupied {
-  background: var(--color-accent-50);
-  color: var(--color-accent-700);
+  background: var(--rose-50);
+  color: var(--rose-600);
 }
 
 .status-chip.blocked {
-  background: var(--color-primary-100);
-  color: var(--color-primary-600);
+  background: var(--neutral-100);
+  color: var(--neutral-600);
 }
 
 .table-meta {
@@ -786,8 +782,8 @@ const staffAtLimit = (staff) => {
 .blocked-reason {
   margin-top: var(--space-3);
   padding: var(--space-2) var(--space-3);
-  background: var(--color-accent-50);
-  color: var(--color-accent-700);
+  background: var(--rose-50);
+  color: var(--rose-600);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: var(--text-xs);
@@ -796,9 +792,9 @@ const staffAtLimit = (staff) => {
 .reservation-section {
   margin-top: var(--space-3);
   padding: var(--space-3);
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-primary-200);
+  border: 1px solid var(--neutral-200);
 }
 
 .section-label {
@@ -857,30 +853,30 @@ const staffAtLimit = (staff) => {
 }
 
 .btn-block {
-  background-color: var(--color-accent-50);
-  color: var(--color-accent-600);
+  background-color: var(--rose-50);
+  color: var(--rose-600);
 }
 
 .btn-block:hover {
-  background-color: var(--color-accent-100);
+  background-color: var(--rose-100);
 }
 
 .btn-unblock {
-  background-color: var(--color-success-50);
-  color: var(--color-success-600);
+  background-color: var(--earth-50);
+  color: var(--earth-600);
 }
 
 .btn-unblock:hover {
-  background-color: var(--color-success-100);
+  background-color: var(--earth-100);
 }
 
 .btn-staff {
-  background-color: var(--color-primary-100);
-  color: var(--color-info-600);
+  background-color: var(--neutral-100);
+  color: var(--sky-600);
 }
 
 .btn-staff:hover:not(:disabled) {
-  background-color: var(--color-primary-200);
+  background-color: var(--neutral-200);
 }
 
 .btn-staff:disabled {
@@ -889,12 +885,12 @@ const staffAtLimit = (staff) => {
 }
 
 .btn-unseat {
-  background-color: var(--color-success-50);
-  color: var(--color-success-600);
+  background-color: var(--earth-50);
+  color: var(--earth-600);
 }
 
 .btn-unseat:hover {
-  background-color: var(--color-success-100);
+  background-color: var(--earth-100);
 }
 
 .staff-options {
@@ -923,18 +919,18 @@ const staffAtLimit = (staff) => {
 }
 
 .staff-option-btn:hover {
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
   border-color: var(--accent);
 }
 
 .staff-option-btn.assigned {
-  background: var(--color-accent-50);
-  border-color: var(--color-accent-200);
+  background: var(--rose-50);
+  border-color: var(--rose-200);
 }
 
 .staff-option-btn.assigned:hover {
-  background: var(--color-accent-100);
-  border-color: var(--color-accent-600);
+  background: var(--rose-100);
+  border-color: var(--rose-600);
 }
 
 .staff-option-name {
@@ -950,7 +946,7 @@ const staffAtLimit = (staff) => {
 .unassign-hint {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
-  color: var(--color-accent-600);
+  color: var(--rose-600);
 }
 
 .modal-overlay {
@@ -1061,31 +1057,31 @@ const staffAtLimit = (staff) => {
 }
 
 .btn-secondary {
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
   color: var(--ink);
   border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
-  background: var(--color-primary-100);
+  background: var(--neutral-100);
 }
 
 .btn-warning {
-  background-color: var(--color-accent-50);
-  color: var(--color-accent-600);
+  background-color: var(--rose-50);
+  color: var(--rose-600);
 }
 
 .btn-warning:hover {
-  background-color: var(--color-accent-100);
+  background-color: var(--rose-100);
 }
 
 .btn-danger {
-  background-color: var(--color-accent-50);
-  color: var(--color-accent-600);
+  background-color: var(--rose-50);
+  color: var(--rose-600);
 }
 
 .btn-danger:hover {
-  background-color: var(--color-accent-100);
+  background-color: var(--rose-100);
 }
 
 .error-content {
@@ -1152,7 +1148,7 @@ const staffAtLimit = (staff) => {
 }
 
 .field-error {
-  color: var(--color-accent-600);
+  color: var(--rose-600);
   font-family: var(--font-sans);
   font-size: var(--text-xs);
   margin-top: var(--space-1);
@@ -1185,14 +1181,14 @@ const staffAtLimit = (staff) => {
 
 .staff-chip:hover:not(.disabled) {
   border-color: var(--accent);
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
 }
 
 .staff-chip.disabled {
   opacity: 0.55;
   cursor: not-allowed;
-  background: var(--color-primary-100);
-  border-color: var(--color-primary-200);
+  background: var(--neutral-100);
+  border-color: var(--neutral-200);
 }
 
 .staff-name {
@@ -1203,14 +1199,14 @@ const staffAtLimit = (staff) => {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
   color: var(--ink-secondary);
-  background: var(--color-primary-100);
+  background: var(--neutral-100);
   padding: 2px var(--space-2);
   border-radius: var(--radius-full);
 }
 
 .staff-count.full {
-  color: var(--color-accent-600);
-  background: var(--color-accent-50);
+  color: var(--rose-600);
+  background: var(--rose-50);
   font-weight: 600;
 }
 
@@ -1218,5 +1214,12 @@ const staffAtLimit = (staff) => {
   font-family: var(--font-sans);
   font-weight: 600;
   letter-spacing: var(--tracking-wide);
+}
+
+@media (min-width: 1024px) {
+  .content-wrapper {
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-10);
+  }
 }
 </style>

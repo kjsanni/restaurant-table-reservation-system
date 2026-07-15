@@ -132,7 +132,7 @@ onMounted(loadStats);
   width: 24px;
   height: 24px;
   border: 2px solid var(--border);
-  border-top-color: var(--color-info-600);
+  border-top-color: var(--sky-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

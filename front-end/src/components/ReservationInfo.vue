@@ -135,7 +135,7 @@ const customerLink = computed(() => {
 }
 
 .names:hover {
-  color: var(--color-info-600);
+  color: var(--sky-600);
   text-decoration: underline;
 }
 

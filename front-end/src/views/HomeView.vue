@@ -567,22 +567,22 @@ const navigateTo = (routeName: string) => router.push({ name: routeName });
 
 .today-icon {
   background: rgba(59, 130, 246, 0.1);
-  color: var(--color-info-600);
+  color: var(--sky-600);
 }
 
 .waitlist-icon {
   background: rgba(245, 158, 11, 0.1);
-  color: var(--color-warm-600);
+  color: var(--accent-600);
 }
 
 .revenue-icon {
   background: rgba(22, 163, 74, 0.1);
-  color: var(--color-success-600);
+  color: var(--earth-600);
 }
 
 .occupancy-icon {
   background: rgba(220, 38, 38, 0.1);
-  color: var(--color-accent-600);
+  color: var(--rose-600);
 }
 
 .stat-value {
@@ -679,7 +679,7 @@ const navigateTo = (routeName: string) => router.push({ name: routeName });
   width: 56px;
   height: 56px;
   border-radius: var(--radius-md);
-  background: var(--color-primary-50);
+  background: var(--neutral-50);
   color: var(--ink);
   display: flex;
   align-items: center;

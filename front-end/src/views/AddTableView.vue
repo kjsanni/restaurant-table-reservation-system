@@ -119,7 +119,7 @@ const submitTable = async () => {
 }
 
 .inline-link {
-  color: var(--color-info-600);
+  color: var(--sky-600);
   text-decoration: underline;
   font-weight: normal;
 }

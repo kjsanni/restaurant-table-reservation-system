@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { paymentOptions } from "@/constants";
 import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
 import reservationAPI from "@/services/reservationAPI";
 import customerAPI from "@/services/customerAPI";
+import tableAPI from "@/services/tableAPI";
 import SuccessMessage from "@/components/SuccessMessage.vue";
 import ErrorMessage from "@/components/ErrorMessage.vue";
 import SaveIcon from "~icons/fluent/save-16-regular";
@@ -93,6 +94,23 @@ const cleanPhone = (phone) =>
     .trim()
     .replace(/\D/g, "")
     .slice(0, 15);
+
+watch(
+  () => reservation.value.people,
+  async (newVal) => {
+    const count = parseInt(newVal, 10);
+    if (!count || count < 1) {
+      reservation.value.expectedTotal = "";
+      return;
+    }
+    try {
+      const res = await tableAPI.calculatePrice(count);
+      reservation.value.expectedTotal = res.data.price || "";
+    } catch {
+      reservation.value.expectedTotal = "";
+    }
+  }
+);
 
 const registerReservation = async () => {
   isSuccessful.value = false;
@@ -288,7 +306,7 @@ const registerReservation = async () => {
             :error-flag="generalError"
             :error-message="generalError"
           />
-          <button type="submit" class="btn btn-primary btn-submit">
+          <button type="submit" class="btn btn-submit">
             <SaveIcon class="btn-icon" />
             Submit Reservation
           </button>
@@ -300,11 +318,11 @@ const registerReservation = async () => {
 
 <style scoped>
 .content-wrapper {
-  margin-top: 50px;
-  margin-bottom: 50px;
-  margin-left: var(--space-6);
-  margin-right: var(--space-6);
+  flex: 1;
+  margin: var(--page-margin-y) var(--page-margin-x);
   padding: 0;
+  max-width: var(--content-max-width);
+  width: 100%;
 }
 
 .reservation-form {
@@ -312,58 +330,74 @@ const registerReservation = async () => {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .form-section {
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--card-radius);
   padding: var(--card-padding);
   box-shadow: var(--card-shadow);
+  transition: box-shadow var(--duration-200) var(--ease-out),
+    transform var(--duration-200) var(--ease-out);
+}
+
+.form-section:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .section-title {
-  font-family: "Inter-Bold";
-  font-size: 16px;
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: 650;
   color: var(--ink);
-  margin: 0 0 16px 0;
+  margin: 0 0 var(--space-5) 0;
+  letter-spacing: var(--tracking-tight);
 }
 
 .fields-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: var(--space-5);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .field-label {
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-secondary);
+  letter-spacing: var(--tracking-wide);
 }
 
 .field-input {
-  padding: 10px 14px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--input-radius);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
   color: var(--ink);
-  background: white;
+  background: var(--surface);
   width: 100%;
   box-sizing: border-box;
+  transition: border-color var(--duration-150) var(--ease-in-out),
+    box-shadow var(--duration-150) var(--ease-in-out);
+}
+
+.field-input:hover {
+  border-color: var(--neutral-300);
 }
 
 .field-input:focus {
   outline: none;
-  border-color: var(--color-info-600);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 textarea.field-input {
@@ -372,44 +406,56 @@ textarea.field-input {
 }
 
 .loyalty-section {
-  background: linear-gradient(180deg, #fefeff 0%, #f8fafc 100%);
+  background: linear-gradient(
+    180deg,
+    var(--brand-50) 0%,
+    var(--accent-50) 100%
+  );
+  border: 1px solid var(--brand-200);
 }
 
 .loyalty-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .loyalty-badge {
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  background: var(--color-info-600);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  background: linear-gradient(
+    135deg,
+    var(--brand-700) 0%,
+    var(--brand-600) 100%
+  );
   color: white;
-  padding: 6px 14px;
-  border-radius: 10px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
 }
 
 .tags-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .tag-btn {
-  padding: 8px 14px;
-  border: 2px solid #f0f0f0;
-  border-radius: 10px;
-  background: white;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
   cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  transition: all 0.15s;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: all var(--duration-150) var(--ease-in-out);
 }
 
 .tag-btn:hover {
-  border-color: var(--color-info-600);
+  border-color: var(--accent);
   transform: translateY(-1px);
 }
 
@@ -422,31 +468,38 @@ textarea.field-input {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .btn-submit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 12px 32px;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-8);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 15px;
-  transition: all 0.15s;
-  background-color: var(--color-info-600);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  transition: all var(--duration-150) var(--ease-in-out);
+  background: linear-gradient(135deg, var(--sky-600) 0%, var(--sky-500) 100%);
   color: white;
+  box-shadow: var(--shadow-md);
   width: 100%;
   max-width: 300px;
 }
 
 .btn-submit:hover {
-  background-color: #2563eb;
+  background: linear-gradient(135deg, var(--sky-700) 0%, var(--sky-600) 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
 }
 
 .btn-icon {
@@ -461,10 +514,6 @@ textarea.field-input {
 }
 
 @media screen and (min-width: 1024px) {
-  .content-wrapper {
-    margin-left: 200px;
-    margin-right: 200px;
-  }
   .btn-submit {
     width: auto;
     min-width: 260px;

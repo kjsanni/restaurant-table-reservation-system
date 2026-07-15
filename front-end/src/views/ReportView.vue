@@ -204,7 +204,7 @@ onMounted(() => {
   width: 32px;
   height: 32px;
   border: 3px solid var(--border);
-  border-top-color: var(--color-info-600);
+  border-top-color: var(--sky-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -260,7 +260,7 @@ onMounted(() => {
 
 .field-input:focus {
   outline: none;
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
@@ -414,7 +414,7 @@ onMounted(() => {
 }
 
 .btn-primary {
-  background-color: var(--color-info-600);
+  background-color: var(--sky-600);
   color: white;
 }
 

@@ -238,7 +238,7 @@ onUnmounted(() => {
   top: 8px;
   right: 8px;
   font-size: 11px;
-  color: var(--color-info-600);
+  color: var(--sky-600);
 }
 .loading-state,
 .error-state {
@@ -260,7 +260,7 @@ onUnmounted(() => {
   width: 32px;
   height: 32px;
   border: 3px solid var(--border);
-  border-top-color: var(--color-info-600);
+  border-top-color: var(--sky-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

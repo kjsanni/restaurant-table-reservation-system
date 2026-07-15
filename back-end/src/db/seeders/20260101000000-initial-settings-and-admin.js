@@ -44,6 +44,20 @@ module.exports = {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
+      {
+        key: "table_base_price",
+        value: JSON.stringify(20),
+        description: "Base price per table (GHS)",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        key: "table_price_per_additional_seat",
+        value: JSON.stringify(5),
+        description: "Additional price per seat beyond 6 (GHS)",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ]);
 
     if (process.env.NODE_ENV !== "production") {

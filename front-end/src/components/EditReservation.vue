@@ -101,7 +101,7 @@ const loadPayments = async () => {
   try {
     const res = await paymentAPI.getPayments(props.reservation.id);
     payments.value = Array.isArray(res.data.payments) ? res.data.payments : [];
-    totalPaid.value = res.data.totalPaid || 0;
+    totalPaid.value = parseFloat(res.data.totalPaid) || 0;
   } catch (err) {
     logger.error("Failed to load payments", { error: err.message });
   }
@@ -119,7 +119,7 @@ const addPayment = async () => {
       reference: newPayment.value.reference || null,
     });
     payments.value = Array.isArray(res.data.payments) ? res.data.payments : [];
-    totalPaid.value = res.data.totalPaid || 0;
+    totalPaid.value = parseFloat(res.data.totalPaid) || 0;
     newPayment.value = {
       amount: "",
       method: "cash",
@@ -192,10 +192,14 @@ const editReservation = async () => {
   generalErrors.value = null;
   isSuccessful.value = false;
   try {
-    await reservationAPI.editReservation(
-      props.reservation.id,
-      getValues(reservation.value)
-    );
+    const payload = getValues(reservation.value);
+    if (payload.expectedTotal !== undefined) {
+      payload.expectedTotal = parseFloat(payload.expectedTotal) || 0;
+    }
+    if (payload.people !== undefined) {
+      payload.people = parseInt(payload.people, 10) || 1;
+    }
+    await reservationAPI.editReservation(props.reservation.id, payload);
     emit("onEdited");
     isSuccessful.value = true;
     logger.debug("Reservation updated", { id: props.reservation.id });
@@ -349,111 +353,148 @@ const editReservation = async () => {
 
 <style scoped>
 .success {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-4);
 }
 .form-group {
   width: 100%;
   display: flex;
   flex-direction: column;
-  margin-bottom: 15px;
+  margin-bottom: var(--space-5);
 }
 .form-label {
   text-align: left;
-  margin-bottom: 5px;
-  font-family: "Inter-Medium";
-  font-size: 14px;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-secondary);
+  letter-spacing: var(--tracking-wide);
 }
 .form-select {
-  padding: 10px;
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: "Inter-Light";
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--ink);
   width: 100%;
   box-sizing: border-box;
-  background-color: white;
+  background: var(--surface);
+  transition: border-color var(--duration-fast) var(--ease-in-out),
+    box-shadow var(--duration-fast) var(--ease-in-out);
+}
+.form-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .payments-section {
   width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 15px;
-  background: #fefefe;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  background: linear-gradient(
+    180deg,
+    var(--neutral-50) 0%,
+    var(--surface) 100%
+  );
+  box-shadow: var(--shadow-sm);
 }
 .payments-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
 }
 .payments-title {
-  font-family: "Inter-Bold";
-  font-size: 15px;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 650;
   flex: 1;
+  color: var(--ink);
 }
 .total-paid {
-  font-family: "Inter-Medium";
-  font-size: 14px;
-  color: #16a34a;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--earth-600);
+  background: var(--earth-50);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
 }
 .payments-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 .payment-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #f9fafb;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  transition: all var(--duration-fast) var(--ease-in-out);
+}
+.payment-row:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
 }
 .payment-info {
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
   align-items: center;
   flex-wrap: wrap;
 }
 .payment-amount {
-  font-family: "Inter-Bold";
-  font-size: 14px;
-  color: #16a34a;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 650;
+  color: var(--earth-600);
 }
 .payment-method {
-  font-size: 12px;
-  font-family: "Inter-Medium";
+  font-size: var(--text-xs);
+  font-family: var(--font-sans);
+  font-weight: 600;
   text-transform: uppercase;
-  background: #e5e7eb;
-  padding: 2px 8px;
-  border-radius: 6px;
+  background: var(--neutral-100);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  color: var(--ink-secondary);
 }
 .payment-by {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
 }
 .payment-ref {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--ink-muted);
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
 }
 .remove-pay-btn {
   background: none;
   border: none;
-  color: #ef4444;
+  color: var(--rose-600);
   font-size: 18px;
   cursor: pointer;
-  padding: 0 4px;
+  padding: 0 var(--space-2);
   line-height: 1;
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--ease-in-out);
+}
+.remove-pay-btn:hover {
+  background: var(--rose-50);
 }
 .add-payment-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-3);
   align-items: flex-end;
 }
 .add-payment-form .form-group.inline {
@@ -462,18 +503,31 @@ const editReservation = async () => {
   margin-bottom: 0;
 }
 .add-pay-btn {
-  background: #16a34a;
+  background: linear-gradient(
+    135deg,
+    var(--earth-500) 0%,
+    var(--earth-600) 100%
+  );
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
-  font-family: "Inter-Medium";
-  font-size: 13px;
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
   cursor: pointer;
   height: 40px;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--duration-fast) var(--ease-in-out);
 }
 .add-pay-btn:hover {
-  background: #15803d;
+  background: linear-gradient(
+    135deg,
+    var(--earth-600) 0%,
+    var(--earth-700) 100%
+  );
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .confirm-overlay {
@@ -482,48 +536,52 @@ const editReservation = async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.55);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: var(--z-modal);
+  backdrop-filter: blur(4px);
 }
-
 .confirm-box {
-  background-color: white;
-  padding: 24px;
-  border-radius: 14px;
+  background: var(--surface);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
   width: 90%;
   max-width: 420px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--border);
 }
-
 .confirm-text {
-  font-family: "Inter-Medium";
-  font-size: 15px;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 500;
   color: var(--ink);
-  margin: 0 0 20px 0;
+  margin: 0 0 var(--space-5) 0;
 }
-
 .confirm-error {
-  font-family: "Inter-Medium";
-  font-size: 14px;
-  color: var(--primary-red);
-  margin: 0 0 16px 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--rose-600);
+  margin: 0 0 var(--space-4) 0;
 }
-
 .confirm-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: var(--space-2);
 }
-
 .btn-danger {
-  background-color: var(--primary-red);
-  color: white;
+  background: var(--rose-50);
+  color: var(--rose-600);
+  border: 1px solid var(--rose-200);
+}
+.btn-danger:hover {
+  background: var(--rose-100);
 }
 
-.btn-danger:hover {
-  background-color: #dc2626;
+@media (min-width: 640px) {
+  .add-payment-form .form-group.inline {
+    flex: 1 1 160px;
+  }
 }
 </style>

@@ -29,9 +29,13 @@ const unassignStaff = async (tableDAO, tableId, userId) => {
   return await tableDAO.unassignStaffFromTable(tableId, userId);
 };
 
-const getPriceForCapacity = (capacity) => {
-  const basePrice = parseFloat(process.env.TABLE_BASE_PRICE || 20);
-  const pricePerSeat = parseFloat(process.env.TABLE_PRICE_PER_ADDITIONAL_SEAT || 5);
+const getPriceForCapacity = (capacity, settings = {}) => {
+  const basePrice = parseFloat(
+    settings.table_base_price ?? process.env.TABLE_BASE_PRICE ?? 20
+  );
+  const pricePerSeat = parseFloat(
+    settings.table_price_per_additional_seat ?? process.env.TABLE_PRICE_PER_ADDITIONAL_SEAT ?? 5
+  );
   if (capacity <= 6) {
     return basePrice;
   }

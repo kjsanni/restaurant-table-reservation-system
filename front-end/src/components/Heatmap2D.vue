@@ -435,9 +435,9 @@ const openDrillDown = async (day) => {
 }
 
 .mode-btn.active {
-  background: var(--color-info-600);
+  background: var(--sky-600);
   color: white;
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
 }
 
 .date-range {
@@ -475,7 +475,7 @@ const openDrillDown = async (day) => {
   width: 36px;
   height: 36px;
   border: 3px solid var(--border);
-  border-top-color: var(--color-info-600);
+  border-top-color: var(--sky-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -637,7 +637,7 @@ const openDrillDown = async (day) => {
 .matrix-cell:hover {
   transform: scale(1.08);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
   z-index: 2;
 }
 

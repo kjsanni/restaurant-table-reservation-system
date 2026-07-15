@@ -35,10 +35,12 @@ import { VaSkeleton } from "vuestic-ui";
 
 .content-wrapper {
   flex: 1;
-  margin: var(--space-6) var(--space-6);
+  margin: var(--page-margin-y) var(--page-margin-x);
   padding: 0;
-  max-width: 1400px;
+  max-width: var(--content-max-width);
   width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .loading-state {
@@ -51,7 +53,8 @@ import { VaSkeleton } from "vuestic-ui";
 
 @media (min-width: 1024px) {
   .content-wrapper {
-    margin: var(--space-8) var(--space-8);
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-10);
   }
 }
 </style>

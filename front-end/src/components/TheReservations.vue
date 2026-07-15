@@ -832,11 +832,13 @@ const today = () => {
 }
 
 .content-wrapper {
-  margin-top: var(--page-margin-y);
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
+  flex: 1;
+  margin: var(--page-margin-y) var(--page-margin-x);
   padding: 0;
+  max-width: var(--content-max-width);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -851,8 +853,9 @@ const today = () => {
 }
 
 .date-label {
-  font-family: "Inter-Bold";
-  font-size: 18px;
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: 650;
   color: var(--ink);
   margin: 0;
   min-width: 240px;
@@ -864,7 +867,7 @@ const today = () => {
   height: 40px;
   border-radius: 10px;
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border);
   cursor: pointer;
   font-size: 24px;
   color: var(--ink);
@@ -872,13 +875,13 @@ const today = () => {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
 }
 
 .nav-btn:hover {
-  background: var(--color-info-600);
+  background: var(--sky-600);
   color: white;
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
 }
 
 .nav-icon {
@@ -894,7 +897,7 @@ const today = () => {
 
 .section-card {
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--card-radius);
   padding: var(--card-padding);
   box-shadow: var(--card-shadow);
@@ -905,10 +908,12 @@ const today = () => {
 }
 
 .section-title {
-  font-family: "Inter-Bold";
-  font-size: 16px;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 650;
   color: var(--ink);
   margin: 0;
+  letter-spacing: var(--tracking-tight);
 }
 
 .table-wrapper {
@@ -925,23 +930,27 @@ const today = () => {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  transition: all 0.15s;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: all var(--duration-fast) var(--ease-in-out);
 }
 
 .btn-primary {
-  background-color: var(--color-info-600);
+  background: linear-gradient(135deg, var(--sky-600) 0%, var(--sky-500) 100%);
   color: white;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  background-color: #2563eb;
+  background: linear-gradient(135deg, var(--sky-700) 0%, var(--sky-600) 100%);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .btn-sm {
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 @media screen and (min-width: 1024px) {
@@ -951,8 +960,8 @@ const today = () => {
     margin-bottom: 20px;
   }
   .content-wrapper {
-    margin-left: var(--space-8);
-    margin-right: var(--space-8);
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-10);
   }
   .sections-row {
     grid-template-columns: 1fr;
@@ -976,29 +985,30 @@ const today = () => {
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
-  font-family: "Inter-Medium";
+  font-family: var(--font-sans);
+  font-weight: 500;
   color: white;
   text-transform: capitalize;
 }
 
 .status-badge.pending {
-  background-color: #3b82f6;
+  background-color: var(--sky-500);
 }
 
 .status-badge.seated {
-  background-color: #22c55e;
+  background-color: var(--earth-500);
 }
 
 .status-badge.cancelled {
-  background-color: #ef4444;
+  background-color: var(--rose-500);
 }
 
 .status-badge.completed {
-  background-color: #9ca3af;
+  background-color: var(--neutral-500);
 }
 
 .status-badge.missed {
-  background-color: #f59e0b;
+  background-color: var(--accent-500);
 }
 
 .payment-badge {
@@ -1006,7 +1016,8 @@ const today = () => {
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
-  font-family: "Inter-Medium";
+  font-family: var(--font-sans);
+  font-weight: 500;
   text-transform: capitalize;
 }
 
@@ -1025,8 +1036,9 @@ const today = () => {
 }
 
 .confirm-content p {
-  font-family: "Inter-Medium";
-  font-size: 15px;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 500;
   color: var(--ink);
   margin: 0;
 }
@@ -1038,21 +1050,21 @@ const today = () => {
 }
 
 .btn-danger {
-  background-color: var(--primary-red);
-  color: white;
+  background-color: var(--rose-50);
+  color: var(--rose-600);
 }
 
 .btn-danger:hover {
-  background-color: #dc2626;
+  background-color: var(--rose-100);
 }
 
 .btn-warning {
-  background-color: #f59e0b;
-  color: white;
+  background-color: var(--accent-soft);
+  color: var(--accent-text);
 }
 
 .btn-warning:hover {
-  background-color: #d97706;
+  background-color: var(--accent-100);
 }
 
 .search-bar {
@@ -1082,20 +1094,21 @@ const today = () => {
 .search-input {
   width: 100%;
   padding: 12px 42px 12px 44px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border);
   border-radius: var(--input-radius);
-  font-family: "Inter-Light";
-  font-size: 15px;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
   color: var(--ink);
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--duration-200) var(--ease-in-out),
+    box-shadow var(--duration-200) var(--ease-in-out);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--color-info-600);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .clear-btn {
@@ -1115,7 +1128,7 @@ const today = () => {
 }
 
 .clear-btn:hover {
-  background: #f3f4f6;
+  background: var(--neutral-100);
   color: var(--ink);
 }
 
@@ -1130,8 +1143,9 @@ const today = () => {
   gap: 8px;
   margin-top: 10px;
   margin-left: var(--space-6);
-  font-family: "Inter-Medium";
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--ink-muted);
   cursor: pointer;
   user-select: none;
@@ -1141,7 +1155,7 @@ const today = () => {
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: var(--color-info-600);
+  accent-color: var(--accent);
 }
 
 @media screen and (min-width: 1024px) {

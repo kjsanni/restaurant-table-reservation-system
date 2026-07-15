@@ -171,7 +171,7 @@ const getFieldValue = (item, fieldKey) => {
   height: 36px;
   border-radius: 10px;
   background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
-  color: var(--color-info-600);
+  color: var(--sky-600);
   font-family: "Inter-Bold";
   font-size: 14px;
   display: flex;

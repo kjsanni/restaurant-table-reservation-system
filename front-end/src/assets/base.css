@@ -225,4 +225,11 @@
   --va-shadow: var(--shadow-md);
   --va-focus: var(--accent);
   --va-transparent: rgba(0, 0, 0, 0);
+
+  --page-margin-x: var(--space-8);
+  --page-margin-y: var(--space-8);
+  --card-radius: var(--radius-xl);
+  --card-padding: var(--space-6);
+  --card-shadow: var(--shadow-sm);
+  --input-radius: var(--radius-lg);
 }

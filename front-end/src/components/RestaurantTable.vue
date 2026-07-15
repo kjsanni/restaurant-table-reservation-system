@@ -100,8 +100,8 @@ const freeTable = async (id) => {
 }
 .free-table-button:hover {
   background-color: #ffffff;
-  border-color: var(--color-info-600);
-  color: var(--color-info-600);
+  border-color: var(--sky-600);
+  color: var(--sky-600);
 }
 .content {
   display: flex;

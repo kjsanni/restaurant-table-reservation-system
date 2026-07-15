@@ -335,7 +335,7 @@ const navigateToNewReservation = () => {
   width: 36px;
   height: 36px;
   border: 3px solid var(--border);
-  border-top-color: var(--color-info-600);
+  border-top-color: var(--sky-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -446,7 +446,7 @@ const navigateToNewReservation = () => {
   padding: 10px 16px;
   border: none;
   border-radius: 8px;
-  background: var(--color-info-600);
+  background: var(--sky-600);
   color: white;
   font-family: "Inter-Medium";
   font-size: 13px;
@@ -461,7 +461,7 @@ const navigateToNewReservation = () => {
 .btn-link {
   background: none;
   border: none;
-  color: var(--color-info-600);
+  color: var(--sky-600);
   font-family: "Inter-Medium";
   font-size: 13px;
   cursor: pointer;
@@ -559,9 +559,9 @@ const navigateToNewReservation = () => {
 
 .btn-small {
   padding: 8px 12px;
-  border: 1px solid var(--color-info-600);
+  border: 1px solid var(--sky-600);
   border-radius: 8px;
-  background: var(--color-info-600);
+  background: var(--sky-600);
   color: white;
   font-family: "Inter-Medium";
   font-size: 12px;

@@ -229,7 +229,7 @@ const deleteStaffMember = async (id) => {
   width: 32px;
   height: 32px;
   border: 3px solid var(--border);
-  border-top-color: var(--color-info-600);
+  border-top-color: var(--sky-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -267,7 +267,7 @@ const deleteStaffMember = async (id) => {
   height: 44px;
   border-radius: 10px;
   background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
-  color: var(--color-info-600);
+  color: var(--sky-600);
   font-family: "Inter-Bold";
   font-size: 18px;
   display: flex;
@@ -339,7 +339,7 @@ const deleteStaffMember = async (id) => {
 }
 
 .perm-item input {
-  accent-color: var(--color-info-600);
+  accent-color: var(--sky-600);
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -360,7 +360,7 @@ const deleteStaffMember = async (id) => {
 }
 
 .btn-primary {
-  background-color: var(--color-info-600);
+  background-color: var(--sky-600);
   color: white;
 }
 
@@ -452,7 +452,7 @@ const deleteStaffMember = async (id) => {
 
 .modal-input:focus {
   outline: none;
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
@@ -471,7 +471,7 @@ const deleteStaffMember = async (id) => {
 
 .modal-select:focus {
   outline: none;
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 

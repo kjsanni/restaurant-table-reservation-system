@@ -344,7 +344,7 @@ const getStackedY = (item, methodKey) => {
   width: 36px;
   height: 36px;
   border: 3px solid var(--border);
-  border-top-color: var(--color-info-600);
+  border-top-color: var(--sky-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -388,9 +388,9 @@ const getStackedY = (item, methodKey) => {
 }
 
 .preset-btn.active {
-  background: var(--color-info-600);
+  background: var(--sky-600);
   color: white;
-  border-color: var(--color-info-600);
+  border-color: var(--sky-600);
 }
 
 .custom-range {
