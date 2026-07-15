@@ -12,8 +12,8 @@ BACKEND_DIR="back-end"
 FRONTEND_DIR="front-end"
 
 # Step 1: Update codebase
-echo "Pulling latest code..."
-git pull origin main || true
+##echo "Pulling latest code..."
+##git pull origin main || true
 
 # Step 2: Install dependencies
 echo "Installing backend dependencies..."
@@ -53,16 +53,16 @@ cd ..
 echo "Starting services with PM2..."
 
 # Kill existing processes
-pm2 delete rtrs-backend 2>/dev/null || true
-pm2 delete rtrs-frontend 2>/dev/null || true
+pm2 delete nguni-backend 2>/dev/null || true
+pm2 delete nguni-frontend 2>/dev/null || true
 
 # Start backend
 cd $BACKEND_DIR
-pm2 start src/app.js --name rtrs-backend -i 1 --env production
+pm2 start src/app.js --name nguni-backend -i 1 --env production
 
 # Start frontend
 cd ../$FRONTEND_DIR
-pm2 start npx --name rtrs-frontend -- serve -s dist -l 8080
+pm2 start npx --name nguni-frontend -- serve -s dist -l 8080
 
 pm2 save
 
