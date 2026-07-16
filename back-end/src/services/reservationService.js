@@ -1,11 +1,11 @@
 const dateTimeValidator = require("../utils/dateAndTimeValidator");
 const scheduleService = require("./scheduleService");
 
-const getAllReservations = async (reservationDAO, filters = {}) => {
+const getAllReservations = async (reservationDAO, filters = {}, pagination = {}) => {
   if (Object.keys(filters).length > 0) {
-    return await reservationDAO.searchReservations(filters);
+    return await reservationDAO.searchReservations(filters, pagination);
   }
-  return await reservationDAO.findAllReservations();
+  return await reservationDAO.findAllReservations(pagination);
 };
 
 const checkClosingOpeningTime = (

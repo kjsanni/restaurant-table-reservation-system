@@ -1,20 +1,14 @@
 <script setup>
 import PageHeader from "@/components/PageHeader.vue";
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import Heatmap2D from "@/components/Heatmap2D.vue";
-import dateNavigator from "@/utils/dateNavigator";
+import { useToday, useDaysAgo } from "@/composables/useReservationCalendar";
 
 const mode = ref("date-hour");
-const from = ref(null);
-const to = ref(null);
-
-onMounted(() => {
-  const today = dateNavigator.asDateString(new Date());
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  from.value = dateNavigator.asDateString(thirtyDaysAgo);
-  to.value = today;
-});
+const today = useToday();
+const thirtyDaysAgo = useDaysAgo(30);
+const from = ref(thirtyDaysAgo.daysAgo.value);
+const to = ref(today.value);
 </script>
 
 <template>

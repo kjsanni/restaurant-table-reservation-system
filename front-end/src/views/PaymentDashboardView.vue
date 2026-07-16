@@ -9,6 +9,9 @@ import PageHeader from "@/components/PageHeader.vue";
 
 const loading = ref(true);
 const reservations = ref([]);
+const total = ref(0);
+const page = ref(1);
+const pageSize = ref(25);
 const summary = ref({
   deposit: 0,
   partial: 0,
@@ -59,6 +62,17 @@ const totalReservations = computed(() => {
   return Object.values(summary.value).reduce((sum, count) => sum + count, 0);
 });
 
+const totalPages = computed(() => {
+  return Math.max(Math.ceil(total.value / pageSize.value), 1);
+});
+
+const goToPage = (target) => {
+  if (target < 1 || target > totalPages.value) return;
+  if (target === page.value) return;
+  page.value = target;
+  loadData();
+};
+
 const maxCount = computed(() => {
   return Math.max(...Object.values(summary.value), 1);
 });
@@ -106,10 +120,12 @@ const loadData = async () => {
   loading.value = true;
   try {
     const [resRes, summaryRes] = await Promise.all([
-      reservationAPI.getReservations(),
+      reservationAPI.getReservations({ page: page.value, pageSize: pageSize.value }),
       reservationAPI.getPaymentSummary(),
     ]);
-    reservations.value = resRes.data.collection;
+    const payload = resRes.data;
+    reservations.value = payload.collection || [];
+    total.value = payload.total || reservations.value.length;
     summary.value = summaryRes.data.summary;
   } catch (err) {
     logger.error("Failed to load payment dashboard", { error: err.message });
@@ -234,6 +250,25 @@ onMounted(loadData);
             :collection="filteredReservations"
             @onSelectedReservation="handleSelectedReservation"
           />
+          <div v-if="total > pageSize" class="pager">
+            <button
+              class="pager-btn"
+              :disabled="page <= 1"
+              @click="goToPage(page - 1)"
+            >
+              Previous
+            </button>
+            <span class="pager-info">
+              Page {{ page }} of {{ totalPages }} ({{ total }} entries)
+            </span>
+            <button
+              class="pager-btn"
+              :disabled="page >= totalPages"
+              @click="goToPage(page + 1)"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -534,5 +569,46 @@ onMounted(loadData);
   font-size: var(--text-sm);
   font-weight: 500;
   transition: all var(--duration-150) var(--ease-in-out);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.pager-btn {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-in-out);
+}
+
+.pager-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pager-btn:not(:disabled):hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pager-info {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+}
+
+.pager-total {
+  color: var(--ink-muted);
 }
 </style>

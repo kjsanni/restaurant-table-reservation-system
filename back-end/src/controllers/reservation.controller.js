@@ -35,15 +35,31 @@ const getAllHandler = async (req, res) => {
   if (req.query.to) filters.to = req.query.to;
   if (req.query.status) filters.status = req.query.status;
 
-  const reservations = await reservationService.getAllReservations(
+  const page = req.query.page ? parseInt(req.query.page, 10) : undefined;
+  const pageSize = req.query.pageSize ? parseInt(req.query.pageSize, 10) : undefined;
+  const pagination = {};
+  if (page && pageSize) {
+    pagination.limit = pageSize;
+    pagination.offset = (page - 1) * pageSize;
+  }
+
+  const result = await reservationService.getAllReservations(
     reservationDAO,
-    filters
+    filters,
+    pagination
   );
 
-  return res.status(200).json({
-    success: true,
-    collection: reservations,
-  });
+  const response = { success: true };
+  if (pagination.limit && result.total !== undefined) {
+    response.collection = result.reservations;
+    response.total = result.total;
+    response.page = page;
+    response.pageSize = pageSize;
+  } else {
+    response.collection = result;
+  }
+
+  return res.status(200).json(response);
 };
 
 const registerHandler = async (req, res) => {

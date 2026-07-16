@@ -6,8 +6,8 @@ const Customer = db.customer;
 const Table = db.table;
 const { flattenArrayObjects } = require("../utils/flattenObject");
 
-const findAllReservations = async () => {
-  const reservations = await Reservation.findAll({
+const findAllReservations = async ({ limit, offset } = {}) => {
+  const opts = {
     attributes: ["id", "customerId", "resDate", "resTime", "resStatus", "people", "paymentStatus", "expectedTotal", "notes"],
     include: [
       {
@@ -27,11 +27,14 @@ const findAllReservations = async () => {
         required: false,
       },
     ],
-  });
-  return flattenArrayObjects(reservations);
+  };
+  if (limit) opts.limit = limit;
+  if (offset !== undefined) opts.offset = offset;
+  const { rows, count } = await Reservation.findAndCountAll(opts);
+  return { reservations: flattenArrayObjects(rows), total: count };
 };
 
-const searchReservations = async (filters = {}) => {
+const searchReservations = async (filters = {}, { limit, offset } = {}) => {
   const { q, from, to, status } = filters;
   const where = {};
 
@@ -68,16 +71,21 @@ const searchReservations = async (filters = {}) => {
     ];
   }
 
-  const reservations = await Reservation.findAll({
+  const baseOpts = {
     where,
     include,
     order: [["resDate", "ASC"], ["resTime", "ASC"]],
-  });
+  };
+
+  if (limit) baseOpts.limit = limit;
+  if (offset !== undefined) baseOpts.offset = offset;
+
+  const { rows, count } = await Reservation.findAndCountAll(baseOpts);
+  let reservations = flattenArrayObjects(rows);
 
   if (q) {
     const term = q.toLowerCase();
-    return reservations
-      .map((r) => r.toJSON())
+    reservations = reservations
       .filter((r) => {
         const customer = r.Customer || {};
         const searchable = [
@@ -100,7 +108,10 @@ const searchReservations = async (filters = {}) => {
       });
   }
 
-  return flattenArrayObjects(reservations);
+  if (limit) {
+    return { reservations, total: count };
+  }
+  return reservations;
 };
 
 const findReservationById = async (reservationId) => {

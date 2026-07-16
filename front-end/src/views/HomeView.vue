@@ -8,20 +8,14 @@ import reservationAPI from "@/services/reservationAPI";
 import waitlistAPI from "@/services/waitlistAPI";
 import paymentAPI from "@/services/paymentAPI";
 import tableAPI from "@/services/tableAPI";
-import dateNavigator from "@/utils/dateNavigator";
+import { useToday, useDaysAgo } from "@/composables/useReservationCalendar";
 
 const router = useRouter();
 const authStore = useAuthStore();
 
 const loading = ref(true);
-const today = ref(dateNavigator.asDateString(new Date()));
-const thirtyDaysAgo = ref(
-  (() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return dateNavigator.asDateString(d);
-  })()
-);
+const today = useToday();
+const thirtyDaysAgo = useDaysAgo(30);
 
 const stats = ref({
   todayReservations: 0,
@@ -67,12 +61,12 @@ const loadData = async () => {
   loading.value = true;
   try {
     const [resStats, waitlistStats, revenueStats, tables] = await Promise.all([
-      reservationAPI.getReservationStats({
-        from: thirtyDaysAgo.value,
-        to: today.value,
-      }),
-      waitlistAPI.getStats(),
-      paymentAPI.getRevenueStats(thirtyDaysAgo.value, today.value),
+    reservationAPI.getReservationStats({
+      from: thirtyDaysAgo.daysAgo.value,
+      to: today.value,
+    }),
+    waitlistAPI.getStats(),
+    paymentAPI.getRevenueStats(thirtyDaysAgo.daysAgo.value, today.value),
       tableAPI.getTables().catch(() => ({ data: { collection: [] } })),
     ]);
 

@@ -2,7 +2,7 @@
 import PageHeader from "@/components/PageHeader.vue";
 import { ref, computed, onMounted, watch } from "vue";
 import reservationAPI from "@/services/reservationAPI";
-import dateNavigator from "@/utils/dateNavigator";
+import { useDateRange, PRESET_RANGES } from "@/composables/useReservationCalendar";
 
 const loading = ref(true);
 const series = ref([]);
@@ -13,36 +13,7 @@ const summary = ref({
 });
 
 const granularity = ref("day");
-const rangeMode = ref("month");
-const customFrom = ref("");
-const customTo = ref("");
-
-const presetRanges = {
-  today: { label: "Today", days: 1 },
-  week: { label: "This Week", days: 7 },
-  month: { label: "This Month", days: 30 },
-};
-
-const dateRangeLabel = computed(() => {
-  if (rangeMode.value === "custom" && customFrom.value && customTo.value) {
-    return `${customFrom.value} → ${customTo.value}`;
-  }
-  return presetRanges[rangeMode.value]?.label || "Custom";
-});
-
-const getDateRange = () => {
-  if (rangeMode.value === "custom" && customFrom.value && customTo.value) {
-    return { from: customFrom.value, to: customTo.value };
-  }
-  const days = presetRanges[rangeMode.value]?.days || 30;
-  const to = new Date();
-  const from = new Date();
-  from.setDate(to.getDate() - days);
-  return {
-    from: dateNavigator.asDateString(from),
-    to: dateNavigator.asDateString(to),
-  };
-};
+const { rangeMode, customFrom, customTo, getDateRange, dateRangeLabel } = useDateRange("month");
 
 const loadReport = async () => {
   loading.value = true;
@@ -156,7 +127,7 @@ const getStackedY = (item, methodKey, _mIndex) => {
         <div class="controls-bar">
           <div class="preset-buttons">
             <button
-              v-for="(preset, key) in presetRanges"
+              v-for="(preset, key) in PRESET_RANGES"
               :key="key"
               :class="['preset-btn', { active: rangeMode === key }]"
               @click="rangeMode = key"
