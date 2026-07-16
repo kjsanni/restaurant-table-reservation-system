@@ -30,6 +30,71 @@ const errorMessage = ref("");
 const showQrModal = ref(false);
 const qrTable = ref(null);
 
+const editLayout = ref(false);
+const draggingTableId = ref(null);
+const dragOffset = ref({ x: 0, y: 0 });
+const savingPosition = ref(false);
+
+const tableStyle = (table) => {
+  if (!editLayout.value) return {};
+  return {
+    position: "absolute",
+    left: (table.posX ?? 0) + "px",
+    top: (table.posY ?? 0) + "px",
+    width: "150px",
+  };
+};
+
+const startDrag = (event, table) => {
+  if (!editLayout.value) return;
+  draggingTableId.value = table.id;
+  const rect = event.currentTarget.getBoundingClientRect();
+  dragOffset.value = {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+  };
+  window.addEventListener("mousemove", onDragMove);
+  window.addEventListener("mouseup", onDragEnd);
+};
+
+const onDragMove = (event) => {
+  if (!draggingTableId.value) return;
+  const canvas = document.querySelector(".layout-canvas");
+  if (!canvas) return;
+  const bounds = canvas.getBoundingClientRect();
+  let x = event.clientX - bounds.left - dragOffset.value.x;
+  let y = event.clientY - bounds.top - dragOffset.value.y;
+  x = Math.max(0, Math.min(x, canvas.clientWidth - 150));
+  y = Math.max(0, Math.min(y, canvas.clientHeight - 90));
+  const t = tables.value.find((tb) => tb.id === draggingTableId.value);
+  if (t) {
+    t.posX = Math.round(x);
+    t.posY = Math.round(y);
+  }
+};
+
+const onDragEnd = async () => {
+  window.removeEventListener("mousemove", onDragMove);
+  window.removeEventListener("mouseup", onDragEnd);
+  const id = draggingTableId.value;
+  draggingTableId.value = null;
+  if (id == null) return;
+  const t = tables.value.find((tb) => tb.id === id);
+  if (!t) return;
+  savingPosition.value = true;
+  try {
+    await tableAPI.updatePosition(id, t.posX, t.posY);
+  } catch (err) {
+    logger.error("Failed to save table position", { error: err.message });
+  } finally {
+    savingPosition.value = false;
+  }
+};
+
+const toggleLayout = () => {
+  editLayout.value = !editLayout.value;
+};
+
 const MAX_TABLES_PER_STAFF = 5;
 
 const showAddDialog = ref(false);
@@ -317,11 +382,19 @@ const getQrCodeUrl = (table) => {
           >
             🗺️ Floor Plan Editor
           </RouterLink>
+          <button
+            v-if="canManageTables"
+            class="btn btn-secondary"
+            :class="{ active: editLayout }"
+            @click="toggleLayout"
+          >
+            {{ editLayout ? "Done Layout" : "📐 Layout Editor" }}
+          </button>
           <button class="btn btn-primary" @click="openAddDialog">
             + Add Table
           </button>
         </div>
-        <div class="table-grid">
+        <div :class="editLayout ? 'table-grid layout-canvas' : 'table-grid'">
           <div
             v-for="table in tables"
             :key="table.id"
@@ -330,7 +403,12 @@ const getQrCodeUrl = (table) => {
               blocked: table.isBlocked,
               occupied: !table.isBlocked && table.isOccupied,
               available: !table.isBlocked && !table.isOccupied,
+              'layout-card': editLayout,
+              dragging: draggingTableId === table.id,
+              [table.shape || 'round']: editLayout,
             }"
+            :style="tableStyle(table)"
+            @mousedown="startDrag($event, table)"
           >
             <div class="table-header">
               <div class="table-identity">
@@ -811,6 +889,42 @@ const getQrCodeUrl = (table) => {
   gap: var(--space-4);
 }
 
+.layout-canvas {
+  display: block;
+  position: relative;
+  min-height: 520px;
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-color: var(--surface-sunken);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.layout-card {
+  cursor: grab;
+  user-select: none;
+  box-shadow: var(--shadow-md);
+}
+
+.layout-card.dragging {
+  cursor: grabbing;
+  z-index: 10;
+  opacity: 0.9;
+}
+
+.layout-card.square {
+  border-radius: var(--radius-md);
+}
+
+.layout-card.round {
+  border-radius: var(--radius-full);
+}
+
+.layout-card.rect {
+  border-radius: var(--radius-md);
+}
+
 .table-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1277,6 +1391,12 @@ const getQrCodeUrl = (table) => {
 .btn-primary:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
+}
+
+.actions-row .btn-secondary.active {
+  background: var(--sky-600);
+  color: white;
+  border-color: var(--sky-600);
 }
 
 .btn-secondary {

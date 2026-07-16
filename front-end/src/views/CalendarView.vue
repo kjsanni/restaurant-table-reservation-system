@@ -323,6 +323,7 @@ const openNewReservationAt = (time) => {
   if (!daySchedule.value || daySchedule.value.isClosed) return;
   newResDate.value = dateNavigator.asDateString(selectedDate.value);
   newResTime.value = time + ":00";
+  newResEndTime.value = "";
   actionReservation.value = null;
   activeAction.value = "new";
   actionLoading.value = false;
@@ -333,6 +334,77 @@ const openNewReservationAt = (time) => {
   loadWaitingStaff();
 };
 
+const dragCreate = ref(false);
+const createStart = ref(null);
+const createEnd = ref(null);
+const newResEndTime = ref("");
+
+const onSlotDown = (hour) => {
+  if (calendarView.value !== "day" || (daySchedule.value && daySchedule.value.isClosed))
+    return;
+  dragCreate.value = true;
+  createStart.value = hour;
+  createEnd.value = hour;
+  window.addEventListener("mouseup", onSlotUp);
+};
+
+const onSlotEnter = (hour) => {
+  if (!dragCreate.value) return;
+  createEnd.value = hour;
+};
+
+const onSlotUp = () => {
+  if (!dragCreate.value) return;
+  dragCreate.value = false;
+  window.removeEventListener("mouseup", onSlotUp);
+  if (createStart.value == null) return;
+  const startHour = Math.min(createStart.value, createEnd.value);
+  const endHour = Math.max(createStart.value, createEnd.value);
+  newResDate.value = dateNavigator.asDateString(selectedDate.value);
+  newResTime.value = String(startHour).padStart(2, "0") + ":00";
+  newResEndTime.value = String(endHour + 1).padStart(2, "0") + ":00";
+  actionReservation.value = null;
+  activeAction.value = "new";
+  actionError.value = "";
+  loadFreeTables();
+  loadWaitingStaff();
+};
+
+const isSlotSelected = (hour) => {
+  if (!dragCreate.value || createStart.value == null) return false;
+  const lo = Math.min(createStart.value, createEnd.value);
+  const hi = Math.max(createStart.value, createEnd.value);
+  return hour >= lo && hour <= hi;
+};
+
+const createReservation = async () => {
+  if (!newResDate.value || !newResTime.value) {
+    actionError.value = "Please provide a date and start time";
+    return;
+  }
+  actionLoading.value = true;
+  actionError.value = "";
+  try {
+    await reservationAPI.registerReservation({
+      resDate: newResDate.value,
+      resTime: newResTime.value,
+      people: newPeople.value,
+      name: newCustomerName.value || "Walk-in",
+      expectedTotal: 0,
+      paymentStatus: "unpaid",
+    });
+    await loadSchedule();
+    closeAction();
+  } catch (err) {
+    actionError.value = getApiErrorMessage(err, "Failed to create reservation");
+  } finally {
+    actionLoading.value = false;
+  }
+};
+
+const newPeople = ref(2);
+const newCustomerName = ref("");
+
 const actionTitle = computed(() => {
   const titles = {
     cancel: "Cancel Reservation",
@@ -340,6 +412,7 @@ const actionTitle = computed(() => {
     table: "Assign Table",
     staff: "Assign Staff",
     reschedule: "Reschedule",
+    new: "New Reservation",
   };
   return titles[activeAction.value] || "";
 });
@@ -660,12 +733,18 @@ const handleReschedule = async () => {
               {{ daySchedule.openTime?.slice(0, 5) }} - {{ daySchedule.closeTime?.slice(0, 5) }}
             </span>
           </div>
+          <p class="day-hint" v-if="!daySchedule?.isClosed">
+            Click a time slot to add a reservation, or drag across slots to set a time range.
+          </p>
           <div class="day-timeline">
             <div
               v-for="slot in TIME_SLOTS"
               :key="slot.value"
               class="time-slot"
+              :class="{ 'slot-selected': isSlotSelected(parseInt(slot.value)) }"
               @click="openNewReservationAt(slot.value)"
+              @mousedown="onSlotDown(parseInt(slot.value))"
+              @mouseenter="onSlotEnter(parseInt(slot.value))"
             >
               <div class="slot-time">{{ slot.label }}</div>
               <div class="slot-content">
@@ -705,11 +784,11 @@ const handleReschedule = async () => {
               <span class="state-icon">📅</span>
               <p>No reservations for this day.</p>
             </div>
-            <div v-else>
-              <div
-                v-if="activeAction && actionReservation"
-                class="action-panel"
-              >
+              <div v-else>
+                <div
+                  v-if="activeAction"
+                  class="action-panel"
+                >
                 <div class="action-header">
                   <h3 class="action-title">{{ actionTitle }}</h3>
                   <button class="action-back" @click="closeAction">
@@ -846,6 +925,63 @@ const handleReschedule = async () => {
                       :disabled="actionLoading"
                     >
                       {{ actionLoading ? "Saving..." : "Reschedule" }}
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  v-else-if="activeAction === 'new'"
+                  class="action-body"
+                >
+                  <div class="field-group">
+                    <label class="field-label">Date</label>
+                    <input
+                      type="date"
+                      v-model="newResDate"
+                      class="action-input"
+                    />
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Start Time</label>
+                    <input
+                      type="time"
+                      v-model="newResTime"
+                      class="action-input"
+                    />
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">End Time</label>
+                    <input
+                      type="time"
+                      v-model="newResEndTime"
+                      class="action-input"
+                    />
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Customer Name</label>
+                    <input
+                      type="text"
+                      v-model="newCustomerName"
+                      placeholder="Walk-in"
+                      class="action-input"
+                    />
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Party Size</label>
+                    <input
+                      type="number"
+                      min="1"
+                      v-model="newPeople"
+                      class="action-input"
+                    />
+                  </div>
+                  <div class="action-buttons">
+                    <button
+                      class="btn btn-primary"
+                      @click="createReservation"
+                      :disabled="actionLoading"
+                    >
+                      {{ actionLoading ? "Creating..." : "Create" }}
                     </button>
                   </div>
                 </div>
@@ -1862,6 +1998,13 @@ const handleReschedule = async () => {
   margin: 0;
 }
 
+.day-hint {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  margin: 6px 0 0 0;
+}
+
 .day-closed-badge,
 .day-hours-badge {
   font-size: var(--text-xs);
@@ -1907,6 +2050,15 @@ const handleReschedule = async () => {
 
 .slot-content:hover {
   background: var(--neutral-50);
+}
+
+.slot-selected {
+  background: var(--sky-50);
+}
+
+.slot-selected .slot-content {
+  background: var(--sky-50);
+  box-shadow: inset 0 0 0 2px var(--sky-400);
 }
 
 .day-reservation {

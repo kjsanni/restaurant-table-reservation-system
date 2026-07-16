@@ -95,6 +95,21 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         defaultValue: null,
       },
+      posX: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+      },
+      posY: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+      },
+      shape: {
+        type: DataTypes.STRING(20),
+        allowNull: true,
+        defaultValue: "round",
+      },
     },
     {
       sequelize,
