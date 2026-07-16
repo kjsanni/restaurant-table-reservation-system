@@ -54,6 +54,10 @@ const updatePosition = async (tableDAO, tableId, posX, posY) => {
   return await tableDAO.updateTablePosition(tableId, posX, posY);
 };
 
+const deleteTable = async (tableDAO, tableId) => {
+  return await tableDAO.deleteTable(tableId);
+};
+
 module.exports = {
   getAllTables,
   registerTable,
@@ -65,4 +69,5 @@ module.exports = {
   mergeTables,
   unmergeTable,
   updatePosition,
+  deleteTable,
 };

@@ -162,6 +162,16 @@ const updatePositionHandler = async (req, res) => {
   });
 };
 
+const deleteHandler = async (req, res) => {
+  const { id } = req.params;
+  const result = await tableService.delete(tableDAO, id);
+  return res.status(200).json({
+    success: true,
+    message: "Table deleted!",
+    item: result,
+  });
+};
+
 module.exports = {
   getAllHandler,
   registerHandler,
@@ -175,4 +185,5 @@ module.exports = {
   unmergeTableHandler,
   calculatePriceHandler,
   updatePositionHandler,
+  deleteHandler,
 };

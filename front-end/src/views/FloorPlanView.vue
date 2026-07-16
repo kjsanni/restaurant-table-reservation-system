@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import tableAPI from "@/services/tableAPI";
 import reservationAPI from "@/services/reservationAPI";
+import waitlistAPI from "@/services/waitlistAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
@@ -9,13 +10,19 @@ import PageHeader from "@/components/PageHeader.vue";
 
 const tables = ref([]);
 const reservations = ref([]);
+const waitlist = ref([]);
 const loading = ref(true);
 const draggingReservation = ref(null);
+const draggingWaitlist = ref(null);
 const assignPopupOpen = ref(false);
 const selectedTable = ref(null);
 const selectedLinkedTables = ref([]);
 const errorPopupOpen = ref(false);
 const errorMessage = ref("");
+const showAddTable = ref(false);
+const newTableName = ref("");
+const newTableCapacity = ref(4);
+const addError = ref("");
 
 const pendingReservations = computed(() => {
   return (reservations.value || []).filter(
@@ -49,15 +56,23 @@ const dragNeedsMerge = computed(() => {
   return calculateCount(draggingReservation.value.people) > 1;
 });
 
+const waitlistReservations = computed(() => {
+  return (waitlist.value || []).filter(
+    (w) => w.status === "waiting" || w.resStatus === "waiting"
+  );
+});
+
 const loadData = async () => {
   loading.value = true;
   try {
-    const [tRes, rRes] = await Promise.all([
+    const [tRes, rRes, wRes] = await Promise.all([
       tableAPI.getTables(),
       reservationAPI.getReservations(),
+      waitlistAPI.getEntries().catch(() => ({ data: { waitlist: [] } })),
     ]);
     tables.value = tRes.data.collection;
     reservations.value = rRes.data.collection;
+    waitlist.value = wRes.data.waitlist || wRes.data.collection || [];
   } catch (err) {
     logger.error("Failed to load floor plan", { error: err.message });
   } finally {
@@ -129,6 +144,13 @@ const onTableDragLeave = (table) => {
 };
 
 const onTableClick = (table) => {
+  if (draggingWaitlist.value) {
+    if (!allowDrop(table)) return;
+    selectedTable.value = table;
+    selectedLinkedTables.value = [];
+    assignPopupOpen.value = true;
+    return;
+  }
   if (!draggingReservation.value) return;
   if (!allowDrop(table)) return;
   if (selectedTable.value?.id === table.id) return;
@@ -160,7 +182,15 @@ const onDrop = (table, event) => {
   document
     .querySelectorAll(".table-block.drag-over")
     .forEach((el) => el.classList.remove("drag-over"));
-  if (!allowDrop(table) || !draggingReservation.value) return;
+  if (!allowDrop(table)) return;
+
+  if (draggingWaitlist.value) {
+    selectedTable.value = table;
+    selectedLinkedTables.value = [];
+    assignPopupOpen.value = true;
+    return;
+  }
+  if (!draggingReservation.value) return;
 
   const requiredCount = calculateCount(draggingReservation.value.people);
   selectedTable.value = table;
@@ -198,7 +228,83 @@ const closeAssign = () => {
   assignPopupOpen.value = false;
   selectedTable.value = null;
   draggingReservation.value = null;
+  draggingWaitlist.value = null;
   selectedLinkedTables.value = [];
+};
+
+const onWaitlistDragStart = (entry, event) => {
+  draggingWaitlist.value = entry;
+  if (event.dataTransfer) {
+    event.dataTransfer.setData("text/plain", String(entry.id));
+    event.dataTransfer.effectAllowed = "move";
+  }
+};
+
+const onWaitlistDragEnd = () => {
+  draggingWaitlist.value = null;
+  document
+    .querySelectorAll(".table-block.drag-over")
+    .forEach((el) => el.classList.remove("drag-over"));
+};
+
+const confirmWaitlistAssign = async () => {
+  if (!draggingWaitlist.value) return;
+  try {
+    await waitlistAPI.seatEntry(draggingWaitlist.value.id);
+    assignPopupOpen.value = false;
+    draggingWaitlist.value = null;
+    selectedTable.value = null;
+    selectedLinkedTables.value = [];
+    await loadData();
+  } catch (err) {
+    logger.error("Assign waitlist error", { error: err.message });
+    errorMessage.value = getApiErrorMessage(err, "Failed to seat waitlist entry");
+    errorPopupOpen.value = true;
+  }
+};
+
+const openAddTable = () => {
+  showAddTable.value = true;
+  addError.value = "";
+  newTableName.value = `T${(tables.value.length || 0) + 1}`;
+  newTableCapacity.value = 4;
+};
+
+const closeAddTable = () => {
+  showAddTable.value = false;
+};
+
+const confirmAddTable = async () => {
+  addError.value = "";
+  if (!newTableName.value.trim()) {
+    addError.value = "Table name is required.";
+    return;
+  }
+  try {
+    await tableAPI.registerTable({
+      name: newTableName.value.trim(),
+      capacity: Number(newTableCapacity.value) || 4,
+    });
+    showAddTable.value = false;
+    await loadData();
+  } catch (err) {
+    addError.value = getApiErrorMessage(err, "Failed to add table");
+  }
+};
+
+const removeTable = async (table) => {
+  if (table.isOccupied || table.reservationId) {
+    errorMessage.value = "Unseat the table before removing it.";
+    errorPopupOpen.value = true;
+    return;
+  }
+  try {
+    await tableAPI.deleteTable(table.id);
+    await loadData();
+  } catch (err) {
+    errorMessage.value = getApiErrorMessage(err, "Failed to remove table");
+    errorPopupOpen.value = true;
+  }
 };
 
 onMounted(loadData);
@@ -248,22 +354,57 @@ onMounted(loadData);
               <div class="drag-hint">Drag onto a free table</div>
             </div>
           </div>
+
+          <div v-if="waitlistReservations.length" class="waitlist-section">
+            <div class="panel-header waitlist-header">
+              <h2>Waitlist</h2>
+              <span class="badge waitlist-badge">{{ waitlistReservations.length }}</span>
+            </div>
+            <div class="pending-list">
+              <div
+                v-for="entry in waitlistReservations"
+                :key="entry.id"
+                class="pending-card waitlist-card"
+                draggable="true"
+                @dragstart="onWaitlistDragStart(entry, $event)"
+                @dragend="onWaitlistDragEnd"
+              >
+                <div class="pending-header">
+                  <span class="pending-avatar">
+                    {{ (entry.customerName || entry.name || "G")[0]?.toUpperCase() }}
+                  </span>
+                  <div class="pending-title">
+                    <span class="pending-name">{{ entry.customerName || entry.name || "Guest" }}</span>
+                    <span class="pending-meta">
+                      {{ entry.partySize || entry.people }} guests
+                    </span>
+                  </div>
+                </div>
+                <div class="drag-hint">Drag onto a free table</div>
+              </div>
+            </div>
+          </div>
         </aside>
 
         <main class="plan-panel">
-          <div class="legend-bar">
-            <span class="legend-pill free">
-              <span class="dot"></span> Free
-            </span>
-            <span class="legend-pill occupied">
-              <span class="dot"></span> Occupied
-            </span>
-            <span class="legend-pill blocked">
-              <span class="dot"></span> Blocked
-            </span>
-            <span class="legend-pill merged" v-if="dragNeedsMerge">
-              <span class="dot"></span> Merged
-            </span>
+          <div class="plan-toolbar">
+            <div class="legend-bar">
+              <span class="legend-pill free">
+                <span class="dot"></span> Free
+              </span>
+              <span class="legend-pill occupied">
+                <span class="dot"></span> Occupied
+              </span>
+              <span class="legend-pill blocked">
+                <span class="dot"></span> Blocked
+              </span>
+              <span class="legend-pill merged" v-if="dragNeedsMerge">
+                <span class="dot"></span> Merged
+              </span>
+            </div>
+            <button class="btn btn-primary btn-sm" @click="openAddTable">
+              + Add Table
+            </button>
           </div>
           <div class="plan-grid">
             <div
@@ -284,20 +425,29 @@ onMounted(loadData);
               @drop.prevent="onDrop(table, $event)"
               @click="onTableClick(table)"
             >
-              <div class="table-top">
-                <div class="table-id-row">
-                  <span class="table-id">{{
-                    table.name || `T${table.id}`
-                  }}</span>
-                  <span
-                    class="status-dot"
-                    :style="{
-                      backgroundColor: statusColor(tableStatus(table)),
-                    }"
-                  ></span>
+                <div class="table-top">
+                  <div class="table-id-row">
+                    <span class="table-id">{{
+                      table.name || `T${table.id}`
+                    }}</span>
+                    <span
+                      class="status-dot"
+                      :style="{
+                        backgroundColor: statusColor(tableStatus(table)),
+                      }"
+                    ></span>
+                  </div>
+                  <div class="table-top-right">
+                    <span class="capacity">🪑 {{ table.capacity }}</span>
+                    <button
+                      class="remove-table-btn"
+                      title="Remove table"
+                      @click.stop="removeTable(table)"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
-                <span class="capacity">🪑 {{ table.capacity }}</span>
-              </div>
               <div class="linked-badge" v-if="table.linkedTableIds?.length">
                 Linked: {{ table.linkedTableIds.length + 1 }} tables
               </div>
@@ -341,11 +491,18 @@ onMounted(loadData);
       >
         <template #popup-content>
           <div class="assign-content">
-            <p class="assign-text">
+            <p class="assign-text" v-if="draggingReservation">
               Assign <strong>{{ draggingReservation?.name }}</strong> ({{
                 draggingReservation?.people
               }}
               guests) to
+              <strong>{{ tableMergeDisplayName() }}</strong
+              >?
+            </p>
+            <p class="assign-text" v-else-if="draggingWaitlist">
+              Seat <strong>{{ draggingWaitlist?.customerName || draggingWaitlist?.name }}</strong>
+              ({{ draggingWaitlist?.partySize || draggingWaitlist?.people }}
+              guests) at
               <strong>{{ tableMergeDisplayName() }}</strong
               >?
             </p>
@@ -362,8 +519,58 @@ onMounted(loadData);
               <button class="btn btn-outline" @click="closeAssign">
                 Cancel
               </button>
-              <button class="btn btn-primary" @click="confirmAssign">
+              <button
+                v-if="draggingReservation"
+                class="btn btn-primary"
+                @click="confirmAssign"
+              >
                 Assign
+              </button>
+              <button
+                v-else-if="draggingWaitlist"
+                class="btn btn-primary"
+                @click="confirmWaitlistAssign"
+              >
+                Seat
+              </button>
+            </div>
+          </div>
+        </template>
+      </PopupBox>
+
+      <PopupBox
+        :is-open="showAddTable"
+        header-text="Add Table"
+        :is-closable="true"
+        @close-modal="closeAddTable"
+      >
+        <template #popup-content>
+          <div class="assign-content">
+            <div class="field-group">
+              <label class="field-label">Table Name</label>
+              <input
+                type="text"
+                v-model="newTableName"
+                class="action-input"
+                placeholder="Table name"
+              />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Capacity</label>
+              <input
+                type="number"
+                min="1"
+                v-model="newTableCapacity"
+                class="action-input"
+              />
+            </div>
+            <p v-if="addError" class="assign-error">{{ addError }}</p>
+            <div class="popup-actions">
+              <button class="btn btn-outline" @click="closeAddTable">
+                Cancel
+              </button>
+              <button class="btn btn-primary" @click="confirmAddTable">
+                Add
               </button>
             </div>
           </div>
@@ -762,8 +969,78 @@ onMounted(loadData);
   align-self: flex-start;
 }
 
-.legend-pill.merged .dot {
-  background-color: #f59e0b;
+.plan-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.table-top-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.remove-table-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--rose-600);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast);
+}
+
+.remove-table-btn:hover {
+  background: var(--rose-50);
+  border-color: var(--rose-200);
+}
+
+.waitlist-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+}
+
+.waitlist-header {
+  margin-bottom: 10px;
+}
+
+.waitlist-badge {
+  background: var(--accent);
+}
+
+.waitlist-card {
+  border-left: 3px solid var(--accent);
+}
+
+.assign-error {
+  color: var(--rose-600);
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  margin: 8px 0;
+}
+
+.field-group {
+  margin-bottom: 12px;
+}
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--ink);
+  font-family: "Inter-Medium";
 }
 
 .merge-rows {

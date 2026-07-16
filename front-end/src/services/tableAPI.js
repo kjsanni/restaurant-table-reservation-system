@@ -40,6 +40,9 @@ class TableAPI {
   updatePosition(tableId, posX, posY) {
     return API.patch("/tables/" + tableId + "/position", { posX, posY });
   }
+  deleteTable(tableId) {
+    return API.delete("/tables/" + tableId + "/delete");
+  }
 }
 
 export default new TableAPI();

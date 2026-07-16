@@ -62,4 +62,9 @@ router
   .patch(...writeRoute("manage_tables", tableController.updatePositionHandler))
   .all(httpMethodError);
 
+router
+  .route("/:id/delete")
+  .delete(...writeRoute("manage_tables", tableController.deleteHandler))
+  .all(httpMethodError);
+
 module.exports = router;

@@ -263,6 +263,21 @@ const unmergeTable = async (tableId) => {
   return { unmergedTableIds: mergedTables.map((t) => t.id) };
 };
 
+const deleteTable = async (tableId) => {
+  const table = await findTableById(tableId);
+  if (!table) {
+    throw { status: 404, message: "Table not found!" };
+  }
+  if (table.isOccupied || table.reservationId) {
+    throw { status: 400, message: "Cannot delete an occupied table!" };
+  }
+  if (table.parentTableId) {
+    throw { status: 400, message: "Unmerge this table before deleting it!" };
+  }
+  await table.destroy();
+  return { id: tableId };
+};
+
 module.exports = {
   findAllTables,
   createTable,
@@ -274,4 +289,5 @@ module.exports = {
   assignStaffToTable,
   unassignStaffFromTable,
   updateTablePosition,
+  deleteTable,
 };
