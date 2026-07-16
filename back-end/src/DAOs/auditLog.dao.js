@@ -66,6 +66,8 @@ const formatAction = (action) => {
     cancel: "Cancelled",
     login: "Logged In",
     logout: "Logged Out",
+    auth_failed: "Auth Failed",
+    read: "Viewed",
   };
   return map[action.toLowerCase()] || action;
 };
@@ -82,8 +84,70 @@ const formatEntityType = (type) => {
     payment: "Payment",
     schedule: "Schedule",
     setting: "Setting",
+    waitlist: "Waitlist Entry",
+    report: "Report",
+    audit_log: "Audit Log",
+    rbac: "RBAC",
+    auth: "Authentication",
   };
   return map[type.toLowerCase()] || type;
+};
+
+const FIELD_LABELS = {
+  resDate: "date",
+  resTime: "time",
+  resStatus: "status",
+  paymentStatus: "payment status",
+  expectedTotal: "expected total",
+  people: "party size",
+  notes: "notes",
+  customerName: "customer name",
+  customerEmail: "customer email",
+  customerPhone: "customer phone",
+  firstName: "first name",
+  lastName: "last name",
+  email: "email",
+  phone: "phone",
+  name: "name",
+  role: "role",
+  permissions: "permissions",
+  groupId: "group",
+  tableId: "table",
+  reservationId: "reservation",
+  amount: "amount",
+  method: "payment method",
+  discount: "discount",
+  paidBy: "paid by",
+  reference: "reference",
+  isClosed: "closed status",
+  description: "description",
+  dayOfWeek: "day",
+  openingTime: "opening time",
+  closingTime: "closing time",
+  value: "value",
+  key: "setting",
+};
+
+const formatValue = (value) => {
+  if (value === null || value === undefined) return "none";
+  if (typeof value === "boolean") return value ? "yes" : "no";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+};
+
+const formatFieldChanges = (body) => {
+  const entries = Object.entries(body).filter(([, v]) => v !== null && v !== undefined && v !== "");
+  if (!entries.length) return null;
+
+  const parts = entries.map(([key, value]) => {
+    const label = FIELD_LABELS[key] || key.replace(/([A-Z])/g, " $1").toLowerCase().trim();
+    return `${label} to ${formatValue(value)}`;
+  });
+
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  const last = parts.pop();
+  return `${parts.join(", ")}, and ${last}`;
 };
 
 const formatChanges = (changes) => {
@@ -102,11 +166,12 @@ const formatChanges = (changes) => {
     const bodyParts = [];
     for (const [key, value] of Object.entries(changes.body)) {
       if (value !== null && value !== undefined && value !== "") {
-        bodyParts.push(`${key}: ${value}`);
+        const label = FIELD_LABELS[key] || key.replace(/([A-Z])/g, " $1").toLowerCase().trim();
+        bodyParts.push(`${label} to ${formatValue(value)}`);
       }
     }
     if (bodyParts.length) {
-      parts.push(`Updated ${bodyParts.join(", ")}`);
+      parts.push(bodyParts.join(", "));
     }
   }
 
@@ -118,11 +183,12 @@ const formatChanges = (changes) => {
       }
     }
     if (paramParts.length) {
-      parts.push(`Parameters: ${paramParts.join(", ")}`);
+      parts.push(`parameters: ${paramParts.join(", ")}`);
     }
   }
 
-  return parts.join("; ") || "No details available";
+  if (!parts.length) return "No details available";
+  return parts.join("; ");
 };
 
 module.exports = {
