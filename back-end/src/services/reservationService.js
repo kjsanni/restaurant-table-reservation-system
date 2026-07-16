@@ -1,4 +1,5 @@
 const dateTimeValidator = require("../utils/dateAndTimeValidator");
+const scheduleService = require("./scheduleService");
 
 const getAllReservations = async (reservationDAO, filters = {}) => {
   if (Object.keys(filters).length > 0) {
@@ -60,6 +61,21 @@ const registerReservation = async (reservationDAO, payload) => {
   isFieldEmpty(payload);
   validateTime(new Date(), payload.resDate, payload.resTime);
 
+  // Enforce opening hours, closed days, and holiday closures before creating.
+  try {
+    const scheduleDAO = require("../DAOs/schedule.dao");
+    const holidayDAO = require("../DAOs/holiday.dao");
+    await scheduleService.checkScheduleAvailability(
+      scheduleDAO,
+      holidayDAO,
+      payload.resDate,
+      payload.resTime
+    );
+  } catch (err) {
+    if (err && err.status) throw err;
+    throw { status: 500, message: "Unable to verify schedule availability." };
+  }
+
   const customer = await reservationDAO.findOrCreateCustomer({
     email: payload.email,
     firstName: payload.firstName,
@@ -113,33 +129,26 @@ const chooseTable = async (
   const currDate = new Date();
   const currDateStr = dateTimeValidator.asDateString(currDate);
 
-  if (compareResDateToCurrDate(reservation.resDate, currDateStr) === -1) {
-    await reservationDAO.setReservationStatus(reservation, "missed");
+  // Past reservation day (and not already resolved) => mark as missed.
+  if (
+    compareResDateToCurrDate(reservation.resDate, currDateStr) === -1 &&
+    reservation.resStatus !== "missed" &&
+    reservation.resStatus !== "cancelled"
+  ) {
+    reservation = await reservationDAO.setReservationStatus(reservation, "missed");
   }
 
-  /**
-   * if the reservation day is in the past (compared to current date)
-   *  => update the reservation's status to 'missed'
-   */
-
-  if (compareResDateToCurrDate(reservation.resDate, currDateStr) === -1) {
-    await reservationDAO.setReservationStatus(reservation, "missed");
-  }
-
-  /**
-   * If the reservation day is equal to current day
-   *  and reservation time is the past (compared to current date - 30 minutes)
-   *  => update the reservation's status to missed
-   */
+  // Same-day reservation whose time has passed the 30-minute grace window => missed.
   if (compareResDateToCurrDate(reservation.resDate, currDateStr) === 0) {
-    const twoMinsAgo = new Date(currDate);
-    twoMinsAgo.setMinutes(twoMinsAgo.getMinutes() - 2);
-    const currTimePlus2minsStr = dateTimeValidator.asTimeString(twoMinsAgo);
-    if (currTimePlus2minsStr > reservation?.resTime) {
-      reservation = await reservationDAO.setReservationStatus(
-        reservation,
-        "missed"
-      );
+    const graceEnd = new Date(currDate);
+    graceEnd.setMinutes(graceEnd.getMinutes() - 30);
+    const graceEndStr = dateTimeValidator.asTimeString(graceEnd);
+    if (
+      graceEndStr > reservation.resTime &&
+      reservation.resStatus !== "seated" &&
+      reservation.resStatus !== "cancelled"
+    ) {
+      reservation = await reservationDAO.setReservationStatus(reservation, "missed");
     }
   }
   /**

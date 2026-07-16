@@ -2,6 +2,7 @@
 import PageHeader from "@/components/PageHeader.vue";
 import { ref, computed, onMounted, watch } from "vue";
 import reservationAPI from "@/services/reservationAPI";
+import dateNavigator from "@/utils/dateNavigator";
 
 const loading = ref(true);
 const series = ref([]);
@@ -38,8 +39,8 @@ const getDateRange = () => {
   const from = new Date();
   from.setDate(to.getDate() - days);
   return {
-    from: from.toISOString().split("T")[0],
-    to: to.toISOString().split("T")[0],
+    from: dateNavigator.asDateString(from),
+    to: dateNavigator.asDateString(to),
   };
 };
 

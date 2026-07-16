@@ -88,7 +88,7 @@ const getFieldValue = (item, fieldKey) => {
 
         <div
           class="res-actions"
-          v-if="['pending', 'missed'].includes(item.resStatus)"
+          v-if="ACTIVE_STATUSES.includes(item.resStatus)"
         >
           <ButtonAction
             text="Seat"

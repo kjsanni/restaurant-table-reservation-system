@@ -1,5 +1,7 @@
 const getErrorMessagesByColumn = require("../utils/getErrorMessages");
 
+const isClientError = (status) => status >= 400 && status < 500;
+
 const errorHandler = (err, req, res, next) => {
   if (err.name === "SequelizeValidationError") {
     return res.status(400).json({
@@ -23,7 +25,23 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  return res.status(err?.status || 500).json({
+  const status = err?.status || 500;
+  // Never leak internal error details (SQL, stack) on server errors.
+  // Log the full error server-side; return a safe message to the client.
+  if (!isClientError(status)) {
+    console.error("Unhandled server error:", {
+      method: req.method,
+      path: req.originalUrl,
+      message: err?.message,
+      stack: err?.stack,
+    });
+    return res.status(status).json({
+      success: false,
+      message: "Something went wrong. Please try again later.",
+    });
+  }
+
+  return res.status(status).json({
     success: false,
     message: err?.message || "Something went wrong. Please try again later.",
   });

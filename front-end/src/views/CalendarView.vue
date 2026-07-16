@@ -7,6 +7,8 @@ import tableAPI from "@/services/tableAPI";
 import groupAPI from "@/services/groupAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
+import dateNavigator from "@/utils/dateNavigator";
+import { statusColor, shortName } from "@/utils/reservationDisplay";
 import PageHeader from "@/components/PageHeader.vue";
 import {
   paymentOptions,
@@ -108,7 +110,7 @@ const buildCalendarDays = (year, month) => {
 
   for (let day = 1; day <= lastDay.getDate(); day++) {
     const date = new Date(year, month, day);
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = dateNavigator.asDateString(date);
     const dayOfWeek = date
       .toLocaleDateString("en-US", { weekday: "long" })
       .toLowerCase();
@@ -164,28 +166,6 @@ const nextMonth = () => {
     1
   );
   loadSchedule();
-};
-
-const statusColor = (status) => {
-  switch (status) {
-    case "seated":
-      return "#22c55e";
-    case "cancelled":
-      return "#ef4444";
-    case "missed":
-      return "#f59e0b";
-    default:
-      return "#3b82f6";
-  }
-};
-
-const shortName = (name) => {
-  if (!name) return "Guest";
-  const parts = name.split(" ");
-  if (parts.length >= 2) {
-    return parts[0][0] + "." + parts[1][0] + ".";
-  }
-  return parts[0].slice(0, 8);
 };
 
 const actionTitle = computed(() => {
@@ -607,7 +587,7 @@ const handleReschedule = async () => {
                         class="diagram-dot"
                         :style="{
                           backgroundColor: statusColor(
-                            res.resStatus || 'pending'
+                            res.resStatus || RESERVATION_STATUS.PENDING
                           ),
                         }"
                       ></span>
@@ -621,7 +601,7 @@ const handleReschedule = async () => {
                           class="timeline-status"
                           :style="{
                             backgroundColor: statusColor(
-                              res.resStatus || 'pending'
+                              res.resStatus || RESERVATION_STATUS.PENDING
                             ),
                           }"
                         >

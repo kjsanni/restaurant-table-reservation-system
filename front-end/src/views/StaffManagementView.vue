@@ -53,7 +53,10 @@ const loadRoles = async () => {
   rolesLoading.value = true;
   try {
     const res = await roleAPI.getAllRoles();
-    roles.value = res.data.roles || [];
+    const roleList = res.data.roles || [];
+    roles.value = roleList
+      .map((r) => (typeof r === "string" ? r : r.name))
+      .filter(Boolean);
   } catch (err) {
     logger.error("Failed to load roles", { error: err.message });
   } finally {
@@ -61,23 +64,37 @@ const loadRoles = async () => {
   }
 };
 
+const formError = ref("");
+const saving = ref(false);
+
 const addStaff = async () => {
-  await authAPI.createStaff(newStaff.value);
-  showAddDialog.value = false;
-  newStaff.value = {
-    username: "",
-    email: "",
-    password: "",
-    role: "staff",
-    permissions: {
-      view_reservations: true,
-      edit_reservations: true,
-      manage_tables: true,
-      manage_schedule: false,
-      manage_staff: false,
-    },
-  };
-  await loadStaff();
+  formError.value = "";
+  saving.value = true;
+  try {
+    await authAPI.createStaff(newStaff.value);
+    showAddDialog.value = false;
+    newStaff.value = {
+      username: "",
+      email: "",
+      password: "",
+      role: "staff",
+      permissions: {
+        view_reservations: true,
+        edit_reservations: true,
+        manage_tables: true,
+        manage_schedule: false,
+        manage_staff: false,
+      },
+    };
+    await loadStaff();
+  } catch (err) {
+    formError.value =
+      err.response?.data?.message ||
+      "Failed to add staff member. Please try again.";
+    logger.error("Failed to add staff", { error: err.message });
+  } finally {
+    saving.value = false;
+  }
 };
 
 const updatePermission = async (staffMember, permission, value) => {
@@ -180,6 +197,10 @@ const deleteStaffMember = async (id) => {
               placeholder="Password"
               class="modal-input"
             />
+            <p class="field-hint">
+              Minimum 12 characters, with uppercase, lowercase, number and
+              special character.
+            </p>
           </div>
           <div class="field">
             <label>Role</label>
@@ -189,11 +210,18 @@ const deleteStaffMember = async (id) => {
               </option>
             </select>
           </div>
+          <div v-if="formError" class="form-error">{{ formError }}</div>
           <div class="modal-actions">
             <button class="btn btn-secondary" @click="showAddDialog = false">
               Cancel
             </button>
-            <button class="btn btn-primary" @click="addStaff">Add</button>
+            <button
+              class="btn btn-primary"
+              :disabled="saving"
+              @click="addStaff"
+            >
+              {{ saving ? "Adding..." : "Add" }}
+            </button>
           </div>
         </div>
       </div>
@@ -428,6 +456,25 @@ const deleteStaffMember = async (id) => {
 
 .field {
   margin-bottom: 16px;
+}
+
+.field-hint {
+  margin: 6px 0 0 0;
+  font-family: "Inter-Light";
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
+
+.form-error {
+  margin: 0 0 16px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background-color: #fef2f2;
+  color: #dc2626;
+  font-family: "Inter-Medium";
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .field label {

@@ -1,12 +1,12 @@
 const sanitizeString = (value) => {
   if (typeof value !== "string") return value;
-  return value
-    .replace(/[<>]/g, "")
-    .replace(/javascript:/gi, "")
-    .replace(/vbscript:/gi, "")
-    .replace(/data:/gi, "")
-    .replace(/on\w+\s*=/gi, "")
-    .trim();
+  // Remove only control characters (incl. null bytes) that output encoding
+  // cannot neutralise. We deliberately do NOT strip `<>`, `on\w+=`, or URI
+  // schemes here: that is denylist-based input mangling that corrupts
+  // legitimate content (e.g. "2 < 3 guests") and gives a false sense of
+  // safety. XSS defence is provided by output encoding (Vue auto-escapes
+  // `{{ }}`, and the one v-html usage is sandboxed via iframe srcdoc).
+  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").trim();
 };
 
 const sanitizeObject = (obj) => {

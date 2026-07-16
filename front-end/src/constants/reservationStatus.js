@@ -1,0 +1,12 @@
+const RESERVATION_STATUS = {
+  PENDING: "pending",
+  SEATED: "seated",
+  MISSED: "missed",
+  CANCELLED: "cancelled",
+  COMPLETED: "completed",
+};
+
+const ACTIVE_STATUSES = [RESERVATION_STATUS.PENDING, RESERVATION_STATUS.MISSED];
+
+export { RESERVATION_STATUS, ACTIVE_STATUSES };
+export default RESERVATION_STATUS;

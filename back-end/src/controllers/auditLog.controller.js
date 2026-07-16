@@ -1,10 +1,15 @@
 const auditLogDAO = require("../DAOs/auditLog.dao");
 
 const getLogsHandler = async (req, res) => {
-  const logs = await auditLogDAO.getAllLogs();
+  const { page, pageSize } = req.query;
+  const result = await auditLogDAO.getAllLogs({ page, pageSize });
   return res.status(200).json({
     success: true,
-    logs,
+    logs: result.logs,
+    total: result.total,
+    page: result.page,
+    pageSize: result.pageSize,
+    totalPages: result.totalPages,
   });
 };
 

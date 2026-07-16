@@ -13,10 +13,15 @@ const createLog = async ({ action, entityType, entityId, userId, changes, ipAddr
   });
 };
 
-const getAllLogs = async () => {
-  const logs = await AuditLog.findAll({
+const getAllLogs = async ({ page = 1, pageSize = 25 } = {}) => {
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+  const safeSize = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25));
+  const offset = (safePage - 1) * safeSize;
+
+  const { count, rows } = await AuditLog.findAndCountAll({
     order: [["createdAt", "DESC"]],
-    limit: 100,
+    limit: safeSize,
+    offset,
     include: [
       {
         model: User,
@@ -27,7 +32,7 @@ const getAllLogs = async () => {
     ],
   });
 
-  return logs.map((log) => {
+  const logs = rows.map((log) => {
     const plain = log.toJSON();
     const user = plain.user || {};
     return {
@@ -42,6 +47,14 @@ const getAllLogs = async () => {
       ipAddress: plain.ipAddress,
     };
   });
+
+  return {
+    logs,
+    total: count,
+    page: safePage,
+    pageSize: safeSize,
+    totalPages: Math.ceil(count / safeSize),
+  };
 };
 
 const formatAction = (action) => {

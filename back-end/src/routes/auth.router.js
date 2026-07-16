@@ -12,7 +12,7 @@ router
   .get(tryCatchHandler(authController.registerStatusHandler))
   .all(httpMethodError);
 
-router.route("/register").post(authLimiter, tryCatchHandler(authController.registerHandler));
+router.route("/register").post(...writeRoute("", authController.registerHandler));
 
 router.route("/login").post(authLimiter, tryCatchHandler(authController.loginHandler));
 

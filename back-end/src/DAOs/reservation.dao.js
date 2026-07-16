@@ -290,6 +290,24 @@ const setReservationTable = async (
   tableId,
   { neededTables = 1 } = {}
 ) => {
+  const reservation = await Reservation.findByPk(reservationId);
+  if (!reservation) {
+    throw { status: 404, message: "Reservation not found!" };
+  }
+
+  const chosenTable = await Table.findByPk(tableId);
+  if (!chosenTable) {
+    throw { status: 404, message: "Table not found!" };
+  }
+
+  // Validate the chosen table can actually seat the party before occupying it.
+  if (chosenTable.capacity && reservation.people > chosenTable.capacity) {
+    throw {
+      status: 400,
+      message: `Table ${chosenTable.name || tableId} seats ${chosenTable.capacity} but party size is ${reservation.people}.`,
+    };
+  }
+
   const allFree = await Table.findAll({
     where: {
       isOccupied: false,
@@ -307,44 +325,35 @@ const setReservationTable = async (
 
   const linkedTableIds = selected.filter((id) => id !== tableId);
 
-  await Table.update(
-    {
-      isOccupied: true,
-      reservationId: reservationId,
-      linkedTableIds:
-        linkedTableIds.length > 0 ? linkedTableIds : null,
-    },
-    {
-      where: {
-        id: tableId,
-      },
-    }
-  );
-
-  if (linkedTableIds.length > 0) {
+  // Wrap all occupancy + status writes in a transaction so a partial failure
+  // cannot leave tables in an inconsistent state.
+  return await db.sequelize.transaction(async (t) => {
     await Table.update(
       {
         isOccupied: true,
         reservationId: reservationId,
+        linkedTableIds: linkedTableIds.length > 0 ? linkedTableIds : null,
       },
-      {
-        where: {
-          id: linkedTableIds,
-        },
-      }
+      { where: { id: tableId }, transaction: t }
     );
-  }
 
-  return await Reservation.update(
-    {
-      resStatus: "seated",
-    },
-    {
-      where: {
-        id: reservationId,
-      },
+    if (linkedTableIds.length > 0) {
+      await Table.update(
+        {
+          isOccupied: true,
+          reservationId: reservationId,
+        },
+        { where: { id: linkedTableIds }, transaction: t }
+      );
     }
-  );
+
+    await Reservation.update(
+      { resStatus: "seated" },
+      { where: { id: reservationId }, transaction: t }
+    );
+
+    return reservation;
+  });
 };
 
 const getReservationsHeatmap = async () => {

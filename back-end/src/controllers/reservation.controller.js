@@ -2,6 +2,31 @@ const reservationService = require("../services/reservationService");
 const reservationDAO = require("../DAOs/reservation.dao");
 const tableDAO = require("../DAOs/table.dao");
 
+// Fields a client is permitted to update on a reservation. Any other key in the
+// request body is stripped to prevent mass-assignment of status/payment totals.
+const EDITABLE_RESERVATION_FIELDS = [
+  "resDate",
+  "resTime",
+  "people",
+  "notes",
+  "customerName",
+  "customerEmail",
+  "customerPhone",
+  "expectedTotal",
+  "paymentStatus",
+  "resStatus",
+];
+
+const pickEditableFields = (source) => {
+  const picked = {};
+  for (const key of EDITABLE_RESERVATION_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      picked[key] = source[key];
+    }
+  }
+  return picked;
+};
+
 const getAllHandler = async (req, res) => {
   const filters = {};
   if (req.query.q) filters.q = req.query.q;
@@ -34,7 +59,7 @@ const registerHandler = async (req, res) => {
 };
 
 const editHandler = async (req, res) => {
-  const payload = req.body;
+  const payload = pickEditableFields(req.body);
   const reservationId = req.params.reservationId;
   const reservation = await reservationService.editReservation(
     reservationId,
@@ -147,7 +172,15 @@ const bulkUpdateHandler = async (req, res) => {
     });
   }
 
-  const results = await reservationDAO.bulkUpdate(ids, updates);
+  const safeUpdates = pickEditableFields(updates);
+  if (Object.keys(safeUpdates).length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "No allowed fields provided for update.",
+    });
+  }
+
+  const results = await reservationDAO.bulkUpdate(ids, safeUpdates);
   return res.status(200).json({
     success: true,
     message: `Updated ${results.count} reservations`,

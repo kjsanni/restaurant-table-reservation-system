@@ -33,39 +33,17 @@ const protect = async (req, res, next) => {
 
     const permissions = user.permissions || {};
     if (!permissions || Object.keys(permissions).length === 0) {
-      const defaults = {
-        admin: {
-          view_reservations: true,
-          edit_reservations: true,
-          manage_tables: true,
-          manage_schedule: true,
-          manage_staff: true,
-          manage_roles: true,
-          manage_groups: true,
-          view_audit_logs: true,
-        },
-        manager: {
-          view_reservations: true,
-          edit_reservations: true,
-          manage_tables: true,
-          manage_schedule: true,
-          manage_staff: false,
-          manage_roles: false,
-          manage_groups: false,
-          view_audit_logs: true,
-        },
-        staff: {
-          view_reservations: true,
-          edit_reservations: true,
-          manage_tables: true,
-          manage_schedule: false,
-          manage_staff: false,
-          manage_roles: false,
-          manage_groups: false,
-          view_audit_logs: false,
-        },
-      };
-      user.permissions = defaults[user.role] || defaults.staff;
+      // Derive effective permissions strictly from the RBAC model
+      // (role + group + user grants) so permissions are never implicitly
+      // granted by role name. Falls back to an empty set when no grants exist.
+      try {
+        const roleDAO = require("../DAOs/role.dao");
+        const effective = await roleDAO.getRolePermissions(user.id);
+        user.permissions = effective && Object.keys(effective).length > 0 ? effective : {};
+      } catch (err) {
+        console.warn("RBAC lookup failed, denying implicit permissions:", err.message);
+        user.permissions = {};
+      }
     }
 
     req.user = user;

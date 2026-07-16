@@ -34,8 +34,17 @@ const logAction = async (req, res, next) => {
 
     let entityType = "unknown";
     if (route.includes("reservations")) entityType = "reservation";
+    else if (route.includes("waitlist")) entityType = "waitlist";
     else if (route.includes("tables")) entityType = "table";
     else if (route.includes("schedule")) entityType = "schedule";
+    else if (route.includes("payments")) entityType = "payment";
+    else if (route.includes("reports")) entityType = "report";
+    else if (route.includes("audit-logs")) entityType = "audit_log";
+    else if (route.includes("rbac/roles")) entityType = "role";
+    else if (route.includes("rbac/groups")) entityType = "group";
+    else if (route.includes("rbac")) entityType = "rbac";
+    else if (route.includes("customers")) entityType = "customer";
+    else if (route.includes("settings")) entityType = "setting";
     else if (route.includes("staff")) entityType = "user";
 
     try {

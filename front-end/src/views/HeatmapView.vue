@@ -2,16 +2,17 @@
 import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted } from "vue";
 import Heatmap2D from "@/components/Heatmap2D.vue";
+import dateNavigator from "@/utils/dateNavigator";
 
 const mode = ref("date-hour");
 const from = ref(null);
 const to = ref(null);
 
 onMounted(() => {
-  const today = new Date().toISOString().split("T")[0];
+  const today = dateNavigator.asDateString(new Date());
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  from.value = thirtyDaysAgo.toISOString().split("T")[0];
+  from.value = dateNavigator.asDateString(thirtyDaysAgo);
   to.value = today;
 });
 </script>

@@ -5,6 +5,10 @@ import auditAPI from "@/services/auditAPI";
 
 const logs = ref([]);
 const loading = ref(true);
+const page = ref(1);
+const pageSize = ref(25);
+const total = ref(0);
+const totalPages = ref(0);
 
 onMounted(async () => {
   await loadLogs();
@@ -13,13 +17,25 @@ onMounted(async () => {
 const loadLogs = async () => {
   loading.value = true;
   try {
-    const res = await auditAPI.getAuditLogs();
+    const res = await auditAPI.getAuditLogs({
+      page: page.value,
+      pageSize: pageSize.value,
+    });
     logs.value = res.data.logs;
+    total.value = res.data.total || 0;
+    totalPages.value = res.data.totalPages || 0;
   } catch (err) {
     console.error("Failed to load audit logs", err);
   } finally {
     loading.value = false;
   }
+};
+
+const goToPage = async (next) => {
+  const target = Math.min(Math.max(1, next), totalPages.value || 1);
+  if (target === page.value) return;
+  page.value = target;
+  await loadLogs();
 };
 
 const formatDate = (date) => {
@@ -118,6 +134,27 @@ const readMore = (text, maxLength = 60) => {
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <div v-if="totalPages > 1" class="pager">
+          <button
+            class="pager-btn"
+            :disabled="page <= 1"
+            @click="goToPage(page - 1)"
+          >
+            Previous
+          </button>
+          <span class="pager-info">
+            Page {{ page }} of {{ totalPages }}
+            <span class="pager-total">({{ total }} entries)</span>
+          </span>
+          <button
+            class="pager-btn"
+            :disabled="page >= totalPages"
+            @click="goToPage(page + 1)"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
@@ -312,5 +349,46 @@ const readMore = (text, maxLength = 60) => {
   text-align: center;
   color: var(--ink-muted);
   padding: var(--space-10);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.pager-btn {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-in-out);
+}
+
+.pager-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pager-btn:not(:disabled):hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pager-info {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+}
+
+.pager-total {
+  color: var(--ink-muted);
 }
 </style>

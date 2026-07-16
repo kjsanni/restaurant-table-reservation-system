@@ -3,14 +3,14 @@ const router = express.Router();
 const tryCatchHandler = require("../middleware/tryCatch");
 const httpMethodError = require("../middleware/httpMethodError");
 const waitlistController = require("../controllers/waitlist.controller");
-const { protect, staff, staffOnly, requirePermission } = require("../middleware/auth");
+const { protect, staff, requirePermission } = require("../middleware/auth");
 const { validateCsrfToken } = require("../middleware/csrf");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 
 router
   .route("/")
   .get(...protectedRoute("manage_tables", waitlistController.getAllHandler))
-  .post(tryCatchHandler(staffOnly), validateCsrfToken, tryCatchHandler(waitlistController.createHandler))
+  .post(tryCatchHandler(protect), tryCatchHandler(staff), validateCsrfToken, tryCatchHandler(waitlistController.createHandler))
   .all(httpMethodError);
 
 router
@@ -25,7 +25,7 @@ router
 
 router
   .route("/from-reservation/:reservationId")
-  .post(tryCatchHandler(staffOnly), validateCsrfToken, tryCatchHandler(waitlistController.createFromReservationHandler))
+  .post(tryCatchHandler(protect), tryCatchHandler(staff), validateCsrfToken, tryCatchHandler(waitlistController.createFromReservationHandler))
   .all(httpMethodError);
 
 router
