@@ -1,6 +1,7 @@
 const db = require("../db/models");
 const AuditLog = db.auditLog;
 const User = db.user;
+const { Op } = db.Sequelize;
 
 const createLog = async ({ action, entityType, entityId, userId, changes, ipAddress }) => {
   return await AuditLog.create({
@@ -13,13 +14,36 @@ const createLog = async ({ action, entityType, entityId, userId, changes, ipAddr
   });
 };
 
-const getAllLogs = async ({ page = 1, pageSize = 25 } = {}) => {
+const buildWhere = (filters = {}) => {
+  const where = {};
+  if (filters.from) where.createdAt = { ...where.createdAt, [Op.gte]: filters.from };
+  if (filters.to) where.createdAt = { ...where.createdAt, [Op.lte]: filters.to };
+  if (filters.action) where.action = filters.action;
+  if (filters.entityType) where.entityType = filters.entityType;
+  if (filters.userId) where.userId = filters.userId;
+  if (filters.search) {
+    where[Op.or] = [
+      { changes: { [Op.like]: `%${filters.search}%` } },
+      { ipAddress: { [Op.like]: `%${filters.search}%` } },
+    ];
+  }
+  return where;
+};
+
+const getAllLogs = async (filters = {}, { page = 1, pageSize = 25, sortBy = "createdAt", sortOrder = "DESC" } = {}) => {
   const safePage = Math.max(1, parseInt(page, 10) || 1);
   const safeSize = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25));
   const offset = (safePage - 1) * safeSize;
 
+  const allowedSortColumns = ["createdAt", "action", "entityType", "userId", "ipAddress"];
+  const orderColumn = allowedSortColumns.includes(sortBy) ? sortBy : "createdAt";
+  const orderDirection = sortOrder === "ASC" ? "ASC" : "DESC";
+
+  const where = buildWhere(filters);
+
   const { count, rows } = await AuditLog.findAndCountAll({
-    order: [["createdAt", "DESC"]],
+    where,
+    order: [[orderColumn, orderDirection]],
     limit: safeSize,
     offset,
     include: [
@@ -55,6 +79,80 @@ const getAllLogs = async ({ page = 1, pageSize = 25 } = {}) => {
     pageSize: safeSize,
     totalPages: Math.ceil(count / safeSize),
   };
+};
+
+const getLogStats = async (filters = {}) => {
+  const where = buildWhere(filters);
+
+  const [actionStats, entityStats, userStats] = await Promise.all([
+    AuditLog.findAll({
+      attributes: [
+        "action",
+        [AuditLog.sequelize.fn("COUNT", AuditLog.sequelize.col("id")), "count"],
+      ],
+      where,
+      group: ["action"],
+      raw: true,
+    }),
+    AuditLog.findAll({
+      attributes: [
+        "entityType",
+        [AuditLog.sequelize.fn("COUNT", AuditLog.sequelize.col("id")), "count"],
+      ],
+      where,
+      group: ["entityType"],
+      raw: true,
+    }),
+    AuditLog.findAll({
+      attributes: [
+        "userId",
+        [AuditLog.sequelize.fn("COUNT", AuditLog.sequelize.col("id")), "count"],
+      ],
+      where,
+      group: ["userId"],
+      order: [[AuditLog.sequelize.fn("COUNT", AuditLog.sequelize.col("id")), "DESC"]],
+      limit: 10,
+      raw: true,
+    }),
+  ]);
+
+  return {
+    byAction: actionStats.map((row) => ({ action: row.action, count: parseInt(row.count, 10) })),
+    byEntity: entityStats.map((row) => ({ entityType: row.entityType, count: parseInt(row.count, 10) })),
+    topUsers: userStats.map((row) => ({ userId: row.userId || "System", count: parseInt(row.count, 10) })),
+    total: actionStats.reduce((sum, row) => sum + parseInt(row.count, 10), 0),
+  };
+};
+
+const bulkDeleteLogs = async (ids = []) => {
+  if (!Array.isArray(ids) || ids.length === 0) return 0;
+  const safeIds = ids.map((id) => parseInt(id, 10)).filter((id) => !Number.isNaN(id) && id > 0);
+  if (!safeIds.length) return 0;
+  const deleted = await AuditLog.destroy({ where: { id: safeIds } });
+  return typeof deleted === "number" ? deleted : 0;
+};
+
+const exportLogsCSV = async (filters = {}) => {
+  const { logs } = await getAllLogs(filters, { page: 1, pageSize: 1000 });
+  const header = ["ID", "Created At", "User", "Action", "Entity", "Entity ID", "Changes", "IP Address"];
+  const csvCell = (value) => {
+    const str = value === null || value === undefined ? "" : String(value);
+    const needsQuote = /[",\n]/.test(str) || /^=[+\-@]/.test(str);
+    const safe = str.replace(/"/g, '""');
+    return needsQuote ? `"${safe}"` : safe;
+  };
+  let csv = header.map(csvCell).join(",") + "\n";
+  logs.forEach((log) => {
+    csv += [log.id, log.createdAt, log.userId, log.action, log.entityType, log.entityId || "", log.changes || "", log.ipAddress || ""]
+      .map(csvCell)
+      .join(",") + "\n";
+  });
+  return csv;
+};
+
+const exportLogsJSON = async (filters = {}) => {
+  const { logs } = await getAllLogs(filters, { page: 1, pageSize: 1000 });
+  return JSON.stringify(logs, null, 2);
 };
 
 const formatAction = (action) => {
@@ -194,4 +292,9 @@ const formatChanges = (changes) => {
 module.exports = {
   createLog,
   getAllLogs,
+  getLogStats,
+  bulkDeleteLogs,
+  exportLogsCSV,
+  exportLogsJSON,
+  buildWhere,
 };

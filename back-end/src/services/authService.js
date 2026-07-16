@@ -168,8 +168,9 @@ const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = n
         manage_schedule: true,
         manage_staff: true,
         manage_roles: true,
-        manage_groups: true,
-        view_audit_logs: true,
+          manage_groups: true,
+          view_audit_logs: true,
+          manage_audit_logs: true,
       },
       manager: {
         view_reservations: true,
@@ -180,6 +181,7 @@ const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = n
         manage_roles: false,
         manage_groups: false,
         view_audit_logs: true,
+        manage_audit_logs: true,
       },
       staff: {
         view_reservations: true,
@@ -190,6 +192,7 @@ const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = n
         manage_roles: false,
         manage_groups: false,
         view_audit_logs: false,
+        manage_audit_logs: false,
       },
     };
     permissions = defaults[user.role] || defaults.staff;

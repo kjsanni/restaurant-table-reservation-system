@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PageHeader from "@/components/PageHeader.vue";
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import auditAPI from "@/services/auditAPI";
 
 const logs = ref([]);
@@ -13,7 +13,23 @@ const totalPages = ref(0);
 const searchQuery = ref("");
 const actionFilter = ref("all");
 const entityFilter = ref("all");
+const dateFrom = ref("");
+const dateTo = ref("");
 const expandedRows = ref<Set<number>>(new Set());
+const selectedIds = ref<Set<number>>(new Set());
+
+const sortBy = ref("createdAt");
+const sortOrder = ref<"ASC" | "DESC">("DESC");
+
+const stats = ref({
+  byAction: [],
+  byEntity: [],
+  topUsers: [],
+  total: 0,
+});
+const showStats = ref(false);
+
+let pollInterval = null;
 
 const availableActions = computed(() => {
   const actions = new Set(logs.value.map((log) => log.action));
@@ -26,56 +42,86 @@ const availableEntities = computed(() => {
 });
 
 const filteredLogs = computed(() => {
-  let result = [...logs.value];
+  return [...logs.value];
+});
 
-  if (searchQuery.value.trim()) {
-    const query = searchQuery.value.trim().toLowerCase();
-    result = result.filter((log) => {
-      const searchable = [
-        log.userId,
-        log.action,
-        log.entityType,
-        log.changes,
-        log.ipAddress,
-        log.userRole,
-      ];
-      return searchable.some(
-        (field) =>
-          field &&
-          String(field).toLowerCase().includes(query)
-      );
-    });
+const selectedCount = computed(() => selectedIds.value.size);
+const allSelected = computed(() => filteredLogs.value.length > 0 && selectedIds.value.size === filteredLogs.value.length);
+
+watch(
+  [searchQuery, actionFilter, entityFilter, dateFrom, dateTo, sortBy, sortOrder],
+  () => {
+    page.value = 1;
+    loadLogs();
   }
+);
 
-  if (actionFilter.value !== "all") {
-    result = result.filter((log) => log.action === actionFilter.value);
+watch(showStats, async (val) => {
+  if (val) {
+    await loadStats();
   }
-
-  if (entityFilter.value !== "all") {
-    result = result.filter((log) => log.entityType === entityFilter.value);
-  }
-
-  return result;
 });
 
 onMounted(async () => {
   await loadLogs();
+  startPolling();
 });
 
-const loadLogs = async () => {
-  loading.value = true;
+onUnmounted(() => {
+  stopPolling();
+});
+
+const startPolling = () => {
+  stopPolling();
+  pollInterval = setInterval(async () => {
+    await loadLogs(false);
+  }, 30000);
+};
+
+const stopPolling = () => {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
+};
+
+const loadLogs = async (showLoading = true) => {
+  if (showLoading) loading.value = true;
   try {
-    const res = await auditAPI.getAuditLogs({
+    const params: any = {
       page: page.value,
       pageSize: pageSize.value,
-    });
+      sortBy: sortBy.value,
+      sortOrder: sortOrder.value,
+    };
+    if (searchQuery.value.trim()) params.search = searchQuery.value.trim();
+    if (actionFilter.value !== "all") params.action = actionFilter.value;
+    if (entityFilter.value !== "all") params.entityType = entityFilter.value;
+    if (dateFrom.value) params.from = dateFrom.value;
+    if (dateTo.value) params.to = dateTo.value;
+
+    const res = await auditAPI.getAuditLogs(params);
     logs.value = res.data.logs;
     total.value = res.data.total || 0;
     totalPages.value = res.data.totalPages || 0;
   } catch (err) {
     console.error("Failed to load audit logs", err);
   } finally {
-    loading.value = false;
+    if (showLoading) loading.value = false;
+  }
+};
+
+const loadStats = async () => {
+  try {
+    const params: any = {};
+    if (dateFrom.value) params.from = dateFrom.value;
+    if (dateTo.value) params.to = dateTo.value;
+    if (actionFilter.value !== "all") params.action = actionFilter.value;
+    if (entityFilter.value !== "all") params.entityType = entityFilter.value;
+
+    stats.value = await auditAPI.getStats(params);
+  } catch (err) {
+    console.error("Failed to load stats", err);
   }
 };
 
@@ -83,6 +129,7 @@ const goToPage = async (next) => {
   const target = Math.min(Math.max(1, next), totalPages.value || 1);
   if (target === page.value) return;
   page.value = target;
+  selectedIds.value.clear();
   await loadLogs();
 };
 
@@ -97,6 +144,104 @@ const toggleRow = (id: number) => {
 };
 
 const isExpanded = (id: number) => expandedRows.value.has(id);
+
+const toggleSelect = (id: number) => {
+  const next = new Set(selectedIds.value);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  selectedIds.value = next;
+};
+
+const toggleSelectAll = () => {
+  if (allSelected.value) {
+    selectedIds.value.clear();
+  } else {
+    selectedIds.value = new Set(filteredLogs.value.map((log) => log.id));
+  }
+};
+
+const handleSort = (column) => {
+  if (sortBy.value === column) {
+    sortOrder.value = sortOrder.value === "ASC" ? "DESC" : "ASC";
+  } else {
+    sortBy.value = column;
+    sortOrder.value = "DESC";
+  }
+  loadLogs();
+};
+
+const getSortIcon = (column) => {
+  if (sortBy.value !== column) return "↕";
+  return sortOrder.value === "ASC" ? "↑" : "↓";
+};
+
+const clearFilters = () => {
+  searchQuery.value = "";
+  actionFilter.value = "all";
+  entityFilter.value = "all";
+  dateFrom.value = "";
+  dateTo.value = "";
+  page.value = 1;
+  selectedIds.value.clear();
+};
+
+const handleBulkDelete = async () => {
+  if (!selectedCount.value) return;
+  if (!confirm(`Delete ${selectedCount.value} selected audit log(s)? This cannot be undone.`)) return;
+
+  try {
+    await auditAPI.bulkDelete(Array.from(selectedIds.value));
+    selectedIds.value.clear();
+    await loadLogs();
+  } catch (err) {
+    console.error("Failed to delete logs", err);
+    alert("Failed to delete selected logs");
+  }
+};
+
+const handleExportCSV = async () => {
+  try {
+    const blob = await auditAPI.exportCSV({
+      search: searchQuery.value || undefined,
+      action: actionFilter.value !== "all" ? actionFilter.value : undefined,
+      entityType: entityFilter.value !== "all" ? entityFilter.value : undefined,
+      from: dateFrom.value || undefined,
+      to: dateTo.value || undefined,
+    });
+    downloadBlob(blob, "audit-logs.csv", "text/csv");
+  } catch (err) {
+    console.error("Failed to export CSV", err);
+    alert("Failed to export CSV");
+  }
+};
+
+const handleExportJSON = async () => {
+  try {
+    const blob = await auditAPI.exportJSON({
+      search: searchQuery.value || undefined,
+      action: actionFilter.value !== "all" ? actionFilter.value : undefined,
+      entityType: entityFilter.value !== "all" ? entityFilter.value : undefined,
+      from: dateFrom.value || undefined,
+      to: dateTo.value || undefined,
+    });
+    downloadBlob(blob, "audit-logs.json", "application/json");
+  } catch (err) {
+    console.error("Failed to export JSON", err);
+    alert("Failed to export JSON");
+  }
+};
+
+const downloadBlob = (blob, filename, mimeType) => {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
 
 const formatDate = (date) => {
   if (!date) return "";
@@ -136,13 +281,6 @@ const getActionIcon = (action) => {
   };
   return map[action.toLowerCase()] || "•";
 };
-
-const clearFilters = () => {
-  searchQuery.value = "";
-  actionFilter.value = "all";
-  entityFilter.value = "all";
-  page.value = 1;
-};
 </script>
 
 <template>
@@ -164,6 +302,22 @@ const clearFilters = () => {
               type="text"
               placeholder="Search logs..."
               class="search-input"
+            />
+          </div>
+          <div class="filter-group">
+            <input
+              v-model="dateFrom"
+              type="date"
+              placeholder="From"
+              class="filter-date"
+            />
+          </div>
+          <div class="filter-group">
+            <input
+              v-model="dateTo"
+              type="date"
+              placeholder="To"
+              class="filter-date"
             />
           </div>
           <div class="filter-group">
@@ -195,17 +349,97 @@ const clearFilters = () => {
           </button>
         </div>
 
+        <div class="actions-bar">
+          <div class="bulk-actions">
+            <button
+              class="action-btn delete-btn"
+              :disabled="!selectedCount"
+              @click="handleBulkDelete"
+            >
+              Delete Selected ({{ selectedCount }})
+            </button>
+          </div>
+          <div class="export-actions">
+            <button class="action-btn export-btn" @click="handleExportCSV">
+              Export CSV
+            </button>
+            <button class="action-btn export-btn" @click="handleExportJSON">
+              Export JSON
+            </button>
+          </div>
+          <button
+            class="action-btn stats-btn"
+            :class="{ active: showStats }"
+            @click="showStats = !showStats"
+          >
+            {{ showStats ? "Hide Stats" : "Show Stats" }}
+          </button>
+        </div>
+
+        <div v-if="showStats" class="stats-panel">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h4>Total Logs</h4>
+              <p class="stat-value">{{ stats.total }}</p>
+            </div>
+            <div class="stat-card">
+              <h4>By Action</h4>
+              <ul class="stat-list">
+                <li v-for="item in stats.byAction" :key="item.action">
+                  <span>{{ item.action }}</span>
+                  <span class="stat-count">{{ item.count }}</span>
+                </li>
+              </ul>
+            </div>
+            <div class="stat-card">
+              <h4>By Entity</h4>
+              <ul class="stat-list">
+                <li v-for="item in stats.byEntity" :key="item.entityType">
+                  <span>{{ item.entityType }}</span>
+                  <span class="stat-count">{{ item.count }}</span>
+                </li>
+              </ul>
+            </div>
+            <div class="stat-card">
+              <h4>Top Users</h4>
+              <ul class="stat-list">
+                <li v-for="item in stats.topUsers" :key="item.userId">
+                  <span>{{ item.userId }}</span>
+                  <span class="stat-count">{{ item.count }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         <div class="table-wrapper">
           <table class="log-table">
             <thead>
               <tr>
+                <th class="select-col">
+                  <input
+                    type="checkbox"
+                    :checked="allSelected"
+                    @change="toggleSelectAll"
+                  />
+                </th>
                 <th class="expand-col"></th>
-                <th>Time</th>
-                <th>User</th>
-                <th>Action</th>
-                <th>Entity</th>
+                <th @click="handleSort('createdAt')" class="sortable">
+                  Time {{ getSortIcon("createdAt") }}
+                </th>
+                <th @click="handleSort('userId')" class="sortable">
+                  User {{ getSortIcon("userId") }}
+                </th>
+                <th @click="handleSort('action')" class="sortable">
+                  Action {{ getSortIcon("action") }}
+                </th>
+                <th @click="handleSort('entityType')" class="sortable">
+                  Entity {{ getSortIcon("entityType") }}
+                </th>
                 <th>Changes</th>
-                <th>IP Address</th>
+                <th @click="handleSort('ipAddress')" class="sortable">
+                  IP Address {{ getSortIcon("ipAddress") }}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -215,6 +449,13 @@ const clearFilters = () => {
                   :class="{ expanded: isExpanded(log.id) }"
                   @click="toggleRow(log.id)"
                 >
+                  <td class="select-col" @click.stop>
+                    <input
+                      type="checkbox"
+                      :checked="selectedIds.has(log.id)"
+                      @change="toggleSelect(log.id)"
+                    />
+                  </td>
                   <td class="expand-col">
                     <span class="expand-icon" :class="{ open: isExpanded(log.id) }">▼</span>
                   </td>
@@ -249,7 +490,7 @@ const clearFilters = () => {
                   <td class="ip-cell">{{ log.ipAddress || "-" }}</td>
                 </tr>
                 <tr v-if="isExpanded(log.id)" class="detail-row">
-                  <td colspan="7">
+                  <td colspan="8">
                     <div class="detail-panel">
                       <div class="detail-section">
                         <h4 class="detail-title">Details</h4>
@@ -283,7 +524,7 @@ const clearFilters = () => {
                 </tr>
               </template>
               <tr v-if="!filteredLogs.length">
-                <td colspan="7" class="empty-row">No audit logs found</td>
+                <td colspan="8" class="empty-row">No audit logs found</td>
               </tr>
             </tbody>
           </table>
@@ -373,7 +614,9 @@ const clearFilters = () => {
   min-width: 180px;
 }
 
-.search-input {
+.search-input,
+.filter-date,
+.filter-select {
   width: 100%;
   padding: var(--space-2-5) var(--space-3-5);
   border: 1px solid var(--border);
@@ -385,23 +628,8 @@ const clearFilters = () => {
   transition: border-color var(--duration-fast);
 }
 
-.search-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.filter-select {
-  width: 100%;
-  padding: var(--space-2-5) var(--space-3-5);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  color: var(--ink);
-  background: var(--surface);
-  cursor: pointer;
-}
-
+.search-input:focus,
+.filter-date:focus,
 .filter-select:focus {
   outline: none;
   border-color: var(--accent);
@@ -424,6 +652,128 @@ const clearFilters = () => {
 .clear-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.actions-bar {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bulk-actions,
+.export-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.action-btn {
+  padding: var(--space-2) var(--space-3-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  white-space: nowrap;
+}
+
+.action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.delete-btn {
+  background: var(--rose-50);
+  color: var(--rose-600);
+  border-color: var(--rose-200);
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: var(--rose-100);
+}
+
+.export-btn {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.export-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.stats-btn {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.stats-btn.active {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  border-color: var(--accent);
+}
+
+.stats-panel {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.stat-card h4 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-muted);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.stat-value {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-2xl);
+  color: var(--ink);
+  margin: 0;
+}
+
+.stat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.stat-list li {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+
+.stat-count {
+  font-weight: 600;
+  color: var(--ink-secondary);
 }
 
 .table-wrapper {
@@ -455,6 +805,15 @@ const clearFilters = () => {
   letter-spacing: 0.6px;
 }
 
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable:hover {
+  color: var(--accent);
+}
+
 .log-row {
   cursor: pointer;
   transition: background-color var(--duration-fast);
@@ -467,6 +826,12 @@ const clearFilters = () => {
 .log-row.expanded {
   background-color: var(--surface-sunken);
   border-bottom: none;
+}
+
+.select-col {
+  width: 40px;
+  text-align: center;
+  padding: var(--space-3-5) var(--space-2);
 }
 
 .expand-col {
@@ -724,11 +1089,25 @@ const clearFilters = () => {
     min-width: 100%;
   }
 
-  .clear-btn {
+  .actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bulk-actions,
+  .export-actions {
+    width: 100%;
+  }
+
+  .action-btn {
     width: 100%;
   }
 
   .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
     grid-template-columns: 1fr;
   }
 }
