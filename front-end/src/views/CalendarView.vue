@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import { io } from "socket.io-client";
 import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
@@ -26,6 +26,32 @@ const calendarDays = ref([]);
 const socket = ref(null);
 const calendarView = ref("month");
 const selectedDate = ref(new Date());
+const typeFilter = ref("all");
+
+const legendItems = [
+  { label: "Pending", color: statusColor("pending") },
+  { label: "Seated", color: statusColor("seated") },
+  { label: "Completed", color: statusColor("completed") },
+  { label: "Cancelled", color: statusColor("cancelled") },
+  { label: "Missed", color: statusColor("missed") },
+  { label: "Closed", color: "#ef4444" },
+  { label: "Holiday", color: "var(--accent)" },
+];
+
+const typeFilterOptions = [
+  { value: "all", label: "All" },
+  { value: "reservations", label: "Reservations" },
+  { value: "holidays", label: "Holidays" },
+  { value: "closed", label: "Closed Days" },
+];
+
+const printCalendar = () => {
+  window.print();
+};
+
+watch(typeFilter, () => {
+  buildCalendarDaysFromCurrent();
+});
 
 const dayPopupOpen = ref(false);
 const selectedDay = ref(null);
@@ -119,17 +145,24 @@ const buildCalendarDays = (year, month) => {
 
     const schedule = schedules.value.find((s) => s.dayOfWeek === dayOfWeek);
     const holiday = holidays.value.find((h) => h.date === dateStr);
-    const dayReservations = reservations.value
-      .filter((r) => r.resDate === dateStr)
-      .sort((a, b) => a.resTime.localeCompare(b.resTime));
+    const isClosed = holiday?.isClosed || schedule?.isClosed || false;
+    const showReservations = typeFilter.value === "all" || typeFilter.value === "reservations";
+    const showHoliday = typeFilter.value === "all" || typeFilter.value === "holidays";
+    const showClosed = typeFilter.value === "all" || typeFilter.value === "closed";
+
+    const dayReservations = showReservations
+      ? reservations.value
+          .filter((r) => r.resDate === dateStr)
+          .sort((a, b) => a.resTime.localeCompare(b.resTime))
+      : [];
 
     days.push({
       date: day,
       dateStr,
       isCurrentMonth: true,
-      isClosed: holiday?.isClosed || schedule?.isClosed || false,
-      isHoliday: !!holiday,
-      holidayDesc: holiday?.description,
+      isClosed: isClosed && showClosed,
+      isHoliday: !!holiday && showHoliday,
+      holidayDesc: showHoliday ? holiday?.description : "",
       openTime: holiday?.openTime || schedule?.openTime,
       closeTime: holiday?.closeTime || schedule?.closeTime,
       reservations: dayReservations,
@@ -470,6 +503,38 @@ const handleReschedule = async () => {
         <button @click="nextPeriod" class="nav-btn">
           <span class="nav-icon">›</span>
         </button>
+      </div>
+
+      <div class="calendar-toolbar">
+        <div class="legend-bar">
+          <span
+            v-for="item in legendItems"
+            :key="item.label"
+            class="legend-item"
+          >
+            <span
+              class="legend-dot"
+              :style="{ backgroundColor: item.color }"
+            ></span>
+            {{ item.label }}
+          </span>
+        </div>
+        <div class="toolbar-actions">
+          <div class="type-filter" v-if="calendarView === 'month'">
+            <select v-model="typeFilter" class="filter-select">
+              <option
+                v-for="opt in typeFilterOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </option>
+            </select>
+          </div>
+          <button class="btn btn-secondary btn-sm" @click="printCalendar">
+            Print
+          </button>
+        </div>
       </div>
 
       <div v-if="loading" class="loading-state">
@@ -1635,8 +1700,70 @@ const handleReschedule = async () => {
   box-shadow: var(--shadow-sm);
 }
 
-.toggle-btn:hover:not(.active) {
+.calendar-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: 16px;
+}
+
+.legend-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--ink-secondary);
+  font-weight: 500;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.type-filter .filter-select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
   color: var(--ink);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+@media print {
+  .calendar-header,
+  .calendar-toolbar,
+  .nav-btn,
+  .view-toggle,
+  .toolbar-actions {
+    display: none !important;
+  }
+  .content-wrapper {
+    margin: 0 !important;
+  }
+  .calendar-container {
+    box-shadow: none !important;
+    border: none !important;
+  }
 }
 
 .header-center {
