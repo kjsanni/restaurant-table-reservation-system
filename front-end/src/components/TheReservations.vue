@@ -37,6 +37,10 @@ const socket = ref(null);
 
 const searchVal = ref("");
 const searchNotes = ref(true);
+const statusFilter = ref("all");
+const dateFrom = ref("");
+const dateTo = ref("");
+const paymentStatusFilter = ref("all");
 
 const dayPopupOpen = ref(false);
 const selectedDay = ref(null);
@@ -479,6 +483,21 @@ const filterReservations = computed(() => {
     (r) => r.resDate && r.resDate.startsWith(prefix)
   );
 
+  if (statusFilter.value !== "all") {
+    filtered = filtered.filter((r) => r.resStatus === statusFilter.value);
+  }
+
+  if (paymentStatusFilter.value !== "all") {
+    filtered = filtered.filter((r) => r.paymentStatus === paymentStatusFilter.value);
+  }
+
+  if (dateFrom.value) {
+    filtered = filtered.filter((r) => r.resDate && r.resDate >= dateFrom.value);
+  }
+  if (dateTo.value) {
+    filtered = filtered.filter((r) => r.resDate && r.resDate <= dateTo.value);
+  }
+
   const query = searchVal.value.trim().toLowerCase();
   if (query) {
     filtered = filtered.filter((item) => {
@@ -500,6 +519,38 @@ const filterReservations = computed(() => {
 const clearSearch = () => {
   searchVal.value = "";
 };
+
+const clearFilters = () => {
+  statusFilter.value = "all";
+  dateFrom.value = "";
+  dateTo.value = "";
+  paymentStatusFilter.value = "all";
+  searchVal.value = "";
+  searchNotes.value = true;
+};
+
+const filteredCount = computed(() => filterReservations.value.length);
+const totalCount = computed(() => reservations.value.length);
+
+const statusCounts = computed(() => {
+  const counts = {};
+  reservations.value.forEach((r) => {
+    if (r.resDate && r.resDate.startsWith(currentMonth.value.toISOString().slice(0, 7))) {
+      counts[r.resStatus] = (counts[r.resStatus] || 0) + 1;
+    }
+  });
+  return counts;
+});
+
+const paymentCounts = computed(() => {
+  const counts = {};
+  reservations.value.forEach((r) => {
+    if (r.resDate && r.resDate.startsWith(currentMonth.value.toISOString().slice(0, 7))) {
+      counts[r.paymentStatus] = (counts[r.paymentStatus] || 0) + 1;
+    }
+  });
+  return counts;
+});
 
 const openPopup = (headerText) => {
   isPopupOpen.value = true;
@@ -581,7 +632,68 @@ const today = () => {
         </label>
       </div>
     </div>
+
     <div class="content-wrapper">
+      <div class="filters-bar">
+        <div class="filter-group">
+          <label class="filter-label">Status</label>
+          <div class="status-chips">
+            <button
+              v-for="status in Object.values(RESERVATION_STATUS)"
+              :key="status"
+              class="chip"
+              :class="[
+                statusFilter === status ? 'active' : '',
+                statusFilter === status ? status : '',
+              ]"
+              @click="statusFilter = statusFilter === status ? 'all' : status"
+            >
+              {{ status }}
+              <span class="chip-count">{{ statusCounts[status] || 0 }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Date Range</label>
+          <div class="date-range-inputs">
+            <input
+              v-model="dateFrom"
+              type="date"
+              class="filter-input"
+              placeholder="From"
+            />
+            <span class="date-separator">to</span>
+            <input
+              v-model="dateTo"
+              type="date"
+              class="filter-input"
+              placeholder="To"
+            />
+          </div>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Payment</label>
+          <select v-model="paymentStatusFilter" class="filter-select">
+            <option value="all">All Payments</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="deposit">Deposit</option>
+            <option value="partial">Partial</option>
+            <option value="paid">Paid</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="clear-filters-btn" @click="clearFilters">
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-bar" v-if="filteredCount !== totalCount">
+        <span class="stats-text">
+          Showing {{ filteredCount }} of {{ totalCount }} reservations
+        </span>
+      </div>
+
       <div class="date-controls">
         <button class="nav-btn" @click="prev()">
           <span class="nav-icon">‹</span>
@@ -935,6 +1047,174 @@ const today = () => {
 .btn-sm {
   padding: 6px 12px;
   font-size: var(--text-xs);
+}
+
+.filters-bar {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 180px;
+}
+
+.filter-label {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-muted);
+}
+
+.status-chips {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  text-transform: capitalize;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.chip.active {
+  color: white;
+  border-color: transparent;
+}
+
+.chip.active.pending {
+  background-color: var(--sky-500);
+}
+.chip.active.seated {
+  background-color: var(--earth-500);
+}
+.chip.active.cancelled {
+  background-color: var(--rose-500);
+}
+.chip.active.completed {
+  background-color: var(--success);
+}
+.chip.active.missed {
+  background-color: var(--neutral-500);
+}
+
+.chip-count {
+  font-size: 10px;
+  opacity: 0.8;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  padding: 1px 6px;
+}
+
+.chip.active .chip-count {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.date-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filter-input,
+.filter-select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.filter-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-select {
+  width: 100%;
+  cursor: pointer;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.date-separator {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+.clear-filters-btn {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  white-space: nowrap;
+  height: 38px;
+}
+
+.clear-filters-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.stats-bar {
+  padding: var(--space-2) var(--space-4);
+  background: var(--accent-soft);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stats-text {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--accent-text);
+  font-weight: 500;
 }
 
 @media screen and (min-width: 1024px) {
