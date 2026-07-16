@@ -27,6 +27,8 @@ const showConfirmModal = ref(false);
 const confirmTarget = ref(null);
 const showErrorModal = ref(false);
 const errorMessage = ref("");
+const showQrModal = ref(false);
+const qrTable = ref(null);
 
 const MAX_TABLES_PER_STAFF = 5;
 
@@ -229,6 +231,31 @@ const assignedStaffForTable = computed(() => {
 const staffAtLimit = (staff) => {
   return staff.tableCount >= MAX_TABLES_PER_STAFF;
 };
+
+const occupancyStats = computed(() => {
+  const total = tables.value.length;
+  const occupied = tables.value.filter((t) => t.isOccupied && !t.isBlocked).length;
+  const blocked = tables.value.filter((t) => t.isBlocked).length;
+  const free = total - occupied - blocked;
+  const occupancyRate = total > 0 ? Math.round((occupied / total) * 100) : 0;
+  return { total, occupied, blocked, free, occupancyRate };
+});
+
+const openQrModal = (table) => {
+  qrTable.value = table;
+  showQrModal.value = true;
+};
+
+const closeQrModal = () => {
+  showQrModal.value = false;
+  qrTable.value = null;
+};
+
+const getQrCodeUrl = (table) => {
+  const baseUrl = window.location.origin;
+  const url = `${baseUrl}/self-service/table/${table.id}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+};
 </script>
 
 <template>
@@ -240,6 +267,29 @@ const staffAtLimit = (staff) => {
         <p>Loading tables...</p>
       </div>
       <div v-else class="tables-container">
+        <div class="occupancy-dashboard">
+          <div class="stat-card">
+            <span class="stat-value">{{ occupancyStats.total }}</span>
+            <span class="stat-label">Total Tables</span>
+          </div>
+          <div class="stat-card stat-free">
+            <span class="stat-value">{{ occupancyStats.free }}</span>
+            <span class="stat-label">Free</span>
+          </div>
+          <div class="stat-card stat-occupied">
+            <span class="stat-value">{{ occupancyStats.occupied }}</span>
+            <span class="stat-label">Occupied</span>
+          </div>
+          <div class="stat-card stat-blocked">
+            <span class="stat-value">{{ occupancyStats.blocked }}</span>
+            <span class="stat-label">Blocked</span>
+          </div>
+          <div class="stat-card stat-rate">
+            <span class="stat-value">{{ occupancyStats.occupancyRate }}%</span>
+            <span class="stat-label">Occupancy</span>
+          </div>
+        </div>
+
         <div class="actions-row">
           <RouterLink
             v-if="canManageTables"
@@ -366,6 +416,13 @@ const staffAtLimit = (staff) => {
                 title="Customer left — free the table"
               >
                 ✅ Unseat
+              </button>
+              <button
+                class="action-btn btn-qr"
+                @click="openQrModal(table)"
+                title="QR Code for self-service"
+              >
+                📱 QR
               </button>
             </div>
           </div>
@@ -603,6 +660,40 @@ const staffAtLimit = (staff) => {
           <p>{{ errorMessage }}</p>
           <div class="confirm-actions">
             <button class="btn btn-secondary" @click="closeError">OK</button>
+          </div>
+        </div>
+      </template>
+    </PopupBox>
+
+    <PopupBox
+      :is-open="showQrModal"
+      header-text="Table QR Code"
+      :is-closable="true"
+      @close-modal="closeQrModal"
+    >
+      <template #popup-content>
+        <div class="qr-content" v-if="qrTable">
+          <p class="qr-subtitle">
+            Scan to access table {{ qrTable.name }} self-service
+          </p>
+          <div class="qr-code-wrapper">
+            <img
+              :src="getQrCodeUrl(qrTable)"
+              :alt="'QR code for table ' + qrTable.name"
+              class="qr-image"
+            />
+          </div>
+          <p class="qr-url">{{ getQrCodeUrl(qrTable).replace('/200x200?', '/') }}</p>
+          <div class="qr-actions">
+            <button
+              class="btn btn-primary"
+              @click="window.open(getQrCodeUrl(qrTable), '_blank')"
+            >
+              Open Full Size
+            </button>
+            <button class="btn btn-secondary" @click="closeQrModal">
+              Close
+            </button>
           </div>
         </div>
       </template>
@@ -1235,6 +1326,117 @@ const staffAtLimit = (staff) => {
   font-family: var(--font-sans);
   font-weight: 600;
   letter-spacing: var(--tracking-wide);
+}
+
+.occupancy-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-value {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-2xl);
+  color: var(--ink);
+}
+
+.stat-label {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-muted);
+}
+
+.stat-free .stat-value {
+  color: var(--success);
+}
+
+.stat-occupied .stat-value {
+  color: var(--earth-600);
+}
+
+.stat-blocked .stat-value {
+  color: var(--rose-600);
+}
+
+.stat-rate .stat-value {
+  color: var(--sky-600);
+}
+
+.qr-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.qr-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  margin: 0;
+}
+
+.qr-code-wrapper {
+  padding: var(--space-4);
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.qr-image {
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+
+.qr-url {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  word-break: break-all;
+  text-align: center;
+  margin: 0;
+}
+
+.qr-actions {
+  display: flex;
+  gap: var(--space-3);
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-qr {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink-secondary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.btn-qr:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 @media (min-width: 1024px) {
