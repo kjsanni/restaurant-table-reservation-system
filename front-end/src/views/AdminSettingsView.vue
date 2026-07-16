@@ -178,6 +178,8 @@ const loadSettings = async () => {
         typeof emailSetting.value === "string"
           ? JSON.parse(emailSetting.value)
           : emailSetting.value;
+      // Never echo a stored password back into the form (write-only field).
+      if (v && typeof v === "object") delete v.pass;
       emailConfig.value = {
         host: "",
         port: 587,

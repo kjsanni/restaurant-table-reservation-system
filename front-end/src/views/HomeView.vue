@@ -8,17 +8,18 @@ import reservationAPI from "@/services/reservationAPI";
 import waitlistAPI from "@/services/waitlistAPI";
 import paymentAPI from "@/services/paymentAPI";
 import tableAPI from "@/services/tableAPI";
+import dateNavigator from "@/utils/dateNavigator";
 
 const router = useRouter();
 const authStore = useAuthStore();
 
 const loading = ref(true);
-const today = ref(new Date().toISOString().split("T")[0]);
+const today = ref(dateNavigator.asDateString(new Date()));
 const thirtyDaysAgo = ref(
   (() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
-    return d.toISOString().split("T")[0];
+    return dateNavigator.asDateString(d);
   })()
 );
 

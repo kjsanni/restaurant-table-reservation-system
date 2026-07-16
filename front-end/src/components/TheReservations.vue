@@ -12,7 +12,12 @@ import ReservationInfo from "@/components/ReservationInfo.vue";
 import ButtonAction from "@/components/ButtonAction.vue";
 import GridContainer from "@/components/GridContainer.vue";
 import RestaurantTable from "@/components/RestaurantTable.vue";
+import { statusColor, shortName } from "@/utils/reservationDisplay";
 import EditReservation from "@/components/EditReservation.vue";
+import {
+  ACTIVE_STATUSES,
+  RESERVATION_STATUS,
+} from "@/constants/reservationStatus";
 import ChooseTable from "@/components/ChooseTable.vue";
 import AssignStaff from "@/components/AssignStaff.vue";
 import { useAuthStore } from "@/stores/auth";
@@ -320,28 +325,6 @@ const paymentColor = (status) => {
   }
 };
 
-const statusColor = (status) => {
-  switch (status) {
-    case "seated":
-      return "#22c55e";
-    case "cancelled":
-      return "#ef4444";
-    case "missed":
-      return "#f59e0b";
-    default:
-      return "#3b82f6";
-  }
-};
-
-const shortName = (name) => {
-  if (!name) return "Guest";
-  const parts = name.split(" ");
-  if (parts.length >= 2) {
-    return parts[0][0] + "." + parts[1][0] + ".";
-  }
-  return parts[0].slice(0, 8);
-};
-
 const actionTitle = computed(() => {
   const titles = {
     cancel: "Cancel Reservation",
@@ -644,14 +627,12 @@ const today = () => {
                 <div
                   class="card-actions"
                   v-if="
-                    ['pending', 'missed'].includes(slotProps.item.resStatus) ||
+                    ACTIVE_STATUSES.includes(slotProps.item.resStatus) ||
                     canManageTables
                   "
                 >
                   <ButtonAction
-                    v-if="
-                      ['pending', 'missed'].includes(slotProps.item.resStatus)
-                    "
+                    v-if="ACTIVE_STATUSES.includes(slotProps.item.resStatus)"
                     text="Seat"
                     color="#22c55e"
                     @click="
@@ -677,16 +658,15 @@ const today = () => {
                     "
                   />
                   <ButtonAction
-                    v-if="
-                      ['pending', 'missed'].includes(slotProps.item.resStatus)
-                    "
+                    v-if="ACTIVE_STATUSES.includes(slotProps.item.resStatus)"
                     text="Cancel"
                     color="#ef4444"
                     @click="handleCancelItem(slotProps.item)"
                   />
                   <ButtonAction
                     v-if="
-                      slotProps.item.resStatus === 'pending' && canAddToWaitlist
+                      slotProps.item.resStatus === RESERVATION_STATUS.PENDING &&
+                      canAddToWaitlist
                     "
                     text="Waitlist"
                     color="#f59e0b"
@@ -697,13 +677,17 @@ const today = () => {
                     </template>
                   </ButtonAction>
                   <ButtonAction
-                    v-if="slotProps.item.resStatus === 'pending'"
+                    v-if="
+                      slotProps.item.resStatus === RESERVATION_STATUS.PENDING
+                    "
                     text="Mark No-Show"
                     color="#f59e0b"
                     @click="openNoShowModal(slotProps.item.id)"
                   />
                   <ButtonAction
-                    v-else-if="slotProps.item.resStatus === 'seated'"
+                    v-else-if="
+                      slotProps.item.resStatus === RESERVATION_STATUS.SEATED
+                    "
                     text="Unseat"
                     color="#ef4444"
                     @click="unseatReservation(slotProps.item)"

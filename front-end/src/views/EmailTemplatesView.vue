@@ -60,10 +60,15 @@ const testEmail = ref("");
 const testStatus = ref<"" | "sending" | "sent" | "error">("");
 const testMessage = ref("");
 
-const perTemplateTest = reactive<Record<string, {
-  status: "" | "sending" | "sent" | "error";
-  message: string;
-}>>({});
+const perTemplateTest = reactive<
+  Record<
+    string,
+    {
+      status: "" | "sending" | "sent" | "error";
+      message: string;
+    }
+  >
+>({});
 
 const placeholder = (key: string) => `{{${key}}}`;
 
@@ -132,7 +137,20 @@ const insertVariable = (type: string, key: string) => {
   markDirty();
 };
 
-const renderPreview = (type: string) => {
+const isSafeImageUrl = (url: string) => {
+  try {
+    const u = new URL(url);
+    return (
+      u.protocol === "http:" ||
+      u.protocol === "https:" ||
+      u.protocol === "data:"
+    );
+  } catch {
+    return false;
+  }
+};
+
+const buildPreviewHtml = (type: string) => {
   const t = templates.value[type];
   if (!t) return "";
   const merged = { ...SAMPLE_DATA, brandName: theme.brandName || "Restaurant" };
@@ -141,21 +159,26 @@ const renderPreview = (type: string) => {
     (_, k: string) => merged[k] ?? placeholder(k)
   );
   const color = theme.primaryColor || "#d97706";
-  const logo = theme.logoUrl
-    ? `<img src="${theme.logoUrl}" alt="" style="max-height:40px;margin-bottom:8px;" />`
-    : "";
-  return `<div style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;">
+  const logo =
+    theme.logoUrl && isSafeImageUrl(theme.logoUrl)
+      ? `<img src="${theme.logoUrl}" alt="" style="max-height:40px;margin-bottom:8px;" />`
+      : "";
+  return `<!doctype html><html><head><meta charset="utf-8"></head><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;">
     ${logo}
     <h2 style="color:${color}">${theme.brandName || "Restaurant"}</h2>
     ${body}
     <hr style="border:none;border-top:1px solid #eee;margin:16px 0;" />
     <small style="color:#888;">${
-      (theme.footerText || "").replace(/\{\{(\w+)\}\}/g, (_, k: string) =>
-        merged[k] ?? ""
+      (theme.footerText || "").replace(
+        /\{\{(\w+)\}\}/g,
+        (_, k: string) => merged[k] ?? ""
       ) || "&nbsp;"
     }</small>
-  </div>`;
+  </body></html>`;
 };
+
+// Sanitized, sandboxed preview content (never injected via v-html).
+const previewSrcdoc = (type: string) => buildPreviewHtml(type);
 
 const previewSubject = (type: string) => {
   const t = templates.value[type];
@@ -183,7 +206,9 @@ const sendTest = async () => {
 const sendTemplateTest = async (type: string) => {
   perTemplateTest[type] = { status: "sending", message: "" };
   try {
-    await notificationAPI.sendTemplate(type, testEmail.value, { ...SAMPLE_DATA });
+    await notificationAPI.sendTemplate(type, testEmail.value, {
+      ...SAMPLE_DATA,
+    });
     perTemplateTest[type] = { status: "sent", message: "Test sent." };
   } catch (e: any) {
     perTemplateTest[type] = {
@@ -304,7 +329,12 @@ onMounted(loadTemplates);
               <span class="preview-label">Live Preview</span>
               <span class="preview-subject">{{ previewSubject(type) }}</span>
             </div>
-            <div class="preview-frame" v-html="renderPreview(type)" />
+            <iframe
+              class="preview-frame"
+              sandbox=""
+              title="Email preview"
+              :srcdoc="previewSrcdoc(type)"
+            ></iframe>
           </div>
 
           <div class="template-test">
@@ -315,7 +345,9 @@ onMounted(loadTemplates);
             />
             <button
               class="btn btn-secondary"
-              :disabled="!testEmail || perTemplateTest[type]?.status === 'sending'"
+              :disabled="
+                !testEmail || perTemplateTest[type]?.status === 'sending'
+              "
               @click="sendTemplateTest(type)"
             >
               {{
@@ -342,7 +374,9 @@ onMounted(loadTemplates);
             {{ saving ? "Saving..." : "Save All" }}
           </button>
           <span v-if="saved" class="saved-indicator">Saved</span>
-          <span v-else-if="dirty" class="unsaved-indicator">Unsaved changes</span>
+          <span v-else-if="dirty" class="unsaved-indicator"
+            >Unsaved changes</span
+          >
         </div>
 
         <div class="test-section">
