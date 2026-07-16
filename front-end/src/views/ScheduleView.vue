@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PageHeader from "@/components/PageHeader.vue";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { VaSwitch, VaButton, VaCard, VaCardContent, VaModal } from "vuestic-ui";
 import scheduleAPI from "@/services/scheduleAPI";
 import logger from "@/utils/logger";
@@ -26,6 +26,47 @@ const days = [
   { value: "saturday", label: "Saturday" },
   { value: "sunday", label: "Sunday" },
 ];
+
+const HOURS = Array.from({ length: 12 }, (_, i) => {
+  const hour = i + 11;
+  const label = hour > 12 ? `${hour - 12} PM` : hour === 12 ? "12 PM" : `${hour} AM`;
+  return { value: `${hour.toString().padStart(2, "0")}:00`, label };
+});
+
+const weeklyGrid = computed(() => {
+  return days.map((day) => {
+    const schedule = schedules.value.find((s) => s.dayOfWeek === day.value);
+    const openHour = schedule?.openTime ? parseInt(schedule.openTime.split(":")[0], 10) : null;
+    const closeHour = schedule?.closeTime ? parseInt(schedule.closeTime.split(":")[0], 10) : null;
+    const isClosed = schedule?.isClosed ?? false;
+
+    const hours = HOURS.map((h) => {
+      const hour = parseInt(h.value.split(":")[0], 10);
+      const isOpen = !isClosed && openHour !== null && closeHour !== null && hour >= openHour && hour < closeHour;
+      const isTransition = hour === openHour || hour === closeHour;
+      return { ...h, isOpen, isTransition };
+    });
+
+    return {
+      day: day.value,
+      label: day.label,
+      hours,
+      isClosed,
+      openTime: schedule?.openTime,
+      closeTime: schedule?.closeTime,
+    };
+  });
+});
+
+const dateOverrides = computed(() => {
+  return holidays.value
+    .filter((h) => h.date)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map((h) => ({
+      ...h,
+      dateObj: new Date(h.date + "T00:00:00"),
+    }));
+});
 
 onMounted(async () => {
   await loadSchedule();
@@ -171,6 +212,47 @@ const exportPDF = async () => {
                   v-model="schedule.isClosed"
                   @change="updateSchedule(schedule)"
                 />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card visual-calendar-card">
+          <h2 class="section-title">Visual Weekly Calendar</h2>
+          <div class="visual-calendar">
+            <div class="calendar-header">
+              <div class="time-gutter"></div>
+              <div
+                v-for="day in weeklyGrid"
+                :key="day.day"
+                class="day-header"
+                :class="{ closed: day.isClosed }"
+              >
+                {{ day.label }}
+                <span v-if="day.isClosed" class="closed-label">Closed</span>
+              </div>
+            </div>
+            <div class="calendar-body">
+              <div
+                v-for="hour in HOURS"
+                :key="hour.value"
+                class="calendar-row"
+              >
+                <div class="time-gutter">{{ hour.label }}</div>
+                <div
+                  v-for="day in weeklyGrid"
+                  :key="day.day"
+                  class="calendar-cell"
+                  :class="{
+                    open: day.hours.find((h) => h.value === hour.value)?.isOpen,
+                    transition: day.hours.find((h) => h.value === hour.value)?.isTransition,
+                    closed: day.isClosed,
+                  }"
+                >
+                  <span v-if="day.hours.find((h) => h.value === hour.value)?.isTransition" class="transition-label">
+                    {{ day.hours.find((h) => h.value === hour.value)?.isOpen ? 'Open' : 'Close' }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -528,6 +610,105 @@ const exportPDF = async () => {
   .content-wrapper {
     margin-top: var(--space-10);
     margin-bottom: var(--space-10);
+  }
+}
+
+.visual-calendar {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.day-header {
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  border-left: 1px solid var(--border-subtle);
+}
+
+.day-header.closed {
+  color: var(--rose-600);
+  background: var(--rose-50);
+}
+
+.closed-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.time-gutter {
+  padding: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-align: center;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+}
+
+.calendar-row {
+  display: contents;
+}
+
+.calendar-cell {
+  height: 28px;
+  border-left: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface);
+  position: relative;
+  transition: background var(--duration-fast);
+}
+
+.calendar-cell.open {
+  background: #dcfce7;
+}
+
+.calendar-cell.transition {
+  background: #fef9c3;
+}
+
+.calendar-cell.closed {
+  background: var(--rose-50);
+}
+
+.transition-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 768px) {
+  .calendar-header,
+  .calendar-body {
+    grid-template-columns: 50px repeat(7, minmax(60px, 1fr));
   }
 }
 </style>
