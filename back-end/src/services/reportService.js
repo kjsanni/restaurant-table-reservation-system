@@ -27,8 +27,9 @@ const getReservationReport = async (filters = {}) => {
 
 const csvCell = (value) => {
   const str = value === null || value === undefined ? "" : String(value);
-  // Wrap in quotes and double internal quotes; neutralize formula-injection
-  // prefixes (= + - @) by prefixing with a single quote.
+  // Wrap in quotes and double internal quotes; wrapping a cell whose value
+  // starts with = + - @ makes CSV readers treat it as literal text instead
+  // of executing a formula (formula-injection defence).
   const needsQuote = /[",\n]/.test(str) || /^=[+\-@]/.test(str);
   const safe = str.replace(/"/g, '""');
   return needsQuote ? `"${safe}"` : safe;
