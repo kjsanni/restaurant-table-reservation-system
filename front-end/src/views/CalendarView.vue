@@ -24,6 +24,8 @@ const currentMonth = ref(new Date());
 const monthLabel = ref("");
 const calendarDays = ref([]);
 const socket = ref(null);
+const calendarView = ref("month");
+const selectedDate = ref(new Date());
 
 const dayPopupOpen = ref(false);
 const selectedDay = ref(null);
@@ -166,6 +168,136 @@ const nextMonth = () => {
     1
   );
   loadSchedule();
+};
+
+const setView = (view) => {
+  calendarView.value = view;
+  if (view === "day") {
+    selectedDate.value = new Date(currentMonth.value);
+  }
+};
+
+const selectDate = (date) => {
+  selectedDate.value = date;
+  calendarView.value = "day";
+};
+
+const previousPeriod = () => {
+  if (calendarView.value === "month") {
+    previousMonth();
+  } else if (calendarView.value === "week") {
+    const d = new Date(selectedDate.value);
+    d.setDate(d.getDate() - 7);
+    selectedDate.value = d;
+  } else if (calendarView.value === "day") {
+    const d = new Date(selectedDate.value);
+    d.setDate(d.getDate() - 1);
+    selectedDate.value = d;
+  }
+};
+
+const nextPeriod = () => {
+  if (calendarView.value === "month") {
+    nextMonth();
+  } else if (calendarView.value === "week") {
+    const d = new Date(selectedDate.value);
+    d.setDate(d.getDate() + 7);
+    selectedDate.value = d;
+  } else if (calendarView.value === "day") {
+    const d = new Date(selectedDate.value);
+    d.setDate(d.getDate() + 1);
+    selectedDate.value = d;
+  }
+};
+
+const periodLabel = computed(() => {
+  if (calendarView.value === "month") {
+    return monthLabel.value;
+  } else if (calendarView.value === "week") {
+    const start = new Date(selectedDate.value);
+    const dayOfWeek = start.getDay();
+    start.setDate(start.getDate() - dayOfWeek);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    return `${start.toLocaleDateString("default", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("default", { month: "short", day: "numeric", year: "numeric" })}`;
+  } else {
+    return selectedDate.value.toLocaleDateString("default", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }
+});
+
+const weekDays = computed(() => {
+  const start = new Date(selectedDate.value);
+  const dayOfWeek = start.getDay();
+  start.setDate(start.getDate() - dayOfWeek);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+});
+
+const dayReservations = computed(() => {
+  if (calendarView.value !== "day") return [];
+  const dateStr = dateNavigator.asDateString(selectedDate.value);
+  return reservations.value
+    .filter((r) => r.resDate === dateStr)
+    .sort((a, b) => a.resTime.localeCompare(b.resTime));
+});
+
+const daySchedule = computed(() => {
+  if (calendarView.value !== "day") return null;
+  const dateStr = dateNavigator.asDateString(selectedDate.value);
+  const dayOfWeek = selectedDate.value
+    .toLocaleDateString("en-US", { weekday: "long" })
+    .toLowerCase();
+  const schedule = schedules.value.find((s) => s.dayOfWeek === dayOfWeek);
+  const holiday = holidays.value.find((h) => h.date === dateStr);
+  return {
+    isClosed: holiday?.isClosed || schedule?.isClosed || false,
+    openTime: holiday?.openTime || schedule?.openTime,
+    closeTime: holiday?.closeTime || schedule?.closeTime,
+    holidayDesc: holiday?.description,
+  };
+});
+
+const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => {
+  const hour = i.toString().padStart(2, "0");
+  return { value: `${hour}:00`, label: `${hour}:00` };
+});
+
+const getReservationsForDateAndHour = (date, hour) => {
+  const dateStr = dateNavigator.asDateString(date);
+  return reservations.value.filter((r) => {
+    if (r.resDate !== dateStr) return false;
+    const resHour = r.resTime?.slice(0, 2);
+    return resHour === hour.slice(0, 2);
+  });
+};
+
+const getReservationsForHour = (hour) => {
+  return dayReservations.value.filter((r) => {
+    const resHour = r.resTime?.slice(0, 2);
+    return resHour === hour.slice(0, 2);
+  });
+};
+
+const openNewReservationAt = (time) => {
+  if (!daySchedule.value || daySchedule.value.isClosed) return;
+  newResDate.value = dateNavigator.asDateString(selectedDate.value);
+  newResTime.value = time + ":00";
+  actionReservation.value = null;
+  activeAction.value = "new";
+  actionLoading.value = false;
+  actionError.value = "";
+  freeTables.value = [];
+  waitingStaffList.value = [];
+  loadFreeTables();
+  loadWaitingStaff();
 };
 
 const actionTitle = computed(() => {
@@ -318,11 +450,24 @@ const handleReschedule = async () => {
     />
     <div class="content-wrapper">
       <div class="calendar-header">
-        <button @click="previousMonth" class="nav-btn">
+        <button @click="previousPeriod" class="nav-btn">
           <span class="nav-icon">‹</span>
         </button>
-        <h2 class="month-label">{{ monthLabel }}</h2>
-        <button @click="nextMonth" class="nav-btn">
+        <div class="header-center">
+          <h2 class="month-label">{{ periodLabel }}</h2>
+          <div class="view-toggle">
+            <button
+              v-for="view in ['month', 'week', 'day']"
+              :key="view"
+              class="toggle-btn"
+              :class="{ active: calendarView === view }"
+              @click="setView(view)"
+            >
+              {{ view.charAt(0).toUpperCase() + view.slice(1) }}
+            </button>
+          </div>
+        </div>
+        <button @click="nextPeriod" class="nav-btn">
           <span class="nav-icon">›</span>
         </button>
       </div>
@@ -333,7 +478,7 @@ const handleReschedule = async () => {
       </div>
 
       <div v-else class="calendar-container">
-        <div class="calendar-grid">
+        <div v-if="calendarView === 'month'" class="calendar-grid">
           <div
             v-for="day in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']"
             :key="day"
@@ -399,6 +544,77 @@ const handleReschedule = async () => {
                 </div>
               </div>
             </template>
+          </div>
+        </div>
+
+        <div v-else-if="calendarView === 'week'" class="week-view">
+          <div class="week-grid">
+            <div class="week-header">
+              <div class="time-gutter"></div>
+              <div
+                v-for="day in weekDays"
+                :key="day.toISOString()"
+                class="week-day-header"
+              >
+                <div class="week-day-name">{{ day.toLocaleDateString("default", { weekday: "short" }) }}</div>
+                <div class="week-day-date">{{ day.getDate() }}</div>
+              </div>
+            </div>
+            <div class="week-body">
+              <div
+                v-for="slot in TIME_SLOTS"
+                :key="slot.value"
+                class="week-row"
+              >
+                <div class="time-gutter">{{ slot.label }}</div>
+                <div
+                  v-for="day in weekDays"
+                  :key="day.toISOString()"
+                  class="week-cell"
+                  @click="selectDate(day)"
+                >
+                  <div
+                    v-for="res in getReservationsForDateAndHour(day, slot.value)"
+                    :key="res.id"
+                    class="week-reservation"
+                    :style="{ borderLeftColor: statusColor(res.resStatus) }"
+                  >
+                    {{ shortName(res.name) }} {{ res.resTime?.slice(0, 5) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="calendarView === 'day'" class="day-view">
+          <div class="day-header-bar">
+            <h3 class="day-title">{{ selectedDate.toLocaleDateString("default", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) }}</h3>
+            <span v-if="daySchedule?.isClosed" class="day-closed-badge">Closed</span>
+            <span v-else-if="daySchedule?.openTime" class="day-hours-badge">
+              {{ daySchedule.openTime?.slice(0, 5) }} - {{ daySchedule.closeTime?.slice(0, 5) }}
+            </span>
+          </div>
+          <div class="day-timeline">
+            <div
+              v-for="slot in TIME_SLOTS"
+              :key="slot.value"
+              class="time-slot"
+              @click="openNewReservationAt(slot.value)"
+            >
+              <div class="slot-time">{{ slot.label }}</div>
+              <div class="slot-content">
+                <div
+                  v-for="res in getReservationsForHour(slot.value)"
+                  :key="res.id"
+                  class="day-reservation"
+                  :style="{ borderLeftColor: statusColor(res.resStatus), backgroundColor: getPaymentStatusColor(res.paymentStatus) + '20' }"
+                >
+                  <div class="day-res-name">{{ shortName(res.name) }}</div>
+                  <div class="day-res-meta">{{ res.people }} ppl · {{ res.resTime?.slice(0, 5) }}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1388,6 +1604,218 @@ const handleReschedule = async () => {
   .content-wrapper {
     margin-top: var(--space-10);
     margin-bottom: var(--space-10);
+  }
+}
+
+.view-toggle {
+  display: flex;
+  gap: var(--space-1);
+  background: var(--neutral-100);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+}
+
+.toggle-btn {
+  padding: var(--space-1) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  text-transform: capitalize;
+}
+
+.toggle-btn.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.toggle-btn:hover:not(.active) {
+  color: var(--ink);
+}
+
+.header-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.week-view,
+.day-view {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.week-grid,
+.day-timeline {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+}
+
+.day-view .day-timeline {
+  grid-template-columns: 60px 1fr;
+}
+
+.week-header,
+.day-header-bar {
+  display: contents;
+}
+
+.week-day-header {
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+  background: var(--surface-sunken);
+  border-left: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.week-day-name {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.week-day-date {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--ink);
+}
+
+.week-body {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+}
+
+.week-row {
+  display: contents;
+}
+
+.week-cell {
+  height: 32px;
+  border-left: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background var(--duration-fast);
+  position: relative;
+}
+
+.week-cell:hover {
+  background: var(--neutral-50);
+}
+
+.week-reservation {
+  font-size: 11px;
+  padding: 2px 6px;
+  margin: 2px;
+  border-left: 3px solid;
+  border-radius: 4px;
+  background: var(--surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.day-title {
+  font-family: var(--font-sans);
+  font-weight: 650;
+  font-size: var(--text-base);
+  color: var(--ink);
+  margin: 0;
+}
+
+.day-closed-badge,
+.day-hours-badge {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+}
+
+.day-closed-badge {
+  background: var(--rose-50);
+  color: var(--rose-600);
+}
+
+.day-hours-badge {
+  background: var(--earth-50);
+  color: var(--earth-600);
+}
+
+.time-slot {
+  display: contents;
+}
+
+.slot-time {
+  padding: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-align: center;
+  border-left: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+}
+
+.slot-content {
+  border-left: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  min-height: 40px;
+  padding: var(--space-1);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+
+.slot-content:hover {
+  background: var(--neutral-50);
+}
+
+.day-reservation {
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-1);
+  cursor: pointer;
+  transition: transform var(--duration-fast);
+}
+
+.day-reservation:hover {
+  transform: translateX(2px);
+}
+
+.day-res-name {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+
+.day-res-meta {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--ink-secondary);
+}
+
+@media (max-width: 768px) {
+  .week-grid,
+  .week-body {
+    grid-template-columns: 50px repeat(7, minmax(70px, 1fr));
+  }
+
+  .day-timeline {
+    grid-template-columns: 50px 1fr;
   }
 }
 </style>
