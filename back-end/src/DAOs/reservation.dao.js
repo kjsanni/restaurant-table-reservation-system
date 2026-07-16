@@ -31,7 +31,11 @@ const findAllReservations = async ({ limit, offset } = {}) => {
   if (limit) opts.limit = limit;
   if (offset !== undefined) opts.offset = offset;
   const { rows, count } = await Reservation.findAndCountAll(opts);
-  return { reservations: flattenArrayObjects(rows), total: count };
+  const reservations = flattenArrayObjects(rows);
+  if (limit) {
+    return { reservations, total: count };
+  }
+  return reservations;
 };
 
 const searchReservations = async (filters = {}, { limit, offset } = {}) => {

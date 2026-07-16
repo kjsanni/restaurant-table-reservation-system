@@ -50,7 +50,7 @@ const getAllHandler = async (req, res) => {
   );
 
   const response = { success: true };
-  if (pagination.limit && result.total !== undefined) {
+  if (result && result.reservations !== undefined) {
     response.collection = result.reservations;
     response.total = result.total;
     response.page = page;
