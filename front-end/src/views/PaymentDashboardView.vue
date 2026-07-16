@@ -67,9 +67,9 @@ const totalPages = computed(() => {
 });
 
 const goToPage = (target) => {
-  if (target < 1 || target > totalPages.value) return;
-  if (target === page.value) return;
-  page.value = target;
+  const clamped = Math.min(Math.max(1, target), totalPages.value || 1);
+  if (clamped === page.value) return;
+  page.value = clamped;
   loadData();
 };
 
