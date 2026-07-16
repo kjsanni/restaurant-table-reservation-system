@@ -3,10 +3,12 @@ import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted, computed } from "vue";
 import { VaSwitch, VaButton, VaCard, VaCardContent, VaModal } from "vuestic-ui";
 import scheduleAPI from "@/services/scheduleAPI";
+import reservationAPI from "@/services/reservationAPI";
 import logger from "@/utils/logger";
 
 const schedules = ref([]);
 const holidays = ref([]);
+const reservations = ref([]);
 const loading = ref(true);
 const showHolidayDialog = ref(false);
 const newHoliday = ref({
@@ -15,7 +17,20 @@ const newHoliday = ref({
   isClosed: true,
   openTime: "",
   closeTime: "",
+  overrideType: "",
 });
+
+const OVERRIDE_TYPES = [
+  { value: "", label: "Standard" },
+  { value: "event", label: "Event" },
+  { value: "private-party", label: "Private Party" },
+  { value: "special", label: "Special Hours" },
+];
+
+const overrideLabel = (type) => {
+  const found = OVERRIDE_TYPES.find((o) => o.value === type);
+  return found ? found.label : type || "Standard";
+};
 
 const days = [
   { value: "monday", label: "Monday" },
@@ -68,6 +83,35 @@ const dateOverrides = computed(() => {
     }));
 });
 
+const dayConflicts = computed(() => {
+  const result = {};
+  const byWeekday = {};
+  (reservations.value || []).forEach((r) => {
+    if (!r.resDate || !r.resTime) return;
+    const d = new Date(r.resDate + "T00:00:00");
+    const dow = d.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+    (byWeekday[dow] = byWeekday[dow] || []).push(r);
+  });
+  schedules.value.forEach((s) => {
+    if (s.isClosed) return;
+    const openMin = s.openTime ? toMinutes(s.openTime) : null;
+    const closeMin = s.closeTime ? toMinutes(s.closeTime) : null;
+    if (openMin === null || closeMin === null) return;
+    const conflicts = (byWeekday[s.dayOfWeek] || []).filter((r) => {
+      const t = toMinutes(r.resTime);
+      return t < openMin || t > closeMin;
+    });
+    if (conflicts.length) result[s.dayOfWeek] = conflicts.length;
+  });
+  return result;
+});
+
+const toMinutes = (time) => {
+  if (!time) return null;
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+};
+
 onMounted(async () => {
   await loadSchedule();
 });
@@ -92,6 +136,8 @@ const loadSchedule = async () => {
     });
     const holidaysRes = await scheduleAPI.getHolidays();
     holidays.value = holidaysRes.data.holidays;
+    const reservationsRes = await reservationAPI.getReservations();
+    reservations.value = reservationsRes.data.collection || reservationsRes.data || [];
   } catch (err) {
     logger.error("Failed to load schedule", { error: err.message });
   } finally {
@@ -115,6 +161,7 @@ const createHoliday = async () => {
     isClosed: newHoliday.value.isClosed,
     openTime: newHoliday.value.isClosed ? null : newHoliday.value.openTime,
     closeTime: newHoliday.value.isClosed ? null : newHoliday.value.closeTime,
+    overrideType: newHoliday.value.overrideType || null,
   });
   showHolidayDialog.value = false;
   newHoliday.value = {
@@ -123,6 +170,7 @@ const createHoliday = async () => {
     isClosed: true,
     openTime: "",
     closeTime: "",
+    overrideType: "",
   };
   await loadSchedule();
 };
@@ -208,6 +256,13 @@ const exportPDF = async () => {
                 <span v-if="!schedule.isClosed" class="slot-badge">
                   {{ schedule.slotDuration }} min slots
                 </span>
+                <span
+                  v-if="dayConflicts[schedule.dayOfWeek]"
+                  class="conflict-badge"
+                  :title="dayConflicts[schedule.dayOfWeek] + ' reservation(s) fall outside open hours'"
+                >
+                  ⚠ {{ dayConflicts[schedule.dayOfWeek] }} conflict(s)
+                </span>
                 <VaSwitch
                   v-model="schedule.isClosed"
                   @change="updateSchedule(schedule)"
@@ -280,6 +335,11 @@ const exportPDF = async () => {
               <div class="holiday-info">
                 <span class="holiday-date">{{ holiday.date }}</span>
                 <span class="holiday-desc">{{ holiday.description }}</span>
+                <span
+                  v-if="holiday.overrideType"
+                  class="override-badge"
+                  >{{ overrideLabel(holiday.overrideType) }}</span
+                >
                 <span v-if="holiday.isClosed" class="closed-badge">Closed</span>
                 <span v-else class="open-badge">Open</span>
               </div>
@@ -313,6 +373,18 @@ const exportPDF = async () => {
                 placeholder="Holiday description"
                 class="field-input"
               />
+            </div>
+            <div class="field">
+              <label class="field-label">Override Type</label>
+              <select v-model="newHoliday.overrideType" class="field-input">
+                <option
+                  v-for="opt in OVERRIDE_TYPES"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
+                  {{ opt.label }}
+                </option>
+              </select>
             </div>
             <div class="field">
               <label class="field-label">Closed</label>
@@ -548,13 +620,24 @@ const exportPDF = async () => {
   color: var(--rose-600);
 }
 
-.open-badge {
+.override-badge {
   font-size: var(--text-xs);
   font-weight: 600;
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-full);
-  background: var(--earth-50);
-  color: var(--earth-600);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.conflict-badge {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--rose-50);
+  color: var(--rose-600);
+  white-space: nowrap;
 }
 
 .empty-state {

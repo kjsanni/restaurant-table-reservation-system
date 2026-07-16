@@ -27,6 +27,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TIME,
         allowNull: true,
       },
+      overrideType: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+      },
     },
     {
       sequelize,
