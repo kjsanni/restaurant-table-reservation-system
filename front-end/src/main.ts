@@ -46,14 +46,14 @@ app.use(
             danger: { color: 'danger', size: 'medium' },
           },
           VaCard: {
-            default: { radius: 'lg', shadow: true },
+            default: { radius: 'lg', shadow: true } as any,
           },
           VaInput: {
-            default: { size: 'large' },
+            default: { size: 'large' } as any,
           },
         },
       },
-    },
+    } as any,
   }),
 )
 

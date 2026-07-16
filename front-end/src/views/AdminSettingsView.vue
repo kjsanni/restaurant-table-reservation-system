@@ -229,7 +229,7 @@ const updateValue = async (setting: {
   }
 };
 
-const handleNumberBlur = (setting: { key: string; value: number | string }) => {
+const handleNumberBlur = (setting: { key: string; value: number | string | boolean }) => {
   if (
     setting.value !== null &&
     setting.value !== undefined &&

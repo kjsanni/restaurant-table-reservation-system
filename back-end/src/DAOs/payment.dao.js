@@ -94,6 +94,47 @@ const getRevenueStats = async (from, to) => {
   };
 };
 
+const getRevenueTimeSeries = async (from, to, granularity = "day") => {
+  const where = {};
+  if (from) where.paidAt = { ...where.paidAt, [Op.gte]: from };
+  if (to) where.paidAt = { ...where.paidAt, [Op.lte]: to };
+
+  const payments = await Payment.findAll({
+    where,
+    attributes: ["paidAt", "amount", "discount", "method"],
+    order: [["paidAt", "ASC"]],
+    raw: true,
+  });
+
+  const groups = new Map();
+  const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: "UTC" });
+
+  for (const p of payments) {
+    const d = new Date(p.paidAt);
+    const key = fmt.format(d).slice(0, granularity === "month" ? 7 : 10);
+    if (!groups.has(key)) groups.set(key, { periodLabel: key, total: 0, count: 0, byMethod: {} });
+    const g = groups.get(key);
+    const net = parseFloat(p.amount || 0) - parseFloat(p.discount || 0);
+    g.total += net;
+    g.count += 1;
+    if (!g.byMethod[p.method]) g.byMethod[p.method] = { total: 0, count: 0 };
+    g.byMethod[p.method].total += net;
+    g.byMethod[p.method].count += 1;
+  }
+
+  const summary = {
+    totalRevenue: Array.from(groups.values()).reduce((s, g) => s + g.total, 0),
+    totalPayments: Array.from(groups.values()).reduce((s, g) => s + g.count, 0),
+    avgPayment: 0,
+  };
+  summary.avgPayment = summary.totalPayments ? summary.totalRevenue / summary.totalPayments : 0;
+
+  return {
+    series: Array.from(groups.values()).sort((a, b) => a.periodLabel.localeCompare(b.periodLabel)),
+    summary,
+  };
+};
+
 module.exports = {
   findByReservation,
   create,
@@ -101,4 +142,5 @@ module.exports = {
   remove,
   getPaymentHistory,
   getRevenueStats,
+  getRevenueTimeSeries,
 };

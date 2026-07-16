@@ -43,6 +43,9 @@ class ReservationAPI {
   getHeatmapV2(filters = {}) {
     return API.get("/reservations/heatmap-v2", { params: filters });
   }
+  getRevenueTimeSeries(filters = {}) {
+    return API.get("/reservations/revenue/time-series", { params: filters });
+  }
 }
 
 export default new ReservationAPI();

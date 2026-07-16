@@ -129,7 +129,7 @@ const getStackedHeight = (amount) => {
   return (amount / max) * 160;
 };
 
-const getStackedY = (item, methodKey) => {
+const getStackedY = (item, methodKey, _mIndex) => {
   const methods = Object.keys(item.byMethod || {});
   let y = 180;
   for (let i = 0; i < methods.indexOf(methodKey); i++) {

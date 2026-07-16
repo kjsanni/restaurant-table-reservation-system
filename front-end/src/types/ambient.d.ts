@@ -48,3 +48,8 @@ declare module '@/constants' {
 }
 
 declare module 'vuestic-ui/css' {}
+
+declare module '*.css' {
+  const styles: { [className: string]: string }
+  export default styles
+}

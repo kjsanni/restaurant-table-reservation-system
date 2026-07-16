@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { VaAlert } from "vuestic-ui";
 
-const props = defineProps({
-  collection: Array,
-  filteredCollection: Array,
-});
+const props = defineProps<{
+  collection: any[]
+  filteredCollection: any[]
+}>();
 </script>
 
 <template>

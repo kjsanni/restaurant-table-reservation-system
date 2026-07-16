@@ -7,7 +7,7 @@ const props = defineProps({
   mode: {
     type: String,
     default: "date-hour",
-    validator: (v) => ["date-hour", "calendar"].includes(v),
+    validator: (v: string) => ["date-hour", "calendar"].includes(v),
   },
   from: String,
   to: String,
@@ -181,14 +181,14 @@ const openDrillDown = async (day) => {
         <input
           type="date"
           :value="internalFrom"
-          @input="setFrom($event.target.value)"
+          @input="setFrom(($event.target as HTMLInputElement).value)"
           class="date-input"
         />
         <span class="range-arrow">→</span>
         <input
           type="date"
           :value="internalTo"
-          @input="setTo($event.target.value)"
+          @input="setTo(($event.target as HTMLInputElement).value)"
           class="date-input"
         />
       </div>

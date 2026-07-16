@@ -54,6 +54,11 @@ router
   .all(httpMethodError);
 
 router
+  .route("/revenue/time-series")
+  .get(...protectedRoute("view_reservations", reservationController.getRevenueTimeSeriesHandler))
+  .all(httpMethodError);
+
+router
   .route("/:reservationId/payments")
   .get(...protectedRoute("view_reservations", paymentController.getPaymentsHandler))
   .post(...writeRoute("edit_reservations", paymentController.addPaymentHandler))

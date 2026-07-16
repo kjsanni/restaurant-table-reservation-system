@@ -1,6 +1,7 @@
 const reservationService = require("../services/reservationService");
 const reservationDAO = require("../DAOs/reservation.dao");
 const tableDAO = require("../DAOs/table.dao");
+const paymentDAO = require("../DAOs/payment.dao");
 
 // Fields a client is permitted to update on a reservation. Any other key in the
 // request body is stripped to prevent mass-assignment of status/payment totals.
@@ -289,6 +290,21 @@ const getStatsHandler = async (req, res) => {
   });
 };
 
+const getRevenueTimeSeriesHandler = async (req, res) => {
+  const { from, to, granularity = "day" } = req.query;
+  if (!["day", "week", "month"].includes(granularity)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid granularity. Use 'day', 'week', or 'month'.",
+    });
+  }
+  const data = await paymentDAO.getRevenueTimeSeries(from, to, granularity);
+  return res.status(200).json({
+    success: true,
+    ...data,
+  });
+};
+
 const searchNotesHandler = async (req, res) => {
   const { q: query } = req.query;
   const results = await reservationDAO.searchReservationsByNotes(query || "");
@@ -314,5 +330,6 @@ module.exports = {
   unassignStaffHandler,
   getPaymentSummaryHandler,
   getStatsHandler,
+  getRevenueTimeSeriesHandler,
   searchNotesHandler,
 };
