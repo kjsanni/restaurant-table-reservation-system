@@ -241,6 +241,25 @@ const occupancyStats = computed(() => {
   return { total, occupied, blocked, free, occupancyRate };
 });
 
+const isOverCapacity = (table) => {
+  const party = table.reservation?.people;
+  if (!party || !table.capacity) return false;
+  return Number(party) > Number(table.capacity);
+};
+
+const serverOverview = computed(() => {
+  const map = new Map();
+  tables.value.forEach((table) => {
+    (table.users || []).forEach((staff) => {
+      if (!map.has(staff.id)) {
+        map.set(staff.id, { id: staff.id, username: staff.username, tables: [] });
+      }
+      map.get(staff.id).tables.push(table.name || `T${table.id}`);
+    });
+  });
+  return Array.from(map.values()).sort((a, b) => b.tables.length - a.tables.length);
+});
+
 const openQrModal = (table) => {
   qrTable.value = table;
   showQrModal.value = true;
@@ -371,6 +390,13 @@ const getQrCodeUrl = (table) => {
                   {{ table.reservation.resTime }}
                 </span>
               </div>
+              <div
+                v-if="isOverCapacity(table)"
+                class="capacity-warning"
+              >
+                ⚠ Party of {{ table.reservation.people }} exceeds capacity
+                ({{ table.capacity }})
+              </div>
             </div>
 
             <div class="staff-section" v-if="table.users && table.users.length">
@@ -426,8 +452,33 @@ const getQrCodeUrl = (table) => {
               </button>
             </div>
           </div>
+          </div>
         </div>
-      </div>
+
+          <div
+            v-if="serverOverview.length"
+            class="server-overview"
+          >
+            <h3 class="overview-title">Server Assignments</h3>
+            <div class="overview-grid">
+              <div
+                v-for="staff in serverOverview"
+                :key="staff.id"
+                class="overview-card"
+              >
+                <span class="overview-name">{{ staff.username }}</span>
+                <span class="overview-count">{{ staff.tables.length }} table(s)</span>
+                <div class="overview-tables">
+                  <span
+                    v-for="tname in staff.tables"
+                    :key="tname"
+                    class="overview-table-chip"
+                    >{{ tname }}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
 
       <div v-if="showMaintenanceDialog" class="modal-overlay">
         <div class="modal">
@@ -925,10 +976,77 @@ const getQrCodeUrl = (table) => {
   color: var(--ink);
 }
 
-.reservation-meta {
+.capacity-warning {
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  background: var(--rose-50);
+  color: var(--rose-600);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.server-overview {
+  margin-top: var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.overview-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 650;
+  color: var(--ink);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.overview-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--neutral-50);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.overview-name {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+
+.overview-count {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
   color: var(--ink-secondary);
+}
+
+.overview-tables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.overview-table-chip {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  background: var(--sky-50);
+  color: var(--sky-700);
+  border-radius: var(--radius-full);
 }
 
 .staff-section {
