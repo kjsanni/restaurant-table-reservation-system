@@ -45,6 +45,121 @@ const paymentStatusFilter = ref("all");
 const dayPopupOpen = ref(false);
 const selectedDay = ref(null);
 
+const selectedIds = ref(new Set());
+const bulkStatusTarget = ref("");
+const bulkLoading = ref(false);
+const bulkError = ref("");
+
+const isSelected = (id) => selectedIds.value.has(id);
+const toggleSelect = (id) => {
+  const next = new Set(selectedIds.value);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  selectedIds.value = next;
+};
+const toggleSelectAll = () => {
+  if (selectedIds.value.size === filterReservations.value.length) {
+    selectedIds.value = new Set();
+  } else {
+    selectedIds.value = new Set(filterReservations.value.map((r) => r.id));
+  }
+};
+const clearSelection = () => {
+  selectedIds.value = new Set();
+  bulkStatusTarget.value = "";
+  bulkError.value = "";
+};
+
+const bulkCancel = async () => {
+  if (selectedIds.value.size === 0) return;
+  bulkLoading.value = true;
+  bulkError.value = "";
+  try {
+    await reservationAPI.bulkCancel(Array.from(selectedIds.value));
+    await loadSchedule();
+    clearSelection();
+  } catch (err) {
+    bulkError.value = getApiErrorMessage(err, "Failed to cancel reservations");
+  } finally {
+    bulkLoading.value = false;
+  }
+};
+
+const bulkUpdateStatus = async () => {
+  if (selectedIds.value.size === 0 || !bulkStatusTarget.value) return;
+  bulkLoading.value = true;
+  bulkError.value = "";
+  try {
+    await reservationAPI.bulkUpdate(Array.from(selectedIds.value), {
+      resStatus: bulkStatusTarget.value,
+    });
+    await loadSchedule();
+    clearSelection();
+  } catch (err) {
+    bulkError.value = getApiErrorMessage(err, "Failed to update reservations");
+  } finally {
+    bulkLoading.value = false;
+  }
+};
+
+const exportCSV = () => {
+  const headers = [
+    "id",
+    "name",
+    "email",
+    "phone",
+    "resDate",
+    "resTime",
+    "people",
+    "resStatus",
+    "paymentStatus",
+    "notes",
+  ];
+  const escape = (val) => {
+    if (val === null || val === undefined) return "";
+    const s = String(val);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const rows = filterReservations.value.map((r) =>
+    headers.map((h) => escape(r[h])).join(",")
+  );
+  const csv = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "reservations.csv");
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
+
+const duplicateReservation = async (reservation) => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const resDate = tomorrow.toISOString().split("T")[0];
+  bulkLoading.value = true;
+  bulkError.value = "";
+  try {
+    await reservationAPI.registerReservation({
+      name: reservation.name,
+      email: reservation.email,
+      phone: reservation.phone,
+      resDate,
+      resTime: reservation.resTime,
+      people: reservation.people,
+      expectedTotal: reservation.expectedTotal || 0,
+      paymentStatus: "unpaid",
+      notes: reservation.notes,
+    });
+    await loadSchedule();
+  } catch (err) {
+    bulkError.value = getApiErrorMessage(err, "Failed to duplicate reservation");
+  } finally {
+    bulkLoading.value = false;
+  }
+};
+
 const activeAction = ref(null);
 const actionReservation = ref(null);
 const actionLoading = ref(false);
@@ -532,6 +647,11 @@ const clearFilters = () => {
 const filteredCount = computed(() => filterReservations.value.length);
 const totalCount = computed(() => reservations.value.length);
 
+const todayCount = computed(() => {
+  const todayStr = new Date().toISOString().split("T")[0];
+  return reservations.value.filter((r) => r.resDate === todayStr).length;
+});
+
 const statusCounts = computed(() => {
   const counts = {};
   reservations.value.forEach((r) => {
@@ -688,11 +808,65 @@ const today = () => {
         </div>
       </div>
 
-      <div class="stats-bar" v-if="filteredCount !== totalCount">
-        <span class="stats-text">
-          Showing {{ filteredCount }} of {{ totalCount }} reservations
-        </span>
-      </div>
+<table class="bulk-select-all" v-if="filteredCount > 0">
+  <tbody>
+    <tr>
+      <td class="select-col">
+        <input
+          type="checkbox"
+          :checked="selectedIds.size === filterReservations.length && filterReservations.length > 0"
+          @change="toggleSelectAll"
+          aria-label="Select all reservations"
+        />
+      </td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="stats-bar">
+  <span class="stats-text">
+    Showing {{ filteredCount }} of {{ totalCount }} reservations
+  </span>
+  <span class="stats-today" v-if="todayCount > 0">
+    · {{ todayCount }} today
+  </span>
+  <button class="btn btn-secondary btn-sm" @click="exportCSV">
+    Export CSV
+  </button>
+</div>
+
+<div class="bulk-bar" v-if="selectedIds.size > 0">
+  <span class="bulk-count">{{ selectedIds.size }} selected</span>
+  <select v-model="bulkStatusTarget" class="filter-select bulk-select">
+    <option value="">Change status…</option>
+    <option
+      v-for="status in Object.values(RESERVATION_STATUS)"
+      :key="status"
+      :value="status"
+    >
+      {{ status }}
+    </option>
+  </select>
+  <button
+    class="btn btn-primary btn-sm"
+    :disabled="!bulkStatusTarget || bulkLoading"
+    @click="bulkUpdateStatus"
+  >
+    Apply
+  </button>
+  <button
+    class="btn btn-danger btn-sm"
+    :disabled="bulkLoading"
+    @click="bulkCancel"
+  >
+    Cancel Selected
+  </button>
+  <button class="btn btn-secondary btn-sm" @click="clearSelection">
+    Clear
+  </button>
+  <span class="bulk-error" v-if="bulkError">{{ bulkError }}</span>
+</div>
 
       <div class="date-controls">
         <button class="nav-btn" @click="prev()">
@@ -714,13 +888,21 @@ const today = () => {
             :collection="reservations"
             :filteredCollection="filterReservations"
           >
-            <template #card="slotProps">
-              <div class="reservation-card">
-                <ReservationInfo
-                  :reservation="slotProps.item"
-                  :can-delete="canEditReservations"
-                  @on-delete="openDeleteModal"
-                />
+<template #card="slotProps">
+  <div class="reservation-card">
+    <div class="card-select-row">
+      <input
+        type="checkbox"
+        :checked="isSelected(slotProps.item.id)"
+        @change="toggleSelect(slotProps.item.id)"
+        aria-label="Select reservation"
+      />
+    </div>
+    <ReservationInfo
+      :reservation="slotProps.item"
+      :can-delete="canEditReservations"
+      @on-delete="openDeleteModal"
+    />
                 <div class="card-meta">
                   <span class="status-badge" :class="slotProps.item.resStatus">
                     {{ slotProps.item.resStatus }}
@@ -805,10 +987,16 @@ const today = () => {
                     @click="unseatReservation(slotProps.item)"
                   />
                   <ButtonAction
-                    v-else-if="canEditReservations"
+                    v-if="canEditReservations"
                     text="Delete"
                     color="#ef4444"
                     @click="openDeleteModal(slotProps.item.id)"
+                  />
+                  <ButtonAction
+                    v-if="canEditReservations"
+                    text="Duplicate"
+                    color="#8b5cf6"
+                    @click="duplicateReservation(slotProps.item)"
                   />
                 </div>
               </div>
@@ -1208,6 +1396,7 @@ const today = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .stats-text {
@@ -1215,6 +1404,70 @@ const today = () => {
   font-size: var(--text-sm);
   color: var(--accent-text);
   font-weight: 500;
+}
+
+.stats-today {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.bulk-count {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.bulk-select {
+  width: auto;
+  min-width: 140px;
+}
+
+.bulk-error {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--rose-600);
+}
+
+.card-select-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.card-select-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.bulk-select-all {
+  margin-left: auto;
+}
+
+.bulk-select-all .select-col {
+  padding: 0;
+}
+
+.bulk-select-all input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
 }
 
 @media screen and (min-width: 1024px) {
