@@ -61,6 +61,7 @@ const getRevenueStats = async (from, to) => {
   const result = await Payment.findOne({
     attributes: [
       [fn("SUM", col("amount")), "totalRevenue"],
+      [fn("SUM", col("discount")), "totalDiscount"],
       [fn("COUNT", col("id")), "totalPayments"],
       [fn("AVG", col("amount")), "avgPayment"],
     ],
@@ -79,8 +80,10 @@ const getRevenueStats = async (from, to) => {
     raw: true,
   });
 
+  const rawRevenue = result?.totalRevenue ? parseFloat(result.totalRevenue) : 0;
+  const rawDiscount = result?.totalDiscount ? parseFloat(result.totalDiscount) : 0;
   return {
-    totalRevenue: result?.totalRevenue ? parseFloat(result.totalRevenue) : 0,
+    totalRevenue: rawRevenue - rawDiscount,
     totalPayments: result?.totalPayments ? parseInt(result.totalPayments, 10) : 0,
     avgPayment: result?.avgPayment ? parseFloat(result.avgPayment) : 0,
     byMethod: byMethod.map((m) => ({

@@ -25,11 +25,32 @@ const getReservationReport = async (filters = {}) => {
   };
 };
 
+const csvCell = (value) => {
+  const str = value === null || value === undefined ? "" : String(value);
+  // Wrap in quotes and double internal quotes; neutralize formula-injection
+  // prefixes (= + - @) by prefixing with a single quote.
+  const needsQuote = /[",\n]/.test(str) || /^=[+\-@]/.test(str);
+  const safe = str.replace(/"/g, '""');
+  return needsQuote ? `"${safe}"` : safe;
+};
+
 const exportCSV = async (filters = {}) => {
   const report = await getReservationReport(filters);
-  let csv = "ID,Date,Time,Status,Payment Status,People,Customer\n";
+  const header = ["ID", "Date", "Time", "Status", "Payment Status", "People", "Customer"];
+  let csv = header.map(csvCell).join(",") + "\n";
   report.reservations.forEach((r) => {
-    csv += `${r.id},${r.resDate},${r.resTime},${r.resStatus},${r.paymentStatus},${r.people},"${r.name || ""}"\n`;
+    csv +=
+      [
+        r.id,
+        r.resDate,
+        r.resTime,
+        r.resStatus,
+        r.paymentStatus,
+        r.people,
+        r.name || "",
+      ]
+        .map(csvCell)
+        .join(",") + "\n";
   });
   return csv;
 };
