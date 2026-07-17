@@ -214,6 +214,25 @@ const unassignStaff = async (userId) => {
   }
 };
 
+const serverOverview = computed(() => {
+  const map = new Map();
+  tables.value.forEach((table) => {
+    (table.users || []).forEach((staff) => {
+      if (!map.has(staff.id)) {
+        map.set(staff.id, {
+          id: staff.id,
+          username: staff.username,
+          tables: [],
+        });
+      }
+      map.get(staff.id).tables.push(table.name || `T${table.id}`);
+    });
+  });
+  return Array.from(map.values()).sort(
+    (a, b) => b.tables.length - a.tables.length
+  );
+});
+
 const availableStaffForAssign = computed(() => {
   if (!selectedTable.value) return [];
   const assignedStaffIds = selectedTable.value.Users?.map((u) => u.id) || [];
