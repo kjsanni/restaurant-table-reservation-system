@@ -118,6 +118,45 @@ const toMinutes = (time) => {
   return h * 60 + m;
 };
 
+const fmtMin = (min) => {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
+};
+
+const suggestedHours = computed(() => {
+  const byWeekday = {};
+  (reservations.value || []).forEach((r) => {
+    if (!r.resDate || !r.resTime) return;
+    const d = new Date(r.resDate + "T00:00:00");
+    const dow = d.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+    (byWeekday[dow] = byWeekday[dow] || []).push(toMinutes(r.resTime));
+  });
+  const result = {};
+  days.forEach((day) => {
+    const times = byWeekday[day.value] || [];
+    if (times.length < 2) return;
+    const min = Math.min(...times);
+    const max = Math.max(...times);
+    result[day.value] = {
+      openTime: fmtMin(Math.max(0, min - 60)),
+      closeTime: fmtMin(Math.min(1439, max + 60)),
+      sampleSize: times.length,
+    };
+  });
+  return result;
+});
+
+const applySuggestion = async (dayOfWeek) => {
+  const s = schedules.value.find((x) => x.dayOfWeek === dayOfWeek);
+  const sug = suggestedHours.value[dayOfWeek];
+  if (!s || !sug) return;
+  s.openTime = sug.openTime;
+  s.closeTime = sug.closeTime;
+  s.isClosed = false;
+  await updateSchedule(s);
+};
+
 const shiftsByDay = computed(() => {
   const map = {};
   for (const s of shifts.value) {
@@ -448,6 +487,25 @@ const exportPDF = async () => {
               <button class="template-del" @click="deleteCustomTemplate(idx)" title="Delete">×</button>
             </div>
           </div>
+        </div>
+        <div class="section-card suggestions-card">
+          <h2 class="section-title">Auto-Schedule Suggestions</h2>
+          <p class="suggestions-note">
+            Based on reservation density. Suggests open/close windows padded by 1 hour.
+          </p>
+          <p v-if="!Object.keys(suggestedHours).length" class="suggestions-empty">
+            Not enough reservation data to suggest hours.
+          </p>
+          <ul v-else class="suggestions-list">
+            <li v-for="day in weeklyGrid" :key="day.day" v-show="suggestedHours[day.day]" class="suggestion-item">
+              <span class="suggestion-day">{{ day.label }}</span>
+              <span class="suggestion-hours">
+                {{ suggestedHours[day.day].openTime.slice(0,5) }} – {{ suggestedHours[day.day].closeTime.slice(0,5) }}
+                <em>(n={{ suggestedHours[day.day].sampleSize }})</em>
+              </span>
+              <button class="mini-btn apply" @click="applySuggestion(day.day)">Apply</button>
+            </li>
+          </ul>
         </div>
         <div class="section-card weekly-card">
           <h2 class="section-title">Weekly Hours</h2>
@@ -1263,6 +1321,57 @@ const exportPDF = async () => {
   color: var(--rose-600, #e11d48);
   cursor: pointer;
   font-size: 1rem;
+}
+
+.suggestions-card {
+  margin-top: var(--space-6);
+}
+.suggestions-note {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-3);
+}
+.suggestions-empty {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+.suggestions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.suggestion-day {
+  font-weight: 600;
+  text-transform: capitalize;
+  min-width: 90px;
+}
+.suggestion-hours {
+  font-size: var(--text-sm);
+}
+.suggestion-hours em {
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+}
+.mini-btn.apply {
+  margin-left: auto;
+  border: 1px solid var(--accent, #2563eb);
+  color: var(--accent, #2563eb);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 2px 10px;
+  font-size: var(--text-sm);
 }
 
 .field-row .field {
