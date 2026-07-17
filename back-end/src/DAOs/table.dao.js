@@ -30,10 +30,11 @@ const findAllTables = async () => {
   });
 };
 
-const createTable = async ({ name, capacity, staffIds }) => {
+const createTable = async ({ name, capacity, staffIds, floorPlanId }) => {
   const table = await Table.create({
     name: name,
     capacity: capacity,
+    floorPlanId: floorPlanId ?? null,
   });
   if (staffIds && staffIds.length > 0) {
     await table.addUsers(staffIds);

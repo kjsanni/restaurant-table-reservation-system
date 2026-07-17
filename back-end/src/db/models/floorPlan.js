@@ -1,0 +1,23 @@
+"use strict";
+const { Model } = require("sequelize");
+module.exports = (sequelize, DataTypes) => {
+  class FloorPlan extends Model {
+    static associate(models) {
+      FloorPlan.hasMany(models.table, { foreignKey: "floorPlanId" });
+    }
+  }
+  FloorPlan.init(
+    {
+      name: {
+        type: DataTypes.STRING(60),
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      modelName: "floorPlan",
+      tableName: "FloorPlans",
+    }
+  );
+  return FloorPlan;
+};

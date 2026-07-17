@@ -4,6 +4,7 @@ import tableAPI from "@/services/tableAPI";
 import reservationAPI from "@/services/reservationAPI";
 import waitlistAPI from "@/services/waitlistAPI";
 import paymentAPI from "@/services/paymentAPI";
+import floorPlanAPI from "@/services/floorPlanAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
@@ -27,9 +28,17 @@ const addError = ref("");
 
 const SECTIONS = ["main", "bar", "patio", "terrace", "private"];
 const sectionFilter = ref("all");
+const floorPlans = ref([]);
+const selectedFloorPlan = ref("all");
 const displayTables = computed(() => {
-  if (sectionFilter.value === "all") return tables.value;
-  return tables.value.filter((t) => (t.section || "main") === sectionFilter.value);
+  let list = tables.value;
+  if (sectionFilter.value !== "all") {
+    list = list.filter((t) => (t.section || "main") === sectionFilter.value);
+  }
+  if (selectedFloorPlan.value !== "all") {
+    list = list.filter((t) => String(t.floorPlanId) === String(selectedFloorPlan.value));
+  }
+  return list;
 });
 const sectionCounts = computed(() => {
   const counts = { all: tables.value.length };
@@ -38,6 +47,42 @@ const sectionCounts = computed(() => {
   }
   return counts;
 });
+
+const loadFloorPlans = async () => {
+  try {
+    const res = await floorPlanAPI.getFloorPlans();
+    floorPlans.value = res?.data?.floorPlans ?? [];
+  } catch (err) {
+    logger.error("Failed to load floor plans", { error: err.message });
+  }
+};
+
+const showNewPlanDialog = ref(false);
+const newPlanName = ref("");
+
+const createFloorPlan = async () => {
+  if (!newPlanName.value) return;
+  try {
+    const res = await floorPlanAPI.createFloorPlan(newPlanName.value.trim());
+    const plan = res?.data?.floorPlan;
+    if (plan) floorPlans.value = [...floorPlans.value, plan];
+    selectedFloorPlan.value = plan.id;
+    newPlanName.value = "";
+    showNewPlanDialog.value = false;
+  } catch (err) {
+    logger.error("Failed to create floor plan", { error: err.message });
+  }
+};
+
+const removeFloorPlan = async (id) => {
+  try {
+    await floorPlanAPI.deleteFloorPlan(id);
+    floorPlans.value = floorPlans.value.filter((f) => f.id !== id);
+    if (String(selectedFloorPlan.value) === String(id)) selectedFloorPlan.value = "all";
+  } catch (err) {
+    logger.error("Failed to delete floor plan", { error: err.message });
+  }
+};
 
 const showServerOverlay = ref(false);
 const STAFF_COLORS = [
@@ -157,6 +202,7 @@ const loadData = async () => {
     tables.value = tRes.data.collection;
     reservations.value = rRes.data.collection;
     waitlist.value = wRes.data.waitlist || wRes.data.collection || [];
+    await loadFloorPlans();
   } catch (err) {
     logger.error("Failed to load floor plan", { error: err.message });
   } finally {
@@ -368,6 +414,7 @@ const confirmAddTable = async () => {
     await tableAPI.registerTable({
       name: newTableName.value.trim(),
       capacity: Number(newTableCapacity.value) || 4,
+      floorPlanId: selectedFloorPlan.value === "all" ? null : Number(selectedFloorPlan.value),
     });
     showAddTable.value = false;
     await loadData();
@@ -471,6 +518,22 @@ onMounted(loadData);
         </aside>
 
         <main class="plan-panel">
+          <div class="floorplan-switcher">
+            <label class="fp-label">Floor Plan</label>
+            <select v-model="selectedFloorPlan" class="fp-select">
+              <option value="all">All plans</option>
+              <option v-for="fp in floorPlans" :key="fp.id" :value="fp.id">{{ fp.name }}</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" @click="showNewPlanDialog = true">+ New</button>
+            <button
+              v-if="selectedFloorPlan !== 'all'"
+              class="btn btn-secondary btn-sm"
+              @click="removeFloorPlan(selectedFloorPlan)"
+              title="Delete plan"
+            >
+              🗑
+            </button>
+          </div>
           <div class="plan-toolbar">
             <div class="legend-bar">
               <span class="legend-pill free">
@@ -726,6 +789,13 @@ onMounted(loadData);
                 class="action-input"
               />
             </div>
+            <div class="field-group" v-if="floorPlans.length">
+              <label class="field-label">Floor Plan</label>
+              <select v-model="selectedFloorPlan" class="action-input">
+                <option value="all">Default (all plans)</option>
+                <option v-for="fp in floorPlans" :key="fp.id" :value="fp.id">{{ fp.name }}</option>
+              </select>
+            </div>
             <p v-if="addError" class="assign-error">{{ addError }}</p>
             <div class="popup-actions">
               <button class="btn btn-outline" @click="closeAddTable">
@@ -733,6 +803,35 @@ onMounted(loadData);
               </button>
               <button class="btn btn-primary" @click="confirmAddTable">
                 Add
+              </button>
+            </div>
+          </div>
+        </template>
+      </PopupBox>
+
+      <PopupBox
+        :is-open="showNewPlanDialog"
+        header-text="New Floor Plan"
+        :is-closable="true"
+        @close-modal="showNewPlanDialog = false"
+      >
+        <template #popup-content>
+          <div class="assign-content">
+            <div class="field-group">
+              <label class="field-label">Plan Name</label>
+              <input
+                type="text"
+                v-model="newPlanName"
+                class="action-input"
+                placeholder="e.g. Main Floor"
+              />
+            </div>
+            <div class="popup-actions">
+              <button class="btn btn-outline" @click="showNewPlanDialog = false">
+                Cancel
+              </button>
+              <button class="btn btn-primary" @click="createFloorPlan">
+                Create
               </button>
             </div>
           </div>
@@ -1138,6 +1237,25 @@ onMounted(loadData);
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.floorplan-switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.fp-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+}
+.fp-select {
+  padding: 6px 10px;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  background: #fff;
 }
 
 .section-filters {

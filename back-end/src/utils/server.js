@@ -18,6 +18,7 @@ const reportRouter = require("../routes/report.router");
 const customerRouter = require("../routes/customer.router");
 const shiftRouter = require("../routes/shift.router");
 const timeOffRouter = require("../routes/timeOff.router");
+const floorPlanRouter = require("../routes/floorPlan.router");
 const { setCsrfCookie, CSRF_HEADER_NAME, CSRF_COOKIE_NAME } = require("../middleware/csrf");
 const { generateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
@@ -131,6 +132,7 @@ const createServer = () => {
   app.use("/api/v1/customers", logAction, customerRouter);
   app.use("/api/v1/shifts", logAction, shiftRouter);
   app.use("/api/v1/time-offs", logAction, timeOffRouter);
+  app.use("/api/v1/floor-plans", logAction, floorPlanRouter);
   app.use("/api/v1/notifications", require("../routes/notification.router"));
   app.get("/api/v1/stats", (req, res) => {
     res.json({ success: true, stats: getStats() });

@@ -115,6 +115,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         defaultValue: "main",
       },
+      floorPlanId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+        references: { model: "FloorPlans", key: "id" },
+      },
     },
     {
       sequelize,
