@@ -5,12 +5,14 @@ import { VaSwitch, VaButton, VaCard, VaCardContent, VaModal } from "vuestic-ui";
 import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
 import shiftAPI from "@/services/shiftAPI";
+import timeOffAPI from "@/services/timeOffAPI";
 import logger from "@/utils/logger";
 
 const schedules = ref([]);
 const holidays = ref([]);
 const reservations = ref([]);
 const shifts = ref([]);
+const timeOffs = ref([]);
 const staffList = ref([]);
 const showShifts = ref(true);
 const loading = ref(true);
@@ -182,6 +184,78 @@ const loadShifts = async () => {
   }
 };
 
+const loadTimeOffs = async () => {
+  try {
+    const res = await timeOffAPI.getTimeOffs();
+    timeOffs.value = res?.data?.timeOffs ?? [];
+  } catch (err) {
+    logger.error("Failed to load time-offs", { error: err.message });
+  }
+};
+
+const affectedDates = computed(() => {
+  const set = new Set();
+  for (const t of timeOffs.value) {
+    if (t.status === "rejected") continue;
+    const start = new Date(t.startDate);
+    const end = new Date(t.endDate);
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      set.add(d.toISOString().slice(0, 10));
+    }
+  }
+  return set;
+});
+
+const showTimeOffDialog = ref(false);
+const newTimeOff = ref({ userId: null, startDate: "", endDate: "", reason: "" });
+
+const openTimeOffDialog = async () => {
+  showTimeOffDialog.value = true;
+  newTimeOff.value = { userId: null, startDate: "", endDate: "", reason: "" };
+  if (staffList.value.length === 0) {
+    try {
+      const res = await timeOffAPI.getStaff();
+      staffList.value = res?.data?.staff ?? [];
+    } catch (err) {
+      logger.error("Failed to load staff", { error: err.message });
+    }
+  }
+};
+
+const createTimeOff = async () => {
+  if (!newTimeOff.value.userId || !newTimeOff.value.startDate || !newTimeOff.value.endDate) return;
+  try {
+    await timeOffAPI.createTimeOff({
+      userId: newTimeOff.value.userId,
+      startDate: newTimeOff.value.startDate,
+      endDate: newTimeOff.value.endDate,
+      reason: newTimeOff.value.reason || null,
+    });
+    showTimeOffDialog.value = false;
+    await loadTimeOffs();
+  } catch (err) {
+    logger.error("Failed to create time-off", { error: err.message });
+  }
+};
+
+const setTimeOffStatus = async (id, status) => {
+  try {
+    await timeOffAPI.updateStatus(id, status);
+    await loadTimeOffs();
+  } catch (err) {
+    logger.error("Failed to update time-off", { error: err.message });
+  }
+};
+
+const removeTimeOff = async (id) => {
+  try {
+    await timeOffAPI.deleteTimeOff(id);
+    await loadTimeOffs();
+  } catch (err) {
+    logger.error("Failed to delete time-off", { error: err.message });
+  }
+};
+
 onMounted(async () => {
   await loadSchedule();
 });
@@ -209,6 +283,7 @@ const loadSchedule = async () => {
     const reservationsRes = await reservationAPI.getReservations();
     reservations.value = reservationsRes.data.collection || reservationsRes.data || [];
     await loadShifts();
+    await loadTimeOffs();
   } catch (err) {
     logger.error("Failed to load schedule", { error: err.message });
   } finally {
@@ -350,6 +425,9 @@ const exportPDF = async () => {
               <button class="btn btn-secondary" :class="{ active: showShifts }" @click="showShifts = !showShifts">
                 👥 Shifts
               </button>
+              <button class="btn btn-secondary" @click="openTimeOffDialog">
+                🏖️ Time-off
+              </button>
               <button class="btn btn-primary" @click="openShiftDialog">+ Add Shift</button>
             </div>
           </div>
@@ -420,6 +498,28 @@ const exportPDF = async () => {
               </ul>
             </div>
           </div>
+        </div>
+
+        <div class="section-card timeoff-card">
+          <div class="timeoff-header">
+            <h2 class="section-title">Time-off Requests</h2>
+            <button class="btn btn-primary" @click="openTimeOffDialog">+ Request</button>
+          </div>
+          <p v-if="!timeOffs.length" class="timeoff-empty">No time-off requests.</p>
+          <ul v-else class="timeoff-list">
+            <li v-for="t in timeOffs" :key="t.id" class="timeoff-item">
+              <div class="timeoff-main">
+                <span class="timeoff-staff">{{ t.User?.username || "Staff" }}</span>
+                <span class="timeoff-range">{{ t.startDate }} → {{ t.endDate }}</span>
+              </div>
+              <span class="timeoff-status" :class="'st-' + t.status">{{ t.status }}</span>
+              <div class="timeoff-actions">
+                <button v-if="t.status === 'pending'" class="mini-btn approve" @click="setTimeOffStatus(t.id, 'approved')">✓</button>
+                <button v-if="t.status === 'pending'" class="mini-btn reject" @click="setTimeOffStatus(t.id, 'rejected')">✕</button>
+                <button class="mini-btn delete" @click="removeTimeOff(t.id)">🗑</button>
+              </div>
+            </li>
+          </ul>
         </div>
 
         <div class="section-card holidays-card">
@@ -543,6 +643,42 @@ const exportPDF = async () => {
           <template #actions>
             <VaButton preset="secondary" @click="showShiftDialog = false">Cancel</VaButton>
             <VaButton preset="primary" :disabled="!newShift.userId" @click="createShift">Save</VaButton>
+          </template>
+        </VaCard>
+      </VaModal>
+
+      <VaModal v-model="showTimeOffDialog" title="Request Time Off" size="small">
+        <VaCard>
+          <VaCardContent>
+            <div class="field">
+              <label class="field-label">Staff</label>
+              <select v-model="newTimeOff.userId" class="field-input">
+                <option :value="null" disabled>Choose staff…</option>
+                <option v-for="s in staffList" :key="s.id" :value="s.id">{{ s.username }}</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">From</label>
+                <input type="date" v-model="newTimeOff.startDate" class="field-input" />
+              </div>
+              <div class="field">
+                <label class="field-label">To</label>
+                <input type="date" v-model="newTimeOff.endDate" class="field-input" />
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Reason (optional)</label>
+              <input type="text" v-model="newTimeOff.reason" placeholder="Vacation, sick, etc." class="field-input" />
+            </div>
+          </VaCardContent>
+          <template #actions>
+            <VaButton preset="secondary" @click="showTimeOffDialog = false">Cancel</VaButton>
+            <VaButton
+              preset="primary"
+              :disabled="!newTimeOff.userId || !newTimeOff.startDate || !newTimeOff.endDate"
+              @click="createTimeOff"
+            >Submit</VaButton>
           </template>
         </VaCard>
       </VaModal>
@@ -1022,6 +1158,87 @@ const exportPDF = async () => {
 }
 .field-row .field {
   flex: 1;
+}
+
+.timeoff-card {
+  margin-top: var(--space-6);
+}
+.timeoff-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.timeoff-empty {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+.timeoff-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.timeoff-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.timeoff-main {
+  display: flex;
+  flex-direction: column;
+}
+.timeoff-staff {
+  font-weight: 600;
+}
+.timeoff-range {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+.timeoff-status {
+  font-size: var(--text-xs);
+  text-transform: capitalize;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.timeoff-status.st-pending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.timeoff-status.st-approved {
+  background: #dcfce7;
+  color: #15803d;
+}
+.timeoff-status.st-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.timeoff-actions {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-2);
+}
+.mini-btn {
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 2px 8px;
+  font-size: var(--text-sm);
+}
+.mini-btn.approve {
+  color: #15803d;
+}
+.mini-btn.reject {
+  color: #b91c1c;
+}
+.mini-btn.delete {
+  color: var(--ink-muted);
 }
 
 @media (max-width: 768px) {
