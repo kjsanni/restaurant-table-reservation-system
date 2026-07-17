@@ -270,7 +270,6 @@ const getCustomerReservationHistory = async (customerId, limit = 50) => {
         required: false,
       },
     ],
-    group: ["resStatus"],
     raw: true,
   });
 };

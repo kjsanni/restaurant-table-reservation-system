@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import customerAPI from "@/services/customerAPI";
 import PopupBox from "@/components/PopupBox.vue";
+import PageHeader from "@/components/PageHeader.vue";
 
 const route = useRoute();
 const customerId = route.params.id;
