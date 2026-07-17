@@ -368,6 +368,15 @@ const getRevenueTimeSeriesHandler = async (req, res) => {
   return res.status(200).json({ success: true, ...data });
 };
 
+const searchNotesHandler = async (req, res) => {
+  const { q: query } = req.query;
+  const results = await reservationDAO.searchReservationsByNotes(query || "");
+  return res.status(200).json({
+    success: true,
+    collection: results,
+  });
+};
+
 module.exports = {
   getAllHandler,
   registerHandler,
@@ -390,4 +399,5 @@ module.exports = {
   mergeTablesHandler,
   unmergeTablesHandler,
   getRevenueTimeSeriesHandler,
+  searchNotesHandler,
 };

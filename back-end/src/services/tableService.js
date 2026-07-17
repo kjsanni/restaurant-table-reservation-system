@@ -44,6 +44,10 @@ const updateTablePosition = async (tableDAO, id, positionX, positionY, floorPlan
   return await tableDAO.updateTablePosition(id, positionX, positionY, floorPlanId);
 };
 
+const recordEvent = async (tableDAO, tableId, eventType, description = null, actorId = null) => {
+  return await tableDAO.recordEvent(tableId, eventType, description, actorId);
+};
+
 module.exports = {
   getAllTables,
   registerTable,
@@ -53,4 +57,5 @@ module.exports = {
   assignStaff,
   unassignStaff,
   updateTablePosition,
+  recordEvent,
 };

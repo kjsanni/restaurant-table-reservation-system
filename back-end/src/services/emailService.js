@@ -82,12 +82,16 @@ const getEmailTemplateDefaults = () => ({
 });
 
 const buildTransporter = (config) => {
+  const tls = {};
+  if (config.insecureTls === true) {
+    tls.rejectUnauthorized = false;
+  }
   return nodemailer.createTransport({
     host: config.host,
     port: config.port,
     secure: config.secure,
     auth: config.user ? { user: config.user, pass: config.pass } : undefined,
-    tls: { rejectUnauthorized: false },
+    ...(Object.keys(tls).length > 0 ? { tls } : {}),
   });
 };
 

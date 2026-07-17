@@ -72,7 +72,7 @@ const blockTableHandler = async (req, res) => {
   const { id } = req.params;
   const { notes } = req.body;
   const table = await tableDAO.blockTable(id, notes);
-  await tableService.recordEvent(tableDAO, id, "blocked", notes || null, actorId(req));
+  await tableService.recordEvent(tableDAO, id, "blocked", notes || null, req.user?.id || null);
 
   return res.status(200).json({
     success: true,
@@ -84,7 +84,7 @@ const blockTableHandler = async (req, res) => {
 const unblockTableHandler = async (req, res) => {
   const { id } = req.params;
   const table = await tableDAO.unblockTable(id);
-  await tableService.recordEvent(tableDAO, id, "unblocked", null, actorId(req));
+  await tableService.recordEvent(tableDAO, id, "unblocked", null, req.user?.id || null);
 
   return res.status(200).json({
     success: true,
@@ -105,7 +105,7 @@ const assignStaffHandler = async (req, res) => {
   const { tableId } = req.params;
   const { userId } = req.body;
   const info = await tableService.assignStaff(tableDAO, tableId, userId);
-  await tableService.recordEvent(tableDAO, tableId, "staff_assigned", null, actorId(req));
+  await tableService.recordEvent(tableDAO, tableId, "staff_assigned", null, req.user?.id || null);
 
   return res.status(200).json({
     success: true,
@@ -117,7 +117,7 @@ const assignStaffHandler = async (req, res) => {
 const unassignStaffHandler = async (req, res) => {
   const { tableId, userId } = req.params;
   const info = await tableService.unassignStaff(tableDAO, tableId, userId);
-  await tableService.recordEvent(tableDAO, tableId, "staff_unassigned", null, actorId(req));
+  await tableService.recordEvent(tableDAO, tableId, "staff_unassigned", null, req.user?.id || null);
 
   return res.status(200).json({
     success: true,

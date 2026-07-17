@@ -43,19 +43,4 @@ router
   .post(...writeRoute("manage_tables", waitlistController.cancelHandler))
   .all(httpMethodError);
 
-router
-  .route("/:id")
-  .delete(...writeRoute("manage_tables", waitlistController.deleteHandler))
-  .all(httpMethodError);
-
-router
-  .route("/maintenance/expire")
-  .post(...writeRoute("manage_tables", waitlistController.expireOldHandler))
-  .all(httpMethodError);
-
-router
-  .route("/from-reservation/:reservationId")
-  .post(...writeRoute("manage_tables", waitlistController.createFromReservationHandler))
-  .all(httpMethodError);
-
 module.exports = router;

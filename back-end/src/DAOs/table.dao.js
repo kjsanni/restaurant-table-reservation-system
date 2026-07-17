@@ -189,6 +189,19 @@ const updateTablePosition = async (id, positionX, positionY, floorPlanId = "defa
   });
 };
 
+const recordEvent = async (tableId, eventType, description = null, actorId = null) => {
+  const table = await findTableById(tableId);
+  if (!table) {
+    throw { status: 404, message: "Table not found!" };
+  }
+  return await TableEvent.create({
+    tableId: table.id,
+    eventType,
+    description,
+    actorId,
+  });
+};
+
 module.exports = {
   findAllTables,
   createTable,
@@ -200,4 +213,5 @@ module.exports = {
   assignStaffToTable,
   unassignStaffFromTable,
   updateTablePosition,
+  recordEvent,
 };

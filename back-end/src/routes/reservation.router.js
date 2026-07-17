@@ -24,11 +24,6 @@ router
   .all(httpMethodError);
 
 router
-  .route("/search")
-  .get(...protectedRoute("view_reservations", reservationController.getAllHandler))
-  .all(httpMethodError);
-
-router
   .route("/heatmap")
   .get(...protectedRoute("view_reservations", reservationController.getHeatmapHandler))
   .all(httpMethodError);

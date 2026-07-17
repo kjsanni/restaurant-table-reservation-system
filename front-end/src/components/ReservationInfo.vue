@@ -25,12 +25,19 @@ const tableNames = computed(() => {
 });
 
 const highlightedNotes = computed(() => {
-  if (!props.searchQuery) return props.reservation?.notes || "";
-  const notes = props.reservation?.notes;
-  if (!notes) return "";
-  const escaped = notes.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(`(${escaped})`, "gi");
-  return notes.replace(regex, "<mark>$1</mark>");
+  if (!props.reservation?.notes) return "";
+  const notes = props.reservation.notes;
+  if (!props.searchQuery) return notes;
+  const escaped = notes.replace(
+    /[&<>"']/g,
+    (m) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[
+        m
+      ])
+  );
+  const queryEscaped = props.searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${queryEscaped})`, "gi");
+  return escaped.replace(regex, "<mark>$1</mark>");
 });
 
 const customerLink = computed(() => {
