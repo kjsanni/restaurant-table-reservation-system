@@ -58,8 +58,50 @@ const isFieldEmpty = (payload) => {
 };
 
 const registerReservation = async (reservationDAO, payload, tenantId) => {
+  const authDAO = require("../DAOs/auth.dao");
+
+  const maintenance = await authDAO.getSettingValue(
+    "maintenance_mode",
+    { enabled: false, message: "" },
+    tenantId
+  );
+  if (maintenance && maintenance.enabled) {
+    throw {
+      status: 503,
+      message:
+        maintenance.message ||
+        "Online booking is temporarily unavailable for maintenance. Please contact us directly.",
+    };
+  }
+
   isFieldEmpty(payload);
   validateTime(new Date(), payload.resDate, payload.resTime);
+
+  const window = await authDAO.getSettingValue(
+    "reservation_window",
+    { minLeadMinutes: 0, maxLeadDays: 365, maxPerSlot: 1 },
+    tenantId
+  );
+  if (window) {
+    const resDateTime = new Date(`${payload.resDate}T${payload.resTime}`);
+    const now = new Date();
+    if (window.minLeadMinutes && resDateTime.getTime() - now.getTime() < window.minLeadMinutes * 60000) {
+      throw {
+        status: 400,
+        message: `Reservations must be made at least ${window.minLeadMinutes} minute(s) in advance.`,
+      };
+    }
+    if (window.maxLeadDays) {
+      const maxDate = new Date(now.getTime() + window.maxLeadDays * 86400000);
+      if (resDateTime.getTime() > maxDate.getTime()) {
+        throw {
+          status: 400,
+          message: `Reservations cannot be made more than ${window.maxLeadDays} days in advance.`,
+        };
+      }
+    }
+  }
+
 
   try {
     const scheduleDAO = require("../DAOs/schedule.dao");

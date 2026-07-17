@@ -17,6 +17,15 @@ class NotificationAPI {
   getTemplates() {
     return API.get("/notifications/templates");
   }
+  sendTestWhatsApp(to, message) {
+    return API.post("/notifications/whatsapp/test", { to, message });
+  }
+  sendTestEmail(to) {
+    return API.post("/notifications/email/test", { to });
+  }
+  getPaystackWebhookInfo() {
+    return API.get("/notifications/paystack/webhook-info");
+  }
 }
 
 export default new NotificationAPI();

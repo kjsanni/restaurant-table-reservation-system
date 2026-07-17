@@ -52,6 +52,9 @@ class ReservationAPI {
   getStatusHistory(reservationId) {
     return API.get("/reservations/" + reservationId + "/status-history");
   }
+  getRevenueTimeSeries(params = {}) {
+    return API.get("/reservations/revenue/time-series", { params });
+  }
 }
 
 export default new ReservationAPI();
