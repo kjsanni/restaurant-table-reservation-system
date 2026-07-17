@@ -110,6 +110,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         defaultValue: "round",
       },
+      section: {
+        type: DataTypes.STRING(40),
+        allowNull: true,
+        defaultValue: "main",
+      },
     },
     {
       sequelize,

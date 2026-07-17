@@ -35,6 +35,29 @@ const draggingTableId = ref(null);
 const dragOffset = ref({ x: 0, y: 0 });
 const savingPosition = ref(false);
 
+const SECTIONS = ["main", "bar", "patio", "terrace", "private"];
+const sectionFilter = ref("all");
+const displayTables = computed(() => {
+  if (sectionFilter.value === "all") return tables.value;
+  return tables.value.filter((t) => (t.section || "main") === sectionFilter.value);
+});
+const sectionCounts = computed(() => {
+  const counts = { all: tables.value.length };
+  for (const s of SECTIONS) {
+    counts[s] = tables.value.filter((t) => (t.section || "main") === s).length;
+  }
+  return counts;
+});
+
+const updateTableSection = async (table, section) => {
+  try {
+    await tableAPI.bulkUpdate([table.id], { section });
+    table.section = section;
+  } catch (err) {
+    logger.error("Failed to update table section", { error: err.message });
+  }
+};
+
 const tableStyle = (table) => {
   if (!editLayout.value) return {};
   return {
@@ -501,6 +524,25 @@ const getQrCodeUrl = (table) => {
           </div>
         </div>
 
+        <div class="section-filters">
+          <button
+            class="section-chip"
+            :class="{ active: sectionFilter === 'all' }"
+            @click="sectionFilter = 'all'"
+          >
+            All <span class="chip-count">{{ sectionCounts.all }}</span>
+          </button>
+          <button
+            v-for="s in SECTIONS"
+            :key="s"
+            class="section-chip"
+            :class="{ active: sectionFilter === s }"
+            @click="sectionFilter = s"
+          >
+            {{ s }} <span class="chip-count">{{ sectionCounts[s] }}</span>
+          </button>
+        </div>
+
         <div class="actions-row">
           <RouterLink
             v-if="canManageTables"
@@ -559,7 +601,7 @@ const getQrCodeUrl = (table) => {
 
         <div :class="editLayout ? 'table-grid layout-canvas' : 'table-grid'">
           <div
-            v-for="table in tables"
+            v-for="table in displayTables"
             :key="table.id"
             class="table-card"
             :class="{
@@ -613,6 +655,16 @@ const getQrCodeUrl = (table) => {
               <div class="meta-item">
                 <span class="meta-icon">👥</span>
                 <span class="meta-text">Capacity: {{ table.capacity }}</span>
+              </div>
+              <div class="meta-item section-select-wrap">
+                <span class="meta-icon">📍</span>
+                <select
+                  class="section-select"
+                  :value="table.section || 'main'"
+                  @change="updateTableSection(table, $event.target.value)"
+                >
+                  <option v-for="s in SECTIONS" :key="s" :value="s">{{ s }}</option>
+                </select>
               </div>
               <div
                 v-if="table.isBlocked && table.maintenanceNotes"
@@ -2030,6 +2082,46 @@ const getQrCodeUrl = (table) => {
   margin-left: auto;
   color: var(--text-muted);
   font-size: 0.78rem;
+}
+.section-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.section-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.82rem;
+  text-transform: capitalize;
+  cursor: pointer;
+  color: var(--text);
+}
+.section-chip.active {
+  background: var(--primary, #2563eb);
+  color: #fff;
+  border-color: var(--primary, #2563eb);
+}
+.chip-count {
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+.section-select-wrap {
+  align-items: center;
+}
+.section-select {
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.78rem;
+  text-transform: capitalize;
+  background: var(--surface);
+  color: var(--text);
 }
 .btn-history {
   background: var(--surface-muted, #eef2f7);
