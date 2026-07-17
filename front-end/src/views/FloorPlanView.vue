@@ -104,6 +104,10 @@ const toggleAnalytics = async () => {
   if (showAnalytics.value) await loadAnalytics();
 };
 
+const printFloorPlan = () => {
+  window.print();
+};
+
 const pendingReservations = computed(() => {
   return (reservations.value || []).filter(
     (r) => r.resStatus === "pending" && !r.tableId
@@ -498,6 +502,9 @@ onMounted(loadData);
               @click="toggleAnalytics"
             >
               📊 Analytics
+            </button>
+            <button class="btn btn-secondary btn-sm" @click="printFloorPlan">
+              🖨 Print
             </button>
           </div>
           <div class="section-filters">
@@ -1381,5 +1388,24 @@ onMounted(loadData);
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+@media print {
+  .sidebar,
+  .plan-toolbar,
+  .section-filters,
+  .analytics-panel,
+  .remove-table-btn {
+    display: none !important;
+  }
+  .floor-plan-layout {
+    display: block;
+  }
+  .plan-panel {
+    width: 100%;
+  }
+  .plan-grid {
+    break-inside: avoid;
+  }
 }
 </style>
