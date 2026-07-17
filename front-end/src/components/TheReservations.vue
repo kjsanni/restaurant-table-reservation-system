@@ -384,6 +384,15 @@ const buildCalendarDays = (year, month) => {
       .filter((r) => r.resDate === dateStr)
       .sort((a, b) => a.resTime.localeCompare(b.resTime));
 
+    const statusTally = {};
+    dayReservations.forEach((r) => {
+      const s = r.resStatus || "pending";
+      statusTally[s] = (statusTally[s] || 0) + 1;
+    });
+    const dominantStatus = Object.keys(statusTally).sort(
+      (a, b) => statusTally[b] - statusTally[a]
+    )[0] || null;
+
     days.push({
       date: day,
       dateStr,
@@ -396,6 +405,7 @@ const buildCalendarDays = (year, month) => {
       reservations: dayReservations,
       visibleReservations: dayReservations.slice(0, MAX_VISIBLE),
       overflowCount: Math.max(0, dayReservations.length - MAX_VISIBLE),
+      dominantStatus,
     });
   }
 

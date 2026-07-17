@@ -157,6 +157,15 @@ const buildCalendarDays = (year, month) => {
           .sort((a, b) => a.resTime.localeCompare(b.resTime))
       : [];
 
+    const statusTally = {};
+    dayReservations.forEach((r) => {
+      const s = r.resStatus || "pending";
+      statusTally[s] = (statusTally[s] || 0) + 1;
+    });
+    const dominantStatus = Object.keys(statusTally).sort(
+      (a, b) => statusTally[b] - statusTally[a]
+    )[0] || null;
+
     days.push({
       date: day,
       dateStr,
@@ -169,6 +178,7 @@ const buildCalendarDays = (year, month) => {
       reservations: dayReservations,
       visibleReservations: dayReservations.slice(0, MAX_VISIBLE),
       overflowCount: Math.max(0, dayReservations.length - MAX_VISIBLE),
+      dominantStatus,
     });
   }
 
@@ -651,6 +661,12 @@ const handleReschedule = async () => {
                 holiday: day.isHoliday,
                 'other-month': !day.isCurrentMonth,
                 'has-reservations': (day.reservations?.length || 0) > 0,
+                'dom-pending': day.dominantStatus === 'pending',
+                'dom-confirmed': day.dominantStatus === 'confirmed',
+                'dom-seated': day.dominantStatus === 'seated',
+                'dom-completed': day.dominantStatus === 'completed',
+                'dom-cancelled': day.dominantStatus === 'cancelled',
+                'dom-missed': day.dominantStatus === 'missed',
               },
             ]"
             @click="openDay(day)"
@@ -1408,6 +1424,24 @@ const handleReschedule = async () => {
 
 .has-reservations {
   border-color: var(--neutral-300);
+}
+.calendar-day.dom-pending {
+  background: #fef9c3;
+}
+.calendar-day.dom-confirmed {
+  background: #dbeafe;
+}
+.calendar-day.dom-seated {
+  background: #dcfce7;
+}
+.calendar-day.dom-completed {
+  background: #e0e7ff;
+}
+.calendar-day.dom-cancelled {
+  background: #fee2e2;
+}
+.calendar-day.dom-missed {
+  background: #ffedd5;
 }
 
 .day-popup {
