@@ -11,13 +11,13 @@ module.exports = {
       "Waitlist",
       "AuditLogs",
       "Settings",
-      "Schedule",
+      "schedules",
       "Holidays",
-      "ReservationStatusHistory",
+      "reservation_status_history",
       "Refunds",
-      "EmailTemplates",
-      "PermissionTemplates",
-      "Shifts",
+      "emailTemplates",
+      "permission_templates",
+      "StaffShifts",
       "TimeOffs",
       "TableEvents",
       "FloorPlans",
@@ -34,7 +34,10 @@ module.exports = {
         });
         await queryInterface.addIndex(table, ["tenantId"]);
       } catch (err) {
-        if (err.message.includes("column name \"tenantId\" already exists")) {
+        if (
+          err.message.includes("tenantId") &&
+          (err.message.includes("already exists") || err.message.includes("Duplicate column"))
+        ) {
           console.log(`Column tenantId already exists on ${table}`);
         } else {
           throw err;
@@ -46,7 +49,6 @@ module.exports = {
       { table: "user_groups", col: "userId" },
       { table: "table_staff", col: "userId" },
       { table: "reservation_staff", col: "userId" },
-      { table: "role_permissions", col: "roleId" },
     ];
 
     for (const jt of junctionTables) {
@@ -60,7 +62,10 @@ module.exports = {
         });
         await queryInterface.addIndex(jt.table, ["tenantId"]);
       } catch (err) {
-        if (err.message.includes("column name \"tenantId\" already exists")) {
+        if (
+          err.message.includes("tenantId") &&
+          (err.message.includes("already exists") || err.message.includes("Duplicate column"))
+        ) {
           console.log(`Column tenantId already exists on ${jt.table}`);
         } else {
           throw err;
@@ -79,20 +84,19 @@ module.exports = {
       "Waitlist",
       "AuditLogs",
       "Settings",
-      "Schedule",
+      "schedules",
       "Holidays",
-      "ReservationStatusHistory",
+      "reservation_status_history",
       "Refunds",
-      "EmailTemplates",
-      "PermissionTemplates",
-      "Shifts",
+      "emailTemplates",
+      "permission_templates",
+      "StaffShifts",
       "TimeOffs",
       "TableEvents",
       "FloorPlans",
       "user_groups",
       "table_staff",
       "reservation_staff",
-      "role_permissions",
     ];
 
     for (const table of tables) {

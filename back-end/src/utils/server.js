@@ -39,10 +39,10 @@ let tenantAdminRoutes = null;
 let billingRoutes = null;
 
 if (TENANT_MODE) {
-  ({ resolveTenant } = require("../../tenant-platform/middleware/resolveTenant"));
-  ({ requireActiveTenant } = require("../../tenant-platform/middleware/tenantStatus"));
-  tenantAdminRoutes = require("../../tenant-platform/routes/tenantAdmin.router");
-  billingRoutes = require("../../tenant-platform/routes/billing.router");
+  ({ resolveTenant } = require("../tenant-platform/middleware/resolveTenant"));
+  ({ requireActiveTenant } = require("../tenant-platform/middleware/tenantStatus"));
+  tenantAdminRoutes = require("../tenant-platform/routes/tenantAdmin.router");
+  billingRoutes = require("../tenant-platform/routes/billing.router");
 }
 
 const requestTimeout = (timeout = 15000) => {
@@ -83,7 +83,7 @@ const createServer = () => {
   app.set("io", io);
 
   if (TENANT_MODE) {
-    const { runTenantCron } = require("../../tenant-platform/utils/tenantCron");
+    const { runTenantCron } = require("../tenant-platform/utils/tenantCron");
     runTenantCron();
     setInterval(runTenantCron, 6 * 60 * 60 * 1000);
   }

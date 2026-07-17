@@ -49,13 +49,6 @@ const paystackWebhookInfoHandler = async (req, res) => {
   });
 };
 
-module.exports = {
-  scheduleRemindersHandler,
-  testWhatsAppHandler,
-  testEmailHandler,
-  paystackWebhookInfoHandler,
-};
-
 const testEmailHandler = async (req, res) => {
   const { to } = req.body;
   if (!to) {
@@ -83,4 +76,11 @@ const testEmailHandler = async (req, res) => {
   } catch (err) {
     return res.status(400).json({ success: false, message: err.message });
   }
+};
+
+module.exports = {
+  scheduleRemindersHandler,
+  testWhatsAppHandler,
+  testEmailHandler,
+  paystackWebhookInfoHandler,
 };
