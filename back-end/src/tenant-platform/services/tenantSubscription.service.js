@@ -73,9 +73,15 @@ const getTenantDashboard = async () => {
   const cancelled = await db.tenant.count({ where: { status: "cancelled" } });
   const trialing = await db.tenant.count({ where: { status: "trialing" } });
 
-  const mrr = await db.tenant.sum("plan", {
+  const mrr = await db.tenant.sum(db.sequelize.literal(`
+    CASE plan
+      WHEN 'starter' THEN 29
+      WHEN 'growth' THEN 79
+      WHEN 'enterprise' THEN 0
+      ELSE 0
+    END
+  `), {
     where: { status: { [db.Sequelize.Op.in]: ["active", "past_due", "trialing"] } },
-    col: "plan",
   });
 
   const recentTenants = await db.tenant.findAll({
