@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import customerAPI from "@/services/customerAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import PageHeader from "@/components/PageHeader.vue";
@@ -9,6 +9,7 @@ import { useCurrency } from "@/composables/useCurrency";
 const { format: fmt } = useCurrency();
 
 const route = useRoute();
+const router = useRouter();
 const customerId = route.params.id;
 
 const loading = ref(true);
@@ -121,7 +122,7 @@ const saveTags = async () => {
 };
 
 const navigateToNewReservation = () => {
-  window.location.href = `/new-reservation?customerId=${customerId}`;
+  router.push({ path: "/new-reservation", query: { customerId } });
 };
 
 const markVisit = async () => {

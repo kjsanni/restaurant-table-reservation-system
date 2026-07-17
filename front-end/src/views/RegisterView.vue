@@ -14,6 +14,7 @@ const user = ref({
   email: "",
   password: "",
 });
+const submitting = ref(false);
 
 const validationErrors = ref<Record<string, string[]> | null>(null);
 const isSuccessful = ref(false);
@@ -37,12 +38,15 @@ onMounted(async () => {
 });
 
 const handleRegister = async () => {
+  if (submitting.value) return;
+  submitting.value = true;
   isSuccessful.value = false;
   validationErrors.value = null;
   generalError.value = null;
 
   if (!registrationEnabled.value) {
     generalError.value = "Registration is currently disabled!";
+    submitting.value = false;
     return;
   }
 
@@ -57,6 +61,8 @@ const handleRegister = async () => {
   } catch (err) {
     generalError.value = getApiErrorMessage(err);
     validationErrors.value = getApiErrors(err);
+  } finally {
+    submitting.value = false;
   }
 };
 </script>
@@ -123,10 +129,10 @@ const handleRegister = async () => {
           <VaButton
             block
             type="submit"
-            :disabled="!registrationEnabled || !allRequirementsMet"
+            :disabled="!registrationEnabled || !allRequirementsMet || submitting"
             class="auth-submit"
           >
-            Register
+            {{ submitting ? "Creating account..." : "Register" }}
           </VaButton>
         </form>
 

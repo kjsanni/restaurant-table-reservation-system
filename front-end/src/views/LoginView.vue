@@ -15,6 +15,7 @@ const credentials = ref({
   email: "",
   password: "",
 });
+const submitting = ref(false);
 
 const validationErrors = ref<Record<string, string[]> | null>(null);
 const generalError = ref<string | null>(null);
@@ -40,6 +41,8 @@ const startLockoutTimer = (remainingSeconds: number) => {
 };
 
 const handleLogin = async () => {
+  if (submitting.value) return;
+  submitting.value = true;
   validationErrors.value = null;
   generalError.value = null;
   try {
@@ -51,6 +54,8 @@ const handleLogin = async () => {
     if (err?.response?.data?.remainingSeconds) {
       startLockoutTimer(err.response.data.remainingSeconds);
     }
+  } finally {
+    submitting.value = false;
   }
 };
 </script>
@@ -117,8 +122,9 @@ const handleLogin = async () => {
             size="large"
             block
             class="auth-submit"
+            :disabled="submitting"
           >
-            Sign In
+            {{ submitting ? "Signing in..." : "Sign In" }}
           </VaButton>
         </form>
 

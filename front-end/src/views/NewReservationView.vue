@@ -89,6 +89,7 @@ const toggleTag = async (tagKey) => {
 const validationErrors = ref(null);
 const isSuccessful = ref(false);
 const generalError = ref(null);
+const submitting = ref(false);
 
 const capitalize = (s) => {
   const str = String(s || "").trim();
@@ -119,7 +120,18 @@ watch(
   }
 );
 
+let loyaltyTimer = null;
+watch(
+  () => reservation.value.email,
+  (email) => {
+    if (loyaltyTimer) clearTimeout(loyaltyTimer);
+    loyaltyTimer = setTimeout(() => loadCustomerLoyalty(email), 400);
+  }
+);
+
 const registerReservation = async () => {
+  if (submitting.value) return;
+  submitting.value = true;
   isSuccessful.value = false;
   validationErrors.value = null;
   generalError.value = null;
@@ -181,6 +193,8 @@ const registerReservation = async () => {
     });
     generalError.value = getApiErrorMessage(err);
     validationErrors.value = getApiErrors(err);
+  } finally {
+    submitting.value = false;
   }
 };
 </script>
@@ -365,9 +379,9 @@ const registerReservation = async () => {
             :error-flag="generalError"
             :error-message="generalError"
           />
-          <button type="submit" class="btn btn-submit">
+          <button type="submit" class="btn btn-submit" :disabled="submitting">
             <SaveIcon class="btn-icon" />
-            Submit Reservation
+            {{ submitting ? "Submitting..." : "Submit Reservation" }}
           </button>
         </div>
       </form>
