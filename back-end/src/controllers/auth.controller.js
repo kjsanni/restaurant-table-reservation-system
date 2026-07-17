@@ -89,6 +89,7 @@ const getMeHandler = async (req, res) => {
         manage_roles: true,
         manage_groups: true,
         view_audit_logs: true,
+        manage_settings: true,
       },
       manager: {
         view_reservations: true,

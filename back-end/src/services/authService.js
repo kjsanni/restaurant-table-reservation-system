@@ -168,9 +168,10 @@ const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = n
         manage_schedule: true,
         manage_staff: true,
         manage_roles: true,
-          manage_groups: true,
-          view_audit_logs: true,
-          manage_audit_logs: true,
+        manage_groups: true,
+        view_audit_logs: true,
+        manage_audit_logs: true,
+        manage_settings: true,
       },
       manager: {
         view_reservations: true,

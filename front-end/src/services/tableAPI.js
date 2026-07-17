@@ -19,11 +19,8 @@ class TableAPI {
   unblockTable(tableId) {
     return API.patch("/tables/" + tableId + "/unblock");
   }
-  updateTablePosition(tableId, positionX, positionY) {
-    return API.patch("/tables/" + tableId + "/position", {
-      positionX,
-      positionY,
-    });
+  updatePosition(tableId, posX, posY) {
+    return API.patch("/tables/" + tableId + "/position", { posX, posY });
   }
   getWaitingStaff() {
     return API.get("/tables/staff");
@@ -45,9 +42,6 @@ class TableAPI {
   }
   updateTable(tableId, data) {
     return API.patch("/tables/" + tableId, data);
-  }
-  updatePosition(tableId, posX, posY) {
-    return API.patch("/tables/" + tableId + "/position", { posX, posY });
   }
   deleteTable(tableId) {
     return API.delete("/tables/" + tableId + "/delete");
