@@ -23,6 +23,7 @@ const getTenantsHandler = async (req, res) => {
       "name",
       "slug",
       "domain",
+      "settings",
       "plan",
       "status",
       "subscriptionStatus",

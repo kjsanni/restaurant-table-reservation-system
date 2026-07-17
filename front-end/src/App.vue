@@ -18,6 +18,7 @@ import {
 } from "@/config/sidebarItems";
 import PageHeader from "@/components/PageHeader.vue";
 import TenantSwitcher from "@/components/TenantSwitcher.vue";
+import { useTenantBranding } from "@/composables/useTenantBranding";
 
 defineOptions({
   components: { PageHeader },
@@ -26,6 +27,7 @@ defineOptions({
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+useTenantBranding();
 
 const sidebarVisible = ref(true);
 const collapsed = ref(false);
