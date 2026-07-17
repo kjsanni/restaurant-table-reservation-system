@@ -3,6 +3,7 @@ const reservationDAO = require("../DAOs/reservation.dao");
 const db = require("../db/models");
 const Payment = db.payment;
 const refundDAO = require("../DAOs/refund.dao");
+const webhookService = require("./webhook.service");
 
 const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
@@ -60,7 +61,9 @@ const addPayment = async (reservationId, data, tenantId) => {
     updatedReservation = reservation;
   }
 
-  return { payment, ...paidInfo, reservation: updatedReservation };
+  const result = { payment, ...paidInfo, reservation: updatedReservation };
+  webhookService.dispatch("payment.completed", result, tenantId);
+  return result;
 };
 
 const getTotalPaid = async (reservationId, tenantId) => {
@@ -84,7 +87,9 @@ const removePayment = async (reservationId, id, tenantId) => {
     }
     updatedReservation = reservation;
   }
-  return { ...paidInfo, reservation: updatedReservation };
+  const result = { ...paidInfo, reservation: updatedReservation };
+  webhookService.dispatch("payment.refunded", result, tenantId);
+  return result;
 };
 
 const refundPayment = async (reservationId, paymentId, data, tenantId) => {

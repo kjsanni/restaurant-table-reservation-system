@@ -47,6 +47,8 @@ const updateCustomerHandler = async (req, res) => {
   return res.status(200).json({ success: true, customer });
 };
 
+const { requireFeatureFlag } = require("../utils/featureFlags");
+
 const findOrCreateHandler = async (req, res) => {
   const customer = await customerService.findOrCreateCustomer(req.body, req.tenant?.id);
   return res.status(200).json({ success: true, customer });
@@ -62,6 +64,7 @@ const incrementVisitHandler = async (req, res) => {
 };
 
 const addPointsHandler = async (req, res) => {
+  await requireFeatureFlag("loyalty", req.tenant?.id);
   const { customerId } = req.params;
   const { points } = req.body;
   if (!points || Number(points) <= 0) {
@@ -75,6 +78,7 @@ const addPointsHandler = async (req, res) => {
 };
 
 const redeemPointsHandler = async (req, res) => {
+  await requireFeatureFlag("loyalty", req.tenant?.id);
   const { customerId } = req.params;
   const { points } = req.body;
   if (!points || Number(points) <= 0) {

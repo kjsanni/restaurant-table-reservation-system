@@ -1,5 +1,6 @@
 const dateTimeValidator = require("../utils/dateAndTimeValidator");
 const scheduleService = require("./scheduleService");
+const webhookService = require("./webhook.service");
 
 const getAllReservations = async (reservationDAO, filters = {}, pagination = {}, tenantId) => {
   if (Object.keys(filters).length > 0) {
@@ -142,7 +143,9 @@ const registerReservation = async (reservationDAO, payload, tenantId) => {
     paymentStatus: payload.paymentStatus || "unpaid",
   };
 
-  return await reservationDAO.createReservation(data, tenantId);
+  const reservation = await reservationDAO.createReservation(data, tenantId);
+  webhookService.dispatch("reservation.created", reservation, tenantId);
+  return reservation;
 };
 
 const editReservation = async (reservationId, reservationDAO, payload, tenantId) => {
@@ -153,7 +156,9 @@ const editReservation = async (reservationId, reservationDAO, payload, tenantId)
       message: "Reservation not found!",
     };
   validateTime(new Date(), payload.resDate, payload.resTime);
-  return await reservationDAO.updateReservation(reservationId, payload, tenantId);
+  const updated = await reservationDAO.updateReservation(reservationId, payload, tenantId);
+  webhookService.dispatch("reservation.updated", updated, tenantId);
+  return updated;
 };
 
 const cancelReservation = async (reservationId, reservationDAO, tenantId) => {
@@ -165,9 +170,13 @@ const cancelReservation = async (reservationId, reservationDAO, tenantId) => {
     };
   }
   if (["cancelled", "seated", "completed", "missed"].includes(reservation.resStatus)) {
-    return await reservationDAO.destroyReservation(reservation, tenantId);
+    const result = await reservationDAO.destroyReservation(reservation, tenantId);
+    webhookService.dispatch("reservation.cancelled", result, tenantId);
+    return result;
   }
-  return await reservationDAO.deleteReservation(reservation, tenantId);
+  const result = await reservationDAO.deleteReservation(reservationId, tenantId);
+  webhookService.dispatch("reservation.cancelled", result, tenantId);
+  return result;
 };
 
 const compareResDateToCurrDate = (resDate, currDate) => {

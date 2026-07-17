@@ -7,6 +7,8 @@ import CoreSettingsCard from "@/components/settings/CoreSettingsCard.vue";
 import EmailSettingsCard from "@/components/settings/EmailSettingsCard.vue";
 import IntegrationSettingsCard from "@/components/settings/IntegrationSettingsCard.vue";
 import PlatformSettingsCard from "@/components/settings/PlatformSettingsCard.vue";
+import FeatureFlagsCard from "@/components/settings/FeatureFlagsCard.vue";
+import WebhooksCard from "@/components/settings/WebhooksCard.vue";
 import QuickActionsCard from "@/components/settings/QuickActionsCard.vue";
 
 const authStore = useAuthStore();
@@ -184,6 +186,8 @@ onMounted(loadSettings);
         <EmailSettingsCard :data="rawSettings" />
         <IntegrationSettingsCard :data="rawSettings" />
         <PlatformSettingsCard :data="rawSettings" />
+        <FeatureFlagsCard :data="rawSettings" />
+        <WebhooksCard :data="rawSettings" />
         <QuickActionsCard />
       </div>
     </div>

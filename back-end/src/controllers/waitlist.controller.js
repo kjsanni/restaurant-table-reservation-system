@@ -1,6 +1,8 @@
 const waitlistDAO = require("../DAOs/waitlist.dao");
+const { requireFeatureFlag } = require("../utils/featureFlags");
 
 const getAllHandler = async (req, res) => {
+  await requireFeatureFlag("waitlist", req.tenant?.id);
   const filters = {};
   if (req.query.desiredTime) filters.desiredTime = req.query.desiredTime;
   if (req.query.customerId) filters.customerId = req.query.customerId;
@@ -9,11 +11,13 @@ const getAllHandler = async (req, res) => {
 };
 
 const getStatsHandler = async (req, res) => {
+  await requireFeatureFlag("waitlist", req.tenant?.id);
   const stats = await waitlistDAO.getStats(req.tenant?.id);
   return res.status(200).json({ success: true, stats });
 };
 
 const createHandler = async (req, res) => {
+  await requireFeatureFlag("waitlist", req.tenant?.id);
   const { name, partySize, phone, email, desiredTime, notes } = req.body;
   if (!name) {
     return res.status(400).json({ success: false, message: "Name is required" });
@@ -31,6 +35,7 @@ const createHandler = async (req, res) => {
 };
 
 const createFromReservationHandler = async (req, res) => {
+  await requireFeatureFlag("waitlist", req.tenant?.id);
   const { reservationId } = req.params;
   const entry = await waitlistDAO.createFromReservation(reservationId, req.tenant?.id);
   if (!entry) {
@@ -40,6 +45,7 @@ const createFromReservationHandler = async (req, res) => {
 };
 
 const seatHandler = async (req, res) => {
+  await requireFeatureFlag("waitlist", req.tenant?.id);
   const { id } = req.params;
   const entry = await waitlistDAO.markSeated(id, req.tenant?.id);
   if (!entry) {
@@ -49,6 +55,7 @@ const seatHandler = async (req, res) => {
 };
 
 const cancelHandler = async (req, res) => {
+  await requireFeatureFlag("waitlist", req.tenant?.id);
   const { id } = req.params;
   const entry = await waitlistDAO.markCancelled(id, req.tenant?.id);
   if (!entry) {
@@ -58,12 +65,14 @@ const cancelHandler = async (req, res) => {
 };
 
 const deleteHandler = async (req, res) => {
+  await requireFeatureFlag("waitlist", req.tenant?.id);
   const { id } = req.params;
   await waitlistDAO.deleteEntry(id, req.tenant?.id);
   return res.status(200).json({ success: true, message: "Waitlist entry deleted" });
 };
 
 const expireOldHandler = async (req, res) => {
+  await requireFeatureFlag("waitlist", req.tenant?.id);
   const count = await waitlistDAO.expireOldEntries(req.tenant?.id);
   return res.status(200).json({ success: true, message: `Expired ${count} entries`, count });
 };

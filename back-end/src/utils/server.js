@@ -21,6 +21,7 @@ const customerRouter = require("../routes/customer.router");
 const adminRouter = require("../routes/admin.router");
 const notificationRouter = require("../routes/notification.router");
 const emailTemplateRouter = require("../routes/emailTemplate.router");
+const webhookRouter = require("../routes/webhook.router");
 const { setCsrfCookie, CSRF_HEADER_NAME } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
 const { requestLogger } = require("../middleware/requestLogger");
@@ -143,6 +144,7 @@ const createServer = () => {
   }
   app.use("/api/v1/notifications", logAction, notificationRouter);
   app.use("/api/v1/email-templates", logAction, emailTemplateRouter);
+  app.use("/api/v1/webhooks", logAction, webhookRouter);
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
   }
