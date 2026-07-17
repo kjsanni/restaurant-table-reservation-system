@@ -39,7 +39,9 @@ const SECTIONS = ["main", "bar", "patio", "terrace", "private"];
 const sectionFilter = ref("all");
 const displayTables = computed(() => {
   if (sectionFilter.value === "all") return tables.value;
-  return tables.value.filter((t) => (t.section || "main") === sectionFilter.value);
+  return tables.value.filter(
+    (t) => (t.section || "main") === sectionFilter.value
+  );
 });
 const sectionCounts = computed(() => {
   const counts = { all: tables.value.length };
@@ -155,7 +157,7 @@ const runBulk = async (fn, successMsg) => {
     await fn(selectedTableIds.value.slice());
     showBulkSuccess.value = successMsg;
     selectedTableIds.value = [];
-    await loadData();
+    await loadTables();
   } catch (err) {
     showErrorModal.value = true;
     errorMessage.value = getApiErrorMessage(err);
@@ -200,7 +202,9 @@ const openBulkAssign = async () => {
       const res = await tableAPI.getWaitingStaff();
       bulkStaffList.value = res?.data?.data ?? res?.data ?? [];
     } catch (err) {
-      logger.error("Failed to load staff for bulk assign", { error: err.message });
+      logger.error("Failed to load staff for bulk assign", {
+        error: err.message,
+      });
     }
   }
 };
@@ -410,7 +414,9 @@ const staffAtLimit = (staff) => {
 
 const occupancyStats = computed(() => {
   const total = tables.value.length;
-  const occupied = tables.value.filter((t) => t.isOccupied && !t.isBlocked).length;
+  const occupied = tables.value.filter(
+    (t) => t.isOccupied && !t.isBlocked
+  ).length;
   const blocked = tables.value.filter((t) => t.isBlocked).length;
   const free = total - occupied - blocked;
   const occupancyRate = total > 0 ? Math.round((occupied / total) * 100) : 0;
@@ -428,12 +434,18 @@ const serverOverview = computed(() => {
   tables.value.forEach((table) => {
     (table.users || []).forEach((staff) => {
       if (!map.has(staff.id)) {
-        map.set(staff.id, { id: staff.id, username: staff.username, tables: [] });
+        map.set(staff.id, {
+          id: staff.id,
+          username: staff.username,
+          tables: [],
+        });
       }
       map.get(staff.id).tables.push(table.name || `T${table.id}`);
     });
   });
-  return Array.from(map.values()).sort((a, b) => b.tables.length - a.tables.length);
+  return Array.from(map.values()).sort(
+    (a, b) => b.tables.length - a.tables.length
+  );
 });
 
 const openQrModal = (table) => {
@@ -488,7 +500,9 @@ const formatEventTime = (ts) => {
 const getQrCodeUrl = (table) => {
   const baseUrl = window.location.origin;
   const url = `${baseUrl}/self-service/table/${table.id}`;
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+    url
+  )}`;
 };
 </script>
 
@@ -576,28 +590,48 @@ const getQrCodeUrl = (table) => {
           <label class="select-all">
             <input
               type="checkbox"
-              :checked="selectedTableIds.length === tables.length && tables.length > 0"
+              :checked="
+                selectedTableIds.length === tables.length && tables.length > 0
+              "
               @change="toggleSelectAll"
             />
             Select all ({{ selectedTableIds.length }}/{{ tables.length }})
           </label>
           <div class="bulk-actions">
-            <button class="btn btn-secondary" :disabled="bulkBusy" @click="bulkBlock">
+            <button
+              class="btn btn-secondary"
+              :disabled="bulkBusy"
+              @click="bulkBlock"
+            >
               Block
             </button>
-            <button class="btn btn-secondary" :disabled="bulkBusy" @click="bulkUnblock">
+            <button
+              class="btn btn-secondary"
+              :disabled="bulkBusy"
+              @click="bulkUnblock"
+            >
               Unblock
             </button>
-            <button class="btn btn-secondary" :disabled="bulkBusy" @click="openBulkAssign">
+            <button
+              class="btn btn-secondary"
+              :disabled="bulkBusy"
+              @click="openBulkAssign"
+            >
               Assign Staff
             </button>
-            <button class="btn btn-danger" :disabled="bulkBusy" @click="bulkDeleteSelected">
+            <button
+              class="btn btn-danger"
+              :disabled="bulkBusy"
+              @click="bulkDeleteSelected"
+            >
               Delete
             </button>
           </div>
         </div>
 
-        <div v-if="showBulkSuccess" class="bulk-success">{{ showBulkSuccess }}</div>
+        <div v-if="showBulkSuccess" class="bulk-success">
+          {{ showBulkSuccess }}
+        </div>
 
         <div :class="editLayout ? 'table-grid layout-canvas' : 'table-grid'">
           <div
@@ -663,7 +697,9 @@ const getQrCodeUrl = (table) => {
                   :value="table.section || 'main'"
                   @change="updateTableSection(table, $event.target.value)"
                 >
-                  <option v-for="s in SECTIONS" :key="s" :value="s">{{ s }}</option>
+                  <option v-for="s in SECTIONS" :key="s" :value="s">
+                    {{ s }}
+                  </option>
                 </select>
               </div>
               <div
@@ -691,12 +727,10 @@ const getQrCodeUrl = (table) => {
                   {{ table.reservation.resTime }}
                 </span>
               </div>
-              <div
-                v-if="isOverCapacity(table)"
-                class="capacity-warning"
-              >
-                ⚠ Party of {{ table.reservation.people }} exceeds capacity
-                ({{ table.capacity }})
+              <div v-if="isOverCapacity(table)" class="capacity-warning">
+                ⚠ Party of {{ table.reservation.people }} exceeds capacity ({{
+                  table.capacity
+                }})
               </div>
             </div>
 
@@ -760,33 +794,32 @@ const getQrCodeUrl = (table) => {
               </button>
             </div>
           </div>
-          </div>
         </div>
+      </div>
 
+      <div v-if="serverOverview.length" class="server-overview">
+        <h3 class="overview-title">Server Assignments</h3>
+        <div class="overview-grid">
           <div
-            v-if="serverOverview.length"
-            class="server-overview"
+            v-for="staff in serverOverview"
+            :key="staff.id"
+            class="overview-card"
           >
-            <h3 class="overview-title">Server Assignments</h3>
-            <div class="overview-grid">
-              <div
-                v-for="staff in serverOverview"
-                :key="staff.id"
-                class="overview-card"
+            <span class="overview-name">{{ staff.username }}</span>
+            <span class="overview-count"
+              >{{ staff.tables.length }} table(s)</span
+            >
+            <div class="overview-tables">
+              <span
+                v-for="tname in staff.tables"
+                :key="tname"
+                class="overview-table-chip"
+                >{{ tname }}</span
               >
-                <span class="overview-name">{{ staff.username }}</span>
-                <span class="overview-count">{{ staff.tables.length }} table(s)</span>
-                <div class="overview-tables">
-                  <span
-                    v-for="tname in staff.tables"
-                    :key="tname"
-                    class="overview-table-chip"
-                    >{{ tname }}</span
-                  >
-                </div>
-              </div>
             </div>
           </div>
+        </div>
+      </div>
 
       <div v-if="showMaintenanceDialog" class="modal-overlay">
         <div class="modal">
@@ -1042,7 +1075,9 @@ const getQrCodeUrl = (table) => {
               class="qr-image"
             />
           </div>
-          <p class="qr-url">{{ getQrCodeUrl(qrTable).replace('/200x200?', '/') }}</p>
+          <p class="qr-url">
+            {{ getQrCodeUrl(qrTable).replace("/200x200?", "/") }}
+          </p>
           <div class="qr-actions">
             <button
               class="btn btn-primary"
@@ -1060,7 +1095,9 @@ const getQrCodeUrl = (table) => {
 
     <PopupBox
       :is-open="showHistoryDialog"
-      :header-text="historyTable ? 'History — ' + historyTable.name : 'Table History'"
+      :header-text="
+        historyTable ? 'History — ' + historyTable.name : 'Table History'
+      "
       :is-closable="true"
       @close-modal="showHistoryDialog = false"
     >
@@ -1075,9 +1112,15 @@ const getQrCodeUrl = (table) => {
               <span class="history-badge" :class="'ev-' + ev.eventType">
                 {{ eventLabel(ev.eventType) }}
               </span>
-              <span class="history-desc" v-if="ev.description">{{ ev.description }}</span>
-              <span class="history-actor" v-if="ev.User">by {{ ev.User.username }}</span>
-              <span class="history-time">{{ formatEventTime(ev.createdAt) }}</span>
+              <span class="history-desc" v-if="ev.description">{{
+                ev.description
+              }}</span>
+              <span class="history-actor" v-if="ev.User"
+                >by {{ ev.User.username }}</span
+              >
+              <span class="history-time">{{
+                formatEventTime(ev.createdAt)
+              }}</span>
             </li>
           </ul>
         </div>

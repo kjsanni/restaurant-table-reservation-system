@@ -53,5 +53,12 @@ export function useDateRange(presetKey = "month") {
     return PRESET_RANGES[rangeMode.value]?.label || "Custom";
   });
 
-  return { rangeMode, customFrom, customTo, getDateRange, dateRangeLabel, PRESET_RANGES };
+  return {
+    rangeMode,
+    customFrom,
+    customTo,
+    getDateRange,
+    dateRangeLabel,
+    PRESET_RANGES,
+  };
 }

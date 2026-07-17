@@ -50,20 +50,30 @@ const days = [
 
 const HOURS = Array.from({ length: 12 }, (_, i) => {
   const hour = i + 11;
-  const label = hour > 12 ? `${hour - 12} PM` : hour === 12 ? "12 PM" : `${hour} AM`;
+  const label =
+    hour > 12 ? `${hour - 12} PM` : hour === 12 ? "12 PM" : `${hour} AM`;
   return { value: `${hour.toString().padStart(2, "0")}:00`, label };
 });
 
 const weeklyGrid = computed(() => {
   return days.map((day) => {
     const schedule = schedules.value.find((s) => s.dayOfWeek === day.value);
-    const openHour = schedule?.openTime ? parseInt(schedule.openTime.split(":")[0], 10) : null;
-    const closeHour = schedule?.closeTime ? parseInt(schedule.closeTime.split(":")[0], 10) : null;
+    const openHour = schedule?.openTime
+      ? parseInt(schedule.openTime.split(":")[0], 10)
+      : null;
+    const closeHour = schedule?.closeTime
+      ? parseInt(schedule.closeTime.split(":")[0], 10)
+      : null;
     const isClosed = schedule?.isClosed ?? false;
 
     const hours = HOURS.map((h) => {
       const hour = parseInt(h.value.split(":")[0], 10);
-      const isOpen = !isClosed && openHour !== null && closeHour !== null && hour >= openHour && hour < closeHour;
+      const isOpen =
+        !isClosed &&
+        openHour !== null &&
+        closeHour !== null &&
+        hour >= openHour &&
+        hour < closeHour;
       const isTransition = hour === openHour || hour === closeHour;
       return { ...h, isOpen, isTransition };
     });
@@ -95,7 +105,9 @@ const dayConflicts = computed(() => {
   (reservations.value || []).forEach((r) => {
     if (!r.resDate || !r.resTime) return;
     const d = new Date(r.resDate + "T00:00:00");
-    const dow = d.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+    const dow = d
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
     (byWeekday[dow] = byWeekday[dow] || []).push(r);
   });
   schedules.value.forEach((s) => {
@@ -129,7 +141,9 @@ const suggestedHours = computed(() => {
   (reservations.value || []).forEach((r) => {
     if (!r.resDate || !r.resTime) return;
     const d = new Date(r.resDate + "T00:00:00");
-    const dow = d.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+    const dow = d
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
     (byWeekday[dow] = byWeekday[dow] || []).push(toMinutes(r.resTime));
   });
   const result = {};
@@ -173,11 +187,23 @@ const shiftsByDay = computed(() => {
 });
 
 const showShiftDialog = ref(false);
-const newShift = ref({ userId: null, dayOfWeek: "monday", startTime: "11:00", endTime: "22:00", role: "" });
+const newShift = ref({
+  userId: null,
+  dayOfWeek: "monday",
+  startTime: "11:00",
+  endTime: "22:00",
+  role: "",
+});
 
 const openShiftDialog = async () => {
   showShiftDialog.value = true;
-  newShift.value = { userId: null, dayOfWeek: "monday", startTime: "11:00", endTime: "22:00", role: "" };
+  newShift.value = {
+    userId: null,
+    dayOfWeek: "monday",
+    startTime: "11:00",
+    endTime: "22:00",
+    role: "",
+  };
   if (staffList.value.length === 0) {
     try {
       const res = await shiftAPI.getStaff();
@@ -246,7 +272,12 @@ const affectedDates = computed(() => {
 });
 
 const showTimeOffDialog = ref(false);
-const newTimeOff = ref({ userId: null, startDate: "", endDate: "", reason: "" });
+const newTimeOff = ref({
+  userId: null,
+  startDate: "",
+  endDate: "",
+  reason: "",
+});
 
 const openTimeOffDialog = async () => {
   showTimeOffDialog.value = true;
@@ -262,7 +293,12 @@ const openTimeOffDialog = async () => {
 };
 
 const createTimeOff = async () => {
-  if (!newTimeOff.value.userId || !newTimeOff.value.startDate || !newTimeOff.value.endDate) return;
+  if (
+    !newTimeOff.value.userId ||
+    !newTimeOff.value.startDate ||
+    !newTimeOff.value.endDate
+  )
+    return;
   try {
     await timeOffAPI.createTimeOff({
       userId: newTimeOff.value.userId,
@@ -320,7 +356,8 @@ const loadSchedule = async () => {
     const holidaysRes = await scheduleAPI.getHolidays();
     holidays.value = holidaysRes.data.holidays;
     const reservationsRes = await reservationAPI.getReservations();
-    reservations.value = reservationsRes.data.collection || reservationsRes.data || [];
+    reservations.value =
+      reservationsRes.data.collection || reservationsRes.data || [];
     await loadShifts();
     await loadTimeOffs();
   } catch (err) {
@@ -340,10 +377,38 @@ const updateSchedule = async (schedule) => {
 };
 
 const SCHEDULE_TEMPLATES = {
-  weekday: { label: "Weekday (11–22)", openTime: "11:00:00", closeTime: "22:00:00", closed: ["sunday"] },
-  weekend: { label: "Weekend (10–24)", openTime: "10:00:00", closeTime: "24:00:00", closed: [] },
-  brunch: { label: "Brunch (09–21)", openTime: "09:00:00", closeTime: "21:00:00", closed: [] },
-  holiday: { label: "Holiday (closed)", openTime: "11:00:00", closeTime: "22:00:00", closed: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] },
+  weekday: {
+    label: "Weekday (11–22)",
+    openTime: "11:00:00",
+    closeTime: "22:00:00",
+    closed: ["sunday"],
+  },
+  weekend: {
+    label: "Weekend (10–24)",
+    openTime: "10:00:00",
+    closeTime: "24:00:00",
+    closed: [],
+  },
+  brunch: {
+    label: "Brunch (09–21)",
+    openTime: "09:00:00",
+    closeTime: "21:00:00",
+    closed: [],
+  },
+  holiday: {
+    label: "Holiday (closed)",
+    openTime: "11:00:00",
+    closeTime: "22:00:00",
+    closed: [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ],
+  },
 };
 
 const customTemplates = ref(
@@ -371,7 +436,10 @@ const saveCurrentAsTemplate = async () => {
     isClosed: s.isClosed,
   }));
   customTemplates.value = [...customTemplates.value, { name, pattern }];
-  localStorage.setItem("scheduleTemplates", JSON.stringify(customTemplates.value));
+  localStorage.setItem(
+    "scheduleTemplates",
+    JSON.stringify(customTemplates.value)
+  );
 };
 
 const applyCustomTemplate = async (idx) => {
@@ -389,7 +457,10 @@ const applyCustomTemplate = async (idx) => {
 
 const deleteCustomTemplate = (idx) => {
   customTemplates.value = customTemplates.value.filter((_, i) => i !== idx);
-  localStorage.setItem("scheduleTemplates", JSON.stringify(customTemplates.value));
+  localStorage.setItem(
+    "scheduleTemplates",
+    JSON.stringify(customTemplates.value)
+  );
 };
 
 const createHoliday = async () => {
@@ -475,7 +546,9 @@ const exportPDF = async () => {
             >
               {{ tpl.label }}
             </button>
-            <button class="template-btn save" @click="saveCurrentAsTemplate">💾 Save current</button>
+            <button class="template-btn save" @click="saveCurrentAsTemplate">
+              💾 Save current
+            </button>
           </div>
           <div v-if="customTemplates.length" class="custom-templates">
             <div
@@ -483,27 +556,47 @@ const exportPDF = async () => {
               :key="idx"
               class="custom-template"
             >
-              <button class="template-btn" @click="applyCustomTemplate(idx)">{{ tpl.name }}</button>
-              <button class="template-del" @click="deleteCustomTemplate(idx)" title="Delete">×</button>
+              <button class="template-btn" @click="applyCustomTemplate(idx)">
+                {{ tpl.name }}
+              </button>
+              <button
+                class="template-del"
+                @click="deleteCustomTemplate(idx)"
+                title="Delete"
+              >
+                ×
+              </button>
             </div>
           </div>
         </div>
         <div class="section-card suggestions-card">
           <h2 class="section-title">Auto-Schedule Suggestions</h2>
           <p class="suggestions-note">
-            Based on reservation density. Suggests open/close windows padded by 1 hour.
+            Based on reservation density. Suggests open/close windows padded by
+            1 hour.
           </p>
-          <p v-if="!Object.keys(suggestedHours).length" class="suggestions-empty">
+          <p
+            v-if="!Object.keys(suggestedHours).length"
+            class="suggestions-empty"
+          >
             Not enough reservation data to suggest hours.
           </p>
           <ul v-else class="suggestions-list">
-            <li v-for="day in weeklyGrid" :key="day.day" v-show="suggestedHours[day.day]" class="suggestion-item">
+            <li
+              v-for="day in weeklyGrid"
+              :key="day.day"
+              v-show="suggestedHours[day.day]"
+              class="suggestion-item"
+            >
               <span class="suggestion-day">{{ day.label }}</span>
               <span class="suggestion-hours">
-                {{ suggestedHours[day.day].openTime.slice(0,5) }} – {{ suggestedHours[day.day].closeTime.slice(0,5) }}
+                {{ suggestedHours[day.day].openTime.slice(0, 5) }} –
+                {{ suggestedHours[day.day].closeTime.slice(0, 5) }}
                 <em>(n={{ suggestedHours[day.day].sampleSize }})</em>
               </span>
-              <button class="mini-btn apply" @click="applySuggestion(day.day)">Apply</button>
+              <button class="mini-btn apply" @click="applySuggestion(day.day)">
+                Apply
+              </button>
             </li>
           </ul>
         </div>
@@ -540,7 +633,10 @@ const exportPDF = async () => {
                 <span
                   v-if="dayConflicts[schedule.dayOfWeek]"
                   class="conflict-badge"
-                  :title="dayConflicts[schedule.dayOfWeek] + ' reservation(s) fall outside open hours'"
+                  :title="
+                    dayConflicts[schedule.dayOfWeek] +
+                    ' reservation(s) fall outside open hours'
+                  "
                 >
                   ⚠ {{ dayConflicts[schedule.dayOfWeek] }} conflict(s)
                 </span>
@@ -557,13 +653,19 @@ const exportPDF = async () => {
           <div class="visual-calendar-header-row">
             <h2 class="section-title">Visual Weekly Calendar</h2>
             <div class="visual-calendar-tools">
-              <button class="btn btn-secondary" :class="{ active: showShifts }" @click="showShifts = !showShifts">
+              <button
+                class="btn btn-secondary"
+                :class="{ active: showShifts }"
+                @click="showShifts = !showShifts"
+              >
                 👥 Shifts
               </button>
               <button class="btn btn-secondary" @click="openTimeOffDialog">
                 🏖️ Time-off
               </button>
-              <button class="btn btn-primary" @click="openShiftDialog">+ Add Shift</button>
+              <button class="btn btn-primary" @click="openShiftDialog">
+                + Add Shift
+              </button>
             </div>
           </div>
           <div class="visual-calendar">
@@ -585,7 +687,9 @@ const exportPDF = async () => {
                     v-for="sh in shiftsByDay[day.day]"
                     :key="sh.id"
                     class="shift-pill"
-                    :title="sh.staffName + ' ' + sh.startTime + '–' + sh.endTime"
+                    :title="
+                      sh.staffName + ' ' + sh.startTime + '–' + sh.endTime
+                    "
                   >
                     {{ sh.staffName }}
                   </span>
@@ -593,11 +697,7 @@ const exportPDF = async () => {
               </div>
             </div>
             <div class="calendar-body">
-              <div
-                v-for="hour in HOURS"
-                :key="hour.value"
-                class="calendar-row"
-              >
+              <div v-for="hour in HOURS" :key="hour.value" class="calendar-row">
                 <div class="time-gutter">{{ hour.label }}</div>
                 <div
                   v-for="day in weeklyGrid"
@@ -605,12 +705,23 @@ const exportPDF = async () => {
                   class="calendar-cell"
                   :class="{
                     open: day.hours.find((h) => h.value === hour.value)?.isOpen,
-                    transition: day.hours.find((h) => h.value === hour.value)?.isTransition,
+                    transition: day.hours.find((h) => h.value === hour.value)
+                      ?.isTransition,
                     closed: day.isClosed,
                   }"
                 >
-                  <span v-if="day.hours.find((h) => h.value === hour.value)?.isTransition" class="transition-label">
-                    {{ day.hours.find((h) => h.value === hour.value)?.isOpen ? 'Open' : 'Close' }}
+                  <span
+                    v-if="
+                      day.hours.find((h) => h.value === hour.value)
+                        ?.isTransition
+                    "
+                    class="transition-label"
+                  >
+                    {{
+                      day.hours.find((h) => h.value === hour.value)?.isOpen
+                        ? "Open"
+                        : "Close"
+                    }}
                   </span>
                 </div>
               </div>
@@ -618,17 +729,34 @@ const exportPDF = async () => {
           </div>
         </div>
 
-        <div v-if="showShifts && shifts.length" class="section-card shifts-card">
+        <div
+          v-if="showShifts && shifts.length"
+          class="section-card shifts-card"
+        >
           <h2 class="section-title">Staff Shifts</h2>
           <div class="shifts-grid">
             <div v-for="day in weeklyGrid" :key="day.day" class="shift-day-col">
               <h3 class="shift-day-title">{{ day.label }}</h3>
-              <p v-if="!shiftsByDay[day.day]?.length" class="shift-empty">No shifts</p>
+              <p v-if="!shiftsByDay[day.day]?.length" class="shift-empty">
+                No shifts
+              </p>
               <ul v-else class="shift-list">
-                <li v-for="sh in shiftsByDay[day.day]" :key="sh.id" class="shift-item">
+                <li
+                  v-for="sh in shiftsByDay[day.day]"
+                  :key="sh.id"
+                  class="shift-item"
+                >
                   <span class="shift-name">{{ sh.staffName }}</span>
-                  <span class="shift-time">{{ sh.startTime }}–{{ sh.endTime }}</span>
-                  <button class="shift-remove" @click="deleteShift(sh.id)" title="Remove">×</button>
+                  <span class="shift-time"
+                    >{{ sh.startTime }}–{{ sh.endTime }}</span
+                  >
+                  <button
+                    class="shift-remove"
+                    @click="deleteShift(sh.id)"
+                    title="Remove"
+                  >
+                    ×
+                  </button>
                 </li>
               </ul>
             </div>
@@ -638,20 +766,44 @@ const exportPDF = async () => {
         <div class="section-card timeoff-card">
           <div class="timeoff-header">
             <h2 class="section-title">Time-off Requests</h2>
-            <button class="btn btn-primary" @click="openTimeOffDialog">+ Request</button>
+            <button class="btn btn-primary" @click="openTimeOffDialog">
+              + Request
+            </button>
           </div>
-          <p v-if="!timeOffs.length" class="timeoff-empty">No time-off requests.</p>
+          <p v-if="!timeOffs.length" class="timeoff-empty">
+            No time-off requests.
+          </p>
           <ul v-else class="timeoff-list">
             <li v-for="t in timeOffs" :key="t.id" class="timeoff-item">
               <div class="timeoff-main">
-                <span class="timeoff-staff">{{ t.User?.username || "Staff" }}</span>
-                <span class="timeoff-range">{{ t.startDate }} → {{ t.endDate }}</span>
+                <span class="timeoff-staff">{{
+                  t.User?.username || "Staff"
+                }}</span>
+                <span class="timeoff-range"
+                  >{{ t.startDate }} → {{ t.endDate }}</span
+                >
               </div>
-              <span class="timeoff-status" :class="'st-' + t.status">{{ t.status }}</span>
+              <span class="timeoff-status" :class="'st-' + t.status">{{
+                t.status
+              }}</span>
               <div class="timeoff-actions">
-                <button v-if="t.status === 'pending'" class="mini-btn approve" @click="setTimeOffStatus(t.id, 'approved')">✓</button>
-                <button v-if="t.status === 'pending'" class="mini-btn reject" @click="setTimeOffStatus(t.id, 'rejected')">✕</button>
-                <button class="mini-btn delete" @click="removeTimeOff(t.id)">🗑</button>
+                <button
+                  v-if="t.status === 'pending'"
+                  class="mini-btn approve"
+                  @click="setTimeOffStatus(t.id, 'approved')"
+                >
+                  ✓
+                </button>
+                <button
+                  v-if="t.status === 'pending'"
+                  class="mini-btn reject"
+                  @click="setTimeOffStatus(t.id, 'rejected')"
+                >
+                  ✕
+                </button>
+                <button class="mini-btn delete" @click="removeTimeOff(t.id)">
+                  🗑
+                </button>
               </div>
             </li>
           </ul>
@@ -679,11 +831,9 @@ const exportPDF = async () => {
               <div class="holiday-info">
                 <span class="holiday-date">{{ holiday.date }}</span>
                 <span class="holiday-desc">{{ holiday.description }}</span>
-                <span
-                  v-if="holiday.overrideType"
-                  class="override-badge"
-                  >{{ overrideLabel(holiday.overrideType) }}</span
-                >
+                <span v-if="holiday.overrideType" class="override-badge">{{
+                  overrideLabel(holiday.overrideType)
+                }}</span>
                 <span v-if="holiday.isClosed" class="closed-badge">Closed</span>
                 <span v-else class="open-badge">Open</span>
               </div>
@@ -751,69 +901,119 @@ const exportPDF = async () => {
               <label class="field-label">Staff</label>
               <select v-model="newShift.userId" class="field-input">
                 <option :value="null" disabled>Choose staff…</option>
-                <option v-for="s in staffList" :key="s.id" :value="s.id">{{ s.username }}</option>
+                <option v-for="s in staffList" :key="s.id" :value="s.id">
+                  {{ s.username }}
+                </option>
               </select>
             </div>
             <div class="field">
               <label class="field-label">Day</label>
               <select v-model="newShift.dayOfWeek" class="field-input">
-                <option v-for="d in days" :key="d.value" :value="d.value">{{ d.label }}</option>
+                <option v-for="d in days" :key="d.value" :value="d.value">
+                  {{ d.label }}
+                </option>
               </select>
             </div>
             <div class="field-row">
               <div class="field">
                 <label class="field-label">Start</label>
-                <input type="time" v-model="newShift.startTime" class="field-input" />
+                <input
+                  type="time"
+                  v-model="newShift.startTime"
+                  class="field-input"
+                />
               </div>
               <div class="field">
                 <label class="field-label">End</label>
-                <input type="time" v-model="newShift.endTime" class="field-input" />
+                <input
+                  type="time"
+                  v-model="newShift.endTime"
+                  class="field-input"
+                />
               </div>
             </div>
             <div class="field">
               <label class="field-label">Role (optional)</label>
-              <input type="text" v-model="newShift.role" placeholder="e.g. Host" class="field-input" />
+              <input
+                type="text"
+                v-model="newShift.role"
+                placeholder="e.g. Host"
+                class="field-input"
+              />
             </div>
           </VaCardContent>
           <template #actions>
-            <VaButton preset="secondary" @click="showShiftDialog = false">Cancel</VaButton>
-            <VaButton preset="primary" :disabled="!newShift.userId" @click="createShift">Save</VaButton>
+            <VaButton preset="secondary" @click="showShiftDialog = false"
+              >Cancel</VaButton
+            >
+            <VaButton
+              preset="primary"
+              :disabled="!newShift.userId"
+              @click="createShift"
+              >Save</VaButton
+            >
           </template>
         </VaCard>
       </VaModal>
 
-      <VaModal v-model="showTimeOffDialog" title="Request Time Off" size="small">
+      <VaModal
+        v-model="showTimeOffDialog"
+        title="Request Time Off"
+        size="small"
+      >
         <VaCard>
           <VaCardContent>
             <div class="field">
               <label class="field-label">Staff</label>
               <select v-model="newTimeOff.userId" class="field-input">
                 <option :value="null" disabled>Choose staff…</option>
-                <option v-for="s in staffList" :key="s.id" :value="s.id">{{ s.username }}</option>
+                <option v-for="s in staffList" :key="s.id" :value="s.id">
+                  {{ s.username }}
+                </option>
               </select>
             </div>
             <div class="field-row">
               <div class="field">
                 <label class="field-label">From</label>
-                <input type="date" v-model="newTimeOff.startDate" class="field-input" />
+                <input
+                  type="date"
+                  v-model="newTimeOff.startDate"
+                  class="field-input"
+                />
               </div>
               <div class="field">
                 <label class="field-label">To</label>
-                <input type="date" v-model="newTimeOff.endDate" class="field-input" />
+                <input
+                  type="date"
+                  v-model="newTimeOff.endDate"
+                  class="field-input"
+                />
               </div>
             </div>
             <div class="field">
               <label class="field-label">Reason (optional)</label>
-              <input type="text" v-model="newTimeOff.reason" placeholder="Vacation, sick, etc." class="field-input" />
+              <input
+                type="text"
+                v-model="newTimeOff.reason"
+                placeholder="Vacation, sick, etc."
+                class="field-input"
+              />
             </div>
           </VaCardContent>
           <template #actions>
-            <VaButton preset="secondary" @click="showTimeOffDialog = false">Cancel</VaButton>
+            <VaButton preset="secondary" @click="showTimeOffDialog = false"
+              >Cancel</VaButton
+            >
             <VaButton
               preset="primary"
-              :disabled="!newTimeOff.userId || !newTimeOff.startDate || !newTimeOff.endDate"
+              :disabled="
+                !newTimeOff.userId ||
+                !newTimeOff.startDate ||
+                !newTimeOff.endDate
+              "
               @click="createTimeOff"
-            >Submit</VaButton>
+              >Submit</VaButton
+            >
           </template>
         </VaCard>
       </VaModal>
@@ -1464,7 +1664,6 @@ const exportPDF = async () => {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-
 
 @media (max-width: 768px) {
   .calendar-header,

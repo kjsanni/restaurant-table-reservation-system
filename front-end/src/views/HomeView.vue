@@ -61,12 +61,12 @@ const loadData = async () => {
   loading.value = true;
   try {
     const [resStats, waitlistStats, revenueStats, tables] = await Promise.all([
-    reservationAPI.getReservationStats({
-      from: thirtyDaysAgo.daysAgo.value,
-      to: today.value,
-    }),
-    waitlistAPI.getStats(),
-    paymentAPI.getRevenueStats(thirtyDaysAgo.daysAgo.value, today.value),
+      reservationAPI.getReservationStats({
+        from: thirtyDaysAgo.daysAgo.value,
+        to: today.value,
+      }),
+      waitlistAPI.getStats(),
+      paymentAPI.getRevenueStats(thirtyDaysAgo.daysAgo.value, today.value),
       tableAPI.getTables().catch(() => ({ data: { collection: [] } })),
     ]);
 

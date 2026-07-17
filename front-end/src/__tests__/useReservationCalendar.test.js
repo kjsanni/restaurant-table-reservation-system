@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { useToday, useDaysAgo, useDateRange, PRESET_RANGES } from "@/composables/useReservationCalendar";
+import {
+  useToday,
+  useDaysAgo,
+  useDateRange,
+  PRESET_RANGES,
+} from "@/composables/useReservationCalendar";
 
 describe("useReservationCalendar", () => {
   describe("useToday", () => {
@@ -25,7 +30,14 @@ describe("useReservationCalendar", () => {
 
   describe("useDateRange", () => {
     it("should provide reactive range state", () => {
-      const { rangeMode, customFrom, customTo, getDateRange, dateRangeLabel, PRESET_RANGES } = useDateRange("month");
+      const {
+        rangeMode,
+        customFrom,
+        customTo,
+        getDateRange,
+        dateRangeLabel,
+        PRESET_RANGES,
+      } = useDateRange("month");
 
       expect(rangeMode.value).toBe("month");
       expect(customFrom.value).toBe("");
@@ -36,7 +48,8 @@ describe("useReservationCalendar", () => {
     });
 
     it("should switch to custom range when mode changes", () => {
-      const { rangeMode, customFrom, customTo, dateRangeLabel, getDateRange } = useDateRange("month");
+      const { rangeMode, customFrom, customTo, dateRangeLabel, getDateRange } =
+        useDateRange("month");
       rangeMode.value = "custom";
       customFrom.value = "2026-07-01";
       customTo.value = "2026-07-16";

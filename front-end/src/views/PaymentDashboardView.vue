@@ -120,7 +120,10 @@ const loadData = async () => {
   loading.value = true;
   try {
     const [resRes, summaryRes] = await Promise.all([
-      reservationAPI.getReservations({ page: page.value, pageSize: pageSize.value }),
+      reservationAPI.getReservations({
+        page: page.value,
+        pageSize: pageSize.value,
+      }),
       reservationAPI.getPaymentSummary(),
     ]);
     const payload = resRes.data;
