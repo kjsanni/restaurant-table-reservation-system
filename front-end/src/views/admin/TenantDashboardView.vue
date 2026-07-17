@@ -33,7 +33,11 @@
     </div>
 
     <div class="filters">
-      <input v-model="searchQuery" placeholder="Search tenants..." class="search-input" />
+      <input
+        v-model="searchQuery"
+        placeholder="Search tenants..."
+        class="search-input"
+      />
       <select v-model="filterStatus" class="filter-select">
         <option value="">All Statuses</option>
         <option value="active">Active</option>
@@ -63,21 +67,29 @@
             <td>{{ tenant.slug }}</td>
             <td>{{ tenant.plan }}</td>
             <td>
-              <span :class="['status-badge', tenant.status]">{{ tenant.status }}</span>
+              <span :class="['status-badge', tenant.status]">{{
+                tenant.status
+              }}</span>
             </td>
             <td>{{ tenant.subscriptionStatus }}</td>
             <td>{{ formatDate(tenant.currentPeriodEnd) }}</td>
             <td class="actions">
-              <button @click="viewTenant(tenant.id)" class="btn-small">View</button>
+              <button @click="viewTenant(tenant.id)" class="btn-small">
+                View
+              </button>
               <button
-                v-if="tenant.status === 'suspended' || tenant.status === 'past_due'"
+                v-if="
+                  tenant.status === 'suspended' || tenant.status === 'past_due'
+                "
                 @click="enableTenant(tenant.id)"
                 class="btn-small success"
               >
                 Enable
               </button>
               <button
-                v-if="tenant.status === 'active' || tenant.status === 'past_due'"
+                v-if="
+                  tenant.status === 'active' || tenant.status === 'past_due'
+                "
                 @click="disableTenant(tenant.id)"
                 class="btn-small danger"
               >
@@ -97,7 +109,16 @@ import { useRouter } from "vue-router";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 
 const router = useRouter();
-const dashboard = ref({ total: 0, active: 0, pastDue: 0, suspended: 0, cancelled: 0, trialing: 0, mrr: 0, recentTenants: [] });
+const dashboard = ref({
+  total: 0,
+  active: 0,
+  pastDue: 0,
+  suspended: 0,
+  cancelled: 0,
+  trialing: 0,
+  mrr: 0,
+  recentTenants: [],
+});
 const tenants = ref([]);
 const searchQuery = ref("");
 const filterStatus = ref("");
@@ -108,7 +129,8 @@ const filteredTenants = computed(() => {
       !searchQuery.value ||
       t.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       t.slug.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const matchesStatus = !filterStatus.value || t.status === filterStatus.value;
+    const matchesStatus =
+      !filterStatus.value || t.status === filterStatus.value;
     return matchesSearch && matchesStatus;
   });
 });

@@ -43,7 +43,9 @@
         </div>
         <div class="info-row">
           <span class="label">Cancel At Period End</span>
-          <span class="value">{{ tenant.cancelAtPeriodEnd ? "Yes" : "No" }}</span>
+          <span class="value">{{
+            tenant.cancelAtPeriodEnd ? "Yes" : "No"
+          }}</span>
         </div>
         <div class="info-row">
           <span class="label">Grace Ends At</span>

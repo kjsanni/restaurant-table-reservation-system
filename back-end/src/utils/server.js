@@ -81,6 +81,12 @@ const createServer = () => {
 
   app.set("io", io);
 
+  if (TENANT_MODE) {
+    const { runTenantCron } = require("../../tenant-platform/utils/tenantCron");
+    runTenantCron();
+    setInterval(runTenantCron, 6 * 60 * 60 * 1000);
+  }
+
   app.use(cookieParser());
   app.use(requestLogger);
   app.use(requestMetrics);
