@@ -11,8 +11,18 @@ const webhookHandler = async (req, res) => {
     return res.status(401).json({ success: false, message: "Invalid signature" });
   }
 
+  const eventId = req.body.id;
   const event = req.body.event;
   const data = req.body.data;
+
+  if (eventId) {
+    const existingEvent = await db.paystackEvent.findOne({
+      where: { paystackEventId: String(eventId) },
+    });
+    if (existingEvent) {
+      return res.status(200).json({ success: true, message: "Event already processed" });
+    }
+  }
 
   try {
     switch (event) {
@@ -42,6 +52,14 @@ const webhookHandler = async (req, res) => {
         break;
       default:
         break;
+    }
+
+    if (eventId) {
+      await db.paystackEvent.create({
+        paystackEventId: String(eventId),
+        tenantId: data.metadata && data.metadata.tenantId,
+        event,
+      });
     }
 
     res.status(200).json({ success: true });
