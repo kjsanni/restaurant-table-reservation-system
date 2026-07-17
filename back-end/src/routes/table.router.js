@@ -68,6 +68,11 @@ router
   .all(httpMethodError);
 
 router
+  .route("/:tableId/events")
+  .get(...protectedRoute("manage_tables", tableController.getEventsHandler))
+  .all(httpMethodError);
+
+router
   .route("/bulk/update")
   .patch(...writeRoute("manage_tables", tableController.bulkUpdateHandler))
   .all(httpMethodError);

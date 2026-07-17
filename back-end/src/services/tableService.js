@@ -58,8 +58,27 @@ const deleteTable = async (tableDAO, tableId) => {
   return await tableDAO.deleteTable(tableId);
 };
 
-const bulkUpdate = async (tableDAO, ids, payload) => {
-  return await tableDAO.bulkUpdate(ids, payload);
+const recordEvent = async (tableDAO, tableId, eventType, description, actorId) => {
+  return await tableDAO.recordEvent(tableId, eventType, description, actorId);
+};
+
+const getEvents = async (tableDAO, tableId, limit) => {
+  return await tableDAO.getEvents(tableId, limit);
+};
+
+const bulkUpdate = async (tableDAO, ids, payload, actorId) => {
+  const result = await tableDAO.bulkUpdate(ids, payload);
+  if (typeof payload.isBlocked === "boolean") {
+    for (const id of ids) {
+      await tableDAO.recordEvent(
+        id,
+        payload.isBlocked ? "blocked" : "unblocked",
+        null,
+        actorId
+      );
+    }
+  }
+  return result;
 };
 
 const bulkDelete = async (tableDAO, ids) => {
@@ -85,4 +104,6 @@ module.exports = {
   bulkUpdate,
   bulkDelete,
   bulkAssignStaff,
+  recordEvent,
+  getEvents,
 };

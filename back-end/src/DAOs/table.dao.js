@@ -3,6 +3,7 @@ const Table = db.table;
 const Reservation = db.reservation;
 const Customer = db.customer;
 const User = db.user;
+const TableEvent = db.tableEvent;
 const { fn, col } = db.sequelize;
 
 const findAllTables = async () => {
@@ -318,6 +319,26 @@ const bulkAssignStaff = async (ids, userId) => {
   return { count: tables.length };
 };
 
+const recordEvent = async (tableId, eventType, description, actorId) => {
+  return await TableEvent.create({
+    tableId,
+    eventType,
+    description: description ?? null,
+    actorId: actorId ?? null,
+  });
+};
+
+const getEvents = async (tableId, limit = 50) => {
+  return await TableEvent.findAll({
+    where: { tableId },
+    include: [
+      { model: User, attributes: ["id", "username"] },
+    ],
+    order: [["createdAt", "DESC"]],
+    limit,
+  });
+};
+
 module.exports = {
   findAllTables,
   createTable,
@@ -333,4 +354,6 @@ module.exports = {
   bulkUpdate,
   bulkDelete,
   bulkAssignStaff,
+  recordEvent,
+  getEvents,
 };

@@ -3,6 +3,8 @@ const tableDAO = require("../DAOs/table.dao");
 const reservationDAO = require("../DAOs/reservation.dao");
 const authDAO = require("../DAOs/auth.dao");
 
+const actorId = (req) => req.user?.id ?? null;
+
 const getAllHandler = async (req, res) => {
   const tables = await tableService.getAllTables(tableDAO);
 
@@ -63,6 +65,7 @@ const blockTableHandler = async (req, res) => {
   const { id } = req.params;
   const { notes } = req.body;
   const table = await tableDAO.blockTable(id, notes);
+  await tableService.recordEvent(tableDAO, id, "blocked", notes || null, actorId(req));
 
   return res.status(200).json({
     success: true,
@@ -74,6 +77,7 @@ const blockTableHandler = async (req, res) => {
 const unblockTableHandler = async (req, res) => {
   const { id } = req.params;
   const table = await tableDAO.unblockTable(id);
+  await tableService.recordEvent(tableDAO, id, "unblocked", null, actorId(req));
 
   return res.status(200).json({
     success: true,
@@ -94,6 +98,7 @@ const assignStaffHandler = async (req, res) => {
   const { tableId } = req.params;
   const { userId } = req.body;
   const info = await tableService.assignStaff(tableDAO, tableId, userId);
+  await tableService.recordEvent(tableDAO, tableId, "staff_assigned", null, actorId(req));
 
   return res.status(200).json({
     success: true,
@@ -105,6 +110,7 @@ const assignStaffHandler = async (req, res) => {
 const unassignStaffHandler = async (req, res) => {
   const { tableId, userId } = req.params;
   const info = await tableService.unassignStaff(tableDAO, tableId, userId);
+  await tableService.recordEvent(tableDAO, tableId, "staff_unassigned", null, actorId(req));
 
   return res.status(200).json({
     success: true,
@@ -116,6 +122,9 @@ const unassignStaffHandler = async (req, res) => {
 const mergeTablesHandler = async (req, res) => {
   const { tableIds } = req.body;
   const result = await tableService.mergeTables(tableDAO, tableIds);
+  for (const id of tableIds) {
+    await tableService.recordEvent(tableDAO, id, "merged", null, actorId(req));
+  }
 
   return res.status(200).json({
     success: true,
@@ -127,6 +136,7 @@ const mergeTablesHandler = async (req, res) => {
 const unmergeTableHandler = async (req, res) => {
   const { tableId } = req.params;
   const result = await tableService.unmergeTable(tableDAO, tableId);
+  await tableService.recordEvent(tableDAO, tableId, "unmerged", null, actorId(req));
 
   return res.status(200).json({
     success: true,
@@ -164,6 +174,7 @@ const updatePositionHandler = async (req, res) => {
 
 const deleteHandler = async (req, res) => {
   const { id } = req.params;
+  await tableService.recordEvent(tableDAO, id, "deleted", null, actorId(req));
   const result = await tableService.delete(tableDAO, id);
   return res.status(200).json({
     success: true,
@@ -172,12 +183,22 @@ const deleteHandler = async (req, res) => {
   });
 };
 
+const getEventsHandler = async (req, res) => {
+  const { tableId } = req.params;
+  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50;
+  const events = await tableService.getEvents(tableDAO, tableId, limit);
+  return res.status(200).json({
+    success: true,
+    events,
+  });
+};
+
 const bulkUpdateHandler = async (req, res) => {
   const { ids, isBlocked, maintenanceNotes } = req.body;
   const payload = {};
   if (typeof isBlocked === "boolean") payload.isBlocked = isBlocked;
   if (maintenanceNotes !== undefined) payload.maintenanceNotes = maintenanceNotes;
-  const result = await tableService.bulkUpdate(tableDAO, ids, payload);
+  const result = await tableService.bulkUpdate(tableDAO, ids, payload, actorId(req));
   return res.status(200).json({
     success: true,
     message: `Updated ${result.count} tables`,
@@ -187,6 +208,9 @@ const bulkUpdateHandler = async (req, res) => {
 
 const bulkDeleteHandler = async (req, res) => {
   const { ids } = req.body;
+  for (const id of ids) {
+    await tableService.recordEvent(tableDAO, id, "deleted", null, actorId(req));
+  }
   const result = await tableService.bulkDelete(tableDAO, ids);
   return res.status(200).json({
     success: true,
@@ -222,4 +246,5 @@ module.exports = {
   bulkUpdateHandler,
   bulkDeleteHandler,
   bulkAssignHandler,
+  getEventsHandler,
 };

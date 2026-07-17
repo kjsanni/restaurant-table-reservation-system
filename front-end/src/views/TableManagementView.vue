@@ -423,6 +423,45 @@ const closeQrModal = () => {
   qrTable.value = null;
 };
 
+const showHistoryDialog = ref(false);
+const historyTable = ref(null);
+const tableEvents = ref([]);
+const historyLoading = ref(false);
+
+const openHistory = async (table) => {
+  historyTable.value = table;
+  showHistoryDialog.value = true;
+  historyLoading.value = true;
+  tableEvents.value = [];
+  try {
+    const res = await tableAPI.getEvents(table.id, 50);
+    tableEvents.value = res?.data?.events ?? res?.data?.data ?? [];
+  } catch (err) {
+    logger.error("Failed to load table history", { error: err.message });
+  } finally {
+    historyLoading.value = false;
+  }
+};
+
+const EVENT_LABELS = {
+  blocked: "Blocked",
+  unblocked: "Unblocked",
+  staff_assigned: "Staff assigned",
+  staff_unassigned: "Staff unassigned",
+  merged: "Merged",
+  unmerged: "Unmerged",
+  deleted: "Deleted",
+  moved: "Moved",
+};
+
+const eventLabel = (type) => EVENT_LABELS[type] || type;
+
+const formatEventTime = (ts) => {
+  if (!ts) return "";
+  const d = new Date(ts);
+  return d.toLocaleString();
+};
+
 const getQrCodeUrl = (table) => {
   const baseUrl = window.location.origin;
   const url = `${baseUrl}/self-service/table/${table.id}`;
@@ -659,6 +698,13 @@ const getQrCodeUrl = (table) => {
                 title="QR Code for self-service"
               >
                 📱 QR
+              </button>
+              <button
+                class="action-btn btn-history"
+                @click="openHistory(table)"
+                title="Table history"
+              >
+                🕑 History
               </button>
             </div>
           </div>
@@ -956,6 +1002,32 @@ const getQrCodeUrl = (table) => {
               Close
             </button>
           </div>
+        </div>
+      </template>
+    </PopupBox>
+
+    <PopupBox
+      :is-open="showHistoryDialog"
+      :header-text="historyTable ? 'History — ' + historyTable.name : 'Table History'"
+      :is-closable="true"
+      @close-modal="showHistoryDialog = false"
+    >
+      <template #popup-content>
+        <div class="history-content">
+          <p v-if="historyLoading" class="history-loading">Loading…</p>
+          <p v-else-if="tableEvents.length === 0" class="history-empty">
+            No activity recorded for this table yet.
+          </p>
+          <ul v-else class="history-list">
+            <li v-for="(ev, i) in tableEvents" :key="i" class="history-item">
+              <span class="history-badge" :class="'ev-' + ev.eventType">
+                {{ eventLabel(ev.eventType) }}
+              </span>
+              <span class="history-desc" v-if="ev.description">{{ ev.description }}</span>
+              <span class="history-actor" v-if="ev.User">by {{ ev.User.username }}</span>
+              <span class="history-time">{{ formatEventTime(ev.createdAt) }}</span>
+            </li>
+          </ul>
         </div>
       </template>
     </PopupBox>
@@ -1905,5 +1977,61 @@ const getQrCodeUrl = (table) => {
 .bulk-assign-actions {
   display: flex;
   gap: var(--space-2);
+}
+.history-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 420px;
+  overflow-y: auto;
+}
+.history-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
+.history-badge {
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-muted, #eef2f7);
+}
+.history-badge.ev-blocked,
+.history-badge.ev-deleted {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.history-badge.ev-unblocked,
+.history-badge.ev-unmerged {
+  background: #dcfce7;
+  color: #15803d;
+}
+.history-desc {
+  color: var(--text-muted);
+}
+.history-actor {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.history-time {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+.btn-history {
+  background: var(--surface-muted, #eef2f7);
 }
 </style>
