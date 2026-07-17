@@ -178,7 +178,7 @@ const shiftsByDay = computed(() => {
     const list = map[s.dayOfWeek] || [];
     list.push({
       ...s,
-      staffName: s.User?.username || "Staff",
+      staffName: s.user?.username || "Staff",
       startMin: toMinutes(s.startTime),
       endMin: toMinutes(s.endTime),
     });

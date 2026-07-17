@@ -1,4 +1,5 @@
 const dateTimeValidator = require("../utils/dateAndTimeValidator");
+const authDAO = require("../DAOs/auth.dao");
 
 const getDayName = (date) => {
   const days = [
@@ -11,6 +12,38 @@ const getDayName = (date) => {
     "saturday",
   ];
   return days[new Date(date).getDay()];
+};
+
+const toMinutes = (time) => {
+  if (!time || typeof time !== "string") return null;
+  const parts = time.split(":").map(Number);
+  if (parts.length < 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return null;
+  return parts[0] * 60 + parts[1];
+};
+
+const checkBusinessHours = async (resDate, resTime, tenantId) => {
+  const config = await authDAO.getSettingValue(
+    "business_hours",
+    { enabled: false, days: {} },
+    tenantId
+  );
+  if (!config || !config.enabled) return;
+  const dayName = getDayName(resDate);
+  const day = config.days && config.days[dayName];
+  if (!day) return;
+  if (day.closed) {
+    throw { status: 400, message: `Restaurant is closed on ${dayName}s (business hours).` };
+  }
+  const start = toMinutes(day.open);
+  const end = toMinutes(day.close);
+  const at = toMinutes(resTime);
+  if (start === null || end === null || at === null) return;
+  if (at < start || at >= end) {
+    throw {
+      status: 400,
+      message: `Reservations are only accepted between ${day.open} and ${day.close} on ${dayName}s.`,
+    };
+  }
 };
 
 const checkScheduleAvailability = async (scheduleDAO, holidayDAO, resDate, resTime) => {
@@ -82,6 +115,7 @@ const validateReservationTime = async (scheduleDAO, holidayDAO, resDate, resTime
 
 module.exports = {
   getDayName,
+  checkBusinessHours,
   checkScheduleAvailability,
   getSlotDuration,
   validateReservationTime,

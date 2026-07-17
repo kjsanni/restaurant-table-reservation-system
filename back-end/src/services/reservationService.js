@@ -112,6 +112,11 @@ const registerReservation = async (reservationDAO, payload, tenantId) => {
       payload.resDate,
       payload.resTime
     );
+    await scheduleService.checkBusinessHours(
+      payload.resDate,
+      payload.resTime,
+      tenantId
+    );
   } catch (err) {
     if (err && err.status) throw err;
     throw { status: 500, message: "Unable to verify schedule availability." };
