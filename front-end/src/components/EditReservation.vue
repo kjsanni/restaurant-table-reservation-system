@@ -105,6 +105,32 @@ const splitMethods = [
   { value: "other", label: "Other" },
 ];
 
+const groupSplitCount = ref(2);
+const groupSplitPaid = ref(0);
+const showGroupSplit = ref(false);
+
+const remainingBalance = computed(() => {
+  const expected = parseFloat(reservation.value.expectedTotal.value) || 0;
+  return Math.max(0, expected - totalPaid.value);
+});
+
+const groupSplitAmount = computed(() => {
+  if (groupSplitCount.value <= 0) return 0;
+  return remainingBalance.value / groupSplitCount.value;
+});
+
+const addGroupSplitPayment = (personIndex) => {
+  const amount = groupSplitAmount.value;
+  if (amount <= 0) return;
+  newPayment.value = {
+    amount: amount.toFixed(2),
+    method: "cash",
+    paidBy: `Person ${personIndex + 1}`,
+    reference: "",
+  };
+  addPayment();
+};
+
 const totalSplitAmount = computed(() => {
   return splits.value.reduce(
     (sum, split) => sum + (parseFloat(split.amount) || 0),
@@ -366,6 +392,52 @@ const editReservation = async () => {
             >
               ×
             </button>
+          </div>
+        </div>
+
+        <div class="group-split-section">
+          <div class="group-split-header">
+            <label class="form-label">Group Split</label>
+            <button
+              type="button"
+              class="toggle-split-btn"
+              @click="showGroupSplit = !showGroupSplit"
+            >
+              {{ showGroupSplit ? "Hide" : "Show" }}
+            </button>
+          </div>
+          <div v-if="showGroupSplit" class="group-split-body">
+            <div class="form-group inline">
+              <label class="form-label">Number of People</label>
+              <input
+                type="number"
+                min="2"
+                max="20"
+                class="form-select"
+                v-model.number="groupSplitCount"
+              />
+            </div>
+            <div class="split-summary-bar">
+              <span>Expected: GHS {{ parseFloat(reservation.value.expectedTotal.value || 0).toFixed(2) }}</span>
+              <span>Paid: GHS {{ totalPaid.toFixed(2) }}</span>
+              <span class="remaining">Remaining: GHS {{ remainingBalance.toFixed(2) }}</span>
+            </div>
+            <div class="split-summary-bar">
+              <span>Per person: GHS {{ groupSplitAmount.toFixed(2) }}</span>
+              <span>{{ groupSplitCount }} people</span>
+            </div>
+            <div class="group-split-buttons">
+              <button
+                v-for="i in groupSplitCount"
+                :key="i"
+                type="button"
+                class="split-person-btn"
+                :disabled="groupSplitAmount.value <= 0"
+                @click="addGroupSplitPayment(i - 1)"
+              >
+                Person {{ i }}: GHS {{ groupSplitAmount.toFixed(2) }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -694,6 +766,83 @@ const editReservation = async () => {
   );
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
+}
+
+.group-split-section {
+  width: 100%;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-5);
+  background: var(--surface);
+}
+.group-split-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+.group-split-header .form-label {
+  margin: 0;
+}
+.toggle-split-btn {
+  background: var(--neutral-100);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--ink-secondary);
+}
+.group-split-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.split-summary-bar {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-secondary);
+  background: var(--neutral-50);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+}
+.split-summary-bar .remaining {
+  color: var(--accent);
+}
+.group-split-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.split-person-btn {
+  background: linear-gradient(
+    135deg,
+    var(--earth-500) 0%,
+    var(--earth-600) 100%
+  );
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--duration-fast) var(--ease-in-out);
+}
+.split-person-btn:hover:not(:disabled) {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.split-person-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .confirm-overlay {
