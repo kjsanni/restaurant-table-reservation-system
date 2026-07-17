@@ -512,7 +512,7 @@ const exportPDF = async () => {
     link.click();
     link.remove();
   } catch (err) {
-    console.error("Failed to export PDF:", err);
+    logger.error("Failed to export PDF:", { error: err });
     alert("Failed to export PDF. Please try again.");
   }
 };

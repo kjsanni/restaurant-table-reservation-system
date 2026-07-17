@@ -2,6 +2,7 @@
 import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import auditAPI from "@/services/auditAPI";
+import logger from "@/utils/logger";
 
 const logs = ref([]);
 const loading = ref(true);
@@ -117,7 +118,7 @@ const loadLogs = async (showLoading = true) => {
     total.value = res.data.total || 0;
     totalPages.value = res.data.totalPages || 0;
   } catch (err) {
-    console.error("Failed to load audit logs", err);
+    logger.error("Failed to load audit logs", err);
   } finally {
     if (showLoading) loading.value = false;
   }
@@ -133,7 +134,7 @@ const loadStats = async () => {
 
     stats.value = await auditAPI.getStats(params);
   } catch (err) {
-    console.error("Failed to load stats", err);
+    logger.error("Failed to load stats", err);
   }
 };
 
@@ -214,7 +215,7 @@ const handleBulkDelete = async () => {
     selectedIds.value.clear();
     await loadLogs();
   } catch (err) {
-    console.error("Failed to delete logs", err);
+    logger.error("Failed to delete logs", err);
     alert("Failed to delete selected logs");
   }
 };
@@ -230,7 +231,7 @@ const handleExportCSV = async () => {
     });
     downloadBlob(blob, "audit-logs.csv", "text/csv");
   } catch (err) {
-    console.error("Failed to export CSV", err);
+    logger.error("Failed to export CSV", err);
     alert("Failed to export CSV");
   }
 };
@@ -246,7 +247,7 @@ const handleExportJSON = async () => {
     });
     downloadBlob(blob, "audit-logs.json", "application/json");
   } catch (err) {
-    console.error("Failed to export JSON", err);
+    logger.error("Failed to export JSON", err);
     alert("Failed to export JSON");
   }
 };

@@ -6,6 +6,7 @@ import {
   useDateRange,
   PRESET_RANGES,
 } from "@/composables/useReservationCalendar";
+import logger from "@/utils/logger";
 
 const loading = ref(true);
 const series = ref([]);
@@ -31,7 +32,7 @@ const loadReport = async () => {
     series.value = res.data.series || [];
     summary.value = res.data.summary || summary.value;
   } catch (err) {
-    console.error("Failed to load revenue report", err);
+    logger.error("Failed to load revenue report", { error: err });
   } finally {
     loading.value = false;
   }

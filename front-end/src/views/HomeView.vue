@@ -8,6 +8,7 @@ import reservationAPI from "@/services/reservationAPI";
 import waitlistAPI from "@/services/waitlistAPI";
 import paymentAPI from "@/services/paymentAPI";
 import tableAPI from "@/services/tableAPI";
+import logger from "@/utils/logger";
 import { useToday, useDaysAgo } from "@/composables/useReservationCalendar";
 
 const router = useRouter();
@@ -95,7 +96,7 @@ const loadData = async () => {
     const recent = await reservationAPI.getReservations({});
     recentReservations.value = (recent.data.collection || []).slice(0, 8);
   } catch (err) {
-    console.error("Failed to load dashboard", err);
+    logger.error("Failed to load dashboard", { error: err });
   } finally {
     loading.value = false;
   }

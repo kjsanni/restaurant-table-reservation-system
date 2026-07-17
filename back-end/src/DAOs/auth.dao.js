@@ -138,6 +138,7 @@ const getSettingByKey = async (key, tenantId) => {
   if (setting && setting.value !== undefined) {
     setting.value = normalizeSettingValue(setting.value);
   }
+  stripSensitiveSettingValue(setting);
   return setting;
 };
 
@@ -162,12 +163,23 @@ const updateSetting = async (key, value, tenantId) => {
   return await getSettingByKey(key, tenantId);
 };
 
+const stripSensitiveSettingValue = (setting) => {
+  if (!setting) return setting;
+  const key = setting.key || (setting.get && setting.get("key"));
+  if (key === "email_server" && setting.value && typeof setting.value === "object") {
+    const { pass, ...rest } = setting.value;
+    setting.value = rest;
+  }
+  return setting;
+};
+
 const getAllSettings = async (tenantId) => {
   const settings = await Setting.findAll({
     where: withTenant({}, tenantId),
   });
   settings.forEach((s) => {
     if (s.value !== undefined) s.value = normalizeSettingValue(s.value);
+    stripSensitiveSettingValue(s);
   });
   return settings;
 };
