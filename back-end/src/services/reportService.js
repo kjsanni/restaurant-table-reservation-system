@@ -3,6 +3,15 @@ const reservationDAO = require("../DAOs/reservation.dao");
 const { Op, fn, col } = require("../db/models");
 const { generateTextPdf } = require("../utils/pdfGenerator");
 
+const csvCell = (value) => {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  if (/[=+\-@]/.test(str[0]) || str.includes(",") || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
 const getReservationReport = async (filters = {}) => {
   const where = {};
   if (filters.from) where.resDate = { ...where.resDate, [Op.gte]: filters.from };

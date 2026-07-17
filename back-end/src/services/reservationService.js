@@ -199,6 +199,12 @@ const chooseTable = async (
   });
 };
 
+const paymentDAO = require("../DAOs/payment.dao");
+
+const getRevenueTimeSeries = async (from, to, granularity = "day") => {
+  return await paymentDAO.getRevenueTimeSeries(from, to, granularity);
+};
+
 const searchReservations = async (reservationDAO, query) => {
   const term = query.trim();
   if (!term) return [];
@@ -243,4 +249,5 @@ module.exports = {
   getStatusHistory,
   mergeReservationTables,
   unmergeReservationTables,
+  getRevenueTimeSeries,
 };

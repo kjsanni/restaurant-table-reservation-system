@@ -5,7 +5,7 @@ const logger = require("./utils/logger");
 const connect = require("./utils/connect");
 const { client: redisClient } = require("./utils/cache");
 
-const { app, server } = createServer();
+const { server } = createServer();
 
 server.setTimeout(30000);
 

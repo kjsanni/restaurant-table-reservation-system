@@ -355,6 +355,19 @@ const unmergeTablesHandler = async (req, res) => {
   return res.status(200).json({ success: true, message: "Tables unmerged", reservation });
 };
 
+const getRevenueTimeSeriesHandler = async (req, res) => {
+  const { from, to, granularity } = req.query;
+  const validGranularities = ["day", "week", "month"];
+  if (!validGranularities.includes(granularity)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid granularity. Use 'day', 'week', or 'month'.",
+    });
+  }
+  const data = await reservationService.getRevenueTimeSeries(from, to, granularity);
+  return res.status(200).json({ success: true, ...data });
+};
+
 module.exports = {
   getAllHandler,
   registerHandler,
@@ -376,4 +389,5 @@ module.exports = {
   getStatusHistoryHandler,
   mergeTablesHandler,
   unmergeTablesHandler,
+  getRevenueTimeSeriesHandler,
 };

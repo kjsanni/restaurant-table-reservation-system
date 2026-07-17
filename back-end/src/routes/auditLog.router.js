@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const tryCatchHandler = require("../middleware/tryCatch");
 const httpMethodError = require("../middleware/httpMethodError");
 const auditLogController = require("../controllers/auditLog.controller");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");

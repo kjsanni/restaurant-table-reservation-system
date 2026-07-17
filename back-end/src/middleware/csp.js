@@ -1,5 +1,3 @@
-const helmet = require("helmet");
-
 const getCspDirectives = () => {
   const isDev = process.env.NODE_ENV !== "production";
   const corsOrigins = (process.env.CORS_ORIGINS || "")

@@ -12,7 +12,6 @@ const toastStore = useToastStore();
 const loading = ref(true);
 const savingKeys = ref(new Set());
 const savedKeys = ref(new Set());
-const settingsMap = ref({});
 const sendingLogs = ref(false);
 const logsSent = ref(false);
 
@@ -499,7 +498,7 @@ const sendLogs = async () => {
             <RouterLink to="/admin/payments" class="action-card">
               <span class="action-icon">💳</span>
               <span>Payments</span>
-            </router-link>
+            </RouterLink>
             <button
               class="action-card"
               type="button"

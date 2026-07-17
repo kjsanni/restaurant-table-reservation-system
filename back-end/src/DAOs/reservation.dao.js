@@ -39,7 +39,14 @@ const findAllReservations = async ({ limit, offset } = {}) => {
 };
 
 const searchReservations = async (filters = {}, { limit, offset } = {}) => {
-  const { q, from, to, status } = filters;
+  let q = "";
+  if (typeof filters === "string") {
+    q = filters.trim();
+    filters = {};
+  } else {
+    ({ q } = filters);
+  }
+  const { from, to, status } = filters;
   const where = {};
 
   if (status) {
@@ -63,16 +70,21 @@ const searchReservations = async (filters = {}, { limit, offset } = {}) => {
     },
   ];
 
-  if (q) {
-    const like = { [Op.like]: `%${q}%` };
+  const like = q ? { [Op.like]: `%${q.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_")}%` } : null;
+  if (like) {
     where[Op.or] = [
       { "$Customer.name$": like },
       { "$Customer.email$": like },
       { "$Customer.phone$": like },
       { resDate: like },
       { resTime: like },
-      { notes: { [Op.like]: `%${q}%` } },
+      { notes: like },
+      { "$Customer.tags$": like },
     ];
+    const num = parseInt(q, 10);
+    if (!Number.isNaN(num)) {
+      where[Op.or].push({ people: num });
+    }
   }
 
   const baseOpts = {
@@ -111,7 +123,6 @@ const searchReservations = async (filters = {}, { limit, offset } = {}) => {
         return Customer ? { ...rest, Customer } : rest;
       });
   }
-
   if (limit) {
     return { reservations, total: count };
   }
@@ -127,7 +138,6 @@ const findReservationById = async (reservationId) => {
 
   return reservation;
 };
-
 const createCustomer = async (customerDetails, t = null) => {
   return await Customer.create(
     {
@@ -730,48 +740,6 @@ const getReservationStats = async (filters = {}) => {
     noShowRate,
     total,
   };
-};
-
-const searchReservations = async (term) => {
-  const like = `%${term.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
-  const where = {
-    [Op.or]: [
-      { resDate: { [Op.like]: like } },
-      { resTime: { [Op.like]: like } },
-      { notes: { [Op.like]: like } },
-      { "$customer.name$": { [Op.like]: like } },
-      { "$customer.email$": { [Op.like]: like } },
-      { "$customer.phone$": { [Op.like]: like } },
-      { "$customer.tags$": { [Op.like]: like } },
-      { "$table.name$": { [Op.like]: like } },
-    ],
-  };
-  const num = parseInt(term, 10);
-  if (!Number.isNaN(num)) {
-    where[Op.or].push({ people: num });
-  }
-  return await Reservation.findAll({
-    where,
-    include: [
-      {
-        model: Customer,
-        attributes: [
-          [fn("CONCAT", col("firstName"), " ", col("lastName")), "name"],
-          "email",
-          "phone",
-          "tags",
-        ],
-        required: false,
-      },
-      {
-        model: Table,
-        attributes: ["id", "name", "capacity"],
-        required: false,
-      },
-    ],
-    limit: 50,
-    order: [["resDate", "DESC"], ["resTime", "DESC"]],
-  });
 };
 
 const getRecurringReservations = async (customerId) => {
