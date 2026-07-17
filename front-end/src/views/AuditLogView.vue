@@ -46,10 +46,22 @@ const filteredLogs = computed(() => {
 });
 
 const selectedCount = computed(() => selectedIds.value.size);
-const allSelected = computed(() => filteredLogs.value.length > 0 && selectedIds.value.size === filteredLogs.value.length);
+const allSelected = computed(
+  () =>
+    filteredLogs.value.length > 0 &&
+    selectedIds.value.size === filteredLogs.value.length
+);
 
 watch(
-  [searchQuery, actionFilter, entityFilter, dateFrom, dateTo, sortBy, sortOrder],
+  [
+    searchQuery,
+    actionFilter,
+    entityFilter,
+    dateFrom,
+    dateTo,
+    sortBy,
+    sortOrder,
+  ],
   () => {
     page.value = 1;
     loadLogs();
@@ -190,7 +202,12 @@ const clearFilters = () => {
 
 const handleBulkDelete = async () => {
   if (!selectedCount.value) return;
-  if (!confirm(`Delete ${selectedCount.value} selected audit log(s)? This cannot be undone.`)) return;
+  if (
+    !confirm(
+      `Delete ${selectedCount.value} selected audit log(s)? This cannot be undone.`
+    )
+  )
+    return;
 
   try {
     await auditAPI.bulkDelete(Array.from(selectedIds.value));
@@ -344,9 +361,7 @@ const getActionIcon = (action) => {
               </option>
             </select>
           </div>
-          <button class="clear-btn" @click="clearFilters">
-            Clear
-          </button>
+          <button class="clear-btn" @click="clearFilters">Clear</button>
         </div>
 
         <div class="actions-bar">
@@ -457,7 +472,11 @@ const getActionIcon = (action) => {
                     />
                   </td>
                   <td class="expand-col">
-                    <span class="expand-icon" :class="{ open: isExpanded(log.id) }">▼</span>
+                    <span
+                      class="expand-icon"
+                      :class="{ open: isExpanded(log.id) }"
+                      >▼</span
+                    >
                   </td>
                   <td class="time-cell">{{ formatDate(log.createdAt) }}</td>
                   <td>
@@ -471,7 +490,9 @@ const getActionIcon = (action) => {
                       class="action-badge"
                       :class="getActionClass(log.action)"
                     >
-                      <span class="action-icon">{{ getActionIcon(log.action) }}</span>
+                      <span class="action-icon">{{
+                        getActionIcon(log.action)
+                      }}</span>
                       {{ log.action }}
                     </span>
                   </td>
@@ -497,19 +518,29 @@ const getActionIcon = (action) => {
                         <div class="detail-grid">
                           <div class="detail-item">
                             <span class="detail-label">User</span>
-                            <span class="detail-value">{{ log.userId || "System" }}</span>
+                            <span class="detail-value">{{
+                              log.userId || "System"
+                            }}</span>
                           </div>
                           <div class="detail-item">
                             <span class="detail-label">Role</span>
-                            <span class="detail-value">{{ log.userRole || "N/A" }}</span>
+                            <span class="detail-value">{{
+                              log.userRole || "N/A"
+                            }}</span>
                           </div>
                           <div class="detail-item">
                             <span class="detail-label">IP Address</span>
-                            <span class="detail-value">{{ log.ipAddress || "-" }}</span>
+                            <span class="detail-value">{{
+                              log.ipAddress || "-"
+                            }}</span>
                           </div>
                           <div class="detail-item">
                             <span class="detail-label">Entity</span>
-                            <span class="detail-value">{{ log.entityType }} #{{ log.entityId || "N/A" }}</span>
+                            <span class="detail-value"
+                              >{{ log.entityType }} #{{
+                                log.entityId || "N/A"
+                              }}</span
+                            >
                           </div>
                         </div>
                       </div>

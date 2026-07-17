@@ -154,7 +154,10 @@ const duplicateReservation = async (reservation) => {
     });
     await loadSchedule();
   } catch (err) {
-    bulkError.value = getApiErrorMessage(err, "Failed to duplicate reservation");
+    bulkError.value = getApiErrorMessage(
+      err,
+      "Failed to duplicate reservation"
+    );
   } finally {
     bulkLoading.value = false;
   }
@@ -389,9 +392,10 @@ const buildCalendarDays = (year, month) => {
       const s = r.resStatus || "pending";
       statusTally[s] = (statusTally[s] || 0) + 1;
     });
-    const dominantStatus = Object.keys(statusTally).sort(
-      (a, b) => statusTally[b] - statusTally[a]
-    )[0] || null;
+    const dominantStatus =
+      Object.keys(statusTally).sort(
+        (a, b) => statusTally[b] - statusTally[a]
+      )[0] || null;
 
     days.push({
       date: day,
@@ -613,7 +617,9 @@ const filterReservations = computed(() => {
   }
 
   if (paymentStatusFilter.value !== "all") {
-    filtered = filtered.filter((r) => r.paymentStatus === paymentStatusFilter.value);
+    filtered = filtered.filter(
+      (r) => r.paymentStatus === paymentStatusFilter.value
+    );
   }
 
   if (dateFrom.value) {
@@ -665,7 +671,10 @@ const todayCount = computed(() => {
 const statusCounts = computed(() => {
   const counts = {};
   reservations.value.forEach((r) => {
-    if (r.resDate && r.resDate.startsWith(currentMonth.value.toISOString().slice(0, 7))) {
+    if (
+      r.resDate &&
+      r.resDate.startsWith(currentMonth.value.toISOString().slice(0, 7))
+    ) {
       counts[r.resStatus] = (counts[r.resStatus] || 0) + 1;
     }
   });
@@ -675,7 +684,10 @@ const statusCounts = computed(() => {
 const paymentCounts = computed(() => {
   const counts = {};
   reservations.value.forEach((r) => {
-    if (r.resDate && r.resDate.startsWith(currentMonth.value.toISOString().slice(0, 7))) {
+    if (
+      r.resDate &&
+      r.resDate.startsWith(currentMonth.value.toISOString().slice(0, 7))
+    ) {
       counts[r.paymentStatus] = (counts[r.paymentStatus] || 0) + 1;
     }
   });
@@ -818,65 +830,68 @@ const today = () => {
         </div>
       </div>
 
-<table class="bulk-select-all" v-if="filteredCount > 0">
-  <tbody>
-    <tr>
-      <td class="select-col">
-        <input
-          type="checkbox"
-          :checked="selectedIds.size === filterReservations.length && filterReservations.length > 0"
-          @change="toggleSelectAll"
-          aria-label="Select all reservations"
-        />
-      </td>
-      <td></td>
-    </tr>
-  </tbody>
-</table>
+      <table class="bulk-select-all" v-if="filteredCount > 0">
+        <tbody>
+          <tr>
+            <td class="select-col">
+              <input
+                type="checkbox"
+                :checked="
+                  selectedIds.size === filterReservations.length &&
+                  filterReservations.length > 0
+                "
+                @change="toggleSelectAll"
+                aria-label="Select all reservations"
+              />
+            </td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
 
-<div class="stats-bar">
-  <span class="stats-text">
-    Showing {{ filteredCount }} of {{ totalCount }} reservations
-  </span>
-  <span class="stats-today" v-if="todayCount > 0">
-    · {{ todayCount }} today
-  </span>
-  <button class="btn btn-secondary btn-sm" @click="exportCSV">
-    Export CSV
-  </button>
-</div>
+      <div class="stats-bar">
+        <span class="stats-text">
+          Showing {{ filteredCount }} of {{ totalCount }} reservations
+        </span>
+        <span class="stats-today" v-if="todayCount > 0">
+          · {{ todayCount }} today
+        </span>
+        <button class="btn btn-secondary btn-sm" @click="exportCSV">
+          Export CSV
+        </button>
+      </div>
 
-<div class="bulk-bar" v-if="selectedIds.size > 0">
-  <span class="bulk-count">{{ selectedIds.size }} selected</span>
-  <select v-model="bulkStatusTarget" class="filter-select bulk-select">
-    <option value="">Change status…</option>
-    <option
-      v-for="status in Object.values(RESERVATION_STATUS)"
-      :key="status"
-      :value="status"
-    >
-      {{ status }}
-    </option>
-  </select>
-  <button
-    class="btn btn-primary btn-sm"
-    :disabled="!bulkStatusTarget || bulkLoading"
-    @click="bulkUpdateStatus"
-  >
-    Apply
-  </button>
-  <button
-    class="btn btn-danger btn-sm"
-    :disabled="bulkLoading"
-    @click="bulkCancel"
-  >
-    Cancel Selected
-  </button>
-  <button class="btn btn-secondary btn-sm" @click="clearSelection">
-    Clear
-  </button>
-  <span class="bulk-error" v-if="bulkError">{{ bulkError }}</span>
-</div>
+      <div class="bulk-bar" v-if="selectedIds.size > 0">
+        <span class="bulk-count">{{ selectedIds.size }} selected</span>
+        <select v-model="bulkStatusTarget" class="filter-select bulk-select">
+          <option value="">Change status…</option>
+          <option
+            v-for="status in Object.values(RESERVATION_STATUS)"
+            :key="status"
+            :value="status"
+          >
+            {{ status }}
+          </option>
+        </select>
+        <button
+          class="btn btn-primary btn-sm"
+          :disabled="!bulkStatusTarget || bulkLoading"
+          @click="bulkUpdateStatus"
+        >
+          Apply
+        </button>
+        <button
+          class="btn btn-danger btn-sm"
+          :disabled="bulkLoading"
+          @click="bulkCancel"
+        >
+          Cancel Selected
+        </button>
+        <button class="btn btn-secondary btn-sm" @click="clearSelection">
+          Clear
+        </button>
+        <span class="bulk-error" v-if="bulkError">{{ bulkError }}</span>
+      </div>
 
       <div class="date-controls">
         <button class="nav-btn" @click="prev()">
@@ -898,21 +913,21 @@ const today = () => {
             :collection="reservations"
             :filteredCollection="filterReservations"
           >
-<template #card="slotProps">
-  <div class="reservation-card">
-    <div class="card-select-row">
-      <input
-        type="checkbox"
-        :checked="isSelected(slotProps.item.id)"
-        @change="toggleSelect(slotProps.item.id)"
-        aria-label="Select reservation"
-      />
-    </div>
-    <ReservationInfo
-      :reservation="slotProps.item"
-      :can-delete="canEditReservations"
-      @on-delete="openDeleteModal"
-    />
+            <template #card="slotProps">
+              <div class="reservation-card">
+                <div class="card-select-row">
+                  <input
+                    type="checkbox"
+                    :checked="isSelected(slotProps.item.id)"
+                    @change="toggleSelect(slotProps.item.id)"
+                    aria-label="Select reservation"
+                  />
+                </div>
+                <ReservationInfo
+                  :reservation="slotProps.item"
+                  :can-delete="canEditReservations"
+                  @on-delete="openDeleteModal"
+                />
                 <div class="card-meta">
                   <span class="status-badge" :class="slotProps.item.resStatus">
                     {{ slotProps.item.resStatus }}

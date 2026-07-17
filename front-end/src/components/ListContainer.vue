@@ -2,8 +2,8 @@
 import { VaAlert } from "vuestic-ui";
 
 const props = defineProps<{
-  collection: any[]
-  filteredCollection: any[]
+  collection: any[];
+  filteredCollection: any[];
 }>();
 </script>
 

@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { ref, computed } from "vue";
 
-function createFilterReservations(reservations, currentMonth, searchVal = "", searchNotes = false) {
+function createFilterReservations(
+  reservations,
+  currentMonth,
+  searchVal = "",
+  searchNotes = false
+) {
   const currentMonthRef = ref(currentMonth);
   const searchValRef = ref(searchVal);
   const searchNotesRef = ref(searchNotes);
@@ -34,10 +39,38 @@ function createFilterReservations(reservations, currentMonth, searchVal = "", se
 
 describe("TheReservations filter logic", () => {
   const reservations = [
-    { id: 1, resDate: "2026-07-01", resTime: "12:00", resStatus: "confirmed", notes: "window", name: "Alice" },
-    { id: 2, resDate: "2026-07-15", resTime: "13:00", resStatus: "pending", notes: "door", name: "Bob" },
-    { id: 3, resDate: "2026-08-01", resTime: "14:00", resStatus: "confirmed", notes: "window", name: "Charlie" },
-    { id: 4, resDate: "2026-07-20", resTime: "15:00", resStatus: "cancelled", notes: null, name: "Diana" },
+    {
+      id: 1,
+      resDate: "2026-07-01",
+      resTime: "12:00",
+      resStatus: "confirmed",
+      notes: "window",
+      name: "Alice",
+    },
+    {
+      id: 2,
+      resDate: "2026-07-15",
+      resTime: "13:00",
+      resStatus: "pending",
+      notes: "door",
+      name: "Bob",
+    },
+    {
+      id: 3,
+      resDate: "2026-08-01",
+      resTime: "14:00",
+      resStatus: "confirmed",
+      notes: "window",
+      name: "Charlie",
+    },
+    {
+      id: 4,
+      resDate: "2026-07-20",
+      resTime: "15:00",
+      resStatus: "cancelled",
+      notes: null,
+      name: "Diana",
+    },
   ];
 
   it("should filter by current month prefix", () => {
@@ -49,14 +82,23 @@ describe("TheReservations filter logic", () => {
 
   it("should filter by search query excluding notes by default", () => {
     const currentMonth = new Date("2026-07-15T00:00:00.000Z");
-    const filtered = createFilterReservations(reservations, currentMonth, "alice");
+    const filtered = createFilterReservations(
+      reservations,
+      currentMonth,
+      "alice"
+    );
     expect(filtered.value).toHaveLength(1);
     expect(filtered.value[0].id).toBe(1);
   });
 
   it("should include notes in search when searchNotes is true", () => {
     const currentMonth = new Date("2026-07-15T00:00:00.000Z");
-    const filtered = createFilterReservations(reservations, currentMonth, "door", true);
+    const filtered = createFilterReservations(
+      reservations,
+      currentMonth,
+      "door",
+      true
+    );
     expect(filtered.value).toHaveLength(1);
     expect(filtered.value[0].id).toBe(2);
   });

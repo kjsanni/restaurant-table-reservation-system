@@ -2,7 +2,10 @@
 import PageHeader from "@/components/PageHeader.vue";
 import { ref, computed, onMounted, watch } from "vue";
 import reservationAPI from "@/services/reservationAPI";
-import { useDateRange, PRESET_RANGES } from "@/composables/useReservationCalendar";
+import {
+  useDateRange,
+  PRESET_RANGES,
+} from "@/composables/useReservationCalendar";
 
 const loading = ref(true);
 const series = ref([]);
@@ -13,7 +16,8 @@ const summary = ref({
 });
 
 const granularity = ref("day");
-const { rangeMode, customFrom, customTo, getDateRange, dateRangeLabel } = useDateRange("month");
+const { rangeMode, customFrom, customTo, getDateRange, dateRangeLabel } =
+  useDateRange("month");
 
 const loadReport = async () => {
   loading.value = true;

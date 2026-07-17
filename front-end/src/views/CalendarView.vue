@@ -147,9 +147,12 @@ const buildCalendarDays = (year, month) => {
     const schedule = schedules.value.find((s) => s.dayOfWeek === dayOfWeek);
     const holiday = holidays.value.find((h) => h.date === dateStr);
     const isClosed = holiday?.isClosed || schedule?.isClosed || false;
-    const showReservations = typeFilter.value === "all" || typeFilter.value === "reservations";
-    const showHoliday = typeFilter.value === "all" || typeFilter.value === "holidays";
-    const showClosed = typeFilter.value === "all" || typeFilter.value === "closed";
+    const showReservations =
+      typeFilter.value === "all" || typeFilter.value === "reservations";
+    const showHoliday =
+      typeFilter.value === "all" || typeFilter.value === "holidays";
+    const showClosed =
+      typeFilter.value === "all" || typeFilter.value === "closed";
 
     const dayReservations = showReservations
       ? reservations.value
@@ -162,9 +165,10 @@ const buildCalendarDays = (year, month) => {
       const s = r.resStatus || "pending";
       statusTally[s] = (statusTally[s] || 0) + 1;
     });
-    const dominantStatus = Object.keys(statusTally).sort(
-      (a, b) => statusTally[b] - statusTally[a]
-    )[0] || null;
+    const dominantStatus =
+      Object.keys(statusTally).sort(
+        (a, b) => statusTally[b] - statusTally[a]
+      )[0] || null;
 
     days.push({
       date: day,
@@ -263,7 +267,14 @@ const periodLabel = computed(() => {
     start.setDate(start.getDate() - dayOfWeek);
     const end = new Date(start);
     end.setDate(end.getDate() + 6);
-    return `${start.toLocaleDateString("default", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("default", { month: "short", day: "numeric", year: "numeric" })}`;
+    return `${start.toLocaleDateString("default", {
+      month: "short",
+      day: "numeric",
+    })} - ${end.toLocaleDateString("default", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })}`;
   } else {
     return selectedDate.value.toLocaleDateString("default", {
       weekday: "long",
@@ -351,7 +362,10 @@ const createEnd = ref(null);
 const newResEndTime = ref("");
 
 const onSlotDown = (hour) => {
-  if (calendarView.value !== "day" || (daySchedule.value && daySchedule.value.isClosed))
+  if (
+    calendarView.value !== "day" ||
+    (daySchedule.value && daySchedule.value.isClosed)
+  )
     return;
   dragCreate.value = true;
   createStart.value = hour;
@@ -726,7 +740,9 @@ const handleReschedule = async () => {
                 :key="day.toISOString()"
                 class="week-day-header"
               >
-                <div class="week-day-name">{{ day.toLocaleDateString("default", { weekday: "short" }) }}</div>
+                <div class="week-day-name">
+                  {{ day.toLocaleDateString("default", { weekday: "short" }) }}
+                </div>
                 <div class="week-day-date">{{ day.getDate() }}</div>
               </div>
             </div>
@@ -744,7 +760,10 @@ const handleReschedule = async () => {
                   @click="selectDate(day)"
                 >
                   <div
-                    v-for="res in getReservationsForDateAndHour(day, slot.value)"
+                    v-for="res in getReservationsForDateAndHour(
+                      day,
+                      slot.value
+                    )"
                     :key="res.id"
                     class="week-reservation"
                     :style="{ borderLeftColor: statusColor(res.resStatus) }"
@@ -759,14 +778,27 @@ const handleReschedule = async () => {
 
         <div v-else-if="calendarView === 'day'" class="day-view">
           <div class="day-header-bar">
-            <h3 class="day-title">{{ selectedDate.toLocaleDateString("default", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) }}</h3>
-            <span v-if="daySchedule?.isClosed" class="day-closed-badge">Closed</span>
+            <h3 class="day-title">
+              {{
+                selectedDate.toLocaleDateString("default", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })
+              }}
+            </h3>
+            <span v-if="daySchedule?.isClosed" class="day-closed-badge"
+              >Closed</span
+            >
             <span v-else-if="daySchedule?.openTime" class="day-hours-badge">
-              {{ daySchedule.openTime?.slice(0, 5) }} - {{ daySchedule.closeTime?.slice(0, 5) }}
+              {{ daySchedule.openTime?.slice(0, 5) }} -
+              {{ daySchedule.closeTime?.slice(0, 5) }}
             </span>
           </div>
           <p class="day-hint" v-if="!daySchedule?.isClosed">
-            Click a time slot to add a reservation, or drag across slots to set a time range.
+            Click a time slot to add a reservation, or drag across slots to set
+            a time range.
           </p>
           <div class="day-timeline">
             <div
@@ -784,10 +816,16 @@ const handleReschedule = async () => {
                   v-for="res in getReservationsForHour(slot.value)"
                   :key="res.id"
                   class="day-reservation"
-                  :style="{ borderLeftColor: statusColor(res.resStatus), backgroundColor: getPaymentStatusColor(res.paymentStatus) + '20' }"
+                  :style="{
+                    borderLeftColor: statusColor(res.resStatus),
+                    backgroundColor:
+                      getPaymentStatusColor(res.paymentStatus) + '20',
+                  }"
                 >
                   <div class="day-res-name">{{ shortName(res.name) }}</div>
-                  <div class="day-res-meta">{{ res.people }} ppl · {{ res.resTime?.slice(0, 5) }}</div>
+                  <div class="day-res-meta">
+                    {{ res.people }} ppl · {{ res.resTime?.slice(0, 5) }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -816,11 +854,8 @@ const handleReschedule = async () => {
               <span class="state-icon">📅</span>
               <p>No reservations for this day.</p>
             </div>
-              <div v-else>
-                <div
-                  v-if="activeAction"
-                  class="action-panel"
-                >
+            <div v-else>
+              <div v-if="activeAction" class="action-panel">
                 <div class="action-header">
                   <h3 class="action-title">{{ actionTitle }}</h3>
                   <button class="action-back" @click="closeAction">
@@ -961,10 +996,7 @@ const handleReschedule = async () => {
                   </div>
                 </div>
 
-                <div
-                  v-else-if="activeAction === 'new'"
-                  class="action-body"
-                >
+                <div v-else-if="activeAction === 'new'" class="action-body">
                   <div class="field-group">
                     <label class="field-label">Date</label>
                     <input
@@ -1097,7 +1129,9 @@ const handleReschedule = async () => {
                         </div>
                         <div v-if="tableName(res)" class="timeline-row">
                           <span class="timeline-icon">🪑</span>
-                          <span class="timeline-text">Table {{ tableName(res) }}</span>
+                          <span class="timeline-text"
+                            >Table {{ tableName(res) }}</span
+                          >
                         </div>
                         <div v-if="res.notes" class="timeline-row">
                           <span class="timeline-icon">📝</span>

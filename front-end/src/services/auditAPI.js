@@ -11,7 +11,9 @@ const getStats = (params = {}) => {
   const qs = new URLSearchParams(
     Object.entries(params).filter(([, v]) => v != null && v !== "")
   ).toString();
-  return API.get(`/audit-logs/stats${qs ? `?${qs}` : ""}`).then((res) => res.data.stats);
+  return API.get(`/audit-logs/stats${qs ? `?${qs}` : ""}`).then(
+    (res) => res.data.stats
+  );
 };
 
 const bulkDelete = (ids) => {
@@ -22,14 +24,18 @@ const exportCSV = (params = {}) => {
   const qs = new URLSearchParams(
     Object.entries(params).filter(([, v]) => v != null && v !== "")
   ).toString();
-  return API.get(`/audit-logs/export/csv${qs ? `?${qs}` : ""}`, { responseType: "blob" });
+  return API.get(`/audit-logs/export/csv${qs ? `?${qs}` : ""}`, {
+    responseType: "blob",
+  });
 };
 
 const exportJSON = (params = {}) => {
   const qs = new URLSearchParams(
     Object.entries(params).filter(([, v]) => v != null && v !== "")
   ).toString();
-  return API.get(`/audit-logs/export/json${qs ? `?${qs}` : ""}`, { responseType: "blob" });
+  return API.get(`/audit-logs/export/json${qs ? `?${qs}` : ""}`, {
+    responseType: "blob",
+  });
 };
 
 export default {

@@ -36,7 +36,9 @@ const displayTables = computed(() => {
     list = list.filter((t) => (t.section || "main") === sectionFilter.value);
   }
   if (selectedFloorPlan.value !== "all") {
-    list = list.filter((t) => String(t.floorPlanId) === String(selectedFloorPlan.value));
+    list = list.filter(
+      (t) => String(t.floorPlanId) === String(selectedFloorPlan.value)
+    );
   }
   return list;
 });
@@ -78,7 +80,8 @@ const removeFloorPlan = async (id) => {
   try {
     await floorPlanAPI.deleteFloorPlan(id);
     floorPlans.value = floorPlans.value.filter((f) => f.id !== id);
-    if (String(selectedFloorPlan.value) === String(id)) selectedFloorPlan.value = "all";
+    if (String(selectedFloorPlan.value) === String(id))
+      selectedFloorPlan.value = "all";
   } catch (err) {
     logger.error("Failed to delete floor plan", { error: err.message });
   }
@@ -86,8 +89,14 @@ const removeFloorPlan = async (id) => {
 
 const showServerOverlay = ref(false);
 const STAFF_COLORS = [
-  "#2563eb", "#16a34a", "#db2777", "#d97706",
-  "#7c3aed", "#0891b2", "#dc2626", "#4f46e5",
+  "#2563eb",
+  "#16a34a",
+  "#db2777",
+  "#d97706",
+  "#7c3aed",
+  "#0891b2",
+  "#dc2626",
+  "#4f46e5",
 ];
 const staffColorMap = computed(() => {
   const map = {};
@@ -102,12 +111,16 @@ const staffColorMap = computed(() => {
   });
   return map;
 });
-const firstStaff = (table) => (table.users && table.users.length ? table.users[0] : null);
+const firstStaff = (table) =>
+  table.users && table.users.length ? table.users[0] : null;
 const serverOverlayStyle = (table) => {
   if (!showServerOverlay.value) return {};
   const staff = firstStaff(table);
   if (!staff) return {};
-  return { borderColor: staffColorMap.value[staff.id], boxShadow: `0 0 0 2px ${staffColorMap.value[staff.id]}55` };
+  return {
+    borderColor: staffColorMap.value[staff.id],
+    boxShadow: `0 0 0 2px ${staffColorMap.value[staff.id]}55`,
+  };
 };
 
 const showAnalytics = ref(false);
@@ -115,10 +128,15 @@ const monthlyRevenue = ref(null);
 const loadAnalytics = async () => {
   try {
     const now = new Date();
-    const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-    const to = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    const from = new Date(now.getFullYear(), now.getMonth(), 1)
+      .toISOString()
+      .slice(0, 10);
+    const to = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      .toISOString()
+      .slice(0, 10);
     const res = await paymentAPI.getRevenueStats(from, to);
-    monthlyRevenue.value = res?.data?.totalRevenue ?? res?.data?.revenue ?? null;
+    monthlyRevenue.value =
+      res?.data?.totalRevenue ?? res?.data?.revenue ?? null;
   } catch {
     monthlyRevenue.value = null;
   }
@@ -133,15 +151,32 @@ const floorAnalytics = computed(() => {
   const occupancyRate = total ? Math.round((occupied / total) * 100) : 0;
   const resToday = (reservations.value || []).filter((r) => {
     const d = new Date();
-    const today = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0, 10);
+    const today = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+      .toISOString()
+      .slice(0, 10);
     return r.resDate === today;
   });
   const avgParty =
     resToday.length && resToday.reduce((s, r) => s + (r.people || 0), 0)
-      ? Math.round((resToday.reduce((s, r) => s + (r.people || 0), 0) / resToday.length) * 10) / 10
+      ? Math.round(
+          (resToday.reduce((s, r) => s + (r.people || 0), 0) /
+            resToday.length) *
+            10
+        ) / 10
       : 0;
-  const turnover = occupied ? Math.round((resToday.length / occupied) * 10) / 10 : 0;
-  return { total, occupied, blocked, free, occupancyRate, todayCount: resToday.length, avgParty, turnover };
+  const turnover = occupied
+    ? Math.round((resToday.length / occupied) * 10) / 10
+    : 0;
+  return {
+    total,
+    occupied,
+    blocked,
+    free,
+    occupancyRate,
+    todayCount: resToday.length,
+    avgParty,
+    turnover,
+  };
 });
 
 const toggleAnalytics = async () => {
@@ -388,7 +423,10 @@ const confirmWaitlistAssign = async () => {
     await loadData();
   } catch (err) {
     logger.error("Assign waitlist error", { error: err.message });
-    errorMessage.value = getApiErrorMessage(err, "Failed to seat waitlist entry");
+    errorMessage.value = getApiErrorMessage(
+      err,
+      "Failed to seat waitlist entry"
+    );
     errorPopupOpen.value = true;
   }
 };
@@ -414,7 +452,10 @@ const confirmAddTable = async () => {
     await tableAPI.registerTable({
       name: newTableName.value.trim(),
       capacity: Number(newTableCapacity.value) || 4,
-      floorPlanId: selectedFloorPlan.value === "all" ? null : Number(selectedFloorPlan.value),
+      floorPlanId:
+        selectedFloorPlan.value === "all"
+          ? null
+          : Number(selectedFloorPlan.value),
     });
     showAddTable.value = false;
     await loadData();
@@ -489,7 +530,9 @@ onMounted(loadData);
           <div v-if="waitlistReservations.length" class="waitlist-section">
             <div class="panel-header waitlist-header">
               <h2>Waitlist</h2>
-              <span class="badge waitlist-badge">{{ waitlistReservations.length }}</span>
+              <span class="badge waitlist-badge">{{
+                waitlistReservations.length
+              }}</span>
             </div>
             <div class="pending-list">
               <div
@@ -502,10 +545,16 @@ onMounted(loadData);
               >
                 <div class="pending-header">
                   <span class="pending-avatar">
-                    {{ (entry.customerName || entry.name || "G")[0]?.toUpperCase() }}
+                    {{
+                      (entry.customerName ||
+                        entry.name ||
+                        "G")[0]?.toUpperCase()
+                    }}
                   </span>
                   <div class="pending-title">
-                    <span class="pending-name">{{ entry.customerName || entry.name || "Guest" }}</span>
+                    <span class="pending-name">{{
+                      entry.customerName || entry.name || "Guest"
+                    }}</span>
                     <span class="pending-meta">
                       {{ entry.partySize || entry.people }} guests
                     </span>
@@ -522,9 +571,16 @@ onMounted(loadData);
             <label class="fp-label">Floor Plan</label>
             <select v-model="selectedFloorPlan" class="fp-select">
               <option value="all">All plans</option>
-              <option v-for="fp in floorPlans" :key="fp.id" :value="fp.id">{{ fp.name }}</option>
+              <option v-for="fp in floorPlans" :key="fp.id" :value="fp.id">
+                {{ fp.name }}
+              </option>
             </select>
-            <button class="btn btn-secondary btn-sm" @click="showNewPlanDialog = true">+ New</button>
+            <button
+              class="btn btn-secondary btn-sm"
+              @click="showNewPlanDialog = true"
+            >
+              + New
+            </button>
             <button
               v-if="selectedFloorPlan !== 'all'"
               class="btn btn-secondary btn-sm"
@@ -590,11 +646,15 @@ onMounted(loadData);
           </div>
           <div v-if="showAnalytics" class="analytics-panel">
             <div class="analytics-metric">
-              <span class="analytics-value">{{ floorAnalytics.occupancyRate }}%</span>
+              <span class="analytics-value"
+                >{{ floorAnalytics.occupancyRate }}%</span
+              >
               <span class="analytics-label">Occupancy</span>
             </div>
             <div class="analytics-metric">
-              <span class="analytics-value">{{ floorAnalytics.occupied }}/{{ floorAnalytics.total }}</span>
+              <span class="analytics-value"
+                >{{ floorAnalytics.occupied }}/{{ floorAnalytics.total }}</span
+              >
               <span class="analytics-label">Occupied</span>
             </div>
             <div class="analytics-metric">
@@ -606,7 +666,9 @@ onMounted(loadData);
               <span class="analytics-label">Blocked</span>
             </div>
             <div class="analytics-metric">
-              <span class="analytics-value">{{ floorAnalytics.todayCount }}</span>
+              <span class="analytics-value">{{
+                floorAnalytics.todayCount
+              }}</span>
               <span class="analytics-label">Reservations today</span>
             </div>
             <div class="analytics-metric">
@@ -618,61 +680,67 @@ onMounted(loadData);
               <span class="analytics-label">Avg party size</span>
             </div>
             <div class="analytics-metric">
-              <span class="analytics-value">{{ monthlyRevenue != null ? "$" + Math.round(monthlyRevenue).toLocaleString() : "—" }}</span>
+              <span class="analytics-value">{{
+                monthlyRevenue != null
+                  ? "$" + Math.round(monthlyRevenue).toLocaleString()
+                  : "—"
+              }}</span>
               <span class="analytics-label">Month revenue</span>
             </div>
           </div>
-            <div class="plan-grid">
-              <div
-                v-for="table in displayTables"
-                :key="table.id"
-                :class="[
-                  'table-block',
-                  tableStatus(table),
-                  {
-                    selected:
-                      selectedTable?.id === table.id ||
-                      selectedLinkedTables.some((t) => t.id === table.id),
-                  },
-                ]"
-                :style="serverOverlayStyle(table)"
-                @dragover.prevent="onTableDragOver(table, $event)"
+          <div class="plan-grid">
+            <div
+              v-for="table in displayTables"
+              :key="table.id"
+              :class="[
+                'table-block',
+                tableStatus(table),
+                {
+                  selected:
+                    selectedTable?.id === table.id ||
+                    selectedLinkedTables.some((t) => t.id === table.id),
+                },
+              ]"
+              :style="serverOverlayStyle(table)"
+              @dragover.prevent="onTableDragOver(table, $event)"
               @dragenter.prevent="onTableDragEnter(table, $event)"
               @dragleave.prevent="onTableDragLeave(table, $event)"
               @drop.prevent="onDrop(table, $event)"
               @click="onTableClick(table)"
             >
-                <div class="table-top">
-                  <div class="table-id-row">
-                    <span class="table-id">{{
-                      table.name || `T${table.id}`
-                    }}</span>
-                    <span
-                      class="status-dot"
-                      :style="{
-                        backgroundColor: statusColor(tableStatus(table)),
-                      }"
-                    ></span>
-                  </div>
-                  <span class="zone-badge">{{ table.section || "main" }}</span>
+              <div class="table-top">
+                <div class="table-id-row">
+                  <span class="table-id">{{
+                    table.name || `T${table.id}`
+                  }}</span>
                   <span
-                    v-if="showServerOverlay && firstStaff(table)"
-                    class="server-overlay-tag"
-                    :style="{ backgroundColor: staffColorMap[firstStaff(table).id] }"
-                  >
-                    {{ firstStaff(table).username }}
-                  </span>
-                  <div class="table-top-right">
-                    <span class="capacity">🪑 {{ table.capacity }}</span>
-                    <button
-                      class="remove-table-btn"
-                      title="Remove table"
-                      @click.stop="removeTable(table)"
-                    >
-                      ×
-                    </button>
-                  </div>
+                    class="status-dot"
+                    :style="{
+                      backgroundColor: statusColor(tableStatus(table)),
+                    }"
+                  ></span>
                 </div>
+                <span class="zone-badge">{{ table.section || "main" }}</span>
+                <span
+                  v-if="showServerOverlay && firstStaff(table)"
+                  class="server-overlay-tag"
+                  :style="{
+                    backgroundColor: staffColorMap[firstStaff(table).id],
+                  }"
+                >
+                  {{ firstStaff(table).username }}
+                </span>
+                <div class="table-top-right">
+                  <span class="capacity">🪑 {{ table.capacity }}</span>
+                  <button
+                    class="remove-table-btn"
+                    title="Remove table"
+                    @click.stop="removeTable(table)"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
               <div class="linked-badge" v-if="table.linkedTableIds?.length">
                 Linked: {{ table.linkedTableIds.length + 1 }} tables
               </div>
@@ -725,7 +793,10 @@ onMounted(loadData);
               >?
             </p>
             <p class="assign-text" v-else-if="draggingWaitlist">
-              Seat <strong>{{ draggingWaitlist?.customerName || draggingWaitlist?.name }}</strong>
+              Seat
+              <strong>{{
+                draggingWaitlist?.customerName || draggingWaitlist?.name
+              }}</strong>
               ({{ draggingWaitlist?.partySize || draggingWaitlist?.people }}
               guests) at
               <strong>{{ tableMergeDisplayName() }}</strong
@@ -793,7 +864,9 @@ onMounted(loadData);
               <label class="field-label">Floor Plan</label>
               <select v-model="selectedFloorPlan" class="action-input">
                 <option value="all">Default (all plans)</option>
-                <option v-for="fp in floorPlans" :key="fp.id" :value="fp.id">{{ fp.name }}</option>
+                <option v-for="fp in floorPlans" :key="fp.id" :value="fp.id">
+                  {{ fp.name }}
+                </option>
               </select>
             </div>
             <p v-if="addError" class="assign-error">{{ addError }}</p>
@@ -827,7 +900,10 @@ onMounted(loadData);
               />
             </div>
             <div class="popup-actions">
-              <button class="btn btn-outline" @click="showNewPlanDialog = false">
+              <button
+                class="btn btn-outline"
+                @click="showNewPlanDialog = false"
+              >
                 Cancel
               </button>
               <button class="btn btn-primary" @click="createFloorPlan">

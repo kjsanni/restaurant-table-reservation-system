@@ -53,7 +53,9 @@ class TableAPI {
     return API.post("/tables/bulk/assign", { ids, userId });
   }
   getEvents(tableId, limit) {
-    return API.get("/tables/" + tableId + "/events" + (limit ? "?limit=" + limit : ""));
+    return API.get(
+      "/tables/" + tableId + "/events" + (limit ? "?limit=" + limit : "")
+    );
   }
 }
 
