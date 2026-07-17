@@ -19,6 +19,19 @@ const paystackClient = axios.create({
   },
 });
 
+const createTenantClient = (tenant) => {
+  const secretKey = tenant?.paystackSecretKey || PAYSTACK_SECRET_KEY;
+  if (!secretKey) return paystackClient;
+
+  return axios.create({
+    baseURL: PAYSTACK_BASE,
+    headers: {
+      Authorization: `Bearer ${secretKey}`,
+      "Content-Type": "application/json",
+    },
+  });
+};
+
 const verifyWebhookSignature = (payload, signature) => {
   if (!PAYSTACK_WEBHOOK_SECRET) return true;
   const crypto = require("crypto");
@@ -26,8 +39,9 @@ const verifyWebhookSignature = (payload, signature) => {
   return hash === signature;
 };
 
-const createCustomer = async ({ email, firstName, lastName, phone }) => {
-  const response = await paystackClient.post("/customer", {
+const createCustomer = async ({ email, firstName, lastName, phone }, tenant) => {
+  const client = createTenantClient(tenant);
+  const response = await client.post("/customer", {
     email,
     first_name: firstName,
     last_name: lastName,
@@ -36,8 +50,9 @@ const createCustomer = async ({ email, firstName, lastName, phone }) => {
   return response.data.data;
 };
 
-const createSubscription = async ({ customerCode, planCode, authorization }) => {
-  const response = await paystackClient.post("/subscription", {
+const createSubscription = async ({ customerCode, planCode, authorization }, tenant) => {
+  const client = createTenantClient(tenant);
+  const response = await client.post("/subscription", {
     customer: customerCode,
     plan: planCode,
     authorization,
@@ -45,8 +60,9 @@ const createSubscription = async ({ customerCode, planCode, authorization }) => 
   return response.data.data;
 };
 
-const createPlan = async ({ name, amount, interval = "monthly", currency = "GHS" }) => {
-  const response = await paystackClient.post("/plan", {
+const createPlan = async ({ name, amount, interval = "monthly", currency = "GHS" }, tenant) => {
+  const client = createTenantClient(tenant);
+  const response = await client.post("/plan", {
     name,
     amount: amount * 100,
     interval,
@@ -55,7 +71,8 @@ const createPlan = async ({ name, amount, interval = "monthly", currency = "GHS"
   return response.data.data;
 };
 
-const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = null }) => {
+const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = null }, tenant) => {
+  const client = createTenantClient(tenant);
   const payload = {
     email,
     amount: amount * 100,
@@ -68,17 +85,19 @@ const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = nu
     payload.bearer = splitConfig.bearer || "subaccount";
   }
 
-  const response = await paystackClient.post("/transaction/initialize", payload);
+  const response = await client.post("/transaction/initialize", payload);
   return response.data.data;
 };
 
-const verifyPayment = async (reference) => {
-  const response = await paystackClient.get(`/transaction/verify/${reference}`);
+const verifyPayment = async (reference, tenant) => {
+  const client = createTenantClient(tenant);
+  const response = await client.get(`/transaction/verify/${reference}`);
   return response.data.data;
 };
 
-const fetchCustomer = async (customerCode) => {
-  const response = await paystackClient.get(`/customer/${customerCode}`);
+const fetchCustomer = async (customerCode, tenant) => {
+  const client = createTenantClient(tenant);
+  const response = await client.get(`/customer/${customerCode}`);
   return response.data.data;
 };
 

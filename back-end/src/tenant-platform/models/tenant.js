@@ -84,6 +84,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(100),
         allowNull: true,
       },
+      paystackPublicKey: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      paystackSecretKey: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
       billingEmail: {
         type: DataTypes.STRING(100),
         allowNull: true,
