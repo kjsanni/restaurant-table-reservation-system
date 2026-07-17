@@ -12,6 +12,7 @@ router
 
 router
   .route("/:id")
+  .patch(...writeRoute("manage_tables", floorPlanController.updateHandler))
   .delete(...writeRoute("manage_tables", floorPlanController.deleteHandler))
   .all(httpMethodError);
 

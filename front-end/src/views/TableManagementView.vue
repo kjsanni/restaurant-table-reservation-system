@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { RouterLink } from "vue-router";
 import tableAPI from "@/services/tableAPI";
 import { useAuthStore } from "@/stores/auth";
@@ -9,6 +9,7 @@ import ErrorMessage from "@/components/ErrorMessage.vue";
 import SuccessMessage from "@/components/SuccessMessage.vue";
 import logger from "@/utils/logger";
 import PageHeader from "@/components/PageHeader.vue";
+import { io } from "socket.io-client";
 
 const authStore = useAuthStore();
 const canManageTables = computed(
@@ -34,6 +35,53 @@ const editLayout = ref(false);
 const draggingTableId = ref(null);
 const dragOffset = ref({ x: 0, y: 0 });
 const savingPosition = ref(false);
+
+const socket = ref(null);
+
+const connectSocket = () => {
+  try {
+    socket.value = io("", {
+      path: "/socket.io",
+      transports: ["websocket", "polling"],
+    });
+    socket.value.on("table-status-changed", (payload) => {
+      const table = tables.value.find((t) => t.id === payload.tableId);
+      if (!table) return;
+      if (payload.status === "blocked") {
+        table.isBlocked = true;
+        table.isOccupied = false;
+      } else if (payload.status === "unblocked") {
+        table.isBlocked = false;
+      } else if (payload.status === "staff_assigned" || payload.status === "staff_unassigned") {
+        const staffId = payload.staffId;
+        // refresh table data to sync staff assignments
+        tableAPI.getTables().then((res) => {
+          const list = res.data.collection || [];
+          const updated = list.find((t) => t.id === payload.tableId);
+          if (updated) {
+            Object.assign(table, updated);
+          }
+        });
+      }
+    });
+    socket.value.on("table-freed", (payload) => {
+      const table = tables.value.find((t) => t.id === payload.tableId);
+      if (table) {
+        table.isOccupied = false;
+        table.reservation = null;
+      }
+    });
+  } catch (err) {
+    logger.error("Socket connection failed", { error: err.message });
+  }
+};
+
+const disconnectSocket = () => {
+  if (socket.value) {
+    socket.value.disconnect();
+    socket.value = null;
+  }
+};
 
 const SECTIONS = ["main", "bar", "patio", "terrace", "private"];
 const sectionFilter = ref("all");
@@ -276,6 +324,11 @@ const registerTable = async () => {
 onMounted(async () => {
   await loadTables();
   await loadWaitingStaff();
+  connectSocket();
+});
+
+onUnmounted(() => {
+  disconnectSocket();
 });
 
 const loadTables = async () => {

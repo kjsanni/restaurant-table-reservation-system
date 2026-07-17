@@ -12,6 +12,13 @@ const createHandler = async (req, res) => {
   return res.status(201).json({ success: true, floorPlan: plan });
 };
 
+const updateHandler = async (req, res) => {
+  const { id } = req.params;
+  const { name, zones } = req.body;
+  const plan = await floorPlanService.updateFloorPlan(id, { name, zones }, req.tenant?.id);
+  return res.status(200).json({ success: true, floorPlan: plan });
+};
+
 const deleteHandler = async (req, res) => {
   const { id } = req.params;
   const result = await floorPlanService.deleteFloorPlan(id, req.tenant?.id);
@@ -21,5 +28,6 @@ const deleteHandler = async (req, res) => {
 module.exports = {
   getHandler,
   createHandler,
+  updateHandler,
   deleteHandler,
 };

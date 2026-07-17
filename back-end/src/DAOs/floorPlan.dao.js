@@ -21,8 +21,16 @@ const deleteFloorPlan = async (id, tenantId) => {
   return { id };
 };
 
+const updateFloorPlan = async (id, updates, tenantId) => {
+  const fp = await FloorPlan.findOne({ where: withTenant({ id }, tenantId) });
+  if (!fp) throw { status: 404, message: "Floor plan not found!" };
+  await fp.update(updates);
+  return fp;
+};
+
 module.exports = {
   createFloorPlan,
   getFloorPlans,
   deleteFloorPlan,
+  updateFloorPlan,
 };

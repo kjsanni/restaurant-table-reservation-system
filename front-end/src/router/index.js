@@ -139,6 +139,12 @@ const router = createRouter({
       redirect: "/",
     },
     {
+      path: "/no-shows",
+      name: "no-shows",
+      component: () => import("../views/NoShowView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "view_reservations" },
+    },
+    {
       path: "/:pathMatch(.*)*",
       name: "notFound",
       component: () => import("../views/NotFoundView.vue"),
