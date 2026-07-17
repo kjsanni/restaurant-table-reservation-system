@@ -13,8 +13,8 @@ class WaitlistAPI {
   addEntry(data) {
     return API.post("/waitlist", data);
   }
-  seatEntry(id) {
-    return API.post("/waitlist/" + id + "/seat");
+  seatEntry(id, tableId) {
+    return API.post("/waitlist/" + id + "/seat", { tableId });
   }
   cancelEntry(id) {
     return API.post("/waitlist/" + id + "/cancel");

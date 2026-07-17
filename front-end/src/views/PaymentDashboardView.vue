@@ -1,11 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import reservationAPI from "@/services/reservationAPI";
+import paymentAPI from "@/services/paymentAPI";
 import TableView from "@/components/TableView.vue";
 import PopupBox from "@/components/PopupBox.vue";
 import EditReservation from "@/components/EditReservation.vue";
 import logger from "@/utils/logger";
-import PageHeader from "@/components/PageHeader.vue";
+import { getApiErrorMessage } from "@/utils/apiError";
 
 const loading = ref(true);
 const reservations = ref([]);
@@ -140,6 +141,44 @@ const loadData = async () => {
 const showDeleteConfirm = ref(false);
 const deleteTargetId = ref(null);
 
+const showRefundModal = ref(false);
+const refundTarget = ref(null);
+const refundAmount = ref("");
+const refundReason = ref("");
+const refundError = ref("");
+
+const openRefund = (reservation) => {
+  refundTarget.value = reservation;
+  refundAmount.value = "";
+  refundReason.value = "";
+  refundError.value = "";
+  showRefundModal.value = true;
+};
+
+const submitRefund = async () => {
+  refundError.value = "";
+  if (
+    !refundTarget.value?.id ||
+    !refundAmount.value ||
+    parseFloat(refundAmount.value) <= 0
+  ) {
+    refundError.value = "Enter a valid refund amount.";
+    return;
+  }
+  try {
+    const paymentId = refundTarget.value.paymentId || refundTarget.value.id;
+    await paymentAPI.refundPayment(refundTarget.value.id, paymentId, {
+      amount: parseFloat(refundAmount.value),
+      reason: refundReason.value || null,
+      idempotencyKey: `${refundTarget.value.id}-${paymentId}-${Date.now()}`,
+    });
+    showRefundModal.value = false;
+    await loadData();
+  } catch (err) {
+    refundError.value = getApiErrorMessage(err, "Refund failed");
+  }
+};
+
 const handleSelectedReservation = async (item) => {
   if (!item?.id) return;
   const action = item.action;
@@ -149,6 +188,8 @@ const handleSelectedReservation = async (item) => {
   } else if (action === "delete") {
     deleteTargetId.value = item.id;
     showDeleteConfirm.value = true;
+  } else if (action === "refund") {
+    openRefund(item);
   }
 };
 
@@ -308,6 +349,48 @@ onMounted(loadData);
             <button class="btn btn-danger" @click="confirmDelete">
               Delete
             </button>
+          </div>
+        </div>
+      </template>
+    </PopupBox>
+
+    <PopupBox
+      :is-open="showRefundModal"
+      header-text="Refund Payment"
+      :is-closable="true"
+      @close-modal="showRefundModal = false"
+    >
+      <template #popup-content>
+        <div class="confirm-content">
+          <p>
+            Issue a refund for <strong>{{ refundTarget?.name }}</strong
+            >?
+          </p>
+          <div class="field">
+            <label class="field-label">Amount</label>
+            <input
+              v-model="refundAmount"
+              type="number"
+              step="0.01"
+              min="0.01"
+              class="field-input"
+              placeholder="0.00"
+            />
+          </div>
+          <div class="field">
+            <label class="field-label">Reason</label>
+            <input
+              v-model="refundReason"
+              class="field-input"
+              placeholder="Optional reason"
+            />
+          </div>
+          <div v-if="refundError" class="error-msg">{{ refundError }}</div>
+          <div class="confirm-actions">
+            <button class="btn btn-secondary" @click="showRefundModal = false">
+              Cancel
+            </button>
+            <button class="btn btn-danger" @click="submitRefund">Refund</button>
           </div>
         </div>
       </template>

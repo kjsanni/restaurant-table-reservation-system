@@ -10,7 +10,7 @@ const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 router
   .route("/")
   .get(...protectedRoute("manage_tables", waitlistController.getAllHandler))
-  .post(tryCatchHandler(protect), tryCatchHandler(staff), validateCsrfToken, tryCatchHandler(waitlistController.createHandler))
+  .post(...writeRoute("manage_tables", waitlistController.createHandler))
   .all(httpMethodError);
 
 router
@@ -41,6 +41,21 @@ router
 router
   .route("/:id/cancel")
   .post(...writeRoute("manage_tables", waitlistController.cancelHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:id")
+  .delete(...writeRoute("manage_tables", waitlistController.deleteHandler))
+  .all(httpMethodError);
+
+router
+  .route("/maintenance/expire")
+  .post(...writeRoute("manage_tables", waitlistController.expireOldHandler))
+  .all(httpMethodError);
+
+router
+  .route("/from-reservation/:reservationId")
+  .post(...writeRoute("manage_tables", waitlistController.createFromReservationHandler))
   .all(httpMethodError);
 
 module.exports = router;

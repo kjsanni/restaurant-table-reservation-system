@@ -26,11 +26,6 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: "/dashboard",
-      name: "dashboard",
-      redirect: "/",
-    },
-    {
       path: "/new-reservation",
       name: "new-reservation",
       component: () => import("../views/NewReservationView.vue"),
@@ -124,6 +119,12 @@ const router = createRouter({
       name: "audit-logs",
       component: () => import("../views/AuditLogView.vue"),
       meta: { requiresAuth: true, requiresPermission: "view_audit_logs" },
+    },
+    {
+      path: "/admin/email-templates",
+      name: "email-template-list",
+      component: () => import("../views/EmailTemplateListView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "manage_settings" },
     },
     {
       path: "/admin/customers/:id",

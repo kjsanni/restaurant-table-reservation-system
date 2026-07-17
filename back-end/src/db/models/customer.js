@@ -68,16 +68,13 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: [],
       },
-      address: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
+      points: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
       },
-      city: {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-      },
-      notes: {
-        type: DataTypes.TEXT,
+      preferences: {
+        type: DataTypes.JSON,
         allowNull: true,
       },
     },

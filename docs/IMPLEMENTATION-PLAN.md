@@ -159,27 +159,23 @@ Each feature is broken into:
 
 ## Feature 7: Customer Profile Page ✅ COMPLETED
 
-## M1 — Backend
-- ✅ Customer model queries in `customer.dao.js`
-- ✅ `GET /api/v1/customers/:id` with stats aggregation
-
-## M2 — Frontend
-- ✅ `CustomerProfileView.vue` — Profile header, stats cards, reservation history, notes
-- ✅ Tag editing via inline chips + modal
-- ✅ Notes display with character limit indicator
+see original plan in `docs/IMPLEMENTATION-PLAN.md` (lines 455–518).
 
 ---
 
 ## Feature 8: Search Notes Indexing ✅ COMPLETED
 
-## M1 — Backend: Database Index
-- ✅ Migration `20260629000002-add-notes-fulltext-index.js` adds FULLTEXT index on `notes` column
+## M1 — Backend: Search API
+- ✅ `GET /api/v1/reservations/search?q=...` with search across name, email, phone, date, time, notes, table name, and people count
+- ✅ `searchReservations` DAO with LIKE-based search across included models
+- ✅ Route registered in `reservation.router.js`
 
-## M2 — Backend: Search Endpoint
-- ✅ `GET /api/v1/reservations/search-notes?q=...` uses `MATCH() AGAINST()` for full-text search
-
-## M3 — Frontend: Search Integration
-- ✅ Notes search available via API (ready for UI integration)
+## M2 — Frontend: Search Page
+- ✅ `SearchView.vue` at `/search` with global search bar and results list
+- ✅ `TheSearch.vue` reusable search input component with clear button and loading spinner
+- ✅ Results count badge, empty state, and loading skeleton via `SearchSkeleton.vue`
+- ✅ Sidebar navigation item for search
+- ✅ Linked from `HomeView.vue`
 
 ---
 
@@ -189,14 +185,17 @@ Each feature is broken into:
 - ✅ Existing `POST /api/v1/reservations/:id/choose-table` validates capacity
 
 ## M2 — Frontend: Floor Plan Component
-- ✅ `FloorPlanView.vue` with drag-and-drop reservation cards onto tables
+- ✅ `FloorPlanView.vue` refactored to use new `FloorPlan.vue` reusable component
+- ✅ `FloorPlan.vue` component with drag-and-drop reservation cards onto tables
 - ✅ Drag feedback: compatible tables highlight green, incompatible shows red
+- ✅ Touch-device support: touchstart/touchmove/touchend for mobile table assignment
 - ✅ Socket integration with `table-freed` events
-- ✅ Touch-device fallback: `onTouchStart`, `onTouchMove`, `onTouchEnd` handlers for mobile
+- ✅ Table layout configuration via `localStorage` (`floorPlanLayout` key)
 
 ## M3 — UX Polish & Config
-- ✅ Layout selector: Auto Grid (170px), Compact (140px), Wide (220px)
-- ✅ `gridMinWidth` computed property for dynamic table sizing
+- ✅ Dedicated `FloorPlan.vue` component extracted from view
+- ✅ Touch fallback with `touched` visual state and tap-to-assign
+- ✅ Persistent layout storage in browser localStorage
 
 ---
 
@@ -232,6 +231,14 @@ Each feature is broken into:
 | Floor Plan Drag-and-Drop | ✅ Complete |
 | Customer Profile | ✅ Complete |
 | Search Notes Indexing | ✅ Complete |
+| Admin Log Email (one-shot) | ✅ Complete |
+| Recurring Reservations | ✅ Complete |
+| Split Bills / Multiple Payments | ✅ Complete |
+| Customer Loyalty & Visit Tracking | ✅ Complete |
+| Permission Templates | ✅ Complete |
+| Waitlist Auto-Promotion | ✅ Complete |
+| Reservation Status Timeline | ✅ Complete |
+| Table Combining / Merging | ✅ Complete |
 
 ---
 
@@ -247,12 +254,14 @@ Each feature is broken into:
 - Frontend: Vitest + Vue Test Utils for components with mock API
 - E2E: Playwright smoke tests for each new page
 
-### Rollout Order (Completed)
+### Rollout Order
 1. **Week 1:** Security hardening, login lockout, audit logging
 2. **Week 2:** RBAC system, role/group management UI
 3. **Week 3:** Payment tracking + revenue reports
 4. **Week 4:** Heatmap 2D, no-show widget, waitlist auto-seat
 5. **Week 5:** Sidebar redesign, UI standardization
+6. **Week 6:** Recurring reservations, split bills, customer loyalty
+7. **Week 7:** Permission templates, waitlist auto-promotion, status timeline, table merging
 
 ### Backlog / Out of Scope
 - Table layout visual editor (admin drag to position tables)

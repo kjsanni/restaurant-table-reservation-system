@@ -104,7 +104,17 @@ const editReservation = async (reservationId, reservationDAO, payload) => {
 };
 
 const cancelReservation = async (reservationId, reservationDAO) => {
-  return await reservationDAO.cancelReservation(reservationId, reservationDAO);
+  const reservation = await reservationDAO.findReservationById(reservationId);
+  if (!reservation) {
+    throw {
+      status: 404,
+      message: "Reservation not found!",
+    };
+  }
+  if (["cancelled", "seated", "completed", "missed"].includes(reservation.resStatus)) {
+    return await reservationDAO.destroyReservation(reservation);
+  }
+  return await reservationDAO.deleteReservation(reservation);
 };
 
 const compareResDateToCurrDate = (resDate, currDate) => {
@@ -166,8 +176,14 @@ const chooseTable = async (
   }
   /**
    *
-   * If the given table is already occupied throw an error
+   * If no table provided or table is already occupied throw an error
    */
+  if (!tableId || !table) {
+    throw {
+      status: 400,
+      message: "Please select a valid table!",
+    };
+  }
   if (table.isOccupied)
     throw {
       status: 400,
@@ -183,10 +199,55 @@ const chooseTable = async (
   });
 };
 
+const paymentDAO = require("../DAOs/payment.dao");
+
+const getRevenueTimeSeries = async (from, to, granularity = "day") => {
+  return await paymentDAO.getRevenueTimeSeries(from, to, granularity);
+};
+
+const searchReservations = async (reservationDAO, query) => {
+  const term = query.trim();
+  if (!term) return [];
+  const results = await reservationDAO.searchReservations(term);
+  return results;
+};
+
+const getRecurringReservations = async (reservationDAO, customerId) => {
+  return await reservationDAO.getRecurringReservations(customerId);
+};
+
+const recordStatusChange = async (reservationDAO, reservationId, fromStatus, toStatus, actorId, metadata = {}) => {
+  await reservationDAO.recordStatusChange(reservationId, fromStatus, toStatus, actorId, metadata);
+  return true;
+};
+
+const getStatusHistory = async (reservationDAO, reservationId) => {
+  return await reservationDAO.getStatusHistory(reservationId);
+};
+
+const mergeReservationTables = async (reservationDAO, reservationId, tableIds) => {
+  const uniqueTableIds = Array.from(new Set((tableIds || []).map((id) => parseInt(id, 10)))).filter(Boolean);
+  if (!uniqueTableIds.length) {
+    throw { status: 400, message: "Provide at least one table to merge." };
+  }
+  return await reservationDAO.mergeReservationTables(reservationId, uniqueTableIds);
+};
+
+const unmergeReservationTables = async (reservationDAO, reservationId) => {
+  return await reservationDAO.unmergeReservationTables(reservationId);
+};
+
 module.exports = {
   getAllReservations,
   registerReservation,
   editReservation,
   cancelReservation,
   chooseTable,
+  searchReservations,
+  getRecurringReservations,
+  recordStatusChange,
+  getStatusHistory,
+  mergeReservationTables,
+  unmergeReservationTables,
+  getRevenueTimeSeries,
 };

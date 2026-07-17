@@ -9,6 +9,8 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         node-version: [18.x, 20.x]
@@ -34,6 +36,8 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         node-version: [18.x, 20.x]
@@ -63,6 +67,8 @@ jobs:
 
   security-sast:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [backend, frontend]
     steps:
       - uses: actions/checkout@v4
@@ -77,6 +83,8 @@ jobs:
 
   dependency-check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [backend, frontend]
     steps:
       - uses: actions/checkout@v4
@@ -89,6 +97,8 @@ jobs:
 
   snyk:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [backend, frontend]
     if: ${{ secrets.SNYK_TOKEN != '' }}
     steps:

@@ -60,8 +60,20 @@ const getWaitingList = async (filters = {}) => {
     where.desiredTime = filters.desiredTime;
   }
 
+  if (filters.customerId) {
+    where.customerId = filters.customerId;
+  }
+
   return await Waitlist.findAll({
     where,
+    include: [
+      {
+        model: Customer,
+        as: "customer",
+        attributes: ["id", "firstName", "lastName", "email", "phone", "visitCount", "preferences"],
+        required: false,
+      },
+    ],
     order: [["createdAt", "ASC"]],
   });
 };
@@ -103,6 +115,29 @@ const getStats = async () => {
   return { waiting, seated, expired, cancelled, total: waiting + seated + expired + cancelled };
 };
 
+const getBestMatch = async (tableId) => {
+  const table = await db.table.findByPk(tableId);
+  if (!table) return null;
+
+  const entries = await Waitlist.findAll({
+    where: { status: "waiting" },
+    order: [["createdAt", "ASC"]],
+  });
+
+  const capacity = table.capacity || 2;
+  const fits = entries.filter((entry) => entry.partySize <= capacity);
+  if (!fits.length) return null;
+
+  const best = fits.reduce((a, b) => {
+    const aDiff = capacity - a.partySize;
+    const bDiff = capacity - b.partySize;
+    if (aDiff !== bDiff) return aDiff < bDiff ? a : b;
+    return a.createdAt < b.createdAt ? a : b;
+  });
+
+  return best;
+};
+
 module.exports = {
   findById,
   createEntry,
@@ -115,4 +150,5 @@ module.exports = {
   markCancelled,
   expireOldEntries,
   getStats,
+  getBestMatch,
 };

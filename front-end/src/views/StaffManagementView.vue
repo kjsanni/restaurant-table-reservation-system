@@ -68,8 +68,6 @@ const formError = ref("");
 const saving = ref(false);
 
 const addStaff = async () => {
-  formError.value = "";
-  saving.value = true;
   try {
     await authAPI.createStaff(newStaff.value);
     showAddDialog.value = false;
@@ -88,12 +86,7 @@ const addStaff = async () => {
     };
     await loadStaff();
   } catch (err) {
-    formError.value =
-      err.response?.data?.message ||
-      "Failed to add staff member. Please try again.";
     logger.error("Failed to add staff", { error: err.message });
-  } finally {
-    saving.value = false;
   }
 };
 
@@ -205,8 +198,8 @@ const deleteStaffMember = async (id) => {
           <div class="field">
             <label>Role</label>
             <select v-model="newStaff.role" class="modal-select">
-              <option v-for="role in roles" :key="role" :value="role">
-                {{ role }}
+              <option v-for="role in roles" :key="role.name" :value="role.name">
+                {{ role.name }}
               </option>
             </select>
           </div>

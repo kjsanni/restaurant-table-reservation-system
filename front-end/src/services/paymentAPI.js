@@ -25,6 +25,19 @@ class PaymentAPI {
     if (to) params.append("to", to);
     return API.get("/payments/revenue?" + params.toString());
   }
+  refundPayment(reservationId, paymentId, data) {
+    return API.post(
+      "/reservations/" + reservationId + "/payments/" + paymentId + "/refund",
+      data,
+      {
+        headers: {
+          "Idempotency-Key":
+            data.idempotencyKey ||
+            `${reservationId}-${paymentId}-${Date.now()}`,
+        },
+      }
+    );
+  }
 }
 
 export default new PaymentAPI();

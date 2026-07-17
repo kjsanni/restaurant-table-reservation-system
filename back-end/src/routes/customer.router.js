@@ -19,8 +19,28 @@ router
   .all(httpMethodError);
 
 router
-  .route("/:customerId")
-  .patch(...protectedRoute("edit_reservations", customerController.updateCustomerHandler))
+  .route("/:customerId/visits")
+  .post(...writeRoute("manage_staff", customerController.incrementVisitHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:customerId/points")
+  .post(...writeRoute("manage_staff", customerController.addPointsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:customerId/points/redeem")
+  .post(...writeRoute("manage_staff", customerController.redeemPointsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:customerId/preferences")
+  .patch(...writeRoute("manage_staff", customerController.updatePreferencesHandler))
+  .all(httpMethodError);
+
+router
+  .route("/search")
+  .get(...protectedRoute("view_reservations", customerController.searchCustomersHandler))
   .all(httpMethodError);
 
 module.exports = router;

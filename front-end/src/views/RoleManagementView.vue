@@ -2,9 +2,9 @@
 import { ref, onMounted } from "vue";
 import roleAPI from "@/services/roleAPI";
 import logger from "@/utils/logger";
-import PageHeader from "@/components/PageHeader.vue";
 
 const roles = ref([]);
+const templates = ref([]);
 const loading = ref(true);
 const showDialog = ref(false);
 const editingRole = ref(null);
@@ -40,13 +40,26 @@ const permissionKeys = [
 const loadRoles = async () => {
   loading.value = true;
   try {
-    const res = await roleAPI.getAllRoles();
-    roles.value = res.data.roles;
+    const [rolesRes, templatesRes] = await Promise.all([
+      roleAPI.getAllRoles(),
+      roleAPI.getAllTemplates(),
+    ]);
+    roles.value = rolesRes.data.roles;
+    templates.value = templatesRes.data.templates || [];
   } catch (err) {
     logger.error("Failed to load roles", { error: err.message });
   } finally {
     loading.value = false;
   }
+};
+
+const applyTemplate = (template) => {
+  form.value = {
+    name: template.name || "",
+    description: template.description || "",
+    permissions: template.permissions || {},
+  };
+  showDialog.value = true;
 };
 
 onMounted(loadRoles);
@@ -170,6 +183,51 @@ const confirmAction = async () => {
 
         <div v-if="!roles.length" class="empty-state">
           No roles configured yet.
+        </div>
+      </div>
+
+      <div class="templates-section">
+        <div class="section-header">
+          <h2 class="section-title">Permission Templates</h2>
+          <button class="btn btn-primary btn-sm" @click="openCreate">
+            + New Template
+          </button>
+        </div>
+        <div v-if="!templates.length" class="empty-state">
+          No templates yet.
+        </div>
+        <div v-else class="templates-grid">
+          <div
+            v-for="template in templates"
+            :key="template.id"
+            class="template-card"
+          >
+            <div class="template-header">
+              <h4 class="template-name">{{ template.name }}</h4>
+              <span v-if="template.isPublic" class="meta-badge">Public</span>
+            </div>
+            <p v-if="template.description" class="template-description">
+              {{ template.description }}
+            </p>
+            <div class="perm-grid">
+              <span
+                v-for="(enabled, key) in template.permissions"
+                :key="key"
+                class="perm-tag"
+                :class="{ active: enabled }"
+              >
+                {{ key.replace(/_/g, " ") }}
+              </span>
+            </div>
+            <div class="template-actions">
+              <button
+                class="btn btn-secondary btn-sm"
+                @click="applyTemplate(template)"
+              >
+                Apply to Role
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -510,5 +568,96 @@ const confirmAction = async () => {
   justify-content: flex-end;
   gap: var(--space-2-5);
   margin-top: var(--space-2);
+}
+
+.templates-section {
+  margin-top: 32px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-family: "Inter-Bold";
+  font-size: 18px;
+  color: var(--primary-black);
+  margin: 0;
+}
+
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.template-card {
+  border: 1px solid #f0f0f0;
+  border-radius: var(--card-radius);
+  padding: 16px;
+  background: white;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.template-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.template-name {
+  margin: 0;
+  font-family: "Inter-Bold";
+  font-size: 16px;
+  color: var(--primary-black);
+}
+
+.template-description {
+  margin: 0;
+  font-family: "Inter-Light";
+  font-size: 13px;
+  color: var(--secondary-gray);
+}
+
+.meta-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-family: "Inter-Medium";
+  font-size: 11px;
+}
+
+.template-actions {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.perm-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.perm-tag {
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-family: "Inter-Medium";
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.perm-tag.active {
+  background: #dcfce7;
+  color: #166534;
 }
 </style>

@@ -36,7 +36,14 @@ const getGroupHandler = async (req, res) => {
 };
 
 const getGroupByNameHandler = async (req, res) => {
-  const group = await rbacService.getGroupByName(req.params.name);
+  const name = req.params.name;
+  if (!name || !/^[a-zA-Z0-9_-]{1,50}$/.test(name)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid group name format.",
+    });
+  }
+  const group = await rbacService.getGroupByName(name);
   return res.status(200).json({ success: true, group });
 };
 
@@ -67,6 +74,31 @@ const removeUserFromGroupHandler = async (req, res) => {
   return res.status(200).json({ success: true, message: "User removed from group!", group: result });
 };
 
+const getAllTemplatesHandler = async (req, res) => {
+  const templates = await rbacService.getAllTemplates();
+  return res.status(200).json({ success: true, templates });
+};
+
+const getTemplateHandler = async (req, res) => {
+  const template = await rbacService.getTemplate(req.params.id);
+  return res.status(200).json({ success: true, template });
+};
+
+const createTemplateHandler = async (req, res) => {
+  const template = await rbacService.createTemplate(req.body);
+  return res.status(201).json({ success: true, message: "Template created!", template });
+};
+
+const updateTemplateHandler = async (req, res) => {
+  const template = await rbacService.updateTemplate(req.params.id, req.body);
+  return res.status(200).json({ success: true, message: "Template updated!", template });
+};
+
+const deleteTemplateHandler = async (req, res) => {
+  await rbacService.deleteTemplate(req.params.id);
+  return res.status(200).json({ success: true, message: "Template deleted!" });
+};
+
 module.exports = {
   getAllRolesHandler,
   getRoleHandler,
@@ -81,4 +113,9 @@ module.exports = {
   deleteGroupHandler,
   addUserToGroupHandler,
   removeUserFromGroupHandler,
+  getAllTemplatesHandler,
+  getTemplateHandler,
+  createTemplateHandler,
+  updateTemplateHandler,
+  deleteTemplateHandler,
 };

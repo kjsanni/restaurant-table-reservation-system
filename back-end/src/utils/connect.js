@@ -5,7 +5,6 @@ const connectDatabase = async () => {
   try {
     await db.sequelize.authenticate();
     logger.info("Database connection is established!");
-    // await syncModels();
   } catch (err) {
     logger.error("Couldn't connect to DB: ");
     process.exit(1);

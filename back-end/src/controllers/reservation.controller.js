@@ -254,6 +254,20 @@ const getPaymentSummaryHandler = async (req, res) => {
   });
 };
 
+const getStatsHandler = async (req, res) => {
+  const filters = {};
+  if (req.query.from) filters.from = req.query.from;
+  if (req.query.to) filters.to = req.query.to;
+  if (req.query.paymentStatus) filters.paymentStatus = req.query.paymentStatus;
+  if (req.query.resStatus) filters.resStatus = req.query.resStatus;
+
+  const stats = await reservationDAO.getReservationStats(filters);
+  return res.status(200).json({
+    success: true,
+    stats,
+  });
+};
+
 const getHeatmapV2Handler = async (req, res) => {
   const { mode = "date-hour", from, to } = req.query;
 
@@ -292,42 +306,66 @@ const getHeatmapV2Handler = async (req, res) => {
   });
 };
 
-const getStatsHandler = async (req, res) => {
-  const filters = {};
-  if (req.query.from) filters.from = req.query.from;
-  if (req.query.to) filters.to = req.query.to;
-  if (req.query.paymentStatus) filters.paymentStatus = req.query.paymentStatus;
-  if (req.query.resStatus) filters.resStatus = req.query.resStatus;
-
-  const stats = await reservationDAO.getReservationStats(filters);
+const searchHandler = async (req, res) => {
+  const query = req.query.q || "";
+  const results = await reservationService.searchReservations(reservationDAO, query);
   return res.status(200).json({
     success: true,
-    stats,
+    results,
   });
 };
 
+const getRecurringHandler = async (req, res) => {
+  const customerId = req.query.customerId;
+  if (!customerId) {
+    return res.status(400).json({
+      success: false,
+      message: "customerId is required.",
+    });
+  }
+  const results = await reservationService.getRecurringReservations(reservationDAO, customerId);
+  return res.status(200).json({
+    success: true,
+    collection: results,
+  });
+};
+
+const getStatusHistoryHandler = async (req, res) => {
+  const { reservationId } = req.params;
+  const history = await reservationService.getStatusHistory(reservationId);
+  return res.status(200).json({ success: true, history });
+};
+
+const mergeTablesHandler = async (req, res) => {
+  const { reservationId } = req.params;
+  const { tableIds } = req.body;
+  const reservation = await reservationService.mergeReservationTables(reservationDAO, reservationId, tableIds);
+  if (!reservation) {
+    return res.status(404).json({ success: false, message: "Reservation not found" });
+  }
+  return res.status(200).json({ success: true, message: "Tables merged", reservation });
+};
+
+const unmergeTablesHandler = async (req, res) => {
+  const { reservationId } = req.params;
+  const reservation = await reservationService.unmergeReservationTables(reservationDAO, reservationId);
+  if (!reservation) {
+    return res.status(404).json({ success: false, message: "Reservation not found" });
+  }
+  return res.status(200).json({ success: true, message: "Tables unmerged", reservation });
+};
+
 const getRevenueTimeSeriesHandler = async (req, res) => {
-  const { from, to, granularity = "day" } = req.query;
-  if (!["day", "week", "month"].includes(granularity)) {
+  const { from, to, granularity } = req.query;
+  const validGranularities = ["day", "week", "month"];
+  if (!validGranularities.includes(granularity)) {
     return res.status(400).json({
       success: false,
       message: "Invalid granularity. Use 'day', 'week', or 'month'.",
     });
   }
-  const data = await paymentDAO.getRevenueTimeSeries(from, to, granularity);
-  return res.status(200).json({
-    success: true,
-    ...data,
-  });
-};
-
-const searchNotesHandler = async (req, res) => {
-  const { q: query } = req.query;
-  const results = await reservationDAO.searchReservationsByNotes(query || "");
-  return res.status(200).json({
-    success: true,
-    collection: results,
-  });
+  const data = await reservationService.getRevenueTimeSeries(from, to, granularity);
+  return res.status(200).json({ success: true, ...data });
 };
 
 module.exports = {
@@ -346,6 +384,10 @@ module.exports = {
   unassignStaffHandler,
   getPaymentSummaryHandler,
   getStatsHandler,
+  searchHandler,
+  getRecurringHandler,
+  getStatusHistoryHandler,
+  mergeTablesHandler,
+  unmergeTablesHandler,
   getRevenueTimeSeriesHandler,
-  searchNotesHandler,
 };

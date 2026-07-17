@@ -39,7 +39,14 @@ const findAllReservations = async ({ limit, offset } = {}) => {
 };
 
 const searchReservations = async (filters = {}, { limit, offset } = {}) => {
-  const { q, from, to, status } = filters;
+  let q = "";
+  if (typeof filters === "string") {
+    q = filters.trim();
+    filters = {};
+  } else {
+    ({ q } = filters);
+  }
+  const { from, to, status } = filters;
   const where = {};
 
   if (status) {
@@ -63,16 +70,21 @@ const searchReservations = async (filters = {}, { limit, offset } = {}) => {
     },
   ];
 
-  if (q) {
-    const like = { [Op.like]: `%${q}%` };
+  const like = q ? { [Op.like]: `%${q.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_")}%` } : null;
+  if (like) {
     where[Op.or] = [
       { "$Customer.name$": like },
       { "$Customer.email$": like },
       { "$Customer.phone$": like },
       { resDate: like },
       { resTime: like },
-      { notes: { [Op.like]: `%${q}%` } },
+      { notes: like },
+      { "$Customer.tags$": like },
     ];
+    const num = parseInt(q, 10);
+    if (!Number.isNaN(num)) {
+      where[Op.or].push({ people: num });
+    }
   }
 
   const baseOpts = {
@@ -111,7 +123,6 @@ const searchReservations = async (filters = {}, { limit, offset } = {}) => {
         return Customer ? { ...rest, Customer } : rest;
       });
   }
-
   if (limit) {
     return { reservations, total: count };
   }
@@ -127,7 +138,6 @@ const findReservationById = async (reservationId) => {
 
   return reservation;
 };
-
 const createCustomer = async (customerDetails, t = null) => {
   return await Customer.create(
     {
@@ -183,6 +193,8 @@ const getCustomerById = async (customerId) => {
       "visitCount",
       "lastVisitDate",
       "tags",
+      "points",
+      "preferences",
     ],
   });
   if (customer && !Array.isArray(customer.tags)) {
@@ -191,13 +203,72 @@ const getCustomerById = async (customerId) => {
   return customer;
 };
 
+const incrementCustomerVisit = async (customerId) => {
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) return null;
+  await customer.increment("visitCount", { by: 1 });
+  await customer.update({ lastVisitDate: new Date() });
+  return customer;
+};
+
+const addCustomerPoints = async (customerId, points) => {
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) return null;
+  const nextPoints = (customer.points || 0) + points;
+  await customer.update({ points: nextPoints });
+  return customer;
+};
+
+const redeemCustomerPoints = async (customerId, points) => {
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) return null;
+  const current = customer.points || 0;
+  if (current < points) {
+    throw { status: 400, message: "Insufficient loyalty points." };
+  }
+  await customer.update({ points: current - points });
+  return customer;
+};
+
+const updateCustomerPreferences = async (customerId, preferences) => {
+  const customer = await Customer.findByPk(customerId);
+  if (!customer) return null;
+  return await customer.update({ preferences: preferences || {} });
+};
+
+const searchCustomers = async (query) => {
+  const { Op } = db.Sequelize;
+  const escapedQuery = query
+    .replace(/\\/g, "\\\\")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+  const like = `%${escapedQuery}%`;
+  return await Customer.findAll({
+    where: {
+      [Op.or]: [
+        { firstName: { [Op.like]: like } },
+        { lastName: { [Op.like]: like } },
+        { email: { [Op.like]: like } },
+        { phone: { [Op.like]: like } },
+      ],
+    },
+    limit: 20,
+    attributes: ["id", "firstName", "lastName", "email", "phone", "visitCount"],
+  });
+};
+
 const getCustomerReservationHistory = async (customerId, limit = 50) => {
   return await Reservation.findAll({
     where: { customerId },
-    attributes: [
-      "resStatus",
-      [fn("SUM", col("expectedTotal")), "totalExpected"],
-      [fn("COUNT", col("id")), "totalVisits"],
+    order: [["resDate", "DESC"]],
+    limit,
+    attributes: ["id", "resDate", "resTime", "resStatus", "people", "paymentStatus", "expectedTotal", "notes"],
+    include: [
+      {
+        model: Table,
+        attributes: ["id", "name", "capacity"],
+        required: false,
+      },
     ],
     group: ["resStatus"],
     raw: true,
@@ -261,6 +332,8 @@ const createReservation = async (resDetails) => {
   return result;
 };
 
+const statusHistoryDAO = require("../DAOs/reservationStatusHistory.dao");
+
 const updateReservation = async (reservationId, resDetails) => {
   const [result, metadata] = await Reservation.update(resDetails, {
     where: {
@@ -271,6 +344,36 @@ const updateReservation = async (reservationId, resDetails) => {
   return result;
 };
 
+const recordStatusChange = async (reservationId, fromStatus, toStatus, actorId, metadata = {}) => {
+  return await statusHistoryDAO.addHistory({
+    reservationId,
+    fromStatus,
+    toStatus,
+    actorId,
+    actorType: actorId ? "user" : "system",
+    metadata,
+  });
+};
+
+const getStatusHistory = async (reservationId) => {
+  return await statusHistoryDAO.getHistoryByReservation(reservationId);
+};
+
+const mergeReservationTables = async (reservationId, tableIds) => {
+  const reservation = await Reservation.findByPk(reservationId);
+  if (!reservation) return null;
+  const uniqueIds = Array.from(new Set((tableIds || []).map((id) => parseInt(id, 10)))).filter(Boolean);
+  await reservation.update({ mergedFromTableIds: uniqueIds });
+  return reservation;
+};
+
+const unmergeReservationTables = async (reservationId) => {
+  const reservation = await Reservation.findByPk(reservationId);
+  if (!reservation) return null;
+  await reservation.update({ mergedFromTableIds: null });
+  return reservation;
+};
+
 const deleteReservation = async (reservation) => {
   return await reservation.update({ resStatus: "cancelled" });
 };
@@ -279,8 +382,8 @@ const destroyReservation = async (reservation) => {
   return await reservation.destroy();
 };
 
-const cancelReservation = async (reservationId, reservationDAO) => {
-  const reservation = await reservationDAO.findReservationById(reservationId);
+const cancelReservation = async (reservationId) => {
+  const reservation = await findReservationById(reservationId);
   if (!reservation) {
     throw {
       status: 404,
@@ -289,10 +392,10 @@ const cancelReservation = async (reservationId, reservationDAO) => {
   }
 
   if (["cancelled", "seated", "completed", "missed"].includes(reservation.resStatus)) {
-    return await reservationDAO.destroyReservation(reservation);
+    return await destroyReservation(reservation);
   }
 
-  return await reservationDAO.deleteReservation(reservation);
+  return await deleteReservation(reservation);
 };
 
 const setReservationStatus = async (reservation, status) => {
@@ -639,34 +742,71 @@ const getReservationStats = async (filters = {}) => {
   };
 };
 
+const getRecurringReservations = async (customerId) => {
+  const { Op } = db.Sequelize;
+  const reservations = await Reservation.findAll({
+    where: {
+      customerId,
+      recurrence: {
+        [Op.not]: null,
+      },
+    },
+    order: [["resDate", "ASC"]],
+    attributes: ["id", "resDate", "resTime", "people", "recurrence"],
+  });
+
+  return reservations.map((reservation) => {
+    const recurrence = reservation.recurrence || {};
+    return {
+      id: reservation.id,
+      resDate: reservation.resDate,
+      resTime: reservation.resTime,
+      people: reservation.people,
+      recurrence: {
+        frequency: recurrence.frequency || null,
+        interval: recurrence.interval || null,
+        until: recurrence.until || null,
+        byDay: recurrence.byDay || [],
+      },
+    };
+  });
+};
+
 module.exports = {
   findAllReservations,
+  findReservationById,
   createReservation,
   updateReservation,
-  deleteReservation,
-  destroyReservation,
-  cancelReservation,
-  findReservationById,
-  setReservationTable,
-  setReservationStatus,
+  recordStatusChange,
+  getStatusHistory,
+  mergeReservationTables,
+  unmergeReservationTables,
+  getCustomerById,
+  incrementCustomerVisit,
+  addCustomerPoints,
+  redeemCustomerPoints,
+  updateCustomerPreferences,
+  searchCustomers,
+  getRecurringReservations,
+  findAllReservationsRaw,
+  getReservationStats,
+  getAssignedStaff,
+  assignStaff,
+  unassignStaff,
   getReservationsHeatmap,
   getHeatmapV2,
   getPaymentStatusCounts,
   bulkCancel,
   bulkUpdate,
-  getAssignedStaff,
-  assignStaff,
-  unassignStaff,
-  findAllReservationsRaw,
-  getReservationStats,
-  createCustomer,
-  findCustomerByEmail,
   findOrCreateCustomer,
+  findCustomerByEmail,
+  createCustomer,
   updateCustomerTags,
-  updateCustomer,
-  getCustomerById,
+  deleteReservation,
+  destroyReservation,
+  cancelReservation,
+  setReservationStatus,
+  setReservationTable,
   getCustomerReservationHistory,
   getCustomerStats,
-  searchReservations,
-  searchReservationsByNotes,
 };

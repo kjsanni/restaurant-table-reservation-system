@@ -43,8 +43,14 @@ class ReservationAPI {
   getHeatmapV2(filters = {}) {
     return API.get("/reservations/heatmap-v2", { params: filters });
   }
-  getRevenueTimeSeries(filters = {}) {
-    return API.get("/reservations/revenue/time-series", { params: filters });
+  search(query) {
+    return API.get("/reservations/search", { params: { q: query } });
+  }
+  getRecurring(filters = {}) {
+    return API.get("/reservations/recurring", { params: filters });
+  }
+  getStatusHistory(reservationId) {
+    return API.get("/reservations/" + reservationId + "/status-history");
   }
 }
 

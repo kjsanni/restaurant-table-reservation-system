@@ -8,6 +8,16 @@ const { validateCsrfToken } = require("../middleware/csrf");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 
 router
+  .route("/search")
+  .get(...protectedRoute("view_reservations", reservationController.searchHandler))
+  .all(httpMethodError);
+
+router
+  .route("/recurring")
+  .get(...protectedRoute("view_reservations", reservationController.getRecurringHandler))
+  .all(httpMethodError);
+
+router
   .route("/")
   .get(...protectedRoute("view_reservations", reservationController.getAllHandler))
   .post(tryCatchHandler(reservationController.registerHandler), validateCsrfToken)
@@ -90,6 +100,17 @@ router
 router
   .route("/:reservationId/staff/:userId")
   .delete(...writeRoute("manage_tables", reservationController.unassignStaffHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:reservationId/status-history")
+  .get(...protectedRoute("view_reservations", reservationController.getStatusHistoryHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:reservationId/merge")
+  .post(...writeRoute("edit_reservations", reservationController.mergeTablesHandler))
+  .delete(...writeRoute("edit_reservations", reservationController.unmergeTablesHandler))
   .all(httpMethodError);
 
 module.exports = router;

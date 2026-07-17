@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const tryCatchHandler = require("../middleware/tryCatch");
 const httpMethodError = require("../middleware/httpMethodError");
 const rbacController = require("../controllers/rbac.controller");
-const { validateCsrfToken } = require("../middleware/csrf");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 
 router
@@ -45,6 +43,19 @@ router
 router
   .route("/groups/:id/users/:userId")
   .delete(...writeRoute("manage_groups", rbacController.removeUserFromGroupHandler))
+  .all(httpMethodError);
+
+router
+  .route("/permission-templates")
+  .get(...protectedRoute("manage_roles", rbacController.getAllTemplatesHandler))
+  .post(...writeRoute("manage_roles", rbacController.createTemplateHandler))
+  .all(httpMethodError);
+
+router
+  .route("/permission-templates/:id")
+  .get(...protectedRoute("manage_roles", rbacController.getTemplateHandler))
+  .patch(...writeRoute("manage_roles", rbacController.updateTemplateHandler))
+  .delete(...writeRoute("manage_roles", rbacController.deleteTemplateHandler))
   .all(httpMethodError);
 
 module.exports = router;

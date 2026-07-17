@@ -2,13 +2,18 @@
 import PageHeader from "@/components/PageHeader.vue";
 import { ref, computed, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
-import { VaSwitch } from "vuestic-ui";
-import notificationAPI from "@/services/notificationAPI";
+import { useToastStore } from "@/stores/toast";
+import ToggleSwitch from "@/components/ToggleSwitch.vue";
+import adminAPI from "@/services/adminAPI";
+import logger from "@/utils/logger";
 
 const authStore = useAuthStore();
+const toastStore = useToastStore();
 const loading = ref(true);
-const savingKeys = ref(new Set<string>());
-const savedKeys = ref(new Set<string>());
+const savingKeys = ref(new Set());
+const savedKeys = ref(new Set());
+const sendingLogs = ref(false);
+const logsSent = ref(false);
 
 const emailConfig = ref({
   host: "",
@@ -191,7 +196,7 @@ const loadSettings = async () => {
       };
     }
   } catch (e) {
-    console.error("Failed to load settings", e);
+    logger.error("Failed to load settings", { error: e.message });
   } finally {
     loading.value = false;
   }
@@ -223,7 +228,7 @@ const updateValue = async (setting: {
     await authStore.updateSettings(setting.key, setting.value);
     markSaved(setting.key);
   } catch (e) {
-    console.error("Failed to update setting", e);
+    logger.error("Failed to update setting", { error: e.message });
   } finally {
     savingKeys.value.delete(setting.key);
   }
@@ -242,13 +247,11 @@ const handleNumberBlur = (setting: {
   }
 };
 
-const adjustNumber = (
-  setting: { key: string; value: number },
-  delta: number
-) => {
-  const config = settingsConfig[setting.key];
+const adjustNumber = (setting, delta) => {
   const current = Number(setting.value) || 0;
-  let newVal = current + delta;
+  const step = Number(delta) || 0;
+  const config = settingsConfig[setting.key];
+  let newVal = current + step;
   if (config.min !== undefined) newVal = Math.max(config.min, newVal);
   if (config.max !== undefined) newVal = Math.min(config.max, newVal);
   if (config.step) newVal = Math.round(newVal / config.step) * config.step;
@@ -256,34 +259,22 @@ const adjustNumber = (
   updateValue(setting);
 };
 
-const saveEmailConfig = async () => {
-  emailSaving.value = true;
-  emailSaved.value = false;
+const sendLogs = async () => {
+  sendingLogs.value = true;
+  logsSent.value = false;
   try {
-    await authStore.updateSettings("email_server", {
-      ...emailConfig.value,
-      port: Number(emailConfig.value.port) || 587,
-    });
-    emailSaved.value = true;
-    setTimeout(() => (emailSaved.value = false), 2000);
-  } catch (e) {
-    console.error("Failed to save email config", e);
+    await adminAPI.emailLogs();
+    logsSent.value = true;
+    toastStore.add("Logs sent successfully!", "success");
+    setTimeout(() => (logsSent.value = false), 3000);
+  } catch (err) {
+    toastStore.add(
+      err.response?.data?.message || "Failed to email logs",
+      "error"
+    );
+    logger.error("Failed to email logs", { error: err.message });
   } finally {
-    emailSaving.value = false;
-  }
-};
-
-const sendTestEmail = async () => {
-  emailTestStatus.value = "sending";
-  emailTestMessage.value = "";
-  try {
-    await notificationAPI.sendTestEmail(emailTestTo.value);
-    emailTestStatus.value = "sent";
-    emailTestMessage.value = "Test email sent successfully.";
-  } catch (e: any) {
-    emailTestStatus.value = "error";
-    emailTestMessage.value =
-      e?.response?.data?.message || "Failed to send test email.";
+    sendingLogs.value = false;
   }
 };
 </script>
@@ -508,6 +499,21 @@ const sendTestEmail = async () => {
               <span class="action-icon">💳</span>
               <span>Payments</span>
             </RouterLink>
+            <button
+              class="action-card"
+              type="button"
+              @click="sendLogs"
+              :disabled="sendingLogs"
+            >
+              <span class="action-icon">📧</span>
+              <span>{{
+                sendingLogs
+                  ? "Sending..."
+                  : logsSent
+                  ? "Logs Sent"
+                  : "Email Logs"
+              }}</span>
+            </button>
           </div>
         </div>
       </div>

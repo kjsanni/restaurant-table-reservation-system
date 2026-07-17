@@ -20,12 +20,9 @@
   },
   "homepage": "https://github.com/slavyanHristov/Restaurant-Table-Reservation-System#readme",
   "dependencies": {
-    "express-rate-limit": "^8.5.2",
-    "puppeteer": "^24.10.2"
-  },
-  "devDependencies": {
-    "@types/node": "^26.0.1",
-    "typescript": "^6.0.3",
-    "vue-tsc": "^3.3.5"
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/vue": "^0.5.0",
+    "csurf": "^1.11.0",
+    "express-rate-limit": "^8.5.2"
   }
 }

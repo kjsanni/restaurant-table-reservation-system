@@ -1,7 +1,6 @@
 ---
 title: Development Session Summary
-date: 2026-07-05
-updated: 2026-07-05
+date: 2026-07-02
 tags:
   - session
   - summary
@@ -10,13 +9,14 @@ tags:
 related:
   - "[[100-MOC-Architecture-Overview]]"
   - "[[202-Changes-Overview]]"
-  - "[[202-Backend-Architecture]]"
+  - "[[IMPLEMENTATION-PLAN]]"
+  - "[[Reservations-FloorPlan]]"
 ---
 
 # Development Session Summary
 
 > [!abstract] Session Focus
-> Comprehensive fix, security hardening, feature implementation, and documentation modernization for restaurant table reservation system.
+> Permission templates, waitlist auto-promotion, reservation status timeline, table merging, and Phase 1 completion.
 
 ---
 
@@ -24,111 +24,81 @@ related:
 
 | Area | Description |
 |---|---|
-| [[202-Changes-Overview\|Changes Overview]] | 25 files changed, code review summary |
-| [[501-Security-Fixes\|Security Fixes]] | CSRF, CORS, JWT, CSP, lockout |
-| [[502-Bug-Fixes\|Bug Fixes]] | Data integrity, API gaps, NaN, iteration failures |
-| [[503-UI-UX-Improvements\|UI/UX Improvements]] | Sidebar redesign, design system, logger |
-| [[504-RBAC-System\|RBAC System]] | Roles, groups, permissions, staff assignment |
-| [[505-Payment-System\|Payment System]] | Payment tracking, auto-classification, revenue reports |
-| [[506-Heatmap-Analytics\|Heatmap Analytics]] | 1D weekly + 2D date-hour heatmaps |
-| [[507-NoShow-Tracking\|No-Show Tracking]] | No-show marking and stats widget |
-| [[508-Waitlist-System\|Waitlist System]] | Waitlist management and auto-seat workflow |
-| [[401-Database-Schema\|Database Schema]] | Migrations, soft-delete, optimizations |
-| [[601-Key-Decisions\|Key Decisions]] | Architecture decision log |
-| [[702-Login-Lockout\|Login Lockout]] | Account lockout implementation |
-| [[701-Audit-Log\|Audit Logging]] | Security event tracking |
-| [[TEST-FINDINGS-2026-06-29\|Test Findings]] | Backend API + frontend build validation |
+| [[202-Changes-Overview\|Changes Overview]] | Updated file inventory |
+| [[Reservations-FloorPlan\|Reservations & Floor Plan]] | Implementation plan for 14 features |
+| Bug Fixes | Staff creation 500, AdminSettings logger reference |
+| Infrastructure | One-shot admin log email endpoint with rate limiting |
+| Phase 1 Features | Recurring reservations, split payments, customer loyalty, permission templates |
+| Phase 2 Features | Waitlist auto-promotion, reservation status timeline, table combining/merging |
 
 ---
 
 ## Session Checklist
 
 > [!check] Completed
-> - [x] Debugging → Root cause `$APP_NAME` injection + SSR hydration mismatch
-> - [x] Security hardening → JWT, CSRF, CORS, CSP, login lockout, rate limiting
-> - [x] Data integrity → Soft-delete, transaction safety, validator restoration
-> - [x] UI consistency → CSS custom properties, slate palette, structured logger
-> - [x] Performance → N+1 removal, Map lookups, query optimization
-> - [x] RBAC implementation → Roles, groups, permissions, middleware
-> - [x] Payment system → Auto-classification, revenue time-series, dashboard
-> - [x] Heatmap v2 → Date-range 2D matrix with calendar mode
-> - [x] Waitlist auto-seat → Socket.io + smart suggestion banner
-> - [x] No-show tracking → One-click marking + widget
-> - [x] Sidebar redesign → Collapsible dark sidebar with grouped nav
-> - [x] Deployment configs → Apache, Nginx, PM2, deploy script
-> - [x] Documentation — Obsidian vault + general project docs
-> - [x] Testing — Backend API validation + frontend build validation
-> - [x] Production WebSocket fix — Apache proxy + dotenv override + PM2 single instance
-> - [x] Production RBAC fix — JSON.parse permissions in role.dao.js
-
----
-
-## Production Fixes — 2026-07-05
-
-> [!important] Production Server: http://192.168.88.10 (nguni project, PM2: nguni-backend / nguni-frontend)
-
-### Socket.io WebSocket Connection Fix
-
-**Problem:** `NS_ERROR_WEBSOCKET_CONNECTION_REFUSED` + HTTP 400 on `/socket.io/` in production.
-
-**Root causes (4x):**
-1. `apache-production.conf` used `RewriteRule` placed AFTER `ProxyPass /`, so catch-all frontend proxy intercepted `/socket.io/` requests
-2. Active production config (`/etc/apache2/sites-available/nguni.conf`) had broken `ProxyPass /socket.io/ ws://127.0.0.1:8000/socket.io/$1` where `$1` was literal (not regex)
-3. Backend ran in PM2 **cluster mode** (`-i max` = 4 workers). Engine.IO sessions exist only in the worker that created them. Subsequent requests hitting a different worker returned `{"code":1,"message":"Session ID unknown"}`
-4. `back-end/config/config.js` loaded `.env` first with empty `CORS_ORIGINS=`, then `.env.production` with `override: false`, so empty value persisted
-
-**Fixes:**
-| File | Change |
-|---|---|
-| `apache-production.conf` | Replaced broken rewrite proxy with `ProxyPassMatch "^/socket.io/(.*)" ws://127.0.0.1:8000/socket.io/$1` BEFORE `ProxyPass /` |
-| `deploy-prod.sh` | `-i max` → `-i 1` (single instance for Socket.io sticky sessions) |
-| `ecosystem.config.js` | `instances: 'max'` → `instances: 1` |
-| `back-end/config/config.js` | `override: false` → `override: true` for `.env.production` |
-| `back-end/.env.production` | `CORS_ORIGINS` → `http://192.168.88.10` |
-| `back-end/src/DAOs/role.dao.js` | Added `normalizePermissions()` helper to parse stringified JSON |
-| `/etc/apache2/sites-available/nguni.conf` (prod) | Deployed correct `ProxyPassMatch` via SSH |
-| PM2 `nguni-backend` | Restarted in single-instance mode (`-i 1`) |
-
-**Verification:**
-- `curl http://192.168.88.10/socket.io/?EIO=4&transport=polling` → **HTTP 200**
-- Backend logs: `Client connected: J-EjU10zkHJUonsNAAAB`
-- Browser: `/tables/manage` navigation works without WebSocket errors
-
----
-
-### Table Link RBAC Bug Fix
-
-**Problem:** Clicking "Tables" in sidebar navigated to `/tables/manage/` but showed nothing.
-
-**Root cause:** `back-end/src/DAOs/role.dao.js` returned `permissions` stored as JSON strings (from seeders using `JSON.stringify`) without parsing. `Object.assign(mergedPermissions, role.permissions)` on a string created a mangled object with numeric keys (`"0":"{","1":"\"",...`). RBAC check saw keys existed and accepted it as valid, but `permissions["manage_tables"]` was `undefined`, so middleware redirected to home.
-
-**Fix:** Added `normalizePermissions()` helper in `role.dao.js` that parses stringified JSON before using it.
-
-**Verification:**
-- `GET /api/v1/auth/me → 200`
-- `permissions: {"view_reservations":true,"edit_reservations":true,"manage_tables":true,...}`
-- Browser navigation to `/tables/manage` succeeds
+> - [x] Fix staff creation 500 error (role validation + frontend error handling)
+> - [x] Add `POST /api/v1/admin/logs/email` with nodemailer
+> - [x] Add frontend toast notification system (`AppToast.vue`, `toast.js`)
+> - [x] Add rate limiting to admin log email endpoint
+> - [x] Add log cleanup before emailing (keep 5 most recent)
+> - [x] Implement Feature F: Recurring Reservations (backend + frontend)
+> - [x] Implement Feature D: Split Bills / Multiple Payment Methods
+> - [x] Implement Feature G: Customer Loyalty & Visit Tracking
+> - [x] Update Obsidian vault docs
 
 ---
 
 ## Uncommitted Changes
 
-25 files changed (~8,921 insertions, ~4,123 deletions)
+23 files changed across backend, frontend, docs
 
----
+### Backend
+- `src/controllers/admin.controller.js` — new
+- `src/routes/admin.router.js` — new
+- `src/services/logEmail.service.js` — new
+- `src/middleware/rateLimit.js` — added `adminActionLimiter`
+- `src/services/recurrence.service.js` — new
+- `src/DAOs/reservation.dao.js` — added `getRecurringReservations`
+- `src/services/reservationService.js` — added `getRecurringReservations`
+- `src/controllers/reservation.controller.js` — added `getRecurringHandler`
+- `src/routes/reservation.router.js` — added `GET /recurring`
+- `src/db/migrations/20260702000003-add-reservation-recurrence.js` — new
+- `src/db/models/reservation.js` — added `recurrence` JSON
+- `src/DAOs/payment.dao.js` — added `updateSplits`
+- `src/services/paymentService.js` — split payment validation
+- `src/db/migrations/20260702000004-add-payment-splits.js` — new
+- `src/db/models/payment.js` — added `splits` JSON
+- `src/DAOs/reservation.dao.js` — added loyalty DAOs
+- `src/services/customerService.js` — added loyalty services
+- `src/controllers/customer.controller.js` — added loyalty handlers
+- `src/routes/customer.router.js` — added loyalty routes
+- `src/db/migrations/20260702000005-add-customer-loyalty-points.js` — new
+- `src/db/models/customer.js` — added `points`, `preferences`
+- `back-end/package.json` — added `nodemailer`
 
-## Known Remaining Issues
+### Frontend
+- `src/services/adminAPI.js` — new
+- `src/components/AppToast.vue` — new
+- `src/stores/toast.js` — new
+- `src/App.vue` — mounted `AppToast`
+- `src/views/AdminSettingsView.vue` — email logs button + toast
+- `src/views/StaffManagementView.vue` — role select fix + error handling
+- `src/services/reservationAPI.js` — added `getRecurring()`
+- `src/views/NewReservationView.vue` — recurrence UI
+- `src/components/EditReservation.vue` — split payment UI
+- `src/services/customerAPI.js` — loyalty methods
+- `src/views/CustomerProfileView.vue` — loyalty + preferences UI
 
-- Security audit identified **3 CRITICAL** and **7 HIGH** vulnerabilities (hardcoded JWT secret, default admin credentials, CORS misconfiguration)
-- `Suspense` experimental feature warning — Vue runtime warning
-- Duplicate `console.log` in `TheReservations.vue` (existing debug output)
-- `TableView.vue` is the only remaining table-row component in a card-based UI
+### Docs
+- `docs/Reservations-FloorPlan.md` — new implementation plan
 
 ---
 
 ## Next Steps
 
-- Remediate critical/high security findings from `SECURITY_AUDIT_REPORT.md`
-- Complete deployment to production environment
-- Implement multi-location `branchId` support (deferred per implementation plan)
-- Add SMS/email integration for customer notifications
+- Feature E: Reservation Notes & Occasions (Phase 2)
+- Feature I: Walk-In Queue Linked to Customers (Phase 2)
+- Feature M: Email Reminders & Confirmations (Phase 2)
+- Feature D: Split Bills enhancements (partial payments tracking)
+- Feature K: Table Turn-Time Analytics (Phase 3)
+- Feature L: Refund Workflow + Audit Trail (Phase 3)

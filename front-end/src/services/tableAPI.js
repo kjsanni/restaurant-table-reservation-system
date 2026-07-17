@@ -4,6 +4,9 @@ class TableAPI {
   registerTable(tableData) {
     return API.post("/tables", tableData);
   }
+  editTable(tableId, tableData) {
+    return API.patch("/tables/" + tableId, tableData);
+  }
   getTables() {
     return API.get("/tables");
   }
@@ -15,6 +18,12 @@ class TableAPI {
   }
   unblockTable(tableId) {
     return API.patch("/tables/" + tableId + "/unblock");
+  }
+  updateTablePosition(tableId, positionX, positionY) {
+    return API.patch("/tables/" + tableId + "/position", {
+      positionX,
+      positionY,
+    });
   }
   getWaitingStaff() {
     return API.get("/tables/staff");
