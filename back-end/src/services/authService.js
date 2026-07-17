@@ -226,7 +226,7 @@ const checkRegistrationStatus = async (settingDAO, tenantId) => {
   if (!setting) {
     return { registrationEnabled: true };
   }
-  return { registrationEnabled: setting.value === "true" };
+  return { registrationEnabled: setting.value === true || setting.value === "true" };
 };
 
 module.exports = {

@@ -1,5 +1,7 @@
-const requireActiveTenant = (req, res, next) => {
-  if (!process.env.TENANT_MODE || process.env.TENANT_MODE !== "enabled") {
+const { isTenantModeEnabled } = require("../utils/tenantMode");
+
+const requireActiveTenant = async (req, res, next) => {
+  if (!(await isTenantModeEnabled())) {
     return next();
   }
 

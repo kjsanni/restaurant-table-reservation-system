@@ -136,8 +136,8 @@ const createServer = () => {
   app.use("/api/v1/customers", logAction, customerRouter);
   app.use("/api/v1/admin", logAction, adminRouter);
   if (TENANT_MODE) {
-    app.use(resolveTenant);
-    app.use(requireActiveTenant);
+    app.use(tryCatchHandler(resolveTenant));
+    app.use(tryCatchHandler(requireActiveTenant));
     app.use("/api/v1/admin/tenants", logAction, tenantAdminRoutes);
     app.use("/api/v1/billing", billingRoutes);
   }

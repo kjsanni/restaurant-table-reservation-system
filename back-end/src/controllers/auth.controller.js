@@ -205,8 +205,31 @@ const getSettingsHandler = async (req, res) => {
 
 const updateSettingsHandler = async (req, res) => {
   const { key, value } = req.body;
+  const allowedKeys = [
+    "customer_registration_enabled",
+    "reservation_slot_duration",
+    "max_party_size",
+    "allow_past_reservations",
+    "require_table_assignment",
+    "table_base_price",
+    "table_price_per_additional_seat",
+    "whatsapp_config",
+    "notification_channels",
+    "paystack_config",
+    "tenant_mode_enabled",
+  ];
+  if (!allowedKeys.includes(key)) {
+    return res.status(400).json({ success: false, message: "Unknown or protected setting key." });
+  }
   const setting = await authDAO.updateSetting(key, value, req.tenant?.id);
-
+  if (key === "tenant_mode_enabled") {
+    try {
+      const { resetTenantModeCache } = require("../tenant-platform/utils/tenantMode");
+      resetTenantModeCache();
+    } catch {
+      // module not loaded when TENANT_MODE off; ignore
+    }
+  }
   return res.status(200).json({
     success: true,
     message: "Setting updated successfully!",

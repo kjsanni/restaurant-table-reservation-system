@@ -7,6 +7,7 @@ export const useAuthStore = defineStore("auth", () => {
   const isAuthenticated = computed(() => !!user.value);
   const isLoading = ref(true);
   const currentTenant = ref(null);
+  const tenantModeEnabled = ref(false);
 
   const login = async (email, password) => {
     const response = await authAPI.login(email, password);
@@ -40,6 +41,25 @@ export const useAuthStore = defineStore("auth", () => {
     return response.data.settings;
   };
 
+  const fetchTenantMode = async () => {
+    try {
+      const settings = await authAPI.getSettings();
+      const setting = (settings.data.settings || []).find(
+        (s) => s.key === "tenant_mode_enabled"
+      );
+      if (setting) {
+        const v =
+          typeof setting.value === "string"
+            ? JSON.parse(setting.value)
+            : setting.value;
+        tenantModeEnabled.value = Boolean(v);
+      }
+    } catch {
+      tenantModeEnabled.value = false;
+    }
+    return tenantModeEnabled.value;
+  };
+
   const fetchRegistrationStatus = async () => {
     const response = await authAPI.getRegistrationStatus();
     return response.data.registrationEnabled;
@@ -47,6 +67,9 @@ export const useAuthStore = defineStore("auth", () => {
 
   const updateSettings = async (key, value) => {
     const response = await authAPI.updateSettings(key, value);
+    if (key === "tenant_mode_enabled") {
+      tenantModeEnabled.value = Boolean(value);
+    }
     return response.data.setting;
   };
 
@@ -65,6 +88,7 @@ export const useAuthStore = defineStore("auth", () => {
       // not authenticated
     }
     isLoading.value = false;
+    fetchTenantMode();
   });
 
   return {
@@ -72,11 +96,13 @@ export const useAuthStore = defineStore("auth", () => {
     isAuthenticated,
     isLoading,
     currentTenant,
+    tenantModeEnabled,
     login,
     register,
     logout,
     getMe,
     fetchSettings,
+    fetchTenantMode,
     fetchRegistrationStatus,
     updateSettings,
     setTenant,

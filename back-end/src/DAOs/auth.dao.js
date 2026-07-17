@@ -122,25 +122,54 @@ const deleteStaffUser = async (id, tenantId) => {
   return await user.destroy();
 };
 
+const normalizeSettingValue = (value) => {
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  }
+  return value;
+};
+
 const getSettingByKey = async (key, tenantId) => {
-  return await Setting.findOne({ where: withTenant({ key }, tenantId) });
+  const setting = await Setting.findOne({ where: withTenant({ key }, tenantId) });
+  if (setting && setting.value !== undefined) {
+    setting.value = normalizeSettingValue(setting.value);
+  }
+  return setting;
+};
+
+const getSettingValue = async (key, defaultValue, tenantId) => {
+  const setting = await getSettingByKey(key, tenantId);
+  if (!setting) return defaultValue;
+  return normalizeSettingValue(setting.value);
 };
 
 const updateSetting = async (key, value, tenantId) => {
   const [updatedRows] = await Setting.update(
-    { value },
+    { value: normalizeSettingValue(value) },
     { where: withTenant({ key }, tenantId) }
   );
   if (updatedRows === 0) {
-    return await Setting.create({ key, value, ...withTenant({}, tenantId) });
+    return await Setting.create({
+      key,
+      value: normalizeSettingValue(value),
+      ...withTenant({}, tenantId),
+    });
   }
   return await getSettingByKey(key, tenantId);
 };
 
 const getAllSettings = async (tenantId) => {
-  return await Setting.findAll({
+  const settings = await Setting.findAll({
     where: withTenant({}, tenantId),
   });
+  settings.forEach((s) => {
+    if (s.value !== undefined) s.value = normalizeSettingValue(s.value);
+  });
+  return settings;
 };
 
 const createRefreshToken = async (userId, token, expiresAt, tenantId) => {
@@ -287,6 +316,7 @@ module.exports = {
   updateStaffUser,
   deleteStaffUser,
   getSettingByKey,
+  getSettingValue,
   updateSetting,
   getAllSettings,
   createRefreshToken,

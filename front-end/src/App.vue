@@ -246,7 +246,10 @@ onUnmounted(() => {
             <div class="topbar-right">
               <template v-if="isAuthenticated">
                 <TenantSwitcher
-                  v-if="user?.permissions?.manage_tenants"
+                  v-if="
+                    user?.permissions?.manage_tenants &&
+                    authStore.tenantModeEnabled
+                  "
                   :modelValue="authStore.currentTenant?.id || ''"
                   @update:modelValue="authStore.setTenant"
                 />

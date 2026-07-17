@@ -28,6 +28,68 @@ const emailSaved = ref(false);
 const emailTestTo = ref("");
 const emailTestStatus = ref<"" | "sending" | "sent" | "error">("");
 const emailTestMessage = ref("");
+
+const integrationSaving = ref(false);
+const integrationSaved = ref(false);
+const integrationConfig = ref({
+  whatsapp: { enabled: false, token: "", phoneNumberId: "" },
+  channels: { email: true, whatsapp: false },
+  paystack: { mode: "test", secretKey: "", webhookSecret: "" },
+  tenantMode: false,
+});
+
+const loadIntegrationConfig = (data: { key: string; value: any }[]) => {
+  const get = (key: string, fallback: any) => {
+    const s = data.find((d) => d.key === key);
+    if (!s || s.value == null) return fallback;
+    const v = typeof s.value === "string" ? JSON.parse(s.value) : s.value;
+    return v ?? fallback;
+  };
+  integrationConfig.value = {
+    whatsapp: get("whatsapp_config", {
+      enabled: false,
+      token: "",
+      phoneNumberId: "",
+    }),
+    channels: get("notification_channels", { email: true, whatsapp: false }),
+    paystack: get("paystack_config", {
+      mode: "test",
+      secretKey: "",
+      webhookSecret: "",
+    }),
+    tenantMode: Boolean(get("tenant_mode_enabled", false)),
+  };
+};
+
+const saveAllIntegrations = async () => {
+  integrationSaving.value = true;
+  integrationSaved.value = false;
+  try {
+    await authStore.updateSettings(
+      "whatsapp_config",
+      integrationConfig.value.whatsapp
+    );
+    await authStore.updateSettings(
+      "notification_channels",
+      integrationConfig.value.channels
+    );
+    await authStore.updateSettings(
+      "paystack_config",
+      integrationConfig.value.paystack
+    );
+    integrationSaved.value = true;
+    setTimeout(() => (integrationSaved.value = false), 2000);
+  } catch (e: any) {
+    toastStore.add(
+      e?.response?.data?.message || "Failed to save integrations",
+      "error"
+    );
+    logger.error("Failed to save integrations", { error: e?.message });
+  } finally {
+    integrationSaving.value = false;
+  }
+};
+
 const settingsMap = ref<
   Record<
     string,
@@ -113,6 +175,31 @@ const settingsConfig: Record<
     max: 100,
     step: 1,
   },
+  tenant_mode_enabled: {
+    label: "Multi-Tenant Mode",
+    category: "Platform",
+    type: "boolean",
+    description:
+      "Enable SaaS multi-tenant mode. Requires TENANT_MODE=enabled server-side to take effect. When off, the system runs as a single restaurant.",
+  },
+  whatsapp_config: {
+    label: "WhatsApp",
+    category: "Integrations",
+    type: "json",
+    description: "WhatsApp Business API credentials for customer notifications",
+  },
+  notification_channels: {
+    label: "Notification Channels",
+    category: "Integrations",
+    type: "json",
+    description: "Which channels are used to notify customers",
+  },
+  paystack_config: {
+    label: "Paystack",
+    category: "Integrations",
+    type: "json",
+    description: "Platform-level Paystack payment gateway credentials",
+  },
 };
 
 const categories = computed(() => {
@@ -174,6 +261,8 @@ const loadSettings = async () => {
     });
 
     settingsMap.value = map;
+
+    loadIntegrationConfig(data);
 
     const emailSetting = data.find(
       (s: { key: string; value: any }) => s.key === "email_server"
@@ -464,6 +553,127 @@ const sendLogs = async () => {
           </div>
         </div>
 
+        <div class="settings-card integrations-card">
+          <h2 class="category-title">Integrations</h2>
+
+          <section class="integration-section">
+            <h3 class="integration-title">Multi-Tenant Mode</h3>
+            <div class="setting-row">
+              <div class="setting-info">
+                <label class="setting-label">Enable SaaS Multi-Tenancy</label>
+                <p class="setting-description">
+                  When enabled (and the server runs with TENANT_MODE=enabled),
+                  the platform supports multiple restaurants with isolated data.
+                </p>
+              </div>
+              <VaSwitch
+                :model-value="integrationConfig.tenantMode"
+                @update:model-value="
+                  (val) => {
+                    integrationConfig.tenantMode = val;
+                    saveIntegration('tenant_mode_enabled', val);
+                  }
+                "
+              />
+            </div>
+          </section>
+
+          <section class="integration-section">
+            <h3 class="integration-title">WhatsApp Business API</h3>
+            <div class="email-grid">
+              <div class="email-field checkbox-field">
+                <label>Enabled</label>
+                <input
+                  v-model="integrationConfig.whatsapp.enabled"
+                  type="checkbox"
+                />
+              </div>
+              <div class="email-field">
+                <label>Phone Number ID</label>
+                <input
+                  v-model="integrationConfig.whatsapp.phoneNumberId"
+                  class="field-input"
+                  placeholder="123456789"
+                />
+              </div>
+              <div class="email-field full-width">
+                <label>Permanent Access Token</label>
+                <input
+                  v-model="integrationConfig.whatsapp.token"
+                  type="password"
+                  class="field-input"
+                  placeholder="EAA..."
+                />
+              </div>
+            </div>
+          </section>
+
+          <section class="integration-section">
+            <h3 class="integration-title">Notification Channels</h3>
+            <div class="channel-toggles">
+              <label class="checkbox-inline">
+                <input
+                  v-model="integrationConfig.channels.email"
+                  type="checkbox"
+                />
+                Email
+              </label>
+              <label class="checkbox-inline">
+                <input
+                  v-model="integrationConfig.channels.whatsapp"
+                  type="checkbox"
+                />
+                WhatsApp
+              </label>
+            </div>
+          </section>
+
+          <section class="integration-section">
+            <h3 class="integration-title">Paystack (Platform)</h3>
+            <div class="email-grid">
+              <div class="email-field">
+                <label>Mode</label>
+                <select
+                  v-model="integrationConfig.paystack.mode"
+                  class="field-input"
+                >
+                  <option value="test">Test</option>
+                  <option value="live">Live</option>
+                </select>
+              </div>
+              <div class="email-field full-width">
+                <label>Secret Key</label>
+                <input
+                  v-model="integrationConfig.paystack.secretKey"
+                  type="password"
+                  class="field-input"
+                  placeholder="sk_..."
+                />
+              </div>
+              <div class="email-field full-width">
+                <label>Webhook Secret</label>
+                <input
+                  v-model="integrationConfig.paystack.webhookSecret"
+                  type="password"
+                  class="field-input"
+                  placeholder="whsec_..."
+                />
+              </div>
+            </div>
+          </section>
+
+          <div class="email-actions">
+            <button
+              class="btn btn-primary"
+              @click="saveAllIntegrations"
+              :disabled="integrationSaving"
+            >
+              {{ integrationSaving ? "Saving..." : "Save Integrations" }}
+            </button>
+            <span v-if="integrationSaved" class="status-text saved">Saved</span>
+          </div>
+        </div>
+
         <div class="settings-card quick-actions-card">
           <h2 class="category-title">Quick Actions</h2>
           <div class="actions-grid">
@@ -704,6 +914,62 @@ const sendLogs = async () => {
 
 .status-text.saved {
   color: var(--earth-600);
+}
+
+.integrations-card {
+  margin-top: var(--space-1);
+}
+
+.integration-section {
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.integration-section:last-of-type {
+  border-bottom: none;
+}
+
+.integration-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--ink-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.setting-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.full-width,
+.email-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.channel-toggles {
+  display: flex;
+  gap: var(--space-6);
+  margin-top: var(--space-2);
+}
+
+.checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.checkbox-inline input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
 }
 
 .email-card {

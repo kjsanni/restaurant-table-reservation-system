@@ -56,6 +56,44 @@
           <span class="value">{{ formatDate(tenant.lastPaymentAt) }}</span>
         </div>
       </div>
+
+      <div class="section">
+        <h2>Paystack (Bring Your Own Keys)</h2>
+        <p class="section-hint">
+          Override the platform Paystack account per tenant. Leave blank to use
+          the platform default. Secret key is write-only.
+        </p>
+        <div class="field">
+          <label>Subaccount Code</label>
+          <input
+            v-model="paystackForm.paystackSubaccountCode"
+            placeholder="ACCT_..."
+          />
+        </div>
+        <div class="field">
+          <label>Public Key</label>
+          <input
+            v-model="paystackForm.paystackPublicKey"
+            placeholder="pk_..."
+          />
+        </div>
+        <div class="field">
+          <label>Secret Key</label>
+          <input
+            v-model="paystackForm.paystackSecretKey"
+            type="password"
+            placeholder="sk_..."
+          />
+        </div>
+        <button
+          class="btn success"
+          @click="savePaystack"
+          :disabled="savingPaystack"
+        >
+          {{ savingPaystack ? "Saving..." : "Save Paystack Keys" }}
+        </button>
+        <span v-if="paystackSaved" class="saved-tag">Saved</span>
+      </div>
     </div>
 
     <div class="actions">
@@ -108,10 +146,22 @@ import tenantAdminAPI from "@/services/tenantAdminAPI";
 
 const route = useRoute();
 const tenant = ref({ users: [] });
+const savingPaystack = ref(false);
+const paystackSaved = ref(false);
+const paystackForm = ref({
+  paystackSubaccountCode: "",
+  paystackPublicKey: "",
+  paystackSecretKey: "",
+});
 
 const loadTenant = async () => {
   const response = await tenantAdminAPI.getById(route.params.id);
   tenant.value = response.data.item;
+  paystackForm.value = {
+    paystackSubaccountCode: tenant.value.paystackSubaccountCode || "",
+    paystackPublicKey: tenant.value.paystackPublicKey || "",
+    paystackSecretKey: "",
+  };
 };
 
 const enableTenant = async () => {
@@ -124,6 +174,21 @@ const disableTenant = async () => {
   if (!reason) return;
   await tenantAdminAPI.disable(route.params.id, { reason });
   await loadTenant();
+};
+
+const savePaystack = async () => {
+  savingPaystack.value = true;
+  paystackSaved.value = false;
+  try {
+    const payload = { ...paystackForm.value };
+    if (!payload.paystackSecretKey) delete payload.paystackSecretKey;
+    await tenantAdminAPI.update(route.params.id, payload);
+    paystackSaved.value = true;
+    setTimeout(() => (paystackSaved.value = false), 2000);
+    await loadTenant();
+  } finally {
+    savingPaystack.value = false;
+  }
 };
 
 const formatDate = (date) => {
@@ -231,6 +296,38 @@ onMounted(() => {
   border: none;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
+}
+.section-hint {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.field label {
+  font-size: 13px;
+  color: #64748b;
+}
+.field input {
+  padding: 10px 12px;
+  border: 1px solid #e3e8ee;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.field input:focus {
+  outline: none;
+  border-color: #533afd;
+}
+.saved-tag {
+  margin-left: 12px;
+  color: #16a34a;
+  font-size: 13px;
   font-weight: 500;
 }
 .btn.success {

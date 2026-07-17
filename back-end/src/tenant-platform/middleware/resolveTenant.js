@@ -1,7 +1,7 @@
-const db = require("../../db/models");
+const { isTenantModeEnabled } = require("../utils/tenantMode");
 
 const resolveTenant = async (req, res, next) => {
-  if (!process.env.TENANT_MODE || process.env.TENANT_MODE !== "enabled") {
+  if (!(await isTenantModeEnabled())) {
     return next();
   }
 
