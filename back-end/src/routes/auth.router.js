@@ -6,13 +6,21 @@ const authController = require("../controllers/auth.controller");
 const { protect, admin, requirePermission } = require("../middleware/auth");
 const { authLimiter, generalLimiter } = require("../middleware/rateLimit");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
+const { validateCsrfToken } = require("../middleware/csrf");
 
 router
   .route("/register/status")
   .get(tryCatchHandler(authController.registerStatusHandler))
   .all(httpMethodError);
 
-router.route("/register").post(...writeRoute("", authController.registerHandler));
+router
+  .route("/register")
+  .post(
+    authLimiter,
+    validateCsrfToken,
+    tryCatchHandler(authController.registerHandler)
+  )
+  .all(httpMethodError);
 
 router.route("/login").post(authLimiter, tryCatchHandler(authController.loginHandler));
 

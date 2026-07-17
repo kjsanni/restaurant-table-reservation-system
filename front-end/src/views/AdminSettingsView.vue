@@ -98,31 +98,6 @@ const settingsConfig: Record<
     max: 100,
     step: 1,
   },
-  tenant_mode_enabled: {
-    label: "Multi-Tenant Mode",
-    category: "Platform",
-    type: "boolean",
-    description:
-      "Enable SaaS multi-tenant mode. Requires TENANT_MODE=enabled server-side to take effect. When off, the system runs as a single restaurant.",
-  },
-  whatsapp_config: {
-    label: "WhatsApp",
-    category: "Integrations",
-    type: "json",
-    description: "WhatsApp Business API credentials for customer notifications",
-  },
-  notification_channels: {
-    label: "Notification Channels",
-    category: "Integrations",
-    type: "json",
-    description: "Which channels are used to notify customers",
-  },
-  paystack_config: {
-    label: "Paystack",
-    category: "Integrations",
-    type: "json",
-    description: "Platform-level Paystack payment gateway credentials",
-  },
 };
 
 const categories = computed(() => {

@@ -43,9 +43,20 @@ const logAction = async (req, res, next) => {
     else if (route.includes("rbac/roles")) entityType = "role";
     else if (route.includes("rbac/groups")) entityType = "group";
     else if (route.includes("rbac")) entityType = "rbac";
+    else if (route.includes("tenants")) entityType = "tenant";
+    else if (route.includes("notifications")) entityType = "notification";
+    else if (route.includes("billing")) entityType = "billing";
     else if (route.includes("customers")) entityType = "customer";
+    else if (route.includes("profile")) entityType = "profile";
     else if (route.includes("settings")) entityType = "setting";
-    else if (route.includes("staff")) entityType = "user";
+    else if (route.includes("staff")) entityType = "staff";
+    else if (
+      route.includes("auth") ||
+      route.includes("login") ||
+      route.includes("logout") ||
+      route.includes("register")
+    )
+      entityType = "auth";
 
     try {
       await AuditLog.create({
