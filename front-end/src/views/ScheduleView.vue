@@ -300,6 +300,59 @@ const updateSchedule = async (schedule) => {
   });
 };
 
+const SCHEDULE_TEMPLATES = {
+  weekday: { label: "Weekday (11–22)", openTime: "11:00:00", closeTime: "22:00:00", closed: ["sunday"] },
+  weekend: { label: "Weekend (10–24)", openTime: "10:00:00", closeTime: "24:00:00", closed: [] },
+  brunch: { label: "Brunch (09–21)", openTime: "09:00:00", closeTime: "21:00:00", closed: [] },
+  holiday: { label: "Holiday (closed)", openTime: "11:00:00", closeTime: "22:00:00", closed: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] },
+};
+
+const customTemplates = ref(
+  JSON.parse(localStorage.getItem("scheduleTemplates") || "[]")
+);
+
+const applyTemplate = async (key) => {
+  const tpl = SCHEDULE_TEMPLATES[key];
+  if (!tpl) return;
+  for (const s of schedules.value) {
+    s.openTime = tpl.openTime;
+    s.closeTime = tpl.closeTime;
+    s.isClosed = tpl.closed.includes(s.dayOfWeek);
+    await updateSchedule(s);
+  }
+};
+
+const saveCurrentAsTemplate = async () => {
+  const name = prompt("Template name?");
+  if (!name) return;
+  const pattern = schedules.value.map((s) => ({
+    dayOfWeek: s.dayOfWeek,
+    openTime: s.openTime,
+    closeTime: s.closeTime,
+    isClosed: s.isClosed,
+  }));
+  customTemplates.value = [...customTemplates.value, { name, pattern }];
+  localStorage.setItem("scheduleTemplates", JSON.stringify(customTemplates.value));
+};
+
+const applyCustomTemplate = async (idx) => {
+  const tpl = customTemplates.value[idx];
+  if (!tpl) return;
+  for (const p of tpl.pattern) {
+    const s = schedules.value.find((x) => x.dayOfWeek === p.dayOfWeek);
+    if (!s) continue;
+    s.openTime = p.openTime;
+    s.closeTime = p.closeTime;
+    s.isClosed = p.isClosed;
+    await updateSchedule(s);
+  }
+};
+
+const deleteCustomTemplate = (idx) => {
+  customTemplates.value = customTemplates.value.filter((_, i) => i !== idx);
+  localStorage.setItem("scheduleTemplates", JSON.stringify(customTemplates.value));
+};
+
 const createHoliday = async () => {
   await scheduleAPI.createHoliday({
     date: newHoliday.value.date,
@@ -372,6 +425,30 @@ const exportPDF = async () => {
         <p>Loading schedule...</p>
       </div>
       <div v-else class="schedules-container">
+        <div class="section-card templates-card">
+          <h2 class="section-title">Schedule Templates</h2>
+          <div class="template-row">
+            <button
+              v-for="(tpl, key) in SCHEDULE_TEMPLATES"
+              :key="key"
+              class="template-btn"
+              @click="applyTemplate(key)"
+            >
+              {{ tpl.label }}
+            </button>
+            <button class="template-btn save" @click="saveCurrentAsTemplate">💾 Save current</button>
+          </div>
+          <div v-if="customTemplates.length" class="custom-templates">
+            <div
+              v-for="(tpl, idx) in customTemplates"
+              :key="idx"
+              class="custom-template"
+            >
+              <button class="template-btn" @click="applyCustomTemplate(idx)">{{ tpl.name }}</button>
+              <button class="template-del" @click="deleteCustomTemplate(idx)" title="Delete">×</button>
+            </div>
+          </div>
+        </div>
         <div class="section-card weekly-card">
           <h2 class="section-title">Weekly Hours</h2>
           <div class="schedule-list">
@@ -1152,10 +1229,42 @@ const exportPDF = async () => {
   font-size: 1rem;
   line-height: 1;
 }
-.field-row {
+.template-row {
   display: flex;
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
+.template-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+.template-btn.save {
+  background: var(--accent-soft, #dbeafe);
+}
+.custom-templates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.custom-template {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.template-del {
+  border: none;
+  background: transparent;
+  color: var(--rose-600, #e11d48);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
 .field-row .field {
   flex: 1;
 }
