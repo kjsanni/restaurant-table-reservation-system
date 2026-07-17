@@ -8,6 +8,7 @@ import shiftAPI from "@/services/shiftAPI";
 import timeOffAPI from "@/services/timeOffAPI";
 import logger from "@/utils/logger";
 import dateNavigator from "@/utils/dateNavigator";
+import { useAuthStore } from "@/stores/auth";
 
 const schedules = ref([]);
 const holidays = ref([]);
@@ -170,6 +171,49 @@ const applySuggestion = async (dayOfWeek) => {
   s.closeTime = sug.closeTime;
   s.isClosed = false;
   await updateSchedule(s);
+};
+
+const authStore = useAuthStore();
+const businessHoursConfig = ref({ enabled: false, days: {
+  monday: { open: "09:00", close: "22:00", closed: false },
+  tuesday: { open: "09:00", close: "22:00", closed: false },
+  wednesday: { open: "09:00", close: "22:00", closed: false },
+  thursday: { open: "09:00", close: "22:00", closed: false },
+  friday: { open: "09:00", close: "22:00", closed: false },
+  saturday: { open: "09:00", close: "22:00", closed: false },
+  sunday: { open: "09:00", close: "22:00", closed: false },
+} });
+const businessHoursSaving = ref(false);
+const businessHoursSaved = ref(false);
+
+const loadBusinessHours = async () => {
+  try {
+    const settings = await authStore.fetchSettings();
+    const raw = settings.find((s) => s.key === "business_hours");
+    if (raw) {
+      businessHoursConfig.value =
+        typeof raw.value === "string" ? JSON.parse(raw.value) : raw.value;
+    }
+  } catch (err) {
+    logger.error("Failed to load business hours", { error: err.message });
+  }
+};
+
+const saveBusinessHours = async () => {
+  businessHoursSaving.value = true;
+  businessHoursSaved.value = false;
+  try {
+    await authStore.updateSettings(
+      "business_hours",
+      JSON.stringify(businessHoursConfig.value)
+    );
+    businessHoursSaved.value = true;
+    setTimeout(() => (businessHoursSaved.value = false), 2000);
+  } catch (err) {
+    logger.error("Failed to save business hours", { error: err.message });
+  } finally {
+    businessHoursSaving.value = false;
+  }
 };
 
 const shiftsByDay = computed(() => {
@@ -361,6 +405,7 @@ const loadSchedule = async () => {
       reservationsRes.data.collection || reservationsRes.data || [];
     await loadShifts();
     await loadTimeOffs();
+    await loadBusinessHours();
   } catch (err) {
     logger.error("Failed to load schedule", { error: err.message });
   } finally {
@@ -647,6 +692,56 @@ const exportPDF = async () => {
                 />
               </div>
             </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <h2 class="section-title">Business Hours</h2>
+          <p class="suggestions-note">
+            Reservations outside these windows are rejected when enabled.
+          </p>
+          <div class="schedule-list">
+            <div
+              v-for="day in days"
+              :key="day.value"
+              class="schedule-item"
+            >
+              <div class="day-label">{{ day.label }}</div>
+              <div class="time-inputs">
+                <input
+                  type="time"
+                  v-model="businessHoursConfig.days[day.value].open"
+                  :disabled="!businessHoursConfig.enabled || businessHoursConfig.days[day.value].closed"
+                  class="time-input"
+                />
+                <span class="time-separator">to</span>
+                <input
+                  type="time"
+                  v-model="businessHoursConfig.days[day.value].close"
+                  :disabled="!businessHoursConfig.enabled || businessHoursConfig.days[day.value].closed"
+                  class="time-input"
+                />
+              </div>
+              <div class="schedule-actions">
+                <VaSwitch
+                  v-model="businessHoursConfig.days[day.value].closed"
+                  :disabled="!businessHoursConfig.enabled"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="schedule-actions" style="margin-top: 12px; justify-content: flex-end; gap: 8px;">
+            <VaSwitch
+              v-model="businessHoursConfig.enabled"
+              label="Enforce business hours"
+            />
+            <button
+              class="btn btn-primary"
+              :disabled="businessHoursSaving"
+              @click="saveBusinessHours"
+            >
+              {{ businessHoursSaving ? "Saving..." : businessHoursSaved ? "Saved" : "Save Business Hours" }}
+            </button>
           </div>
         </div>
 

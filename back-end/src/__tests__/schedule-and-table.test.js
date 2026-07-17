@@ -106,3 +106,82 @@ describe("Tables — capacity enforcement", () => {
     });
   });
 });
+
+jest.mock("../DAOs/auth.dao");
+const authDAO = require("../DAOs/auth.dao");
+
+describe("Schedule — checkBusinessHours", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("passes when business_hours is disabled", async () => {
+    authDAO.getSettingValue.mockResolvedValue({ enabled: false, days: {} });
+
+    await expect(
+      scheduleService.checkBusinessHours("2099-01-05", "12:00", null)
+    ).resolves.toBeUndefined();
+  });
+
+  it("passes when day is not configured", async () => {
+    authDAO.getSettingValue.mockResolvedValue({
+      enabled: true,
+      days: { monday: { open: "09:00", close: "22:00", closed: false } },
+    });
+
+    await expect(
+      scheduleService.checkBusinessHours("2099-01-06", "12:00", null)
+    ).resolves.toBeUndefined();
+  });
+
+  it("throws when the day is closed", async () => {
+    authDAO.getSettingValue.mockResolvedValue({
+      enabled: true,
+      days: { monday: { open: "09:00", close: "22:00", closed: true } },
+    });
+
+    await expect(
+      scheduleService.checkBusinessHours("2099-01-05", "12:00", null)
+    ).rejects.toMatchObject({
+      status: 400,
+      message: expect.stringContaining("closed"),
+    });
+  });
+
+  it("throws when reservation is before open time", async () => {
+    authDAO.getSettingValue.mockResolvedValue({
+      enabled: true,
+      days: { monday: { open: "09:00", close: "22:00", closed: false } },
+    });
+
+    await expect(
+      scheduleService.checkBusinessHours("2099-01-05", "08:30", null)
+    ).rejects.toMatchObject({
+      status: 400,
+      message: expect.stringContaining("09:00"),
+    });
+  });
+
+  it("throws when reservation is after close time", async () => {
+    authDAO.getSettingValue.mockResolvedValue({
+      enabled: true,
+      days: { monday: { open: "09:00", close: "22:00", closed: false } },
+    });
+
+    await expect(
+      scheduleService.checkBusinessHours("2099-01-05", "22:30", null)
+    ).rejects.toMatchObject({
+      status: 400,
+      message: expect.stringContaining("22:00"),
+    });
+  });
+
+  it("passes when reservation is within open window", async () => {
+    authDAO.getSettingValue.mockResolvedValue({
+      enabled: true,
+      days: { monday: { open: "09:00", close: "22:00", closed: false } },
+    });
+
+    await expect(
+      scheduleService.checkBusinessHours("2099-01-05", "12:00", null)
+    ).resolves.toBeUndefined();
+  });
+});
