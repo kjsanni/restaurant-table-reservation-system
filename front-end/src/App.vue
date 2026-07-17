@@ -17,6 +17,7 @@ import {
   adminNavItems,
 } from "@/config/sidebarItems";
 import PageHeader from "@/components/PageHeader.vue";
+import TenantSwitcher from "@/components/TenantSwitcher.vue";
 
 defineOptions({
   components: { PageHeader },
@@ -242,6 +243,11 @@ onUnmounted(() => {
             </div>
             <div class="topbar-right">
               <template v-if="isAuthenticated">
+                <TenantSwitcher
+                  v-if="user?.permissions?.manage_tenants"
+                  :modelValue="authStore.currentTenant?.id || ''"
+                  @update:modelValue="authStore.setTenant"
+                />
                 <VaChip color="primary" size="small">{{
                   user?.username
                 }}</VaChip>

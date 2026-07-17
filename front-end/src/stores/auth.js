@@ -6,6 +6,7 @@ export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
   const isAuthenticated = computed(() => !!user.value);
   const isLoading = ref(true);
+  const currentTenant = ref(null);
 
   const login = async (email, password) => {
     const response = await authAPI.login(email, password);
@@ -25,6 +26,7 @@ export const useAuthStore = defineStore("auth", () => {
       // ignore logout errors
     }
     user.value = null;
+    currentTenant.value = null;
   };
 
   const getMe = async () => {
@@ -48,6 +50,14 @@ export const useAuthStore = defineStore("auth", () => {
     return response.data.setting;
   };
 
+  const setTenant = (tenant) => {
+    currentTenant.value = tenant;
+  };
+
+  const clearTenant = () => {
+    currentTenant.value = null;
+  };
+
   onMounted(async () => {
     try {
       await getMe();
@@ -61,6 +71,7 @@ export const useAuthStore = defineStore("auth", () => {
     user,
     isAuthenticated,
     isLoading,
+    currentTenant,
     login,
     register,
     logout,
@@ -68,5 +79,7 @@ export const useAuthStore = defineStore("auth", () => {
     fetchSettings,
     fetchRegistrationStatus,
     updateSettings,
+    setTenant,
+    clearTenant,
   };
 });
