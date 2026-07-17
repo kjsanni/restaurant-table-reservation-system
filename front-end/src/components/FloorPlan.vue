@@ -57,7 +57,7 @@ const onTouchMove = (event) => {
   const element = document.elementFromPoint(touch.clientX, touch.clientY);
   if (!element) return;
   const block = element.closest(".table-block");
-  if (!block) return;
+  if (!block || !block.parentNode) return;
   const idx = Array.from(block.parentNode.children).indexOf(block);
   const table = props.tables[idx];
   if (!table || !allowDrop(table)) return;
