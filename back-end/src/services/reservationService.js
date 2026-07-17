@@ -63,7 +63,7 @@ const registerReservation = async (reservationDAO, payload, tenantId) => {
 
   try {
     const scheduleDAO = require("../DAOs/schedule.dao");
-    const holidayDAO = require("../DAOs/holiday.dao");
+    const holidayDAO = require("../DAOs/schedule.dao");
     await scheduleService.checkScheduleAvailability(
       scheduleDAO,
       holidayDAO,
