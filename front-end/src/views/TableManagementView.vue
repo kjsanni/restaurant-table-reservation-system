@@ -700,8 +700,9 @@ const handleTablesUpdated = async () => {
 
           <form @submit.prevent="registerTable">
             <div class="field">
-              <label class="field-label">Table Name</label>
+              <label for="table-name" class="field-label">Table Name</label>
               <input
+                id="table-name"
                 v-model="newTable.name"
                 type="text"
                 placeholder="Enter table name..."
@@ -720,8 +721,9 @@ const handleTablesUpdated = async () => {
             </div>
 
             <div class="field">
-              <label class="field-label">Capacity</label>
+              <label for="table-capacity" class="field-label">Capacity</label>
               <input
+                id="table-capacity"
                 v-model="newTable.capacity"
                 type="number"
                 placeholder="Enter capacity..."

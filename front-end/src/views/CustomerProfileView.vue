@@ -243,8 +243,10 @@ const savePreferences = async () => {
                 </span>
               </div>
               <div class="tag-input-row">
+                <label for="tag-input" class="sr-only">Add tag</label>
                 <input
                   ref="tagInput"
+                  id="tag-input"
                   v-model="newTag"
                   type="text"
                   placeholder="Add tag..."
