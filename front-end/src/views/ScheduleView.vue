@@ -4,11 +4,15 @@ import { ref, onMounted, computed } from "vue";
 import { VaSwitch, VaButton, VaCard, VaCardContent, VaModal } from "vuestic-ui";
 import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
+import shiftAPI from "@/services/shiftAPI";
 import logger from "@/utils/logger";
 
 const schedules = ref([]);
 const holidays = ref([]);
 const reservations = ref([]);
+const shifts = ref([]);
+const staffList = ref([]);
+const showShifts = ref(true);
 const loading = ref(true);
 const showHolidayDialog = ref(false);
 const newHoliday = ref({
@@ -112,6 +116,72 @@ const toMinutes = (time) => {
   return h * 60 + m;
 };
 
+const shiftsByDay = computed(() => {
+  const map = {};
+  for (const s of shifts.value) {
+    const list = map[s.dayOfWeek] || [];
+    list.push({
+      ...s,
+      staffName: s.User?.username || "Staff",
+      startMin: toMinutes(s.startTime),
+      endMin: toMinutes(s.endTime),
+    });
+    map[s.dayOfWeek] = list;
+  }
+  return map;
+});
+
+const showShiftDialog = ref(false);
+const newShift = ref({ userId: null, dayOfWeek: "monday", startTime: "11:00", endTime: "22:00", role: "" });
+
+const openShiftDialog = async () => {
+  showShiftDialog.value = true;
+  newShift.value = { userId: null, dayOfWeek: "monday", startTime: "11:00", endTime: "22:00", role: "" };
+  if (staffList.value.length === 0) {
+    try {
+      const res = await shiftAPI.getStaff();
+      staffList.value = res?.data?.staff ?? [];
+    } catch (err) {
+      logger.error("Failed to load staff", { error: err.message });
+    }
+  }
+};
+
+const createShift = async () => {
+  if (!newShift.value.userId) return;
+  try {
+    await shiftAPI.createShift({
+      userId: newShift.value.userId,
+      dayOfWeek: newShift.value.dayOfWeek,
+      startTime: newShift.value.startTime + ":00",
+      endTime: newShift.value.endTime + ":00",
+      role: newShift.value.role || null,
+    });
+    showShiftDialog.value = false;
+    await loadShifts();
+  } catch (err) {
+    logger.error("Failed to create shift", { error: err.message });
+  }
+};
+
+const deleteShift = async (id) => {
+  try {
+    await shiftAPI.deleteShift(id);
+    await loadShifts();
+  } catch (err) {
+    logger.error("Failed to delete shift", { error: err.message });
+  }
+};
+
+const loadShifts = async () => {
+  try {
+    const res = await shiftAPI.getShifts();
+    shifts.value = res?.data?.shifts ?? [];
+  } catch (err) {
+    logger.error("Failed to load shifts", { error: err.message });
+  }
+};
+
 onMounted(async () => {
   await loadSchedule();
 });
@@ -138,6 +208,7 @@ const loadSchedule = async () => {
     holidays.value = holidaysRes.data.holidays;
     const reservationsRes = await reservationAPI.getReservations();
     reservations.value = reservationsRes.data.collection || reservationsRes.data || [];
+    await loadShifts();
   } catch (err) {
     logger.error("Failed to load schedule", { error: err.message });
   } finally {
@@ -273,7 +344,15 @@ const exportPDF = async () => {
         </div>
 
         <div class="section-card visual-calendar-card">
-          <h2 class="section-title">Visual Weekly Calendar</h2>
+          <div class="visual-calendar-header-row">
+            <h2 class="section-title">Visual Weekly Calendar</h2>
+            <div class="visual-calendar-tools">
+              <button class="btn btn-secondary" :class="{ active: showShifts }" @click="showShifts = !showShifts">
+                👥 Shifts
+              </button>
+              <button class="btn btn-primary" @click="openShiftDialog">+ Add Shift</button>
+            </div>
+          </div>
           <div class="visual-calendar">
             <div class="calendar-header">
               <div class="time-gutter"></div>
@@ -285,6 +364,19 @@ const exportPDF = async () => {
               >
                 {{ day.label }}
                 <span v-if="day.isClosed" class="closed-label">Closed</span>
+                <div
+                  v-if="showShifts && shiftsByDay[day.day]?.length"
+                  class="day-shift-strip"
+                >
+                  <span
+                    v-for="sh in shiftsByDay[day.day]"
+                    :key="sh.id"
+                    class="shift-pill"
+                    :title="sh.staffName + ' ' + sh.startTime + '–' + sh.endTime"
+                  >
+                    {{ sh.staffName }}
+                  </span>
+                </div>
               </div>
             </div>
             <div class="calendar-body">
@@ -309,6 +401,23 @@ const exportPDF = async () => {
                   </span>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="showShifts && shifts.length" class="section-card shifts-card">
+          <h2 class="section-title">Staff Shifts</h2>
+          <div class="shifts-grid">
+            <div v-for="day in weeklyGrid" :key="day.day" class="shift-day-col">
+              <h3 class="shift-day-title">{{ day.label }}</h3>
+              <p v-if="!shiftsByDay[day.day]?.length" class="shift-empty">No shifts</p>
+              <ul v-else class="shift-list">
+                <li v-for="sh in shiftsByDay[day.day]" :key="sh.id" class="shift-item">
+                  <span class="shift-name">{{ sh.staffName }}</span>
+                  <span class="shift-time">{{ sh.startTime }}–{{ sh.endTime }}</span>
+                  <button class="shift-remove" @click="deleteShift(sh.id)" title="Remove">×</button>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
@@ -396,6 +505,44 @@ const exportPDF = async () => {
               >Cancel</VaButton
             >
             <VaButton preset="primary" @click="createHoliday">Save</VaButton>
+          </template>
+        </VaCard>
+      </VaModal>
+
+      <VaModal v-model="showShiftDialog" title="Add Staff Shift" size="small">
+        <VaCard>
+          <VaCardContent>
+            <div class="field">
+              <label class="field-label">Staff</label>
+              <select v-model="newShift.userId" class="field-input">
+                <option :value="null" disabled>Choose staff…</option>
+                <option v-for="s in staffList" :key="s.id" :value="s.id">{{ s.username }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Day</label>
+              <select v-model="newShift.dayOfWeek" class="field-input">
+                <option v-for="d in days" :key="d.value" :value="d.value">{{ d.label }}</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Start</label>
+                <input type="time" v-model="newShift.startTime" class="field-input" />
+              </div>
+              <div class="field">
+                <label class="field-label">End</label>
+                <input type="time" v-model="newShift.endTime" class="field-input" />
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Role (optional)</label>
+              <input type="text" v-model="newShift.role" placeholder="e.g. Host" class="field-input" />
+            </div>
+          </VaCardContent>
+          <template #actions>
+            <VaButton preset="secondary" @click="showShiftDialog = false">Cancel</VaButton>
+            <VaButton preset="primary" :disabled="!newShift.userId" @click="createShift">Save</VaButton>
           </template>
         </VaCard>
       </VaModal>
@@ -787,6 +934,102 @@ const exportPDF = async () => {
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
+
+.visual-calendar-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.visual-calendar-tools {
+  display: flex;
+  gap: var(--space-2);
+}
+.day-shift-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: 4px;
+}
+.shift-pill {
+  font-size: 8px;
+  font-weight: 600;
+  background: var(--accent-soft, #dbeafe);
+  color: var(--accent, #1d4ed8);
+  border-radius: 6px;
+  padding: 1px 4px;
+  white-space: nowrap;
+}
+.shifts-card {
+  margin-top: var(--space-6);
+}
+.shifts-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-3);
+}
+.shift-day-col {
+  background: var(--neutral-50);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+.shift-day-title {
+  font-size: var(--text-sm);
+  text-transform: capitalize;
+  margin: 0 0 var(--space-2);
+  color: var(--ink-secondary);
+}
+.shift-empty {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  margin: 0;
+}
+.shift-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.shift-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+}
+.shift-name {
+  font-weight: 600;
+}
+.shift-time {
+  color: var(--ink-muted);
+}
+.shift-remove {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--rose-600, #e11d48);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+.field-row {
+  display: flex;
+  gap: var(--space-3);
+}
+.field-row .field {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .shifts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 
 @media (max-width: 768px) {
   .calendar-header,
