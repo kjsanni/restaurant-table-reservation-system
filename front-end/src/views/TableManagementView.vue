@@ -95,6 +95,94 @@ const toggleLayout = () => {
   editLayout.value = !editLayout.value;
 };
 
+const selectedTableIds = ref([]);
+const selectMode = ref(false);
+const bulkBarVisible = computed(
+  () => selectMode.value && selectedTableIds.value.length > 0
+);
+
+const toggleSelectMode = () => {
+  selectMode.value = !selectMode.value;
+  if (!selectMode.value) selectedTableIds.value = [];
+};
+
+const isSelected = (id) => selectedTableIds.value.includes(id);
+
+const toggleSelect = (id) => {
+  if (isSelected(id)) {
+    selectedTableIds.value = selectedTableIds.value.filter((x) => x !== id);
+  } else {
+    selectedTableIds.value = [...selectedTableIds.value, id];
+  }
+};
+
+const toggleSelectAll = () => {
+  if (selectedTableIds.value.length === tables.value.length) {
+    selectedTableIds.value = [];
+  } else {
+    selectedTableIds.value = tables.value.map((t) => t.id);
+  }
+};
+
+const bulkBusy = ref(false);
+
+const runBulk = async (fn, successMsg) => {
+  bulkBusy.value = true;
+  try {
+    await fn(selectedTableIds.value.slice());
+    showBulkSuccess.value = successMsg;
+    selectedTableIds.value = [];
+    await loadData();
+  } catch (err) {
+    showErrorModal.value = true;
+    errorMessage.value = getApiErrorMessage(err);
+  } finally {
+    bulkBusy.value = false;
+    setTimeout(() => (showBulkSuccess.value = ""), 2500);
+  }
+};
+
+const bulkBlock = () =>
+  runBulk(
+    (ids) => tableAPI.bulkUpdate(ids, { isBlocked: true }),
+    "Tables blocked"
+  );
+const bulkUnblock = () =>
+  runBulk(
+    (ids) => tableAPI.bulkUpdate(ids, { isBlocked: false }),
+    "Tables unblocked"
+  );
+const bulkDeleteSelected = () => {
+  if (!confirm("Delete selected tables? Occupied tables will be skipped."))
+    return;
+  runBulk((ids) => tableAPI.bulkDelete(ids), "Tables deleted");
+};
+const bulkAssignSelected = () => {
+  if (!bulkAssignUserId.value) return;
+  runBulk(
+    (ids) => tableAPI.bulkAssign(ids, bulkAssignUserId.value),
+    "Staff assigned to tables"
+  );
+};
+
+const bulkAssignUserId = ref(null);
+const showBulkSuccess = ref("");
+const bulkStaffList = ref([]);
+
+const openBulkAssign = async () => {
+  showBulkAssignDialog.value = true;
+  bulkAssignUserId.value = null;
+  if (bulkStaffList.value.length === 0) {
+    try {
+      const res = await tableAPI.getWaitingStaff();
+      bulkStaffList.value = res?.data?.data ?? res?.data ?? [];
+    } catch (err) {
+      logger.error("Failed to load staff for bulk assign", { error: err.message });
+    }
+  }
+};
+const showBulkAssignDialog = ref(false);
+
 const MAX_TABLES_PER_STAFF = 5;
 
 const showAddDialog = ref(false);
@@ -393,7 +481,43 @@ const getQrCodeUrl = (table) => {
           <button class="btn btn-primary" @click="openAddDialog">
             + Add Table
           </button>
+          <button
+            v-if="canManageTables"
+            class="btn btn-secondary"
+            :class="{ active: selectMode }"
+            @click="toggleSelectMode"
+          >
+            {{ selectMode ? "Cancel Select" : "☑ Select" }}
+          </button>
         </div>
+
+        <div v-if="selectMode" class="bulk-bar">
+          <label class="select-all">
+            <input
+              type="checkbox"
+              :checked="selectedTableIds.length === tables.length && tables.length > 0"
+              @change="toggleSelectAll"
+            />
+            Select all ({{ selectedTableIds.length }}/{{ tables.length }})
+          </label>
+          <div class="bulk-actions">
+            <button class="btn btn-secondary" :disabled="bulkBusy" @click="bulkBlock">
+              Block
+            </button>
+            <button class="btn btn-secondary" :disabled="bulkBusy" @click="bulkUnblock">
+              Unblock
+            </button>
+            <button class="btn btn-secondary" :disabled="bulkBusy" @click="openBulkAssign">
+              Assign Staff
+            </button>
+            <button class="btn btn-danger" :disabled="bulkBusy" @click="bulkDeleteSelected">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div v-if="showBulkSuccess" class="bulk-success">{{ showBulkSuccess }}</div>
+
         <div :class="editLayout ? 'table-grid layout-canvas' : 'table-grid'">
           <div
             v-for="table in tables"
@@ -417,6 +541,14 @@ const getQrCodeUrl = (table) => {
                   <h3 class="table-name">{{ table.name }}</h3>
                   <span class="table-id">ID: {{ table.id }}</span>
                 </div>
+              </div>
+              <div class="table-top-right" v-if="selectMode">
+                <input
+                  type="checkbox"
+                  class="table-select"
+                  :checked="isSelected(table.id)"
+                  @click.stop="toggleSelect(table.id)"
+                />
               </div>
               <span
                 class="status-chip"
@@ -822,6 +954,40 @@ const getQrCodeUrl = (table) => {
             </button>
             <button class="btn btn-secondary" @click="closeQrModal">
               Close
+            </button>
+          </div>
+        </div>
+      </template>
+    </PopupBox>
+
+    <PopupBox
+      :is-open="showBulkAssignDialog"
+      header-text="Assign Staff to Selected Tables"
+      :is-closable="true"
+      @close-modal="showBulkAssignDialog = false"
+    >
+      <template #popup-content>
+        <div class="bulk-assign-content">
+          <label class="field-label">Select staff member</label>
+          <select v-model="bulkAssignUserId" class="field-input">
+            <option :value="null" disabled>Choose staff…</option>
+            <option v-for="s in bulkStaffList" :key="s.id" :value="s.id">
+              {{ s.username }}
+            </option>
+          </select>
+          <div class="bulk-assign-actions">
+            <button
+              class="btn btn-primary"
+              :disabled="!bulkAssignUserId"
+              @click="bulkAssignSelected"
+            >
+              Assign
+            </button>
+            <button
+              class="btn btn-secondary"
+              @click="showBulkAssignDialog = false"
+            >
+              Cancel
             </button>
           </div>
         </div>
@@ -1682,5 +1848,62 @@ const getQrCodeUrl = (table) => {
     margin-top: var(--space-10);
     margin-bottom: var(--space-10);
   }
+}
+
+.bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.select-all {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.bulk-success {
+  padding: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+  color: var(--success, #16a34a);
+  background: var(--success-bg, #dcfce7);
+  border: 1px solid var(--success, #16a34a);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
+.table-top-right {
+  display: flex;
+  align-items: center;
+}
+.table-select {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+.bulk-assign-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.field-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.bulk-assign-actions {
+  display: flex;
+  gap: var(--space-2);
 }
 </style>

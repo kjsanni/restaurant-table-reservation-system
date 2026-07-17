@@ -278,6 +278,46 @@ const deleteTable = async (tableId) => {
   return { id: tableId };
 };
 
+const bulkUpdate = async (ids, payload) => {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    throw { status: 400, message: "No table IDs provided!" };
+  }
+  const result = await Table.update(payload, { where: { id: ids } });
+  return { count: result[0] };
+};
+
+const bulkDelete = async (ids) => {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    throw { status: 400, message: "No table IDs provided!" };
+  }
+  const occupied = await Table.findAll({
+    where: { id: ids, [db.Sequelize.Op.or]: [{ isOccupied: true }, { reservationId: { [db.Sequelize.Op.not]: null } }] },
+  });
+  if (occupied.length > 0) {
+    throw { status: 400, message: "Cannot delete occupied tables!" };
+  }
+  const result = await Table.destroy({ where: { id: ids } });
+  return { count: result };
+};
+
+const bulkAssignStaff = async (ids, userId) => {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    throw { status: 400, message: "No table IDs provided!" };
+  }
+  const tables = await Table.findAll({ where: { id: ids } });
+  const user = await User.findByPk(userId);
+  if (!user) {
+    throw { status: 404, message: "User not found!" };
+  }
+  for (const table of tables) {
+    const existing = await table.getUsers();
+    if (!existing.some((s) => s.id === userId)) {
+      await table.addUser(user);
+    }
+  }
+  return { count: tables.length };
+};
+
 module.exports = {
   findAllTables,
   createTable,
@@ -290,4 +330,7 @@ module.exports = {
   unassignStaffFromTable,
   updateTablePosition,
   deleteTable,
+  bulkUpdate,
+  bulkDelete,
+  bulkAssignStaff,
 };

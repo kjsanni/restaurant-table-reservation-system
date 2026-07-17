@@ -58,6 +58,18 @@ const deleteTable = async (tableDAO, tableId) => {
   return await tableDAO.deleteTable(tableId);
 };
 
+const bulkUpdate = async (tableDAO, ids, payload) => {
+  return await tableDAO.bulkUpdate(ids, payload);
+};
+
+const bulkDelete = async (tableDAO, ids) => {
+  return await tableDAO.bulkDelete(ids);
+};
+
+const bulkAssignStaff = async (tableDAO, ids, userId) => {
+  return await tableDAO.bulkAssignStaff(ids, userId);
+};
+
 module.exports = {
   getAllTables,
   registerTable,
@@ -70,4 +82,7 @@ module.exports = {
   unmergeTable,
   updatePosition,
   deleteTable,
+  bulkUpdate,
+  bulkDelete,
+  bulkAssignStaff,
 };

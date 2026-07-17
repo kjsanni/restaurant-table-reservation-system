@@ -43,6 +43,15 @@ class TableAPI {
   deleteTable(tableId) {
     return API.delete("/tables/" + tableId + "/delete");
   }
+  bulkUpdate(ids, payload) {
+    return API.patch("/tables/bulk/update", { ids, ...payload });
+  }
+  bulkDelete(ids) {
+    return API.delete("/tables/bulk/delete", { ids });
+  }
+  bulkAssign(ids, userId) {
+    return API.post("/tables/bulk/assign", { ids, userId });
+  }
 }
 
 export default new TableAPI();

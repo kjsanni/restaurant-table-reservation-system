@@ -172,6 +172,39 @@ const deleteHandler = async (req, res) => {
   });
 };
 
+const bulkUpdateHandler = async (req, res) => {
+  const { ids, isBlocked, maintenanceNotes } = req.body;
+  const payload = {};
+  if (typeof isBlocked === "boolean") payload.isBlocked = isBlocked;
+  if (maintenanceNotes !== undefined) payload.maintenanceNotes = maintenanceNotes;
+  const result = await tableService.bulkUpdate(tableDAO, ids, payload);
+  return res.status(200).json({
+    success: true,
+    message: `Updated ${result.count} tables`,
+    count: result.count,
+  });
+};
+
+const bulkDeleteHandler = async (req, res) => {
+  const { ids } = req.body;
+  const result = await tableService.bulkDelete(tableDAO, ids);
+  return res.status(200).json({
+    success: true,
+    message: `Deleted ${result.count} tables`,
+    count: result.count,
+  });
+};
+
+const bulkAssignHandler = async (req, res) => {
+  const { ids, userId } = req.body;
+  const result = await tableService.bulkAssignStaff(tableDAO, ids, userId);
+  return res.status(200).json({
+    success: true,
+    message: `Assigned staff to ${result.count} tables`,
+    count: result.count,
+  });
+};
+
 module.exports = {
   getAllHandler,
   registerHandler,
@@ -186,4 +219,7 @@ module.exports = {
   calculatePriceHandler,
   updatePositionHandler,
   deleteHandler,
+  bulkUpdateHandler,
+  bulkDeleteHandler,
+  bulkAssignHandler,
 };

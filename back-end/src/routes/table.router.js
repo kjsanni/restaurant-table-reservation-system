@@ -67,4 +67,19 @@ router
   .delete(...writeRoute("manage_tables", tableController.deleteHandler))
   .all(httpMethodError);
 
+router
+  .route("/bulk/update")
+  .patch(...writeRoute("manage_tables", tableController.bulkUpdateHandler))
+  .all(httpMethodError);
+
+router
+  .route("/bulk/delete")
+  .delete(...writeRoute("manage_tables", tableController.bulkDeleteHandler))
+  .all(httpMethodError);
+
+router
+  .route("/bulk/assign")
+  .post(...writeRoute("manage_tables", tableController.bulkAssignHandler))
+  .all(httpMethodError);
+
 module.exports = router;
