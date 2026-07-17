@@ -99,6 +99,7 @@ import { ref, computed, onMounted } from "vue";
 import reservationAPI from "@/services/reservationAPI";
 import PageHeader from "@/components/PageHeader.vue";
 import logger from "@/utils/logger";
+import dateNavigator from "@/utils/dateNavigator";
 
 const loading = ref(true);
 const errorMsg = ref("");
@@ -151,10 +152,10 @@ const loadNoShows = async () => {
 
 onMounted(() => {
   const now = new Date();
-  toDate.value = now.toISOString().slice(0, 10);
+  toDate.value = dateNavigator.asDateString(now);
   const past = new Date(now);
   past.setDate(past.getDate() - 30);
-  fromDate.value = past.toISOString().slice(0, 10);
+  fromDate.value = dateNavigator.asDateString(past);
   loadNoShows();
 });
 </script>

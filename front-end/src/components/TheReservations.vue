@@ -25,6 +25,7 @@ import { getApiErrorMessage } from "@/utils/apiError";
 import SearchIcon from "~icons/ant-design/search-outlined";
 import ClearIcon from "~icons/fluent/dismiss-16-filled";
 import WaitlistIcon from "~icons/fluent/clock-16-regular";
+import dateNavigator from "@/utils/dateNavigator";
 
 const schedules = ref([]);
 const holidays = ref([]);
@@ -137,7 +138,7 @@ const exportCSV = () => {
 const duplicateReservation = async (reservation) => {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const resDate = tomorrow.toISOString().split("T")[0];
+  const resDate = dateNavigator.asDateString(tomorrow);
   bulkLoading.value = true;
   bulkError.value = "";
   try {
@@ -376,7 +377,7 @@ const buildCalendarDays = (year, month) => {
 
   for (let day = 1; day <= lastDay.getDate(); day++) {
     const date = new Date(year, month, day);
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = dateNavigator.asDateString(date);
     const dayOfWeek = date
       .toLocaleDateString("en-US", { weekday: "long" })
       .toLowerCase();
@@ -606,7 +607,7 @@ const currDate = computed(() => {
 });
 
 const filterReservations = computed(() => {
-  const dateStr = currentMonth.value.toISOString().split("T")[0];
+  const dateStr = dateNavigator.asDateString(currentMonth.value);
   const prefix = dateStr.slice(0, 7);
   let filtered = reservations.value.filter(
     (r) => r.resDate && r.resDate.startsWith(prefix)
@@ -664,7 +665,7 @@ const filteredCount = computed(() => filterReservations.value.length);
 const totalCount = computed(() => reservations.value.length);
 
 const todayCount = computed(() => {
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = dateNavigator.asDateString(new Date());
   return reservations.value.filter((r) => r.resDate === todayStr).length;
 });
 
@@ -673,7 +674,7 @@ const statusCounts = computed(() => {
   reservations.value.forEach((r) => {
     if (
       r.resDate &&
-      r.resDate.startsWith(currentMonth.value.toISOString().slice(0, 7))
+      r.resDate.startsWith(dateNavigator.asDateString(currentMonth.value).slice(0, 7))
     ) {
       counts[r.resStatus] = (counts[r.resStatus] || 0) + 1;
     }

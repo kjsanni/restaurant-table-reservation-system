@@ -12,7 +12,7 @@ const csvCell = (value) => {
   return str;
 };
 
-const getReservationReport = async (filters = {}, tenantId) => {
+const getReservationReport = async (filters = {}, tenantId, pagination = {}) => {
   const where = {};
   if (filters.from) where.resDate = { ...where.resDate, [Op.gte]: filters.from };
   if (filters.to) where.resDate = { ...where.resDate, [Op.lte]: filters.to };
@@ -25,16 +25,34 @@ const getReservationReport = async (filters = {}, tenantId) => {
 
   const paymentBreakdown = await paymentService.getRevenueStats(filters.from, filters.to, tenantId);
 
+  let reservations = totalReservations;
+  let total = totalReservations.length;
+  let page = undefined;
+  let pageSize = undefined;
+  let totalPages = undefined;
+
+  if (pagination.limit) {
+    pageSize = parseInt(pagination.limit, 10);
+    page = pagination.offset ? Math.floor(parseInt(pagination.offset, 10) / pageSize) + 1 : 1;
+    const start = (page - 1) * pageSize;
+    reservations = totalReservations.slice(start, start + pageSize);
+    total = totalReservations.length;
+    totalPages = Math.ceil(total / pageSize);
+  }
+
   return {
-    totalReservations: totalReservations.length,
-    reservations: totalReservations,
+    totalReservations: total,
+    reservations,
     stats,
     paymentBreakdown,
     filters,
+    page,
+    pageSize,
+    totalPages,
   };
 };
 
-const getTurnTimeReport = async (filters = {}, tenantId) => {
+const getTurnTimeReport = async (filters = {}, tenantId, pagination = {}) => {
   const where = {};
   if (filters.from) where.resDate = { ...where.resDate, [Op.gte]: filters.from };
   if (filters.to) where.resDate = { ...where.resDate, [Op.lte]: filters.to };
@@ -78,7 +96,20 @@ const getTurnTimeReport = async (filters = {}, tenantId) => {
     };
   });
 
-  return { total, avg, turnTimes, tableSummaries };
+  let page = undefined;
+  let pageSize = undefined;
+  let totalPages = undefined;
+  let paginatedTurnTimes = turnTimes;
+
+  if (pagination.limit) {
+    pageSize = parseInt(pagination.limit, 10);
+    page = pagination.offset ? Math.floor(parseInt(pagination.offset, 10) / pageSize) + 1 : 1;
+    const start = (page - 1) * pageSize;
+    paginatedTurnTimes = turnTimes.slice(start, start + pageSize);
+    totalPages = Math.ceil(total / pageSize);
+  }
+
+  return { total, avg, turnTimes: paginatedTurnTimes, tableSummaries, page, pageSize, totalPages };
 };
 
 const exportCSV = async (filters = {}, tenantId) => {

@@ -343,8 +343,8 @@ const getStatusHistoryHandler = async (req, res) => {
 
 const mergeTablesHandler = async (req, res) => {
   const { reservationId } = req.params;
-  const { tableIds } = req.body;
-  const reservation = await reservationService.mergeReservationTables(reservationDAO, reservationId, tableIds, req.tenant?.id);
+  const { tableIds, primaryTableId } = req.body;
+  const reservation = await reservationService.mergeReservationTables(reservationDAO, reservationId, tableIds, primaryTableId, req.tenant?.id);
   if (!reservation) {
     return res.status(404).json({ success: false, message: "Reservation not found" });
   }

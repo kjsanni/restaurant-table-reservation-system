@@ -7,6 +7,7 @@ import reservationAPI from "@/services/reservationAPI";
 import shiftAPI from "@/services/shiftAPI";
 import timeOffAPI from "@/services/timeOffAPI";
 import logger from "@/utils/logger";
+import dateNavigator from "@/utils/dateNavigator";
 
 const schedules = ref([]);
 const holidays = ref([]);
@@ -265,7 +266,7 @@ const affectedDates = computed(() => {
     const start = new Date(t.startDate);
     const end = new Date(t.endDate);
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      set.add(d.toISOString().slice(0, 10));
+      set.add(dateNavigator.asDateString(d));
     }
   }
   return set;

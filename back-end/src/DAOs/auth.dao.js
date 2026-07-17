@@ -208,36 +208,36 @@ const checkLoginLockout = async (email, ipAddress, tenantId) => {
   const LoginAttempt = db.loginAttempt;
   if (!LoginAttempt) return { locked: false, remainingSeconds: 0 };
 
-  const cutoff = new Date(Date.now() - 15 * 60 * 1000);
   const { Op } = db.Sequelize;
 
-  const emailAttempts = await LoginAttempt.count({
-    where: withTenant({ email, attemptedAt: { [Op.gte]: cutoff } }, tenantId),
+  const recentAttempt = await LoginAttempt.findOne({
+    where: withTenant(
+      {
+        [Op.or]: [{ email }, { ipAddress }],
+      },
+      tenantId
+    ),
+    order: [["attemptedAt", "DESC"]],
   });
 
-  const ipAttempts = await LoginAttempt.count({
-    where: withTenant({ ipAddress, attemptedAt: { [Op.gte]: cutoff } }, tenantId),
-  });
+  if (!recentAttempt) {
+    return { locked: false, remainingSeconds: 0 };
+  }
 
-  const maxAttempts = 5;
-  if (emailAttempts >= maxAttempts || ipAttempts >= maxAttempts) {
-    const mostRecent = await LoginAttempt.findOne({
+  const lockoutEnd = new Date(recentAttempt.attemptedAt.getTime() + 15 * 60 * 1000);
+  const remainingMs = lockoutEnd - Date.now();
+  if (remainingMs > 0) {
+    const recentCount = await LoginAttempt.count({
       where: withTenant(
         {
           [Op.or]: [{ email }, { ipAddress }],
-          attemptedAt: { [Op.gte]: cutoff },
+          attemptedAt: { [Op.gte]: new Date(recentAttempt.attemptedAt.getTime() - 15 * 60 * 1000) },
         },
         tenantId
       ),
-      order: [["attemptedAt", "DESC"]],
     });
-
-    if (mostRecent) {
-      const lockoutEnd = new Date(mostRecent.attemptedAt.getTime() + 15 * 60 * 1000);
-      const remainingMs = lockoutEnd - Date.now();
-      if (remainingMs > 0) {
-        return { locked: true, remainingSeconds: Math.ceil(remainingMs / 1000) };
-      }
+    if (recentCount >= 5) {
+      return { locked: true, remainingSeconds: Math.ceil(remainingMs / 1000) };
     }
   }
 
@@ -247,15 +247,26 @@ const checkLoginLockout = async (email, ipAddress, tenantId) => {
 const clearLoginAttempts = async (email, ipAddress, tenantId) => {
   const LoginAttempt = db.loginAttempt;
   if (!LoginAttempt) return null;
-  const cutoff = new Date(Date.now() - 15 * 60 * 1000);
   const { Op } = db.Sequelize;
+
+  const recentAttempt = await LoginAttempt.findOne({
+    where: withTenant(
+      {
+        [Op.or]: [{ email }, { ipAddress }],
+      },
+      tenantId
+    ),
+    order: [["attemptedAt", "DESC"]],
+  });
+
+  if (!recentAttempt) return 0;
+
+  const cutoff = new Date(recentAttempt.attemptedAt.getTime() - 15 * 60 * 1000);
   return await LoginAttempt.destroy({
     where: withTenant(
       {
-        [Op.or]: [
-          { email, attemptedAt: { [Op.gte]: cutoff } },
-          { ipAddress, attemptedAt: { [Op.gte]: cutoff } },
-        ],
+        [Op.or]: [{ email }, { ipAddress }],
+        attemptedAt: { [Op.lte]: cutoff },
       },
       tenantId
     ),

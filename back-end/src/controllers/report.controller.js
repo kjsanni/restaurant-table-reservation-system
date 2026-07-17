@@ -8,7 +8,14 @@ const getReservationReportHandler = async (req, res) => {
     paymentStatus: req.query.paymentStatus,
     resStatus: req.query.resStatus,
   };
-  const report = await reportService.getReservationReport(filters, req.tenant?.id);
+  const page = req.query.page ? parseInt(req.query.page, 10) : undefined;
+  const pageSize = req.query.pageSize ? parseInt(req.query.pageSize, 10) : undefined;
+  const pagination = {};
+  if (page && pageSize) {
+    pagination.limit = pageSize;
+    pagination.offset = (page - 1) * pageSize;
+  }
+  const report = await reportService.getReservationReport(filters, req.tenant?.id, pagination);
   return res.status(200).json({ success: true, report });
 };
 
@@ -71,7 +78,14 @@ const getTurnTimeHandler = async (req, res) => {
     to: req.query.to,
     tableIds: req.query.tableIds,
   };
-  const report = await reportService.getTurnTimeReport(filters, req.tenant?.id);
+  const page = req.query.page ? parseInt(req.query.page, 10) : undefined;
+  const pageSize = req.query.pageSize ? parseInt(req.query.pageSize, 10) : undefined;
+  const pagination = {};
+  if (page && pageSize) {
+    pagination.limit = pageSize;
+    pagination.offset = (page - 1) * pageSize;
+  }
+  const report = await reportService.getTurnTimeReport(filters, req.tenant?.id, pagination);
   return res.status(200).json({ success: true, report });
 };
 

@@ -152,6 +152,10 @@ const chooseTable = async (
     reservation.resStatus !== "cancelled"
   ) {
     reservation = await reservationDAO.setReservationStatus(reservation, "missed", tenantId);
+    throw {
+      status: 400,
+      message: "Cannot seat a past reservation.",
+    };
   }
 
   if (compareResDateToCurrDate(reservation.resDate, currDateStr) === 0) {
@@ -164,6 +168,10 @@ const chooseTable = async (
       reservation.resStatus !== "cancelled"
     ) {
       reservation = await reservationDAO.setReservationStatus(reservation, "missed", tenantId);
+      throw {
+        status: 400,
+        message: "Reservation is past the grace period and has been marked as missed.",
+      };
     }
   }
   if (reservation.resStatus === "seated") {
@@ -220,12 +228,12 @@ const getStatusHistory = async (reservationDAO, reservationId, tenantId) => {
   return await reservationDAO.getStatusHistory(reservationId, tenantId);
 };
 
-const mergeReservationTables = async (reservationDAO, reservationId, tableIds, tenantId) => {
+const mergeReservationTables = async (reservationDAO, reservationId, tableIds, primaryTableId, tenantId) => {
   const uniqueTableIds = Array.from(new Set((tableIds || []).map((id) => parseInt(id, 10)))).filter(Boolean);
   if (!uniqueTableIds.length) {
     throw { status: 400, message: "Provide at least one table to merge." };
   }
-  return await reservationDAO.mergeReservationTables(reservationId, uniqueTableIds, tenantId);
+  return await reservationDAO.mergeReservationTables(reservationId, uniqueTableIds, primaryTableId, tenantId);
 };
 
 const unmergeReservationTables = async (reservationDAO, reservationId, tenantId) => {

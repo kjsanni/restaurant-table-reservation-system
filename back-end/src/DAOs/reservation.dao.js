@@ -394,14 +394,34 @@ const getStatusHistory = async (reservationId, tenantId) => {
   return await statusHistoryDAO.getHistoryByReservation(reservationId, tenantId);
 };
 
-const mergeReservationTables = async (reservationId, tableIds, tenantId) => {
+const mergeReservationTables = async (reservationId, tableIds, primaryTableId, tenantId) => {
   const reservation = await Reservation.findOne({
     where: withTenant({ id: reservationId }, tenantId),
   });
   if (!reservation) return null;
+
   const uniqueIds = Array.from(new Set((tableIds || []).map((id) => parseInt(id, 10)))).filter(Boolean);
-  await reservation.update({ mergedFromTableIds: uniqueIds });
-  return reservation;
+  if (!uniqueIds.length) return reservation;
+
+  const primaryId = primaryTableId ? parseInt(primaryTableId, 10) : uniqueIds[0];
+  const childIds = uniqueIds.filter((id) => id !== primaryId);
+
+  return await db.sequelize.transaction(async (t) => {
+    if (childIds.length > 0) {
+      await Table.update(
+        { parentTableId: primaryId },
+        { where: withTenant({ id: childIds }, tenantId), transaction: t }
+      );
+    }
+
+    await Table.update(
+      { linkedTableIds: childIds.length > 0 ? childIds : null },
+      { where: withTenant({ id: primaryId }, tenantId), transaction: t }
+    );
+
+    await reservation.update({ mergedFromTableIds: uniqueIds }, { transaction: t });
+    return reservation;
+  });
 };
 
 const unmergeReservationTables = async (reservationId, tenantId) => {

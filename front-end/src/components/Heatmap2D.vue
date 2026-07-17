@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { VaModal } from "vuestic-ui";
 import reservationAPI from "@/services/reservationAPI";
+import dateNavigator from "@/utils/dateNavigator";
 
 const props = defineProps({
   mode: {
@@ -26,11 +27,11 @@ const internalTo = ref(props.to || getDefaultTo());
 function getDefaultFrom() {
   const d = new Date();
   d.setDate(d.getDate() - 30);
-  return d.toISOString().split("T")[0];
+  return dateNavigator.asDateString(d);
 }
 
 function getDefaultTo() {
-  return new Date().toISOString().split("T")[0];
+  return dateNavigator.asDateString(new Date());
 }
 
 const maxCount = computed(() => {

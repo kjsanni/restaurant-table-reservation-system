@@ -97,8 +97,15 @@ const getHistoryHandler = async (req, res) => {
     from: req.query.from,
     to: req.query.to,
   };
-  const history = await paymentService.getPaymentHistory(filters, req.tenant?.id);
-  return res.status(200).json({ success: true, history });
+  const page = req.query.page ? parseInt(req.query.page, 10) : undefined;
+  const pageSize = req.query.pageSize ? parseInt(req.query.pageSize, 10) : undefined;
+  const pagination = {};
+  if (page && pageSize) {
+    pagination.limit = pageSize;
+    pagination.offset = (page - 1) * pageSize;
+  }
+  const result = await paymentService.getPaymentHistory(filters, req.tenant?.id, pagination);
+  return res.status(200).json({ success: true, ...result });
 };
 
 const getRevenueStatsHandler = async (req, res) => {

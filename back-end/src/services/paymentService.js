@@ -118,8 +118,8 @@ const refundPayment = async (reservationId, paymentId, data, tenantId) => {
   return { refund, skipped: false };
 };
 
-const getPaymentHistory = async (filters = {}, tenantId) => {
-  return await paymentDAO.getPaymentHistory(filters, tenantId);
+const getPaymentHistory = async (filters = {}, tenantId, pagination = {}) => {
+  return await paymentDAO.getPaymentHistory(filters, tenantId, pagination);
 };
 
 const getRevenueStats = async (from, to, tenantId) => {

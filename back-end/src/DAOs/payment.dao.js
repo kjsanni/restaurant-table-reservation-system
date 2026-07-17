@@ -52,14 +52,17 @@ const remove = async (reservationId, id, tenantId) => {
   return true;
 };
 
-const getPaymentHistory = async (filters = {}, tenantId) => {
+const getPaymentHistory = async (filters = {}, tenantId, pagination = {}) => {
   const where = withTenant({}, tenantId);
   if (filters.reservationId) where.reservationId = filters.reservationId;
   if (filters.method) where.method = filters.method;
   if (filters.from) where.paidAt = { ...where.paidAt, [Op.gte]: filters.from };
   if (filters.to) where.paidAt = { ...where.paidAt, [Op.lte]: filters.to };
 
-  return await Payment.findAll({
+  const limit = pagination.limit ? parseInt(pagination.limit, 10) : undefined;
+  const offset = pagination.offset ? parseInt(pagination.offset, 10) : undefined;
+
+  const { rows, count } = await Payment.findAndCountAll({
     where,
     include: [
       {
@@ -68,7 +71,17 @@ const getPaymentHistory = async (filters = {}, tenantId) => {
       },
     ],
     order: [["paidAt", "DESC"]],
+    limit,
+    offset,
   });
+
+  return {
+    collection: rows,
+    total: count,
+    page: limit && offset ? Math.floor(offset / limit) + 1 : undefined,
+    pageSize: limit,
+    totalPages: limit ? Math.ceil(count / limit) : undefined,
+  };
 };
 
 const getRevenueStats = async (from, to, tenantId) => {
