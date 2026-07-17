@@ -24,6 +24,20 @@ const newTableName = ref("");
 const newTableCapacity = ref(4);
 const addError = ref("");
 
+const SECTIONS = ["main", "bar", "patio", "terrace", "private"];
+const sectionFilter = ref("all");
+const displayTables = computed(() => {
+  if (sectionFilter.value === "all") return tables.value;
+  return tables.value.filter((t) => (t.section || "main") === sectionFilter.value);
+});
+const sectionCounts = computed(() => {
+  const counts = { all: tables.value.length };
+  for (const s of SECTIONS) {
+    counts[s] = tables.value.filter((t) => (t.section || "main") === s).length;
+  }
+  return counts;
+});
+
 const pendingReservations = computed(() => {
   return (reservations.value || []).filter(
     (r) => r.resStatus === "pending" && !r.tableId
@@ -406,9 +420,27 @@ onMounted(loadData);
               + Add Table
             </button>
           </div>
-          <div class="plan-grid">
-            <div
-              v-for="table in tables"
+          <div class="section-filters">
+            <button
+              class="section-chip"
+              :class="{ active: sectionFilter === 'all' }"
+              @click="sectionFilter = 'all'"
+            >
+              All <span class="chip-count">{{ sectionCounts.all }}</span>
+            </button>
+            <button
+              v-for="s in SECTIONS"
+              :key="s"
+              class="section-chip"
+              :class="{ active: sectionFilter === s }"
+              @click="sectionFilter = s"
+            >
+              {{ s }} <span class="chip-count">{{ sectionCounts[s] }}</span>
+            </button>
+          </div>
+            <div class="plan-grid">
+              <div
+                v-for="table in displayTables"
               :key="table.id"
               :class="[
                 'table-block',
@@ -437,6 +469,7 @@ onMounted(loadData);
                       }"
                     ></span>
                   </div>
+                  <span class="zone-badge">{{ table.section || "main" }}</span>
                   <div class="table-top-right">
                     <span class="capacity">🪑 {{ table.capacity }}</span>
                     <button
@@ -976,6 +1009,44 @@ onMounted(loadData);
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.section-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.section-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+  cursor: pointer;
+  color: #334155;
+}
+.section-chip.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+.chip-count {
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+.zone-badge {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 4px;
+  padding: 1px 5px;
 }
 
 .table-top-right {
