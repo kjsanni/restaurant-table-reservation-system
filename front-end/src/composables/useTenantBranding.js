@@ -14,6 +14,19 @@ const BRAND_CSS_VARS = [
   "brand-900",
 ];
 
+const ACCENT_CSS_VARS = [
+  "accent",
+  "accent-50",
+  "accent-100",
+  "accent-200",
+  "accent-300",
+  "accent-400",
+  "accent-500",
+  "accent-600",
+  "accent-soft",
+  "accent-text",
+];
+
 const applyBranding = (settings = {}) => {
   const root = document.documentElement;
   const branding = settings.branding || {};
@@ -23,6 +36,12 @@ const applyBranding = (settings = {}) => {
     root.style.setProperty("--brand-400", branding.primaryColor);
     root.style.setProperty("--brand-600", branding.primaryColor);
     root.style.setProperty("--brand-700", branding.primaryColor);
+    root.style.setProperty("--accent", branding.primaryColor);
+    root.style.setProperty("--accent-500", branding.primaryColor);
+    root.style.setProperty("--accent-400", branding.primaryColor);
+    root.style.setProperty("--accent-600", branding.primaryColor);
+    root.style.setProperty("--accent-soft", branding.primaryColor);
+    root.style.setProperty("--accent-text", branding.primaryColor);
   }
 
   if (branding.secondaryColor) {
@@ -52,6 +71,7 @@ const applyBranding = (settings = {}) => {
 const clearBranding = () => {
   const root = document.documentElement;
   BRAND_CSS_VARS.forEach((v) => root.style.removeProperty(`--${v}`));
+  ACCENT_CSS_VARS.forEach((v) => root.style.removeProperty(`--${v}`));
 
   const logoEl = document.querySelector(".sidebar-header .logo");
   if (logoEl) {

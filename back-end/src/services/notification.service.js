@@ -138,4 +138,6 @@ module.exports = {
   sendCancellation,
   sendViaChannels,
   buildWhatsAppText,
+  renderTemplate,
+  getWhatsAppReminderTemplate,
 };

@@ -2,6 +2,7 @@ const paymentService = require("../services/paymentService");
 const reservationDAO = require("../DAOs/reservation.dao");
 const { Op, fn, col } = require("../db/models");
 const { generateTextPdf } = require("../utils/pdfGenerator");
+const { formatMoney } = require("../utils/formatMoney");
 
 const csvCell = (value) => {
   if (value === null || value === undefined) return "";
@@ -146,17 +147,13 @@ const exportPDF = async (filters = {}, tenantId) => {
   lines.push(`Total Reservations: ${report.totalReservations}`);
   lines.push("");
   lines.push("PAYMENT BREAKDOWN");
-  (report.paymentBreakdown.byMethod || []).forEach((m) => {
-    lines.push(
-      `  ${m.method}: GHS ${Number(m.total || 0).toFixed(2)} (${m.count} payments)`
-    );
-  });
-  lines.push(
-    `Total Revenue: GHS ${Number(report.paymentBreakdown.totalRevenue || 0).toFixed(2)}`
-  );
-  lines.push(
-    `Average Payment: GHS ${Number(report.paymentBreakdown.avgPayment || 0).toFixed(2)}`
-  );
+  const currency = await formatMoney(0, tenantId).then((s) => s.split(" ")[0] || "GHS");
+  for (const m of report.paymentBreakdown.byMethod || []) {
+    const formatted = await formatMoney(Number(m.total || 0), tenantId);
+    lines.push(`  ${m.method}: ${formatted} (${m.count} payments)`);
+  }
+  lines.push(`Total Revenue: ${await formatMoney(Number(report.paymentBreakdown.totalRevenue || 0), tenantId)}`);
+  lines.push(`Average Payment: ${await formatMoney(Number(report.paymentBreakdown.avgPayment || 0), tenantId)}`);
   return generateTextPdf(lines);
 };
 
