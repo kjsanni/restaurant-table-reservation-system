@@ -33,9 +33,6 @@ const protect = async (req, res, next) => {
 
     const permissions = user.permissions || {};
     if (!permissions || Object.keys(permissions).length === 0) {
-      // Derive effective permissions strictly from the RBAC model
-      // (role + group + user grants) so permissions are never implicitly
-      // granted by role name. Falls back to an empty set when no grants exist.
       try {
         const roleDAO = require("../DAOs/role.dao");
         const effective = await roleDAO.getRolePermissions(user.id);
@@ -47,6 +44,17 @@ const protect = async (req, res, next) => {
     }
 
     req.user = user;
+
+    if (process.env.TENANT_MODE === "enabled" && user.tenantId) {
+      try {
+        const Tenant = require("../../tenant-platform/models/tenant")(require("../db/models").sequelize, require("sequelize").DataTypes);
+        const tenant = await Tenant.findByPk(user.tenantId);
+        if (tenant) req.tenant = tenant;
+      } catch (err) {
+        console.warn("Tenant load failed:", err.message);
+      }
+    }
+
     next();
   } catch (err) {
     console.error("Token verification error:", err.message);

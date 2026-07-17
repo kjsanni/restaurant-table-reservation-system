@@ -146,6 +146,21 @@ const router = createRouter({
   ],
 });
 
+if (import.meta.env.VITE_TENANT_MODE === "enabled") {
+  router.addRoute({
+    path: "/admin/tenants",
+    name: "tenant-dashboard",
+    component: () => import("../views/admin/TenantDashboardView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/tenants/:id",
+    name: "tenant-detail",
+    component: () => import("../views/admin/TenantDetailView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+}
+
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
 

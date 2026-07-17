@@ -31,6 +31,19 @@ const { Server } = require("socket.io");
 const tryCatchHandler = require("../middleware/tryCatch");
 const { protect } = require("../middleware/auth");
 
+const TENANT_MODE = process.env.TENANT_MODE === "enabled";
+let resolveTenant = null;
+let requireActiveTenant = null;
+let tenantAdminRoutes = null;
+let billingRoutes = null;
+
+if (TENANT_MODE) {
+  ({ resolveTenant } = require("../../tenant-platform/middleware/resolveTenant"));
+  ({ requireActiveTenant } = require("../../tenant-platform/middleware/tenantStatus"));
+  tenantAdminRoutes = require("../../tenant-platform/routes/tenantAdmin.router");
+  billingRoutes = require("../../tenant-platform/routes/billing.router");
+}
+
 const requestTimeout = (timeout = 15000) => {
   return (req, res, next) => {
     res.setTimeout(timeout, () => {
@@ -116,6 +129,12 @@ const createServer = () => {
   app.use("/api/v1/reports", logAction, reportRouter);
   app.use("/api/v1/customers", logAction, customerRouter);
   app.use("/api/v1/admin", logAction, adminRouter);
+  if (TENANT_MODE) {
+    app.use(resolveTenant);
+    app.use(requireActiveTenant);
+    app.use("/api/v1/admin/tenants", logAction, tenantAdminRoutes);
+    app.use("/api/v1/billing", billingRoutes);
+  }
   app.use("/api/v1/notifications", logAction, notificationRouter);
   app.use("/api/v1/email-templates", logAction, emailTemplateRouter);
   if (process.env.SENTRY_DSN) {
