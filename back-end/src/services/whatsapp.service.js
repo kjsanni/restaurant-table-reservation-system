@@ -74,13 +74,13 @@ const sendWhatsAppText = async (to, text) => {
 };
 
 const formatPhoneNumber = (phone) => {
-  if (!phone) return null;
+  if (!phone && phone !== "") return null;
   let cleaned = String(phone).replace(/[^\d+]/g, "");
   if (cleaned.startsWith("+")) cleaned = cleaned.slice(1);
   if (!cleaned.startsWith("233") && cleaned.length === 9) {
     cleaned = "233" + cleaned;
   }
-  return cleaned;
+  return cleaned || null;
 };
 
 module.exports = {

@@ -60,7 +60,7 @@ const getPaymentHistory = async (filters = {}, tenantId, pagination = {}) => {
   if (filters.to) where.paidAt = { ...where.paidAt, [Op.lte]: filters.to };
 
   const limit = pagination.limit ? parseInt(pagination.limit, 10) : undefined;
-  const offset = pagination.offset ? parseInt(pagination.offset, 10) : undefined;
+  const offset = pagination.offset != null ? parseInt(pagination.offset, 10) : undefined;
 
   const { rows, count } = await Payment.findAndCountAll({
     where,
@@ -78,7 +78,7 @@ const getPaymentHistory = async (filters = {}, tenantId, pagination = {}) => {
   return {
     collection: rows,
     total: count,
-    page: limit && offset ? Math.floor(offset / limit) + 1 : undefined,
+    page: limit && offset != null ? Math.floor(offset / limit) + 1 : undefined,
     pageSize: limit,
     totalPages: limit ? Math.ceil(count / limit) : undefined,
   };
