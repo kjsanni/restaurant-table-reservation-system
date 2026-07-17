@@ -9,6 +9,9 @@ import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
 import PageHeader from "@/components/PageHeader.vue";
+import { useCurrency } from "@/composables/useCurrency";
+
+const { format: fmt } = useCurrency();
 
 const tables = ref([]);
 const reservations = ref([]);
@@ -682,7 +685,7 @@ onMounted(loadData);
             <div class="analytics-metric">
               <span class="analytics-value">{{
                 monthlyRevenue != null
-                  ? "$" + Math.round(monthlyRevenue).toLocaleString()
+                  ? fmt(monthlyRevenue)
                   : "—"
               }}</span>
               <span class="analytics-label">Month revenue</span>

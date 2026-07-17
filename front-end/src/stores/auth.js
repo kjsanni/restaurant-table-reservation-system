@@ -8,6 +8,15 @@ export const useAuthStore = defineStore("auth", () => {
   const isLoading = ref(true);
   const currentTenant = ref(null);
   const tenantModeEnabled = ref(false);
+  const branding = ref({ brandName: "", logoUrl: "", primaryColor: "" });
+  const currencyLocale = ref({ currency: "GHS", locale: "en-GH" });
+
+  const applySetting = (settings, key, target) => {
+    const s = settings.find((d) => d.key === key);
+    if (!s || s.value == null) return;
+    const v = typeof s.value === "string" ? JSON.parse(s.value) : s.value;
+    if (v && typeof v === "object") Object.assign(target, v);
+  };
 
   const login = async (email, password) => {
     const response = await authAPI.login(email, password);
@@ -38,7 +47,10 @@ export const useAuthStore = defineStore("auth", () => {
 
   const fetchSettings = async () => {
     const response = await authAPI.getSettings();
-    return response.data.settings;
+    const settings = response.data.settings;
+    applySetting(settings, "branding", branding.value);
+    applySetting(settings, "currency_locale", currencyLocale.value);
+    return settings;
   };
 
   const fetchTenantMode = async () => {
@@ -54,6 +66,8 @@ export const useAuthStore = defineStore("auth", () => {
             : setting.value;
         tenantModeEnabled.value = Boolean(v);
       }
+      applySetting(settings.data.settings, "branding", branding.value);
+      applySetting(settings.data.settings, "currency_locale", currencyLocale.value);
     } catch {
       tenantModeEnabled.value = false;
     }
@@ -97,6 +111,8 @@ export const useAuthStore = defineStore("auth", () => {
     isLoading,
     currentTenant,
     tenantModeEnabled,
+    branding,
+    currencyLocale,
     login,
     register,
     logout,

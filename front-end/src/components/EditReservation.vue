@@ -13,6 +13,9 @@ import paymentAPI from "@/services/paymentAPI";
 import reservationAPI from "@/services/reservationAPI";
 import getValues from "@/utils/getValues";
 import { computePaymentStatus } from "@/utils/paymentStatus";
+import { useCurrency } from "@/composables/useCurrency";
+
+const { format: fmt } = useCurrency();
 
 const props = defineProps({
   reservation: Object,
@@ -353,7 +356,7 @@ const editReservation = async () => {
           <PaymentIcon />
           <span class="payments-title">Payments</span>
           <span class="total-paid"
-            >Total paid: GHS {{ totalPaid.toFixed(2) }}</span
+            >Total paid: {{ fmt(totalPaid.toFixed(2)) }}</span
           >
         </div>
 
@@ -361,7 +364,7 @@ const editReservation = async () => {
           <div v-for="pay in payments" :key="pay.id" class="payment-row">
             <div class="payment-info">
               <span class="payment-amount"
-                >GHS {{ parseFloat(pay.amount).toFixed(2) }}</span
+                >{{ fmt(parseFloat(pay.amount).toFixed(2)) }}</span
               >
               <span class="payment-method">{{ pay.method }}</span>
               <span v-if="pay.paidBy" class="payment-by">{{ pay.paidBy }}</span>
@@ -380,7 +383,7 @@ const editReservation = async () => {
                   {{ split.method }}: GHS
                   {{ parseFloat(split.amount).toFixed(2) }}
                   <span v-if="split.tip"
-                    >(tip GHS {{ parseFloat(split.tip).toFixed(2) }})</span
+                    >(tip {{ fmt(parseFloat(split.tip).toFixed(2)) }})</span
                   >
                 </span>
               </div>
@@ -426,13 +429,13 @@ const editReservation = async () => {
                   ).toFixed(2)
                 }}</span
               >
-              <span>Paid: GHS {{ totalPaid.toFixed(2) }}</span>
+              <span>Paid: {{ fmt(totalPaid.toFixed(2)) }}</span>
               <span class="remaining"
-                >Remaining: GHS {{ remainingBalance.toFixed(2) }}</span
+                >Remaining: {{ fmt(remainingBalance.toFixed(2)) }}</span
               >
             </div>
             <div class="split-summary-bar">
-              <span>Per person: GHS {{ groupSplitAmount.toFixed(2) }}</span>
+              <span>Per person: {{ fmt(groupSplitAmount.toFixed(2)) }}</span>
               <span>{{ groupSplitCount }} people</span>
             </div>
             <div class="group-split-buttons">
@@ -444,7 +447,7 @@ const editReservation = async () => {
                 :disabled="groupSplitAmount.value <= 0"
                 @click="addGroupSplitPayment(i - 1)"
               >
-                Person {{ i }}: GHS {{ groupSplitAmount.toFixed(2) }}
+                Person {{ i }}: {{ fmt(groupSplitAmount.toFixed(2)) }}
               </button>
             </div>
           </div>
@@ -554,9 +557,9 @@ const editReservation = async () => {
               + Add Split
             </button>
             <div class="split-summary">
-              <span>Total split: GHS {{ totalSplitAmount.toFixed(2) }}</span>
+              <span>Total split: {{ fmt(totalSplitAmount.toFixed(2)) }}</span>
               <span v-if="newPayment.amount"
-                >of GHS {{ parseFloat(newPayment.amount).toFixed(2) }}</span
+                >of {{ fmt(parseFloat(newPayment.amount).toFixed(2)) }}</span
               >
             </div>
           </div>

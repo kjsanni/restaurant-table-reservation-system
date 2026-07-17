@@ -55,8 +55,26 @@ const getEmailTheme = async () => {
     const setting = await db.setting.findOne({
       where: { key: EMAIL_THEME_KEY },
     });
-    if (!setting) return { ...DEFAULT_EMAIL_THEME };
-    return { ...DEFAULT_EMAIL_THEME, ...(setting.value || {}) };
+    const theme = setting && setting.value ? setting.value : {};
+    let brand = {};
+    try {
+      const branding = await db.setting.findOne({ where: { key: "branding" } });
+      if (branding && branding.value) {
+        brand =
+          typeof branding.value === "string"
+            ? JSON.parse(branding.value)
+            : branding.value;
+      }
+    } catch {
+      brand = {};
+    }
+    return {
+      ...DEFAULT_EMAIL_THEME,
+      brandName: brand.brandName || DEFAULT_EMAIL_THEME.brandName,
+      logoUrl: brand.logoUrl || "",
+      primaryColor: brand.primaryColor || DEFAULT_EMAIL_THEME.primaryColor,
+      ...theme,
+    };
   } catch (err) {
     logger.error("Failed to read email_theme setting", { error: err.message });
     return { ...DEFAULT_EMAIL_THEME };

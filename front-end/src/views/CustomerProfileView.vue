@@ -4,6 +4,9 @@ import { useRoute } from "vue-router";
 import customerAPI from "@/services/customerAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import PageHeader from "@/components/PageHeader.vue";
+import { useCurrency } from "@/composables/useCurrency";
+
+const { format: fmt } = useCurrency();
 
 const route = useRoute();
 const customerId = route.params.id;
@@ -292,7 +295,7 @@ const savePreferences = async () => {
                     {{ res.paymentStatus }}
                   </span>
                   <span v-if="res.expectedTotal" class="history-total">
-                    ${{ parseFloat(res.expectedTotal).toFixed(2) }}
+                    {{ fmt(res.expectedTotal) }}
                   </span>
                 </div>
                 <div v-if="res.notes" class="history-notes">
@@ -415,7 +418,7 @@ const savePreferences = async () => {
                 </span>
                 <span class="breakdown-count">{{ item.count }}</span>
                 <span v-if="item.totalExpected" class="breakdown-revenue">
-                  ${{ parseFloat(item.totalExpected).toFixed(2) }}
+                  {{ fmt(item.totalExpected) }}
                 </span>
               </div>
             </div>

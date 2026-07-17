@@ -4,10 +4,12 @@ import { useRouter } from "vue-router";
 import { VaButton, VaCard, VaCardContent, VaInput, VaAlert } from "vuestic-ui";
 
 import { useAuthStore } from "@/stores/auth";
+import { useBranding } from "@/composables/useBranding";
 import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { brandName, logoUrl, primaryColor } = useBranding();
 
 const credentials = ref({
   email: "",
@@ -55,12 +57,22 @@ const handleLogin = async () => {
 
 <template>
   <div class="auth-wrapper">
-    <VaCard class="auth-card" flat>
+    <VaCard
+      class="auth-card"
+      flat
+      :style="primaryColor ? { '--brand-accent': primaryColor } : null"
+    >
       <VaCardContent>
         <div class="auth-header">
           <div class="brand">
-            <span class="brand-icon">🍽️</span>
-            <span class="brand-text">RTRS</span>
+            <img
+              v-if="logoUrl"
+              :src="logoUrl"
+              alt="Logo"
+              class="brand-logo"
+            />
+            <span v-else class="brand-icon">🍽️</span>
+            <span class="brand-text">{{ brandName || "RTRS" }}</span>
           </div>
           <h1 class="auth-title">Sign In</h1>
           <p class="auth-subtitle">Access your restaurant dashboard</p>

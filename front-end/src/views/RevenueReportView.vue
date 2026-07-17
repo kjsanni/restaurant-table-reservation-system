@@ -6,7 +6,10 @@ import {
   useDateRange,
   PRESET_RANGES,
 } from "@/composables/useReservationCalendar";
+import { useCurrency } from "@/composables/useCurrency";
 import logger from "@/utils/logger";
+
+const { format: fmtMoney } = useCurrency();
 
 const loading = ref(true);
 const series = ref([]);
@@ -69,12 +72,12 @@ const exportCSV = () => {
     const other = s.byMethod?.other?.total || 0;
     return [
       s.periodLabel,
-      s.total.toFixed(2),
+      fmtMoney(s.total),
       s.count,
-      cash.toFixed(2),
-      card.toFixed(2),
-      transfer.toFixed(2),
-      other.toFixed(2),
+      fmtMoney(cash),
+      fmtMoney(card),
+      fmtMoney(transfer),
+      fmtMoney(other),
     ].join(",");
   });
 
@@ -170,7 +173,7 @@ const getStackedY = (item, methodKey, _mIndex) => {
           <div class="summary-card">
             <span class="summary-label">Total Revenue</span>
             <span class="summary-value"
-              >GHS {{ summary.totalRevenue.toFixed(2) }}</span
+              >{{ fmtMoney(summary.totalRevenue) }}</span
             >
           </div>
           <div class="summary-card">
@@ -180,7 +183,7 @@ const getStackedY = (item, methodKey, _mIndex) => {
           <div class="summary-card">
             <span class="summary-label">Avg Transaction</span>
             <span class="summary-value"
-              >GHS {{ summary.avgPayment.toFixed(2) }}</span
+              >{{ fmtMoney(summary.avgPayment) }}</span
             >
           </div>
         </div>

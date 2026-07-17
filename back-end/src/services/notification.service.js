@@ -22,7 +22,7 @@ const resolveChannels = async (tenantId, requested) => {
   return ["email"];
 };
 
-const sendViaChannels = async (reservation, templateData, channels = ["email"], tenantId) => {
+const sendViaChannels = async (reservation, templateData, channels = ["email"], tenantId, whatsappTemplate = null) => {
   const results = [];
   for (const channel of channels) {
     if (channel === "email" && reservation.customerEmail) {
@@ -34,7 +34,7 @@ const sendViaChannels = async (reservation, templateData, channels = ["email"], 
       }
     } else if (channel === "whatsapp" && reservation.customerPhone) {
       try {
-        const text = buildWhatsAppText(templateData);
+        const text = buildWhatsAppText(templateData, whatsappTemplate);
         await whatsappService.sendWhatsAppText(reservation.customerPhone, text);
         results.push({ channel: "whatsapp", sent: true });
       } catch (err) {
@@ -45,12 +45,21 @@ const sendViaChannels = async (reservation, templateData, channels = ["email"], 
   return results;
 };
 
-const buildWhatsAppText = (data) => {
-  return `Hi ${data.name},\n\nThis is a reminder for your reservation on ${data.date} at ${data.time} for ${data.partySize} people.\nTable: ${data.table}\n${data.restaurantName}\n\nSee you soon!`;
+const renderTemplate = (template, data = {}) => {
+  if (!template) return "";
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key] ?? "");
+};
+
+const DEFAULT_WHATSAPP_REMINDER =
+  "Hi {{name}},\n\nThis is a reminder for your reservation on {{date}} at {{time}} for {{partySize}} people.\nTable: {{table}}\n{{restaurantName}}\n\nSee you soon!";
+
+const buildWhatsAppText = (data, template) => {
+  return renderTemplate(template || DEFAULT_WHATSAPP_REMINDER, data);
 };
 
 const scheduleReminders = async (tenantId, channels = null) => {
   const resolved = await resolveChannels(tenantId, channels);
+  const whatsappTemplate = await getWhatsAppReminderTemplate(tenantId);
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = dateTimeValidator.asDateString(tomorrow);
@@ -71,11 +80,30 @@ const scheduleReminders = async (tenantId, channels = null) => {
       restaurantName: process.env.APP_NAME || "Restaurant",
     };
 
-    const channelResults = await sendViaChannels(reservation, templateData, resolved, tenantId);
+    const channelResults = await sendViaChannels(
+      reservation,
+      templateData,
+      resolved,
+      tenantId,
+      whatsappTemplate
+    );
     results.push({ reservationId: reservation.id, channels: channelResults });
   }
 
   return results;
+};
+
+const getWhatsAppReminderTemplate = async (tenantId) => {
+  try {
+    const templates = await settingDAO.getSettingValue(
+      "message_templates",
+      {},
+      tenantId
+    );
+    return templates?.whatsapp_reminder || null;
+  } catch {
+    return null;
+  }
 };
 
 const sendConfirmation = async (reservation, channels = null, tenantId) => {
@@ -109,4 +137,5 @@ module.exports = {
   sendConfirmation,
   sendCancellation,
   sendViaChannels,
+  buildWhatsAppText,
 };

@@ -76,13 +76,20 @@ export const useTenantBranding = () => {
     const tenant = authStore.currentTenant;
     if (tenant?.settings?.branding) {
       applyBranding(tenant.settings);
+    } else if (
+      authStore.branding &&
+      (authStore.branding.brandName ||
+        authStore.branding.logoUrl ||
+        authStore.branding.primaryColor)
+    ) {
+      applyBranding({ branding: authStore.branding });
     } else {
       clearBranding();
     }
   };
 
   const stop = watch(
-    () => authStore.currentTenant,
+    [() => authStore.currentTenant, () => authStore.branding],
     () => {
       apply();
     },
