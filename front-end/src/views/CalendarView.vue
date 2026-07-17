@@ -62,6 +62,7 @@ const actionLoading = ref(false);
 const actionError = ref("");
 
 const freeTables = ref([]);
+const allTables = ref([]);
 const waitingStaffList = ref([]);
 const newResDate = ref("");
 const newResTime = ref("");
@@ -446,12 +447,27 @@ const closeAction = () => {
 const loadFreeTables = async () => {
   try {
     const res = await tableAPI.getTables();
-    freeTables.value = res.data.collection.filter(
+    allTables.value = res.data.collection || [];
+    freeTables.value = allTables.value.filter(
       (t) => !t.reservationId && !t.isBlocked
     );
   } catch {
     freeTables.value = [];
   }
+};
+
+const tableName = (res) => {
+  if (!res) return null;
+  if (res.tableName) return res.tableName;
+  if (res.tableId) {
+    const t = allTables.value.find((x) => x.id === res.tableId);
+    return t ? t.name : null;
+  }
+  return null;
+};
+
+const reservationName = (res) => {
+  return res?.Customer?.name || res?.name || "Walk-in";
 };
 
 const loadWaitingStaff = async () => {
@@ -1012,7 +1028,7 @@ const handleReschedule = async () => {
                     <div class="diagram-card">
                       <div class="timeline-card-header">
                         <span class="timeline-name">{{
-                          res.name || "Guest"
+                          reservationName(res)
                         }}</span>
                         <span
                           class="timeline-status"
@@ -1062,6 +1078,16 @@ const handleReschedule = async () => {
                         <div v-if="res.phone" class="timeline-row">
                           <span class="timeline-icon">📞</span>
                           <span class="timeline-text">{{ res.phone }}</span>
+                        </div>
+                        <div v-if="tableName(res)" class="timeline-row">
+                          <span class="timeline-icon">🪑</span>
+                          <span class="timeline-text">Table {{ tableName(res) }}</span>
+                        </div>
+                        <div v-if="res.notes" class="timeline-row">
+                          <span class="timeline-icon">📝</span>
+                          <span class="timeline-text timeline-notes">{{
+                            res.notes
+                          }}</span>
                         </div>
                         <div class="diagram-actions">
                           <button
@@ -1574,6 +1600,10 @@ const handleReschedule = async () => {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 180px;
+}
+.timeline-notes {
+  font-style: italic;
+  color: var(--text-muted);
 }
 
 .timeline-payment {
