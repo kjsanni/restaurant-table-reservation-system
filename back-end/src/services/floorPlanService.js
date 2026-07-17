@@ -1,8 +1,8 @@
 const floorPlanDAO = require("../DAOs/floorPlan.dao");
 
-const createFloorPlan = async (payload) => floorPlanDAO.createFloorPlan(payload);
-const getFloorPlans = async () => floorPlanDAO.getFloorPlans();
-const deleteFloorPlan = async (id) => floorPlanDAO.deleteFloorPlan(id);
+const createFloorPlan = async (payload, tenantId) => floorPlanDAO.createFloorPlan(payload, tenantId);
+const getFloorPlans = async (tenantId) => floorPlanDAO.getFloorPlans(tenantId);
+const deleteFloorPlan = async (id, tenantId) => floorPlanDAO.deleteFloorPlan(id, tenantId);
 
 module.exports = {
   createFloorPlan,

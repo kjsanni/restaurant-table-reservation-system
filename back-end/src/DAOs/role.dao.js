@@ -2,6 +2,8 @@ const db = require("../db/models");
 const Role = db.role;
 const { Op } = db.Sequelize;
 
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+
 const normalizePermissions = (permissions) => {
   if (!permissions) return {};
   if (typeof permissions === "string") {
@@ -14,42 +16,54 @@ const normalizePermissions = (permissions) => {
   return {};
 };
 
-const findAllRoles = async () => {
-  const roles = await Role.findAll({ order: [["id", "ASC"]] });
+const findAllRoles = async (tenantId) => {
+  const roles = await Role.findAll({
+    where: withTenant({}, tenantId),
+    order: [["id", "ASC"]],
+  });
   return roles.map((r) => {
     r.permissions = normalizePermissions(r.permissions);
     return r;
   });
 };
 
-const findRoleById = async (id) => {
-  const role = await Role.findByPk(id);
+const findRoleById = async (id, tenantId) => {
+  const role = await Role.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (role) {
     role.permissions = normalizePermissions(role.permissions);
   }
   return role;
 };
 
-const findRoleByName = async (name) => {
-  const role = await Role.findOne({ where: { name } });
+const findRoleByName = async (name, tenantId) => {
+  const role = await Role.findOne({ where: withTenant({ name }, tenantId) });
   if (role) {
     role.permissions = normalizePermissions(role.permissions);
   }
   return role;
 };
 
-const createRole = async (roleData) => {
-  return await Role.create(roleData);
+const createRole = async (roleData, tenantId) => {
+  return await Role.create({
+    ...roleData,
+    ...withTenant({}, tenantId),
+  });
 };
 
-const updateRole = async (id, updates) => {
-  const role = await Role.findByPk(id);
+const updateRole = async (id, updates, tenantId) => {
+  const role = await Role.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!role) return null;
   return await role.update(updates);
 };
 
-const deleteRole = async (id) => {
-  const role = await Role.findByPk(id);
+const deleteRole = async (id, tenantId) => {
+  const role = await Role.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!role) return null;
   if (role.isSystem) {
     throw { status: 400, message: "Cannot delete a system role!" };

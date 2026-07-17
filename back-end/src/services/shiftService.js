@@ -1,9 +1,9 @@
 const shiftDAO = require("../DAOs/shift.dao");
 
-const createShift = async (payload) => shiftDAO.createShift(payload);
-const getShiftsByDay = async (dayOfWeek) => shiftDAO.getShiftsByDay(dayOfWeek);
-const deleteShift = async (id) => shiftDAO.deleteShift(id);
-const getAllStaff = async () => shiftDAO.getAllStaff();
+const createShift = async (payload, tenantId) => shiftDAO.createShift(payload, tenantId);
+const getShiftsByDay = async (dayOfWeek, tenantId) => shiftDAO.getShiftsByDay(dayOfWeek, tenantId);
+const deleteShift = async (id, tenantId) => shiftDAO.deleteShift(id, tenantId);
+const getAllStaff = async (tenantId) => shiftDAO.getAllStaff(tenantId);
 
 module.exports = {
   createShift,

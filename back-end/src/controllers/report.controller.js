@@ -8,7 +8,7 @@ const getReservationReportHandler = async (req, res) => {
     paymentStatus: req.query.paymentStatus,
     resStatus: req.query.resStatus,
   };
-  const report = await reportService.getReservationReport(filters);
+  const report = await reportService.getReservationReport(filters, req.tenant?.id);
   return res.status(200).json({ success: true, report });
 };
 
@@ -19,7 +19,7 @@ const exportCSVHandler = async (req, res) => {
     paymentStatus: req.query.paymentStatus,
     resStatus: req.query.resStatus,
   };
-  const csv = await reportService.exportCSV(filters);
+  const csv = await reportService.exportCSV(filters, req.tenant?.id);
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", "attachment; filename=reservations.csv");
   res.send(csv);
@@ -32,7 +32,7 @@ const exportPDFHandler = async (req, res) => {
     paymentStatus: req.query.paymentStatus,
     resStatus: req.query.resStatus,
   };
-  const report = await reportService.getReservationReport(filters);
+  const report = await reportService.getReservationReport(filters, req.tenant?.id);
 
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "attachment; filename=reservations.pdf");
@@ -71,7 +71,7 @@ const getTurnTimeHandler = async (req, res) => {
     to: req.query.to,
     tableIds: req.query.tableIds,
   };
-  const report = await reportService.getTurnTimeReport(filters);
+  const report = await reportService.getTurnTimeReport(filters, req.tenant?.id);
   return res.status(200).json({ success: true, report });
 };
 

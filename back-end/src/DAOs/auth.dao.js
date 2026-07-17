@@ -4,6 +4,8 @@ const User = db.user;
 const RefreshToken = db.refreshToken;
 const Setting = db.setting;
 
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+
 const hashPassword = async (password) => {
   const salt = await bcrypt.genSalt(12);
   return await bcrypt.hash(password, salt);
@@ -33,50 +35,51 @@ const comparePassword = async (plainPassword, hashedPassword) => {
   return await bcrypt.compare(plainPassword, hashedPassword);
 };
 
-const findUserByEmail = async (email) => {
-  return await User.findOne({ where: { email } });
+const findUserByEmail = async (email, tenantId) => {
+  return await User.findOne({ where: withTenant({ email }, tenantId) });
 };
 
-const findUserById = async (id) => {
-  return await User.findByPk(id, {
+const findUserById = async (id, tenantId) => {
+  return await User.findOne({
+    where: withTenant({ id }, tenantId),
     attributes: ["id", "username", "email", "role", "permissions", "createdAt", "updatedAt"],
   });
 };
 
-const createUser = async (userData) => {
-  return await User.create(userData);
+const createUser = async (userData, tenantId) => {
+  return await User.create({
+    ...userData,
+    ...withTenant({}, tenantId),
+  });
 };
 
-const getAllStaff = async () => {
+const getAllStaff = async (tenantId) => {
   return await User.findAll({
     attributes: ["id", "username", "email", "role", "permissions", "createdAt"],
-    where: {
-      role: ["staff", "manager"],
-    },
+    where: withTenant({ role: ["staff", "manager"] }, tenantId),
   });
 };
 
-const getAllAdmins = async () => {
+const getAllAdmins = async (tenantId) => {
   return await User.findAll({
     attributes: ["id", "username", "email", "role"],
-    where: {
-      role: "admin",
-    },
+    where: withTenant({ role: "admin" }, tenantId),
   });
 };
 
-const getAllUsers = async () => {
+const getAllUsers = async (tenantId) => {
   return await User.findAll({
     attributes: ["id", "username", "email", "role", "createdAt"],
+    where: withTenant({}, tenantId),
     order: [["role", "ASC"], ["username", "ASC"]],
   });
 };
 
-const getAdminCount = async () => {
-  return await User.count({ where: { role: "admin" } });
+const getAdminCount = async (tenantId) => {
+  return await User.count({ where: withTenant({ role: "admin" }, tenantId) });
 };
 
-const createStaffUser = async ({ username, email, password, role, permissions }) => {
+const createStaffUser = async ({ username, email, password, role, permissions }, tenantId) => {
   const errors = validatePasswordComplexity(password);
   if (errors.length > 0) {
     throw { status: 400, message: errors.join(". ") + "." };
@@ -88,11 +91,14 @@ const createStaffUser = async ({ username, email, password, role, permissions })
     password: hashedPassword,
     role: role || "staff",
     permissions,
+    ...withTenant({}, tenantId),
   });
 };
 
-const updateStaffUser = async (id, updates) => {
-  const user = await User.findByPk(id);
+const updateStaffUser = async (id, updates, tenantId) => {
+  const user = await User.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!user) {
     throw { status: 404, message: "User not found!" };
   }
@@ -106,85 +112,99 @@ const updateStaffUser = async (id, updates) => {
   return await user.update(updates);
 };
 
-const deleteStaffUser = async (id) => {
-  const user = await User.findByPk(id);
+const deleteStaffUser = async (id, tenantId) => {
+  const user = await User.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!user) {
     throw { status: 404, message: "User not found!" };
   }
   return await user.destroy();
 };
 
-const getSettingByKey = async (key) => {
-  return await Setting.findOne({ where: { key } });
+const getSettingByKey = async (key, tenantId) => {
+  return await Setting.findOne({ where: withTenant({ key }, tenantId) });
 };
 
-const updateSetting = async (key, value) => {
+const updateSetting = async (key, value, tenantId) => {
   const [updatedRows] = await Setting.update(
     { value },
-    { where: { key } }
+    { where: withTenant({ key }, tenantId) }
   );
   if (updatedRows === 0) {
-    return await Setting.create({ key, value });
+    return await Setting.create({ key, value, ...withTenant({}, tenantId) });
   }
-  return await getSettingByKey(key);
+  return await getSettingByKey(key, tenantId);
 };
 
-const getAllSettings = async () => {
-  return await Setting.findAll();
+const getAllSettings = async (tenantId) => {
+  return await Setting.findAll({
+    where: withTenant({}, tenantId),
+  });
 };
 
-const createRefreshToken = async (userId, token, expiresAt) => {
+const createRefreshToken = async (userId, token, expiresAt, tenantId) => {
   return await RefreshToken.create({
     token,
     userId,
     expiresAt,
+    ...withTenant({}, tenantId),
   });
 };
 
-const findValidRefreshToken = async (token) => {
+const findValidRefreshToken = async (token, tenantId) => {
   return await RefreshToken.findOne({
-    where: {
-      token,
-      isRevoked: false,
-      expiresAt: { [db.Sequelize.Op.gt]: new Date() },
-    },
+    where: withTenant(
+      {
+        token,
+        isRevoked: false,
+        expiresAt: { [db.Sequelize.Op.gt]: new Date() },
+      },
+      tenantId
+    ),
   });
 };
 
-const revokeRefreshToken = async (token) => {
-  const refreshToken = await RefreshToken.findOne({ where: { token } });
+const revokeRefreshToken = async (token, tenantId) => {
+  const refreshToken = await RefreshToken.findOne({
+    where: withTenant({ token }, tenantId),
+  });
   if (!refreshToken) return false;
   await refreshToken.update({ isRevoked: true });
   return true;
 };
 
-const revokeAllUserTokens = async (userId) => {
+const revokeAllUserTokens = async (userId, tenantId) => {
   await RefreshToken.update(
     { isRevoked: true },
-    { where: { userId, isRevoked: false } }
+    { where: withTenant({ userId, isRevoked: false }, tenantId) }
   );
   return true;
 };
 
-const cleanupExpiredTokens = async () => {
+const cleanupExpiredTokens = async (tenantId) => {
   await RefreshToken.destroy({
-    where: {
-      expiresAt: { [db.Sequelize.Op.lt]: new Date() },
-    },
+    where: withTenant(
+      {
+        expiresAt: { [db.Sequelize.Op.lt]: new Date() },
+      },
+      tenantId
+    ),
   });
 };
 
-const recordFailedLogin = async (email, ipAddress) => {
+const recordFailedLogin = async (email, ipAddress, tenantId) => {
   const LoginAttempt = db.loginAttempt;
   if (!LoginAttempt) return null;
   return await LoginAttempt.create({
     email,
     ipAddress,
     attemptedAt: new Date(),
+    ...withTenant({}, tenantId),
   });
 };
 
-const checkLoginLockout = async (email, ipAddress) => {
+const checkLoginLockout = async (email, ipAddress, tenantId) => {
   const LoginAttempt = db.loginAttempt;
   if (!LoginAttempt) return { locked: false, remainingSeconds: 0 };
 
@@ -192,20 +212,23 @@ const checkLoginLockout = async (email, ipAddress) => {
   const { Op } = db.Sequelize;
 
   const emailAttempts = await LoginAttempt.count({
-    where: { email, attemptedAt: { [Op.gte]: cutoff } },
+    where: withTenant({ email, attemptedAt: { [Op.gte]: cutoff } }, tenantId),
   });
 
   const ipAttempts = await LoginAttempt.count({
-    where: { ipAddress, attemptedAt: { [Op.gte]: cutoff } },
+    where: withTenant({ ipAddress, attemptedAt: { [Op.gte]: cutoff } }, tenantId),
   });
 
   const maxAttempts = 5;
   if (emailAttempts >= maxAttempts || ipAttempts >= maxAttempts) {
     const mostRecent = await LoginAttempt.findOne({
-      where: {
-        [Op.or]: [{ email }, { ipAddress }],
-        attemptedAt: { [Op.gte]: cutoff },
-      },
+      where: withTenant(
+        {
+          [Op.or]: [{ email }, { ipAddress }],
+          attemptedAt: { [Op.gte]: cutoff },
+        },
+        tenantId
+      ),
       order: [["attemptedAt", "DESC"]],
     });
 
@@ -221,18 +244,21 @@ const checkLoginLockout = async (email, ipAddress) => {
   return { locked: false, remainingSeconds: 0 };
 };
 
-const clearLoginAttempts = async (email, ipAddress) => {
+const clearLoginAttempts = async (email, ipAddress, tenantId) => {
   const LoginAttempt = db.loginAttempt;
   if (!LoginAttempt) return null;
   const cutoff = new Date(Date.now() - 15 * 60 * 1000);
   const { Op } = db.Sequelize;
   return await LoginAttempt.destroy({
-    where: {
-      [Op.or]: [
-        { email, attemptedAt: { [Op.gte]: cutoff } },
-        { ipAddress, attemptedAt: { [Op.gte]: cutoff } },
-      ],
-    },
+    where: withTenant(
+      {
+        [Op.or]: [
+          { email, attemptedAt: { [Op.gte]: cutoff } },
+          { ipAddress, attemptedAt: { [Op.gte]: cutoff } },
+        ],
+      },
+      tenantId
+    ),
   });
 };
 

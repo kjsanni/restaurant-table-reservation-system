@@ -88,7 +88,7 @@ describe("reservation.controller — heatmap-v2", () => {
 
     await reservationController.getHeatmapV2Handler(req, res);
 
-    expect(reservationDAO.getHeatmapV2).toHaveBeenCalledWith("2026-06-01", "2026-06-30", "date-hour");
+    expect(reservationDAO.getHeatmapV2).toHaveBeenCalledWith("2026-06-01", "2026-06-30", "date-hour", undefined);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       success: true,
@@ -110,7 +110,7 @@ describe("reservation.controller — heatmap-v2", () => {
 
     await reservationController.getHeatmapV2Handler(req, res);
 
-    expect(reservationDAO.getHeatmapV2).toHaveBeenCalledWith("2026-06-01", "2026-06-30", "calendar");
+    expect(reservationDAO.getHeatmapV2).toHaveBeenCalledWith("2026-06-01", "2026-06-30", "calendar", undefined);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       success: true,
@@ -131,7 +131,7 @@ describe("reservation.controller — heatmap-v2", () => {
 
     await reservationController.getHeatmapV2Handler(req, res);
 
-    expect(reservationDAO.getHeatmapV2).toHaveBeenCalledWith("2026-06-01", "2026-06-30", "date-hour");
+    expect(reservationDAO.getHeatmapV2).toHaveBeenCalledWith("2026-06-01", "2026-06-30", "date-hour", undefined);
   });
 
   it("should accept from-only without to", async () => {
@@ -147,7 +147,7 @@ describe("reservation.controller — heatmap-v2", () => {
 
     await reservationController.getHeatmapV2Handler(req, res);
 
-    expect(reservationDAO.getHeatmapV2).toHaveBeenCalledWith("2026-06-01", undefined, "date-hour");
+    expect(reservationDAO.getHeatmapV2).toHaveBeenCalledWith("2026-06-01", undefined, "date-hour", undefined);
   });
 
   it("should accept to-only without from", async () => {
@@ -163,6 +163,6 @@ describe("reservation.controller — heatmap-v2", () => {
 
     await reservationController.getHeatmapV2Handler(req, res);
 
-    expect(reservationDAO.getHeatmapV2).toHaveBeenCalledWith(undefined, "2026-06-30", "date-hour");
+    expect(reservationDAO.getHeatmapV2).toHaveBeenCalledWith(undefined, "2026-06-30", "date-hour", undefined);
   });
 });

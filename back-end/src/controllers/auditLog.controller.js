@@ -14,7 +14,7 @@ const getLogsHandler = async (req, res) => {
     pageSize: req.query.pageSize,
     sortBy: req.query.sortBy,
     sortOrder: req.query.sortOrder,
-  });
+  }, req.tenant?.id);
 
   return res.status(200).json({
     success: true,
@@ -33,7 +33,7 @@ const getStatsHandler = async (req, res) => {
   if (req.query.action) filters.action = req.query.action;
   if (req.query.entityType) filters.entityType = req.query.entityType;
 
-  const stats = await auditLogDAO.getLogStats(filters);
+  const stats = await auditLogDAO.getLogStats(filters, req.tenant?.id);
   return res.status(200).json({
     success: true,
     stats,
@@ -42,7 +42,7 @@ const getStatsHandler = async (req, res) => {
 
 const bulkDeleteHandler = async (req, res) => {
   const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
-  const deleted = await auditLogDAO.bulkDeleteLogs(ids);
+  const deleted = await auditLogDAO.bulkDeleteLogs(ids, req.tenant?.id);
   return res.status(200).json({
     success: true,
     deleted,
@@ -58,7 +58,7 @@ const exportCSVHandler = async (req, res) => {
   if (req.query.entityType) filters.entityType = req.query.entityType;
   if (req.query.search) filters.search = req.query.search;
 
-  const csv = await auditLogDAO.exportLogsCSV(filters);
+  const csv = await auditLogDAO.exportLogsCSV(filters, req.tenant?.id);
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", "attachment; filename=audit-logs.csv");
   res.send(csv);
@@ -72,7 +72,7 @@ const exportJSONHandler = async (req, res) => {
   if (req.query.entityType) filters.entityType = req.query.entityType;
   if (req.query.search) filters.search = req.query.search;
 
-  const json = await auditLogDAO.exportLogsJSON(filters);
+  const json = await auditLogDAO.exportLogsJSON(filters, req.tenant?.id);
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Content-Disposition", "attachment; filename=audit-logs.json");
   res.send(json);

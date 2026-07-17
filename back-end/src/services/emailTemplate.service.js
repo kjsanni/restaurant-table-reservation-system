@@ -1,27 +1,27 @@
 const emailTemplateDAO = require("../DAOs/emailTemplate.dao");
 
-const getAllTemplates = async () => {
-  return await emailTemplateDAO.getAllTemplates();
+const getAllTemplates = async (tenantId) => {
+  return await emailTemplateDAO.getAllTemplates(tenantId);
 };
 
-const getTemplateByKey = async (key) => {
-  return await emailTemplateDAO.getTemplateByKey(key);
+const getTemplateByKey = async (key, tenantId) => {
+  return await emailTemplateDAO.getTemplateByKey(key, tenantId);
 };
 
-const getTemplateById = async (id) => {
-  return await emailTemplateDAO.getTemplateById(id);
+const getTemplateById = async (id, tenantId) => {
+  return await emailTemplateDAO.getTemplateById(id, tenantId);
 };
 
-const createTemplate = async (data) => {
-  return await emailTemplateDAO.createTemplate(data);
+const createTemplate = async (data, tenantId) => {
+  return await emailTemplateDAO.createTemplate(data, tenantId);
 };
 
-const updateTemplate = async (id, data) => {
-  return await emailTemplateDAO.updateTemplate(id, data);
+const updateTemplate = async (id, data, tenantId) => {
+  return await emailTemplateDAO.updateTemplate(id, data, tenantId);
 };
 
-const deleteTemplate = async (id) => {
-  return await emailTemplateDAO.deleteTemplate(id);
+const deleteTemplate = async (id, tenantId) => {
+  return await emailTemplateDAO.deleteTemplate(id, tenantId);
 };
 
 const renderTemplate = (template, data = {}) => {

@@ -221,8 +221,8 @@ const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = n
   };
 };
 
-const checkRegistrationStatus = async (settingDAO) => {
-  const setting = await settingDAO.getSettingByKey("customer_registration_enabled");
+const checkRegistrationStatus = async (settingDAO, tenantId) => {
+  const setting = await settingDAO.getSettingByKey("customer_registration_enabled", tenantId);
   if (!setting) {
     return { registrationEnabled: true };
   }

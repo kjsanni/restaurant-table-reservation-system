@@ -1,7 +1,7 @@
 const mailService = require("./mail.service");
 const reservationDAO = require("../DAOs/reservation.dao");
 
-const scheduleReminders = async () => {
+const scheduleReminders = async (tenantId) => {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = tomorrow.toISOString().split("T")[0];
@@ -9,7 +9,7 @@ const scheduleReminders = async () => {
   const reservations = await reservationDAO.findAllReservationsRaw({
     resDate: tomorrowStr,
     resStatus: "confirmed",
-  });
+  }, tenantId);
 
   const results = [];
   for (const reservation of reservations) {

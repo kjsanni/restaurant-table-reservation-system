@@ -1,14 +1,14 @@
 const reservationDAO = require("../DAOs/reservation.dao");
 
-const getCustomerLoyalty = async (customerId) => {
-  return await reservationDAO.getCustomerById(customerId);
+const getCustomerLoyalty = async (customerId, tenantId) => {
+  return await reservationDAO.getCustomerById(customerId, tenantId);
 };
 
-const updateCustomerTags = async (customerId, tags) => {
-  return await reservationDAO.updateCustomerTags(customerId, tags);
+const updateCustomerTags = async (customerId, tags, tenantId) => {
+  return await reservationDAO.updateCustomerTags(customerId, tags, tenantId);
 };
 
-const updateCustomer = async (customerId, updates) => {
+const updateCustomer = async (customerId, updates, tenantId) => {
   const allowedFields = ["firstName", "lastName", "email", "phone", "address", "city", "notes"];
   const filteredUpdates = {};
   for (const key of allowedFields) {
@@ -16,31 +16,31 @@ const updateCustomer = async (customerId, updates) => {
       filteredUpdates[key] = updates[key];
     }
   }
-  return await reservationDAO.updateCustomer(customerId, filteredUpdates);
+  return await reservationDAO.updateCustomer(customerId, filteredUpdates, tenantId);
 };
 
-const findOrCreateCustomer = async (customerDetails) => {
-  return await reservationDAO.findOrCreateCustomer(customerDetails);
+const findOrCreateCustomer = async (customerDetails, tenantId) => {
+  return await reservationDAO.findOrCreateCustomer(customerDetails, null, tenantId);
 };
 
-const incrementVisit = async (customerId) => {
-  return await reservationDAO.incrementCustomerVisit(customerId);
+const incrementVisit = async (customerId, tenantId) => {
+  return await reservationDAO.incrementCustomerVisit(customerId, tenantId);
 };
 
-const addPoints = async (customerId, points) => {
-  return await reservationDAO.addCustomerPoints(customerId, points);
+const addPoints = async (customerId, points, tenantId) => {
+  return await reservationDAO.addCustomerPoints(customerId, points, tenantId);
 };
 
-const redeemPoints = async (customerId, points) => {
-  return await reservationDAO.redeemCustomerPoints(customerId, points);
+const redeemPoints = async (customerId, points, tenantId) => {
+  return await reservationDAO.redeemCustomerPoints(customerId, points, tenantId);
 };
 
-const updatePreferences = async (customerId, preferences) => {
-  return await reservationDAO.updateCustomerPreferences(customerId, preferences);
+const updatePreferences = async (customerId, preferences, tenantId) => {
+  return await reservationDAO.updateCustomerPreferences(customerId, preferences, tenantId);
 };
 
-const searchCustomers = async (query) => {
-  return await reservationDAO.searchCustomers(query);
+const searchCustomers = async (query, tenantId) => {
+  return await reservationDAO.searchCustomers(query, tenantId);
 };
 
 module.exports = {

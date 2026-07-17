@@ -2,20 +2,25 @@ const db = require("../db/models");
 const Payment = db.payment;
 const { Op, fn, col } = db.Sequelize;
 
-const findByReservation = async (reservationId) => {
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+
+const findByReservation = async (reservationId, tenantId) => {
   return await Payment.findAll({
-    where: { reservationId },
+    where: withTenant({ reservationId }, tenantId),
     order: [["paidAt", "DESC"]],
     attributes: ["id", "reservationId", "amount", "method", "paidBy", "reference", "paidAt", "splits"],
   });
 };
 
-const create = async (data) => {
-  return await Payment.create(data);
+const create = async (data, tenantId) => {
+  return await Payment.create({
+    ...data,
+    ...withTenant({}, tenantId),
+  });
 };
 
-const updateSplits = async (reservationId, id, splits) => {
-  const payment = await Payment.findOne({ where: { id, reservationId } });
+const updateSplits = async (reservationId, id, splits, tenantId) => {
+  const payment = await Payment.findOne({ where: withTenant({ id, reservationId }, tenantId) });
   if (!payment) return null;
   const totalSplit = (splits || []).reduce((sum, split) => sum + parseFloat(split.amount || 0), 0);
   const allowedTotal = parseFloat(payment.amount || 0);
@@ -26,13 +31,13 @@ const updateSplits = async (reservationId, id, splits) => {
   return payment;
 };
 
-const getTotalPaid = async (reservationId) => {
+const getTotalPaid = async (reservationId, tenantId) => {
   const result = await Payment.findOne({
     attributes: [
       [fn("SUM", col("amount")), "total"],
       [fn("SUM", col("discount")), "discountTotal"],
     ],
-    where: { reservationId },
+    where: withTenant({ reservationId }, tenantId),
     raw: true,
   });
   const total = result?.total ? parseFloat(result.total) : 0;
@@ -40,15 +45,15 @@ const getTotalPaid = async (reservationId) => {
   return { total, discountTotal, finalTotal: total - discountTotal };
 };
 
-const remove = async (reservationId, id) => {
-  const payment = await Payment.findOne({ where: { id, reservationId } });
+const remove = async (reservationId, id, tenantId) => {
+  const payment = await Payment.findOne({ where: withTenant({ id, reservationId }, tenantId) });
   if (!payment) return null;
   await payment.destroy();
   return true;
 };
 
-const getPaymentHistory = async (filters = {}) => {
-  const where = {};
+const getPaymentHistory = async (filters = {}, tenantId) => {
+  const where = withTenant({}, tenantId);
   if (filters.reservationId) where.reservationId = filters.reservationId;
   if (filters.method) where.method = filters.method;
   if (filters.from) where.paidAt = { ...where.paidAt, [Op.gte]: filters.from };
@@ -66,8 +71,8 @@ const getPaymentHistory = async (filters = {}) => {
   });
 };
 
-const getRevenueStats = async (from, to) => {
-  const where = {};
+const getRevenueStats = async (from, to, tenantId) => {
+  const where = withTenant({}, tenantId);
   if (from) where.paidAt = { ...where.paidAt, [Op.gte]: from };
   if (to) where.paidAt = { ...where.paidAt, [Op.lte]: to };
 
@@ -107,8 +112,8 @@ const getRevenueStats = async (from, to) => {
   };
 };
 
-const getRevenueTimeSeries = async (from, to, granularity = "day") => {
-  const where = {};
+const getRevenueTimeSeries = async (from, to, granularity = "day", tenantId) => {
+  const where = withTenant({}, tenantId);
   if (from) where.paidAt = { ...where.paidAt, [Op.gte]: from };
   if (to) where.paidAt = { ...where.paidAt, [Op.lte]: to };
 

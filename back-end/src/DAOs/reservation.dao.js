@@ -6,9 +6,21 @@ const Customer = db.customer;
 const Table = db.table;
 const { flattenArrayObjects } = require("../utils/flattenObject");
 
-const findAllReservations = async ({ limit, offset } = {}) => {
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+
+const findAllReservations = async ({ limit, offset } = {}, tenantId) => {
   const opts = {
-    attributes: ["id", "customerId", "resDate", "resTime", "resStatus", "people", "paymentStatus", "expectedTotal", "notes"],
+    attributes: [
+      "id",
+      "customerId",
+      "resDate",
+      "resTime",
+      "resStatus",
+      "people",
+      "paymentStatus",
+      "expectedTotal",
+      "notes",
+    ],
     include: [
       {
         model: Customer,
@@ -27,6 +39,7 @@ const findAllReservations = async ({ limit, offset } = {}) => {
         required: false,
       },
     ],
+    where: withTenant({}, tenantId),
   };
   if (limit) opts.limit = limit;
   if (offset !== undefined) opts.offset = offset;
@@ -38,7 +51,7 @@ const findAllReservations = async ({ limit, offset } = {}) => {
   return reservations;
 };
 
-const searchReservations = async (filters = {}, { limit, offset } = {}) => {
+const searchReservations = async (filters = {}, { limit, offset } = {}, tenantId) => {
   let q = "";
   if (typeof filters === "string") {
     q = filters.trim();
@@ -47,7 +60,7 @@ const searchReservations = async (filters = {}, { limit, offset } = {}) => {
     ({ q } = filters);
   }
   const { from, to, status } = filters;
-  const where = {};
+  const where = withTenant({}, tenantId);
 
   if (status) {
     where.resStatus = status;
@@ -129,16 +142,14 @@ const searchReservations = async (filters = {}, { limit, offset } = {}) => {
   return reservations;
 };
 
-const findReservationById = async (reservationId) => {
+const findReservationById = async (reservationId, tenantId) => {
   const reservation = await Reservation.findOne({
-    where: {
-      id: reservationId,
-    },
+    where: withTenant({ id: reservationId }, tenantId),
   });
 
   return reservation;
 };
-const createCustomer = async (customerDetails, t = null) => {
+const createCustomer = async (customerDetails, t = null, tenantId) => {
   return await Customer.create(
     {
       firstName: customerDetails.firstName,
@@ -147,6 +158,7 @@ const createCustomer = async (customerDetails, t = null) => {
       email: customerDetails.email,
       visitCount: 0,
       tags: [],
+      ...withTenant({}, tenantId),
     },
     {
       transaction: t,
@@ -154,15 +166,15 @@ const createCustomer = async (customerDetails, t = null) => {
   );
 };
 
-const findCustomerByEmail = async (email) => {
-  return await Customer.findOne({ where: { email } });
+const findCustomerByEmail = async (email, tenantId) => {
+  return await Customer.findOne({ where: withTenant({ email }, tenantId) });
 };
 
-const findOrCreateCustomer = async (customerDetails, t = null) => {
+const findOrCreateCustomer = async (customerDetails, t = null, tenantId) => {
   const { email } = customerDetails;
-  let customer = await findCustomerByEmail(email);
+  let customer = await findCustomerByEmail(email, tenantId);
   if (!customer) {
-    customer = await createCustomer(customerDetails, t);
+    customer = await createCustomer(customerDetails, t, tenantId);
   } else {
     await customer.increment("visitCount", { by: 1 });
     await customer.update({ lastVisitDate: new Date() });
@@ -170,20 +182,25 @@ const findOrCreateCustomer = async (customerDetails, t = null) => {
   return customer;
 };
 
-const updateCustomerTags = async (customerId, tags) => {
-  const customer = await Customer.findByPk(customerId);
+const updateCustomerTags = async (customerId, tags, tenantId) => {
+  const customer = await Customer.findOne({
+    where: withTenant({ id: customerId }, tenantId),
+  });
   if (!customer) return null;
   return await customer.update({ tags: Array.isArray(tags) ? tags : [] });
 };
 
-const updateCustomer = async (customerId, updates) => {
-  const customer = await Customer.findByPk(customerId);
+const updateCustomer = async (customerId, updates, tenantId) => {
+  const customer = await Customer.findOne({
+    where: withTenant({ id: customerId }, tenantId),
+  });
   if (!customer) return null;
   return await customer.update(updates);
 };
 
-const getCustomerById = async (customerId) => {
-  const customer = await Customer.findByPk(customerId, {
+const getCustomerById = async (customerId, tenantId) => {
+  const customer = await Customer.findOne({
+    where: withTenant({ id: customerId }, tenantId),
     attributes: [
       "id",
       "firstName",
@@ -203,24 +220,30 @@ const getCustomerById = async (customerId) => {
   return customer;
 };
 
-const incrementCustomerVisit = async (customerId) => {
-  const customer = await Customer.findByPk(customerId);
+const incrementCustomerVisit = async (customerId, tenantId) => {
+  const customer = await Customer.findOne({
+    where: withTenant({ id: customerId }, tenantId),
+  });
   if (!customer) return null;
   await customer.increment("visitCount", { by: 1 });
   await customer.update({ lastVisitDate: new Date() });
   return customer;
 };
 
-const addCustomerPoints = async (customerId, points) => {
-  const customer = await Customer.findByPk(customerId);
+const addCustomerPoints = async (customerId, points, tenantId) => {
+  const customer = await Customer.findOne({
+    where: withTenant({ id: customerId }, tenantId),
+  });
   if (!customer) return null;
   const nextPoints = (customer.points || 0) + points;
   await customer.update({ points: nextPoints });
   return customer;
 };
 
-const redeemCustomerPoints = async (customerId, points) => {
-  const customer = await Customer.findByPk(customerId);
+const redeemCustomerPoints = async (customerId, points, tenantId) => {
+  const customer = await Customer.findOne({
+    where: withTenant({ id: customerId }, tenantId),
+  });
   if (!customer) return null;
   const current = customer.points || 0;
   if (current < points) {
@@ -230,13 +253,15 @@ const redeemCustomerPoints = async (customerId, points) => {
   return customer;
 };
 
-const updateCustomerPreferences = async (customerId, preferences) => {
-  const customer = await Customer.findByPk(customerId);
+const updateCustomerPreferences = async (customerId, preferences, tenantId) => {
+  const customer = await Customer.findOne({
+    where: withTenant({ id: customerId }, tenantId),
+  });
   if (!customer) return null;
   return await customer.update({ preferences: preferences || {} });
 };
 
-const searchCustomers = async (query) => {
+const searchCustomers = async (query, tenantId) => {
   const { Op } = db.Sequelize;
   const escapedQuery = query
     .replace(/\\/g, "\\\\")
@@ -244,25 +269,37 @@ const searchCustomers = async (query) => {
     .replace(/_/g, "\\_");
   const like = `%${escapedQuery}%`;
   return await Customer.findAll({
-    where: {
-      [Op.or]: [
-        { firstName: { [Op.like]: like } },
-        { lastName: { [Op.like]: like } },
-        { email: { [Op.like]: like } },
-        { phone: { [Op.like]: like } },
-      ],
-    },
+    where: withTenant(
+      {
+        [Op.or]: [
+          { firstName: { [Op.like]: like } },
+          { lastName: { [Op.like]: like } },
+          { email: { [Op.like]: like } },
+          { phone: { [Op.like]: like } },
+        ],
+      },
+      tenantId
+    ),
     limit: 20,
     attributes: ["id", "firstName", "lastName", "email", "phone", "visitCount"],
   });
 };
 
-const getCustomerReservationHistory = async (customerId, limit = 50) => {
+const getCustomerReservationHistory = async (customerId, limit = 50, tenantId) => {
   return await Reservation.findAll({
-    where: { customerId },
+    where: withTenant({ customerId }, tenantId),
     order: [["resDate", "DESC"]],
     limit,
-    attributes: ["id", "resDate", "resTime", "resStatus", "people", "paymentStatus", "expectedTotal", "notes"],
+    attributes: [
+      "id",
+      "resDate",
+      "resTime",
+      "resStatus",
+      "people",
+      "paymentStatus",
+      "expectedTotal",
+      "notes",
+    ],
     include: [
       {
         model: Table,
@@ -274,9 +311,9 @@ const getCustomerReservationHistory = async (customerId, limit = 50) => {
   });
 };
 
-const getCustomerStats = async (customerId) => {
+const getCustomerStats = async (customerId, tenantId) => {
   const reservations = await Reservation.findAll({
-    where: { customerId },
+    where: withTenant({ customerId }, tenantId),
     attributes: [
       "resStatus",
       [fn("SUM", col("expectedTotal")), "totalExpected"],
@@ -303,13 +340,13 @@ const getCustomerStats = async (customerId) => {
     })),
   };
 };
-const createReservation = async (resDetails) => {
+const createReservation = async (resDetails, tenantId) => {
   const { resDate, resTime, people, notes, customerId, ...rest } = resDetails;
   const result = await db.sequelize.transaction(async (t) => {
     let finalCustomerId = customerId;
 
     if (!finalCustomerId) {
-      const customer = await findOrCreateCustomer(rest, t);
+      const customer = await findOrCreateCustomer(rest, t, tenantId);
       finalCustomerId = customer.id;
     }
 
@@ -322,6 +359,7 @@ const createReservation = async (resDetails) => {
         paymentStatus: resDetails.paymentStatus || "unpaid",
         expectedTotal: parseFloat(resDetails.expectedTotal || 0),
         notes: notes || null,
+        ...withTenant({}, tenantId),
       },
       { transaction: t }
     );
@@ -333,17 +371,15 @@ const createReservation = async (resDetails) => {
 
 const statusHistoryDAO = require("../DAOs/reservationStatusHistory.dao");
 
-const updateReservation = async (reservationId, resDetails) => {
+const updateReservation = async (reservationId, resDetails, tenantId) => {
   const [result, metadata] = await Reservation.update(resDetails, {
-    where: {
-      id: reservationId,
-    },
+    where: withTenant({ id: reservationId }, tenantId),
   });
 
   return result;
 };
 
-const recordStatusChange = async (reservationId, fromStatus, toStatus, actorId, metadata = {}) => {
+const recordStatusChange = async (reservationId, fromStatus, toStatus, actorId, metadata = {}, tenantId) => {
   return await statusHistoryDAO.addHistory({
     reservationId,
     fromStatus,
@@ -351,38 +387,50 @@ const recordStatusChange = async (reservationId, fromStatus, toStatus, actorId, 
     actorId,
     actorType: actorId ? "user" : "system",
     metadata,
+  }, tenantId);
+};
+
+const getStatusHistory = async (reservationId, tenantId) => {
+  return await statusHistoryDAO.getHistoryByReservation(reservationId, tenantId);
+};
+
+const mergeReservationTables = async (reservationId, tableIds, tenantId) => {
+  const reservation = await Reservation.findOne({
+    where: withTenant({ id: reservationId }, tenantId),
   });
-};
-
-const getStatusHistory = async (reservationId) => {
-  return await statusHistoryDAO.getHistoryByReservation(reservationId);
-};
-
-const mergeReservationTables = async (reservationId, tableIds) => {
-  const reservation = await Reservation.findByPk(reservationId);
   if (!reservation) return null;
   const uniqueIds = Array.from(new Set((tableIds || []).map((id) => parseInt(id, 10)))).filter(Boolean);
   await reservation.update({ mergedFromTableIds: uniqueIds });
   return reservation;
 };
 
-const unmergeReservationTables = async (reservationId) => {
-  const reservation = await Reservation.findByPk(reservationId);
+const unmergeReservationTables = async (reservationId, tenantId) => {
+  const reservation = await Reservation.findOne({
+    where: withTenant({ id: reservationId }, tenantId),
+  });
   if (!reservation) return null;
   await reservation.update({ mergedFromTableIds: null });
   return reservation;
 };
 
-const deleteReservation = async (reservation) => {
+const deleteReservation = async (reservation, tenantId) => {
+  if (tenantId && reservation.tenantId !== tenantId) {
+    throw { status: 404, message: "Reservation not found!" };
+  }
   return await reservation.update({ resStatus: "cancelled" });
 };
 
-const destroyReservation = async (reservation) => {
+const destroyReservation = async (reservation, tenantId) => {
+  if (tenantId && reservation.tenantId !== tenantId) {
+    throw { status: 404, message: "Reservation not found!" };
+  }
   return await reservation.destroy();
 };
 
-const cancelReservation = async (reservationId) => {
-  const reservation = await findReservationById(reservationId);
+const cancelReservation = async (reservationId, tenantId) => {
+  const reservation = await Reservation.findOne({
+    where: withTenant({ id: reservationId }, tenantId),
+  });
   if (!reservation) {
     throw {
       status: 404,
@@ -391,13 +439,16 @@ const cancelReservation = async (reservationId) => {
   }
 
   if (["cancelled", "seated", "completed", "missed"].includes(reservation.resStatus)) {
-    return await destroyReservation(reservation);
+    return await destroyReservation(reservation, tenantId);
   }
 
-  return await deleteReservation(reservation);
+  return await deleteReservation(reservation, tenantId);
 };
 
-const setReservationStatus = async (reservation, status) => {
+const setReservationStatus = async (reservation, status, tenantId) => {
+  if (tenantId && reservation.tenantId !== tenantId) {
+    throw { status: 404, message: "Reservation not found!" };
+  }
   reservation.resStatus = status;
   return await reservation.save();
 };
@@ -405,19 +456,23 @@ const setReservationStatus = async (reservation, status) => {
 const setReservationTable = async (
   reservationId,
   tableId,
-  { neededTables = 1 } = {}
+  { neededTables = 1 } = {},
+  tenantId
 ) => {
-  const reservation = await Reservation.findByPk(reservationId);
+  const reservation = await Reservation.findOne({
+    where: withTenant({ id: reservationId }, tenantId),
+  });
   if (!reservation) {
     throw { status: 404, message: "Reservation not found!" };
   }
 
-  const chosenTable = await Table.findByPk(tableId);
+  const chosenTable = await Table.findOne({
+    where: withTenant({ id: tableId }, tenantId),
+  });
   if (!chosenTable) {
     throw { status: 404, message: "Table not found!" };
   }
 
-  // Validate the chosen table can actually seat the party before occupying it.
   if (chosenTable.capacity && reservation.people > chosenTable.capacity) {
     throw {
       status: 400,
@@ -426,9 +481,7 @@ const setReservationTable = async (
   }
 
   const allFree = await Table.findAll({
-    where: {
-      isOccupied: false,
-    },
+    where: withTenant({ isOccupied: false }, tenantId),
   });
 
   const selected = [tableId];
@@ -442,8 +495,6 @@ const setReservationTable = async (
 
   const linkedTableIds = selected.filter((id) => id !== tableId);
 
-  // Wrap all occupancy + status writes in a transaction so a partial failure
-  // cannot leave tables in an inconsistent state.
   return await db.sequelize.transaction(async (t) => {
     await Table.update(
       {
@@ -451,7 +502,7 @@ const setReservationTable = async (
         reservationId: reservationId,
         linkedTableIds: linkedTableIds.length > 0 ? linkedTableIds : null,
       },
-      { where: { id: tableId }, transaction: t }
+      { where: withTenant({ id: tableId }, tenantId), transaction: t }
     );
 
     if (linkedTableIds.length > 0) {
@@ -466,26 +517,29 @@ const setReservationTable = async (
 
     await Reservation.update(
       { resStatus: "seated" },
-      { where: { id: reservationId }, transaction: t }
+      { where: withTenant({ id: reservationId }, tenantId), transaction: t }
     );
 
     return reservation;
   });
 };
 
-const getReservationsHeatmap = async () => {
+const getReservationsHeatmap = async (tenantId) => {
   const reservations = await Reservation.findAll({
     attributes: [
       [fn("DAYOFWEEK", col("resDate")), "dayOfWeek"],
       [fn("HOUR", col("resTime")), "hour"],
       [fn("COUNT", col("id")), "count"],
     ],
-    where: {
-      resDate: {
-        [Op.gte]: db.sequelize.fn("DATE_SUB", db.sequelize.fn("CURDATE"), db.sequelize.literal("INTERVAL 30 DAY")),
+    where: withTenant(
+      {
+        resDate: {
+          [Op.gte]: db.sequelize.fn("DATE_SUB", db.sequelize.fn("CURDATE"), db.sequelize.literal("INTERVAL 30 DAY")),
+        },
+        resStatus: "pending",
       },
-      resStatus: "pending",
-    },
+      tenantId
+    ),
     group: [fn("DAYOFWEEK", col("resDate")), fn("HOUR", col("resTime"))],
     raw: true,
   });
@@ -505,10 +559,8 @@ const getReservationsHeatmap = async () => {
   return heatmap;
 };
 
-const getHeatmapV2 = async (from, to, mode = "date-hour") => {
-  const where = {
-    resStatus: "pending",
-  };
+const getHeatmapV2 = async (from, to, mode = "date-hour", tenantId) => {
+  const where = withTenant({ resStatus: "pending" }, tenantId);
   if (from) where.resDate = { ...where.resDate, [Op.gte]: from };
   if (to) where.resDate = { ...where.resDate, [Op.lte]: to };
 
@@ -590,12 +642,13 @@ const getHeatmapV2 = async (from, to, mode = "date-hour") => {
   };
 };
 
-const getPaymentStatusCounts = async () => {
+const getPaymentStatusCounts = async (tenantId) => {
   const results = await Reservation.findAll({
     attributes: [
       ["paymentStatus", "status"],
       [fn("COUNT", col("id")), "count"],
     ],
+    where: withTenant({}, tenantId),
     group: ["paymentStatus"],
     raw: true,
   });
@@ -614,10 +667,10 @@ const getPaymentStatusCounts = async () => {
   return counts;
 };
 
-const bulkCancel = async (ids) => {
+const bulkCancel = async (ids, tenantId) => {
   const result = await db.sequelize.transaction(async (t) => {
     const reservations = await Reservation.findAll({
-      where: { id: ids },
+      where: withTenant({ id: ids }, tenantId),
       transaction: t,
     });
     const cancellable = reservations.filter((r) => r.resStatus !== "seated");
@@ -625,7 +678,7 @@ const bulkCancel = async (ids) => {
     const [count] = await Reservation.update(
       { resStatus: "cancelled" },
       {
-        where: { id: cancellable.map((r) => r.id) },
+        where: withTenant({ id: cancellable.map((r) => r.id) }, tenantId),
         transaction: t,
       }
     );
@@ -634,15 +687,16 @@ const bulkCancel = async (ids) => {
   return result;
 };
 
-const bulkUpdate = async (ids, updates) => {
+const bulkUpdate = async (ids, updates, tenantId) => {
   const count = await Reservation.update(updates, {
-    where: { id: ids },
+    where: withTenant({ id: ids }, tenantId),
   });
   return { count };
 };
 
-const getAssignedStaff = async (reservationId) => {
-  const reservation = await Reservation.findByPk(reservationId, {
+const getAssignedStaff = async (reservationId, tenantId) => {
+  const reservation = await Reservation.findOne({
+    where: withTenant({ id: reservationId }, tenantId),
     include: [
       {
         model: db.user,
@@ -654,32 +708,41 @@ const getAssignedStaff = async (reservationId) => {
   return reservation ? reservation.Users : [];
 };
 
-const assignStaff = async (reservationId, userId) => {
-  const reservation = await Reservation.findByPk(reservationId);
+const assignStaff = async (reservationId, userId, tenantId) => {
+  const reservation = await Reservation.findOne({
+    where: withTenant({ id: reservationId }, tenantId),
+  });
   if (!reservation) return null;
-  const user = await db.user.findByPk(userId);
+  const user = await db.user.findOne({
+    where: withTenant({ id: userId }, tenantId),
+  });
   if (!user) return null;
   await reservation.addUser(user);
   return { reservationId, userId };
 };
 
-const unassignStaff = async (reservationId, userId) => {
-  const reservation = await Reservation.findByPk(reservationId);
+const unassignStaff = async (reservationId, userId, tenantId) => {
+  const reservation = await Reservation.findOne({
+    where: withTenant({ id: reservationId }, tenantId),
+  });
   if (!reservation) return null;
-  const user = await db.user.findByPk(userId);
+  const user = await db.user.findOne({
+    where: withTenant({ id: userId }, tenantId),
+  });
   if (!user) return null;
   await reservation.removeUser(user);
   return { reservationId, userId };
 };
 
-const findAllReservationsRaw = async (where = {}) => {
-  return await Reservation.findAll({ where });
+const findAllReservationsRaw = async (where = {}, tenantId) => {
+  return await Reservation.findAll({ where: withTenant(where, tenantId) });
 };
 
-const searchReservationsByNotes = async (query) => {
+const searchReservationsByNotes = async (query, tenantId) => {
   const searchTerm = query.trim();
   if (!searchTerm) return [];
 
+  const tenantFilter = tenantId ? `AND r.tenantId = :tenantId` : "";
   const reservations = await db.sequelize.query(
     `SELECT r.id, r.customerId, r.resDate, r.resTime, r.resStatus, r.people, r.paymentStatus, r.expectedTotal, r.notes, 
      c.firstName, c.lastName, c.email, c.phone, c.tags,
@@ -687,10 +750,11 @@ const searchReservationsByNotes = async (query) => {
       FROM Reservations r
       JOIN customers c ON r.customerId = c.id
      WHERE MATCH(r.notes) AGAINST (:searchTerm IN NATURAL LANGUAGE MODE)
+      ${tenantFilter}
      ORDER BY relevance DESC
      LIMIT 50`,
     {
-      replacements: { searchTerm },
+      replacements: { searchTerm, ...(tenantId ? { tenantId } : {}) },
       type: db.sequelize.QueryTypes.SELECT,
     }
   );
@@ -698,8 +762,8 @@ const searchReservationsByNotes = async (query) => {
   return flattenArrayObjects(reservations);
 };
 
-const getReservationStats = async (filters = {}) => {
-  const where = {};
+const getReservationStats = async (filters = {}, tenantId) => {
+  const where = withTenant({}, tenantId);
   if (filters.from) where.resDate = { ...where.resDate, [Op.gte]: filters.from };
   if (filters.to) where.resDate = { ...where.resDate, [Op.lte]: filters.to };
   if (filters.paymentStatus) where.paymentStatus = filters.paymentStatus;
@@ -741,15 +805,18 @@ const getReservationStats = async (filters = {}) => {
   };
 };
 
-const getRecurringReservations = async (customerId) => {
+const getRecurringReservations = async (customerId, tenantId) => {
   const { Op } = db.Sequelize;
   const reservations = await Reservation.findAll({
-    where: {
-      customerId,
-      recurrence: {
-        [Op.not]: null,
+    where: withTenant(
+      {
+        customerId,
+        recurrence: {
+          [Op.not]: null,
+        },
       },
-    },
+      tenantId
+    ),
     order: [["resDate", "ASC"]],
     attributes: ["id", "resDate", "resTime", "people", "recurrence"],
   });

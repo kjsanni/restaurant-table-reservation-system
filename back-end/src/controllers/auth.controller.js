@@ -4,7 +4,8 @@ const roleDAO = require("../DAOs/role.dao");
 
 const registerStatusHandler = async (req, res) => {
   const { registrationEnabled } = await authService.checkRegistrationStatus(
-    authDAO
+    authDAO,
+    req.tenant?.id
   );
 
   return res.status(200).json({
@@ -16,7 +17,8 @@ const registerStatusHandler = async (req, res) => {
 const registerHandler = async (req, res) => {
   const payload = req.body;
   const { registrationEnabled } = await authService.checkRegistrationStatus(
-    authDAO
+    authDAO,
+    req.tenant?.id
   );
 
   if (!registrationEnabled) {
@@ -26,7 +28,7 @@ const registerHandler = async (req, res) => {
     };
   }
 
-  await authService.registerUser(authDAO, payload);
+  await authService.registerUser(authDAO, payload, req.tenant?.id);
 
   return res.status(201).json({
     success: true,
@@ -37,7 +39,7 @@ const registerHandler = async (req, res) => {
 const loginHandler = async (req, res) => {
   const payload = req.body;
   const ipAddress = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;
-  const result = await authService.loginUser(authDAO, payload, authDAO, ipAddress);
+  const result = await authService.loginUser(authDAO, payload, authDAO, ipAddress, req.tenant?.id);
 
   const isSecure = req.secure || false;
   const cookieBase = {
@@ -67,7 +69,7 @@ const loginHandler = async (req, res) => {
 };
 
 const getMeHandler = async (req, res) => {
-  const user = await authDAO.findUserById(req.user.id);
+  const user = await authDAO.findUserById(req.user.id, req.tenant?.id);
   let effectivePermissions = user.permissions || {};
   try {
     const rbacPermissions = await roleDAO.getRolePermissions(req.user.id);
@@ -128,7 +130,7 @@ const logoutHandler = async (req, res) => {
   try {
     const refreshToken = req.cookies?.refreshToken;
     if (refreshToken && authDAO.revokeRefreshToken) {
-      await authDAO.revokeRefreshToken(refreshToken);
+      await authDAO.revokeRefreshToken(refreshToken, req.tenant?.id);
     }
   } catch {
     // ignore token revocation errors during logout
@@ -153,7 +155,7 @@ const logoutHandler = async (req, res) => {
 
 const refreshTokenHandler = async (req, res) => {
   const { refreshToken } = req.body;
-  const result = await authService.refreshAccessToken(authDAO, refreshToken);
+  const result = await authService.refreshAccessToken(authDAO, refreshToken, req.tenant?.id);
 
   const isProd = process.env.NODE_ENV === "production";
   const cookieBase = {
@@ -185,7 +187,7 @@ const refreshTokenHandler = async (req, res) => {
 
 const revokeTokenHandler = async (req, res) => {
   const { refreshToken } = req.body;
-  await authService.revokeRefreshToken(authDAO, refreshToken);
+  await authService.revokeRefreshToken(authDAO, refreshToken, req.tenant?.id);
 
   return res.status(200).json({
     success: true,
@@ -194,7 +196,7 @@ const revokeTokenHandler = async (req, res) => {
 };
 
 const getSettingsHandler = async (req, res) => {
-  const settings = await authDAO.getAllSettings();
+  const settings = await authDAO.getAllSettings(req.tenant?.id);
   return res.status(200).json({
     success: true,
     settings,
@@ -203,7 +205,7 @@ const getSettingsHandler = async (req, res) => {
 
 const updateSettingsHandler = async (req, res) => {
   const { key, value } = req.body;
-  const setting = await authDAO.updateSetting(key, value);
+  const setting = await authDAO.updateSetting(key, value, req.tenant?.id);
 
   return res.status(200).json({
     success: true,
@@ -213,7 +215,7 @@ const updateSettingsHandler = async (req, res) => {
 };
 
 const getAllStaffHandler = async (req, res) => {
-  const users = await authDAO.getAllStaff();
+  const users = await authDAO.getAllStaff(req.tenant?.id);
   return res.status(200).json({
     success: true,
     users,
@@ -221,7 +223,7 @@ const getAllStaffHandler = async (req, res) => {
 };
 
 const getAllUsersHandler = async (req, res) => {
-  const users = await authDAO.getAllUsers();
+  const users = await authDAO.getAllUsers(req.tenant?.id);
   return res.status(200).json({
     success: true,
     users,
@@ -239,7 +241,7 @@ const createStaffHandler = async (req, res) => {
     password,
     role: normalizedRole,
     permissions,
-  });
+  }, req.tenant?.id);
 
   return res.status(201).json({
     success: true,
@@ -256,7 +258,6 @@ const updateStaffHandler = async (req, res) => {
     throw { status: 400, message: "Invalid role!" };
   }
 
-  // Prevent admin from demoting themselves
   if (req.user.id === parseInt(id) && updates.role && updates.role !== "admin") {
     throw {
       status: 400,
@@ -264,7 +265,7 @@ const updateStaffHandler = async (req, res) => {
     };
   }
 
-  const user = await authDAO.updateStaffUser(id, updates);
+  const user = await authDAO.updateStaffUser(id, updates, req.tenant?.id);
 
   return res.status(200).json({
     success: true,
@@ -276,7 +277,6 @@ const updateStaffHandler = async (req, res) => {
 const deleteStaffHandler = async (req, res) => {
   const { id } = req.params;
 
-  // Prevent admin from deleting themselves
   if (req.user.id === parseInt(id)) {
     throw {
       status: 400,
@@ -284,12 +284,11 @@ const deleteStaffHandler = async (req, res) => {
     };
   }
 
-  // Check if this is the last admin
-  const currentUser = await authDAO.findUserById(req.user.id);
-  const targetUser = await authDAO.findUserById(id);
+  const currentUser = await authDAO.findUserById(req.user.id, req.tenant?.id);
+  const targetUser = await authDAO.findUserById(id, req.tenant?.id);
 
   if (targetUser?.role === "admin" && currentUser.role === "admin") {
-    const adminCount = await authDAO.getAdminCount();
+    const adminCount = await authDAO.getAdminCount(req.tenant?.id);
     if (adminCount <= 1) {
       throw {
         status: 400,
@@ -298,7 +297,7 @@ const deleteStaffHandler = async (req, res) => {
     }
   }
 
-  await authDAO.deleteStaffUser(id);
+  await authDAO.deleteStaffUser(id, req.tenant?.id);
 
   return res.status(200).json({
     success: true,

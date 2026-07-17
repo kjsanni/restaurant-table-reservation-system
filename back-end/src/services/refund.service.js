@@ -1,8 +1,8 @@
 const refundDAO = require("../DAOs/refund.dao");
 const paymentDAO = require("../DAOs/payment.dao");
 
-const createRefund = async (paymentId, data) => {
-  const existing = await refundDAO.findByIdempotencyKey(data.idempotencyKey);
+const createRefund = async (paymentId, data, tenantId) => {
+  const existing = await refundDAO.findByIdempotencyKey(data.idempotencyKey, tenantId);
   if (existing) {
     return existing;
   }
@@ -14,13 +14,13 @@ const createRefund = async (paymentId, data) => {
     status: data.status || "pending",
     refundedBy: data.refundedBy || null,
     idempotencyKey: data.idempotencyKey || null,
-  });
+  }, tenantId);
 
   return refund;
 };
 
-const getRefundsByPayment = async (paymentId) => {
-  return await refundDAO.findByPaymentId(paymentId);
+const getRefundsByPayment = async (paymentId, tenantId) => {
+  return await refundDAO.findByPaymentId(paymentId, tenantId);
 };
 
 module.exports = {

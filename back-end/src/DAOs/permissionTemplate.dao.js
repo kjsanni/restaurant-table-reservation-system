@@ -2,44 +2,58 @@ const db = require("../db/models");
 const PermissionTemplate = db.permissionTemplate;
 const { Op } = db.Sequelize;
 
-const findAllTemplates = async () => {
-  return await PermissionTemplate.findAll({ order: [["id", "ASC"]] });
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+
+const findAllTemplates = async (tenantId) => {
+  return await PermissionTemplate.findAll({
+    where: withTenant({}, tenantId),
+    order: [["id", "ASC"]],
+  });
 };
 
-const findTemplateById = async (id) => {
-  return await PermissionTemplate.findByPk(id);
+const findTemplateById = async (id, tenantId) => {
+  return await PermissionTemplate.findOne({
+    where: withTenant({ id }, tenantId),
+  });
 };
 
-const findTemplateByName = async (name) => {
-  return await PermissionTemplate.findOne({ where: { name } });
+const findTemplateByName = async (name, tenantId) => {
+  return await PermissionTemplate.findOne({ where: withTenant({ name }, tenantId) });
 };
 
-const createTemplate = async (templateData) => {
-  return await PermissionTemplate.create(templateData);
+const createTemplate = async (templateData, tenantId) => {
+  return await PermissionTemplate.create({
+    ...templateData,
+    ...withTenant({}, tenantId),
+  });
 };
 
-const updateTemplate = async (id, updates) => {
-  const template = await PermissionTemplate.findByPk(id);
+const updateTemplate = async (id, updates, tenantId) => {
+  const template = await PermissionTemplate.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!template) return null;
   return await template.update(updates);
 };
 
-const deleteTemplate = async (id) => {
-  const template = await PermissionTemplate.findByPk(id);
+const deleteTemplate = async (id, tenantId) => {
+  const template = await PermissionTemplate.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!template) return null;
   await template.destroy();
   return true;
 };
 
-const searchTemplates = async (query) => {
+const searchTemplates = async (query, tenantId) => {
   const like = `%${query}%`;
   return await PermissionTemplate.findAll({
-    where: {
+    where: withTenant({
       [Op.or]: [
         { name: { [Op.like]: like } },
         { description: { [Op.like]: like } },
       ],
-    },
+    }, tenantId),
     order: [["id", "ASC"]],
   });
 };

@@ -16,7 +16,7 @@ const escapeCsv = (str) => {
 };
 
 const getAllSchedulesHandler = async (req, res) => {
-  const schedules = await scheduleDAO.getAllSchedules();
+  const schedules = await scheduleDAO.getAllSchedules(req.tenant?.id);
   return res.status(200).json({
     success: true,
     schedules,
@@ -39,7 +39,7 @@ const createScheduleHandler = async (req, res) => {
     closeTime,
     isClosed: isClosed || false,
     slotDuration: slotDuration || 30,
-  });
+  }, req.tenant?.id);
 
   req.app.get("io").emit("schedule-updated", { action: "create", schedule });
 
@@ -52,7 +52,7 @@ const createScheduleHandler = async (req, res) => {
 
 const updateScheduleHandler = async (req, res) => {
   const { id } = req.params;
-  const result = await scheduleDAO.updateSchedule(id, req.body);
+  const result = await scheduleDAO.updateSchedule(id, req.body, req.tenant?.id);
 
   if (!result) {
     throw { status: 404, message: "Schedule not found!" };
@@ -68,7 +68,7 @@ const updateScheduleHandler = async (req, res) => {
 
 const deleteScheduleHandler = async (req, res) => {
   const { id } = req.params;
-  const result = await scheduleDAO.deleteSchedule(id);
+  const result = await scheduleDAO.deleteSchedule(id, req.tenant?.id);
 
   if (!result) {
     throw { status: 404, message: "Schedule not found!" };
@@ -83,7 +83,7 @@ const deleteScheduleHandler = async (req, res) => {
 };
 
 const getAllHolidaysHandler = async (req, res) => {
-  const holidays = await scheduleDAO.getAllHolidays();
+  const holidays = await scheduleDAO.getAllHolidays(req.tenant?.id);
   return res.status(200).json({
     success: true,
     holidays,
@@ -106,7 +106,7 @@ const createHolidayHandler = async (req, res) => {
     isClosed: isClosed !== false,
     openTime,
     closeTime,
-  });
+  }, req.tenant?.id);
 
   req.app.get("io").emit("holiday-updated", { action: "create", holiday });
 
@@ -119,7 +119,7 @@ const createHolidayHandler = async (req, res) => {
 
 const deleteHolidayHandler = async (req, res) => {
   const { id } = req.params;
-  const result = await scheduleDAO.deleteHoliday(id);
+  const result = await scheduleDAO.deleteHoliday(id, req.tenant?.id);
 
   if (!result) {
     throw { status: 404, message: "Holiday not found!" };
@@ -134,8 +134,8 @@ const deleteHolidayHandler = async (req, res) => {
 };
 
 const exportScheduleCSVHandler = async (req, res) => {
-  const schedules = await scheduleDAO.getAllSchedules();
-  const holidays = await scheduleDAO.getAllHolidays();
+  const schedules = await scheduleDAO.getAllSchedules(req.tenant?.id);
+  const holidays = await scheduleDAO.getAllHolidays(req.tenant?.id);
 
   let csv = "Type,Day/Date,Open Time,Close Time,Status,Description\n";
 
@@ -153,8 +153,8 @@ const exportScheduleCSVHandler = async (req, res) => {
 };
 
 const exportSchedulePDFHandler = async (req, res) => {
-  const schedules = await scheduleDAO.getAllSchedules();
-  const holidays = await scheduleDAO.getAllHolidays();
+  const schedules = await scheduleDAO.getAllSchedules(req.tenant?.id);
+  const holidays = await scheduleDAO.getAllHolidays(req.tenant?.id);
 
   const html = `
     <html>

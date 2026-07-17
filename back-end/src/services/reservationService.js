@@ -1,11 +1,11 @@
 const dateTimeValidator = require("../utils/dateAndTimeValidator");
 const scheduleService = require("./scheduleService");
 
-const getAllReservations = async (reservationDAO, filters = {}, pagination = {}) => {
+const getAllReservations = async (reservationDAO, filters = {}, pagination = {}, tenantId) => {
   if (Object.keys(filters).length > 0) {
-    return await reservationDAO.searchReservations(filters, pagination);
+    return await reservationDAO.searchReservations(filters, pagination, tenantId);
   }
-  return await reservationDAO.findAllReservations(pagination);
+  return await reservationDAO.findAllReservations(pagination, tenantId);
 };
 
 const checkClosingOpeningTime = (
@@ -57,11 +57,10 @@ const isFieldEmpty = (payload) => {
   }
 };
 
-const registerReservation = async (reservationDAO, payload) => {
+const registerReservation = async (reservationDAO, payload, tenantId) => {
   isFieldEmpty(payload);
   validateTime(new Date(), payload.resDate, payload.resTime);
 
-  // Enforce opening hours, closed days, and holiday closures before creating.
   try {
     const scheduleDAO = require("../DAOs/schedule.dao");
     const holidayDAO = require("../DAOs/holiday.dao");
@@ -76,12 +75,16 @@ const registerReservation = async (reservationDAO, payload) => {
     throw { status: 500, message: "Unable to verify schedule availability." };
   }
 
-  const customer = await reservationDAO.findOrCreateCustomer({
-    email: payload.email,
-    firstName: payload.firstName,
-    lastName: payload.lastName,
-    phone: payload.phone,
-  });
+  const customer = await reservationDAO.findOrCreateCustomer(
+    {
+      email: payload.email,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      phone: payload.phone,
+    },
+    null,
+    tenantId
+  );
 
   const data = {
     ...payload,
@@ -89,22 +92,22 @@ const registerReservation = async (reservationDAO, payload) => {
     paymentStatus: payload.paymentStatus || "unpaid",
   };
 
-  return await reservationDAO.createReservation(data);
+  return await reservationDAO.createReservation(data, tenantId);
 };
 
-const editReservation = async (reservationId, reservationDAO, payload) => {
-  const reservation = await reservationDAO.findReservationById(reservationId);
+const editReservation = async (reservationId, reservationDAO, payload, tenantId) => {
+  const reservation = await reservationDAO.findReservationById(reservationId, tenantId);
   if (!reservation)
     throw {
       status: 404,
       message: "Reservation not found!",
     };
   validateTime(new Date(), payload.resDate, payload.resTime);
-  return await reservationDAO.updateReservation(reservationId, payload);
+  return await reservationDAO.updateReservation(reservationId, payload, tenantId);
 };
 
-const cancelReservation = async (reservationId, reservationDAO) => {
-  const reservation = await reservationDAO.findReservationById(reservationId);
+const cancelReservation = async (reservationId, reservationDAO, tenantId) => {
+  const reservation = await reservationDAO.findReservationById(reservationId, tenantId);
   if (!reservation) {
     throw {
       status: 404,
@@ -112,9 +115,9 @@ const cancelReservation = async (reservationId, reservationDAO) => {
     };
   }
   if (["cancelled", "seated", "completed", "missed"].includes(reservation.resStatus)) {
-    return await reservationDAO.destroyReservation(reservation);
+    return await reservationDAO.destroyReservation(reservation, tenantId);
   }
-  return await reservationDAO.deleteReservation(reservation);
+  return await reservationDAO.deleteReservation(reservation, tenantId);
 };
 
 const compareResDateToCurrDate = (resDate, currDate) => {
@@ -125,30 +128,29 @@ const chooseTable = async (
   reservationId,
   tableId,
   reservationDAO,
-  tableDAO
+  tableDAO,
+  tenantId
 ) => {
-  let reservation = await reservationDAO.findReservationById(reservationId);
+  let reservation = await reservationDAO.findReservationById(reservationId, tenantId);
   if (!reservation) {
     throw {
       status: 404,
       message: "Reservation not found!",
     };
   }
-  const table = await tableDAO.findTableById(tableId);
+  const table = await tableDAO.findTableById(tableId, tenantId);
 
   const currDate = new Date();
   const currDateStr = dateTimeValidator.asDateString(currDate);
 
-  // Past reservation day (and not already resolved) => mark as missed.
   if (
     compareResDateToCurrDate(reservation.resDate, currDateStr) === -1 &&
     reservation.resStatus !== "missed" &&
     reservation.resStatus !== "cancelled"
   ) {
-    reservation = await reservationDAO.setReservationStatus(reservation, "missed");
+    reservation = await reservationDAO.setReservationStatus(reservation, "missed", tenantId);
   }
 
-  // Same-day reservation whose time has passed the 30-minute grace window => missed.
   if (compareResDateToCurrDate(reservation.resDate, currDateStr) === 0) {
     const graceEnd = new Date(currDate);
     graceEnd.setMinutes(graceEnd.getMinutes() - 30);
@@ -158,15 +160,9 @@ const chooseTable = async (
       reservation.resStatus !== "seated" &&
       reservation.resStatus !== "cancelled"
     ) {
-      reservation = await reservationDAO.setReservationStatus(reservation, "missed");
+      reservation = await reservationDAO.setReservationStatus(reservation, "missed", tenantId);
     }
   }
-  /**
-   *
-   * if reservation.resStatus === 'seated'
-   *  => throw error => "You've already reserved a table. Please make a new reservation."
-   * missed reservations can still be seated if a table is free
-   */
   if (reservation.resStatus === "seated") {
     throw {
       status: 400,
@@ -174,10 +170,6 @@ const chooseTable = async (
         "You've already reserved a table! Please make a new reservation.",
     };
   }
-  /**
-   *
-   * If no table provided or table is already occupied throw an error
-   */
   if (!tableId || !table) {
     throw {
       status: 400,
@@ -196,7 +188,7 @@ const chooseTable = async (
 
   return await reservationDAO.setReservationTable(reservationId, tableId, {
     neededTables,
-  });
+  }, tenantId);
 };
 
 const paymentDAO = require("../DAOs/payment.dao");
@@ -205,36 +197,36 @@ const getRevenueTimeSeries = async (from, to, granularity = "day") => {
   return await paymentDAO.getRevenueTimeSeries(from, to, granularity);
 };
 
-const searchReservations = async (reservationDAO, query) => {
+const searchReservations = async (reservationDAO, query, tenantId) => {
   const term = query.trim();
   if (!term) return [];
-  const results = await reservationDAO.searchReservations(term);
+  const results = await reservationDAO.searchReservations(term, tenantId);
   return results;
 };
 
-const getRecurringReservations = async (reservationDAO, customerId) => {
-  return await reservationDAO.getRecurringReservations(customerId);
+const getRecurringReservations = async (reservationDAO, customerId, tenantId) => {
+  return await reservationDAO.getRecurringReservations(customerId, tenantId);
 };
 
-const recordStatusChange = async (reservationDAO, reservationId, fromStatus, toStatus, actorId, metadata = {}) => {
-  await reservationDAO.recordStatusChange(reservationId, fromStatus, toStatus, actorId, metadata);
+const recordStatusChange = async (reservationDAO, reservationId, fromStatus, toStatus, actorId, metadata = {}, tenantId) => {
+  await reservationDAO.recordStatusChange(reservationId, fromStatus, toStatus, actorId, metadata, tenantId);
   return true;
 };
 
-const getStatusHistory = async (reservationDAO, reservationId) => {
-  return await reservationDAO.getStatusHistory(reservationId);
+const getStatusHistory = async (reservationDAO, reservationId, tenantId) => {
+  return await reservationDAO.getStatusHistory(reservationId, tenantId);
 };
 
-const mergeReservationTables = async (reservationDAO, reservationId, tableIds) => {
+const mergeReservationTables = async (reservationDAO, reservationId, tableIds, tenantId) => {
   const uniqueTableIds = Array.from(new Set((tableIds || []).map((id) => parseInt(id, 10)))).filter(Boolean);
   if (!uniqueTableIds.length) {
     throw { status: 400, message: "Provide at least one table to merge." };
   }
-  return await reservationDAO.mergeReservationTables(reservationId, uniqueTableIds);
+  return await reservationDAO.mergeReservationTables(reservationId, uniqueTableIds, tenantId);
 };
 
-const unmergeReservationTables = async (reservationDAO, reservationId) => {
-  return await reservationDAO.unmergeReservationTables(reservationId);
+const unmergeReservationTables = async (reservationDAO, reservationId, tenantId) => {
+  return await reservationDAO.unmergeReservationTables(reservationId, tenantId);
 };
 
 module.exports = {

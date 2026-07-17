@@ -4,17 +4,19 @@ const db = require("../db/models");
 const Payment = db.payment;
 const refundDAO = require("../DAOs/refund.dao");
 
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+
 const classifyPaymentStatus = (totalPaid, expectedTotal) => {
   if (totalPaid <= 0) return "unpaid";
   if (totalPaid >= parseFloat(expectedTotal || 0)) return "paid";
   return "deposit";
 };
 
-const getPaymentsForReservation = async (reservationId) => {
-  return await paymentDAO.findByReservation(reservationId);
+const getPaymentsForReservation = async (reservationId, tenantId) => {
+  return await paymentDAO.findByReservation(reservationId, tenantId);
 };
 
-const addPayment = async (reservationId, data) => {
+const addPayment = async (reservationId, data, tenantId) => {
   if (!data.amount || parseFloat(data.amount) <= 0) {
     throw { status: 400, message: "Invalid payment amount" };
   }
@@ -40,10 +42,10 @@ const addPayment = async (reservationId, data) => {
     amount: paymentAmount,
     method: sanitizedSplits.length > 0 ? "split" : data.method,
     splits: sanitizedSplits.length > 0 ? sanitizedSplits : undefined,
-  });
+  }, tenantId);
 
-  const paidInfo = await paymentDAO.getTotalPaid(reservationId);
-  const reservation = await reservationDAO.findReservationById(reservationId);
+  const paidInfo = await paymentDAO.getTotalPaid(reservationId, tenantId);
+  const reservation = await reservationDAO.findReservationById(reservationId, tenantId);
   let updatedReservation = null;
   if (reservation) {
     const expectedTotal = reservation.expectedTotal || 0;
@@ -52,7 +54,7 @@ const addPayment = async (reservationId, data) => {
     if (reservation.paymentStatus !== newStatus) {
       await reservationDAO.updateReservation(reservationId, {
         paymentStatus: newStatus,
-      });
+      }, tenantId);
       reservation.paymentStatus = newStatus;
     }
     updatedReservation = reservation;
@@ -61,14 +63,14 @@ const addPayment = async (reservationId, data) => {
   return { payment, ...paidInfo, reservation: updatedReservation };
 };
 
-const getTotalPaid = async (reservationId) => {
-  return await paymentDAO.getTotalPaid(reservationId);
+const getTotalPaid = async (reservationId, tenantId) => {
+  return await paymentDAO.getTotalPaid(reservationId, tenantId);
 };
 
-const removePayment = async (reservationId, id) => {
-  await paymentDAO.remove(reservationId, id);
-  const paidInfo = await paymentDAO.getTotalPaid(reservationId);
-  const reservation = await reservationDAO.findReservationById(reservationId);
+const removePayment = async (reservationId, id, tenantId) => {
+  await paymentDAO.remove(reservationId, id, tenantId);
+  const paidInfo = await paymentDAO.getTotalPaid(reservationId, tenantId);
+  const reservation = await reservationDAO.findReservationById(reservationId, tenantId);
   let updatedReservation = null;
   if (reservation) {
     const expectedTotal = reservation.expectedTotal || 0;
@@ -77,7 +79,7 @@ const removePayment = async (reservationId, id) => {
     if (reservation.paymentStatus !== newStatus) {
       await reservationDAO.updateReservation(reservationId, {
         paymentStatus: newStatus,
-      });
+      }, tenantId);
       reservation.paymentStatus = newStatus;
     }
     updatedReservation = reservation;
@@ -85,8 +87,10 @@ const removePayment = async (reservationId, id) => {
   return { ...paidInfo, reservation: updatedReservation };
 };
 
-const refundPayment = async (reservationId, paymentId, data) => {
-  const payment = await Payment.findByPk(paymentId);
+const refundPayment = async (reservationId, paymentId, data, tenantId) => {
+  const payment = await Payment.findOne({
+    where: withTenant({ id: paymentId }, tenantId),
+  });
   if (!payment) {
     throw { status: 404, message: "Payment not found" };
   }
@@ -109,17 +113,17 @@ const refundPayment = async (reservationId, paymentId, data) => {
     status: "pending",
     refundedBy: data.refundedBy || null,
     idempotencyKey: data.idempotencyKey || null,
-  });
+  }, tenantId);
 
   return { refund, skipped: false };
 };
 
-const getPaymentHistory = async (filters = {}) => {
-  return await paymentDAO.getPaymentHistory(filters);
+const getPaymentHistory = async (filters = {}, tenantId) => {
+  return await paymentDAO.getPaymentHistory(filters, tenantId);
 };
 
-const getRevenueStats = async (from, to) => {
-  return await paymentDAO.getRevenueStats(from, to);
+const getRevenueStats = async (from, to, tenantId) => {
+  return await paymentDAO.getRevenueStats(from, to, tenantId);
 };
 
 module.exports = {

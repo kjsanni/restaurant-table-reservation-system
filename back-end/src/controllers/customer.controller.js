@@ -3,7 +3,7 @@ const reservationDAO = require("../DAOs/reservation.dao");
 
 const getCustomerHandler = async (req, res) => {
   const { customerId } = req.params;
-  const customer = await customerService.getCustomerLoyalty(customerId);
+  const customer = await customerService.getCustomerLoyalty(customerId, req.tenant?.id);
   if (!customer) {
     return res.status(404).json({ success: false, message: "Customer not found" });
   }
@@ -13,14 +13,14 @@ const getCustomerHandler = async (req, res) => {
 const getCustomerProfileHandler = async (req, res) => {
   const { customerId } = req.params;
 
-  const customer = await reservationDAO.getCustomerById(customerId);
+  const customer = await reservationDAO.getCustomerById(customerId, req.tenant?.id);
   if (!customer) {
     return res.status(404).json({ success: false, message: "Customer not found" });
   }
 
   const [history, stats] = await Promise.all([
-    reservationDAO.getCustomerReservationHistory(customerId, 50),
-    reservationDAO.getCustomerStats(customerId),
+    reservationDAO.getCustomerReservationHistory(customerId, 50, req.tenant?.id),
+    reservationDAO.getCustomerStats(customerId, req.tenant?.id),
   ]);
 
   return res.status(200).json({
@@ -36,25 +36,25 @@ const getCustomerProfileHandler = async (req, res) => {
 const updateTagsHandler = async (req, res) => {
   const { customerId } = req.params;
   const { tags } = req.body;
-  const customer = await customerService.updateCustomerTags(customerId, tags);
+  const customer = await customerService.updateCustomerTags(customerId, tags, req.tenant?.id);
   return res.status(200).json({ success: true, customer });
 };
 
 const updateCustomerHandler = async (req, res) => {
   const { customerId } = req.params;
   const updates = req.body;
-  const customer = await customerService.updateCustomer(customerId, updates);
+  const customer = await customerService.updateCustomer(customerId, updates, req.tenant?.id);
   return res.status(200).json({ success: true, customer });
 };
 
 const findOrCreateHandler = async (req, res) => {
-  const customer = await customerService.findOrCreateCustomer(req.body);
+  const customer = await customerService.findOrCreateCustomer(req.body, req.tenant?.id);
   return res.status(200).json({ success: true, customer });
 };
 
 const incrementVisitHandler = async (req, res) => {
   const { customerId } = req.params;
-  const customer = await customerService.incrementVisit(customerId);
+  const customer = await customerService.incrementVisit(customerId, req.tenant?.id);
   if (!customer) {
     return res.status(404).json({ success: false, message: "Customer not found" });
   }
@@ -67,7 +67,7 @@ const addPointsHandler = async (req, res) => {
   if (!points || Number(points) <= 0) {
     return res.status(400).json({ success: false, message: "Invalid points value." });
   }
-  const customer = await customerService.addPoints(customerId, Number(points));
+  const customer = await customerService.addPoints(customerId, Number(points), req.tenant?.id);
   if (!customer) {
     return res.status(404).json({ success: false, message: "Customer not found" });
   }
@@ -80,7 +80,7 @@ const redeemPointsHandler = async (req, res) => {
   if (!points || Number(points) <= 0) {
     return res.status(400).json({ success: false, message: "Invalid points value." });
   }
-  const customer = await customerService.redeemPoints(customerId, Number(points));
+  const customer = await customerService.redeemPoints(customerId, Number(points), req.tenant?.id);
   if (!customer) {
     return res.status(404).json({ success: false, message: "Customer not found" });
   }
@@ -90,7 +90,7 @@ const redeemPointsHandler = async (req, res) => {
 const updatePreferencesHandler = async (req, res) => {
   const { customerId } = req.params;
   const preferences = req.body.preferences || {};
-  const customer = await customerService.updatePreferences(customerId, preferences);
+  const customer = await customerService.updatePreferences(customerId, preferences, req.tenant?.id);
   if (!customer) {
     return res.status(404).json({ success: false, message: "Customer not found" });
   }
@@ -102,7 +102,7 @@ const searchCustomersHandler = async (req, res) => {
   if (!query) {
     return res.status(400).json({ success: false, message: "Query is required" });
   }
-  const customers = await customerService.searchCustomers(query);
+  const customers = await customerService.searchCustomers(query, req.tenant?.id);
   return res.status(200).json({ success: true, customers });
 };
 

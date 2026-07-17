@@ -4,7 +4,7 @@ const reservationDAO = require("../DAOs/reservation.dao");
 const waitlistDAO = require("../DAOs/waitlist.dao");
 
 const getAllHandler = async (req, res) => {
-  const tables = await tableService.getAllTables(tableDAO);
+  const tables = await tableService.getAllTables(tableDAO, req.tenant?.id);
 
   if (tables.length === 0)
     throw {
@@ -31,7 +31,7 @@ const registerHandler = async (req, res) => {
     name,
     capacity,
     staffIds: staffIds || [],
-  });
+  }, req.tenant?.id);
 
   return res.status(201).json({
     success: true,
@@ -44,7 +44,8 @@ const freeTableHandler = async (req, res) => {
   const tableId = req.params.tableId;
   const info = await tableService.freeTable(
     { reservationDAO, tableDAO },
-    tableId
+    tableId,
+    req.tenant?.id
   );
 
   const io = req.app.get("io");
@@ -71,8 +72,8 @@ const freeTableHandler = async (req, res) => {
 const blockTableHandler = async (req, res) => {
   const { id } = req.params;
   const { notes } = req.body;
-  const table = await tableDAO.blockTable(id, notes);
-  await tableService.recordEvent(tableDAO, id, "blocked", notes || null, req.user?.id || null);
+  const table = await tableDAO.blockTable(id, notes, req.tenant?.id);
+  await tableService.recordEvent(tableDAO, id, "blocked", notes || null, req.user?.id || null, req.tenant?.id);
 
   return res.status(200).json({
     success: true,
@@ -83,8 +84,8 @@ const blockTableHandler = async (req, res) => {
 
 const unblockTableHandler = async (req, res) => {
   const { id } = req.params;
-  const table = await tableDAO.unblockTable(id);
-  await tableService.recordEvent(tableDAO, id, "unblocked", null, req.user?.id || null);
+  const table = await tableDAO.unblockTable(id, req.tenant?.id);
+  await tableService.recordEvent(tableDAO, id, "unblocked", null, req.user?.id || null, req.tenant?.id);
 
   return res.status(200).json({
     success: true,
@@ -94,7 +95,7 @@ const unblockTableHandler = async (req, res) => {
 };
 
 const getWaitingStaffHandler = async (req, res) => {
-  const staff = await tableService.getWaitingStaff(tableDAO);
+  const staff = await tableService.getWaitingStaff(tableDAO, req.tenant?.id);
   return res.status(200).json({
     success: true,
     staff,
@@ -104,8 +105,8 @@ const getWaitingStaffHandler = async (req, res) => {
 const assignStaffHandler = async (req, res) => {
   const { tableId } = req.params;
   const { userId } = req.body;
-  const info = await tableService.assignStaff(tableDAO, tableId, userId);
-  await tableService.recordEvent(tableDAO, tableId, "staff_assigned", null, req.user?.id || null);
+  const info = await tableService.assignStaff(tableDAO, tableId, userId, req.tenant?.id);
+  await tableService.recordEvent(tableDAO, tableId, "staff_assigned", null, req.user?.id || null, req.tenant?.id);
 
   return res.status(200).json({
     success: true,
@@ -116,8 +117,8 @@ const assignStaffHandler = async (req, res) => {
 
 const unassignStaffHandler = async (req, res) => {
   const { tableId, userId } = req.params;
-  const info = await tableService.unassignStaff(tableDAO, tableId, userId);
-  await tableService.recordEvent(tableDAO, tableId, "staff_unassigned", null, req.user?.id || null);
+  const info = await tableService.unassignStaff(tableDAO, tableId, userId, req.tenant?.id);
+  await tableService.recordEvent(tableDAO, tableId, "staff_unassigned", null, req.user?.id || null, req.tenant?.id);
 
   return res.status(200).json({
     success: true,
@@ -129,7 +130,7 @@ const unassignStaffHandler = async (req, res) => {
 const editHandler = async (req, res) => {
   const { id } = req.params;
   const { name, capacity } = req.body;
-  const table = await tableService.editTable(tableDAO, id, { name, capacity });
+  const table = await tableService.editTable(tableDAO, id, { name, capacity }, req.tenant?.id);
 
   return res.status(200).json({
     success: true,
@@ -148,7 +149,8 @@ const updatePositionHandler = async (req, res) => {
     id,
     x,
     y,
-    floorPlanId
+    floorPlanId,
+    req.tenant?.id
   );
 
   return res.status(200).json({

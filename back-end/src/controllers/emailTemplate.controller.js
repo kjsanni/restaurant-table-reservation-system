@@ -1,12 +1,12 @@
 const emailTemplateService = require("../services/emailTemplate.service");
 
 const getAllHandler = async (req, res) => {
-  const templates = await emailTemplateService.getAllTemplates();
+  const templates = await emailTemplateService.getAllTemplates(req.tenant?.id);
   return res.status(200).json({ success: true, templates });
 };
 
 const getByIdHandler = async (req, res) => {
-  const template = await emailTemplateService.getTemplateById(req.params.id);
+  const template = await emailTemplateService.getTemplateById(req.params.id, req.tenant?.id);
   if (!template) {
     return res.status(404).json({ success: false, message: "Template not found" });
   }
@@ -25,12 +25,12 @@ const createHandler = async (req, res) => {
     body,
     variables: variables || [],
     isActive: isActive !== false,
-  });
+  }, req.tenant?.id);
   return res.status(201).json({ success: true, template });
 };
 
 const updateHandler = async (req, res) => {
-  const template = await emailTemplateService.updateTemplate(req.params.id, req.body);
+  const template = await emailTemplateService.updateTemplate(req.params.id, req.body, req.tenant?.id);
   if (!template) {
     return res.status(404).json({ success: false, message: "Template not found" });
   }
@@ -38,7 +38,7 @@ const updateHandler = async (req, res) => {
 };
 
 const deleteHandler = async (req, res) => {
-  const result = await emailTemplateService.deleteTemplate(req.params.id);
+  const result = await emailTemplateService.deleteTemplate(req.params.id, req.tenant?.id);
   if (!result) {
     return res.status(404).json({ success: false, message: "Template not found" });
   }

@@ -6,9 +6,12 @@ const User = db.user;
 const TableEvent = db.tableEvent;
 const { fn, col } = db.sequelize;
 
-const findAllTables = async () => {
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+
+const findAllTables = async (tenantId) => {
   return await Table.findAll({
     attributes: { exclude: ["linkedTableIds"] },
+    where: withTenant({}, tenantId),
     include: [
       {
         model: Reservation,
@@ -31,11 +34,12 @@ const findAllTables = async () => {
   });
 };
 
-const createTable = async ({ name, capacity, staffIds, floorPlanId }) => {
+const createTable = async ({ name, capacity, staffIds, floorPlanId }, tenantId) => {
   const table = await Table.create({
     name: name,
     capacity: capacity,
     floorPlanId: floorPlanId ?? null,
+    ...withTenant({}, tenantId),
   });
   if (staffIds && staffIds.length > 0) {
     await table.addUsers(staffIds);
@@ -43,42 +47,43 @@ const createTable = async ({ name, capacity, staffIds, floorPlanId }) => {
   return table;
 };
 
-const findTableById = async (id) => {
+const findTableById = async (id, tenantId) => {
   return await Table.findOne({
-    where: {
-      id: id,
-    },
+    where: withTenant({ id }, tenantId),
   });
 };
 
-const updateTable = async (table, payload) => {
+const updateTable = async (table, payload, tenantId) => {
+  if (tenantId && table.tenantId !== tenantId) {
+    throw { status: 404, message: "Table not found!" };
+  }
   return await table.update(payload);
 };
 
-const blockTable = async (id, notes = null) => {
-  const table = await findTableById(id);
+const blockTable = async (id, notes = null, tenantId) => {
+  const table = await findTableById(id, tenantId);
   if (!table) {
     throw { status: 404, message: "Table not found!" };
   }
   return await table.update({ isBlocked: true, maintenanceNotes: notes });
 };
 
-const unblockTable = async (id) => {
-  const table = await findTableById(id);
+const unblockTable = async (id, tenantId) => {
+  const table = await findTableById(id, tenantId);
   if (!table) {
     throw { status: 404, message: "Table not found!" };
   }
   return await table.update({ isBlocked: false, maintenanceNotes: null });
 };
 
-const freeTable = async (reservationDAO, table) => {
+const freeTable = async (reservationDAO, table, tenantId) => {
   const reservationId = table.reservationId;
   if (!reservationId) {
     await updateTable(table, {
       isOccupied: false,
       reservationId: null,
       linkedTableIds: null,
-    });
+    }, tenantId);
     return null;
   }
 
@@ -93,32 +98,30 @@ const freeTable = async (reservationDAO, table) => {
         linkedTableIds: null,
       },
       {
-        where: {
-          id: linkedIds,
-        },
+        where: withTenant({ id: linkedIds }, tenantId),
       }
     );
   }
 
-  const reservation = await reservationDAO.findReservationById(reservationId);
+  const reservation = await reservationDAO.findReservationById(reservationId, tenantId);
   await updateTable(table, {
     isOccupied: false,
     reservationId: null,
     linkedTableIds: null,
-  });
+  }, tenantId);
 
   if (reservation) {
     const now = new Date();
     const resDateTime = new Date(`${reservation.resDate}T${reservation.resTime || "00:00:00"}`);
     const nextStatus = resDateTime > now ? "pending" : "completed";
-    return await reservation.update({ resStatus: nextStatus });
+    return await reservationDAO.setReservationStatus(reservation, nextStatus, tenantId);
   }
   return null;
 };
 
-const getWaitingStaff = async () => {
+const getWaitingStaff = async (tenantId) => {
   const staff = await User.findAll({
-    where: { role: "staff" },
+    where: withTenant({ role: "staff" }, tenantId),
     attributes: {
       include: [
         [
@@ -139,12 +142,14 @@ const getWaitingStaff = async () => {
   }));
 };
 
-const assignStaffToTable = async (tableId, userId) => {
-  const table = await findTableById(tableId);
+const assignStaffToTable = async (tableId, userId, tenantId) => {
+  const table = await findTableById(tableId, tenantId);
   if (!table) {
     throw { status: 404, message: "Table not found!" };
   }
-  const user = await User.findByPk(userId);
+  const user = await User.findOne({
+    where: withTenant({ id: userId }, tenantId),
+  });
   if (!user) {
     throw { status: 404, message: "User not found!" };
   }
@@ -164,12 +169,14 @@ const assignStaffToTable = async (tableId, userId) => {
   return { tableId, userId };
 };
 
-const unassignStaffFromTable = async (tableId, userId) => {
-  const table = await findTableById(tableId);
+const unassignStaffFromTable = async (tableId, userId, tenantId) => {
+  const table = await findTableById(tableId, tenantId);
   if (!table) {
     throw { status: 404, message: "Table not found!" };
   }
-  const user = await User.findByPk(userId);
+  const user = await User.findOne({
+    where: withTenant({ id: userId }, tenantId),
+  });
   if (!user) {
     throw { status: 404, message: "User not found!" };
   }
@@ -177,8 +184,8 @@ const unassignStaffFromTable = async (tableId, userId) => {
   return { tableId, userId };
 };
 
-const updateTablePosition = async (id, positionX, positionY, floorPlanId = "default") => {
-  const table = await findTableById(id);
+const updateTablePosition = async (id, positionX, positionY, floorPlanId = "default", tenantId) => {
+  const table = await findTableById(id, tenantId);
   if (!table) {
     throw { status: 404, message: "Table not found!" };
   }
@@ -189,8 +196,8 @@ const updateTablePosition = async (id, positionX, positionY, floorPlanId = "defa
   });
 };
 
-const recordEvent = async (tableId, eventType, description = null, actorId = null) => {
-  const table = await findTableById(tableId);
+const recordEvent = async (tableId, eventType, description = null, actorId = null, tenantId) => {
+  const table = await findTableById(tableId, tenantId);
   if (!table) {
     throw { status: 404, message: "Table not found!" };
   }
@@ -199,6 +206,7 @@ const recordEvent = async (tableId, eventType, description = null, actorId = nul
     eventType,
     description,
     actorId,
+    ...withTenant({}, tenantId),
   });
 };
 

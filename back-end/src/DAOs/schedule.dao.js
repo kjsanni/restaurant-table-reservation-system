@@ -3,31 +3,36 @@ const Schedule = db.schedule;
 const Holiday = db.holiday;
 const { cache } = require("../utils/cache");
 
-const createSchedule = async (scheduleData) => {
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+
+const createSchedule = async (scheduleData, tenantId) => {
   await cache.del("schedules:all");
-  return await Schedule.create(scheduleData);
+  return await Schedule.create({ ...scheduleData, ...withTenant({}, tenantId) });
 };
 
-const getAllSchedules = async () => {
+const getAllSchedules = async (tenantId) => {
   const cached = await cache.get("schedules:all");
   if (cached) return cached;
 
-  const schedules = await Schedule.findAll({ order: [["dayOfWeek", "ASC"]] });
+  const schedules = await Schedule.findAll({
+    where: withTenant({}, tenantId),
+    order: [["dayOfWeek", "ASC"]],
+  });
   await cache.set("schedules:all", schedules, 300);
   return schedules;
 };
 
-const getScheduleByDay = async (dayOfWeek) => {
+const getScheduleByDay = async (dayOfWeek, tenantId) => {
   const cached = await cache.get(`schedule:${dayOfWeek}`);
   if (cached) return cached;
 
-  const schedule = await Schedule.findOne({ where: { dayOfWeek } });
+  const schedule = await Schedule.findOne({ where: withTenant({ dayOfWeek }, tenantId) });
   if (schedule) await cache.set(`schedule:${dayOfWeek}`, schedule, 300);
   return schedule;
 };
 
-const updateSchedule = async (id, scheduleData) => {
-  const schedule = await Schedule.findByPk(id);
+const updateSchedule = async (id, scheduleData, tenantId) => {
+  const schedule = await Schedule.findOne({ where: withTenant({ id }, tenantId) });
   if (!schedule) return null;
 
   await cache.del("schedules:all");
@@ -35,8 +40,8 @@ const updateSchedule = async (id, scheduleData) => {
   return await schedule.update(scheduleData);
 };
 
-const deleteSchedule = async (id) => {
-  const schedule = await Schedule.findByPk(id);
+const deleteSchedule = async (id, tenantId) => {
+  const schedule = await Schedule.findOne({ where: withTenant({ id }, tenantId) });
   if (!schedule) return null;
 
   await cache.del("schedules:all");
@@ -44,31 +49,34 @@ const deleteSchedule = async (id) => {
   return await schedule.destroy();
 };
 
-const createHoliday = async (holidayData) => {
+const createHoliday = async (holidayData, tenantId) => {
   await cache.del("holidays:all");
-  return await Holiday.create(holidayData);
+  return await Holiday.create({ ...holidayData, ...withTenant({}, tenantId) });
 };
 
-const getAllHolidays = async () => {
+const getAllHolidays = async (tenantId) => {
   const cached = await cache.get("holidays:all");
   if (cached) return cached;
 
-  const holidays = await Holiday.findAll({ order: [["date", "ASC"]] });
+  const holidays = await Holiday.findAll({
+    where: withTenant({}, tenantId),
+    order: [["date", "ASC"]],
+  });
   await cache.set("holidays:all", holidays, 300);
   return holidays;
 };
 
-const getHolidayByDate = async (date) => {
+const getHolidayByDate = async (date, tenantId) => {
   const cached = await cache.get(`holiday:${date}`);
   if (cached) return cached;
 
-  const holiday = await Holiday.findOne({ where: { date } });
+  const holiday = await Holiday.findOne({ where: withTenant({ date }, tenantId) });
   if (holiday) await cache.set(`holiday:${date}`, holiday, 300);
   return holiday;
 };
 
-const deleteHoliday = async (id) => {
-  const holiday = await Holiday.findByPk(id);
+const deleteHoliday = async (id, tenantId) => {
+  const holiday = await Holiday.findOne({ where: withTenant({ id }, tenantId) });
   if (!holiday) return null;
 
   await cache.del("holidays:all");

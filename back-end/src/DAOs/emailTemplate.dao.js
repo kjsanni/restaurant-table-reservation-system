@@ -1,30 +1,44 @@
 const db = require("../db/models");
 const EmailTemplate = db.emailTemplate;
 
-const getAllTemplates = async () => {
-  return await EmailTemplate.findAll({ order: [["name", "ASC"]] });
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+
+const getAllTemplates = async (tenantId) => {
+  return await EmailTemplate.findAll({
+    where: withTenant({}, tenantId),
+    order: [["name", "ASC"]],
+  });
 };
 
-const getTemplateByKey = async (key) => {
-  return await EmailTemplate.findOne({ where: { key } });
+const getTemplateByKey = async (key, tenantId) => {
+  return await EmailTemplate.findOne({ where: withTenant({ key }, tenantId) });
 };
 
-const getTemplateById = async (id) => {
-  return await EmailTemplate.findByPk(id);
+const getTemplateById = async (id, tenantId) => {
+  return await EmailTemplate.findOne({
+    where: withTenant({ id }, tenantId),
+  });
 };
 
-const createTemplate = async (data) => {
-  return await EmailTemplate.create(data);
+const createTemplate = async (data, tenantId) => {
+  return await EmailTemplate.create({
+    ...data,
+    ...withTenant({}, tenantId),
+  });
 };
 
-const updateTemplate = async (id, data) => {
-  const template = await EmailTemplate.findByPk(id);
+const updateTemplate = async (id, data, tenantId) => {
+  const template = await EmailTemplate.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!template) return null;
   return await template.update(data);
 };
 
-const deleteTemplate = async (id) => {
-  const template = await EmailTemplate.findByPk(id);
+const deleteTemplate = async (id, tenantId) => {
+  const template = await EmailTemplate.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!template) return null;
   await template.destroy();
   return true;

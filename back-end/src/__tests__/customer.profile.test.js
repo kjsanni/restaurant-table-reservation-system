@@ -53,9 +53,9 @@ describe("customer.controller — profile", () => {
 
     await customerController.getCustomerProfileHandler(req, res);
 
-    expect(reservationDAO.getCustomerById).toHaveBeenCalledWith(1);
-    expect(reservationDAO.getCustomerReservationHistory).toHaveBeenCalledWith(1, 50);
-    expect(reservationDAO.getCustomerStats).toHaveBeenCalledWith(1);
+    expect(reservationDAO.getCustomerById).toHaveBeenCalledWith(1, undefined);
+    expect(reservationDAO.getCustomerReservationHistory).toHaveBeenCalledWith(1, 50, undefined);
+    expect(reservationDAO.getCustomerStats).toHaveBeenCalledWith(1, undefined);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       success: true,
@@ -80,6 +80,6 @@ describe("customer.controller — profile", () => {
 
     await customerController.getCustomerProfileHandler(req, res);
 
-    expect(reservationDAO.getCustomerReservationHistory).toHaveBeenCalledWith(5, 50);
+    expect(reservationDAO.getCustomerReservationHistory).toHaveBeenCalledWith(5, 50, undefined);
   });
 });

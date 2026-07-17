@@ -3,7 +3,9 @@ const AuditLog = db.auditLog;
 const User = db.user;
 const { Op } = db.Sequelize;
 
-const createLog = async ({ action, entityType, entityId, userId, changes, ipAddress }) => {
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+
+const createLog = async ({ action, entityType, entityId, userId, changes, ipAddress }, tenantId) => {
   return await AuditLog.create({
     action,
     entityType,
@@ -11,11 +13,12 @@ const createLog = async ({ action, entityType, entityId, userId, changes, ipAddr
     userId,
     changes,
     ipAddress,
+    ...withTenant({}, tenantId),
   });
 };
 
-const buildWhere = (filters = {}) => {
-  const where = {};
+const buildWhere = (filters = {}, tenantId) => {
+  const where = withTenant({}, tenantId);
   if (filters.from) where.createdAt = { ...where.createdAt, [Op.gte]: filters.from };
   if (filters.to) where.createdAt = { ...where.createdAt, [Op.lte]: filters.to };
   if (filters.action) where.action = filters.action;
@@ -30,7 +33,7 @@ const buildWhere = (filters = {}) => {
   return where;
 };
 
-const getAllLogs = async (filters = {}, { page = 1, pageSize = 25, sortBy = "createdAt", sortOrder = "DESC" } = {}) => {
+const getAllLogs = async (filters = {}, { page = 1, pageSize = 25, sortBy = "createdAt", sortOrder = "DESC" } = {}, tenantId) => {
   const safePage = Math.max(1, parseInt(page, 10) || 1);
   const safeSize = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25));
   const offset = (safePage - 1) * safeSize;
@@ -39,7 +42,7 @@ const getAllLogs = async (filters = {}, { page = 1, pageSize = 25, sortBy = "cre
   const orderColumn = allowedSortColumns.includes(sortBy) ? sortBy : "createdAt";
   const orderDirection = sortOrder === "ASC" ? "ASC" : "DESC";
 
-  const where = buildWhere(filters);
+  const where = buildWhere(filters, tenantId);
 
   const { count, rows } = await AuditLog.findAndCountAll({
     where,
@@ -81,8 +84,8 @@ const getAllLogs = async (filters = {}, { page = 1, pageSize = 25, sortBy = "cre
   };
 };
 
-const getLogStats = async (filters = {}) => {
-  const where = buildWhere(filters);
+const getLogStats = async (filters = {}, tenantId) => {
+  const where = buildWhere(filters, tenantId);
 
   const [actionStats, entityStats, userStats] = await Promise.all([
     AuditLog.findAll({
@@ -124,16 +127,16 @@ const getLogStats = async (filters = {}) => {
   };
 };
 
-const bulkDeleteLogs = async (ids = []) => {
+const bulkDeleteLogs = async (ids = [], tenantId) => {
   if (!Array.isArray(ids) || ids.length === 0) return 0;
   const safeIds = ids.map((id) => parseInt(id, 10)).filter((id) => !Number.isNaN(id) && id > 0);
   if (!safeIds.length) return 0;
-  const deleted = await AuditLog.destroy({ where: { id: safeIds } });
+  const deleted = await AuditLog.destroy({ where: withTenant({ id: safeIds }, tenantId) });
   return typeof deleted === "number" ? deleted : 0;
 };
 
-const exportLogsCSV = async (filters = {}) => {
-  const { logs } = await getAllLogs(filters, { page: 1, pageSize: 1000 });
+const exportLogsCSV = async (filters = {}, tenantId) => {
+  const { logs } = await getAllLogs(filters, { page: 1, pageSize: 1000 }, tenantId);
   const header = ["ID", "Created At", "User", "Action", "Entity", "Entity ID", "Changes", "IP Address"];
   const csvCell = (value) => {
     const str = value === null || value === undefined ? "" : String(value);
@@ -150,8 +153,8 @@ const exportLogsCSV = async (filters = {}) => {
   return csv;
 };
 
-const exportLogsJSON = async (filters = {}) => {
-  const { logs } = await getAllLogs(filters, { page: 1, pageSize: 1000 });
+const exportLogsJSON = async (filters = {}, tenantId) => {
+  const { logs } = await getAllLogs(filters, { page: 1, pageSize: 1000 }, tenantId);
   return JSON.stringify(logs, null, 2);
 };
 

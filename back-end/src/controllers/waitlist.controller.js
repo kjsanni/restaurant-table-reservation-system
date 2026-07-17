@@ -4,12 +4,12 @@ const getAllHandler = async (req, res) => {
   const filters = {};
   if (req.query.desiredTime) filters.desiredTime = req.query.desiredTime;
   if (req.query.customerId) filters.customerId = req.query.customerId;
-  const entries = await waitlistDAO.getWaitingList(filters);
+  const entries = await waitlistDAO.getWaitingList(filters, req.tenant?.id);
   return res.status(200).json({ success: true, entries });
 };
 
 const getStatsHandler = async (req, res) => {
-  const stats = await waitlistDAO.getStats();
+  const stats = await waitlistDAO.getStats(req.tenant?.id);
   return res.status(200).json({ success: true, stats });
 };
 
@@ -26,13 +26,13 @@ const createHandler = async (req, res) => {
     desiredTime,
     notes,
     status: "waiting",
-  });
+  }, req.tenant?.id);
   return res.status(201).json({ success: true, message: "Added to waitlist", entry });
 };
 
 const createFromReservationHandler = async (req, res) => {
   const { reservationId } = req.params;
-  const entry = await waitlistDAO.createFromReservation(reservationId);
+  const entry = await waitlistDAO.createFromReservation(reservationId, req.tenant?.id);
   if (!entry) {
     return res.status(404).json({ success: false, message: "Reservation not found" });
   }
@@ -41,7 +41,7 @@ const createFromReservationHandler = async (req, res) => {
 
 const seatHandler = async (req, res) => {
   const { id } = req.params;
-  const entry = await waitlistDAO.markSeated(id);
+  const entry = await waitlistDAO.markSeated(id, req.tenant?.id);
   if (!entry) {
     return res.status(404).json({ success: false, message: "Waitlist entry not found" });
   }
@@ -50,7 +50,7 @@ const seatHandler = async (req, res) => {
 
 const cancelHandler = async (req, res) => {
   const { id } = req.params;
-  const entry = await waitlistDAO.markCancelled(id);
+  const entry = await waitlistDAO.markCancelled(id, req.tenant?.id);
   if (!entry) {
     return res.status(404).json({ success: false, message: "Waitlist entry not found" });
   }
@@ -59,12 +59,12 @@ const cancelHandler = async (req, res) => {
 
 const deleteHandler = async (req, res) => {
   const { id } = req.params;
-  await waitlistDAO.deleteEntry(id);
+  await waitlistDAO.deleteEntry(id, req.tenant?.id);
   return res.status(200).json({ success: true, message: "Waitlist entry deleted" });
 };
 
 const expireOldHandler = async (req, res) => {
-  const count = await waitlistDAO.expireOldEntries();
+  const count = await waitlistDAO.expireOldEntries(req.tenant?.id);
   return res.status(200).json({ success: true, message: `Expired ${count} entries`, count });
 };
 

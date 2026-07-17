@@ -46,7 +46,8 @@ const getAllHandler = async (req, res) => {
   const result = await reservationService.getAllReservations(
     reservationDAO,
     filters,
-    pagination
+    pagination,
+    req.tenant?.id
   );
 
   const response = { success: true };
@@ -66,7 +67,8 @@ const registerHandler = async (req, res) => {
   const payload = req.body;
   await reservationService.registerReservation(
     reservationDAO,
-    payload
+    payload,
+    req.tenant?.id
   );
 
   return res.status(201).json({
@@ -81,7 +83,8 @@ const editHandler = async (req, res) => {
   const reservation = await reservationService.editReservation(
     reservationId,
     reservationDAO,
-    payload
+    payload,
+    req.tenant?.id
   );
 
   return res.status(200).json({
@@ -93,7 +96,7 @@ const editHandler = async (req, res) => {
 
 const getOneHandler = async (req, res) => {
   const reservationId = req.params.reservationId;
-  const reservation = await reservationDAO.findReservationById(reservationId);
+  const reservation = await reservationDAO.findReservationById(reservationId, req.tenant?.id);
   if (!reservation) {
     return res.status(404).json({
       success: false,
@@ -110,7 +113,8 @@ const cancelHandler = async (req, res) => {
   const reservationId = req.params.reservationId;
   const reservation = await reservationService.cancelReservation(
     reservationId,
-    reservationDAO
+    reservationDAO,
+    req.tenant?.id
   );
 
   return res.status(200).json({
@@ -129,7 +133,8 @@ const chooseTableHandler = async (req, res) => {
       reservationId,
       tableId,
       reservationDAO,
-      tableDAO
+      tableDAO,
+      req.tenant?.id
     );
 
     return res.status(200).json({
@@ -147,7 +152,7 @@ const chooseTableHandler = async (req, res) => {
 };
 
 const getHeatmapHandler = async (req, res) => {
-  const heatmap = await reservationDAO.getReservationsHeatmap();
+  const heatmap = await reservationDAO.getReservationsHeatmap(req.tenant?.id);
   return res.status(200).json({
     success: true,
     heatmap,
@@ -164,7 +169,7 @@ const bulkCancelHandler = async (req, res) => {
     });
   }
 
-  const results = await reservationDAO.bulkCancel(ids);
+  const results = await reservationDAO.bulkCancel(ids, req.tenant?.id);
   return res.status(200).json({
     success: true,
     message: `Canceled ${results.count} reservations`,
@@ -197,7 +202,7 @@ const bulkUpdateHandler = async (req, res) => {
     });
   }
 
-  const results = await reservationDAO.bulkUpdate(ids, safeUpdates);
+  const results = await reservationDAO.bulkUpdate(ids, safeUpdates, req.tenant?.id);
   return res.status(200).json({
     success: true,
     message: `Updated ${results.count} reservations`,
@@ -207,7 +212,7 @@ const bulkUpdateHandler = async (req, res) => {
 
 const getAssignedStaffHandler = async (req, res) => {
   const { reservationId } = req.params;
-  const staff = await reservationDAO.getAssignedStaff(reservationId);
+  const staff = await reservationDAO.getAssignedStaff(reservationId, req.tenant?.id);
   return res.status(200).json({
     success: true,
     staff,
@@ -217,7 +222,7 @@ const getAssignedStaffHandler = async (req, res) => {
 const assignStaffHandler = async (req, res) => {
   const { reservationId } = req.params;
   const { userId } = req.body;
-  const result = await reservationDAO.assignStaff(reservationId, userId);
+  const result = await reservationDAO.assignStaff(reservationId, userId, req.tenant?.id);
   if (!result) {
     return res.status(404).json({
       success: false,
@@ -233,7 +238,7 @@ const assignStaffHandler = async (req, res) => {
 
 const unassignStaffHandler = async (req, res) => {
   const { reservationId, userId } = req.params;
-  const result = await reservationDAO.unassignStaff(reservationId, userId);
+  const result = await reservationDAO.unassignStaff(reservationId, userId, req.tenant?.id);
   if (!result) {
     return res.status(404).json({
       success: false,
@@ -247,7 +252,7 @@ const unassignStaffHandler = async (req, res) => {
 };
 
 const getPaymentSummaryHandler = async (req, res) => {
-  const summary = await reservationDAO.getPaymentStatusCounts();
+  const summary = await reservationDAO.getPaymentStatusCounts(req.tenant?.id);
   return res.status(200).json({
     success: true,
     summary,
@@ -261,7 +266,7 @@ const getStatsHandler = async (req, res) => {
   if (req.query.paymentStatus) filters.paymentStatus = req.query.paymentStatus;
   if (req.query.resStatus) filters.resStatus = req.query.resStatus;
 
-  const stats = await reservationDAO.getReservationStats(filters);
+  const stats = await reservationDAO.getReservationStats(filters, req.tenant?.id);
   return res.status(200).json({
     success: true,
     stats,
@@ -299,7 +304,7 @@ const getHeatmapV2Handler = async (req, res) => {
     });
   }
 
-  const result = await reservationDAO.getHeatmapV2(from, to, mode);
+  const result = await reservationDAO.getHeatmapV2(from, to, mode, req.tenant?.id);
   return res.status(200).json({
     success: true,
     ...result,
@@ -308,7 +313,7 @@ const getHeatmapV2Handler = async (req, res) => {
 
 const searchHandler = async (req, res) => {
   const query = req.query.q || "";
-  const results = await reservationService.searchReservations(reservationDAO, query);
+  const results = await reservationService.searchReservations(reservationDAO, query, req.tenant?.id);
   return res.status(200).json({
     success: true,
     results,
@@ -323,7 +328,7 @@ const getRecurringHandler = async (req, res) => {
       message: "customerId is required.",
     });
   }
-  const results = await reservationService.getRecurringReservations(reservationDAO, customerId);
+  const results = await reservationService.getRecurringReservations(reservationDAO, customerId, req.tenant?.id);
   return res.status(200).json({
     success: true,
     collection: results,
@@ -332,14 +337,14 @@ const getRecurringHandler = async (req, res) => {
 
 const getStatusHistoryHandler = async (req, res) => {
   const { reservationId } = req.params;
-  const history = await reservationService.getStatusHistory(reservationId);
+  const history = await reservationService.getStatusHistory(reservationId, req.tenant?.id);
   return res.status(200).json({ success: true, history });
 };
 
 const mergeTablesHandler = async (req, res) => {
   const { reservationId } = req.params;
   const { tableIds } = req.body;
-  const reservation = await reservationService.mergeReservationTables(reservationDAO, reservationId, tableIds);
+  const reservation = await reservationService.mergeReservationTables(reservationDAO, reservationId, tableIds, req.tenant?.id);
   if (!reservation) {
     return res.status(404).json({ success: false, message: "Reservation not found" });
   }
@@ -348,7 +353,7 @@ const mergeTablesHandler = async (req, res) => {
 
 const unmergeTablesHandler = async (req, res) => {
   const { reservationId } = req.params;
-  const reservation = await reservationService.unmergeReservationTables(reservationDAO, reservationId);
+  const reservation = await reservationService.unmergeReservationTables(reservationDAO, reservationId, req.tenant?.id);
   if (!reservation) {
     return res.status(404).json({ success: false, message: "Reservation not found" });
   }
@@ -370,7 +375,7 @@ const getRevenueTimeSeriesHandler = async (req, res) => {
 
 const searchNotesHandler = async (req, res) => {
   const { q: query } = req.query;
-  const results = await reservationDAO.searchReservationsByNotes(query || "");
+  const results = await reservationDAO.searchReservationsByNotes(query || "", req.tenant?.id);
   return res.status(200).json({
     success: true,
     collection: results,

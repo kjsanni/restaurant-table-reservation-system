@@ -4,16 +4,24 @@ const Reservation = db.reservation;
 const Customer = db.customer;
 const { Op } = db.Sequelize;
 
-const findById = async (id) => {
-  return await Waitlist.findByPk(id);
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+
+const findById = async (id, tenantId) => {
+  return await Waitlist.findOne({
+    where: withTenant({ id }, tenantId),
+  });
 };
 
-const createEntry = async (data) => {
-  return await Waitlist.create(data);
+const createEntry = async (data, tenantId) => {
+  return await Waitlist.create({
+    ...data,
+    ...withTenant({}, tenantId),
+  });
 };
 
-const createFromReservation = async (reservationId) => {
-  const reservation = await Reservation.findByPk(reservationId, {
+const createFromReservation = async (reservationId, tenantId) => {
+  const reservation = await Reservation.findOne({
+    where: withTenant({ id: reservationId }, tenantId),
     include: [
       {
         model: Customer,
@@ -37,24 +45,29 @@ const createFromReservation = async (reservationId) => {
     desiredTime: reservation.resTime || null,
     notes: reservation.notes || null,
     status: "waiting",
+    ...withTenant({}, tenantId),
   });
 };
 
-const updateEntry = async (id, updates) => {
-  const entry = await Waitlist.findByPk(id);
+const updateEntry = async (id, updates, tenantId) => {
+  const entry = await Waitlist.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!entry) return null;
   return await entry.update(updates);
 };
 
-const deleteEntry = async (id) => {
-  const entry = await Waitlist.findByPk(id);
+const deleteEntry = async (id, tenantId) => {
+  const entry = await Waitlist.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!entry) return null;
   await entry.destroy();
   return true;
 };
 
-const getWaitingList = async (filters = {}) => {
-  const where = { status: "waiting" };
+const getWaitingList = async (filters = {}, tenantId) => {
+  const where = withTenant({ status: "waiting" }, tenantId);
 
   if (filters.desiredTime) {
     where.desiredTime = filters.desiredTime;
@@ -78,49 +91,51 @@ const getWaitingList = async (filters = {}) => {
   });
 };
 
-const markSeated = async (id) => {
+const markSeated = async (id, tenantId) => {
   return await updateEntry(id, {
     status: "seated",
     seatedAt: new Date(),
-  });
+  }, tenantId);
 };
 
-const markExpired = async (id) => {
-  return await updateEntry(id, { status: "expired" });
+const markExpired = async (id, tenantId) => {
+  return await updateEntry(id, { status: "expired" }, tenantId);
 };
 
-const markCancelled = async (id) => {
-  return await updateEntry(id, { status: "cancelled" });
+const markCancelled = async (id, tenantId) => {
+  return await updateEntry(id, { status: "cancelled" }, tenantId);
 };
 
-const expireOldEntries = async () => {
+const expireOldEntries = async (tenantId) => {
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
   const result = await Waitlist.update(
     { status: "expired" },
     {
-      where: {
+      where: withTenant({
         status: "waiting",
         createdAt: { [Op.lte]: oneHourAgo },
-      },
+      }, tenantId),
     }
   );
   return result[0];
 };
 
-const getStats = async () => {
-  const waiting = await Waitlist.count({ where: { status: "waiting" } });
-  const seated = await Waitlist.count({ where: { status: "seated" } });
-  const expired = await Waitlist.count({ where: { status: "expired" } });
-  const cancelled = await Waitlist.count({ where: { status: "cancelled" } });
+const getStats = async (tenantId) => {
+  const waiting = await Waitlist.count({ where: withTenant({ status: "waiting" }, tenantId) });
+  const seated = await Waitlist.count({ where: withTenant({ status: "seated" }, tenantId) });
+  const expired = await Waitlist.count({ where: withTenant({ status: "expired" }, tenantId) });
+  const cancelled = await Waitlist.count({ where: withTenant({ status: "cancelled" }, tenantId) });
   return { waiting, seated, expired, cancelled, total: waiting + seated + expired + cancelled };
 };
 
-const getBestMatch = async (tableId) => {
-  const table = await db.table.findByPk(tableId);
+const getBestMatch = async (tableId, tenantId) => {
+  const table = await db.table.findOne({
+    where: withTenant({ id: tableId }, tenantId),
+  });
   if (!table) return null;
 
   const entries = await Waitlist.findAll({
-    where: { status: "waiting" },
+    where: withTenant({ status: "waiting" }, tenantId),
     order: [["createdAt", "ASC"]],
   });
 

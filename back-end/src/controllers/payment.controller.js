@@ -2,14 +2,14 @@ const paymentService = require("../services/paymentService");
 
 const getPaymentsHandler = async (req, res) => {
   const { reservationId } = req.params;
-  const payments = await paymentService.getPaymentsForReservation(reservationId);
-  const totalPaid = await paymentService.getTotalPaid(reservationId);
+  const payments = await paymentService.getPaymentsForReservation(reservationId, req.tenant?.id);
+  const totalPaid = await paymentService.getTotalPaid(reservationId, req.tenant?.id);
   return res.status(200).json({ success: true, payments, totalPaid });
 };
 
 const addPaymentHandler = async (req, res) => {
   const { reservationId } = req.params;
-  const payment = await paymentService.addPayment(reservationId, req.body);
+  const payment = await paymentService.addPayment(reservationId, req.body, req.tenant?.id);
   return res.status(201).json({
     success: true,
     message: "Payment added successfully!",
@@ -21,7 +21,7 @@ const addPaymentHandler = async (req, res) => {
 
 const removePaymentHandler = async (req, res) => {
   const { reservationId, id } = req.params;
-  const result = await paymentService.removePayment(reservationId, id);
+  const result = await paymentService.removePayment(reservationId, id, req.tenant?.id);
   return res.status(200).json({
     success: true,
     message: "Payment removed successfully!",
@@ -39,7 +39,7 @@ const refundPaymentHandler = async (req, res) => {
     ...req.body,
     refundedBy: userId,
     idempotencyKey,
-  });
+  }, req.tenant?.id);
 
   return res.status(200).json({
     success: true,
@@ -56,14 +56,14 @@ const getHistoryHandler = async (req, res) => {
     from: req.query.from,
     to: req.query.to,
   };
-  const history = await paymentService.getPaymentHistory(filters);
+  const history = await paymentService.getPaymentHistory(filters, req.tenant?.id);
   return res.status(200).json({ success: true, history });
 };
 
 const getRevenueStatsHandler = async (req, res) => {
   const from = req.query.from;
   const to = req.query.to;
-  const stats = await paymentService.getRevenueStats(from, to);
+  const stats = await paymentService.getRevenueStats(from, to, req.tenant?.id);
   return res.status(200).json({ success: true, stats });
 };
 

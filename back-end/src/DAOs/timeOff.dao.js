@@ -2,12 +2,14 @@ const db = require("../db/models");
 const TimeOff = db.timeOff;
 const User = db.user;
 
-const createTimeOff = async ({ userId, startDate, endDate, reason }) => {
-  return await TimeOff.create({ userId, startDate, endDate, reason, status: "pending" });
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+
+const createTimeOff = async ({ userId, startDate, endDate, reason }, tenantId) => {
+  return await TimeOff.create({ userId, startDate, endDate, reason, status: "pending", ...withTenant({}, tenantId) });
 };
 
-const getTimeOffs = async (status) => {
-  const where = status ? { status } : {};
+const getTimeOffs = async (status, tenantId) => {
+  const where = withTenant(status ? { status } : {}, tenantId);
   return await TimeOff.findAll({
     where,
     include: [{ model: User, attributes: ["id", "username", "role"] }],
@@ -15,24 +17,24 @@ const getTimeOffs = async (status) => {
   });
 };
 
-const updateTimeOffStatus = async (id, status) => {
-  const t = await TimeOff.findByPk(id);
+const updateTimeOffStatus = async (id, status, tenantId) => {
+  const t = await TimeOff.findOne({ where: withTenant({ id }, tenantId) });
   if (!t) throw { status: 404, message: "Time-off request not found!" };
   t.status = status;
   await t.save();
   return t;
 };
 
-const deleteTimeOff = async (id) => {
-  const t = await TimeOff.findByPk(id);
+const deleteTimeOff = async (id, tenantId) => {
+  const t = await TimeOff.findOne({ where: withTenant({ id }, tenantId) });
   if (!t) throw { status: 404, message: "Time-off request not found!" };
   await t.destroy();
   return { id };
 };
 
-const getAllStaff = async () =>
+const getAllStaff = async (tenantId) =>
   await User.findAll({
-    where: { role: "staff" },
+    where: withTenant({ role: "staff" }, tenantId),
     attributes: ["id", "username", "role"],
     order: [["username", "ASC"]],
   });

@@ -1,13 +1,18 @@
 const db = require("../db/models");
 const ReservationStatusHistory = db.reservationStatusHistory;
 
-const addHistory = async (data) => {
-  return await ReservationStatusHistory.create(data);
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+
+const addHistory = async (data, tenantId) => {
+  return await ReservationStatusHistory.create({
+    ...data,
+    ...withTenant({}, tenantId),
+  });
 };
 
-const getHistoryByReservation = async (reservationId) => {
+const getHistoryByReservation = async (reservationId, tenantId) => {
   return await ReservationStatusHistory.findAll({
-    where: { reservationId },
+    where: withTenant({ reservationId }, tenantId),
     order: [["createdAt", "DESC"]],
   });
 };

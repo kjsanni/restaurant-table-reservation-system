@@ -3,8 +3,13 @@ const Group = db.group;
 const User = db.user;
 const { Op } = db.Sequelize;
 
-const findAllGroups = async () => {
-  const groups = await Group.findAll({ order: [["id", "ASC"]] });
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+
+const findAllGroups = async (tenantId) => {
+  const groups = await Group.findAll({
+    where: withTenant({}, tenantId),
+    order: [["id", "ASC"]],
+  });
   return groups.map((g) => {
     if (!g.permissions || typeof g.permissions !== "object") {
       g.permissions = {};
@@ -13,8 +18,9 @@ const findAllGroups = async () => {
   });
 };
 
-const findGroupById = async (id) => {
-  const group = await Group.findByPk(id, {
+const findGroupById = async (id, tenantId) => {
+  const group = await Group.findOne({
+    where: withTenant({ id }, tenantId),
     include: [
       {
         model: User,
@@ -29,45 +35,53 @@ const findGroupById = async (id) => {
   return group;
 };
 
-const findGroupByName = async (name) => {
-  return await Group.findOne({ where: { name } });
+const findGroupByName = async (name, tenantId) => {
+  return await Group.findOne({ where: withTenant({ name }, tenantId) });
 };
 
-const createGroup = async (groupData) => {
-  return await Group.create(groupData);
+const createGroup = async (groupData, tenantId) => {
+  return await Group.create({
+    ...groupData,
+    ...withTenant({}, tenantId),
+  });
 };
 
-const updateGroup = async (id, updates) => {
-  const group = await Group.findByPk(id);
+const updateGroup = async (id, updates, tenantId) => {
+  const group = await Group.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!group) return null;
   return await group.update(updates);
 };
 
-const deleteGroup = async (id) => {
-  const group = await Group.findByPk(id);
+const deleteGroup = async (id, tenantId) => {
+  const group = await Group.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!group) return null;
   await group.destroy();
   return true;
 };
 
-const addUserToGroup = async (groupId, userId) => {
-  const group = await Group.findByPk(groupId);
-  const user = await User.findByPk(userId);
+const addUserToGroup = async (groupId, userId, tenantId) => {
+  const group = await Group.findOne({ where: withTenant({ id: groupId }, tenantId) });
+  const user = await User.findOne({ where: withTenant({ id: userId }, tenantId) });
   if (!group || !user) return null;
   await user.addGroup(group);
-  return await findGroupById(groupId);
+  return await findGroupById(groupId, tenantId);
 };
 
-const removeUserFromGroup = async (groupId, userId) => {
-  const group = await Group.findByPk(groupId);
-  const user = await User.findByPk(userId);
+const removeUserFromGroup = async (groupId, userId, tenantId) => {
+  const group = await Group.findOne({ where: withTenant({ id: groupId }, tenantId) });
+  const user = await User.findOne({ where: withTenant({ id: userId }, tenantId) });
   if (!group || !user) return null;
   await user.removeGroup(group);
-  return await findGroupById(groupId);
+  return await findGroupById(groupId, tenantId);
 };
 
-const getUsersInGroup = async (groupId) => {
-  const group = await Group.findByPk(groupId, {
+const getUsersInGroup = async (groupId, tenantId) => {
+  const group = await Group.findOne({
+    where: withTenant({ id: groupId }, tenantId),
     include: [
       {
         model: User,

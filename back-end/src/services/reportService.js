@@ -12,19 +12,19 @@ const csvCell = (value) => {
   return str;
 };
 
-const getReservationReport = async (filters = {}) => {
+const getReservationReport = async (filters = {}, tenantId) => {
   const where = {};
   if (filters.from) where.resDate = { ...where.resDate, [Op.gte]: filters.from };
   if (filters.to) where.resDate = { ...where.resDate, [Op.lte]: filters.to };
   if (filters.paymentStatus) where.paymentStatus = filters.paymentStatus;
   if (filters.resStatus) where.resStatus = filters.resStatus;
 
-  const totalReservations = await reservationDAO.findAllReservationsRaw(where);
-  
-  const stats = await reservationDAO.getReservationStats(filters);
-  
-  const paymentBreakdown = await paymentService.getRevenueStats(filters.from, filters.to);
-  
+  const totalReservations = await reservationDAO.findAllReservationsRaw(where, tenantId);
+
+  const stats = await reservationDAO.getReservationStats(filters, tenantId);
+
+  const paymentBreakdown = await paymentService.getRevenueStats(filters.from, filters.to, tenantId);
+
   return {
     totalReservations: totalReservations.length,
     reservations: totalReservations,
@@ -34,12 +34,12 @@ const getReservationReport = async (filters = {}) => {
   };
 };
 
-const getTurnTimeReport = async (filters = {}) => {
+const getTurnTimeReport = async (filters = {}, tenantId) => {
   const where = {};
   if (filters.from) where.resDate = { ...where.resDate, [Op.gte]: filters.from };
   if (filters.to) where.resDate = { ...where.resDate, [Op.lte]: filters.to };
 
-  const results = await reservationDAO.findAllReservationsRaw(where);
+  const results = await reservationDAO.findAllReservationsRaw(where, tenantId);
   const eligible = results.filter((r) => r.seatedAt && r.completedAt);
 
   const turnTimes = eligible.map((r) => {
@@ -81,8 +81,8 @@ const getTurnTimeReport = async (filters = {}) => {
   return { total, avg, turnTimes, tableSummaries };
 };
 
-const exportCSV = async (filters = {}) => {
-  const report = await getReservationReport(filters);
+const exportCSV = async (filters = {}, tenantId) => {
+  const report = await getReservationReport(filters, tenantId);
   const header = ["ID", "Date", "Time", "Status", "Payment Status", "People", "Customer"];
   let csv = header.map(csvCell).join(",") + "\n";
   report.reservations.forEach((r) => {
@@ -102,8 +102,8 @@ const exportCSV = async (filters = {}) => {
   return csv;
 };
 
-const exportPDF = async (filters = {}) => {
-  const report = await getReservationReport(filters);
+const exportPDF = async (filters = {}, tenantId) => {
+  const report = await getReservationReport(filters, tenantId);
   const lines = [];
   lines.push("RESERVATION REPORT");
   lines.push("==================");
