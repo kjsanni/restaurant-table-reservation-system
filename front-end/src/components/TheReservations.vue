@@ -26,15 +26,22 @@ import SearchIcon from "~icons/ant-design/search-outlined";
 import ClearIcon from "~icons/fluent/dismiss-16-filled";
 import WaitlistIcon from "~icons/fluent/clock-16-regular";
 import dateNavigator from "@/utils/dateNavigator";
+import { useCalendarCore } from "@/composables/useCalendarCore";
+import { useReservationActions } from "@/composables/useReservationActions";
 
-const schedules = ref([]);
-const holidays = ref([]);
-const reservations = ref([]);
-const loading = ref(true);
-const currentMonth = ref(new Date());
-const monthLabel = ref("");
-const calendarDays = ref([]);
-const socket = ref(null);
+const calendar = useCalendarCore();
+const schedules = calendar.schedules;
+const holidays = calendar.holidays;
+const reservations = calendar.reservations;
+const loading = calendar.loading;
+const currentMonth = calendar.currentMonth;
+const monthLabel = calendar.monthLabel;
+const calendarDays = calendar.calendarDays;
+const socket = calendar.socket;
+const selectedDay = calendar.selectedDay;
+const dayPopupOpen = calendar.dayPopupOpen;
+const freeTables = calendar.freeTables;
+const waitingStaffList = calendar.waitingStaffList;
 
 const searchVal = ref("");
 const searchNotes = ref(true);
@@ -42,9 +49,6 @@ const statusFilter = ref("all");
 const dateFrom = ref("");
 const dateTo = ref("");
 const paymentStatusFilter = ref("all");
-
-const dayPopupOpen = ref(false);
-const selectedDay = ref(null);
 
 const selectedIds = ref(new Set());
 const bulkStatusTarget = ref("");
@@ -77,7 +81,7 @@ const bulkCancel = async () => {
   bulkError.value = "";
   try {
     await reservationAPI.bulkCancel(Array.from(selectedIds.value));
-    await loadSchedule();
+    await calendar.loadSchedule();
     clearSelection();
   } catch (err) {
     bulkError.value = getApiErrorMessage(err, "Failed to cancel reservations");
@@ -94,7 +98,7 @@ const bulkUpdateStatus = async () => {
     await reservationAPI.bulkUpdate(Array.from(selectedIds.value), {
       resStatus: bulkStatusTarget.value,
     });
-    await loadSchedule();
+    await calendar.loadSchedule();
     clearSelection();
   } catch (err) {
     bulkError.value = getApiErrorMessage(err, "Failed to update reservations");
@@ -153,7 +157,7 @@ const duplicateReservation = async (reservation) => {
       paymentStatus: "unpaid",
       notes: reservation.notes,
     });
-    await loadSchedule();
+    await calendar.loadSchedule();
   } catch (err) {
     bulkError.value = getApiErrorMessage(
       err,
@@ -164,15 +168,6 @@ const duplicateReservation = async (reservation) => {
   }
 };
 
-const activeAction = ref(null);
-const actionReservation = ref(null);
-const actionLoading = ref(false);
-const actionError = ref("");
-
-const freeTables = ref([]);
-const waitingStaffList = ref([]);
-const newResDate = ref("");
-const newResTime = ref("");
 const tables = ref([]);
 const isPopupOpen = ref(false);
 const popupHeaderText = ref("");
@@ -222,7 +217,7 @@ const confirmNoShow = async () => {
     await reservationAPI.editReservation(noShowTargetId.value, {
       resStatus: "missed",
     });
-    await loadSchedule();
+    await calendar.loadSchedule();
   } catch (err) {
     actionError.value = getApiErrorMessage(err, "Failed to mark no-show");
   } finally {
@@ -236,7 +231,7 @@ const confirmDelete = async () => {
   actionLoading.value = true;
   try {
     await reservationAPI.cancelReservation(deleteTargetId.value);
-    await loadSchedule();
+    await calendar.loadSchedule();
   } catch (err) {
     actionError.value = getApiErrorMessage(err, "Failed to delete reservation");
   } finally {
@@ -261,7 +256,7 @@ const unseatReservation = async (reservation) => {
       return;
     }
     await tableAPI.freeTable(table.id);
-    await Promise.all([loadSchedule(), getTables()]);
+    await Promise.all([calendar.loadSchedule(), getTables()]);
   } catch (err) {
     actionError.value = getApiErrorMessage(err, "Failed to unseat reservation");
   } finally {
@@ -275,7 +270,7 @@ const sendToWaitlist = async (reservation) => {
   actionError.value = "";
   try {
     await waitlistAPI.addFromReservation(reservation.id);
-    await loadSchedule();
+    await calendar.loadSchedule();
   } catch (err) {
     actionError.value = getApiErrorMessage(err, "Failed to send to waitlist");
   } finally {
@@ -283,11 +278,11 @@ const sendToWaitlist = async (reservation) => {
   }
 };
 
-const MAX_VISIBLE = 3;
+const MAX_VISIBLE = calendar.MAX_VISIBLE;
 
 onMounted(async () => {
   try {
-    await loadSchedule();
+    await calendar.loadSchedule();
   } catch {
     // schedule load failed, still try to load tables
   }
@@ -296,155 +291,12 @@ onMounted(async () => {
   } catch {
     // tables load failed
   }
-  socket.value = io("", {
-    path: "/socket.io",
-  });
-  socket.value.on("schedule-updated", () => loadSchedules());
-  socket.value.on("holiday-updated", () => loadHolidays());
-  socket.value.on("table-freed", () => {
-    loadReservations();
-    getTables();
-  });
+  calendar.connectSocket();
 });
 
 onUnmounted(() => {
-  if (socket.value) socket.value.disconnect();
+  calendar.disconnectSocket();
 });
-
-const loadSchedule = async () => {
-  loading.value = true;
-  const year = currentMonth.value.getFullYear();
-  const month = currentMonth.value.getMonth();
-  monthLabel.value = currentMonth.value.toLocaleString("default", {
-    month: "long",
-    year: "numeric",
-  });
-
-  const [schedulesRes, holidaysRes, reservationsRes] = await Promise.all([
-    scheduleAPI.getSchedules(),
-    scheduleAPI.getHolidays(),
-    reservationAPI.getReservations(),
-  ]);
-
-  schedules.value = schedulesRes.data.schedules;
-  holidays.value = holidaysRes.data.holidays;
-  reservations.value = reservationsRes.data.collection;
-
-  buildCalendarDays(year, month);
-};
-
-const loadSchedules = async () => {
-  const res = await scheduleAPI.getSchedules();
-  schedules.value = res.data.schedules;
-  buildCalendarDaysFromCurrent();
-};
-
-const loadHolidays = async () => {
-  const res = await scheduleAPI.getHolidays();
-  holidays.value = res.data.holidays;
-  buildCalendarDaysFromCurrent();
-};
-
-const loadReservations = async () => {
-  const res = await reservationAPI.getReservations();
-  reservations.value = res.data.collection;
-  buildCalendarDaysFromCurrent();
-};
-
-const buildCalendarDaysFromCurrent = () => {
-  const year = currentMonth.value.getFullYear();
-  const month = currentMonth.value.getMonth();
-  buildCalendarDays(year, month);
-};
-
-const buildCalendarDays = (year, month) => {
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const days = [];
-
-  for (let i = 0; i < firstDay.getDay(); i++) {
-    days.push({ date: null, isCurrentMonth: false });
-  }
-
-  const scheduleMap = schedules.value.reduce(
-    (m, s) => m.set(s.dayOfWeek, s),
-    new Map()
-  );
-  const holidayMap = holidays.value.reduce(
-    (m, h) => m.set(h.date, h),
-    new Map()
-  );
-
-  for (let day = 1; day <= lastDay.getDate(); day++) {
-    const date = new Date(year, month, day);
-    const dateStr = dateNavigator.asDateString(date);
-    const dayOfWeek = date
-      .toLocaleDateString("en-US", { weekday: "long" })
-      .toLowerCase();
-
-    const schedule = scheduleMap.get(dayOfWeek);
-    const holiday = holidayMap.get(dateStr);
-    const dayReservations = reservations.value
-      .filter((r) => r.resDate === dateStr)
-      .sort((a, b) => a.resTime.localeCompare(b.resTime));
-
-    const statusTally = {};
-    dayReservations.forEach((r) => {
-      const s = r.resStatus || "pending";
-      statusTally[s] = (statusTally[s] || 0) + 1;
-    });
-    const dominantStatus =
-      Object.keys(statusTally).sort(
-        (a, b) => statusTally[b] - statusTally[a]
-      )[0] || null;
-
-    days.push({
-      date: day,
-      dateStr,
-      isCurrentMonth: true,
-      isClosed: holiday?.isClosed || schedule?.isClosed || false,
-      isHoliday: !!holiday,
-      holidayDesc: holiday?.description,
-      openTime: holiday?.openTime || schedule?.openTime,
-      closeTime: holiday?.closeTime || schedule?.closeTime,
-      reservations: dayReservations,
-      visibleReservations: dayReservations.slice(0, MAX_VISIBLE),
-      overflowCount: Math.max(0, dayReservations.length - MAX_VISIBLE),
-      dominantStatus,
-    });
-  }
-
-  calendarDays.value = days;
-  loading.value = false;
-};
-
-const openDay = (day) => {
-  selectedDay.value = day;
-  dayPopupOpen.value = true;
-};
-
-const closeDayPopup = () => {
-  dayPopupOpen.value = false;
-  selectedDay.value = null;
-};
-
-const previousMonth = () => {
-  currentMonth.value = new Date(
-    currentMonth.value.getFullYear(),
-    currentMonth.value.getMonth() - 1,
-    1
-  );
-  loadSchedule();
-};
-
-const nextMonth = () => {
-  currentMonth.value = new Date(
-    currentMonth.value.getFullYear(),
-    currentMonth.value.getMonth() + 1,
-    1
-  );
-  loadSchedule();
-};
 
 const paymentColor = (status) => {
   switch (status) {
@@ -457,42 +309,6 @@ const paymentColor = (status) => {
     default:
       return "#9ca3af";
   }
-};
-
-const actionTitle = computed(() => {
-  const titles = {
-    cancel: "Cancel Reservation",
-    payment: "Update Payment",
-    table: "Assign Table",
-    staff: "Assign Staff",
-    reschedule: "Reschedule",
-  };
-  return titles[activeAction.value] || "";
-});
-
-const openAction = (action, res) => {
-  activeAction.value = action;
-  actionReservation.value = res;
-  actionError.value = "";
-  if (action === "payment") {
-  } else if (action === "table") {
-    loadFreeTables();
-  } else if (action === "staff") {
-    loadWaitingStaff();
-  } else if (action === "reschedule") {
-    newResDate.value = res.resDate || "";
-    newResTime.value = res.resTime || "";
-  }
-};
-
-const closeAction = () => {
-  activeAction.value = null;
-  actionReservation.value = null;
-  actionError.value = "";
-  freeTables.value = [];
-  waitingStaffList.value = [];
-  newResDate.value = "";
-  newResTime.value = "";
 };
 
 const loadFreeTables = async () => {
@@ -515,89 +331,22 @@ const loadWaitingStaff = async () => {
   }
 };
 
-const handleCancel = async () => {
-  if (!actionReservation.value) return;
-  actionLoading.value = true;
-  actionError.value = "";
-  try {
-    await reservationAPI.cancelReservation(actionReservation.value.id);
-    await loadSchedule();
-    closeAction();
-  } catch (err) {
-    actionError.value = getApiErrorMessage(err, "Failed to cancel reservation");
-  } finally {
-    actionLoading.value = false;
-  }
-};
+const actions = useReservationActions({
+  loadSchedule: calendar.loadSchedule,
+  reservationAPI,
+  tableAPI,
+  groupAPI,
+  loadFreeTables,
+  loadWaitingStaff,
+});
 
-const handlePaymentChange = async (status) => {
-  if (!actionReservation.value) return;
-  actionLoading.value = true;
-  actionError.value = "";
-  try {
-    await reservationAPI.editReservation(actionReservation.value.id, {
-      paymentStatus: status,
-    });
-    await loadSchedule();
-    closeAction();
-  } catch (err) {
-    actionError.value = getApiErrorMessage(err, "Failed to update payment");
-  } finally {
-    actionLoading.value = false;
-  }
-};
-
-const handleAssignTable = async (tableId) => {
-  if (!actionReservation.value || !tableId) return;
-  actionLoading.value = true;
-  actionError.value = "";
-  try {
-    await reservationAPI.chooseTable(actionReservation.value.id, tableId);
-    await loadSchedule();
-    closeAction();
-  } catch (err) {
-    actionError.value = getApiErrorMessage(err, "Failed to assign table");
-  } finally {
-    actionLoading.value = false;
-  }
-};
-
-const handleAssignStaff = async (userId) => {
-  if (!actionReservation.value || !userId) return;
-  actionLoading.value = true;
-  actionError.value = "";
-  try {
-    await reservationAPI.assignStaff(actionReservation.value.id, userId);
-    await loadSchedule();
-    closeAction();
-  } catch (err) {
-    actionError.value = getApiErrorMessage(err, "Failed to assign staff");
-  } finally {
-    actionLoading.value = false;
-  }
-};
-
-const handleReschedule = async () => {
-  if (!actionReservation.value) return;
-  if (!newResDate.value || !newResTime.value) {
-    actionError.value = "Please provide both date and time";
-    return;
-  }
-  actionLoading.value = true;
-  actionError.value = "";
-  try {
-    await reservationAPI.editReservation(actionReservation.value.id, {
-      resDate: newResDate.value,
-      resTime: newResTime.value,
-    });
-    await loadSchedule();
-    closeAction();
-  } catch (err) {
-    actionError.value = getApiErrorMessage(err, "Failed to reschedule");
-  } finally {
-    actionLoading.value = false;
-  }
-};
+const activeAction = actions.activeAction;
+const actionReservation = actions.actionReservation;
+const actionLoading = actions.actionLoading;
+const actionError = actions.actionError;
+const newResDate = actions.newResDate;
+const newResTime = actions.newResTime;
+const handleCancel = actions.handleCancel;
 
 const currDate = computed(() => {
   return currentMonth.value.toLocaleDateString("default", {
@@ -705,7 +454,7 @@ const assignSelectedReservation = (reservation) => {
 };
 
 const refreshReservations = async () => {
-  await loadSchedule();
+  await calendar.loadSchedule();
 };
 
 const refreshTables = async () => {
@@ -722,7 +471,7 @@ const getTables = async () => {
 };
 
 const getReservations = async () => {
-  await loadReservations();
+  await calendar.loadReservations();
 };
 
 const prev = () => {
@@ -731,7 +480,7 @@ const prev = () => {
     currentMonth.value.getMonth() - 1,
     1
   );
-  loadSchedule();
+  calendar.loadSchedule();
 };
 
 const next = () => {
@@ -740,12 +489,12 @@ const next = () => {
     currentMonth.value.getMonth() + 1,
     1
   );
-  loadSchedule();
+  calendar.loadSchedule();
 };
 
 const today = () => {
   currentMonth.value = new Date();
-  loadSchedule();
+  calendar.loadSchedule();
 };
 </script>
 

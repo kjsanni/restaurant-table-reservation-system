@@ -79,6 +79,15 @@ export function useCalendarCore(extraDeps = {}) {
       days.push({ date: null, isCurrentMonth: false });
     }
 
+    const scheduleMap = schedules.value.reduce(
+      (m, s) => m.set(s.dayOfWeek, s),
+      new Map()
+    );
+    const holidayMap = holidays.value.reduce(
+      (m, h) => m.set(h.date, h),
+      new Map()
+    );
+
     for (let day = 1; day <= lastDay.getDate(); day++) {
       const date = new Date(year, month, day);
       const dateStr = dateNavigator.asDateString(date);
@@ -86,10 +95,11 @@ export function useCalendarCore(extraDeps = {}) {
         .toLocaleDateString("en-US", { weekday: "long" })
         .toLowerCase();
 
-      const schedule = schedules.value.find((s) => s.dayOfWeek === dayOfWeek);
-      const holiday = holidays.value.find((h) => h.date === dateStr);
+      const schedule = scheduleMap.get(dayOfWeek);
+      const holiday = holidayMap.get(dateStr);
       const isClosed = holiday?.isClosed || schedule?.isClosed || false;
-      const showReservations = typeFilter === "all" || typeFilter === "reservations";
+      const showReservations =
+        typeFilter === "all" || typeFilter === "reservations";
       const showHoliday = typeFilter === "all" || typeFilter === "holidays";
       const showClosed = typeFilter === "all" || typeFilter === "closed";
 
