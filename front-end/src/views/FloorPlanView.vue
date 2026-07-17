@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import tableAPI from "@/services/tableAPI";
 import reservationAPI from "@/services/reservationAPI";
 import waitlistAPI from "@/services/waitlistAPI";
+import paymentAPI from "@/services/paymentAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
@@ -37,6 +38,71 @@ const sectionCounts = computed(() => {
   }
   return counts;
 });
+
+const showServerOverlay = ref(false);
+const STAFF_COLORS = [
+  "#2563eb", "#16a34a", "#db2777", "#d97706",
+  "#7c3aed", "#0891b2", "#dc2626", "#4f46e5",
+];
+const staffColorMap = computed(() => {
+  const map = {};
+  const allStaff = [];
+  tables.value.forEach((t) =>
+    (t.users || []).forEach((s) => {
+      if (!allStaff.find((x) => x.id === s.id)) allStaff.push(s);
+    })
+  );
+  allStaff.forEach((s, i) => {
+    map[s.id] = STAFF_COLORS[i % STAFF_COLORS.length];
+  });
+  return map;
+});
+const firstStaff = (table) => (table.users && table.users.length ? table.users[0] : null);
+const serverOverlayStyle = (table) => {
+  if (!showServerOverlay.value) return {};
+  const staff = firstStaff(table);
+  if (!staff) return {};
+  return { borderColor: staffColorMap.value[staff.id], boxShadow: `0 0 0 2px ${staffColorMap.value[staff.id]}55` };
+};
+
+const showAnalytics = ref(false);
+const monthlyRevenue = ref(null);
+const loadAnalytics = async () => {
+  try {
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    const to = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    const res = await paymentAPI.getRevenueStats(from, to);
+    monthlyRevenue.value = res?.data?.totalRevenue ?? res?.data?.revenue ?? null;
+  } catch {
+    monthlyRevenue.value = null;
+  }
+};
+
+const floorAnalytics = computed(() => {
+  const all = tables.value;
+  const total = all.length;
+  const occupied = all.filter((t) => !t.isBlocked && t.isOccupied).length;
+  const blocked = all.filter((t) => t.isBlocked).length;
+  const free = total - occupied - blocked;
+  const occupancyRate = total ? Math.round((occupied / total) * 100) : 0;
+  const resToday = (reservations.value || []).filter((r) => {
+    const d = new Date();
+    const today = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0, 10);
+    return r.resDate === today;
+  });
+  const avgParty =
+    resToday.length && resToday.reduce((s, r) => s + (r.people || 0), 0)
+      ? Math.round((resToday.reduce((s, r) => s + (r.people || 0), 0) / resToday.length) * 10) / 10
+      : 0;
+  const turnover = occupied ? Math.round((resToday.length / occupied) * 10) / 10 : 0;
+  return { total, occupied, blocked, free, occupancyRate, todayCount: resToday.length, avgParty, turnover };
+});
+
+const toggleAnalytics = async () => {
+  showAnalytics.value = !showAnalytics.value;
+  if (showAnalytics.value) await loadAnalytics();
+};
 
 const pendingReservations = computed(() => {
   return (reservations.value || []).filter(
@@ -419,6 +485,20 @@ onMounted(loadData);
             <button class="btn btn-primary btn-sm" @click="openAddTable">
               + Add Table
             </button>
+            <button
+              class="btn btn-secondary btn-sm"
+              :class="{ active: showServerOverlay }"
+              @click="showServerOverlay = !showServerOverlay"
+            >
+              👤 Server Overlay
+            </button>
+            <button
+              class="btn btn-secondary btn-sm"
+              :class="{ active: showAnalytics }"
+              @click="toggleAnalytics"
+            >
+              📊 Analytics
+            </button>
           </div>
           <div class="section-filters">
             <button
@@ -438,20 +518,55 @@ onMounted(loadData);
               {{ s }} <span class="chip-count">{{ sectionCounts[s] }}</span>
             </button>
           </div>
+          <div v-if="showAnalytics" class="analytics-panel">
+            <div class="analytics-metric">
+              <span class="analytics-value">{{ floorAnalytics.occupancyRate }}%</span>
+              <span class="analytics-label">Occupancy</span>
+            </div>
+            <div class="analytics-metric">
+              <span class="analytics-value">{{ floorAnalytics.occupied }}/{{ floorAnalytics.total }}</span>
+              <span class="analytics-label">Occupied</span>
+            </div>
+            <div class="analytics-metric">
+              <span class="analytics-value">{{ floorAnalytics.free }}</span>
+              <span class="analytics-label">Free</span>
+            </div>
+            <div class="analytics-metric">
+              <span class="analytics-value">{{ floorAnalytics.blocked }}</span>
+              <span class="analytics-label">Blocked</span>
+            </div>
+            <div class="analytics-metric">
+              <span class="analytics-value">{{ floorAnalytics.todayCount }}</span>
+              <span class="analytics-label">Reservations today</span>
+            </div>
+            <div class="analytics-metric">
+              <span class="analytics-value">{{ floorAnalytics.turnover }}</span>
+              <span class="analytics-label">Turnover / table</span>
+            </div>
+            <div class="analytics-metric">
+              <span class="analytics-value">{{ floorAnalytics.avgParty }}</span>
+              <span class="analytics-label">Avg party size</span>
+            </div>
+            <div class="analytics-metric">
+              <span class="analytics-value">{{ monthlyRevenue != null ? "$" + Math.round(monthlyRevenue).toLocaleString() : "—" }}</span>
+              <span class="analytics-label">Month revenue</span>
+            </div>
+          </div>
             <div class="plan-grid">
               <div
                 v-for="table in displayTables"
-              :key="table.id"
-              :class="[
-                'table-block',
-                tableStatus(table),
-                {
-                  selected:
-                    selectedTable?.id === table.id ||
-                    selectedLinkedTables.some((t) => t.id === table.id),
-                },
-              ]"
-              @dragover.prevent="onTableDragOver(table, $event)"
+                :key="table.id"
+                :class="[
+                  'table-block',
+                  tableStatus(table),
+                  {
+                    selected:
+                      selectedTable?.id === table.id ||
+                      selectedLinkedTables.some((t) => t.id === table.id),
+                  },
+                ]"
+                :style="serverOverlayStyle(table)"
+                @dragover.prevent="onTableDragOver(table, $event)"
               @dragenter.prevent="onTableDragEnter(table, $event)"
               @dragleave.prevent="onTableDragLeave(table, $event)"
               @drop.prevent="onDrop(table, $event)"
@@ -470,6 +585,13 @@ onMounted(loadData);
                     ></span>
                   </div>
                   <span class="zone-badge">{{ table.section || "main" }}</span>
+                  <span
+                    v-if="showServerOverlay && firstStaff(table)"
+                    class="server-overlay-tag"
+                    :style="{ backgroundColor: staffColorMap[firstStaff(table).id] }"
+                  >
+                    {{ firstStaff(table).username }}
+                  </span>
                   <div class="table-top-right">
                     <span class="capacity">🪑 {{ table.capacity }}</span>
                     <button
@@ -1047,6 +1169,39 @@ onMounted(loadData);
   background: #f1f5f9;
   border-radius: 4px;
   padding: 1px 5px;
+}
+.server-overlay-tag {
+  font-size: 0.62rem;
+  color: #fff;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-weight: 600;
+}
+.analytics-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.analytics-metric {
+  display: flex;
+  flex-direction: column;
+  min-width: 80px;
+}
+.analytics-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.analytics-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .table-top-right {
