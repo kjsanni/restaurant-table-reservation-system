@@ -52,7 +52,10 @@ const connectSocket = () => {
         table.isOccupied = false;
       } else if (payload.status === "unblocked") {
         table.isBlocked = false;
-      } else if (payload.status === "staff_assigned" || payload.status === "staff_unassigned") {
+      } else if (
+        payload.status === "staff_assigned" ||
+        payload.status === "staff_unassigned"
+      ) {
         const staffId = payload.staffId;
         // refresh table data to sync staff assignments
         tableAPI.getTables().then((res) => {

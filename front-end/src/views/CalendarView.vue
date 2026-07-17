@@ -7,6 +7,7 @@ import tableAPI from "@/services/tableAPI";
 import groupAPI from "@/services/groupAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
+import dateNavigator from "@/utils/dateNavigator";
 import { statusColor, shortName } from "@/utils/reservationDisplay";
 import PageHeader from "@/components/PageHeader.vue";
 import {
@@ -31,6 +32,10 @@ const dayPopupOpen = calendar.dayPopupOpen;
 const freeTables = calendar.freeTables;
 const allTables = calendar.allTables;
 const waitingStaffList = calendar.waitingStaffList;
+
+const calendarView = ref("month");
+const selectedDate = ref(new Date());
+const typeFilter = ref("all");
 
 const legendItems = [
   { label: "Pending", color: statusColor("pending") },

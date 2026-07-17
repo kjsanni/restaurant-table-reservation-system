@@ -423,7 +423,9 @@ const statusCounts = computed(() => {
   reservations.value.forEach((r) => {
     if (
       r.resDate &&
-      r.resDate.startsWith(dateNavigator.asDateString(currentMonth.value).slice(0, 7))
+      r.resDate.startsWith(
+        dateNavigator.asDateString(currentMonth.value).slice(0, 7)
+      )
     ) {
       counts[r.resStatus] = (counts[r.resStatus] || 0) + 1;
     }

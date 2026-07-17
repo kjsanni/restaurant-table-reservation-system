@@ -61,7 +61,10 @@ export function useReservationActions({
       await loadSchedule();
       closeAction();
     } catch (err) {
-      actionError.value = getApiErrorMessage(err, "Failed to cancel reservation");
+      actionError.value = getApiErrorMessage(
+        err,
+        "Failed to cancel reservation"
+      );
     } finally {
       actionLoading.value = false;
     }

@@ -10,7 +10,10 @@ const API = axios.create({
 
 API.interceptors.request.use((config) => {
   const authStore = useAuthStore();
-  if (authStore.currentTenant && import.meta.env.VITE_TENANT_MODE === "enabled") {
+  if (
+    authStore.currentTenant &&
+    import.meta.env.VITE_TENANT_MODE === "enabled"
+  ) {
     config.headers["X-Tenant-Id"] = authStore.currentTenant.id;
   }
   return config;

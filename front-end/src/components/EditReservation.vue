@@ -418,9 +418,18 @@ const editReservation = async () => {
               />
             </div>
             <div class="split-summary-bar">
-              <span>Expected: GHS {{ parseFloat(reservation.value.expectedTotal.value || 0).toFixed(2) }}</span>
+              <span
+                >Expected: GHS
+                {{
+                  parseFloat(
+                    reservation.value.expectedTotal.value || 0
+                  ).toFixed(2)
+                }}</span
+              >
               <span>Paid: GHS {{ totalPaid.toFixed(2) }}</span>
-              <span class="remaining">Remaining: GHS {{ remainingBalance.toFixed(2) }}</span>
+              <span class="remaining"
+                >Remaining: GHS {{ remainingBalance.toFixed(2) }}</span
+              >
             </div>
             <div class="split-summary-bar">
               <span>Per person: GHS {{ groupSplitAmount.toFixed(2) }}</span>

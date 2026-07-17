@@ -1,16 +1,8 @@
 <template>
   <div class="tenant-switcher">
-    <select
-      :value="modelValue"
-      @change="onChange"
-      class="tenant-select"
-    >
+    <select :value="modelValue" @change="onChange" class="tenant-select">
       <option value="">Platform Admin</option>
-      <option
-        v-for="tenant in tenants"
-        :key="tenant.id"
-        :value="tenant.id"
-      >
+      <option v-for="tenant in tenants" :key="tenant.id" :value="tenant.id">
         {{ tenant.name }} ({{ tenant.slug }})
       </option>
     </select>

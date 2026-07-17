@@ -50,7 +50,9 @@ const loadFloorPlans = async () => {
 const loadZones = async () => {
   if (!selectedFloorPlanId.value) return;
   try {
-    const plan = floorPlans.value.find((p) => p.id === selectedFloorPlanId.value);
+    const plan = floorPlans.value.find(
+      (p) => p.id === selectedFloorPlanId.value
+    );
     zones.value = plan?.zones || [];
   } catch (err) {
     logger.error("Failed to load zones", { error: err.message });
@@ -256,14 +258,10 @@ onUnmounted(() => {
             v-if="floorPlans.length"
             v-model="selectedFloorPlanId"
             class="form-select"
-            style="width: auto; min-width: 180px;"
+            style="width: auto; min-width: 180px"
             @change="loadZones"
           >
-            <option
-              v-for="plan in floorPlans"
-              :key="plan.id"
-              :value="plan.id"
-            >
+            <option v-for="plan in floorPlans" :key="plan.id" :value="plan.id">
               {{ plan.name }}
             </option>
           </select>

@@ -134,10 +134,12 @@ const loadNoShows = async () => {
 
     const [noShowRes, statsRes] = await Promise.all([
       reservationAPI.getReservations(params),
-      reservationAPI.getReservationStats({
-        from: fromDate.value || undefined,
-        to: toDate.value || undefined,
-      }).catch(() => ({ data: {} })),
+      reservationAPI
+        .getReservationStats({
+          from: fromDate.value || undefined,
+          to: toDate.value || undefined,
+        })
+        .catch(() => ({ data: {} })),
     ]);
 
     noShows.value = noShowRes.data.collection || [];
