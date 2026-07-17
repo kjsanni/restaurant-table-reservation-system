@@ -256,8 +256,10 @@ onUnmounted(() => {
           ></div>
           <main class="main-content">
             <RouterView v-slot="{ Component }">
-              <Transition name="fade" mode="out-in">
-                <component :is="Component" :key="$route.name" />
+              <Transition name="fade">
+                <div v-if="Component" :key="$route.name">
+                  <component :is="Component" />
+                </div>
               </Transition>
             </RouterView>
           </main>
