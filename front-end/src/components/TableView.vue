@@ -3,6 +3,7 @@ import { computed } from "vue";
 import ButtonAction from "@/components/ButtonAction.vue";
 import NotFoundResource from "@/components/NotFoundResource.vue";
 import { getPaymentStatusLabel, getPaymentStatusColor } from "@/constants";
+import { ACTIVE_STATUSES } from "@/constants/reservationStatus";
 import { useAuthStore } from "@/stores/auth";
 
 defineProps({

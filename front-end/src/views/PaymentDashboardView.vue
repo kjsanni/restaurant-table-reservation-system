@@ -7,6 +7,7 @@ import PopupBox from "@/components/PopupBox.vue";
 import EditReservation from "@/components/EditReservation.vue";
 import logger from "@/utils/logger";
 import { getApiErrorMessage } from "@/utils/apiError";
+import PageHeader from "@/components/PageHeader.vue";
 
 const loading = ref(true);
 const reservations = ref([]);

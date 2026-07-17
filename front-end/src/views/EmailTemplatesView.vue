@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import PageHeader from "@/components/PageHeader.vue";
 import { ref, reactive, onMounted, computed } from "vue";
+import emailTemplateAPI from "@/services/emailTemplateAPI";
 import notificationAPI from "@/services/notificationAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
@@ -75,21 +76,21 @@ const placeholder = (key: string) => `{{${key}}}`;
 const loadTemplates = async () => {
   loading.value = true;
   try {
-    const res = await notificationAPI.getTemplates();
+    const res = await emailTemplateAPI.getAll();
     templates.value = res.data.templates || {};
     Object.assign(theme, res.data.theme || {});
     defaults.value = res.data.defaults || { theme: {}, templates: {} };
+  } catch (e) {
+    logger.error("Failed to load email templates", {
+      error: (e as Error).message,
+    });
+  } finally {
     templateTypes.forEach((type) => {
       if (!templates.value[type]) {
         templates.value[type] = { subject: "", html: "" };
       }
       perTemplateTest[type] = { status: "", message: "" };
     });
-  } catch (e) {
-    logger.error("Failed to load email templates", {
-      error: (e as Error).message,
-    });
-  } finally {
     loading.value = false;
   }
 };

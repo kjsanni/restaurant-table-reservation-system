@@ -589,7 +589,7 @@ const exportPDF = async () => {
               class="suggestion-item"
             >
               <span class="suggestion-day">{{ day.label }}</span>
-              <span class="suggestion-hours">
+              <span class="suggestion-hours" v-if="suggestedHours[day.day]">
                 {{ suggestedHours[day.day].openTime.slice(0, 5) }} –
                 {{ suggestedHours[day.day].closeTime.slice(0, 5) }}
                 <em>(n={{ suggestedHours[day.day].sampleSize }})</em>
