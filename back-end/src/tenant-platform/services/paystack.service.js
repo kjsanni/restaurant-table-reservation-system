@@ -82,6 +82,20 @@ const fetchCustomer = async (customerCode) => {
   return response.data.data;
 };
 
+const buildSplitConfig = (tenant) => {
+  if (!tenant || !tenant.paystackSubaccountCode) return null;
+
+  const subaccount = tenant.paystackSubaccountCode;
+  const bearer = tenant.settings?.splitBearer || "subaccount";
+  const charge = tenant.settings?.splitCharge || 0;
+
+  return {
+    subaccountCode: subaccount,
+    bearer,
+    transactionCharge: charge,
+  };
+};
+
 module.exports = {
   paystackClient,
   verifyWebhookSignature,
@@ -91,4 +105,5 @@ module.exports = {
   initializeCharge,
   verifyPayment,
   fetchCustomer,
+  buildSplitConfig,
 };

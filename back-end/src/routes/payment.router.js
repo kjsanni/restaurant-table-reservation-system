@@ -5,6 +5,11 @@ const paymentController = require("../controllers/payment.controller");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 
 router
+  .route("/:reservationId/payments/initialize")
+  .post(...writeRoute("manage_staff", paymentController.initializePaymentHandler))
+  .all(httpMethodError);
+
+router
   .route("/:reservationId/payments/:id/refund")
   .post(...writeRoute("manage_staff", paymentController.refundPaymentHandler))
   .all(httpMethodError);

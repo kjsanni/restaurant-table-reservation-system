@@ -80,6 +80,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.JSON,
         allowNull: true,
       },
+      paystackSubaccountCode: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
       billingEmail: {
         type: DataTypes.STRING(100),
         allowNull: true,

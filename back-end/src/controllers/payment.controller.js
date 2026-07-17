@@ -1,4 +1,5 @@
 const paymentService = require("../services/paymentService");
+const { buildSplitConfig } = require("../tenant-platform/services/paystack.service");
 
 const getPaymentsHandler = async (req, res) => {
   const { reservationId } = req.params;
@@ -17,6 +18,46 @@ const addPaymentHandler = async (req, res) => {
     totalPaid: payment.totalPaid,
     reservation: payment.reservation,
   });
+};
+
+const initializePaymentHandler = async (req, res) => {
+  const { reservationId } = req.params;
+  const { email, amount, firstName, lastName, phone } = req.body;
+
+  if (!email || !amount) {
+    return res.status(400).json({ success: false, message: "Email and amount are required" });
+  }
+
+  const db = require("../db/models");
+  const tenant = await db.tenant.findByPk(req.tenant?.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  const splitConfig = buildSplitConfig(tenant);
+  const { initializeCharge } = require("../tenant-platform/services/paystack.service");
+
+  try {
+    const result = await initializeCharge({
+      email,
+      amount: parseFloat(amount),
+      metadata: {
+        tenantId: tenant.id,
+        reservationId,
+        tenantSlug: tenant.slug,
+      },
+      splitConfig,
+    });
+
+    return res.status(200).json({
+      success: true,
+      authorizationUrl: result.authorization_url,
+      accessCode: result.access_code,
+      reference: result.reference,
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Payment initialization failed" });
+  }
 };
 
 const removePaymentHandler = async (req, res) => {
@@ -70,6 +111,7 @@ const getRevenueStatsHandler = async (req, res) => {
 module.exports = {
   getPaymentsHandler,
   addPaymentHandler,
+  initializePaymentHandler,
   removePaymentHandler,
   refundPaymentHandler,
   getHistoryHandler,
