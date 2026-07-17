@@ -70,13 +70,9 @@ const refreshAccessToken = async (refreshTokenDAO, refreshToken) => {
   const newRefreshToken = generateRefreshToken();
 
   if (refreshTokenDAO.createRefreshToken && refreshTokenDAO.revokeRefreshToken) {
-    try {
-      await refreshTokenDAO.revokeRefreshToken(refreshToken);
-      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      await refreshTokenDAO.createRefreshToken(user.id, newRefreshToken, expiresAt);
-    } catch (err) {
-      console.warn("Failed to rotate refresh token:", err.message);
-    }
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await refreshTokenDAO.createRefreshToken(user.id, newRefreshToken, expiresAt);
+    await refreshTokenDAO.revokeRefreshToken(refreshToken);
   }
 
   return {
