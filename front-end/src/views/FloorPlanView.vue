@@ -8,6 +8,7 @@ import floorPlanAPI from "@/services/floorPlanAPI";
 import PopupBox from "@/components/PopupBox.vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
+import RESERVATION_STATUS from "@/constants/reservationStatus";
 import PageHeader from "@/components/PageHeader.vue";
 import { useCurrency } from "@/composables/useCurrency";
 
@@ -193,7 +194,7 @@ const printFloorPlan = () => {
 
 const pendingReservations = computed(() => {
   return (reservations.value || []).filter(
-    (r) => r.resStatus === "pending" && !r.tableId
+    (r) => r.resStatus === RESERVATION_STATUS.PENDING && !r.tableId
   );
 });
 

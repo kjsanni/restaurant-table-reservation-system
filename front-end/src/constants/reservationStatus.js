@@ -1,5 +1,6 @@
 const RESERVATION_STATUS = {
   PENDING: "pending",
+  CONFIRMED: "confirmed",
   SEATED: "seated",
   MISSED: "missed",
   CANCELLED: "cancelled",

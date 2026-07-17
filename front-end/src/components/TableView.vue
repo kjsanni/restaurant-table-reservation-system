@@ -173,7 +173,8 @@ const getFieldValue = (item, fieldKey) => {
   border-radius: 10px;
   background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
   color: var(--sky-600);
-  font-family: "Inter-Bold";
+  font-family: var(--font-sans);
+  font-weight: 700;
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -196,7 +197,8 @@ const getFieldValue = (item, fieldKey) => {
 }
 
 .res-id {
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
   font-size: 12px;
   color: var(--ink-muted);
 }
@@ -243,7 +245,8 @@ const getFieldValue = (item, fieldKey) => {
 }
 
 .detail-label {
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
   font-size: 12px;
   color: var(--ink-muted);
 }
@@ -271,7 +274,8 @@ const getFieldValue = (item, fieldKey) => {
 }
 
 .visit-count {
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
   font-size: 11px;
   color: var(--ink-muted);
 }
@@ -284,7 +288,8 @@ const getFieldValue = (item, fieldKey) => {
 }
 
 .loyalty-tag {
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
   font-size: 10px;
   background: #e5e7eb;
   color: var(--ink);

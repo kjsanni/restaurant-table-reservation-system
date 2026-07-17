@@ -133,7 +133,8 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 .section h4 {
-  font-family: "Inter-Bold";
+  font-family: var(--font-sans);
+  font-weight: 700;
   margin-bottom: 10px;
   font-size: 14px;
 }
@@ -142,7 +143,8 @@ onMounted(async () => {
   color: #6c757d;
   padding: 10px;
   text-align: center;
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
 }
 .staff-list {
   display: flex;
@@ -198,13 +200,15 @@ onMounted(async () => {
 .loading {
   text-align: center;
   padding: 40px;
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
 }
 .error {
   color: #dc3545;
   text-align: center;
   padding: 10px;
   margin-bottom: 15px;
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
 }
 </style>

@@ -20,6 +20,7 @@
   --accent-50: #fffbeb;
 
   --earth-600: #365314;
+  --earth-700: #1a2e05;
   --earth-500: #4d7c0f;
   --earth-400: #65a30d;
   --earth-300: #84cc16;
@@ -28,6 +29,7 @@
   --earth-50: #f7fee7;
 
   --sky-600: #1e40af;
+  --sky-700: #172554;
   --sky-500: #3b82f6;
   --sky-400: #60a5fa;
   --sky-300: #93c5fd;
@@ -167,6 +169,8 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   --duration-75: 75ms;
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
   --duration-100: 100ms;
   --duration-150: 150ms;
   --duration-200: 200ms;

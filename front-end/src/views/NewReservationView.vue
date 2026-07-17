@@ -86,7 +86,6 @@ const toggleTag = async (tagKey) => {
   }
 };
 
-const validationErrors = ref(null);
 const isSuccessful = ref(false);
 const generalError = ref(null);
 const submitting = ref(false);
@@ -133,12 +132,10 @@ const registerReservation = async () => {
   if (submitting.value) return;
   submitting.value = true;
   isSuccessful.value = false;
-  validationErrors.value = null;
   generalError.value = null;
   const clientErrors = validateReservation(reservation.value);
   if (clientErrors.length) {
     generalError.value = clientErrors[0];
-    validationErrors.value = clientErrors;
     return;
   }
   try {
@@ -192,7 +189,6 @@ const registerReservation = async () => {
       details: getApiErrors(err),
     });
     generalError.value = getApiErrorMessage(err);
-    validationErrors.value = getApiErrors(err);
   } finally {
     submitting.value = false;
   }

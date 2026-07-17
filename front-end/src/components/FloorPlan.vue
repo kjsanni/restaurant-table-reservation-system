@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import PopupBox from "@/components/PopupBox.vue";
+import RESERVATION_STATUS from "@/constants/reservationStatus";
 
 const props = defineProps({
   tables: {
@@ -81,7 +82,7 @@ const onTableTouchEnd = (table, event) => {
 
 const pendingReservations = computed(() => {
   return (props.reservations || []).filter(
-    (r) => r.resStatus === "pending" && !r.tableId
+    (r) => r.resStatus === RESERVATION_STATUS.PENDING && !r.tableId
   );
 });
 
@@ -435,7 +436,8 @@ const closeAssign = () => {
 }
 
 .panel-header h2 {
-  font-family: "Inter-Bold";
+  font-family: var(--font-sans);
+  font-weight: 700;
   font-size: 15px;
   color: var(--primary-black);
   margin: 0;
@@ -493,7 +495,8 @@ const closeAssign = () => {
   border-radius: 10px;
   background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
   color: var(--primary-blue);
-  font-family: "Inter-Bold";
+  font-family: var(--font-sans);
+  font-weight: 700;
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -518,13 +521,15 @@ const closeAssign = () => {
 }
 
 .pending-meta {
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
   font-size: 12px;
   color: var(--secondary-gray);
 }
 
 .pending-notes {
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
   font-size: 12px;
   color: #f59e0b;
   margin-bottom: 6px;
@@ -534,7 +539,8 @@ const closeAssign = () => {
 }
 
 .drag-hint {
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
   font-size: 11px;
   color: var(--secondary-gray);
   opacity: 0.7;
@@ -544,7 +550,8 @@ const closeAssign = () => {
   text-align: center;
   padding: 24px 0;
   color: var(--secondary-gray);
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
   font-size: 13px;
   display: flex;
   flex-direction: column;
@@ -662,7 +669,8 @@ const closeAssign = () => {
 }
 
 .table-id {
-  font-family: "Inter-Bold";
+  font-family: var(--font-sans);
+  font-weight: 700;
   font-size: 15px;
   color: var(--primary-black);
 }
@@ -675,7 +683,8 @@ const closeAssign = () => {
 }
 
 .capacity {
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
   font-size: 12px;
   color: var(--secondary-gray);
 }
@@ -696,7 +705,8 @@ const closeAssign = () => {
 }
 
 .res-time {
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
   font-size: 12px;
   color: var(--secondary-gray);
 }
@@ -752,7 +762,8 @@ const closeAssign = () => {
 
 .hint-bar {
   text-align: center;
-  font-family: "Inter-Light";
+  font-family: var(--font-sans);
+  font-weight: 300;
   font-size: 13px;
   color: var(--secondary-gray);
   margin-top: 18px;
