@@ -75,6 +75,9 @@ const registerReservation = async (reservationDAO, payload, tenantId) => {
     throw { status: 500, message: "Unable to verify schedule availability." };
   }
 
+  const { checkUsageLimit } = require("../tenant-platform/services/tenantSubscription.service");
+  await checkUsageLimit(tenantId, "reservations");
+
   const customer = await reservationDAO.findOrCreateCustomer(
     {
       email: payload.email,

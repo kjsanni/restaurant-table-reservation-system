@@ -3,6 +3,8 @@ const getAllTables = async (tableDAO, tenantId) => {
 };
 
 const registerTable = async (tableDAO, { name, capacity, staffIds }, tenantId) => {
+  const { checkUsageLimit } = require("../tenant-platform/services/tenantSubscription.service");
+  await checkUsageLimit(tenantId, "tables");
   return await tableDAO.createTable({ name, capacity, staffIds }, tenantId);
 };
 

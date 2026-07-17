@@ -150,11 +150,49 @@ const syncFromPaymentGateway = async (tenantId, payload) => {
   return tenant;
 };
 
+const checkUsageLimit = async (tenantId, resource) => {
+  const tenant = await db.tenant.findByPk(tenantId);
+  if (!tenant) throw { status: 404, message: "Tenant not found" };
+
+  const plan = PLANS[tenant.plan] || PLANS.starter;
+
+  if (resource === "tables") {
+    if (plan.maxTables === Infinity) return;
+    const count = await db.table.count({ where: { tenantId } });
+    if (count >= plan.maxTables) {
+      throw {
+        status: 403,
+        message: `Table limit reached (${plan.maxTables}). Upgrade your plan to add more tables.`,
+      };
+    }
+  }
+
+  if (resource === "reservations") {
+    if (plan.maxReservationsPerMonth === Infinity) return;
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    const count = await db.reservation.count({
+      where: {
+        tenantId,
+        createdAt: { [db.Sequelize.Op.gte]: startOfMonth },
+      },
+    });
+    if (count >= plan.maxReservationsPerMonth) {
+      throw {
+        status: 403,
+        message: `Monthly reservation limit reached (${plan.maxReservationsPerMonth}). Upgrade your plan for more.`,
+      };
+    }
+  }
+};
+
 module.exports = {
   checkPastDue,
   enableTenant,
   disableTenant,
   getTenantDashboard,
   syncFromPaymentGateway,
+  checkUsageLimit,
   PLANS,
 };
