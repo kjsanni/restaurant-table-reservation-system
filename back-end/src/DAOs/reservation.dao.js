@@ -887,6 +887,7 @@ module.exports = {
   findOrCreateCustomer,
   findCustomerByEmail,
   createCustomer,
+  updateCustomer,
   updateCustomerTags,
   deleteReservation,
   destroyReservation,

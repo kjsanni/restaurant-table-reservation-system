@@ -19,6 +19,7 @@ const paymentRouter = require("../routes/payment.router");
 const reportRouter = require("../routes/report.router");
 const customerRouter = require("../routes/customer.router");
 const adminRouter = require("../routes/admin.router");
+const customerPortalRouter = require("../routes/customer-portal.router");
 const notificationRouter = require("../routes/notification.router");
 const emailTemplateRouter = require("../routes/emailTemplate.router");
 const webhookRouter = require("../routes/webhook.router");
@@ -142,6 +143,7 @@ const createServer = () => {
     app.use("/api/v1/admin/tenants", logAction, tenantAdminRoutes);
     app.use("/api/v1/billing", billingRoutes);
   }
+  app.use("/api/v1/customer-portal", logAction, customerPortalRouter);
   app.use("/api/v1/notifications", logAction, notificationRouter);
   app.use("/api/v1/email-templates", logAction, emailTemplateRouter);
   app.use("/api/v1/webhooks", logAction, webhookRouter);

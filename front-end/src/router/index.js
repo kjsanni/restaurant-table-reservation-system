@@ -189,4 +189,21 @@ router.beforeEach((to, from, next) => {
   }
 });
 
+const customerPortalRoutes = [
+  {
+    path: "/portal/profile",
+    name: "customer-profile",
+    component: () => import("../views/customer/CustomerPortalProfileView.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/portal/reservations",
+    name: "customer-reservations",
+    component: () => import("../views/customer/CustomerPortalReservationsView.vue"),
+    meta: { requiresAuth: true },
+  },
+];
+
+customerPortalRoutes.forEach((route) => router.addRoute(route));
+
 export default router;

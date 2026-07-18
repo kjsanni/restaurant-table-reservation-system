@@ -1,5 +1,6 @@
 const reportService = require("../services/reportService");
 const PDFDocument = require("pdfkit");
+const { Op } = require("../db/models");
 
 const getReservationReportHandler = async (req, res) => {
   const filters = {
@@ -16,6 +17,42 @@ const getReservationReportHandler = async (req, res) => {
     pagination.offset = (page - 1) * pageSize;
   }
   const report = await reportService.getReservationReport(filters, req.tenant?.id, pagination);
+  return res.status(200).json({ success: true, report });
+};
+
+const getTimeSeriesHandler = async (req, res) => {
+  const filters = {
+    from: req.query.from,
+    to: req.query.to,
+  };
+  const report = await reportService.getTimeSeriesReport(filters, req.tenant?.id);
+  return res.status(200).json({ success: true, report });
+};
+
+const getCustomerAnalyticsHandler = async (req, res) => {
+  const filters = {
+    from: req.query.from,
+    to: req.query.to,
+  };
+  const report = await reportService.getCustomerAnalytics(filters, req.tenant?.id);
+  return res.status(200).json({ success: true, report });
+};
+
+const getTableUtilizationHandler = async (req, res) => {
+  const filters = {
+    from: req.query.from,
+    to: req.query.to,
+  };
+  const report = await reportService.getTableUtilization(filters, req.tenant?.id);
+  return res.status(200).json({ success: true, report });
+};
+
+const getNoShowAnalyticsHandler = async (req, res) => {
+  const filters = {
+    from: req.query.from,
+    to: req.query.to,
+  };
+  const report = await reportService.getNoShowAnalytics(filters, req.tenant?.id);
   return res.status(200).json({ success: true, report });
 };
 
@@ -91,6 +128,10 @@ const getTurnTimeHandler = async (req, res) => {
 
 module.exports = {
   getReservationReportHandler,
+  getTimeSeriesHandler,
+  getCustomerAnalyticsHandler,
+  getTableUtilizationHandler,
+  getNoShowAnalyticsHandler,
   exportCSVHandler,
   exportPDFHandler,
   getTurnTimeHandler,
