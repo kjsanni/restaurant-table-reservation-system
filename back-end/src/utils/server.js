@@ -149,7 +149,7 @@ const createServer = () => {
   app.use("/api/v1", generalLimiter, require("../routes"));
   app.use("/api/v1/tables", logAction, validateCsrfToken, tableRouter);
   app.use("/api/v1/reservations", logAction, validateCsrfToken, reservationRouter);
-  app.use("/api/v1/auth", authLimiter, validateCsrfToken, authRouter);
+  app.use("/api/v1/auth", validateCsrfToken, authRouter);
   app.use("/api/v1/schedule", logAction, validateCsrfToken, scheduleRouter);
   app.use("/api/v1/shifts", logAction, validateCsrfToken, shiftRouter);
   app.use("/api/v1/time-offs", logAction, validateCsrfToken, timeOffRouter);
