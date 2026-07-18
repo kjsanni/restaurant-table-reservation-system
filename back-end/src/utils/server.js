@@ -32,7 +32,7 @@ const { getCurrentSecret } = require("../utils/jwtRotation");
 const { Server } = require("socket.io");
 const tryCatchHandler = require("../middleware/tryCatch");
 const { protect } = require("../middleware/auth");
-const { authLimiter, generalLimiter, bulkOperationLimiter, adminActionLimiter } = require("../middleware/rateLimit");
+const { authLimiter, generalLimiter, bulkOperationLimiter, adminActionLimiter, syncLimiter, webhookLimiter } = require("../middleware/rateLimit");
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
 
@@ -168,8 +168,8 @@ const createServer = () => {
   app.use("/api/v1/customer-portal", logAction, validateCsrfToken, customerPortalRouter);
   app.use("/api/v1/notifications", logAction, validateCsrfToken, notificationRouter);
   app.use("/api/v1/email-templates", logAction, validateCsrfToken, emailTemplateRouter);
-  app.use("/api/v1/webhooks", logAction, webhookRouter);
-  app.use("/api/v1/sync", logAction, require("../routes/sync.router"));
+  app.use("/api/v1/webhooks", logAction, webhookLimiter, webhookRouter);
+  app.use("/api/v1/sync", logAction, syncLimiter, require("../routes/sync.router"));
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
   }

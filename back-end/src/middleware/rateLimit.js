@@ -25,7 +25,11 @@ const makeLimiter = (prefix, opts) => {
   if (RATE_LIMIT_DISABLED) {
     return (req, res, next) => next();
   }
-  return rateLimit({ ...opts, store: createRedisStore(prefix) });
+  const store = createRedisStore(prefix);
+  if (!store && process.env.NODE_ENV === "production") {
+    console.warn(`[rateLimit] Redis unavailable for ${prefix}; falling back to in-memory store. Set REDIS_HOST/REDIS_PORT in production.`);
+  }
+  return rateLimit({ ...opts, store });
 };
 
 const authLimiter = makeLimiter("rl:auth:", {
@@ -72,9 +76,33 @@ const adminActionLimiter = makeLimiter("rl:admin:", {
   legacyHeaders: false,
 });
 
+const syncLimiter = makeLimiter("rl:sync:", {
+  windowMs: 60 * 1000,
+  max: numEnv("RATE_LIMIT_SYNC_MAX", 60),
+  message: {
+    success: false,
+    message: "Too many sync requests. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const webhookLimiter = makeLimiter("rl:webhook:", {
+  windowMs: 60 * 1000,
+  max: numEnv("RATE_LIMIT_WEBHOOK_MAX", 120),
+  message: {
+    success: false,
+    message: "Too many webhook requests. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 module.exports = {
   authLimiter,
   generalLimiter,
   bulkOperationLimiter,
   adminActionLimiter,
+  syncLimiter,
+  webhookLimiter,
 };

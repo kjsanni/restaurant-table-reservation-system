@@ -21,7 +21,7 @@ const getCspDirectives = () => {
     styleSrc: ["'self'"],
     imgSrc: ["'self'", "data:", "https:"],
     fontSrc: ["'self'", "data:"],
-    connectSrc: ["'self'", backendOrigin, frontendOrigin],
+    connectSrc,
     frameAncestors: ["'none'"],
     baseUri: ["'self'"],
     formAction: ["'self'"],
