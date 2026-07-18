@@ -218,6 +218,12 @@ const updateSettingsHandler = async (req, res) => {
     "paystack_config",
     "tenant_mode_enabled",
     "feature_flags",
+    "maintenance_mode",
+    "currency_locale",
+    "reservation_window",
+    "branding",
+    "message_templates",
+    "email_server",
   ];
   if (!allowedKeys.includes(key)) {
     return res.status(400).json({ success: false, message: "Unknown or protected setting key." });
