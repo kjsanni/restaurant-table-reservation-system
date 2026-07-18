@@ -35,7 +35,6 @@ const { protect } = require("../middleware/auth");
 const { authLimiter, generalLimiter, bulkOperationLimiter, adminActionLimiter } = require("../middleware/rateLimit");
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
-const { startReportWorker } = require("../queues/report.queue");
 
 const TENANT_MODE = process.env.TENANT_MODE === "enabled";
 let resolveTenant = null;
@@ -93,12 +92,21 @@ const createServer = () => {
     setInterval(runTenantCron, 6 * 60 * 60 * 1000);
   }
 
+  const workers = [];
   try {
-    startNotificationWorker();
-    startReportWorker();
+    const nw = startNotificationWorker();
+    const rw = startReportWorker();
+    if (nw) workers.push(nw);
+    if (rw) workers.push(rw);
   } catch (err) {
     console.warn("BullMQ workers not started:", err.message);
   }
+
+  const shutdownWorkers = async () => {
+    await Promise.all(workers.map((w) => w.close().catch(() => {})));
+  };
+  process.once("SIGTERM", shutdownWorkers);
+  process.once("SIGINT", shutdownWorkers);
 
   app.use(cookieParser());
   app.use(requestLogger);

@@ -5,7 +5,18 @@ const authDAO = require("../DAOs/auth.dao");
 const db = require("../db/models");
 
 const scheduleRemindersHandler = async (req, res) => {
-  const results = await notificationService.scheduleReminders(req.tenant?.id);
+  const tenantId = req.tenant?.id;
+  const queued = await notificationService.enqueueReminders(tenantId);
+  if (queued.enqueued) {
+    return res.status(202).json({
+      success: true,
+      queued: true,
+      count: queued.count || 0,
+      message: `Scheduled ${queued.count || 0} reminder(s) for background delivery.`,
+    });
+  }
+  // Redis unavailable: fall back to synchronous delivery so behavior is unchanged.
+  const results = await notificationService.scheduleReminders(tenantId);
   return res.status(200).json({ success: true, results });
 };
 

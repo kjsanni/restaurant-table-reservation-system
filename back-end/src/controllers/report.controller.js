@@ -1,4 +1,5 @@
 const reportService = require("../services/reportService");
+const { reportQueue, safeAdd } = require("../queues/queue");
 const PDFDocument = require("pdfkit");
 const { Op } = require("../db/models");
 
@@ -63,7 +64,18 @@ const exportCSVHandler = async (req, res) => {
     paymentStatus: req.query.paymentStatus,
     resStatus: req.query.resStatus,
   };
-  const csv = await reportService.exportCSV(filters, req.tenant?.id);
+  const tenantId = req.tenant?.id;
+  const queued = await safeAdd(reportQueue, "csv", { type: "csv", filters, tenantId });
+  if (queued.enqueued) {
+    return res.status(202).json({
+      success: true,
+      queued: true,
+      type: "csv",
+      message: "CSV export has been queued for background processing.",
+    });
+  }
+  // Redis unavailable: fall back to synchronous generation so behavior is unchanged.
+  const csv = await reportService.exportCSV(filters, tenantId);
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", "attachment; filename=reservations.csv");
   res.send(csv);
@@ -76,7 +88,18 @@ const exportPDFHandler = async (req, res) => {
     paymentStatus: req.query.paymentStatus,
     resStatus: req.query.resStatus,
   };
-  const report = await reportService.getReservationReport(filters, req.tenant?.id);
+  const tenantId = req.tenant?.id;
+  const queued = await safeAdd(reportQueue, "pdf", { type: "pdf", filters, tenantId });
+  if (queued.enqueued) {
+    return res.status(202).json({
+      success: true,
+      queued: true,
+      type: "pdf",
+      message: "PDF export has been queued for background processing.",
+    });
+  }
+  // Redis unavailable: fall back to synchronous streaming so behavior is unchanged.
+  const report = await reportService.getReservationReport(filters, tenantId);
 
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "attachment; filename=reservations.pdf");

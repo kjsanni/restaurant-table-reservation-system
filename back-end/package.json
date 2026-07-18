@@ -18,11 +18,20 @@
     "migrate:up": "npx sequelize db:migrate",
     "migrate:undo": "npx sequelize db:migrate:undo",
     "seed:all": "npx sequelize db:seed:all",
-    "seed:undo": "npx sequelize db:seed:undo:all"
+    "seed:undo": "npx sequelize db:seed:undo:all",
+    "loadtest:seed": "node load-tests/seed.js",
+    "loadtest:seed:clean": "node load-tests/seed.js --clean",
+    "loadtest:unseed": "node load-tests/unseed.js",
+    "test:load": "node load-tests/run.js --scenario all",
+    "loadtest:baseline": "LOAD_TENANT_MODE=baseline node load-tests/run.js --scenario all --sessions 1 --tenantHeader false --label baseline",
+    "loadtest:tenant": "LOAD_TENANT_MODE=enabled node load-tests/run.js --scenario all --sessions 100 --label tenant",
+    "loadtest:leak": "node load-tests/leak-check.js --sample 20 --rounds 3",
+    "loadtest:queue": "node load-tests/queue-bench.js --jobs 500 --concurrency 5 --sendMs 50"
   },
   "author": "Slavyan Hristov",
   "license": "ISC",
   "devDependencies": {
+    "autocannon": "^7.15.0",
     "concurrently": "^7.5.0",
     "jest": "^29.3.1",
     "nodemon": "^3.1.14",

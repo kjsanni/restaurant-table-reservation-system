@@ -1,0 +1,65 @@
+"use strict";
+
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
+    const [tenant] = await queryInterface.sequelize.query(
+      `SELECT id FROM tenants WHERE id = 1 LIMIT 1`
+    );
+
+    if (!tenant || tenant.length === 0) {
+      await queryInterface.sequelize.query(
+        `INSERT INTO tenants (id, name, slug, status, plan, subscriptionStatus, createdAt, updatedAt) VALUES (1, 'Default Tenant', 'default', 'active', 'starter', 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+      );
+    }
+
+    const tables = [
+      "Users",
+      "Customers",
+      "Reservations",
+      "Tables",
+      "Payments",
+      "Waitlist",
+      "AuditLogs",
+      "Settings",
+      "schedules",
+      "Holidays",
+      "reservation_status_history",
+      "Refunds",
+      "emailTemplates",
+      "permission_templates",
+      "StaffShifts",
+      "TimeOffs",
+      "TableEvents",
+      "FloorPlans",
+      "login_attempts",
+      "refresh_tokens",
+      "paystackEvents",
+      "Groups",
+      "Roles",
+    ];
+
+    for (const table of tables) {
+      try {
+        await queryInterface.sequelize.query(
+          `UPDATE ${table} SET tenantId = 1 WHERE tenantId IS NULL`
+        );
+      } catch (err) {
+        console.log(`Skip backfill ${table}: ${err.message}`);
+      }
+    }
+
+    const junctionTables = ["user_groups", "table_staff", "reservation_staff"];
+    for (const jt of junctionTables) {
+      try {
+        await queryInterface.sequelize.query(
+          `UPDATE ${jt} SET tenantId = 1 WHERE tenantId IS NULL`
+        );
+      } catch (err) {
+        console.log(`Skip backfill ${jt}: ${err.message}`);
+      }
+    }
+  },
+
+  down: async () => {
+  },
+};

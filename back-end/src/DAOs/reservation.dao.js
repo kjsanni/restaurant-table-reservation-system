@@ -1,4 +1,5 @@
 const db = require("../db/models");
+const readReplica = require("../db/readReplica");
 const { fn, col } = db.sequelize;
 const { Op } = db.Sequelize;
 const Reservation = db.reservation;
@@ -43,7 +44,11 @@ const findAllReservations = async ({ limit, offset } = {}, tenantId) => {
   };
   if (limit) opts.limit = limit;
   if (offset !== undefined) opts.offset = offset;
-  const { rows, count } = await Reservation.findAndCountAll(opts);
+  const { rows, count } = await readReplica.withReplicaFallback(
+    ({ useMaster }) =>
+      Reservation.findAndCountAll(useMaster === null ? opts : { ...opts, useMaster }),
+    { label: "reservation.findAllReservations" }
+  );
   const reservations = flattenArrayObjects(rows);
   if (limit) {
     return { reservations, total: count };
@@ -109,7 +114,11 @@ const searchReservations = async (filters = {}, { limit, offset } = {}, tenantId
   if (limit) baseOpts.limit = limit;
   if (offset !== undefined) baseOpts.offset = offset;
 
-  const { rows, count } = await Reservation.findAndCountAll(baseOpts);
+  const { rows, count } = await readReplica.withReplicaFallback(
+    ({ useMaster }) =>
+      Reservation.findAndCountAll(useMaster === null ? baseOpts : { ...baseOpts, useMaster }),
+    { label: "reservation.searchReservations" }
+  );
   let reservations = flattenArrayObjects(rows);
 
   if (q) {
@@ -585,18 +594,21 @@ const getHeatmapV2 = async (from, to, mode = "date-hour", tenantId) => {
   if (to) where.resDate = { ...where.resDate, [Op.lte]: to };
 
   if (mode === "calendar") {
-    const results = await Reservation.findAll({
-      attributes: [
-        [col("resDate"), "date"],
-        [fn("COUNT", col("id")), "count"],
-        [fn("HOUR", fn("MIN", col("resTime"))), "peakHour"],
-        [fn("COUNT", col("id")), "peakCount"],
-      ],
-      where,
-      group: [col("resDate")],
-      order: [[col("resDate"), "ASC"]],
-      raw: true,
-    });
+    const results = await readReplica.withReplicaFallback(({ useMaster }) => {
+      const opts = {
+        attributes: [
+          [col("resDate"), "date"],
+          [fn("COUNT", col("id")), "count"],
+          [fn("HOUR", fn("MIN", col("resTime"))), "peakHour"],
+          [fn("COUNT", col("id")), "peakCount"],
+        ],
+        where,
+        group: [col("resDate")],
+        order: [[col("resDate"), "ASC"]],
+        raw: true,
+      };
+      return Reservation.findAll(useMaster === null ? opts : { ...opts, useMaster });
+    }, { label: "reservation.getHeatmapV2:calendar" });
 
     const days = results.map((r) => ({
       date: r.date,
@@ -608,17 +620,20 @@ const getHeatmapV2 = async (from, to, mode = "date-hour", tenantId) => {
     return { days };
   }
 
-  const results = await Reservation.findAll({
-    attributes: [
-      ["resDate", "date"],
-      [fn("HOUR", col("resTime")), "hour"],
-      [fn("COUNT", col("id")), "count"],
-    ],
-    where,
-    group: ["resDate", fn("HOUR", col("resTime"))],
-    order: [["resDate", "ASC"]],
-    raw: true,
-  });
+  const results = await readReplica.withReplicaFallback(({ useMaster }) => {
+    const opts = {
+      attributes: [
+        ["resDate", "date"],
+        [fn("HOUR", col("resTime")), "hour"],
+        [fn("COUNT", col("id")), "count"],
+      ],
+      where,
+      group: ["resDate", fn("HOUR", col("resTime"))],
+      order: [["resDate", "ASC"]],
+      raw: true,
+    };
+    return Reservation.findAll(useMaster === null ? opts : { ...opts, useMaster });
+  }, { label: "reservation.getHeatmapV2:date-hour" });
 
   const dateSet = new Set();
   const hourSet = new Set();
@@ -663,15 +678,18 @@ const getHeatmapV2 = async (from, to, mode = "date-hour", tenantId) => {
 };
 
 const getPaymentStatusCounts = async (tenantId) => {
-  const results = await Reservation.findAll({
-    attributes: [
-      ["paymentStatus", "status"],
-      [fn("COUNT", col("id")), "count"],
-    ],
-    where: withTenant({}, tenantId),
-    group: ["paymentStatus"],
-    raw: true,
-  });
+  const results = await readReplica.withReplicaFallback(({ useMaster }) => {
+    const opts = {
+      attributes: [
+        ["paymentStatus", "status"],
+        [fn("COUNT", col("id")), "count"],
+      ],
+      where: withTenant({}, tenantId),
+      group: ["paymentStatus"],
+      raw: true,
+    };
+    return Reservation.findAll(useMaster === null ? opts : { ...opts, useMaster });
+  }, { label: "reservation.getPaymentStatusCounts" });
 
   const counts = {
     deposit: 0,
@@ -789,28 +807,37 @@ const getReservationStats = async (filters = {}, tenantId) => {
   if (filters.paymentStatus) where.paymentStatus = filters.paymentStatus;
   if (filters.resStatus) where.resStatus = filters.resStatus;
 
-  const reservations = await Reservation.findAll({ where });
+  const reservations = await readReplica.withReplicaFallback(
+    ({ useMaster }) => Reservation.findAll(useMaster === null ? { where } : { where, useMaster }),
+    { label: "reservation.getReservationStats:list" }
+  );
 
-  const paymentBreakdown = await Reservation.findAll({
-    where: { ...where, paymentStatus: { [Op.ne]: null } },
-    attributes: [
-      "paymentStatus",
-      [fn("COUNT", col("id")), "count"],
-      [fn("COALESCE", fn("SUM", col("people")), 0), "totalPeople"],
-    ],
-    group: ["paymentStatus"],
-    raw: true,
-  });
+  const paymentBreakdown = await readReplica.withReplicaFallback(({ useMaster }) => {
+    const opts = {
+      where: { ...where, paymentStatus: { [Op.ne]: null } },
+      attributes: [
+        "paymentStatus",
+        [fn("COUNT", col("id")), "count"],
+        [fn("COALESCE", fn("SUM", col("people")), 0), "totalPeople"],
+      ],
+      group: ["paymentStatus"],
+      raw: true,
+    };
+    return Reservation.findAll(useMaster === null ? opts : { ...opts, useMaster });
+  }, { label: "reservation.getReservationStats:paymentBreakdown" });
 
-  const resStatusBreakdown = await Reservation.findAll({
-    where,
-    attributes: [
-      "resStatus",
-      [fn("COUNT", col("id")), "count"],
-    ],
-    group: ["resStatus"],
-    raw: true,
-  });
+  const resStatusBreakdown = await readReplica.withReplicaFallback(({ useMaster }) => {
+    const opts = {
+      where,
+      attributes: [
+        "resStatus",
+        [fn("COUNT", col("id")), "count"],
+      ],
+      group: ["resStatus"],
+      raw: true,
+    };
+    return Reservation.findAll(useMaster === null ? opts : { ...opts, useMaster });
+  }, { label: "reservation.getReservationStats:resStatusBreakdown" });
 
   const total = reservations.length;
   const noShowCount = reservations.filter((r) => r.resStatus === "missed").length;

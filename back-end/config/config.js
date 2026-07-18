@@ -20,6 +20,38 @@ const validateEnv = (envName) => {
 const dbSsl = process.env.DB_SSL === "true" ? { ssl: { require: true, rejectUnauthorized: false } } : null;
 const withSsl = (config) => (dbSsl ? { ...config, dialectOptions: dbSsl } : config);
 
+// Read replica configuration.
+//
+// A replica is considered "configured" only when DB_HOST_REPLICA is set. When it
+// is not set, `replica` resolves to `null` and the application keeps its existing
+// single-database behaviour untouched (fully backward compatible).
+//
+// Replica credentials fall back to the primary credentials when the replica-
+// specific variable is omitted, which is the common case where the replica shares
+// the same user/password/schema as the primary (typical for native MySQL
+// replication).
+const replicaEnabled = process.env.DB_REPLICA_ENABLED !== "false"; // default on when host provided
+const hasReplicaHost = !!process.env.DB_HOST_REPLICA;
+
+const buildReplica = (database) => {
+  if (!hasReplicaHost || !replicaEnabled) return null;
+  return {
+    host: process.env.DB_HOST_REPLICA,
+    port: process.env.DB_PORT_REPLICA || process.env.DB_PORT,
+    username: process.env.DB_USERNAME_REPLICA || process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD_REPLICA || process.env.DB_PASSWORD,
+    database,
+    // Replica pool is sized independently: read-heavy workloads usually want a
+    // larger read pool than the write pool. Falls back to the primary pool sizing.
+    pool: {
+      min: parseInt(process.env.DB_POOL_MIN_REPLICA, 10) || parseInt(process.env.DB_POOL_MIN, 10) || 2,
+      max: parseInt(process.env.DB_POOL_MAX_REPLICA, 10) || parseInt(process.env.DB_POOL_MAX, 10) || 20,
+      idle: parseInt(process.env.DB_POOL_IDLE_REPLICA, 10) || parseInt(process.env.DB_POOL_IDLE, 10) || 10000,
+      acquire: parseInt(process.env.DB_POOL_ACQUIRE_REPLICA, 10) || parseInt(process.env.DB_POOL_ACQUIRE, 10) || 30000,
+    },
+  };
+};
+
 const environments = {
   development: withSsl({
     username: process.env.DB_USERNAME,
@@ -29,6 +61,7 @@ const environments = {
     dialect: process.env.DB_DIALECT || "mysql",
     port: process.env.DB_PORT,
     server_port: process.env.PORT,
+    replica: buildReplica(process.env.DB_NAME),
   }),
   test: withSsl({
     username: process.env.DB_USERNAME,
@@ -38,6 +71,9 @@ const environments = {
     dialect: process.env.DB_DIALECT || "mysql",
     port: process.env.DB_PORT,
     server_port: process.env.PORT,
+    // Replica is intentionally disabled for the test environment so the existing
+    // test suite always runs against a single database.
+    replica: null,
   }),
   production: withSsl({
     username: process.env.DB_USERNAME,
@@ -47,6 +83,7 @@ const environments = {
     dialect: process.env.DB_DIALECT || "mysql",
     port: process.env.DB_PORT,
     server_port: process.env.PORT,
+    replica: buildReplica(process.env.DB_NAME),
   }),
 };
 

@@ -6,7 +6,11 @@ const requireActiveTenant = async (req, res, next) => {
   }
 
   const tenant = req.tenant;
+  const PLATFORM_ADMIN_PATHS = ["/api/v1/admin/tenants", "/api/v1/billing"];
   if (!tenant) {
+    if (PLATFORM_ADMIN_PATHS.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
+      return next();
+    }
     return res.status(500).json({
       success: false,
       message: "Tenant not resolved before request.",

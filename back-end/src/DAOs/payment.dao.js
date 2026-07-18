@@ -1,4 +1,5 @@
 const db = require("../db/models");
+const readReplica = require("../db/readReplica");
 const Payment = db.payment;
 const { Op, fn, col } = db.Sequelize;
 
@@ -89,40 +90,44 @@ const getRevenueStats = async (from, to, tenantId) => {
   if (from) where.paidAt = { ...where.paidAt, [Op.gte]: from };
   if (to) where.paidAt = { ...where.paidAt, [Op.lte]: to };
 
-  const result = await Payment.findOne({
-    attributes: [
-      [fn("SUM", col("amount")), "totalRevenue"],
-      [fn("SUM", col("discount")), "totalDiscount"],
-      [fn("COUNT", col("id")), "totalPayments"],
-      [fn("AVG", col("amount")), "avgPayment"],
-    ],
-    where,
-    raw: true,
-  });
+  return readReplica.withReplicaFallback(async ({ useMaster }) => {
+    const result = await Payment.findOne({
+      attributes: [
+        [fn("SUM", col("amount")), "totalRevenue"],
+        [fn("SUM", col("discount")), "totalDiscount"],
+        [fn("COUNT", col("id")), "totalPayments"],
+        [fn("AVG", col("amount")), "avgPayment"],
+      ],
+      where,
+      raw: true,
+      ...(useMaster === null ? {} : { useMaster }),
+    });
 
-  const byMethod = await Payment.findAll({
-    attributes: [
-      "method",
-      [fn("SUM", col("amount")), "total"],
-      [fn("COUNT", col("id")), "count"],
-    ],
-    where,
-    group: ["method"],
-    raw: true,
-  });
+    const byMethod = await Payment.findAll({
+      attributes: [
+        "method",
+        [fn("SUM", col("amount")), "total"],
+        [fn("COUNT", col("id")), "count"],
+      ],
+      where,
+      group: ["method"],
+      raw: true,
+      ...(useMaster === null ? {} : { useMaster }),
+    });
 
-  const rawRevenue = result?.totalRevenue ? parseFloat(result.totalRevenue) : 0;
-  const rawDiscount = result?.totalDiscount ? parseFloat(result.totalDiscount) : 0;
-  return {
-    totalRevenue: rawRevenue - rawDiscount,
-    totalPayments: result?.totalPayments ? parseInt(result.totalPayments, 10) : 0,
-    avgPayment: result?.avgPayment ? parseFloat(result.avgPayment) : 0,
-    byMethod: byMethod.map((m) => ({
-      method: m.method,
-      total: parseFloat(m.total),
-      count: parseInt(m.count, 10),
-    })),
-  };
+    const rawRevenue = result?.totalRevenue ? parseFloat(result.totalRevenue) : 0;
+    const rawDiscount = result?.totalDiscount ? parseFloat(result.totalDiscount) : 0;
+    return {
+      totalRevenue: rawRevenue - rawDiscount,
+      totalPayments: result?.totalPayments ? parseInt(result.totalPayments, 10) : 0,
+      avgPayment: result?.avgPayment ? parseFloat(result.avgPayment) : 0,
+      byMethod: byMethod.map((m) => ({
+        method: m.method,
+        total: parseFloat(m.total),
+        count: parseInt(m.count, 10),
+      })),
+    };
+  }, { label: "payment.getRevenueStats" });
 };
 
 const getRevenueTimeSeries = async (from, to, granularity = "day", tenantId) => {

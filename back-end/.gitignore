@@ -2,3 +2,9 @@
 .env
 .env.production
 /logs
+
+# Load-testing runtime artifacts (scripts are tracked; results/cache are not)
+/load-tests/results
+/load-tests/.sessions.cache.json
+/load-tests/tenants.manifest.json
+/load-tests/baseline.manifest.json
