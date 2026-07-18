@@ -9,7 +9,7 @@
   },
   "main": "app.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --forceExit",
     "start": "node ./src/app.js",
     "start:dev": "npm run migrate:up && nodemon -L ./src/app.js",
     "start:prod": "npm run migrate:up && node ./src/app.js",
