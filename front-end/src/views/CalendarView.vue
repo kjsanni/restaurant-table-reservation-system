@@ -62,6 +62,27 @@ watch(typeFilter, () => {
   calendar.buildCalendarDaysFromCurrent();
 });
 
+const loadFreeTables = async () => {
+  try {
+    const res = await tableAPI.getTables();
+    allTables.value = res.data.collection || [];
+    freeTables.value = allTables.value.filter(
+      (t) => !t.reservationId && !t.isBlocked
+    );
+  } catch {
+    freeTables.value = [];
+  }
+};
+
+const loadWaitingStaff = async () => {
+  try {
+    const groupRes = await groupAPI.getGroupByName("waiting_staff");
+    waitingStaffList.value = groupRes.data.group.Users || [];
+  } catch {
+    waitingStaffList.value = [];
+  }
+};
+
 const actions = useReservationActions({
   loadSchedule: calendar.loadSchedule,
   reservationAPI,
@@ -325,18 +346,6 @@ const createReservation = async () => {
 const newPeople = ref(2);
 const newCustomerName = ref("");
 
-const loadFreeTables = async () => {
-  try {
-    const res = await tableAPI.getTables();
-    allTables.value = res.data.collection || [];
-    freeTables.value = allTables.value.filter(
-      (t) => !t.reservationId && !t.isBlocked
-    );
-  } catch {
-    freeTables.value = [];
-  }
-};
-
 const tableName = (res) => {
   if (!res) return null;
   if (res.tableName) return res.tableName;
@@ -351,14 +360,6 @@ const reservationName = (res) => {
   return res?.Customer?.name || res?.name || "Walk-in";
 };
 
-const loadWaitingStaff = async () => {
-  try {
-    const groupRes = await groupAPI.getGroupByName("waiting_staff");
-    waitingStaffList.value = groupRes.data.group.Users || [];
-  } catch {
-    waitingStaffList.value = [];
-  }
-};
 </script>
 
 <template>
