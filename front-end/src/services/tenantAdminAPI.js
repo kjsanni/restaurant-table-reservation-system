@@ -5,6 +5,9 @@ const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 
 const client = axios.create({
   baseURL: `${API_BASE}/admin/tenants`,
+  withCredentials: true,
+  xsrfCookieName: "XSRF-TOKEN",
+  xsrfHeaderName: "x-xsrf-token",
   headers: {
     "Content-Type": "application/json",
   },
