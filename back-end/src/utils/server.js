@@ -146,7 +146,7 @@ const createServer = () => {
     app.use(tryCatchHandler(requireActiveTenant));
   }
 
-  app.use("/api/v1", generalLimiter, validateCsrfToken, require("../routes"));
+  app.use("/api/v1", generalLimiter, require("../routes"));
   app.use("/api/v1/tables", logAction, validateCsrfToken, tableRouter);
   app.use("/api/v1/reservations", logAction, validateCsrfToken, reservationRouter);
   app.use("/api/v1/auth", authLimiter, validateCsrfToken, authRouter);
@@ -162,12 +162,12 @@ const createServer = () => {
   app.use("/api/v1/customers", logAction, validateCsrfToken, customerRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminRouter);
   if (TENANT_MODE) {
-    app.use("/api/v1/admin/tenants", logAction, tenantAdminRoutes);
-    app.use("/api/v1/billing", billingRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, tenantAdminRoutes);
+    app.use("/api/v1/billing", logAction, billingRoutes);
   }
-  app.use("/api/v1/customer-portal", logAction, customerPortalRouter);
-  app.use("/api/v1/notifications", logAction, notificationRouter);
-  app.use("/api/v1/email-templates", logAction, emailTemplateRouter);
+  app.use("/api/v1/customer-portal", logAction, validateCsrfToken, customerPortalRouter);
+  app.use("/api/v1/notifications", logAction, validateCsrfToken, notificationRouter);
+  app.use("/api/v1/email-templates", logAction, validateCsrfToken, emailTemplateRouter);
   app.use("/api/v1/webhooks", logAction, webhookRouter);
   app.use("/api/v1/sync", logAction, require("../routes/sync.router"));
   if (process.env.SENTRY_DSN) {
