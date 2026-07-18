@@ -217,6 +217,7 @@ const updateSettingsHandler = async (req, res) => {
     "notification_channels",
     "paystack_config",
     "tenant_mode_enabled",
+    "feature_flags",
   ];
   if (!allowedKeys.includes(key)) {
     return res.status(400).json({ success: false, message: "Unknown or protected setting key." });
