@@ -7,7 +7,7 @@ const webhookHandler = async (req, res) => {
   const signature = req.headers["x-paystack-signature"];
   const rawBody = JSON.stringify(req.body);
 
-  if (!verifyWebhookSignature(rawBody, signature)) {
+  if (!(await verifyWebhookSignature(rawBody, signature))) {
     return res.status(401).json({ success: false, message: "Invalid signature" });
   }
 
