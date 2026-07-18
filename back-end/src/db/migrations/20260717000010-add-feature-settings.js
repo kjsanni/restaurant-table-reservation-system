@@ -28,6 +28,11 @@ module.exports = {
         value: JSON.stringify({ enabled: false, subscriptions: [] }),
         description: "Outbound webhook subscriptions for reservation/payment events",
       },
+      {
+        key: "pos_sync",
+        value: JSON.stringify({ enabled: false, posApiUrl: "", posApiKey: "" }),
+        description: "BV360 POS integration: table sync, reservation→POS order, payment settlement",
+      },
     ];
 
     for (const s of settings) {
@@ -46,7 +51,7 @@ module.exports = {
 
   async down(queryInterface) {
     await queryInterface.bulkDelete("settings", {
-      key: ["business_hours", "feature_flags", "webhooks"],
+      key: ["business_hours", "feature_flags", "webhooks", "pos_sync"],
     });
   },
 };

@@ -145,6 +145,7 @@ const createServer = () => {
   app.use("/api/v1/notifications", logAction, notificationRouter);
   app.use("/api/v1/email-templates", logAction, emailTemplateRouter);
   app.use("/api/v1/webhooks", logAction, webhookRouter);
+  app.use("/api/v1/sync", logAction, require("./sync.router"));
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
   }
