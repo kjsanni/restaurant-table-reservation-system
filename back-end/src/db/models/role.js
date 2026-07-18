@@ -8,10 +8,13 @@ module.exports = (sequelize, DataTypes) => {
 
   Role.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       name: {
         type: DataTypes.STRING(50),
         allowNull: false,
-        unique: true,
       },
       description: {
         type: DataTypes.STRING(255),
@@ -31,6 +34,12 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "role",
+      indexes: [
+        {
+          unique: true,
+          fields: ["tenantId", "name"],
+        },
+      ],
     }
   );
 

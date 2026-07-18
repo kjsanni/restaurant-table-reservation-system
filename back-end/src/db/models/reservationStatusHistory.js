@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
 
   ReservationStatusHistory.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       reservationId: {
         type: DataTypes.INTEGER,
         allowNull: false,

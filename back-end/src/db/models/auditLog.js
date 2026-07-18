@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   AuditLog.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       action: {
         type: DataTypes.STRING(50),
         allowNull: false,

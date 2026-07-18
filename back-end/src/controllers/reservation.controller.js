@@ -369,7 +369,7 @@ const getRevenueTimeSeriesHandler = async (req, res) => {
       message: "Invalid granularity. Use 'day', 'week', or 'month'.",
     });
   }
-  const data = await reservationService.getRevenueTimeSeries(from, to, granularity);
+  const data = await reservationService.getRevenueTimeSeries(from, to, granularity, req.tenant?.id);
   return res.status(200).json({ success: true, ...data });
 };
 

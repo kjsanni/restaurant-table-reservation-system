@@ -5,14 +5,16 @@ Restaurant Table Reservation System - RTRS
 <br>
 </h1>
 
-<h4 align="center">Table reservation web app for any restaurant with RBAC, payments, analytics, and real-time waitlist management</h4>
+<h4 align="center">Table reservation web app for any restaurant with RBAC, payments, analytics, real-time waitlist management, and multi-tenant SaaS support</h4>
 
 <p align="center">
   <a href="#key-features">Key Features</a> •
   <a href="#tech-stack">Tech Stack</a> •
+  <a href="#multi-tenant-deployment">Multi-Tenant Deployment</a> •
   <a href="#how-to-use">How To Use</a> •
   <a href="#credentials">Default Credentials</a> •
   <a href="#security">Security</a> •
+  <a href="#documentation">Documentation</a> •
   <a href="#contact">Contact</a>
 </p>
 
@@ -27,6 +29,22 @@ Restaurant Table Reservation System - RTRS
 - **Table Management** — Register tables with capacity, block/unblock, assign staff (5-table limit per staff)
 - **Waitlist Management** — Queue guests, auto-suggest seating when tables free up (Socket.io real-time)
 - **Staff Assignment** — Assign waiting staff to reservations and tables
+
+### Multi-Tenant SaaS Platform
+- **Multi-Tenant Architecture** — Feature-flagged `TENANT_MODE=enabled`; single repo, zero overhead when disabled
+- **Tenant Resolution** — Header (`X-Tenant-Id`, `X-Tenant-Slug`) or subdomain-based routing
+- **Subscription Gating** — Paystack integration with plans (starter/growth/enterprise), grace periods, auto-suspension
+- **Tenant Isolation** — Composite unique indexes, Redis tenant caching (5min TTL), distributed cron lock
+- **Platform Admin Dashboard** — Create/manage tenants, view MRR, enable/disable tenants
+- **Per-Tenant Settings** — Branding, currency, business hours, notification channels, Paystack keys
+- **Usage Limits** — Enforced per-plan limits for tables and reservations
+
+### Background Jobs & Performance
+- **BullMQ Job Queue** — Offloaded notifications, email, WhatsApp, CSV/PDF exports from request thread
+- **Redis Cache** — Tenant resolution caching, schedule/holiday caching, rate-limit shared store
+- **Rate Limiting** — Auth (10/15min), general (100/15min), bulk ops (5/hr), admin actions (3/hr)
+- **DB Connection Pool** — Configurable pool settings for PM2 cluster deployments
+- **Distributed Cron** — Redis lock ensures single-instance cron execution across cluster
 
 ### Payment & Analytics
 - **Payment Tracking** — Record payments with auto-classification (deposit/partial/paid/unpaid)
@@ -73,7 +91,54 @@ Restaurant Table Reservation System - RTRS
 | Frontend UI | PrimeVue + Tailwind CSS + CSS custom properties |
 | State Management | Pinia |
 | Build Tool | Vite |
-| Testing | Playwright (E2E) |
+| Background Jobs | BullMQ + Redis |
+| Cache | Redis |
+| Testing | Playwright (E2E), Jest (unit) |
+
+---
+
+## Multi-Tenant Deployment
+
+### Prerequisites
+- Node.js 18+
+- MySQL 8+ (or MariaDB)
+- Redis 5+ (for caching, rate limiting, BullMQ)
+- Git
+
+### Environment Variables
+```bash
+# Backend (.env)
+NODE_ENV=production
+TENANT_MODE=enabled
+REDIS_HOST=localhost
+REDIS_PORT=6379
+DB_POOL_MIN=10
+DB_POOL_MAX=50
+JWT_SECRET=<32+ random chars>
+PAYSTACK_SECRET_KEY=sk_live_...
+PAYSTACK_WEBHOOK_SECRET=whsec_...
+```
+
+### Initialize Database
+```bash
+cd back-end
+npx sequelize-cli db:migrate
+npx sequelize-cli db:seed:all
+```
+
+### Run with PM2 (Cluster Mode)
+```bash
+cd back-end
+pm2 start src/app.js --name rtrs --instances max --exec_mode cluster
+pm2 save
+pm2 startup
+```
+
+### Frontend Build
+```bash
+cd front-end
+VITE_TENANT_MODE=enabled npm run build
+```
 
 ---
 
@@ -82,6 +147,7 @@ Restaurant Table Reservation System - RTRS
 ### Prerequisites
 - Node.js 18+
 - MySQL 8+ (or MariaDB)
+- Redis 5+ (optional, for multi-tenant features)
 - Git
 
 ```bash
@@ -117,6 +183,29 @@ See `DEPLOYMENT-GUIDE.md` for Apache/Nginx + PM2 setup.
 
 ---
 
+## Sessions & Documentation
+
+### Current Sprint: Multi-Tenant Production Readiness (2026-07-18)
+- **Phase 1 Complete** — Middleware mount order, tenantId in 22 models, Redis caching, rate limiters, distributed cron lock, tenant switcher pagination, DB connection pool
+- **Phase 2 Complete** — DAO/service/controller tenantId wiring, BullMQ job queue scaffold, frontend tenant-aware fetching, end-to-end multi-tenant tests, production deployment checklist
+
+### Documentation Index
+- `docs/README.md` — Documentation index
+- `CHANGELOG.md` — Version history
+- `DEPLOYMENT-GUIDE.md` — Production setup
+- `SECURITY_AUDIT_REPORT.md` — Security findings
+- `Specs/` — Implementation specs and checklists
+- `Sessions/` — Session notes and architecture decisions
+- `docs/` — Full Obsidian documentation vault
+
+### Key Docs
+- [[903-Tenant-Platform-Module]] — Multi-tenant architecture, migrations, middleware
+- [[904-Multi-Tenant-Query-Scoping-Tracker]] — DAO scoping status and implementation details
+- [[900-Session-Summary]] — Development session history
+- `Specs/production-deployment-checklist.md` — Production readiness checklist
+
+---
+
 ## Default Credentials
 
 **⚠️ Change these immediately in production!**
@@ -142,6 +231,8 @@ See `DEPLOYMENT-GUIDE.md` for Apache/Nginx + PM2 setup.
 - `CHANGELOG.md` — Version history
 - `DEPLOYMENT-GUIDE.md` — Production setup
 - `SECURITY_AUDIT_REPORT.md` — Security findings
+- `Specs/` — Implementation specs and production checklists
+- `Sessions/` — Session notes and architecture decisions
 - `docs/` — Full Obsidian documentation vault
 
 ---
@@ -156,6 +247,7 @@ See `DEPLOYMENT-GUIDE.md` for Apache/Nginx + PM2 setup.
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Socket.io](https://socket.io/)
 - [Playwright](https://playwright.dev/)
+- [BullMQ](https://docs.bullmq.io/)
 
 ---
 

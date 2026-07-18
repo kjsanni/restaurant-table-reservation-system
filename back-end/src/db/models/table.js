@@ -24,6 +24,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   Table.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       name: {
         type: DataTypes.STRING(45),
         allowNull: false,
@@ -118,7 +122,7 @@ module.exports = (sequelize, DataTypes) => {
       indexes: [
         {
           unique: true,
-          fields: ["name"],
+          fields: ["tenantId", "name"],
         },
       ],
     }

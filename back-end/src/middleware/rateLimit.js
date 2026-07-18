@@ -1,4 +1,16 @@
 const rateLimit = require("express-rate-limit");
+const RedisStore = require("rate-limit-redis");
+const { client } = require("../utils/cache");
+
+const createRedisStore = () => {
+  if (!client) return undefined;
+  return new RedisStore({
+    client,
+    prefix: "rl:",
+  });
+};
+
+const redisStore = createRedisStore();
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -9,6 +21,7 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  store: redisStore,
 });
 
 const generalLimiter = rateLimit({
@@ -20,6 +33,7 @@ const generalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  store: redisStore,
 });
 
 const bulkOperationLimiter = rateLimit({
@@ -31,6 +45,7 @@ const bulkOperationLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  store: redisStore,
 });
 
 const adminActionLimiter = rateLimit({
@@ -42,6 +57,7 @@ const adminActionLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  store: redisStore,
 });
 
 module.exports = {

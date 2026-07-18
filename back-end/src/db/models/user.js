@@ -22,10 +22,13 @@ module.exports = (sequelize, DataTypes) => {
   }
   User.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       username: {
         type: DataTypes.STRING(50),
         allowNull: false,
-        unique: true,
         validate: {
           notEmpty: {
             msg: "Username shouldn't be blank!",
@@ -35,7 +38,6 @@ module.exports = (sequelize, DataTypes) => {
       email: {
         type: DataTypes.STRING(100),
         allowNull: false,
-        unique: true,
         validate: {
           isEmail: {
             msg: "Invalid email address!",
@@ -71,6 +73,16 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "user",
+      indexes: [
+        {
+          unique: true,
+          fields: ["tenantId", "email"],
+        },
+        {
+          unique: true,
+          fields: ["tenantId", "username"],
+        },
+      ],
     }
   );
   return User;

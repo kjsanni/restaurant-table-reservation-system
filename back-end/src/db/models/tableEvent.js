@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   TableEvent.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       tableId: {
         type: DataTypes.INTEGER,
         allowNull: false,

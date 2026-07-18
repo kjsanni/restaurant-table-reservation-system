@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   FloorPlan.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       name: {
         type: DataTypes.STRING(60),
         allowNull: false,

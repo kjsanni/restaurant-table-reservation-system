@@ -8,6 +8,8 @@ const VALID_FREQUENCIES = ["daily", "weekly", "monthly"];
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+
 const addDays = (date, days) => {
   const result = new Date(date);
   result.setDate(result.getDate() + days);
@@ -32,23 +34,18 @@ const getDayName = (date) => {
   return DAY_NAMES[date.getDay()];
 };
 
-const isHoliday = async (date) => {
+const isHoliday = async (date, tenantId) => {
   const dateStr = date.toISOString().split("T")[0];
   const holiday = await Holiday.findOne({
-    where: {
-      date: dateStr,
-    },
+    where: withTenant({ date: dateStr }, tenantId),
   });
   return !!holiday;
 };
 
-const isWithinSchedule = async (date) => {
+const isWithinSchedule = async (date, tenantId) => {
   const dayName = getDayName(date);
   const schedule = await Schedule.findOne({
-    where: {
-      day: dayName,
-      isClosed: false,
-    },
+    where: withTenant({ day: dayName, isClosed: false }, tenantId),
   });
   return !!schedule;
 };
@@ -61,7 +58,7 @@ const matchesByDay = (date, byDay) => {
   return byDay.includes(currentDay);
 };
 
-const expandRecurrence = async (recurrence, from, to) => {
+const expandRecurrence = async (recurrence, from, to, tenantId) => {
   if (!recurrence || !recurrence.frequency || !recurrence.until) {
     return [];
   }
@@ -86,8 +83,8 @@ const expandRecurrence = async (recurrence, from, to) => {
 
   while (currentDate <= endDate && currentDate <= until) {
     if (matchesByDay(currentDate, byDay)) {
-      const isHolidayDate = await isHoliday(currentDate);
-      const hasSchedule = await isWithinSchedule(currentDate);
+      const isHolidayDate = await isHoliday(currentDate, tenantId);
+      const hasSchedule = await isWithinSchedule(currentDate, tenantId);
 
       if (!isHolidayDate && hasSchedule) {
         occurrences.push(new Date(currentDate));
@@ -106,14 +103,14 @@ const expandRecurrence = async (recurrence, from, to) => {
   return occurrences;
 };
 
-const getRecurringReservations = async (customerId) => {
+const getRecurringReservations = async (customerId, tenantId) => {
   const reservations = await Reservation.findAll({
-    where: {
+    where: withTenant({
       customerId,
       recurrence: {
         [Op.not]: null,
       },
-    },
+    }, tenantId),
     order: [["resDate", "ASC"]],
   });
 

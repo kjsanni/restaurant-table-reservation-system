@@ -46,9 +46,9 @@ const checkBusinessHours = async (resDate, resTime, tenantId) => {
   }
 };
 
-const checkScheduleAvailability = async (scheduleDAO, holidayDAO, resDate, resTime) => {
+const checkScheduleAvailability = async (scheduleDAO, holidayDAO, resDate, resTime, tenantId) => {
   const dayName = getDayName(resDate);
-  const daySchedule = await scheduleDAO.getScheduleByDay(dayName);
+  const daySchedule = await scheduleDAO.getScheduleByDay(dayName, tenantId);
   
   if (!daySchedule) {
     throw {
@@ -64,7 +64,7 @@ const checkScheduleAvailability = async (scheduleDAO, holidayDAO, resDate, resTi
     };
   }
 
-  const holiday = await holidayDAO.getHolidayByDate(resDate);
+  const holiday = await holidayDAO.getHolidayByDate(resDate, tenantId);
   if (holiday && holiday.isClosed) {
     throw {
       status: 400,
@@ -75,12 +75,12 @@ const checkScheduleAvailability = async (scheduleDAO, holidayDAO, resDate, resTi
   return { daySchedule, holiday };
 };
 
-const getSlotDuration = async (scheduleDAO, holidayDAO, resDate) => {
+const getSlotDuration = async (scheduleDAO, holidayDAO, resDate, tenantId) => {
   const dayName = getDayName(resDate);
-  const daySchedule = await scheduleDAO.getScheduleByDay(dayName);
+  const daySchedule = await scheduleDAO.getScheduleByDay(dayName, tenantId);
   
   if (daySchedule) {
-    const holiday = await holidayDAO.getHolidayByDate(resDate);
+    const holiday = await holidayDAO.getHolidayByDate(resDate, tenantId);
     if (holiday && !holiday.isClosed) {
       return holiday.slotDuration || daySchedule.slotDuration;
     }
@@ -90,7 +90,7 @@ const getSlotDuration = async (scheduleDAO, holidayDAO, resDate) => {
   return 30;
 };
 
-const validateReservationTime = async (scheduleDAO, holidayDAO, resDate, resTime) => {
+const validateReservationTime = async (scheduleDAO, holidayDAO, resDate, resTime, tenantId) => {
   const now = new Date();
   const currDateStr = dateTimeValidator.asDateString(now);
   const currTimeStr = dateTimeValidator.asTimeString(now);
@@ -109,7 +109,7 @@ const validateReservationTime = async (scheduleDAO, holidayDAO, resDate, resTime
     };
   }
 
-  await checkScheduleAvailability(scheduleDAO, holidayDAO, resDate, resTime);
+  await checkScheduleAvailability(scheduleDAO, holidayDAO, resDate, resTime, tenantId);
   return true;
 };
 

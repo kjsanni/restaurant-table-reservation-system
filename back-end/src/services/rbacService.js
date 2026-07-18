@@ -37,8 +37,8 @@ const deleteRole = async (id, tenantId) => {
   return true;
 };
 
-const getPermissionsForUser = async (userId) => {
-  return await roleDAO.getRolePermissions(userId);
+const getPermissionsForUser = async (userId, tenantId) => {
+  return await roleDAO.getRolePermissions(userId, tenantId);
 };
 
 const getAllGroups = async (tenantId) => {

@@ -32,6 +32,10 @@ const { getCurrentSecret } = require("../utils/jwtRotation");
 const { Server } = require("socket.io");
 const tryCatchHandler = require("../middleware/tryCatch");
 const { protect } = require("../middleware/auth");
+const { authLimiter, generalLimiter, bulkOperationLimiter, adminActionLimiter } = require("../middleware/rateLimit");
+const { startNotificationWorker } = require("../queues/notification.queue");
+const { startReportWorker } = require("../queues/report.queue");
+const { startReportWorker } = require("../queues/report.queue");
 
 const TENANT_MODE = process.env.TENANT_MODE === "enabled";
 let resolveTenant = null;
@@ -89,6 +93,13 @@ const createServer = () => {
     setInterval(runTenantCron, 6 * 60 * 60 * 1000);
   }
 
+  try {
+    startNotificationWorker();
+    startReportWorker();
+  } catch (err) {
+    console.warn("BullMQ workers not started:", err.message);
+  }
+
   app.use(cookieParser());
   app.use(requestLogger);
   app.use(requestMetrics);
@@ -122,24 +133,27 @@ const createServer = () => {
     res.json({ success: true, status: "healthy", timestamp: new Date().toISOString() });
   });
 
-  app.use("/api/v1", require("../routes"));
+  if (TENANT_MODE) {
+    app.use(tryCatchHandler(resolveTenant));
+    app.use(tryCatchHandler(requireActiveTenant));
+  }
+
+  app.use("/api/v1", generalLimiter, require("../routes"));
   app.use("/api/v1/tables", logAction, tableRouter);
   app.use("/api/v1/reservations", logAction, reservationRouter);
-  app.use("/api/v1/auth", authRouter);
+  app.use("/api/v1/auth", authLimiter, authRouter);
   app.use("/api/v1/schedule", logAction, scheduleRouter);
   app.use("/api/v1/shifts", logAction, shiftRouter);
   app.use("/api/v1/time-offs", logAction, timeOffRouter);
   app.use("/api/v1/floor-plans", logAction, floorPlanRouter);
   app.use("/api/v1/audit-logs", auditLogRouter);
   app.use("/api/v1/rbac", logAction, rbacRouter);
-  app.use("/api/v1/waitlist", logAction, waitlistRouter);
+  app.use("/api/v1/waitlist", logAction, bulkOperationLimiter, waitlistRouter);
   app.use("/api/v1/payments", logAction, paymentRouter);
   app.use("/api/v1/reports", logAction, reportRouter);
   app.use("/api/v1/customers", logAction, customerRouter);
-  app.use("/api/v1/admin", logAction, adminRouter);
+  app.use("/api/v1/admin", logAction, adminActionLimiter, adminRouter);
   if (TENANT_MODE) {
-    app.use(tryCatchHandler(resolveTenant));
-    app.use(tryCatchHandler(requireActiveTenant));
     app.use("/api/v1/admin/tenants", logAction, tenantAdminRoutes);
     app.use("/api/v1/billing", billingRoutes);
   }
@@ -147,7 +161,7 @@ const createServer = () => {
   app.use("/api/v1/notifications", logAction, notificationRouter);
   app.use("/api/v1/email-templates", logAction, emailTemplateRouter);
   app.use("/api/v1/webhooks", logAction, webhookRouter);
-  app.use("/api/v1/sync", logAction, require("./sync.router"));
+  app.use("/api/v1/sync", logAction, require("../routes/sync.router"));
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
   }

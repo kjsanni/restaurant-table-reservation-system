@@ -111,7 +111,8 @@ const registerReservation = async (reservationDAO, payload, tenantId) => {
       scheduleDAO,
       holidayDAO,
       payload.resDate,
-      payload.resTime
+      payload.resTime,
+      tenantId
     );
     await scheduleService.checkBusinessHours(
       payload.resDate,
@@ -260,8 +261,8 @@ const chooseTable = async (
 
 const paymentDAO = require("../DAOs/payment.dao");
 
-const getRevenueTimeSeries = async (from, to, granularity = "day") => {
-  return await paymentDAO.getRevenueTimeSeries(from, to, granularity);
+const getRevenueTimeSeries = async (from, to, granularity = "day", tenantId) => {
+  return await paymentDAO.getRevenueTimeSeries(from, to, granularity, tenantId);
 };
 
 const searchReservations = async (reservationDAO, query, tenantId) => {

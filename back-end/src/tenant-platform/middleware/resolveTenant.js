@@ -1,4 +1,9 @@
 const { isTenantModeEnabled } = require("../utils/tenantMode");
+const db = require("../../db/models");
+const { cache } = require("../../utils/cache");
+
+const TENANT_CACHE_TTL = 300;
+const TENANT_NEGATIVE_CACHE_TTL = 30;
 
 const resolveTenant = async (req, res, next) => {
   if (!(await isTenantModeEnabled())) {
@@ -27,21 +32,52 @@ const resolveTenant = async (req, res, next) => {
   }
 
   let where = {};
+  let cacheKey = null;
   if (typeof tenantIdentifier === "string") {
     const id = parseInt(tenantIdentifier, 10);
-    where = Number.isNaN(id) ? { slug: tenantIdentifier } : { id };
+    if (Number.isNaN(id)) {
+      where = { slug: tenantIdentifier };
+      cacheKey = `tenant:slug:${tenantIdentifier}`;
+    } else {
+      where = { id };
+      cacheKey = `tenant:id:${id}`;
+    }
   } else {
     where = tenantIdentifier;
+    cacheKey = `tenant:slug:${tenantIdentifier.slug}`;
   }
 
   try {
-    const tenant = await db.tenant.findOne({ where });
+    let tenant = null;
+    if (cacheKey) {
+      const cached = await cache.get(cacheKey);
+      if (cached === "__NOT_FOUND__") {
+        return res.status(404).json({
+          success: false,
+          message: "Tenant not found.",
+        });
+      }
+      if (cached) {
+        tenant = db.tenant.build(cached);
+      }
+    }
 
     if (!tenant) {
-      return res.status(404).json({
-        success: false,
-        message: "Tenant not found.",
-      });
+      tenant = await db.tenant.findOne({ where });
+
+      if (!tenant) {
+        if (cacheKey) {
+          await cache.set(cacheKey, "__NOT_FOUND__", TENANT_NEGATIVE_CACHE_TTL);
+        }
+        return res.status(404).json({
+          success: false,
+          message: "Tenant not found.",
+        });
+      }
+
+      if (cacheKey) {
+        await cache.set(cacheKey, tenant.toJSON(), TENANT_CACHE_TTL);
+      }
     }
 
     req.tenant = tenant;

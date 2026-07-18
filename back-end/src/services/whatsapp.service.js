@@ -4,11 +4,12 @@ const db = require("../db/models");
 const envToken = process.env.WHATSAPP_TOKEN;
 const envPhoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
-const resolveConfig = async () => {
+const resolveConfig = async (tenantId) => {
   let token = envToken;
   let phoneNumberId = envPhoneNumberId;
   try {
-    const setting = await db.setting.findOne({ where: { key: "whatsapp_config" } });
+    const where = tenantId ? { key: "whatsapp_config", tenantId } : { key: "whatsapp_config" };
+    const setting = await db.setting.findOne({ where });
     if (setting && setting.value) {
       const cfg =
         typeof setting.value === "string"
@@ -36,8 +37,8 @@ const buildClient = (token, phoneNumberId) => {
   };
 };
 
-const sendWhatsAppMessage = async (to, templateName, languageCode = "en_US", components = []) => {
-  const { token, phoneNumberId, enabled } = await resolveConfig();
+const sendWhatsAppMessage = async (to, templateName, languageCode = "en_US", components = [], tenantId) => {
+  const { token, phoneNumberId, enabled } = await resolveConfig(tenantId);
   if (!enabled) {
     throw new Error("WhatsApp is not configured.");
   }
@@ -63,8 +64,8 @@ const sendWhatsAppMessage = async (to, templateName, languageCode = "en_US", com
   }
 };
 
-const sendWhatsAppText = async (to, text) => {
-  const { token, phoneNumberId, enabled } = await resolveConfig();
+const sendWhatsAppText = async (to, text, tenantId) => {
+  const { token, phoneNumberId, enabled } = await resolveConfig(tenantId);
   if (!enabled) {
     throw new Error("WhatsApp is not configured.");
   }

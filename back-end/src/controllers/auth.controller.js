@@ -39,7 +39,7 @@ const registerHandler = async (req, res) => {
 const loginHandler = async (req, res) => {
   const payload = req.body;
   const ipAddress = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;
-  const result = await authService.loginUser(authDAO, payload, authDAO, ipAddress, req.tenant?.id);
+  const result = await authService.loginUser(authDAO, payload, req.tenant?.id, authDAO, ipAddress);
 
   const isSecure = req.secure || false;
   const cookieBase = {

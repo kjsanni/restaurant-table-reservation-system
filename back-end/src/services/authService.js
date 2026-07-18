@@ -23,7 +23,7 @@ const verifyRefreshToken = (token) => {
   return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET || getCurrentSecret());
 };
 
-const registerUser = async (userDAO, payload) => {
+const registerUser = async (userDAO, payload, tenantId) => {
   const { username, email, password } = payload;
 
   if (!username || !email || !password) {
@@ -48,15 +48,15 @@ const registerUser = async (userDAO, payload) => {
     email,
     password: hashedPassword,
     role: "staff",
-  });
+  }, tenantId);
 };
 
-const refreshAccessToken = async (refreshTokenDAO, refreshToken) => {
+const refreshAccessToken = async (refreshTokenDAO, refreshToken, tenantId) => {
   if (!refreshToken) {
     throw { status: 401, message: "Refresh token is required!" };
   }
 
-  const storedToken = await refreshTokenDAO.findValidRefreshToken(refreshToken);
+  const storedToken = await refreshTokenDAO.findValidRefreshToken(refreshToken, tenantId);
   if (!storedToken) {
     throw { status: 401, message: "Invalid or expired refresh token!" };
   }
@@ -71,8 +71,8 @@ const refreshAccessToken = async (refreshTokenDAO, refreshToken) => {
 
   if (refreshTokenDAO.createRefreshToken && refreshTokenDAO.revokeRefreshToken) {
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    await refreshTokenDAO.createRefreshToken(user.id, newRefreshToken, expiresAt);
-    await refreshTokenDAO.revokeRefreshToken(refreshToken);
+    await refreshTokenDAO.createRefreshToken(user.id, newRefreshToken, expiresAt, tenantId);
+    await refreshTokenDAO.revokeRefreshToken(refreshToken, tenantId);
   }
 
   return {
@@ -88,18 +88,18 @@ const refreshAccessToken = async (refreshTokenDAO, refreshToken) => {
   };
 };
 
-const revokeRefreshToken = async (refreshTokenDAO, refreshToken) => {
+const revokeRefreshToken = async (refreshTokenDAO, refreshToken, tenantId) => {
   if (!refreshToken) {
     throw { status: 400, message: "Refresh token is required!" };
   }
-  return await refreshTokenDAO.revokeRefreshToken(refreshToken);
+  return await refreshTokenDAO.revokeRefreshToken(refreshToken, tenantId);
 };
 
-const revokeAllUserTokens = async (refreshTokenDAO, userId) => {
-  return await refreshTokenDAO.revokeAllUserTokens(userId);
+const revokeAllUserTokens = async (refreshTokenDAO, userId, tenantId) => {
+  return await refreshTokenDAO.revokeAllUserTokens(userId, tenantId);
 };
 
-const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = null) => {
+const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipAddress = null) => {
   const { email, password } = payload;
 
   if (!email || !password) {
@@ -110,7 +110,7 @@ const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = n
   }
 
   if (ipAddress) {
-    const lockoutCheck = await userDAO.checkLoginLockout(email, ipAddress);
+    const lockoutCheck = await userDAO.checkLoginLockout(email, ipAddress, tenantId);
     if (lockoutCheck.locked) {
       throw {
         status: 401,
@@ -120,7 +120,7 @@ const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = n
     }
   }
 
-  const user = await userDAO.findUserByEmail(email);
+  const user = await userDAO.findUserByEmail(email, tenantId);
 
   const isValidPassword = user && await userDAO.comparePassword(
     password,
@@ -129,7 +129,7 @@ const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = n
 
   if (!user || !isValidPassword) {
     if (ipAddress) {
-      await userDAO.recordFailedLogin(email, ipAddress);
+      await userDAO.recordFailedLogin(email, ipAddress, tenantId);
     }
     throw {
       status: 401,
@@ -138,7 +138,7 @@ const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = n
   }
 
   if (ipAddress) {
-    await userDAO.clearLoginAttempts(email, ipAddress);
+    await userDAO.clearLoginAttempts(email, ipAddress, tenantId);
   }
 
   const token = generateToken(user.id, user.role);
@@ -198,7 +198,7 @@ const loginUser = async (userDAO, payload, refreshTokenDAO = null, ipAddress = n
   if (refreshTokenDAO) {
     try {
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      await refreshTokenDAO.createRefreshToken(user.id, refreshToken, expiresAt);
+      await refreshTokenDAO.createRefreshToken(user.id, refreshToken, expiresAt, tenantId);
     } catch (err) {
       console.warn("Failed to store refresh token:", err.message);
     }

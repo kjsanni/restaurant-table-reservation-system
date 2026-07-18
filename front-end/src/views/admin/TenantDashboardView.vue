@@ -46,6 +46,56 @@
         <option value="cancelled">Cancelled</option>
         <option value="trialing">Trialing</option>
       </select>
+      <button @click="openCreateModal" class="btn-primary">+ Add Tenant</button>
+    </div>
+
+    <div v-if="showCreateModal" class="modal-overlay" @click.self="closeCreateModal">
+      <div class="modal">
+        <h2>Create New Tenant</h2>
+        <form @submit.prevent="createTenant">
+          <div class="form-group">
+            <label>Name *</label>
+            <input v-model="form.name" required />
+          </div>
+          <div class="form-group">
+            <label>Slug *</label>
+            <input v-model="form.slug" required />
+          </div>
+          <div class="form-group">
+            <label>Domain</label>
+            <input v-model="form.domain" />
+          </div>
+          <div class="form-group">
+            <label>Plan</label>
+            <select v-model="form.plan">
+              <option value="starter">Starter</option>
+              <option value="growth">Growth</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Billing Email</label>
+            <input v-model="form.billingEmail" />
+          </div>
+          <div class="form-group">
+            <label>Billing Name</label>
+            <input v-model="form.billingName" />
+          </div>
+          <div class="form-group">
+            <label>Currency</label>
+            <select v-model="form.currency">
+              <option value="GHS">GHS</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" @click="closeCreateModal" class="btn-secondary">Cancel</button>
+            <button type="submit" class="btn-primary">Create Tenant</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <div class="table-wrapper">
@@ -122,6 +172,16 @@ const dashboard = ref({
 const tenants = ref([]);
 const searchQuery = ref("");
 const filterStatus = ref("");
+const showCreateModal = ref(false);
+const form = ref({
+  name: "",
+  slug: "",
+  domain: "",
+  plan: "starter",
+  billingEmail: "",
+  billingName: "",
+  currency: "GHS",
+});
 
 const filteredTenants = computed(() => {
   return tenants.value.filter((t) => {
@@ -147,6 +207,34 @@ const loadTenants = async () => {
 
 const viewTenant = (id) => {
   router.push(`/admin/tenants/${id}`);
+};
+
+const openCreateModal = () => {
+  form.value = {
+    name: "",
+    slug: "",
+    domain: "",
+    plan: "starter",
+    billingEmail: "",
+    billingName: "",
+    currency: "GHS",
+  };
+  showCreateModal.value = true;
+};
+
+const closeCreateModal = () => {
+  showCreateModal.value = false;
+};
+
+const createTenant = async () => {
+  try {
+    await tenantAdminAPI.create(form.value);
+    await loadTenants();
+    await loadDashboard();
+    closeCreateModal();
+  } catch (err) {
+    alert(err.response?.data?.message || "Failed to create tenant");
+  }
 };
 
 const enableTenant = async (id) => {
@@ -313,5 +401,69 @@ onMounted(async () => {
   background: #ef4444;
   color: #ffffff;
   border-color: #ef4444;
+}
+.btn-primary {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background: #0d253d;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+.btn-secondary {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid #e3e8ee;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+.modal h2 {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #374151;
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e3e8ee;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
 }
 </style>

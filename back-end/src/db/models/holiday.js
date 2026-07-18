@@ -6,10 +6,13 @@ module.exports = (sequelize, DataTypes) => {
   }
   Holiday.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       date: {
         type: DataTypes.DATEONLY,
         allowNull: false,
-        unique: true,
       },
       description: {
         type: DataTypes.STRING(255),
@@ -35,6 +38,12 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "holiday",
+      indexes: [
+        {
+          unique: true,
+          fields: ["tenantId", "date"],
+        },
+      ],
     }
   );
   return Holiday;

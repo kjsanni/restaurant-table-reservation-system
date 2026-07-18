@@ -14,10 +14,13 @@ module.exports = (sequelize, DataTypes) => {
 
   Group.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       name: {
         type: DataTypes.STRING(50),
         allowNull: false,
-        unique: true,
       },
       description: {
         type: DataTypes.STRING(255),
@@ -32,6 +35,12 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "group",
+      indexes: [
+        {
+          unique: true,
+          fields: ["tenantId", "name"],
+        },
+      ],
     }
   );
 

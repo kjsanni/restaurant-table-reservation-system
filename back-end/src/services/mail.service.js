@@ -41,8 +41,8 @@ const getDefaultTemplates = () => ({
   },
 });
 
-const sendMail = async (to, templateKey, data = {}) => {
-  let template = await emailTemplateDAO.getTemplateByKey(templateKey);
+const sendMail = async (to, templateKey, data = {}, tenantId) => {
+  let template = await emailTemplateDAO.getTemplateByKey(templateKey, tenantId);
   if (!template || !template.isActive) {
     template = getDefaultTemplates()[templateKey];
     if (!template) template = getDefaultTemplates().confirmation;

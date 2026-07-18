@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
 
   Refund.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       paymentId: {
         type: DataTypes.INTEGER,
         allowNull: false,

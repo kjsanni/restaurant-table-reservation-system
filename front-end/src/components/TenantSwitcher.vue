@@ -6,6 +6,9 @@
         {{ tenant.name }} ({{ tenant.slug }})
       </option>
     </select>
+    <button v-if="hasMore" @click="loadMore" class="tenant-load-more">
+      Load more
+    </button>
   </div>
 </template>
 
@@ -25,14 +28,28 @@ const emit = defineEmits(["update:modelValue"]);
 
 const authStore = useAuthStore();
 const tenants = ref([]);
+const page = ref(1);
+const pageSize = 20;
+const hasMore = ref(false);
 
-const loadTenants = async () => {
+const loadTenants = async (pageNum = 1) => {
   try {
-    const response = await tenantAdminAPI.getAll();
-    tenants.value = response.data.collection || [];
+    const response = await tenantAdminAPI.getAll({ page: pageNum, pageSize });
+    const data = response.data;
+    if (pageNum === 1) {
+      tenants.value = data.collection || [];
+    } else {
+      tenants.value = [...tenants.value, ...(data.collection || [])];
+    }
+    hasMore.value = (data.collection?.length || 0) >= pageSize;
+    page.value = pageNum;
   } catch {
     // ignore
   }
+};
+
+const loadMore = () => {
+  loadTenants(page.value + 1);
 };
 
 const onChange = (event) => {
@@ -58,6 +75,7 @@ onMounted(() => {
 .tenant-switcher {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
 }
 .tenant-select {
   padding: 6px 12px;
@@ -72,5 +90,16 @@ onMounted(() => {
 .tenant-select:focus {
   outline: 2px solid var(--accent, #d97706);
   outline-offset: 1px;
+}
+.tenant-load-more {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle, #e3e8ee);
+  background: #f8fafc;
+  font-size: 12px;
+  cursor: pointer;
+}
+.tenant-load-more:hover {
+  background: #e2e8f0;
 }
 </style>

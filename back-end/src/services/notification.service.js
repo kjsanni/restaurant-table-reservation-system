@@ -27,7 +27,7 @@ const sendViaChannels = async (reservation, templateData, channels = ["email"], 
   for (const channel of channels) {
     if (channel === "email" && reservation.customerEmail) {
       try {
-        await mailService.sendMail(reservation.customerEmail, "reminder", templateData);
+        await mailService.sendMail(reservation.customerEmail, "reminder", templateData, tenantId);
         results.push({ channel: "email", sent: true });
       } catch (err) {
         results.push({ channel: "email", sent: false, error: err.message });
@@ -35,7 +35,7 @@ const sendViaChannels = async (reservation, templateData, channels = ["email"], 
     } else if (channel === "whatsapp" && reservation.customerPhone) {
       try {
         const text = buildWhatsAppText(templateData, whatsappTemplate);
-        await whatsappService.sendWhatsAppText(reservation.customerPhone, text);
+        await whatsappService.sendWhatsAppText(reservation.customerPhone, text, tenantId);
         results.push({ channel: "whatsapp", sent: true });
       } catch (err) {
         results.push({ channel: "whatsapp", sent: false, error: err.message });

@@ -16,10 +16,13 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true,
         primaryKey: true,
       },
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       token: {
         type: DataTypes.STRING(255),
         allowNull: false,
-        unique: true,
       },
       userId: {
         type: DataTypes.INTEGER,

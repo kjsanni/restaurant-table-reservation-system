@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
 
   Waitlist.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       customerId: {
         type: DataTypes.INTEGER,
         allowNull: true,

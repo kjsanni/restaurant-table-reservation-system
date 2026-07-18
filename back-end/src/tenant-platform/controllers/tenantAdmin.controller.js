@@ -5,6 +5,28 @@ const {
   getTenantDashboard,
 } = require("../services/tenantSubscription.service");
 
+const createTenantHandler = async (req, res) => {
+  const { name, slug, domain, plan, status, billingEmail, billingName, currency } = req.body;
+
+  if (!name || !slug) {
+    return res.status(400).json({ success: false, message: "Name and slug are required" });
+  }
+
+  const tenant = await db.tenant.create({
+    name,
+    slug,
+    domain,
+    plan: plan || "starter",
+    status: status || "active",
+    billingEmail,
+    billingName,
+    currency: currency || "GHS",
+    settings: {},
+  });
+
+  res.status(201).json({ success: true, item: tenant });
+};
+
 const getTenantsHandler = async (req, res) => {
   const { status, plan, page = 1, pageSize = 20 } = req.query;
   const where = {};
@@ -107,6 +129,7 @@ const getDashboardHandler = async (req, res) => {
 };
 
 module.exports = {
+  createTenantHandler,
   getTenantsHandler,
   getTenantHandler,
   updateTenantHandler,

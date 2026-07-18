@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
 
   PermissionTemplate.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       name: {
         type: DataTypes.STRING(100),
         allowNull: false,

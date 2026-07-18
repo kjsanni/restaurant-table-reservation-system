@@ -6,10 +6,13 @@ module.exports = (sequelize, DataTypes) => {
   }
   Setting.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       key: {
         type: DataTypes.STRING(50),
         allowNull: false,
-        unique: true,
       },
       value: {
         type: DataTypes.JSON,
@@ -24,6 +27,12 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "setting",
+      indexes: [
+        {
+          unique: true,
+          fields: ["tenantId", "key"],
+        },
+      ],
     }
   );
   return Setting;

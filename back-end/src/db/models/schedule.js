@@ -6,6 +6,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   Schedule.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       dayOfWeek: {
         type: DataTypes.ENUM(
           "monday",

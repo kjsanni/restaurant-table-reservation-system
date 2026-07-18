@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
 
   Payment.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       reservationId: {
         type: DataTypes.INTEGER,
         allowNull: false,

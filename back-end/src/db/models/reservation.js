@@ -26,6 +26,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   Reservation.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       resDate: {
         type: DataTypes.DATEONLY,
         allowNull: false,

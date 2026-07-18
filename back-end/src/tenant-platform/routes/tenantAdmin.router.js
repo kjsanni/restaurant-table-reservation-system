@@ -12,6 +12,7 @@ router
 
 router
   .route("/")
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.createTenantHandler))
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.getTenantsHandler))
   .all(httpMethodError);
 

@@ -1,8 +1,11 @@
 module.exports = (sequelize, DataTypes) => {
   const EmailTemplate = sequelize.define("emailTemplate", {
+    tenantId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     key: {
       type: DataTypes.STRING,
-      unique: true,
       allowNull: false,
     },
     name: {
@@ -25,6 +28,13 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
+  }, {
+    indexes: [
+      {
+        unique: true,
+        fields: ["tenantId", "key"],
+      },
+    ],
   });
 
   return EmailTemplate;

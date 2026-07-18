@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
   }
   LoginAttempt.init(
     {
+      tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       email: {
         type: DataTypes.STRING(255),
         allowNull: false,

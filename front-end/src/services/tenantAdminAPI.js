@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuthStore } from "@/stores/auth";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 
@@ -7,6 +8,17 @@ const client = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+});
+
+client.interceptors.request.use((config) => {
+  const authStore = useAuthStore();
+  if (
+    authStore.currentTenant &&
+    import.meta.env.VITE_TENANT_MODE === "enabled"
+  ) {
+    config.headers["X-Tenant-Id"] = authStore.currentTenant.id;
+  }
+  return config;
 });
 
 client.interceptors.response.use(
@@ -18,6 +30,11 @@ client.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const create = async (data) => {
+  const response = await client.post("/", data);
+  return response;
+};
 
 export const getDashboard = async () => {
   const response = await client.get("/dashboard");
@@ -50,6 +67,7 @@ export const disable = async (id, data = {}) => {
 };
 
 export default {
+  create,
   getDashboard,
   getAll,
   getById,
