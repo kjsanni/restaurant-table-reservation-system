@@ -3,6 +3,7 @@ require("dotenv").config({ path: path.resolve(__dirname, "../.env"), override: f
 require("dotenv").config({ path: path.resolve(__dirname, "../.env." + (process.env.NODE_ENV || "development")), override: true });
 
 const REQUIRED_VARS = ["DB_HOST", "DB_NAME", "DB_USERNAME", "JWT_SECRET", "PORT"];
+const PROD_REQUIRED_VARS = ["FRONTEND_URL", "API_URL", "CORS_ORIGINS"];
 
 const validateEnv = (envName) => {
   const missing = REQUIRED_VARS.filter((v) => !process.env[v]);
@@ -10,6 +11,14 @@ const validateEnv = (envName) => {
     throw new Error(
       `[config] Missing required environment variables for "${envName}": ${missing.join(", ")}`
     );
+  }
+  if (envName === "production") {
+    const prodMissing = PROD_REQUIRED_VARS.filter((v) => !process.env[v]);
+    if (prodMissing.length > 0) {
+      throw new Error(
+        `[config] Missing required production environment variables: ${prodMissing.join(", ")}`
+      );
+    }
   }
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 16) {
     throw new Error("[config] JWT_SECRET must be at least 16 characters.");

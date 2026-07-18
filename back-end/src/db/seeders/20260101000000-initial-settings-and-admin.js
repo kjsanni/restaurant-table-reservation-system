@@ -60,13 +60,29 @@ module.exports = {
       },
     ]);
 
-    if (process.env.NODE_ENV !== "production") {
-      const hashedPassword = await bcrypt.hash("admin123", SALT_ROUNDS);
+    const adminPassword = process.env.ADMIN_INITIAL_PASSWORD;
+    if (!adminPassword) {
+      if (process.env.NODE_ENV === "production") {
+        throw new Error("ADMIN_INITIAL_PASSWORD must be set in production");
+      }
+      const randomPassword = `tmp-${require("crypto").randomBytes(16).toString("hex")}`;
+      console.log(`[Seeder] Generated temporary admin password: ${randomPassword}`);
       await queryInterface.bulkInsert("users", [
         {
           username: "admin",
           email: "admin@rtrs.com",
-          password: hashedPassword,
+          password: await bcrypt.hash(randomPassword, SALT_ROUNDS),
+          role: "admin",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+    } else {
+      await queryInterface.bulkInsert("users", [
+        {
+          username: "admin",
+          email: "admin@rtrs.com",
+          password: await bcrypt.hash(adminPassword, SALT_ROUNDS),
           role: "admin",
           createdAt: new Date(),
           updatedAt: new Date(),

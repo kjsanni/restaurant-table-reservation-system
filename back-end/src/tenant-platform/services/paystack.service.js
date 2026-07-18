@@ -63,7 +63,7 @@ const createTenantClient = async (tenant) => {
 
 const verifyWebhookSignature = async (payload, signature) => {
   const config = await loadPaystackConfig();
-  if (!config.webhookSecret) return true;
+  if (!config.webhookSecret) return false;
   const crypto = require("crypto");
   const hash = crypto.createHmac("sha512", config.webhookSecret).update(payload).digest("hex");
   return hash === signature;

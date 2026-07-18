@@ -23,7 +23,7 @@ const customerPortalRouter = require("../routes/customer-portal.router");
 const notificationRouter = require("../routes/notification.router");
 const emailTemplateRouter = require("../routes/emailTemplate.router");
 const webhookRouter = require("../routes/webhook.router");
-const { setCsrfCookie, CSRF_HEADER_NAME, CSRF_COOKIE_NAME } = require("../middleware/csrf");
+const { setCsrfCookie, CSRF_HEADER_NAME, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
 const { requestLogger } = require("../middleware/requestLogger");
 const { logAction } = require("../middleware/auditLog");
@@ -119,7 +119,7 @@ const createServer = () => {
     credentials: true,
   }));
   app.use(express.json({ limit: "5kb" }));
-  app.use(helmet({ crossOriginResourcePolicy: false }));
+  app.use(helmet({ crossOriginResourcePolicy: false, hsts: process.env.NODE_ENV === "production" ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false }));
   app.use(cspHeaders);
   app.use(require("../middleware/sanitize").sanitize);
 
@@ -146,21 +146,21 @@ const createServer = () => {
     app.use(tryCatchHandler(requireActiveTenant));
   }
 
-  app.use("/api/v1", generalLimiter, require("../routes"));
-  app.use("/api/v1/tables", logAction, tableRouter);
-  app.use("/api/v1/reservations", logAction, reservationRouter);
-  app.use("/api/v1/auth", authLimiter, authRouter);
-  app.use("/api/v1/schedule", logAction, scheduleRouter);
-  app.use("/api/v1/shifts", logAction, shiftRouter);
-  app.use("/api/v1/time-offs", logAction, timeOffRouter);
-  app.use("/api/v1/floor-plans", logAction, floorPlanRouter);
+  app.use("/api/v1", generalLimiter, validateCsrfToken, require("../routes"));
+  app.use("/api/v1/tables", logAction, validateCsrfToken, tableRouter);
+  app.use("/api/v1/reservations", logAction, validateCsrfToken, reservationRouter);
+  app.use("/api/v1/auth", authLimiter, validateCsrfToken, authRouter);
+  app.use("/api/v1/schedule", logAction, validateCsrfToken, scheduleRouter);
+  app.use("/api/v1/shifts", logAction, validateCsrfToken, shiftRouter);
+  app.use("/api/v1/time-offs", logAction, validateCsrfToken, timeOffRouter);
+  app.use("/api/v1/floor-plans", logAction, validateCsrfToken, floorPlanRouter);
   app.use("/api/v1/audit-logs", auditLogRouter);
-  app.use("/api/v1/rbac", logAction, rbacRouter);
-  app.use("/api/v1/waitlist", logAction, bulkOperationLimiter, waitlistRouter);
-  app.use("/api/v1/payments", logAction, paymentRouter);
-  app.use("/api/v1/reports", logAction, reportRouter);
-  app.use("/api/v1/customers", logAction, customerRouter);
-  app.use("/api/v1/admin", logAction, adminActionLimiter, adminRouter);
+  app.use("/api/v1/rbac", logAction, validateCsrfToken, rbacRouter);
+  app.use("/api/v1/waitlist", logAction, validateCsrfToken, bulkOperationLimiter, waitlistRouter);
+  app.use("/api/v1/payments", logAction, validateCsrfToken, paymentRouter);
+  app.use("/api/v1/reports", logAction, validateCsrfToken, reportRouter);
+  app.use("/api/v1/customers", logAction, validateCsrfToken, customerRouter);
+  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminRouter);
   if (TENANT_MODE) {
     app.use("/api/v1/admin/tenants", logAction, tenantAdminRoutes);
     app.use("/api/v1/billing", billingRoutes);

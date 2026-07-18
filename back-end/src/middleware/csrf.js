@@ -11,11 +11,11 @@ const setCsrfCookie = (req, res, next) => {
   const existingToken = req.cookies?.[CSRF_COOKIE_NAME];
   if (!existingToken) {
     const token = generateCsrfToken();
-    const isSecure = req.secure || false;
+    const isProduction = process.env.NODE_ENV === "production";
     res.cookie(CSRF_COOKIE_NAME, token, {
       httpOnly: false,
-      secure: isSecure,
-      sameSite: isSecure ? "lax" : false,
+      secure: isProduction,
+      sameSite: isProduction ? "lax" : false,
       path: "/",
       maxAge: 24 * 60 * 60 * 1000,
     });
