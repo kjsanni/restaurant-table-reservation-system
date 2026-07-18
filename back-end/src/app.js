@@ -5,18 +5,18 @@ const logger = require("./utils/logger");
 const connect = require("./utils/connect");
 const { client: redisClient } = require("./utils/cache");
 
-const { server } = createServer();
-
-server.setTimeout(30000);
-
 const init = async () => {
   try {
-    await connect.connectDatabase();
     if (redisClient) {
       await redisClient.connect().catch((err) => {
         logger.warn("Redis connection failed, caching disabled:", err.message);
       });
     }
+    await connect.connectDatabase();
+
+    const { server } = createServer();
+    server.setTimeout(30000);
+
     server.listen(server_port, () => {
       logger.info(`Server is listening on PORT: ${server_port} 👂 ⬅`);
     });
