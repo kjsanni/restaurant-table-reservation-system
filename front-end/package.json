@@ -12,6 +12,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:unit": "vitest --environment jsdom --root src/",
+    "test:a11y": "playwright test tests/accessibility.spec.ts",
+    "test:visual": "playwright test tests/visual.spec.ts",
+    "test:e2e": "playwright test",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
     "format": "prettier .  --write"
   },
@@ -29,6 +32,7 @@
     "vuestic-ui": "^1.10.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@rushstack/eslint-patch": "^1.1.4",
     "@typescript-eslint/parser": "^5.62.0",
     "@vitejs/plugin-vue": "^5.2.4",
@@ -37,7 +41,11 @@
     "eslint": "^8.22.0",
     "eslint-plugin-vue": "^9.3.0",
     "jsdom": "^20.0.1",
+    "playwright": "^1.61.1",
     "prettier": "^2.7.1",
+    "rollup": "^4.62.2",
+    "rollup-plugin-visualizer": "^7.0.1",
+    "rollup-plugin-vue": "^6.0.0",
     "typescript": "^5.4.5",
     "vite": "^6.4.3",
     "vitest": "^3.2.7"

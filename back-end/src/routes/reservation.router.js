@@ -6,6 +6,7 @@ const reservationController = require("../controllers/reservation.controller");
 const paymentController = require("../controllers/payment.controller");
 const { validateCsrfToken } = require("../middleware/csrf");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
+const { generalLimiter } = require("../middleware/rateLimit");
 
 router
   .route("/search")
@@ -20,7 +21,7 @@ router
 router
   .route("/")
   .get(...protectedRoute("view_reservations", reservationController.getAllHandler))
-  .post(tryCatchHandler(reservationController.registerHandler), validateCsrfToken)
+  .post(generalLimiter, tryCatchHandler(reservationController.registerHandler), validateCsrfToken)
   .all(httpMethodError);
 
 router

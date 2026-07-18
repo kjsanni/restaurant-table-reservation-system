@@ -2,25 +2,26 @@ const express = require("express");
 const router = express.Router();
 const httpMethodError = require("../middleware/httpMethodError");
 const syncController = require("../controllers/sync.controller");
+const { generalLimiter } = require("../middleware/rateLimit");
 
 router
   .route("/tables")
-  .get(syncController.listTablesHandler)
+  .get(generalLimiter, syncController.listTablesHandler)
   .all(httpMethodError);
 
 router
   .route("/reservations")
-  .get(syncController.listReservationsHandler)
+  .get(generalLimiter, syncController.listReservationsHandler)
   .all(httpMethodError);
 
 router
   .route("/reservation-seated")
-  .post(syncController.reservationSeatedHandler)
+  .post(generalLimiter, syncController.reservationSeatedHandler)
   .all(httpMethodError);
 
 router
   .route("/payment-settled")
-  .post(syncController.paymentSettledHandler)
+  .post(generalLimiter, syncController.paymentSettledHandler)
   .all(httpMethodError);
 
 module.exports = router;

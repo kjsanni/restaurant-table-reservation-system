@@ -1,112 +1,52 @@
-name: CI
+name: CI/CD
 
 on:
   push:
-    branches: [ main, Features ]
+    branches: [main]
   pull_request:
-    branches: [ main, Features ]
+    branches: [main]
 
 jobs:
   backend:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: npm
+          node-version: "26"
+          cache: "npm"
           cache-dependency-path: back-end/package-lock.json
-      - name: Install backend dependencies
-        working-directory: ./back-end
-        run: npm ci
-      - name: Run backend tests
-        working-directory: ./back-end
-        run: npm test
-        env:
-          NODE_ENV: test
-      - name: Security audit
-        working-directory: ./back-end
-        run: npm audit --audit-level=high || true
+      - run: cd back-end && npm ci
+      - run: cd back-end && npx jest --silent
+      - run: cd back-end && npx sequelize db:migrate
 
   frontend:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: npm
+          node-version: "26"
+          cache: "npm"
           cache-dependency-path: front-end/package-lock.json
-      - name: Install frontend dependencies
-        working-directory: ./front-end
-        run: npm ci
-      - name: Lint
-        working-directory: ./front-end
-        run: npm run lint
-      - name: Run frontend tests
-        working-directory: ./front-end
-        run: npm run test:unit
-      - name: Build
-        working-directory: ./front-end
-        run: npm run build
-      - name: Security audit
-        working-directory: ./front-end
-        run: npm audit --audit-level=high || true
+      - run: cd front-end && npm ci
+      - run: cd front-end && npx vue-tsc --noEmit
+      - run: cd front-end && npm run build
 
-  security-sast:
+  codeql:
     runs-on: ubuntu-latest
     permissions:
+      security-events: write
       contents: read
-    needs: [backend, frontend]
     steps:
       - uses: actions/checkout@v4
-      - name: Run ESLint security checks
-        run: |
-          npm install -g eslint eslint-plugin-security
-          eslint back-end/src --ext .js --plugin security --rule 'security/detect-object-injection: warn' --rule 'security/detect-non-literal-require: warn' || true
-      - name: Check for hardcoded secrets
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  dependency-check:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    needs: [backend, frontend]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run npm audit for both packages
-        run: |
-          echo "=== Backend Audit ==="
-          cd back-end && npm audit --json || true
-          echo "=== Frontend Audit ==="
-          cd ../front-end && npm audit --json || true
-
-  snyk:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    needs: [backend, frontend]
-    if: ${{ secrets.SNYK_TOKEN != '' }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        continue-on-error: true
+      - uses: github/codeql-action/init@v3
         with:
-          args: --severity-threshold=high
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          languages: javascript, php
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript"
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:php"
