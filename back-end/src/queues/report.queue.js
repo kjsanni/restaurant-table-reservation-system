@@ -1,9 +1,17 @@
 const { Worker, Queue } = require("bullmq");
 const { connection, defaultJobOptions } = require("./queue");
 const logger = require("../utils/logger");
+const db = require("../db/models");
 
 const DLQ_NAME = "reports-dlq";
 const dlqQueue = connection ? new Queue(DLQ_NAME, { connection }) : null;
+
+const isTenantActive = async (tenantId) => {
+  if (!tenantId || !db.tenant) return true;
+  const tenant = await db.tenant.findByPk(tenantId);
+  if (!tenant) return true;
+  return ["active", "past_due", "trialing"].includes(tenant.status);
+};
 
 const moveToDLQ = async (job, err) => {
   if (!dlqQueue || !job) return;
@@ -42,6 +50,9 @@ const startReportWorker = () => {
     "reports",
     async (job) => {
       const { type, filters, tenantId } = job.data;
+      if (!(await isTenantActive(tenantId))) {
+        return { skipped: true, reason: "tenant_suspended" };
+      }
       switch (type) {
         case "csv":
           return await generateCSVReport(filters, tenantId);

@@ -2,9 +2,17 @@ const { Worker } = require("bullmq");
 const { Queue } = require("bullmq");
 const { connection, defaultJobOptions } = require("./queue");
 const logger = require("../utils/logger");
+const db = require("../db/models");
 
 const DLQ_NAME = "notifications-dlq";
 const dlqQueue = connection ? new Queue(DLQ_NAME, { connection }) : null;
+
+const isTenantActive = async (tenantId) => {
+  if (!tenantId || !db.tenant) return true;
+  const tenant = await db.tenant.findByPk(tenantId);
+  if (!tenant) return true;
+  return ["active", "past_due", "trialing"].includes(tenant.status);
+};
 
 const moveToDLQ = async (job, err) => {
   if (!dlqQueue || !job) return;
@@ -42,14 +50,21 @@ const startNotificationWorker = () => {
   const worker = new Worker(
     "notifications",
     async (job) => {
-      const { type } = job.data;
+      const { type, tenantId } = job.data || {};
+      if (!(await isTenantActive(tenantId))) {
+        return { skipped: true, reason: "tenant_suspended" };
+      }
       // Reminder/confirmation/cancellation jobs are enqueued as a single batch
       // containing one payload per channel; expand and process each.
       if (type === "batch") {
         const items = Array.isArray(job.data.items) ? job.data.items : [];
         const results = [];
         for (const item of items) {
-          results.push(await processItem(item));
+          if (!(await isTenantActive(item.tenantId))) {
+            results.push({ skipped: true, reason: "tenant_suspended" });
+          } else {
+            results.push(await processItem(item));
+          }
         }
         return results;
       }
