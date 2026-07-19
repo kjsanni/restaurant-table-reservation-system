@@ -129,7 +129,7 @@ const router = createRouter({
     },
     {
       path: "/admin/customers/:id",
-      name: "customer-profile",
+      name: "admin-customer-profile",
       component: () => import("../views/CustomerProfileView.vue"),
       meta: { requiresAuth: true, requiresPermission: "view_reservations" },
     },
@@ -176,7 +176,11 @@ router.beforeEach((to, from, next) => {
     !authStore.isLoading
   ) {
     next({ name: "login" });
-  } else if (to.meta.requiresAdmin && authStore.user?.role !== "admin") {
+  } else if (
+    to.meta.requiresAdmin &&
+    !authStore.isLoading &&
+    authStore.user?.role !== "admin"
+  ) {
     next({ name: "home" });
   } else if (
     to.meta.requiresPermission &&
@@ -199,7 +203,8 @@ const customerPortalRoutes = [
   {
     path: "/portal/reservations",
     name: "customer-reservations",
-    component: () => import("../views/customer/CustomerPortalReservationsView.vue"),
+    component: () =>
+      import("../views/customer/CustomerPortalReservationsView.vue"),
     meta: { requiresAuth: true },
   },
 ];

@@ -150,7 +150,9 @@ const syncFromPaymentGateway = async (tenantId, payload) => {
   return tenant;
 };
 
-const checkUsageLimit = async (tenantId, resource) => {
+  const checkUsageLimit = async (tenantId, resource) => {
+  if (!tenantId) return;
+
   const tenant = await db.tenant.findByPk(tenantId);
   if (!tenant) throw { status: 404, message: "Tenant not found" };
 

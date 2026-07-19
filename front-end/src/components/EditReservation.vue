@@ -363,9 +363,9 @@ const editReservation = async () => {
         <div v-if="payments.length" class="payments-list">
           <div v-for="pay in payments" :key="pay.id" class="payment-row">
             <div class="payment-info">
-              <span class="payment-amount"
-                >{{ fmt(parseFloat(pay.amount).toFixed(2)) }}</span
-              >
+              <span class="payment-amount">{{
+                fmt(parseFloat(pay.amount).toFixed(2))
+              }}</span>
               <span class="payment-method">{{ pay.method }}</span>
               <span v-if="pay.paidBy" class="payment-by">{{ pay.paidBy }}</span>
               <span v-if="pay.reference" class="payment-ref"
@@ -952,8 +952,8 @@ const editReservation = async () => {
   height: 32px;
   border: none;
   border-radius: 6px;
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--rose-100);
+  color: var(--rose-600);
   cursor: pointer;
   font-size: 18px;
   display: inline-flex;

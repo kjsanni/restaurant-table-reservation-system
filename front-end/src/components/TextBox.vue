@@ -40,15 +40,15 @@ const emit = defineEmits(["update:input"]);
 }
 .text-box-input {
   padding: 10px 14px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-family: "Inter-Light";
   font-size: 14px;
-  background: white;
+  background: var(--surface);
 }
 .text-box-input:focus {
   outline: none;
-  border-color: var(--sky-600);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 </style>

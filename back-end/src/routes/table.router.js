@@ -7,6 +7,11 @@ const { validateCsrfToken } = require("../middleware/csrf");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 
 router
+  .route("/price")
+  .post(...writeRoute("manage_tables", tableController.calculatePriceHandler))
+  .all(httpMethodError);
+
+router
   .route("/")
   .get(...protectedRoute("manage_tables", tableController.getAllHandler))
   .post(...writeRoute("manage_tables", tableController.registerHandler))

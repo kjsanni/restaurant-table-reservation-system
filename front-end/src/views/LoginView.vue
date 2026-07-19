@@ -70,12 +70,7 @@ const handleLogin = async () => {
       <VaCardContent>
         <div class="auth-header">
           <div class="brand">
-            <img
-              v-if="logoUrl"
-              :src="logoUrl"
-              alt="Logo"
-              class="brand-logo"
-            />
+            <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="brand-logo" />
             <span v-else class="brand-icon">🍽️</span>
             <span class="brand-text">{{ brandName || "RTRS" }}</span>
           </div>

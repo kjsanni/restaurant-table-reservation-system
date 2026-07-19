@@ -53,8 +53,8 @@ const clear = () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
   padding: 10px 14px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -88,7 +88,7 @@ const clear = () => {
 }
 
 .search-input::placeholder {
-  color: #9ca3af;
+  color: var(--ink-subtle);
 }
 
 .clear-btn {
@@ -104,7 +104,7 @@ const clear = () => {
 }
 
 .clear-btn:hover {
-  background-color: #f3f4f6;
+  background-color: var(--neutral-100);
 }
 
 .clear-btn :deep(svg) {

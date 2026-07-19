@@ -53,14 +53,14 @@ const freeTable = async (id) => {
 
 <style scoped>
 .main-wrapper {
-  background-color: #eef2ff;
+  background-color: var(--sky-50);
   padding: 8px;
   width: 100%;
   height: auto;
   min-height: 90px;
   border-radius: 10px;
   transition: all 0.2s;
-  border: 1px solid #dbeafe;
+  border: 1px solid var(--sky-100);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -77,10 +77,10 @@ const freeTable = async (id) => {
 }
 .header .table-status {
   background-color: transparent;
-  color: #1e293b;
+  color: var(--ink);
   font-family: "Inter-Light";
   font-size: 10px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--neutral-200);
   padding-left: 5px;
   padding-right: 5px;
   border-radius: 10px;
@@ -89,8 +89,8 @@ const freeTable = async (id) => {
   position: relative;
   top: 0;
   right: 5px;
-  color: #1e293b;
-  border: 1px solid #cbd5e1;
+  color: var(--ink);
+  border: 1px solid var(--neutral-200);
   padding-left: 5px;
   padding-right: 5px;
   border-radius: 20px;
@@ -124,7 +124,7 @@ const freeTable = async (id) => {
   width: 12px;
   height: 12px;
   background-color: var(--surface);
-  border: 2px solid #94a3b8;
+  border: 2px solid var(--neutral-300);
   border-radius: 100%;
 }
 .blackColor {

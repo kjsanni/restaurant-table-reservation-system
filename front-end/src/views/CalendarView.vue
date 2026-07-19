@@ -43,7 +43,7 @@ const legendItems = [
   { label: "Completed", color: statusColor("completed") },
   { label: "Cancelled", color: statusColor("cancelled") },
   { label: "Missed", color: statusColor("missed") },
-  { label: "Closed", color: "#ef4444" },
+  { label: "Closed", color: "#f43f5e" },
   { label: "Holiday", color: "var(--accent)" },
 ];
 
@@ -359,7 +359,6 @@ const tableName = (res) => {
 const reservationName = (res) => {
   return res?.Customer?.name || res?.name || "Walk-in";
 };
-
 </script>
 
 <template>
@@ -1234,22 +1233,22 @@ const reservationName = (res) => {
   border-color: var(--neutral-300);
 }
 .calendar-day.dom-pending {
-  background: #fef9c3;
+  background: var(--accent-100);
 }
 .calendar-day.dom-confirmed {
-  background: #dbeafe;
+  background: var(--sky-100);
 }
 .calendar-day.dom-seated {
-  background: #dcfce7;
+  background: var(--earth-100);
 }
 .calendar-day.dom-completed {
-  background: #e0e7ff;
+  background: var(--neutral-100);
 }
 .calendar-day.dom-cancelled {
-  background: #fee2e2;
+  background: var(--rose-100);
 }
 .calendar-day.dom-missed {
-  background: #ffedd5;
+  background: var(--accent-50);
 }
 
 .day-popup {
@@ -1666,7 +1665,7 @@ const reservationName = (res) => {
 }
 
 .action-btn.staff {
-  color: #7c3aed;
+  color: #6b4a3a;
 }
 
 .action-btn.reschedule {

@@ -43,15 +43,15 @@ const toastStore = useToastStore();
 }
 
 .toast.success {
-  background-color: #065f46;
+  background-color: var(--earth-600);
 }
 
 .toast.error {
-  background-color: #991b1b;
+  background-color: var(--rose-600);
 }
 
 .toast.info {
-  background-color: #1e40af;
+  background-color: var(--sky-600);
 }
 
 .toast-enter-from,

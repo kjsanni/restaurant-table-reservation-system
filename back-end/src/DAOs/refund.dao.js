@@ -3,7 +3,7 @@ const Refund = db.refund;
 const Payment = db.payment;
 const { Op } = db.Sequelize;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const createRefund = async (data, tenantId) => {
   return await Refund.create({

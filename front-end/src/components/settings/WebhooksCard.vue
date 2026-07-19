@@ -42,7 +42,10 @@ const save = async () => {
     saved.value = true;
     setTimeout(() => (saved.value = false), 2000);
   } catch (e: any) {
-    toastStore.add(e?.response?.data?.message || "Failed to save webhooks", "error");
+    toastStore.add(
+      e?.response?.data?.message || "Failed to save webhooks",
+      "error"
+    );
     logger.error("Failed to save webhooks", { error: e?.message });
   } finally {
     saving.value = false;
@@ -99,32 +102,68 @@ onMounted(load);
         <label class="setting-label">Enable Webhooks</label>
         <p class="setting-description">Dispatch outbound events when enabled</p>
       </div>
-      <VaSwitch :model-value="webhooks.enabled" @update:model-value="toggleEnabled" />
+      <VaSwitch
+        :model-value="webhooks.enabled"
+        @update:model-value="toggleEnabled"
+      />
     </div>
 
-    <div v-if="webhooks.enabled" style="margin-top: 16px;">
+    <div v-if="webhooks.enabled" style="margin-top: 16px">
       <h3 class="integration-title">Subscriptions</h3>
       <div v-if="!webhooks.subscriptions.length" class="suggestions-empty">
         No webhook subscriptions configured.
       </div>
-      <div v-for="(sub, idx) in webhooks.subscriptions" :key="idx" class="setting-row">
+      <div
+        v-for="(sub, idx) in webhooks.subscriptions"
+        :key="idx"
+        class="setting-row"
+      >
         <div class="setting-info">
           <label class="setting-label">{{ sub.url }}</label>
           <p class="setting-description">
             Events: {{ sub.events?.join(", ") || "all" }}
           </p>
         </div>
-        <button class="btn btn-secondary" @click="removeSubscription(idx)">Remove</button>
+        <button class="btn btn-secondary" @click="removeSubscription(idx)">
+          Remove
+        </button>
       </div>
 
-      <div class="setting-row" style="margin-top: 12px; gap: 8px; align-items: flex-end;">
-        <input v-model="newUrl" placeholder="https://example.com/webhook" class="field-input" style="flex:1" />
-        <input v-model="newEvents" placeholder="reservation.created,payment.completed" class="field-input" style="flex:1" />
-        <button class="btn btn-primary" :disabled="!newUrl" @click="addSubscription">Add</button>
+      <div
+        class="setting-row"
+        style="margin-top: 12px; gap: 8px; align-items: flex-end"
+      >
+        <input
+          v-model="newUrl"
+          placeholder="https://example.com/webhook"
+          class="field-input"
+          style="flex: 1"
+        />
+        <input
+          v-model="newEvents"
+          placeholder="reservation.created,payment.completed"
+          class="field-input"
+          style="flex: 1"
+        />
+        <button
+          class="btn btn-primary"
+          :disabled="!newUrl"
+          @click="addSubscription"
+        >
+          Add
+        </button>
       </div>
 
-      <div class="setting-row" style="margin-top: 12px; gap: 8px; align-items: flex-end;">
-        <input v-model="testUrl" placeholder="https://example.com/webhook" class="field-input" style="flex:1" />
+      <div
+        class="setting-row"
+        style="margin-top: 12px; gap: 8px; align-items: flex-end"
+      >
+        <input
+          v-model="testUrl"
+          placeholder="https://example.com/webhook"
+          class="field-input"
+          style="flex: 1"
+        />
         <button class="btn btn-secondary" :disabled="testing" @click="sendTest">
           {{ testing ? "Testing..." : "Test" }}
         </button>
@@ -132,7 +171,7 @@ onMounted(load);
         <span v-else-if="testStatus === 'error'" class="error-msg">Failed</span>
       </div>
 
-      <div style="margin-top: 12px; text-align: right;">
+      <div style="margin-top: 12px; text-align: right">
         <button class="btn btn-primary" :disabled="saving" @click="save">
           {{ saving ? "Saving..." : saved ? "Saved" : "Save Webhooks" }}
         </button>

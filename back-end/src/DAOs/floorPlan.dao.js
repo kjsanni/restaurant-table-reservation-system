@@ -1,7 +1,7 @@
 const db = require("../db/models");
 const FloorPlan = db.floorPlan;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const createFloorPlan = async ({ name }, tenantId) => {
   return await FloorPlan.create({ name, ...withTenant({}, tenantId) });

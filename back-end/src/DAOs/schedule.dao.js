@@ -3,7 +3,7 @@ const Schedule = db.schedule;
 const Holiday = db.holiday;
 const { cache } = require("../utils/cache");
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const createSchedule = async (scheduleData, tenantId) => {
   await cache.del("schedules:all");
@@ -66,14 +66,15 @@ const getAllHolidays = async (tenantId) => {
   return holidays;
 };
 
-const getHolidayByDate = async (date, tenantId) => {
-  const cached = await cache.get(`holiday:${date}`);
-  if (cached) return cached;
+  const getHolidayByDate = async (date, tenantId) => {
+    const cached = await cache.get(`holiday:${date}`);
+    if (cached && cached.date === date) return cached;
 
-  const holiday = await Holiday.findOne({ where: withTenant({ date }, tenantId) });
-  if (holiday) await cache.set(`holiday:${date}`, holiday, 300);
-  return holiday;
-};
+    const holiday = await Holiday.findOne({ where: withTenant({ date }, tenantId) });
+    if (holiday) await cache.set(`holiday:${date}`, holiday, 300);
+    else await cache.set(`holiday:${date}`, null, 60);
+    return holiday;
+  };
 
 const deleteHoliday = async (id, tenantId) => {
   const holiday = await Holiday.findOne({ where: withTenant({ id }, tenantId) });

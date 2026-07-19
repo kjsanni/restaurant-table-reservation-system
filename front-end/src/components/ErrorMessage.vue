@@ -31,6 +31,6 @@ defineProps({
 .error-message {
   font-family: "Inter-Medium";
   font-size: 14px;
-  color: #991b1b;
+  color: #e11d48;
 }
 </style>

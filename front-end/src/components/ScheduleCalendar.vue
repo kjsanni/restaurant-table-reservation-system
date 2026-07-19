@@ -114,26 +114,26 @@ const formatTime = (time: string) => {
   gap: 10px;
   padding: 14px;
   border-radius: 10px;
-  border: 1px solid #f0f0f0;
-  background: #fafafa;
+  border: 1px solid var(--border-subtle);
+  background: var(--neutral-50);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .schedule-day:hover {
-  border-color: #3b82f6;
-  background: #f8fafc;
+  border-color: var(--sky-500);
+  background: var(--sky-50);
 }
 
 .schedule-day--selected {
-  border-color: #3b82f6;
-  background: #f8fafc;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  border-color: var(--sky-500);
+  background: var(--sky-50);
+  box-shadow: 0 0 0 2px var(--sky-100);
 }
 
 .schedule-day--closed {
-  background: #fef2f2;
-  border-color: #fecaca;
+  background: var(--rose-50);
+  border-color: var(--rose-200);
 }
 
 .day-header {
@@ -146,22 +146,22 @@ const formatTime = (time: string) => {
 .day-label {
   font-family: "Inter-Medium";
   font-size: 14px;
-  color: #04030f;
+  color: var(--ink);
 }
 
 .day-time {
   font-family: "Inter-Light";
   font-size: 13px;
-  color: #686868;
+  color: var(--ink-muted);
 }
 
 .time-range {
   font-family: "Inter-Medium";
-  color: #3b82f6;
+  color: var(--sky-600);
 }
 
 .time-range-closed {
-  color: #ef4444;
+  color: var(--rose-500);
 }
 
 .day-actions {

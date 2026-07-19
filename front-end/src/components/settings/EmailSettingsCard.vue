@@ -55,7 +55,10 @@ const saveEmailConfig = async () => {
     emailSaved.value = true;
     setTimeout(() => (emailSaved.value = false), 2000);
   } catch (e: any) {
-    toastStore.add(e?.response?.data?.message || "Failed to save email settings", "error");
+    toastStore.add(
+      e?.response?.data?.message || "Failed to save email settings",
+      "error"
+    );
     logger.error("Failed to save email settings", { error: e?.message });
   } finally {
     emailSaving.value = false;
@@ -76,7 +79,8 @@ const sendTestEmail = async () => {
     emailTestMessage.value = "Test email sent.";
   } catch (e: any) {
     emailTestStatus.value = "error";
-    emailTestMessage.value = e?.response?.data?.message || "Failed to send test email.";
+    emailTestMessage.value =
+      e?.response?.data?.message || "Failed to send test email.";
   }
 };
 
@@ -87,17 +91,25 @@ load();
   <div class="settings-card email-card">
     <h2 class="category-title">Email Server (SMTP)</h2>
     <p class="setting-description">
-      SMTP credentials are stored in the database and used to send reservation and
-      notification emails.
+      SMTP credentials are stored in the database and used to send reservation
+      and notification emails.
     </p>
     <div class="email-grid">
       <div class="email-field">
         <label>SMTP Host</label>
-        <input v-model="emailConfig.host" class="field-input" placeholder="smtp.example.com" />
+        <input
+          v-model="emailConfig.host"
+          class="field-input"
+          placeholder="smtp.example.com"
+        />
       </div>
       <div class="email-field">
         <label>Port</label>
-        <input v-model.number="emailConfig.port" type="number" class="field-input" />
+        <input
+          v-model.number="emailConfig.port"
+          type="number"
+          class="field-input"
+        />
       </div>
       <div class="email-field checkbox-field">
         <label>Use TLS / SSL (secure)</label>
@@ -105,7 +117,11 @@ load();
       </div>
       <div class="email-field">
         <label>Username</label>
-        <input v-model="emailConfig.user" class="field-input" placeholder="user@example.com" />
+        <input
+          v-model="emailConfig.user"
+          class="field-input"
+          placeholder="user@example.com"
+        />
       </div>
       <div class="email-field">
         <label>Password</label>
@@ -126,7 +142,11 @@ load();
       </div>
     </div>
     <div class="email-actions">
-      <button class="btn btn-primary" @click="saveEmailConfig" :disabled="emailSaving">
+      <button
+        class="btn btn-primary"
+        @click="saveEmailConfig"
+        :disabled="emailSaving"
+      >
         {{ emailSaving ? "Saving..." : "Save Email Settings" }}
       </button>
       <span v-if="emailSaved" class="status-text saved">Saved</span>
@@ -135,7 +155,11 @@ load();
     <div class="email-test">
       <h3 class="test-title">Send Test Email</h3>
       <div class="test-row">
-        <input v-model="emailTestTo" class="field-input" placeholder="test@example.com" />
+        <input
+          v-model="emailTestTo"
+          class="field-input"
+          placeholder="test@example.com"
+        />
         <button
           class="btn btn-secondary"
           @click="sendTestEmail"

@@ -2,7 +2,7 @@ const db = require("../db/models");
 const PermissionTemplate = db.permissionTemplate;
 const { Op } = db.Sequelize;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const findAllTemplates = async (tenantId) => {
   return await PermissionTemplate.findAll({

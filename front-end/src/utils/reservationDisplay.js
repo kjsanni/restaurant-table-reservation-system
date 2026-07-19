@@ -1,10 +1,12 @@
+import { brandColors } from "@/theme/colors";
+
 const STATUS_COLORS = {
-  seated: "#22c55e",
-  cancelled: "#ef4444",
-  missed: "#f59e0b",
+  seated: brandColors.earth500,
+  cancelled: brandColors.rose500,
+  missed: brandColors.accent500,
 };
 
-const statusColor = (status) => STATUS_COLORS[status] || "#3b82f6";
+const statusColor = (status) => STATUS_COLORS[status] || brandColors.sky500;
 
 const shortName = (name) => {
   if (!name) return "Guest";

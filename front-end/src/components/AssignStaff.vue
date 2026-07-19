@@ -140,7 +140,7 @@ onMounted(async () => {
 }
 .empty {
   font-size: 13px;
-  color: #6c757d;
+  color: var(--ink-muted);
   padding: 10px;
   text-align: center;
   font-family: var(--font-sans);
@@ -158,7 +158,7 @@ onMounted(async () => {
   padding: 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background-color: #fafafa;
+  background-color: var(--neutral-50);
 }
 .staff-name {
   font-family: "Inter-Medium";
@@ -170,32 +170,33 @@ onMounted(async () => {
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
+  transition: background-color var(--duration-150) var(--ease-in-out);
 }
 
 .assign-btn:disabled {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: var(--earth-100);
+  color: var(--earth-600);
   cursor: not-allowed;
 }
 
 .assign-btn:not(:disabled) {
-  background-color: #007bff;
+  background-color: var(--accent-500);
   color: white;
 }
 .assign-btn:not(:disabled):hover {
-  background-color: #0056b3;
+  background-color: var(--accent-600);
 }
 .remove-btn {
   background: none;
   border: none;
-  color: #dc3545;
+  color: var(--rose-500);
   cursor: pointer;
   font-size: 18px;
   font-weight: bold;
   padding: 0 4px;
 }
 .remove-btn:hover {
-  color: #a71d2a;
+  color: var(--rose-600);
 }
 .loading {
   text-align: center;
@@ -204,7 +205,7 @@ onMounted(async () => {
   font-weight: 300;
 }
 .error {
-  color: #dc3545;
+  color: var(--rose-500);
   text-align: center;
   padding: 10px;
   margin-bottom: 15px;

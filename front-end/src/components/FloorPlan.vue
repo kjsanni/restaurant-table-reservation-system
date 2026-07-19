@@ -121,11 +121,11 @@ const tableStatus = (table) => {
 const statusColor = (status) => {
   switch (status) {
     case "occupied":
-      return "#ef4444";
+      return "#f43f5e";
     case "blocked":
-      return "#6c757d";
+      return "#9a9389";
     default:
-      return "#22c55e";
+      return "#4d7c0f";
   }
 };
 
@@ -409,7 +409,7 @@ const closeAssign = () => {
   width: 260px;
   min-width: 240px;
   background: var(--primary-white);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--card-radius);
   padding: var(--card-padding);
   max-height: calc(100vh - 260px);
@@ -421,7 +421,7 @@ const closeAssign = () => {
   flex: 1;
   min-width: 0;
   background: var(--primary-white);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
   padding: 20px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
@@ -459,8 +459,8 @@ const closeAssign = () => {
 }
 
 .pending-card {
-  background: #fafafa;
-  border: 1px solid #f0f0f0;
+  background: var(--neutral-50);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 12px;
   cursor: grab;
@@ -531,7 +531,7 @@ const closeAssign = () => {
   font-family: var(--font-sans);
   font-weight: 300;
   font-size: 12px;
-  color: #f59e0b;
+  color: var(--accent-600);
   margin-bottom: 6px;
   white-space: nowrap;
   overflow: hidden;
@@ -579,7 +579,7 @@ const closeAssign = () => {
   border-radius: 999px;
   font-family: "Inter-Medium";
   font-size: 12px;
-  background: #f3f4f6;
+  background: var(--neutral-100);
   color: var(--primary-black);
 }
 
@@ -591,15 +591,15 @@ const closeAssign = () => {
 }
 
 .legend-pill.free .dot {
-  background-color: #22c55e;
+  background-color: var(--earth-500);
 }
 
 .legend-pill.occupied .dot {
-  background-color: #ef4444;
+  background-color: var(--rose-500);
 }
 
 .legend-pill.blocked .dot {
-  background-color: #6c757d;
+  background-color: var(--neutral-500);
 }
 
 .plan-grid {
@@ -609,8 +609,8 @@ const closeAssign = () => {
 }
 
 .table-block {
-  background: white;
-  border: 1px solid #f0f0f0;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 14px;
   transition: all 0.2s ease;
@@ -627,32 +627,32 @@ const closeAssign = () => {
 }
 
 .table-block.free {
-  border-color: #22c55e;
-  background: linear-gradient(180deg, #f6fef9 0%, #ffffff 100%);
+  border-color: var(--earth-500);
+  background: linear-gradient(180deg, var(--earth-50) 0%, var(--surface) 100%);
 }
 
 .table-block.free.drag-over {
-  border-color: #16a34a;
-  background: #dcfce7;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35);
+  border-color: var(--earth-600);
+  background: var(--earth-100);
+  box-shadow: 0 0 0 3px var(--earth-200);
   transform: translateY(-1px);
 }
 
 .table-block.touched {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: var(--sky-500);
+  box-shadow: 0 0 0 3px var(--sky-100);
   transform: translateY(-1px);
 }
 
 .table-block.occupied {
-  border-color: #ef4444;
-  background: linear-gradient(180deg, #fff5f5 0%, #ffffff 100%);
+  border-color: var(--rose-500);
+  background: linear-gradient(180deg, var(--rose-50) 0%, var(--surface) 100%);
   opacity: 0.9;
 }
 
 .table-block.blocked {
-  border-color: #6c757d;
-  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  border-color: var(--neutral-500);
+  background: linear-gradient(180deg, var(--neutral-50) 0%, var(--surface) 100%);
   opacity: 0.7;
 }
 
@@ -701,7 +701,7 @@ const closeAssign = () => {
 .res-name {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: #ef4444;
+  color: var(--rose-500);
 }
 
 .res-time {
@@ -735,15 +735,15 @@ const closeAssign = () => {
   margin-top: 8px;
   padding: 4px 8px;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--sky-100);
+  color: var(--sky-600);
   font-family: "Inter-Medium";
   font-size: 11px;
   align-self: flex-start;
 }
 
 .legend-pill.merged .dot {
-  background-color: #f59e0b;
+  background-color: var(--accent-500);
 }
 
 .merge-rows {
@@ -752,7 +752,7 @@ const closeAssign = () => {
   gap: 6px;
   padding: 10px;
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--neutral-50);
 }
 
 .merge-row {
@@ -765,11 +765,11 @@ const closeAssign = () => {
   font-family: var(--font-sans);
   font-weight: 300;
   font-size: 13px;
-  color: var(--secondary-gray);
+  color: var(--ink-muted);
   margin-top: 18px;
   padding: 10px;
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--neutral-50);
 }
 
 .assign-content {
@@ -788,13 +788,13 @@ const closeAssign = () => {
   justify-content: flex-end;
   gap: 10px;
   padding-top: 12px;
-  border-top: 1px solid var(--lighter-gray);
+  border-top: 1px solid var(--border);
 }
 
 .btn-outline {
   background-color: transparent;
-  border: 1px solid var(--lighter-gray);
-  color: var(--primary-black);
+  border: 1px solid var(--border);
+  color: var(--ink);
   border-radius: 8px;
   padding: 8px 16px;
   font-family: "Inter-Medium";
@@ -802,11 +802,11 @@ const closeAssign = () => {
 }
 
 .btn-outline:hover {
-  background-color: #f3f4f6;
+  background-color: var(--neutral-100);
 }
 
 .btn-primary {
-  background-color: var(--primary-blue);
+  background-color: var(--accent-500);
   color: white;
   border: none;
   border-radius: 8px;
@@ -814,10 +814,11 @@ const closeAssign = () => {
   font-family: "Inter-Medium";
   font-size: 13px;
   cursor: pointer;
+  transition: background-color var(--duration-150) var(--ease-in-out);
 }
 
 .btn-primary:hover {
-  background-color: #2563eb;
+  background-color: var(--accent-600);
 }
 
 @media screen and (max-width: 860px) {

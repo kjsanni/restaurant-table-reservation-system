@@ -11,6 +11,7 @@ import logger from "@/utils/logger";
 import RESERVATION_STATUS from "@/constants/reservationStatus";
 import PageHeader from "@/components/PageHeader.vue";
 import { useCurrency } from "@/composables/useCurrency";
+import { tableDotPalette } from "@/theme/colors";
 
 const { format: fmt } = useCurrency();
 
@@ -92,16 +93,7 @@ const removeFloorPlan = async (id) => {
 };
 
 const showServerOverlay = ref(false);
-const STAFF_COLORS = [
-  "#2563eb",
-  "#16a34a",
-  "#db2777",
-  "#d97706",
-  "#7c3aed",
-  "#0891b2",
-  "#dc2626",
-  "#4f46e5",
-];
+const STAFF_COLORS = [...tableDotPalette];
 const staffColorMap = computed(() => {
   const map = {};
   const allStaff = [];
@@ -258,11 +250,11 @@ const tableStatus = (table) => {
 const statusColor = (status) => {
   switch (status) {
     case "occupied":
-      return "#ef4444";
+      return "#f43f5e";
     case "blocked":
-      return "#6c757d";
+      return "#9a9389";
     default:
-      return "#22c55e";
+      return "#4d7c0f";
   }
 };
 
@@ -685,9 +677,7 @@ onMounted(loadData);
             </div>
             <div class="analytics-metric">
               <span class="analytics-value">{{
-                monthlyRevenue != null
-                  ? fmt(monthlyRevenue)
-                  : "—"
+                monthlyRevenue != null ? fmt(monthlyRevenue) : "—"
               }}</span>
               <span class="analytics-label">Month revenue</span>
             </div>
@@ -984,7 +974,7 @@ onMounted(loadData);
   width: 260px;
   min-width: 240px;
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--card-radius);
   padding: var(--card-padding);
   max-height: calc(100vh - 260px);
@@ -996,7 +986,7 @@ onMounted(loadData);
   flex: 1;
   min-width: 0;
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--card-radius);
   padding: var(--card-padding);
   box-shadow: var(--card-shadow);
@@ -1020,7 +1010,7 @@ onMounted(loadData);
 .badge {
   font-family: "Inter-Medium";
   font-size: 12px;
-  background: var(--sky-600);
+  background: var(--accent-500);
   color: white;
   padding: 2px 10px;
   border-radius: 999px;
@@ -1033,8 +1023,8 @@ onMounted(loadData);
 }
 
 .pending-card {
-  background: #fafafa;
-  border: 1px solid #f0f0f0;
+  background: var(--neutral-50);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 12px;
   cursor: grab;
@@ -1044,9 +1034,9 @@ onMounted(loadData);
 }
 
 .pending-card:hover {
-  background: white;
-  border-color: var(--sky-600);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
+  background: var(--surface);
+  border-color: var(--accent-500);
+  box-shadow: 0 6px 20px var(--accent-soft);
   transform: translateY(-1px);
 }
 
@@ -1101,7 +1091,7 @@ onMounted(loadData);
 .pending-notes {
   font-family: "Inter-Light";
   font-size: 12px;
-  color: #f59e0b;
+  color: var(--accent-600);
   margin-bottom: 6px;
   white-space: nowrap;
   overflow: hidden;
@@ -1136,7 +1126,7 @@ onMounted(loadData);
   flex: 1;
   min-width: 0;
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
   padding: 20px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
@@ -1157,7 +1147,7 @@ onMounted(loadData);
   border-radius: 999px;
   font-family: "Inter-Medium";
   font-size: 12px;
-  background: #f3f4f6;
+  background: var(--neutral-100);
   color: var(--ink);
 }
 
@@ -1169,15 +1159,15 @@ onMounted(loadData);
 }
 
 .legend-pill.free .dot {
-  background-color: #22c55e;
+  background-color: var(--earth-500);
 }
 
 .legend-pill.occupied .dot {
-  background-color: #ef4444;
+  background-color: var(--rose-500);
 }
 
 .legend-pill.blocked .dot {
-  background-color: #6c757d;
+  background-color: var(--neutral-500);
 }
 
 .plan-grid {
@@ -1187,8 +1177,8 @@ onMounted(loadData);
 }
 
 .table-block {
-  background: white;
-  border: 1px solid #f0f0f0;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 14px;
   transition: all 0.2s ease;
@@ -1204,26 +1194,26 @@ onMounted(loadData);
 }
 
 .table-block.free {
-  border-color: #22c55e;
-  background: linear-gradient(180deg, #f6fef9 0%, #ffffff 100%);
+  border-color: var(--earth-500);
+  background: linear-gradient(180deg, var(--earth-50) 0%, var(--surface) 100%);
 }
 
 .table-block.free.drag-over {
-  border-color: #16a34a;
-  background: #dcfce7;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35);
+  border-color: var(--earth-600);
+  background: var(--earth-100);
+  box-shadow: 0 0 0 3px var(--earth-200);
   transform: translateY(-1px);
 }
 
 .table-block.occupied {
-  border-color: #ef4444;
-  background: linear-gradient(180deg, #fff5f5 0%, #ffffff 100%);
+  border-color: var(--rose-500);
+  background: linear-gradient(180deg, var(--rose-50) 0%, var(--surface) 100%);
   opacity: 0.9;
 }
 
 .table-block.blocked {
-  border-color: #6c757d;
-  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  border-color: var(--neutral-500);
+  background: linear-gradient(180deg, var(--neutral-50) 0%, var(--surface) 100%);
   opacity: 0.7;
 }
 
@@ -1261,7 +1251,7 @@ onMounted(loadData);
 .table-reservation {
   margin-top: auto;
   padding-top: 8px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1270,7 +1260,7 @@ onMounted(loadData);
 .res-name {
   font-family: "Inter-Medium";
   font-size: 13px;
-  color: #ef4444;
+  color: var(--rose-500);
 }
 
 .res-time {
@@ -1282,7 +1272,7 @@ onMounted(loadData);
 .table-empty {
   margin-top: auto;
   padding-top: 8px;
-  border-top: 1px dashed #f0f0f0;
+  border-top: 1px dashed var(--border-subtle);
   text-align: center;
   font-family: "Inter-Medium";
   font-size: 12px;
@@ -1290,21 +1280,21 @@ onMounted(loadData);
 }
 
 .selectable:hover {
-  border-color: var(--sky-600);
-  background: #f8faff;
+  border-color: var(--accent-500);
+  background: var(--accent-50);
 }
 
 .table-block.selected {
-  border-color: var(--sky-600);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .linked-badge {
   margin-top: 8px;
   padding: 4px 8px;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--sky-100);
+  color: var(--sky-600);
   font-family: "Inter-Medium";
   font-size: 11px;
   align-self: flex-start;
@@ -1328,14 +1318,15 @@ onMounted(loadData);
 .fp-label {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--ink-secondary);
 }
 .fp-select {
   padding: 6px 10px;
-  border: 1px solid #d0d7de;
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   font-size: 0.85rem;
-  background: #fff;
+  background: var(--surface);
+  color: var(--ink);
 }
 
 .section-filters {
@@ -1349,18 +1340,22 @@ onMounted(loadData);
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--border);
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   font-size: 0.8rem;
   text-transform: capitalize;
   cursor: pointer;
-  color: #334155;
+  color: var(--ink-secondary);
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+.section-chip:hover {
+  border-color: var(--neutral-300);
 }
 .section-chip.active {
-  background: #2563eb;
-  color: #fff;
-  border-color: #2563eb;
+  background: var(--accent);
+  color: var(--white);
+  border-color: var(--accent);
 }
 .chip-count {
   font-size: 0.72rem;
@@ -1370,15 +1365,15 @@ onMounted(loadData);
   font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #64748b;
-  background: #f1f5f9;
-  border-radius: 4px;
+  color: var(--ink-muted);
+  background: var(--neutral-50);
+  border-radius: var(--radius-sm);
   padding: 1px 5px;
 }
 .server-overlay-tag {
   font-size: 0.62rem;
-  color: #fff;
-  border-radius: 4px;
+  color: var(--white);
+  border-radius: var(--radius-sm);
   padding: 1px 6px;
   font-weight: 600;
 }
@@ -1388,9 +1383,9 @@ onMounted(loadData);
   gap: 12px;
   margin-bottom: 16px;
   padding: 12px 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
 }
 .analytics-metric {
   display: flex;
@@ -1400,11 +1395,11 @@ onMounted(loadData);
 .analytics-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--ink);
 }
 .analytics-label {
   font-size: 0.7rem;
-  color: #64748b;
+  color: var(--ink-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -1480,7 +1475,7 @@ onMounted(loadData);
   gap: 6px;
   padding: 10px;
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--neutral-50);
 }
 
 .merge-row {
@@ -1496,7 +1491,7 @@ onMounted(loadData);
   margin-top: 18px;
   padding: 10px;
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--neutral-50);
 }
 
 .assign-content {
@@ -1535,11 +1530,11 @@ onMounted(loadData);
 }
 
 .btn-outline:hover {
-  background-color: #f3f4f6;
+  background-color: var(--neutral-100);
 }
 
 .btn-primary {
-  background-color: var(--sky-600);
+  background-color: var(--accent-500);
   color: white;
   border: none;
   border-radius: 8px;
@@ -1547,10 +1542,11 @@ onMounted(loadData);
   font-family: "Inter-Medium";
   font-size: 13px;
   cursor: pointer;
+  transition: background-color var(--duration-150) var(--ease-in-out);
 }
 
 .btn-primary:hover {
-  background-color: #2563eb;
+  background-color: var(--accent-600);
 }
 
 @media screen and (max-width: 860px) {

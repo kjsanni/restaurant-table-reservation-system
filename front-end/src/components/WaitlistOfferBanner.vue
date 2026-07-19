@@ -127,8 +127,8 @@ defineExpose({ handleOffer });
   right: 24px;
   width: 360px;
   max-width: calc(100% - 32px);
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
   padding: 16px;
@@ -196,8 +196,8 @@ defineExpose({ handleOffer });
 }
 
 .btn-secondary {
-  background: #f3f4f6;
-  color: var(--primary-black);
+  background: var(--neutral-100);
+  color: var(--ink);
 }
 
 .fade-enter-from,

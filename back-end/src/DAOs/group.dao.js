@@ -3,7 +3,7 @@ const Group = db.group;
 const User = db.user;
 const { Op } = db.Sequelize;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const findAllGroups = async (tenantId) => {
   const groups = await Group.findAll({

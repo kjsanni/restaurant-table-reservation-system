@@ -129,7 +129,9 @@ const handleRegister = async () => {
           <VaButton
             block
             type="submit"
-            :disabled="!registrationEnabled || !allRequirementsMet || submitting"
+            :disabled="
+              !registrationEnabled || !allRequirementsMet || submitting
+            "
             class="auth-submit"
           >
             {{ submitting ? "Creating account..." : "Register" }}

@@ -5,14 +5,16 @@ export const paymentOptions = [
   { label: "Paid", value: "paid" },
 ];
 
+import { brandColors } from "@/theme/colors";
+
 export const getPaymentStatusColor = (status) => {
   const colors = {
-    paid: "#22c55e",
-    partial: "#f59e0b",
-    deposit: "#3b82f6",
-    unpaid: "#9ca3af",
+    paid: brandColors.earth500,
+    partial: brandColors.accent500,
+    deposit: brandColors.sky500,
+    unpaid: brandColors.neutral500,
   };
-  return colors[status] || "#9ca3af";
+  return colors[status] || brandColors.neutral500;
 };
 
 export const getPaymentStatusLabel = (status) => {

@@ -64,21 +64,21 @@ const drillDownMax = computed(() => {
 });
 
 const cellColor = (count) => {
-  if (count === 0) return "#f9fafb";
+  if (count === 0) return "#faf9f7";
   const ratio = count / maxCount.value;
   if (ratio < 0.25) return "#dbeafe";
-  if (ratio < 0.5) return "#93c5fd";
+  if (ratio < 0.5) return "#60a5fa";
   if (ratio < 0.75) return "#3b82f6";
-  return "#1d4ed8";
+  return "#1e40af";
 };
 
 const calendarCellColor = (count) => {
-  if (count === 0) return "#f9fafb";
+  if (count === 0) return "#faf9f7";
   const ratio = count / maxCount.value;
-  if (ratio < 0.25) return "#d1fae5";
-  if (ratio < 0.5) return "#34d399";
-  if (ratio < 0.75) return "#059669";
-  return "#047857";
+  if (ratio < 0.25) return "#ecfccb";
+  if (ratio < 0.5) return "#84cc16";
+  if (ratio < 0.75) return "#4d7c0f";
+  return "#365314";
 };
 
 let debounceTimer = null;

@@ -183,7 +183,12 @@ const findOrCreateCustomer = async (customerDetails, t = null, tenantId) => {
   const { email } = customerDetails;
   let customer = await findCustomerByEmail(email, tenantId);
   if (!customer) {
-    customer = await createCustomer(customerDetails, t, tenantId);
+    try {
+      customer = await createCustomer(customerDetails, t, tenantId);
+    } catch (err) {
+      console.error("findOrCreateCustomer create failed:", err.message);
+      return null;
+    }
   } else {
     await customer.increment("visitCount", { by: 1 });
     await customer.update({ lastVisitDate: new Date() });
@@ -887,6 +892,7 @@ const getRecurringReservations = async (customerId, tenantId) => {
 
 module.exports = {
   findAllReservations,
+  searchReservations,
   findReservationById,
   createReservation,
   updateReservation,

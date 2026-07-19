@@ -93,7 +93,7 @@ const getFieldValue = (item, fieldKey) => {
         >
           <ButtonAction
             text="Seat"
-            color="#22c55e"
+            color="#4d7c0f"
             @click="
               emit('onSelectedReservation', { ...item, action: 'choose-table' })
             "
@@ -106,14 +106,14 @@ const getFieldValue = (item, fieldKey) => {
           <ButtonAction
             v-if="canManageTables"
             text="Assign"
-            color="#f59e0b"
+            color="#d97706"
             @click="
               emit('onSelectedReservation', { ...item, action: 'assign-staff' })
             "
           />
           <ButtonAction
             text="Cancel"
-            color="#ef4444"
+            color="#f43f5e"
             @click="
               emit('onSelectedReservation', { ...item, action: 'cancel' })
             "
@@ -122,7 +122,7 @@ const getFieldValue = (item, fieldKey) => {
         <div class="res-actions" v-else-if="canEditReservations">
           <ButtonAction
             text="Delete"
-            color="#ef4444"
+            color="#f43f5e"
             @click="
               emit('onSelectedReservation', { ...item, action: 'delete' })
             "
@@ -146,7 +146,7 @@ const getFieldValue = (item, fieldKey) => {
 
 .res-card {
   background: var(--surface);
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--card-radius);
   padding: 16px;
   display: flex;
@@ -171,7 +171,7 @@ const getFieldValue = (item, fieldKey) => {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
+  background: linear-gradient(135deg, var(--sky-100) 0%, var(--sky-200) 100%);
   color: var(--sky-600);
   font-family: var(--font-sans);
   font-weight: 700;
@@ -213,23 +213,23 @@ const getFieldValue = (item, fieldKey) => {
 }
 
 .status-chip.pending {
-  background: #3b82f6;
+  background: var(--sky-500);
 }
 
 .status-chip.seated {
-  background: #22c55e;
+  background: var(--earth-500);
 }
 
 .status-chip.cancelled {
-  background: #ef4444;
+  background: var(--rose-500);
 }
 
 .status-chip.completed {
-  background: #9ca3af;
+  background: var(--neutral-500);
 }
 
 .status-chip.missed {
-  background: #f59e0b;
+  background: var(--accent-500);
 }
 
 .res-details {
@@ -291,7 +291,7 @@ const getFieldValue = (item, fieldKey) => {
   font-family: var(--font-sans);
   font-weight: 300;
   font-size: 10px;
-  background: #e5e7eb;
+  background: var(--neutral-100);
   color: var(--ink);
   padding: 2px 8px;
   border-radius: 6px;

@@ -70,7 +70,11 @@ const handleNumberBlur = (setting: {
   key: string;
   value: number | string | boolean;
 }) => {
-  if (setting.value !== null && setting.value !== undefined && setting.value !== "") {
+  if (
+    setting.value !== null &&
+    setting.value !== undefined &&
+    setting.value !== ""
+  ) {
     updateValue(setting);
   }
 };
@@ -89,14 +93,14 @@ const adjustNumber = (setting: any, delta: number) => {
 </script>
 
 <template>
-  <div
-    v-for="category in categories"
-    :key="category"
-    class="settings-card"
-  >
+  <div v-for="category in categories" :key="category" class="settings-card">
     <h2 class="category-title">{{ category }}</h2>
     <div class="settings-list">
-      <div v-for="setting in getByCategory(category)" :key="setting.key" class="setting-item">
+      <div
+        v-for="setting in getByCategory(category)"
+        :key="setting.key"
+        class="setting-item"
+      >
         <div class="setting-info">
           <label class="setting-label">{{ setting.label }}</label>
           <p class="setting-description">{{ setting.description }}</p>
@@ -106,14 +110,18 @@ const adjustNumber = (setting: any, delta: number) => {
           <VaSwitch
             v-if="setting.type === 'boolean'"
             :model-value="setting.value as boolean"
-            @update:model-value="(val) => updateValue({ ...setting, value: val })"
+            @update:model-value="
+              (val) => updateValue({ ...setting, value: val })
+            "
           />
 
           <div v-else-if="setting.type === 'number'" class="number-control">
             <button
               type="button"
               class="num-btn"
-              @click="adjustNumber(setting, -(settingsConfig[setting.key].step || 1))"
+              @click="
+                adjustNumber(setting, -(settingsConfig[setting.key].step || 1))
+              "
               :disabled="savingKeys.has(setting.key)"
             >
               −
@@ -131,7 +139,9 @@ const adjustNumber = (setting: any, delta: number) => {
             <button
               type="button"
               class="num-btn"
-              @click="adjustNumber(setting, settingsConfig[setting.key].step || 1)"
+              @click="
+                adjustNumber(setting, settingsConfig[setting.key].step || 1)
+              "
               :disabled="savingKeys.has(setting.key)"
             >
               +
@@ -139,8 +149,12 @@ const adjustNumber = (setting: any, delta: number) => {
             <span class="unit">{{ settingsConfig[setting.key].unit }}</span>
           </div>
 
-          <span v-if="savingKeys.has(setting.key)" class="status-text saving">Saving...</span>
-          <span v-else-if="savedKeys.has(setting.key)" class="status-text saved">Saved</span>
+          <span v-if="savingKeys.has(setting.key)" class="status-text saving"
+            >Saving...</span
+          >
+          <span v-else-if="savedKeys.has(setting.key)" class="status-text saved"
+            >Saved</span
+          >
         </div>
       </div>
     </div>

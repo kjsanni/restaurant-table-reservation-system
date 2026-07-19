@@ -254,8 +254,8 @@ onMounted(() => {
   text-transform: capitalize;
 }
 .status-badge.missed {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #ffe4e6;
+  color: #e11d48;
 }
 .muted {
   color: var(--ink-muted);

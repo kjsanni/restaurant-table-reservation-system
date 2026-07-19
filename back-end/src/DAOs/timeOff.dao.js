@@ -2,7 +2,7 @@ const db = require("../db/models");
 const TimeOff = db.timeOff;
 const User = db.user;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const createTimeOff = async ({ userId, startDate, endDate, reason }, tenantId) => {
   return await TimeOff.create({ userId, startDate, endDate, reason, status: "pending", ...withTenant({}, tenantId) });

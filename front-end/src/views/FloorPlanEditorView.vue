@@ -28,7 +28,7 @@ const currentZone = ref(null);
 
 const ZONE_COLORS = [
   "#dbeafe",
-  "#dcfce7",
+  "#ecfccb",
   "#fef3c7",
   "#fce7f3",
   "#e9d5ff",

@@ -206,6 +206,7 @@ const getSettingsHandler = async (req, res) => {
 const updateSettingsHandler = async (req, res) => {
   const { key, value } = req.body;
   const allowedKeys = [
+    "business_hours",
     "customer_registration_enabled",
     "reservation_slot_duration",
     "max_party_size",

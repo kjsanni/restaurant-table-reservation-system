@@ -26,7 +26,7 @@ defineProps({
 .success-icon {
   font-size: 18px;
   flex-shrink: 0;
-  color: #16a34a;
+  color: #365314;
 }
 
 .success-message {

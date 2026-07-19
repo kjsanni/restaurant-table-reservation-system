@@ -301,13 +301,13 @@ onUnmounted(() => {
 const paymentColor = (status) => {
   switch (status) {
     case "paid":
-      return "#22c55e";
+      return "#4d7c0f";
     case "partial":
-      return "#f59e0b";
+      return "#d97706";
     case "deposit":
       return "#3b82f6";
     default:
-      return "#9ca3af";
+      return "#9a9389";
   }
 };
 
@@ -709,7 +709,7 @@ const today = () => {
                       )
                     "
                     text="Seat"
-                    color="#22c55e"
+                    color="#4d7c0f"
                     @click="
                       openPopup('Choose Table');
                       assignSelectedReservation(slotProps.item);
@@ -727,7 +727,7 @@ const today = () => {
                   <ButtonAction
                     v-if="canManageTables"
                     text="Assign"
-                    color="#f59e0b"
+                    color="#d97706"
                     @click="
                       openPopup('Assign Staff');
                       assignSelectedReservation(slotProps.item);
@@ -736,7 +736,7 @@ const today = () => {
                   <ButtonAction
                     v-if="ACTIVE_STATUSES.includes(slotProps.item.resStatus)"
                     text="Cancel"
-                    color="#ef4444"
+                    color="#f43f5e"
                     @click="handleCancelItem(slotProps.item)"
                   />
                   <ButtonAction
@@ -745,7 +745,7 @@ const today = () => {
                       canAddToWaitlist
                     "
                     text="Waitlist"
-                    color="#f59e0b"
+                    color="#d97706"
                     @click="sendToWaitlist(slotProps.item)"
                   >
                     <template #icon>
@@ -757,7 +757,7 @@ const today = () => {
                       slotProps.item.resStatus === RESERVATION_STATUS.PENDING
                     "
                     text="Mark No-Show"
-                    color="#f59e0b"
+                    color="#d97706"
                     @click="openNoShowModal(slotProps.item.id)"
                   />
                   <ButtonAction
@@ -765,19 +765,19 @@ const today = () => {
                       slotProps.item.resStatus === RESERVATION_STATUS.SEATED
                     "
                     text="Unseat"
-                    color="#ef4444"
+                    color="#f43f5e"
                     @click="unseatReservation(slotProps.item)"
                   />
                   <ButtonAction
                     v-if="canEditReservations"
                     text="Delete"
-                    color="#ef4444"
+                    color="#f43f5e"
                     @click="openDeleteModal(slotProps.item.id)"
                   />
                   <ButtonAction
                     v-if="canEditReservations"
                     text="Duplicate"
-                    color="#8b5cf6"
+                    color="#6b4a3a"
                     @click="duplicateReservation(slotProps.item)"
                   />
                 </div>

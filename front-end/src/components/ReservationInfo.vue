@@ -153,7 +153,7 @@ const customerLink = computed(() => {
   background: none;
   border: none;
   cursor: pointer;
-  color: #ef4444;
+  color: var(--rose-500);
   display: flex;
   align-items: center;
   padding: 4px;
@@ -210,7 +210,7 @@ const customerLink = computed(() => {
 
 .notes-text :deep(mark) {
   background-color: #fef08a;
-  color: #854d0e;
+  color: #b45309;
   padding: 1px 3px;
   border-radius: 3px;
 }

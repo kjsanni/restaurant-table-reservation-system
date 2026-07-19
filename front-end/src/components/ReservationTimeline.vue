@@ -9,12 +9,12 @@ const props = defineProps({
 });
 
 const statusColors = {
-  pending: "#f59e0b",
+  pending: "#d97706",
   confirmed: "#3b82f6",
-  seated: "#22c55e",
-  completed: "#6c757d",
-  cancelled: "#ef4444",
-  missed: "#ef4444",
+  seated: "#4d7c0f",
+  completed: "#9a9389",
+  cancelled: "#f43f5e",
+  missed: "#f43f5e",
 };
 
 const statusLabels = {
@@ -58,7 +58,7 @@ const timelineItems = computed(() => {
       >
         <div
           class="timeline-dot"
-          :style="{ backgroundColor: statusColors[item.toStatus] || '#6c757d' }"
+          :style="{ backgroundColor: statusColors[item.toStatus] || '#9a9389' }"
         ></div>
         <div class="timeline-body">
           <div class="timeline-title">

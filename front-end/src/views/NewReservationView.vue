@@ -39,14 +39,14 @@ const recurrenceUntil = ref("");
 const recurrenceByDay = ref([]);
 
 const availableTags = [
-  { key: "vip", label: "⭐ VIP", color: "#f59e0b" },
-  { key: "allergy_dairy", label: "🥛 Dairy allergy", color: "#ef4444" },
-  { key: "allergy_nuts", label: "🥜 Nut allergy", color: "#ef4444" },
-  { key: "allergy_gluten", label: "🌾 Gluten-free", color: "#ef4444" },
-  { key: "allergy_shellfish", label: "🦐 Shellfish allergy", color: "#ef4444" },
+  { key: "vip", label: "⭐ VIP", color: "#d97706" },
+  { key: "allergy_dairy", label: "🥛 Dairy allergy", color: "#f43f5e" },
+  { key: "allergy_nuts", label: "🥜 Nut allergy", color: "#f43f5e" },
+  { key: "allergy_gluten", label: "🌾 Gluten-free", color: "#f43f5e" },
+  { key: "allergy_shellfish", label: "🦐 Shellfish allergy", color: "#f43f5e" },
   { key: "birthday", label: "🎂 Birthday", color: "#3b82f6" },
-  { key: "anniversary", label: "💍 Anniversary", color: "#ec4899" },
-  { key: "regular", label: "🔄 Regular", color: "#22c55e" },
+  { key: "anniversary", label: "💍 Anniversary", color: "#d97706" },
+  { key: "regular", label: "🔄 Regular", color: "#4d7c0f" },
 ];
 
 const loadCustomerLoyalty = async (email) => {

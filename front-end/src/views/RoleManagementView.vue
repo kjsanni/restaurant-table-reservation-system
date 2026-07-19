@@ -658,7 +658,7 @@ const confirmAction = async () => {
 }
 
 .perm-tag.active {
-  background: #dcfce7;
+  background: #ecfccb;
   color: #166534;
 }
 </style>

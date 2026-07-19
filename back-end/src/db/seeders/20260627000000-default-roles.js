@@ -19,6 +19,7 @@ module.exports = {
           view_audit_logs: true,
           manage_audit_logs: true,
           manage_tenants: true,
+          manage_settings: true,
         }),
         isSystem: true,
         createdAt: new Date(),

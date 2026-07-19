@@ -18,7 +18,10 @@ const sendLogs = async () => {
     toastStore.add("Logs sent successfully!", "success");
     setTimeout(() => (logsSent.value = false), 3000);
   } catch (err: any) {
-    toastStore.add(err.response?.data?.message || "Failed to email logs", "error");
+    toastStore.add(
+      err.response?.data?.message || "Failed to email logs",
+      "error"
+    );
     logger.error("Failed to email logs", { error: err?.message });
   } finally {
     sendingLogs.value = false;
@@ -62,7 +65,12 @@ const sendLogs = async () => {
         <span class="action-icon">💳</span>
         <span>Payments</span>
       </RouterLink>
-      <button class="action-card" type="button" @click="sendLogs" :disabled="sendingLogs">
+      <button
+        class="action-card"
+        type="button"
+        @click="sendLogs"
+        :disabled="sendingLogs"
+      >
         <span class="action-icon">📧</span>
         <span>{{
           sendingLogs ? "Sending..." : logsSent ? "Logs Sent" : "Email Logs"

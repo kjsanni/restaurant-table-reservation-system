@@ -93,12 +93,12 @@ const exportCSV = () => {
 
 const getMethodColor = (method) => {
   const colors = {
-    cash: "#22c55e",
+    cash: "#4d7c0f",
     card: "#3b82f6",
-    transfer: "#f59e0b",
-    other: "#8b5cf6",
+    transfer: "#d97706",
+    other: "#8c5e4a",
   };
-  return colors[method] || "#9ca3af";
+  return colors[method] || "#9a9389";
 };
 
 const getStackedHeight = (amount) => {
@@ -172,9 +172,9 @@ const getStackedY = (item, methodKey, _mIndex) => {
         <div class="summary-cards">
           <div class="summary-card">
             <span class="summary-label">Total Revenue</span>
-            <span class="summary-value"
-              >{{ fmtMoney(summary.totalRevenue) }}</span
-            >
+            <span class="summary-value">{{
+              fmtMoney(summary.totalRevenue)
+            }}</span>
           </div>
           <div class="summary-card">
             <span class="summary-label">Transactions</span>
@@ -182,9 +182,9 @@ const getStackedY = (item, methodKey, _mIndex) => {
           </div>
           <div class="summary-card">
             <span class="summary-label">Avg Transaction</span>
-            <span class="summary-value"
-              >{{ fmtMoney(summary.avgPayment) }}</span
-            >
+            <span class="summary-value">{{
+              fmtMoney(summary.avgPayment)
+            }}</span>
           </div>
         </div>
 
@@ -233,7 +233,7 @@ const getStackedY = (item, methodKey, _mIndex) => {
           <h2 class="section-title">Revenue by Payment Method</h2>
           <div class="method-legend">
             <span class="legend-item"
-              ><span class="legend-color" style="background: #22c55e"></span
+              ><span class="legend-color" style="background: #4d7c0f"></span
               >Cash</span
             >
             <span class="legend-item"
@@ -241,11 +241,11 @@ const getStackedY = (item, methodKey, _mIndex) => {
               >Card</span
             >
             <span class="legend-item"
-              ><span class="legend-color" style="background: #f59e0b"></span
+              ><span class="legend-color" style="background: #d97706"></span
               >Transfer</span
             >
             <span class="legend-item"
-              ><span class="legend-color" style="background: #8b5cf6"></span
+              ><span class="legend-color" style="background: #8c5e4a"></span
               >Other</span
             >
           </div>
@@ -364,7 +364,7 @@ const getStackedY = (item, methodKey, _mIndex) => {
 }
 
 .preset-btn:hover {
-  background: #f3f4f6;
+  background: var(--neutral-100);
 }
 
 .preset-btn.active {
@@ -389,8 +389,8 @@ const getStackedY = (item, methodKey, _mIndex) => {
 }
 
 .date-input:disabled {
-  background: #f9fafb;
-  color: #9ca3af;
+  background: var(--neutral-50);
+  color: var(--ink-muted);
 }
 
 .range-separator {
@@ -404,7 +404,7 @@ const getStackedY = (item, methodKey, _mIndex) => {
   border-radius: 8px;
   font-family: "Inter-Medium";
   font-size: 13px;
-  background: white;
+  background: var(--surface);
   color: var(--ink);
   margin-left: auto;
 }
@@ -413,7 +413,7 @@ const getStackedY = (item, methodKey, _mIndex) => {
   padding: 8px 16px;
   border: none;
   border-radius: 8px;
-  background: #16a34a;
+  background: var(--earth-600);
   color: white;
   font-family: "Inter-Medium";
   font-size: 13px;

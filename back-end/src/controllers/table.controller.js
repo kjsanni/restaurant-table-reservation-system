@@ -2,6 +2,28 @@ const tableService = require("../services/tableService");
 const tableDAO = require("../DAOs/table.dao");
 const reservationDAO = require("../DAOs/reservation.dao");
 const waitlistDAO = require("../DAOs/waitlist.dao");
+const authDAO = require("../DAOs/auth.dao");
+
+const BASE_SEATS = 6;
+
+const calculatePriceHandler = async (req, res) => {
+  const capacity = parseInt(req.body.capacity, 10);
+  if (!capacity || capacity < 1) {
+    return res.status(400).json({ success: false, message: "Invalid capacity" });
+  }
+
+  const basePrice = await authDAO.getSettingValue("table_base_price", 20, req.tenant?.id);
+  const perAdditionalSeat = await authDAO.getSettingValue(
+    "table_price_per_additional_seat",
+    5,
+    req.tenant?.id
+  );
+
+  const additionalSeats = Math.max(0, capacity - BASE_SEATS);
+  const price = Number(basePrice) + additionalSeats * Number(perAdditionalSeat);
+
+  return res.status(200).json({ success: true, price });
+};
 
 const getAllHandler = async (req, res) => {
   const tables = await tableService.getAllTables(tableDAO, req.tenant?.id);
@@ -191,4 +213,5 @@ module.exports = {
   unassignStaffHandler,
   editHandler,
   updatePositionHandler,
+  calculatePriceHandler,
 };

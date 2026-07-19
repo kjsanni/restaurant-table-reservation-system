@@ -2,7 +2,7 @@ const db = require("../db/models");
 const { Op } = db.Sequelize;
 const LoginAttempt = db.loginAttempt;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const recordAttempt = async (email, ipAddress, tenantId) => {
   return await LoginAttempt.create({

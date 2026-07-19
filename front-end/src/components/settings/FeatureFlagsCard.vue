@@ -28,11 +28,17 @@ const saveFlags = async () => {
   flagsSaving.value = true;
   flagsSaved.value = false;
   try {
-    await authStore.updateSettings("feature_flags", JSON.stringify(flags.value));
+    await authStore.updateSettings(
+      "feature_flags",
+      JSON.stringify(flags.value)
+    );
     flagsSaved.value = true;
     setTimeout(() => (flagsSaved.value = false), 2000);
   } catch (e: any) {
-    toastStore.add(e?.response?.data?.message || "Failed to save feature flags", "error");
+    toastStore.add(
+      e?.response?.data?.message || "Failed to save feature flags",
+      "error"
+    );
     logger.error("Failed to save feature flags", { error: e?.message });
   } finally {
     flagsSaving.value = false;
@@ -51,7 +57,9 @@ onMounted(loadFlags);
     <div class="setting-row">
       <div class="setting-info">
         <label class="setting-label">Waitlist</label>
-        <p class="setting-description">Allow customers to join a waitlist when fully booked</p>
+        <p class="setting-description">
+          Allow customers to join a waitlist when fully booked
+        </p>
       </div>
       <VaSwitch v-model="flags.waitlist" />
     </div>
@@ -69,13 +77,19 @@ onMounted(loadFlags);
       </div>
       <VaSwitch v-model="flags.deposits" />
     </div>
-    <div style="margin-top: 12px; text-align: right;">
+    <div style="margin-top: 12px; text-align: right">
       <button
         class="btn btn-primary"
         :disabled="flagsSaving"
         @click="saveFlags"
       >
-        {{ flagsSaving ? "Saving..." : flagsSaved ? "Saved" : "Save Feature Flags" }}
+        {{
+          flagsSaving
+            ? "Saving..."
+            : flagsSaved
+            ? "Saved"
+            : "Save Feature Flags"
+        }}
       </button>
     </div>
   </div>

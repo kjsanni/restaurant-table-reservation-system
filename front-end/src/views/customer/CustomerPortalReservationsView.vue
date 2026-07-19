@@ -33,7 +33,10 @@ const cancelReservation = async (id: number) => {
       toastStore.add("Reservation cancelled", "success");
       await loadReservations();
     } else {
-      toastStore.add(res.data.message || "Failed to cancel reservation", "error");
+      toastStore.add(
+        res.data.message || "Failed to cancel reservation",
+        "error"
+      );
     }
   } catch (err) {
     logger.error("Failed to cancel reservation", { error: err });
@@ -51,11 +54,15 @@ onMounted(loadReservations);
     <VaCard>
       <h1 class="page-title">My Reservations</h1>
       <div v-if="loading" class="loading">Loading...</div>
-      <div v-else-if="!reservations.length" class="empty">No reservations found.</div>
+      <div v-else-if="!reservations.length" class="empty">
+        No reservations found.
+      </div>
       <div v-else class="reservation-list">
         <div v-for="r in reservations" :key="r.id" class="reservation-item">
           <div class="reservation-info">
-            <div class="reservation-date">{{ r.resDate }} at {{ r.resTime }}</div>
+            <div class="reservation-date">
+              {{ r.resDate }} at {{ r.resTime }}
+            </div>
             <div class="reservation-details">
               {{ r.people }} people • Table: {{ r.tableName || "Unassigned" }}
             </div>
@@ -64,7 +71,10 @@ onMounted(loadReservations);
             </div>
           </div>
           <button
-            v-if="r.resStatus === RESERVATION_STATUS.CONFIRMED || r.resStatus === RESERVATION_STATUS.PENDING"
+            v-if="
+              r.resStatus === RESERVATION_STATUS.CONFIRMED ||
+              r.resStatus === RESERVATION_STATUS.PENDING
+            "
             class="btn btn-secondary"
             :disabled="cancelling === r.id"
             @click="cancelReservation(r.id)"
@@ -78,16 +88,76 @@ onMounted(loadReservations);
 </template>
 
 <style scoped>
-.page { padding: 24px; max-width: 800px; margin: 0 auto; }
-.page-title { font-size: 1.5rem; margin-bottom: 16px; }
-.loading, .empty { text-align: center; padding: 40px; color: #666; }
-.reservation-list { display: flex; flex-direction: column; gap: 12px; }
-.reservation-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; }
-.reservation-date { font-weight: 600; }
-.reservation-details { color: #666; font-size: 0.9rem; }
-.reservation-status { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; text-transform: capitalize; }
-.reservation-status.confirmed { background: #dcfce7; color: #166534; }
-.reservation-status.pending { background: #fef9c3; color: #854d0e; }
-.reservation-status.cancelled { background: #fee2e2; color: #991b1b; }
-.reservation-status.completed { background: #dbeafe; color: #1e40af; }
+.page {
+  padding: var(--space-6);
+  max-width: 800px;
+  margin: 0 auto;
+}
+.page-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  margin-bottom: var(--space-4);
+}
+.loading,
+.empty {
+  text-align: center;
+  padding: var(--space-10);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+.reservation-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.reservation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  transition: border-color var(--duration-150) var(--ease-in-out);
+}
+.reservation-item:hover {
+  border-color: var(--border);
+}
+.reservation-date {
+  font-weight: 600;
+  color: var(--ink);
+}
+.reservation-details {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
+}
+.reservation-status {
+  display: inline-block;
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  text-transform: capitalize;
+  margin-top: var(--space-2);
+  font-weight: 600;
+}
+.reservation-status.confirmed {
+  background: var(--earth-100);
+  color: var(--earth-600);
+}
+.reservation-status.pending {
+  background: var(--accent-100);
+  color: var(--accent-600);
+}
+.reservation-status.cancelled {
+  background: var(--rose-100);
+  color: var(--rose-600);
+}
+.reservation-status.completed {
+  background: var(--sky-100);
+  color: var(--sky-600);
+}
 </style>

@@ -2100,9 +2100,9 @@ const getQrCodeUrl = (table) => {
 .bulk-success {
   padding: var(--space-2) var(--space-4);
   margin-bottom: var(--space-4);
-  color: var(--success, #16a34a);
-  background: var(--success-bg, #dcfce7);
-  border: 1px solid var(--success, #16a34a);
+  color: var(--earth-600, #365314);
+  background: var(--earth-100, #ecfccb);
+  border: 1px solid var(--earth-600, #365314);
   border-radius: var(--radius);
   font-size: 0.85rem;
 }
@@ -2158,17 +2158,17 @@ const getQrCodeUrl = (table) => {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
-  background: var(--surface-muted, #eef2f7);
+  background: var(--surface-muted, #f3f1ed);
 }
 .history-badge.ev-blocked,
 .history-badge.ev-deleted {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--rose-100, #ffe4e6);
+  color: var(--rose-600, #e11d48);
 }
 .history-badge.ev-unblocked,
 .history-badge.ev-unmerged {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--earth-100, #ecfccb);
+  color: var(--earth-600, #365314);
 }
 .history-desc {
   color: var(--text-muted);
@@ -2202,9 +2202,9 @@ const getQrCodeUrl = (table) => {
   color: var(--text);
 }
 .section-chip.active {
-  background: var(--primary, #2563eb);
+  background: var(--accent, #d97706);
   color: #fff;
-  border-color: var(--primary, #2563eb);
+  border-color: var(--accent, #d97706);
 }
 .chip-count {
   font-size: 0.72rem;

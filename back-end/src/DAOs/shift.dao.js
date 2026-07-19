@@ -2,7 +2,7 @@ const db = require("../db/models");
 const StaffShift = db.staffShift;
 const User = db.user;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : {});
+const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const createShift = async ({ userId, dayOfWeek, startTime, endTime, role }, tenantId) => {
   return await StaffShift.create({ userId, dayOfWeek, startTime, endTime, role, ...withTenant({}, tenantId) });

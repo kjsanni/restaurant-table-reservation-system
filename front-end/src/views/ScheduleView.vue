@@ -174,15 +174,18 @@ const applySuggestion = async (dayOfWeek) => {
 };
 
 const authStore = useAuthStore();
-const businessHoursConfig = ref({ enabled: false, days: {
-  monday: { open: "09:00", close: "22:00", closed: false },
-  tuesday: { open: "09:00", close: "22:00", closed: false },
-  wednesday: { open: "09:00", close: "22:00", closed: false },
-  thursday: { open: "09:00", close: "22:00", closed: false },
-  friday: { open: "09:00", close: "22:00", closed: false },
-  saturday: { open: "09:00", close: "22:00", closed: false },
-  sunday: { open: "09:00", close: "22:00", closed: false },
-} });
+const businessHoursConfig = ref({
+  enabled: false,
+  days: {
+    monday: { open: "09:00", close: "22:00", closed: false },
+    tuesday: { open: "09:00", close: "22:00", closed: false },
+    wednesday: { open: "09:00", close: "22:00", closed: false },
+    thursday: { open: "09:00", close: "22:00", closed: false },
+    friday: { open: "09:00", close: "22:00", closed: false },
+    saturday: { open: "09:00", close: "22:00", closed: false },
+    sunday: { open: "09:00", close: "22:00", closed: false },
+  },
+});
 const businessHoursSaving = ref(false);
 const businessHoursSaved = ref(false);
 
@@ -701,24 +704,26 @@ const exportPDF = async () => {
             Reservations outside these windows are rejected when enabled.
           </p>
           <div class="schedule-list">
-            <div
-              v-for="day in days"
-              :key="day.value"
-              class="schedule-item"
-            >
+            <div v-for="day in days" :key="day.value" class="schedule-item">
               <div class="day-label">{{ day.label }}</div>
               <div class="time-inputs">
                 <input
                   type="time"
                   v-model="businessHoursConfig.days[day.value].open"
-                  :disabled="!businessHoursConfig.enabled || businessHoursConfig.days[day.value].closed"
+                  :disabled="
+                    !businessHoursConfig.enabled ||
+                    businessHoursConfig.days[day.value].closed
+                  "
                   class="time-input"
                 />
                 <span class="time-separator">to</span>
                 <input
                   type="time"
                   v-model="businessHoursConfig.days[day.value].close"
-                  :disabled="!businessHoursConfig.enabled || businessHoursConfig.days[day.value].closed"
+                  :disabled="
+                    !businessHoursConfig.enabled ||
+                    businessHoursConfig.days[day.value].closed
+                  "
                   class="time-input"
                 />
               </div>
@@ -730,7 +735,10 @@ const exportPDF = async () => {
               </div>
             </div>
           </div>
-          <div class="schedule-actions" style="margin-top: 12px; justify-content: flex-end; gap: 8px;">
+          <div
+            class="schedule-actions"
+            style="margin-top: 12px; justify-content: flex-end; gap: 8px"
+          >
             <VaSwitch
               v-model="businessHoursConfig.enabled"
               label="Enforce business hours"
@@ -740,7 +748,13 @@ const exportPDF = async () => {
               :disabled="businessHoursSaving"
               @click="saveBusinessHours"
             >
-              {{ businessHoursSaving ? "Saving..." : businessHoursSaved ? "Saved" : "Save Business Hours" }}
+              {{
+                businessHoursSaving
+                  ? "Saving..."
+                  : businessHoursSaved
+                  ? "Saved"
+                  : "Save Business Hours"
+              }}
             </button>
           </div>
         </div>
@@ -1478,11 +1492,11 @@ const exportPDF = async () => {
 }
 
 .calendar-cell.open {
-  background: #dcfce7;
+  background: var(--earth-100);
 }
 
 .calendar-cell.transition {
-  background: #fef9c3;
+  background: var(--accent-100);
 }
 
 .calendar-cell.closed {
@@ -1721,16 +1735,16 @@ const exportPDF = async () => {
   border-radius: 999px;
 }
 .timeoff-status.st-pending {
-  background: #fef9c3;
-  color: #854d0e;
+  background: var(--accent-100);
+  color: var(--accent-600);
 }
 .timeoff-status.st-approved {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--earth-100);
+  color: var(--earth-600);
 }
 .timeoff-status.st-rejected {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--rose-100);
+  color: var(--rose-600);
 }
 .timeoff-actions {
   margin-left: auto;
@@ -1746,10 +1760,10 @@ const exportPDF = async () => {
   font-size: var(--text-sm);
 }
 .mini-btn.approve {
-  color: #15803d;
+  color: var(--earth-600);
 }
 .mini-btn.reject {
-  color: #b91c1c;
+  color: var(--rose-600);
 }
 .mini-btn.delete {
   color: var(--ink-muted);

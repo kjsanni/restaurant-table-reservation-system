@@ -167,17 +167,17 @@ const updateTablePosition = async (tableId, positionX, positionY) => {
 }
 
 .floorplan-table.available {
-  border-color: #22c55e;
+  border-color: #4d7c0f;
 }
 
 .floorplan-table.occupied {
-  border-color: #ef4444;
-  background: #fef2f2;
+  border-color: #f43f5e;
+  background: #ffe4e6;
 }
 
 .floorplan-table.blocked {
-  border-color: #6c757d;
-  background: #f3f4f6;
+  border-color: #9a9389;
+  background: #f3f1ed;
   opacity: 0.7;
 }
 

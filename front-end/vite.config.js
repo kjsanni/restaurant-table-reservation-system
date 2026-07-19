@@ -26,9 +26,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-      manualChunks: {
-        "vuestic-ui": ["vuestic-ui"],
-      },
+        manualChunks: {
+          "vuestic-ui": ["vuestic-ui"],
+        },
       },
     },
   },

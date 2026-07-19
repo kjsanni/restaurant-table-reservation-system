@@ -29,9 +29,17 @@ const load = () => {
     return v ?? fallback;
   };
   integrationConfig.value = {
-    whatsapp: get("whatsapp_config", { enabled: false, token: "", phoneNumberId: "" }),
+    whatsapp: get("whatsapp_config", {
+      enabled: false,
+      token: "",
+      phoneNumberId: "",
+    }),
     channels: get("notification_channels", { email: true, whatsapp: false }),
-    paystack: get("paystack_config", { mode: "test", secretKey: "", webhookSecret: "" }),
+    paystack: get("paystack_config", {
+      mode: "test",
+      secretKey: "",
+      webhookSecret: "",
+    }),
     tenantMode: Boolean(get("tenant_mode_enabled", false)),
   };
 };
@@ -40,13 +48,25 @@ const saveAllIntegrations = async () => {
   integrationSaving.value = true;
   integrationSaved.value = false;
   try {
-    await authStore.updateSettings("whatsapp_config", integrationConfig.value.whatsapp);
-    await authStore.updateSettings("notification_channels", integrationConfig.value.channels);
-    await authStore.updateSettings("paystack_config", integrationConfig.value.paystack);
+    await authStore.updateSettings(
+      "whatsapp_config",
+      integrationConfig.value.whatsapp
+    );
+    await authStore.updateSettings(
+      "notification_channels",
+      integrationConfig.value.channels
+    );
+    await authStore.updateSettings(
+      "paystack_config",
+      integrationConfig.value.paystack
+    );
     integrationSaved.value = true;
     setTimeout(() => (integrationSaved.value = false), 2000);
   } catch (e: any) {
-    toastStore.add(e?.response?.data?.message || "Failed to save integrations", "error");
+    toastStore.add(
+      e?.response?.data?.message || "Failed to save integrations",
+      "error"
+    );
     logger.error("Failed to save integrations", { error: e?.message });
   } finally {
     integrationSaving.value = false;
@@ -58,7 +78,10 @@ const saveIntegration = async (key: string, value: any) => {
     await authStore.updateSettings(key, value);
     toastStore.add("Setting saved", "success");
   } catch (e: any) {
-    toastStore.add(e?.response?.data?.message || "Failed to save setting", "error");
+    toastStore.add(
+      e?.response?.data?.message || "Failed to save setting",
+      "error"
+    );
     logger.error("Failed to save integration setting", { error: e?.message });
   }
 };
@@ -76,8 +99,8 @@ load();
         <div class="setting-info">
           <label class="setting-label">Enable SaaS Multi-Tenancy</label>
           <p class="setting-description">
-            When enabled (and the server runs with TENANT_MODE=enabled), the platform
-            supports multiple restaurants with isolated data.
+            When enabled (and the server runs with TENANT_MODE=enabled), the
+            platform supports multiple restaurants with isolated data.
           </p>
         </div>
         <VaSwitch
@@ -127,7 +150,10 @@ load();
           Email
         </label>
         <label class="checkbox-inline">
-          <input v-model="integrationConfig.channels.whatsapp" type="checkbox" />
+          <input
+            v-model="integrationConfig.channels.whatsapp"
+            type="checkbox"
+          />
           WhatsApp
         </label>
       </div>
@@ -165,7 +191,11 @@ load();
     </section>
 
     <div class="email-actions">
-      <button class="btn btn-primary" @click="saveAllIntegrations" :disabled="integrationSaving">
+      <button
+        class="btn btn-primary"
+        @click="saveAllIntegrations"
+        :disabled="integrationSaving"
+      >
         {{ integrationSaving ? "Saving..." : "Save Integrations" }}
       </button>
       <span v-if="integrationSaved" class="status-text saved">Saved</span>

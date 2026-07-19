@@ -67,7 +67,11 @@ export const useAuthStore = defineStore("auth", () => {
         tenantModeEnabled.value = Boolean(v);
       }
       applySetting(settings.data.settings, "branding", branding.value);
-      applySetting(settings.data.settings, "currency_locale", currencyLocale.value);
+      applySetting(
+        settings.data.settings,
+        "currency_locale",
+        currencyLocale.value
+      );
     } catch {
       tenantModeEnabled.value = false;
     }

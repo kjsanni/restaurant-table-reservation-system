@@ -395,7 +395,7 @@ const deleteStaffMember = async (id) => {
 }
 
 .btn-danger:hover {
-  background-color: #fee2e2;
+  background-color: #ffe4e6;
 }
 
 .btn-secondary {

@@ -43,7 +43,10 @@ const load = () => {
   };
   enhanceConfig.value = {
     maintenance: get("maintenance_mode", { enabled: false, message: "" }),
-    currencyLocale: get("currency_locale", { currency: "GHS", locale: "en-GH" }),
+    currencyLocale: get("currency_locale", {
+      currency: "GHS",
+      locale: "en-GH",
+    }),
     reservationWindow: get("reservation_window", {
       minLeadMinutes: 0,
       maxLeadDays: 365,
@@ -54,7 +57,8 @@ const load = () => {
       whatsapp_reminder: get("message_templates", {}).whatsapp_reminder || "",
       email_confirmation_subject:
         get("message_templates", {}).email_confirmation_subject || "",
-      email_confirmation_body: get("message_templates", {}).email_confirmation_body || "",
+      email_confirmation_body:
+        get("message_templates", {}).email_confirmation_body || "",
     },
   };
 };
@@ -75,19 +79,33 @@ const saveEnhancements = async () => {
   enhanceSaving.value = true;
   enhanceSaved.value = false;
   try {
-    await authStore.updateSettings("maintenance_mode", enhanceConfig.value.maintenance);
-    await authStore.updateSettings("currency_locale", enhanceConfig.value.currencyLocale);
-    await authStore.updateSettings("reservation_window", enhanceConfig.value.reservationWindow);
+    await authStore.updateSettings(
+      "maintenance_mode",
+      enhanceConfig.value.maintenance
+    );
+    await authStore.updateSettings(
+      "currency_locale",
+      enhanceConfig.value.currencyLocale
+    );
+    await authStore.updateSettings(
+      "reservation_window",
+      enhanceConfig.value.reservationWindow
+    );
     await authStore.updateSettings("branding", enhanceConfig.value.branding);
     await authStore.updateSettings("message_templates", {
       whatsapp_reminder: enhanceConfig.value.templates.whatsapp_reminder,
-      email_confirmation_subject: enhanceConfig.value.templates.email_confirmation_subject,
-      email_confirmation_body: enhanceConfig.value.templates.email_confirmation_body,
+      email_confirmation_subject:
+        enhanceConfig.value.templates.email_confirmation_subject,
+      email_confirmation_body:
+        enhanceConfig.value.templates.email_confirmation_body,
     });
     enhanceSaved.value = true;
     setTimeout(() => (enhanceSaved.value = false), 2000);
   } catch (e: any) {
-    toastStore.add(e?.response?.data?.message || "Failed to save settings", "error");
+    toastStore.add(
+      e?.response?.data?.message || "Failed to save settings",
+      "error"
+    );
     logger.error("Failed to save enhancements", { error: e?.message });
   } finally {
     enhanceSaving.value = false;
@@ -103,12 +121,16 @@ const sendTestWhatsApp = async () => {
   sendingWhatsApp.value = true;
   whatsappTestStatus.value = "sending";
   try {
-    await notificationAPI.sendTestWhatsApp(whatsappTestTo.value, whatsappTestMessage.value);
+    await notificationAPI.sendTestWhatsApp(
+      whatsappTestTo.value,
+      whatsappTestMessage.value
+    );
     whatsappTestStatus.value = "sent";
     whatsappTestMessage.value = "Test WhatsApp sent.";
   } catch (e: any) {
     whatsappTestStatus.value = "error";
-    whatsappTestMessage.value = e?.response?.data?.message || "Failed to send test WhatsApp.";
+    whatsappTestMessage.value =
+      e?.response?.data?.message || "Failed to send test WhatsApp.";
   } finally {
     sendingWhatsApp.value = false;
   }
@@ -133,13 +155,15 @@ onMounted(loadPaystackWebhook);
         <div class="setting-info">
           <label class="setting-label">Close online booking</label>
           <p class="setting-description">
-            When enabled, new reservations are rejected with a maintenance message. Staff
-            can still manage existing reservations.
+            When enabled, new reservations are rejected with a maintenance
+            message. Staff can still manage existing reservations.
           </p>
         </div>
         <VaSwitch
           :model-value="enhanceConfig.maintenance.enabled"
-          @update:model-value="(val) => (enhanceConfig.maintenance.enabled = val)"
+          @update:model-value="
+            (val) => (enhanceConfig.maintenance.enabled = val)
+          "
         />
       </div>
       <div class="email-field full-width" style="margin-top: 12px">
@@ -271,13 +295,21 @@ onMounted(loadPaystackWebhook);
     <section class="integration-section">
       <h3 class="integration-title">Test WhatsApp Message</h3>
       <div class="test-row">
-        <input v-model="whatsappTestTo" class="field-input" placeholder="+233..." />
+        <input
+          v-model="whatsappTestTo"
+          class="field-input"
+          placeholder="+233..."
+        />
         <input
           v-model="whatsappTestMessage"
           class="field-input"
           placeholder="Test message (optional)"
         />
-        <button class="btn btn-secondary" @click="sendTestWhatsApp" :disabled="sendingWhatsApp">
+        <button
+          class="btn btn-secondary"
+          @click="sendTestWhatsApp"
+          :disabled="sendingWhatsApp"
+        >
           {{ sendingWhatsApp ? "Sending..." : "Send Test" }}
         </button>
       </div>
@@ -310,7 +342,11 @@ onMounted(loadPaystackWebhook);
     </section>
 
     <div class="email-actions">
-      <button class="btn btn-primary" @click="saveEnhancements" :disabled="enhanceSaving">
+      <button
+        class="btn btn-primary"
+        @click="saveEnhancements"
+        :disabled="enhanceSaving"
+      >
         {{ enhanceSaving ? "Saving..." : "Save Platform Settings" }}
       </button>
       <span v-if="enhanceSaved" class="status-text saved">Saved</span>
