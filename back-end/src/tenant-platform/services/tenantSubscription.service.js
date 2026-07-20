@@ -110,16 +110,14 @@ const getTenantDashboard = async () => {
   const trialing = await db.tenant.count({ where: { status: "trialing" } });
 
   const plans = await getPlansCached();
-  const mrr = await db.tenant.sum(db.sequelize.literal(`
-    CASE plan
-      ${Object.keys(plans)
-        .map((slug) => `WHEN '${slug}' THEN ${plans[slug].price || 0}`)
-        .join("\n      ")}
-      ELSE 0
-    END
-  `), {
-    where: { status: { [db.Sequelize.Op.in]: ["active", "past_due", "trialing"] } },
-  });
+  const planCases = Object.keys(plans)
+    .map((slug) => `WHEN '${slug}' THEN ${plans[slug].price || 0}`)
+    .join("\n      ");
+  const mrrResult = await db.sequelize.query(
+    `SELECT COALESCE(SUM(CASE plan\n      ${planCases}\n      ELSE 0\n    END), 0) AS mrr FROM tenants WHERE status IN ('active', 'past_due', 'trialing')`,
+    { type: db.sequelize.QueryTypes.SELECT }
+  );
+  const mrr = mrrResult[0]?.mrr || 0;
 
   const recentTenants = await db.tenant.findAll({
     order: [["createdAt", "DESC"]],

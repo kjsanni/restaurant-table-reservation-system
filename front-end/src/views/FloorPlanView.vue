@@ -482,6 +482,35 @@ onMounted(loadData);
   <div class="main-wrapper">
     <PageHeader title="Floor Plan" subtitle="Visual table layout and seating" />
     <div class="content-wrapper">
+      <div class="summary-strip">
+        <div class="summary-tile">
+          <span class="summary-value">{{ floorAnalytics.total }}</span>
+          <span class="summary-label">Total</span>
+        </div>
+        <div class="summary-tile">
+          <span class="summary-value summary-occupied">{{
+            floorAnalytics.occupied
+          }}</span>
+          <span class="summary-label">Occupied</span>
+        </div>
+        <div class="summary-tile">
+          <span class="summary-value summary-free">{{
+            floorAnalytics.free
+          }}</span>
+          <span class="summary-label">Free</span>
+        </div>
+        <div class="summary-tile">
+          <span class="summary-value summary-blocked">{{
+            floorAnalytics.blocked
+          }}</span>
+          <span class="summary-label">Blocked</span>
+        </div>
+        <div class="summary-tile">
+          <span class="summary-value">{{ floorAnalytics.occupancyRate }}%</span>
+          <span class="summary-label">Occupancy</span>
+        </div>
+      </div>
+
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
         <p>Loading floor plan...</p>
@@ -964,6 +993,53 @@ onMounted(loadData);
   }
 }
 
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.summary-tile {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.summary-value {
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+}
+
+.summary-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.summary-occupied {
+  color: var(--rose-600);
+}
+
+.summary-free {
+  color: var(--earth-600);
+}
+
+.summary-blocked {
+  color: var(--neutral-600);
+}
+
 .floor-layout {
   display: flex;
   gap: 20px;
@@ -1213,7 +1289,11 @@ onMounted(loadData);
 
 .table-block.blocked {
   border-color: var(--neutral-500);
-  background: linear-gradient(180deg, var(--neutral-50) 0%, var(--surface) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--neutral-50) 0%,
+    var(--surface) 100%
+  );
   opacity: 0.7;
 }
 

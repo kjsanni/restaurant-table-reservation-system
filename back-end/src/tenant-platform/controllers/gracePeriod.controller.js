@@ -1,7 +1,7 @@
 const db = require("../../db/models");
 
 const getGracePeriodHandler = async (req, res) => {
-  const tenant = await db.tenant.findByPk(req.params.id);
+  const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
@@ -17,7 +17,7 @@ const updateGracePeriodHandler = async (req, res) => {
   if (typeof days !== "number" || days < 0) {
     return res.status(400).json({ success: false, message: "Valid grace period days is required" });
   }
-  const tenant = await db.tenant.findByPk(req.params.id);
+  const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }

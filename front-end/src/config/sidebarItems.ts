@@ -14,6 +14,7 @@ export const guestNavItems: NavItem[] = [
 ]
 
 export const authenticatedNavItems: NavItem[] = [
+  { routeName: 'tenant-landing', text: 'Dashboard', icon: 'mdi:view-dashboard', requiresAuth: true },
   { routeName: 'reservations', text: 'Reservations', icon: 'mdi:format-list-bulleted', requiresAuth: true },
   { routeName: 'table-management', text: 'Tables', icon: 'mdi:table', requiresAuth: true },
   { routeName: 'schedule', text: 'Schedule', icon: 'mdi:calendar', requiresAuth: true },
@@ -27,6 +28,7 @@ export const authenticatedNavItems: NavItem[] = [
 ]
 
 export const adminNavItems: NavItem[] = [
+  { routeName: 'super-admin-overview', text: 'Overview', icon: 'mdi:view-dashboard', requiresAuth: true, requiresPermission: 'manage_tenants' },
   { routeName: 'admin-settings', text: 'Settings', icon: 'mdi:cog', requiresAuth: true, requiresAdmin: true },
   { routeName: 'tenant-dashboard', text: 'Tenants', icon: 'mdi:account-group', requiresAuth: true, requiresPermission: 'manage_tenants' },
   { routeName: 'plans-management', text: 'Pricing', icon: 'mdi:tag-outline', requiresAuth: true, requiresPermission: 'manage_tenants' },

@@ -6,7 +6,7 @@ const gracePeriodController = require("../controllers/gracePeriod.controller");
 const { protect, requirePermission } = require("../../middleware/auth");
 
 router
-  .route("/")
+  .route("/:tenantId/grace-period")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(gracePeriodController.getGracePeriodHandler))
   .patch(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(gracePeriodController.updateGracePeriodHandler))
   .all(httpMethodError);

@@ -124,31 +124,22 @@ onMounted(() => {
         <p>{{ errorMsg }}</p>
       </div>
       <div v-else-if="generated && report" class="report-container">
-        <div class="report-grid">
-          <div class="report-metric">
-            <span class="metric-icon">📋</span>
-            <div class="metric-content">
-              <span class="metric-label">Total Reservations</span>
-              <span class="metric-value">{{ report.totalReservations }}</span>
-            </div>
+        <div class="kpi-strip">
+          <div class="kpi-tile">
+            <span class="kpi-value">{{ report.totalReservations }}</span>
+            <span class="kpi-label">Total Reservations</span>
           </div>
-          <div class="report-metric revenue">
-            <span class="metric-icon">💰</span>
-            <div class="metric-content">
-              <span class="metric-label">Revenue</span>
-              <span class="metric-value">
-                GHS {{ report.paymentBreakdown?.totalRevenue?.toFixed(2) }}
-              </span>
-            </div>
+          <div class="kpi-tile">
+            <span class="kpi-value kpi-accent">
+              GHS {{ report.paymentBreakdown?.totalRevenue?.toFixed(2) }}
+            </span>
+            <span class="kpi-label">Revenue</span>
           </div>
-          <div class="report-metric">
-            <span class="metric-icon">💵</span>
-            <div class="metric-content">
-              <span class="metric-label">Avg Payment</span>
-              <span class="metric-value">
-                GHS {{ report.paymentBreakdown?.avgPayment?.toFixed(2) }}
-              </span>
-            </div>
+          <div class="kpi-tile">
+            <span class="kpi-value">
+              GHS {{ report.paymentBreakdown?.avgPayment?.toFixed(2) }}
+            </span>
+            <span class="kpi-label">Avg Payment</span>
           </div>
         </div>
 
@@ -276,6 +267,44 @@ onMounted(() => {
   justify-content: flex-end;
 }
 
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+.kpi-tile {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.kpi-value {
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+}
+
+.kpi-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.kpi-accent {
+  color: var(--accent-600);
+}
+
 .export-bar {
   display: flex;
   gap: var(--space-3);
@@ -303,54 +332,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-}
-
-.report-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-4);
-}
-
-.report-metric {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--card-radius);
-  padding: var(--space-5);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  box-shadow: var(--shadow-sm);
-}
-
-.report-metric.revenue {
-  border-left: 4px solid var(--earth-600);
-}
-
-.metric-icon {
-  font-size: 24px;
-  flex-shrink: 0;
-}
-
-.metric-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.metric-label {
-  font-family: var(--font-sans);
-  font-weight: 300;
-  font-size: var(--text-xs);
-  color: var(--ink-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.metric-value {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: var(--text-2xl, 1.5rem);
-  color: var(--ink);
 }
 
 .breakdown-card {

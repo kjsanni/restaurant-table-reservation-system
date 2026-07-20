@@ -9,22 +9,67 @@
         v-for="(step, idx) in steps"
         :key="idx"
         class="step"
-        :class="{ done: step.done }"
+        :class="{
+          done: step.policySlug ? policyAccepted(step.policySlug) : step.done,
+          required: step.required,
+        }"
       >
         <div class="step-check">
           <input
             type="checkbox"
-            :checked="step.done"
+            :checked="
+              step.policySlug ? policyAccepted(step.policySlug) : step.done
+            "
+            :disabled="
+              step.policySlug
+                ? policyAccepted(step.policySlug) || accepting
+                : step.locked
+            "
             @change="toggleStep(idx)"
           />
         </div>
         <div class="step-content">
-          <div class="step-title">{{ step.title }}</div>
+          <div class="step-title">
+            {{ step.title }}
+            <span v-if="step.required" class="step-tag">Required</span>
+          </div>
           <div class="step-desc">{{ step.description }}</div>
+          <div v-if="step.links" class="step-links">
+            <RouterLink
+              v-for="link in step.links"
+              :key="link.slug"
+              :to="{
+                name: 'legal-document',
+                params: { slug: link.slug },
+              }"
+              target="_blank"
+              rel="noopener"
+              >{{ link.label }}</RouterLink
+            >
+          </div>
+          <div
+            v-if="step.policySlug && policyAccepted(step.policySlug)"
+            class="step-evidence"
+          >
+            Accepted v{{ acceptances[step.policySlug].version }} on
+            {{
+              new Date(acceptances[step.policySlug].acceptedAt).toLocaleString()
+            }}
+            <span v-if="acceptances[step.policySlug].ipAddress">
+              from {{ acceptances[step.policySlug].ipAddress }}</span
+            >. Record is permanent.
+          </div>
         </div>
-        <span class="step-status">{{ step.done ? "Done" : "Pending" }}</span>
+        <span class="step-status">{{
+          (step.policySlug ? policyAccepted(step.policySlug) : step.done)
+            ? "Accepted"
+            : "Pending"
+        }}</span>
       </div>
     </div>
+    <p v-if="missingRequired.length" class="required-note">
+      Please accept all required policies before marking onboarding complete.
+    </p>
     <div class="actions">
       <button @click="save" class="btn-primary">Save Progress</button>
       <button @click="complete" class="btn-success">Mark Complete</button>
@@ -33,12 +78,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import onboardingAPI from "@/services/onboardingAPI";
+import legalAcceptanceAPI, {
+  LEGAL_DOCUMENT_VERSIONS,
+} from "@/services/legalAcceptanceAPI";
 
 const route = useRoute();
 const tenantId = route.params.id;
+
+// Required policy steps are driven by the immutable server-side acceptance
+// record (versioned, with IP + timestamp) — not by a local checkbox.
+const REQUIRED_POLICY_SLUGS = ["tenant", "dpa"];
+const acceptances = ref({}); // slug -> { version, acceptedAt, ipAddress }
+const accepting = ref(false);
+
 const steps = ref([
   {
     title: "Add Tables",
@@ -65,31 +120,133 @@ const steps = ref([
     description: "Upload logo and set primary color",
     done: false,
   },
+  {
+    title: "Accept Merchant Policy",
+    description:
+      "As the restaurant, you are an independent data controller under Ghana's Data Protection Act, 2012. Accept the Merchant Policy before going live.",
+    done: false,
+    required: true,
+    policySlug: "tenant",
+    links: [{ slug: "tenant", label: "Read Merchant Policy" }],
+  },
+  {
+    title: "Accept Data Processing Agreement",
+    description:
+      "Accept the DPA governing how Vibespot Technologies Ltd. processes your guests' and staff's data as your processor.",
+    done: false,
+    required: true,
+    policySlug: "dpa",
+    links: [{ slug: "dpa", label: "Read Data Processing Agreement" }],
+  },
 ]);
+
+// A required policy step is "done" only when the server has a current-version
+// acceptance record for that slug.
+const policyAccepted = (slug) => {
+  const rec = acceptances.value[slug];
+  return !!(rec && rec.version === LEGAL_DOCUMENT_VERSIONS[slug]);
+};
+
+const missingRequired = computed(() =>
+  steps.value
+    .filter((s) => s.required && !policyAccepted(s.policySlug))
+    .map((s) => s.title)
+);
 
 const loadOnboarding = async () => {
   const response = await onboardingAPI.getOnboarding(tenantId);
   if (response.data.item && Array.isArray(response.data.item.steps)) {
-    steps.value = response.data.item.steps;
+    const saved = response.data.item.steps;
+    steps.value = steps.value.map((base) => {
+      if (base.policySlug) return base; // policy steps come from server record
+      const match = saved.find((s) => s.title === base.title);
+      return match ? { ...base, done: !!match.done } : base;
+    });
+  }
+};
+
+const loadAcceptances = async () => {
+  try {
+    const response = await legalAcceptanceAPI.getAcceptances(tenantId);
+    const map = {};
+    (response.data.items || []).forEach((item) => {
+      // keep the latest acceptance per slug
+      if (
+        !map[item.slug] ||
+        new Date(item.acceptedAt) > new Date(map[item.slug].acceptedAt)
+      ) {
+        map[item.slug] = item;
+      }
+    });
+    acceptances.value = map;
+  } catch (err) {
+    console.warn("Failed to load legal acceptances", err);
   }
 };
 
 const toggleStep = (idx) => {
+  const step = steps.value[idx];
+  if (step.policySlug) {
+    // toggling a required policy on records the acceptance server-side
+    if (!policyAccepted(step.policySlug)) {
+      acceptPolicy(step.policySlug);
+    }
+    return;
+  }
   steps.value[idx].done = !steps.value[idx].done;
 };
 
+const acceptPolicy = async (slug) => {
+  accepting.value = true;
+  try {
+    const response = await legalAcceptanceAPI.acceptDocument(tenantId, slug);
+    acceptances.value = {
+      ...acceptances.value,
+      [slug]: {
+        version: response.data.item.version,
+        acceptedAt: response.data.item.acceptedAt,
+        ipAddress: response.data.item.ipAddress,
+      },
+    };
+  } catch (err) {
+    alert("Failed to record policy acceptance. Please try again.");
+  } finally {
+    accepting.value = false;
+  }
+};
+
 const save = async () => {
-  await onboardingAPI.updateOnboarding(tenantId, steps.value);
+  await onboardingAPI.updateOnboarding(
+    tenantId,
+    steps.value
+      .filter((s) => !s.policySlug)
+      .map((s) => ({
+        title: s.title,
+        description: s.description,
+        done: s.done,
+      }))
+  );
   alert("Progress saved");
 };
 
 const complete = async () => {
+  if (missingRequired.value.length) {
+    alert(
+      "Please accept all required policies before marking onboarding complete."
+    );
+    return;
+  }
+  if (accepting.value) {
+    alert("Please wait for policy acceptance to finish.");
+    return;
+  }
   await onboardingAPI.completeOnboarding(tenantId);
   alert("Onboarding marked as complete");
 };
 
 onMounted(() => {
   loadOnboarding();
+  loadAcceptances();
 });
 </script>
 
@@ -158,6 +315,54 @@ onMounted(() => {
 }
 .step.done .step-status {
   color: var(--earth-600);
+}
+.step-tag {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-md);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  background: var(--accent-100);
+  color: var(--accent-600);
+  vertical-align: middle;
+}
+.step-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-2);
+}
+.step-links a {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent-600);
+  text-decoration: none;
+}
+.step-links a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.step-evidence {
+  margin-top: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--earth-600);
+  background: var(--earth-50);
+  border: 1px solid var(--earth-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-2);
+  line-height: 1.4;
+}
+.required-note {
+  margin-top: var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--rose-600);
 }
 .actions {
   display: flex;

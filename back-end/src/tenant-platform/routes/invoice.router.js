@@ -6,13 +6,13 @@ const invoiceController = require("../controllers/invoice.controller");
 const { protect, requirePermission } = require("../../middleware/auth");
 
 router
-  .route("/")
+  .route("/:tenantId/invoices")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(invoiceController.listInvoicesHandler))
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(invoiceController.createInvoiceHandler))
   .all(httpMethodError);
 
 router
-  .route("/:id")
+  .route("/:tenantId/invoices/:id")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(invoiceController.getInvoiceHandler))
   .patch(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(invoiceController.updateInvoiceHandler))
   .delete(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(invoiceController.deleteInvoiceHandler))

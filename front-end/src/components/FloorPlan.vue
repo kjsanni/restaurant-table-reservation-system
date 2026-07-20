@@ -652,7 +652,11 @@ const closeAssign = () => {
 
 .table-block.blocked {
   border-color: var(--neutral-500);
-  background: linear-gradient(180deg, var(--neutral-50) 0%, var(--surface) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--neutral-50) 0%,
+    var(--surface) 100%
+  );
   opacity: 0.7;
 }
 

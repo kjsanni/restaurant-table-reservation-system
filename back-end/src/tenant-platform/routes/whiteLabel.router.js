@@ -6,7 +6,7 @@ const whiteLabelController = require("../controllers/whiteLabel.controller");
 const { protect, requirePermission } = require("../../middleware/auth");
 
 router
-  .route("/")
+  .route("/:tenantId/branding")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(whiteLabelController.getBrandingHandler))
   .patch(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(whiteLabelController.updateBrandingHandler))
   .all(httpMethodError);

@@ -26,3 +26,10 @@ dist-ssr/
 
 # Screenshots
 screenshots/
+*.png
+*.jpg
+*.jpeg
+
+# Mockups
+.kilo/mockups/
+tenant/

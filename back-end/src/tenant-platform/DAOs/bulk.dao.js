@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const { sendMail } = require("../../services/mail.service");
 
 const bulkDAO = {};
 
@@ -27,7 +28,16 @@ bulkDAO.sendEmail = async (tenantIds, subject, body) => {
   const results = [];
   for (const t of tenants) {
     if (t.billingEmail) {
-      results.push({ tenantId: t.id, email: t.billingEmail, sent: true });
+      try {
+        await sendMail(t.billingEmail, "billing_notification", {
+          subject,
+          body,
+          tenantName: t.name,
+        }, t.id);
+        results.push({ tenantId: t.id, email: t.billingEmail, sent: true });
+      } catch (err) {
+        results.push({ tenantId: t.id, email: t.billingEmail, sent: false, error: err.message });
+      }
     }
   }
   return results;

@@ -26,6 +26,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: "/dashboard",
+      name: "tenant-landing",
+      component: () => import("../views/TenantDashboardView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
       path: "/new-reservation",
       name: "new-reservation",
       component: () => import("../views/NewReservationView.vue"),
@@ -134,15 +140,15 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresPermission: "view_reservations" },
     },
     {
-      path: "/dashboard",
-      name: "dashboard",
-      redirect: "/",
-    },
-    {
       path: "/no-shows",
       name: "no-shows",
       component: () => import("../views/NoShowView.vue"),
       meta: { requiresAuth: true, requiresPermission: "view_reservations" },
+    },
+    {
+      path: "/legal/:slug",
+      name: "legal-document",
+      component: () => import("../views/legal/LegalDocumentView.vue"),
     },
     {
       path: "/:pathMatch(.*)*",
@@ -157,6 +163,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     path: "/admin/tenants",
     name: "tenant-dashboard",
     component: () => import("../views/admin/TenantDashboardView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/overview",
+    name: "super-admin-overview",
+    component: () => import("../views/admin/SuperAdminOverviewView.vue"),
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({

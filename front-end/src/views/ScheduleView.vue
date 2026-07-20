@@ -91,14 +91,20 @@ const weeklyGrid = computed(() => {
   });
 });
 
-const dateOverrides = computed(() => {
-  return holidays.value
-    .filter((h) => h.date)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .map((h) => ({
-      ...h,
-      dateObj: new Date(h.date + "T00:00:00"),
-    }));
+const scheduleSummary = computed(() => {
+  const openCount = weeklyGrid.value.filter((d) => !d.isClosed).length;
+  const closedDays = 7 - openCount;
+  const totalHours = weeklyGrid.value.reduce((sum, d) => {
+    if (d.isClosed || !d.openTime || !d.closeTime) return sum;
+    const open = parseInt(d.openTime.split(":")[0], 10);
+    const close = parseInt(d.closeTime.split(":")[0], 10);
+    return sum + (close >= open ? close - open : close + 24 - open);
+  }, 0);
+  return {
+    openDays: openCount,
+    closedDays,
+    avgHours: openCount ? Math.round((totalHours / openCount) * 10) / 10 : 0,
+  };
 });
 
 const dayConflicts = computed(() => {
@@ -570,6 +576,25 @@ const exportPDF = async () => {
   <div class="main-wrapper">
     <PageHeader title="Schedule" />
     <div class="content-wrapper">
+      <section class="summary-strip">
+        <article class="mini">
+          <div class="l">Open Days</div>
+          <div class="v earth">{{ scheduleSummary.openDays }}</div>
+        </article>
+        <article class="mini">
+          <div class="l">Closed Days</div>
+          <div class="v rose">{{ scheduleSummary.closedDays }}</div>
+        </article>
+        <article class="mini">
+          <div class="l">Avg Hours / Day</div>
+          <div class="v sky">{{ scheduleSummary.avgHours }}h</div>
+        </article>
+        <article class="mini">
+          <div class="l">Shifts Logged</div>
+          <div class="v">{{ shifts.length }}</div>
+        </article>
+      </section>
+
       <div class="action-bar">
         <div class="export-bar">
           <button class="btn btn-primary" @click="exportCSV">Export CSV</button>
@@ -1147,6 +1172,50 @@ const exportPDF = async () => {
   width: 100%;
   margin-left: auto;
   margin-right: auto;
+}
+
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.mini {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+.mini .l {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+.mini .v {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  color: var(--ink);
+  margin-top: var(--space-2);
+  line-height: 1;
+  letter-spacing: var(--tracking-tight);
+}
+.mini .v.earth {
+  color: var(--earth-600);
+}
+.mini .v.sky {
+  color: var(--sky-500);
+}
+.mini .v.rose {
+  color: var(--rose-500);
+}
+
+@media (max-width: 980px) {
+  .summary-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .action-bar {

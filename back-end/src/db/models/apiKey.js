@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: "apiKey",
       tableName: "api_keys",
+      timestamps: false,
     }
   );
 

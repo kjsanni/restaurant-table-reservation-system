@@ -6,13 +6,13 @@ const onboardingController = require("../controllers/onboarding.controller");
 const { protect, requirePermission } = require("../../middleware/auth");
 
 router
-  .route("/")
+  .route("/:tenantId/onboarding")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(onboardingController.getOnboardingHandler))
   .patch(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(onboardingController.updateOnboardingHandler))
   .all(httpMethodError);
 
 router
-  .route("/complete")
+  .route("/:tenantId/onboarding/complete")
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(onboardingController.completeOnboardingHandler))
   .all(httpMethodError);
 

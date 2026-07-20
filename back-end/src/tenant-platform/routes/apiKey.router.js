@@ -6,13 +6,13 @@ const apiKeyController = require("../../tenant-platform/controllers/apiKey.contr
 const { protect, requirePermission } = require("../../middleware/auth");
 
 router
-  .route("/")
+  .route("/:tenantId/api-keys")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(apiKeyController.listApiKeysHandler))
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(apiKeyController.createApiKeyHandler))
   .all(httpMethodError);
 
 router
-  .route("/:id/revoke")
+  .route("/:tenantId/api-keys/:id/revoke")
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(apiKeyController.revokeApiKeyHandler))
   .all(httpMethodError);
 

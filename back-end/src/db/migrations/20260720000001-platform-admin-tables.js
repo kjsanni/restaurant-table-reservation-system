@@ -89,7 +89,7 @@ module.exports = {
 
     await queryInterface.addIndex("invoices", ["tenantId"]);
     await queryInterface.addIndex("invoices", ["status"]);
-    await queryInterface.addUniqueIndex("invoices", ["invoiceNumber"]);
+    await queryInterface.addIndex("invoices", ["invoiceNumber"], { unique: true });
 
     await queryInterface.createTable("api_keys", {
       id: {

@@ -6,12 +6,12 @@ const trialController = require("../controllers/trial.controller");
 const { protect, requirePermission } = require("../../middleware/auth");
 
 router
-  .route("/extend")
+  .route("/:tenantId/trial/extend")
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(trialController.extendTrialHandler))
   .all(httpMethodError);
 
 router
-  .route("/convert")
+  .route("/:tenantId/trial/convert")
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(trialController.convertTrialHandler))
   .all(httpMethodError);
 

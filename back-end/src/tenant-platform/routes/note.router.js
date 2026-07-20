@@ -6,13 +6,13 @@ const noteController = require("../controllers/note.controller");
 const { protect, requirePermission } = require("../../middleware/auth");
 
 router
-  .route("/")
+  .route("/:tenantId/notes")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(noteController.listNotesHandler))
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(noteController.createNoteHandler))
   .all(httpMethodError);
 
 router
-  .route("/:noteId")
+  .route("/:tenantId/notes/:noteId")
   .delete(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(noteController.deleteNoteHandler))
   .all(httpMethodError);
 

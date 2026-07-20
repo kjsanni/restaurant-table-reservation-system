@@ -3,7 +3,7 @@ const { Op } = require("sequelize");
 
 const extendTrialHandler = async (req, res) => {
   const { days } = req.body;
-  const tenant = await db.tenant.findByPk(req.params.id);
+  const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
@@ -18,7 +18,7 @@ const extendTrialHandler = async (req, res) => {
 
 const convertTrialHandler = async (req, res) => {
   const { plan, billingEmail, billingName } = req.body;
-  const tenant = await db.tenant.findByPk(req.params.id);
+  const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }

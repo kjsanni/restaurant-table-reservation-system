@@ -6,7 +6,7 @@ const statusTimelineController = require("../controllers/statusTimeline.controll
 const { protect, requirePermission } = require("../../middleware/auth");
 
 router
-  .route("/")
+  .route("/:tenantId/timeline")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(statusTimelineController.getTimelineHandler))
   .all(httpMethodError);
 

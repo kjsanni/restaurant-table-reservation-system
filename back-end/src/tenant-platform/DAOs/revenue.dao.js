@@ -8,23 +8,10 @@ revenueDAO.getMrrTrends = async (months = 12) => {
   for (let i = months - 1; i >= 0; i--) {
     const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-    const mrr = await db.tenant.sum(db.sequelize.literal(`
-      CASE plan
-        ${Object.keys({
-          starter: 29,
-          growth: 79,
-          enterprise: 0,
-        })
-          .map((slug) => `WHEN '${slug}' THEN ${slug === "enterprise" ? 0 : { starter: 29, growth: 79 }[slug]}`)
-          .join("\n        ")}
-        ELSE 0
-      END
-    `), {
-      where: {
-        status: { [db.Sequelize.Op.in]: ["active", "past_due", "trialing"] },
-        createdAt: { [db.Sequelize.Op.lte]: end },
-      },
-    });
+    const mrrResult = await db.sequelize.query(
+      `SELECT COALESCE(SUM(CASE plan WHEN 'starter' THEN 29 WHEN 'growth' THEN 79 WHEN 'enterprise' THEN 0 ELSE 0 END), 0) AS mrr FROM tenants WHERE status IN ('active', 'past_due', 'trialing') AND createdAt <= :end`,
+      { replacements: { end }, type: db.Sequelize.QueryTypes.SELECT }
+    );
     const newTenants = await db.tenant.count({
       where: {
         status: { [db.Sequelize.Op.in]: ["active", "past_due", "trialing"] },
@@ -37,32 +24,27 @@ revenueDAO.getMrrTrends = async (months = 12) => {
         updatedAt: { [db.Sequelize.Op.gte]: start, [db.Sequelize.Op.lt]: end },
       },
     });
+    const mrr = mrrResult[0]?.mrr || 0;
     trends.push({
       month: start.toISOString().slice(0, 7),
-      mrr: (await mrr) || 0,
+      mrr,
       newTenants,
       cancelled,
-      churnRate: newtenants > 0 ? Math.round((cancelled / newtenants) * 100) : 0,
+      churnRate: newTenants > 0 ? Math.round((cancelled / newTenants) * 100) : 0,
     });
   }
   return trends;
 };
 
 revenueDAO.getRevenueByPlan = async () => {
-  const rows = await db.tenant.findAll({
-    attributes: [
-      "plan",
-      [db.sequelize.fn("COUNT", db.sequelize.col("id")), "count"],
-      [db.sequelize.fn("SUM", db.sequelize.literal("CASE plan WHEN 'starter' THEN 29 WHEN 'growth' THEN 79 WHEN 'enterprise' THEN 0 ELSE 0 END")), "mrr"],
-    ],
-    where: { status: { [db.Sequelize.Op.in]: ["active", "past_due", "trialing"] } },
-    group: ["plan"],
-    raw: false,
-  });
+  const rows = await db.sequelize.query(
+    `SELECT plan, COUNT(id) AS count, SUM(CASE plan WHEN 'starter' THEN 29 WHEN 'growth' THEN 79 WHEN 'enterprise' THEN 0 ELSE 0 END) AS mrr FROM tenants WHERE status IN ('active', 'past_due', 'trialing') GROUP BY plan`,
+    { type: db.Sequelize.QueryTypes.SELECT }
+  );
   return rows.map((r) => ({
     plan: r.plan,
-    count: parseInt(r.get("count"), 10),
-    mrr: parseFloat(r.get("mrr") || 0),
+    count: parseInt(r.count, 10),
+    mrr: parseFloat(r.mrr || 0),
   }));
 };
 

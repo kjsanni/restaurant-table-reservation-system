@@ -1,13 +1,13 @@
 const apiKeyDAO = require("../DAOs/apiKey.dao");
 
 const listApiKeysHandler = async (req, res) => {
-  const tenantId = parseInt(req.params.id, 10);
+  const tenantId = parseInt(req.params.tenantId, 10);
   const keys = await apiKeyDAO.list(tenantId);
   res.status(200).json({ success: true, collection: keys.map((k) => ({ ...k.toJSON(), keyHash: undefined })) });
 };
 
 const createApiKeyHandler = async (req, res) => {
-  const tenantId = parseInt(req.params.id, 10);
+  const tenantId = parseInt(req.params.tenantId, 10);
   const { name, scopes, expiresInDays } = req.body;
   if (!name) {
     return res.status(400).json({ success: false, message: "name is required" });
@@ -17,8 +17,8 @@ const createApiKeyHandler = async (req, res) => {
 };
 
 const revokeApiKeyHandler = async (req, res) => {
-  const tenantId = parseInt(req.params.id, 10);
-  const keyId = parseInt(req.params.keyId, 10);
+  const tenantId = parseInt(req.params.tenantId, 10);
+  const keyId = parseInt(req.params.id, 10);
   const key = await apiKeyDAO.revoke(keyId, tenantId);
   if (!key) {
     return res.status(404).json({ success: false, message: "API key not found" });

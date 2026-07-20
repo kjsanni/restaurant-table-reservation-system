@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: "platformAuditLog",
       tableName: "platform_audit_logs",
+      timestamps: false,
     }
   );
 

@@ -3,43 +3,48 @@
 const { QueryInterface } = require("sequelize");
 
 /**
- * MySQL Partitioning Migrations — Reservations
+ * Reservations scaling optimization (Phase 3).
  *
- * WARNING: These migrations rebuild the table. Run ONLY during a maintenance
- * window on a replica or using pt-online-schema-change / gh-ost.
+ * Original intent: make `tenantId` NOT NULL and partition `Reservations` by
+ * `LINEAR KEY(tenantId)` for 100k-tenant / 1M-customer scale.
  *
- * Prerequisites:
- *   1. All tenantId values are non-NULL (backfill already done).
- *   2. Foreign keys referencing Reservations(id) are dropped and recreated
- *      around the ALTER because the PK changes from (id) to (id, tenantId).
+ * IMPORTANT — why partitioning is skipped:
+ *   MySQL 8.0 cannot partition a table that carries a FULLTEXT index. The
+ *   `Reservations` table has `notes_fulltext_idx` on `notes`, so any
+ *   `ALTER TABLE ... PARTITION BY` fails with
+ *   "The used table type doesn't support FULLTEXT indexes". Switching to a
+ *   composite primary key `(id, tenantId)` is also risky: it changes the PK
+ *   every FK to `Reservations(id)` depends on and is not required for
+ *   correctness (tenant scoping is already enforced in queries/DAOs).
  *
- * Sequence:
- *   a. Make tenantId NOT NULL (default 1 for any stragglers).
- *   b. Drop existing PK.
- *   c. Add composite PK (id, tenantId).
- *   d. Recreate index on tenantId if needed.
- *   e. Apply LINEAR KEY(tenantId) partitioning with 64 partitions.
+ *   To keep `sequelize db:migrate` runnable we apply only the safe,
+ *   compatible part (NOT NULL default) and intentionally skip partitioning.
+ *   Revisit only if FULLTEXT search is moved to a dedicated table/index.
  */
 module.exports = {
   async up(queryInterface) {
     const sequelize = queryInterface.sequelize;
 
+    // Safe, compatible hardening: guarantee tenantId is never NULL.
+    // (Already backfilled to 1 for legacy rows; this just enforces the column.)
     await sequelize.query(`
       ALTER TABLE Reservations
-        MODIFY COLUMN tenantId INT NOT NULL DEFAULT 1,
-        DROP PRIMARY KEY,
-        ADD PRIMARY KEY (id, tenantId),
-        PARTITION BY LINEAR KEY(tenantId) PARTITIONS 64;
+        MODIFY COLUMN tenantId INT NOT NULL DEFAULT 1;
     `);
+
+    // Partitioning intentionally NOT applied — see note above.
+    // If FULLTEXT is later removed, this can be re-enabled:
+    //   ALTER TABLE Reservations
+    //     DROP PRIMARY KEY,
+    //     ADD PRIMARY KEY (id, tenantId),
+    //     PARTITION BY LINEAR KEY(tenantId) PARTITIONS 64;
   },
 
-  async down() {
+  async down(queryInterface) {
     const sequelize = queryInterface.sequelize;
     await sequelize.query(`
       ALTER TABLE Reservations
-        REMOVE PARTITIONING,
-        DROP PRIMARY KEY,
-      ADD PRIMARY KEY (id);
+        MODIFY COLUMN tenantId INT NULL;
     `);
   },
 };

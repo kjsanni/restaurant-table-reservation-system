@@ -23,6 +23,7 @@ const customerPortalRouter = require("../routes/customer-portal.router");
 const notificationRouter = require("../routes/notification.router");
 const emailTemplateRouter = require("../routes/emailTemplate.router");
 const webhookRouter = require("../routes/webhook.router");
+const legalRouter = require("../routes/legal.router");
 const { setCsrfCookie, CSRF_HEADER_NAME, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
 const { requestLogger } = require("../middleware/requestLogger");
@@ -56,6 +57,7 @@ let apiKeyRoutes = null;
 let platformAuditRoutes = null;
 let notificationRoutes = null;
 let onboardingRoutes = null;
+let legalAcceptanceRoutes = null;
 let billingRoutes = null;
 
 if (TENANT_MODE) {
@@ -78,6 +80,7 @@ if (TENANT_MODE) {
   platformAuditRoutes = require("../tenant-platform/routes/platformAudit.router");
   notificationRoutes = require("../tenant-platform/routes/notification.router");
   onboardingRoutes = require("../tenant-platform/routes/onboarding.router");
+  legalAcceptanceRoutes = require("../tenant-platform/routes/legalAcceptance.router");
   billingRoutes = require("../tenant-platform/routes/billing.router");
 }
 
@@ -194,23 +197,24 @@ const createServer = () => {
   app.use("/api/v1/customers", logAction, validateCsrfToken, customerRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminRouter);
   if (TENANT_MODE) {
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, trialRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, invoiceRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, statusTimelineRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, gracePeriodRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, whiteLabelRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, apiKeyRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, onboardingRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, legalAcceptanceRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, noteRoutes);
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, tenantAdminRoutes);
     app.use("/api/v1/admin/plans", logAction, validateCsrfToken, planRoutes);
     app.use("/api/v1/admin/payments", logAction, validateCsrfToken, platformPaymentRoutes);
     app.use("/api/v1/admin/usage", logAction, validateCsrfToken, usageRoutes);
     app.use("/api/v1/admin/revenue", logAction, validateCsrfToken, revenueRoutes);
     app.use("/api/v1/admin/bulk", logAction, validateCsrfToken, bulkActionRoutes);
-    app.use("/api/v1/admin/tenants/:id/notes", logAction, validateCsrfToken, noteRoutes);
-    app.use("/api/v1/admin/tenants/:id/trial", logAction, validateCsrfToken, trialRoutes);
-    app.use("/api/v1/admin/tenants/:id/invoices", logAction, validateCsrfToken, invoiceRoutes);
     app.use("/api/v1/admin/billing-emails", logAction, validateCsrfToken, billingEmailRoutes);
-    app.use("/api/v1/admin/tenants/:id/timeline", logAction, validateCsrfToken, statusTimelineRoutes);
-    app.use("/api/v1/admin/tenants/:id/grace-period", logAction, validateCsrfToken, gracePeriodRoutes);
-    app.use("/api/v1/admin/tenants/:id/branding", logAction, validateCsrfToken, whiteLabelRoutes);
-    app.use("/api/v1/admin/tenants/:id/api-keys", logAction, validateCsrfToken, apiKeyRoutes);
     app.use("/api/v1/admin/audit", logAction, validateCsrfToken, platformAuditRoutes);
     app.use("/api/v1/admin/notifications", logAction, validateCsrfToken, notificationRoutes);
-    app.use("/api/v1/admin/tenants/:id/onboarding", logAction, validateCsrfToken, onboardingRoutes);
     app.use("/api/v1/billing", logAction, billingRoutes);
   }
   app.use("/api/v1/customer-portal", logAction, validateCsrfToken, customerPortalRouter);
@@ -218,6 +222,7 @@ const createServer = () => {
   app.use("/api/v1/email-templates", logAction, validateCsrfToken, emailTemplateRouter);
   app.use("/api/v1/webhooks", logAction, webhookLimiter, webhookRouter);
   app.use("/api/v1/sync", logAction, syncLimiter, require("../routes/sync.router"));
+  app.use("/api/v1/legal", legalRouter);
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
   }

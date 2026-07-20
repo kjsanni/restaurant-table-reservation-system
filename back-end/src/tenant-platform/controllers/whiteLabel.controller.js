@@ -1,7 +1,7 @@
 const db = require("../../db/models");
 
 const getBrandingHandler = async (req, res) => {
-  const tenant = await db.tenant.findByPk(req.params.id, {
+  const tenant = await db.tenant.findByPk(req.params.tenantId, {
     attributes: ["logoUrl", "primaryColor", "customDomain", "domain"],
   });
   if (!tenant) {
@@ -11,7 +11,7 @@ const getBrandingHandler = async (req, res) => {
 };
 
 const updateBrandingHandler = async (req, res) => {
-  const tenant = await db.tenant.findByPk(req.params.id);
+  const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }

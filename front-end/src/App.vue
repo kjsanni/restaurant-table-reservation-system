@@ -272,10 +272,56 @@ onUnmounted(() => {
           </main>
 
           <footer class="app-footer">
-            <span class="footer-text"
-              >&copy; {{ currentYear }} Vibespot Technologies Ltd. Made by:
-              Kobina John Sanni</span
-            >
+            <div class="footer-inner">
+              <span class="footer-text"
+                >&copy; {{ currentYear }} Vibespot Technologies Ltd. Made by:
+                Kobina John Sanni</span
+              >
+              <nav class="footer-legal" aria-label="Legal">
+                <RouterLink
+                  :to="{ name: 'legal-document', params: { slug: 'privacy' } }"
+                  >Privacy</RouterLink
+                >
+                <RouterLink
+                  :to="{ name: 'legal-document', params: { slug: 'terms' } }"
+                  >Terms</RouterLink
+                >
+                <RouterLink
+                  :to="{ name: 'legal-document', params: { slug: 'cookies' } }"
+                  >Cookies</RouterLink
+                >
+                <RouterLink
+                  :to="{ name: 'legal-document', params: { slug: 'gdpr' } }"
+                  >GDPR</RouterLink
+                >
+                <RouterLink
+                  :to="{ name: 'legal-document', params: { slug: 'dpa' } }"
+                  >DPA</RouterLink
+                >
+                <RouterLink
+                  :to="{ name: 'legal-document', params: { slug: 'customer' } }"
+                  >Customers</RouterLink
+                >
+                <RouterLink
+                  :to="{ name: 'legal-document', params: { slug: 'tenant' } }"
+                  >Merchants</RouterLink
+                >
+                <RouterLink
+                  :to="{
+                    name: 'legal-document',
+                    params: { slug: 'payment-refund' },
+                  }"
+                  >Payments</RouterLink
+                >
+                <RouterLink
+                  :to="{
+                    name: 'legal-document',
+                    params: { slug: 'accessibility' },
+                  }"
+                  >Accessibility</RouterLink
+                >
+              </nav>
+            </div>
           </footer>
         </div>
       </template>
@@ -644,5 +690,33 @@ onUnmounted(() => {
   font-size: var(--text-sm);
   color: var(--ink-muted);
   font-weight: 450;
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2) var(--space-5);
+}
+
+.footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.footer-legal a {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-in-out);
+}
+
+.footer-legal a:hover {
+  color: var(--accent-600);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 </style>
