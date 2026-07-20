@@ -117,7 +117,7 @@ const getTenantDashboard = async () => {
     `SELECT COALESCE(SUM(CASE plan\n      ${planCases}\n      ELSE 0\n    END), 0) AS mrr FROM tenants WHERE status IN ('active', 'past_due', 'trialing')`,
     { type: db.sequelize.QueryTypes.SELECT }
   );
-  const mrr = mrrResult[0]?.mrr || 0;
+  const mrr = (mrrResult?.[0]?.mrr) || 0;
 
   const recentTenants = await db.tenant.findAll({
     order: [["createdAt", "DESC"]],
