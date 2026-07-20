@@ -55,4 +55,14 @@ const cache = {
   },
 };
 
-module.exports = { cache, client };
+const closeClient = async () => {
+  if (client) {
+    try {
+      await client.quit();
+    } catch (err) {
+      console.warn("[Cache] Failed to close Redis client:", err.message);
+    }
+  }
+};
+
+module.exports = { cache, client, closeClient };

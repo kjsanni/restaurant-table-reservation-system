@@ -1,44 +1,46 @@
 "use strict";
 
-const { QueryInterface } = require("sequelize");
-
 /**
- * MySQL Partitioning Migrations — Payments
+ * MySQL hardening for the Payments table (Phase 3).
  *
- * WARNING: These migrations rebuild the table. Run ONLY during a maintenance
- * window on a replica or using pt-online-schema-change / gh-ost.
+ * This migration originally intended to partition `payments` by
+ * `LINEAR KEY(tenantId)`. That is not applicable and is unsafe on this schema:
  *
- * Prerequisites:
- *   1. All tenantId values are non-NULL (backfill already done).
- *   2. Foreign keys referencing Payments do not currently exist, so no
- *      FK recreation is needed around the PK change.
+ *   1. Partitioning requires a composite PK `(id, tenantId)`, which would
+ *      break the FK `payments_ibfk_1` referencing `reservations(id)` and
+ *      change every downstream access pattern. It also provides no real
+ *      benefit at current data volumes.
  *
- * Sequence:
- *   a. Make tenantId NOT NULL (default 1 for any stragglers).
- *   b. Drop existing PK.
- *   c. Add composite PK (id, tenantId).
- *   d. Apply LINEAR KEY(tenantId) partitioning with 64 partitions.
+ *   2. `tenantId` must stay NULLABLE: the FK
+ *      `Payments_tenantId_foreign_idx` is defined `ON DELETE SET NULL`, which
+ *      requires the column to remain nullable. Forcing `NOT NULL` fails with
+ *      "Column 'tenantId' cannot be NOT NULL: needed in a foreign key
+ *       constraint ... SET NULL".
+ *
+ * What this migration actually does (safe + idempotent):
+ *   - Backfills any legacy rows that still have `tenantId IS NULL` to the
+ *     default tenant (id = 1) so every payment is attributable.
+ *   - Leaves the column NULLABLE and the table unpartitioned, matching the
+ *     real access pattern. Tenant scoping is enforced in queries/DAOs.
  */
 module.exports = {
   async up(queryInterface) {
     const sequelize = queryInterface.sequelize;
 
+    // Attract every legacy payment to the default tenant (id = 1).
+    // Idempotent: rows that already have a tenantId are untouched.
     await sequelize.query(`
-      ALTER TABLE payments
-        MODIFY COLUMN tenantId INT NOT NULL DEFAULT 1,
-        DROP PRIMARY KEY,
-        ADD PRIMARY KEY (id, tenantId),
-        PARTITION BY LINEAR KEY(tenantId) PARTITIONS 64;
+      UPDATE payments
+        SET tenantId = 1
+        WHERE tenantId IS NULL;
     `);
   },
 
   async down() {
     const sequelize = queryInterface.sequelize;
+    // No destructive change: leave payments attributed to the default tenant.
     await sequelize.query(`
-      ALTER TABLE payments
-        REMOVE PARTITIONING,
-        DROP PRIMARY KEY,
-        ADD PRIMARY KEY (id);
+      SELECT 1;
     `);
   },
 };

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TableReserve — Super Admin Portal (Mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* Brand tokens mirrored from front-end/src/theme/colors.js */
+    --brand900:#1a1410; --brand800:#2d221c; --brand700:#4a352b; --brand600:#6b4a3a;
+    --brand500:#8c5e4a; --brand400:#b87a62; --brand300:#d9a086; --brand200:#e8c4b5;
+    --brand100:#f3ddd3; --brand50:#faf6f3;
+    --accent600:#b45309; --accent500:#d97706; --accent400:#f59e0b; --accent300:#fbbf24;
+    --accent100:#fef3c7; --accent50:#fffbeb;
+    --earth600:#365314; --earth500:#4d7c0f; --earth400:#65a30d; --earth100:#ecfccb;
+    --sky600:#1e40af; --sky500:#3b82f6; --sky100:#dbeafe;
+    --rose600:#e11d48; --rose500:#f43f5e; --rose100:#ffe4e6;
+    --neutral900:#312e2a; --neutral700:#645d54; --neutral600:#7d766c;
+    --neutral500:#9a9389; --neutral300:#d6d1c9; --neutral200:#e7e4de; --neutral100:#f3f1ed;
+    --ink:#241b15; --paper:#fbf8f4; --card:#fffdfb;
+    --shadow:0 1px 2px rgba(45,34,28,.04),0 8px 24px -12px rgba(45,34,28,.18);
+    --shadow-lg:0 24px 60px -28px rgba(45,34,28,.35);
+    --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:15px}
+  body{
+    font-family:"Public Sans",system-ui,sans-serif;
+    color:var(--ink);background:
+      radial-gradient(1200px 600px at 85% -10%, #fde9d6 0%, transparent 55%),
+      radial-gradient(900px 500px at -5% 110%, #f1e7da 0%, transparent 50%),
+      var(--paper);
+    min-height:100vh;-webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:"Fraunces",Georgia,serif;font-weight:600;letter-spacing:-.02em;color:var(--brand900)}
+
+  /* ---------- Shell ---------- */
+  .shell{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+
+  /* Sidebar */
+  .sidebar{
+    background:linear-gradient(180deg,var(--brand900),var(--brand800));
+    color:#f3ddd3;padding:26px 18px;position:sticky;top:0;height:100vh;
+    display:flex;flex-direction:column;gap:6px;
+    box-shadow:inset -1px 0 0 rgba(255,255,255,.04);
+  }
+  .brand{display:flex;align-items:center;gap:11px;padding:4px 8px 22px}
+  .brand .mark{width:34px;height:34px;border-radius:10px;background:
+    radial-gradient(circle at 30% 30%,var(--accent400),var(--accent600));
+    display:grid;place-items:center;font-family:"Fraunces";font-weight:700;color:#fff;font-size:18px;
+    box-shadow:0 6px 16px -6px var(--accent600)}
+  .brand b{font-family:"Fraunces";font-size:19px;color:#fff;line-height:1}
+  .brand small{display:block;color:#b87a62;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+  .nav-group{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#8c5e4a;margin:18px 10px 8px}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;
+    color:#e8c4b5;font-weight:500;font-size:13.5px;cursor:pointer;transition:.18s;position:relative}
+  .nav-item svg{width:18px;height:18px;stroke:currentColor;opacity:.85}
+  .nav-item:hover{background:rgba(255,255,255,.05);color:#fff}
+  .nav-item.active{background:linear-gradient(90deg,rgba(217,119,6,.22),rgba(217,119,6,.06));color:#fff}
+  .nav-item.active::before{content:"";position:absolute;left:-18px;top:9px;bottom:9px;width:3px;
+    border-radius:0 3px 3px 0;background:var(--accent400)}
+  .nav-item .badge{margin-left:auto;background:var(--accent500);color:#fff;font-size:10px;
+    font-weight:700;padding:1px 7px;border-radius:999px}
+  .side-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;
+    background:rgba(255,255,255,.05)}
+  .side-foot .av{width:32px;height:32px;border-radius:50%;background:var(--brand500);
+    display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+  .side-foot div{line-height:1.2}
+  .side-foot b{color:#fff;font-size:13px}
+  .side-foot span{color:#b87a62;font-size:11px}
+
+  /* Main */
+  .main{padding:26px 34px 48px;max-width:1320px}
+  .topbar{display:flex;align-items:center;gap:16px;margin-bottom:26px;flex-wrap:wrap}
+  .title-block h1{font-size:30px}
+  .title-block p{color:var(--neutral600);font-size:13.5px;margin-top:3px}
+  .topbar .spacer{flex:1}
+  .search{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--neutral200);
+    padding:9px 14px;border-radius:12px;color:var(--neutral500);font-size:13px;min-width:230px;
+    box-shadow:var(--shadow)}
+  .search kbd{margin-left:auto;background:var(--neutral100);border:1px solid var(--neutral200);
+    border-radius:6px;padding:1px 6px;font-size:11px;font-family:inherit}
+  .pill-btn{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--neutral200);
+    padding:9px 14px;border-radius:12px;font-weight:600;font-size:13px;color:var(--brand800);
+    cursor:pointer;box-shadow:var(--shadow);transition:.15s}
+  .pill-btn:hover{border-color:var(--brand300);transform:translateY(-1px)}
+  .mode-flag{display:flex;align-items:center;gap:7px;background:var(--earth100);color:var(--earth600);
+    font-weight:700;font-size:12px;padding:7px 12px;border-radius:999px}
+  .mode-flag .dot{width:8px;height:8px;border-radius:50%;background:var(--earth500);
+    box-shadow:0 0 0 4px rgba(77,124,15,.18)}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:22px}
+  .kpi{background:var(--card);border:1px solid var(--neutral200);border-radius:var(--radius);
+    padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .kpi::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;
+    background:radial-gradient(circle,rgba(217,119,6,.10),transparent 70%)}
+  .kpi .lbl{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--neutral600);font-weight:600}
+  .kpi .val{font-family:"Fraunces";font-size:32px;color:var(--brand900);margin:8px 0 4px;line-height:1}
+  .kpi .delta{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;
+    padding:2px 8px;border-radius:999px}
+  .delta.up{background:var(--earth100);color:var(--earth600)}
+  .delta.down{background:var(--rose100);color:var(--rose600)}
+  .kpi .spark{position:absolute;right:16px;bottom:14px;width:74px;height:30px}
+
+  /* Section heading */
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin:30px 0 14px}
+  .sec-head h2{font-size:19px;font-family:"Fraunces";color:var(--brand900)}
+  .sec-head a{color:var(--accent600);font-weight:600;font-size:13px;text-decoration:none}
+  .sec-head a:hover{text-decoration:underline}
+
+  /* Tenant workspace grid */
+  .tenants{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .tenant{background:var(--card);border:1px solid var(--neutral200);border-radius:var(--radius);
+    padding:18px;box-shadow:var(--shadow);transition:.2s;position:relative}
+  .tenant:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--brand200)}
+  .tenant .top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .tenant .logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+    font-family:"Fraunces";font-weight:700;color:#fff;font-size:18px;flex-shrink:0}
+  .tenant .nm{line-height:1.2}
+  .tenant .nm b{font-size:15px;color:var(--brand900)}
+  .tenant .nm span{font-size:12px;color:var(--neutral500)}
+  .tenant .status{margin-left:auto;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px}
+  .st-active{background:var(--earth100);color:var(--earth600)}
+  .st-trial{background:var(--sky100);color:var(--sky600)}
+  .st-pastdue{background:var(--accent100);color:var(--accent600)}
+  .tenant .stats{display:flex;gap:18px;border-top:1px solid var(--neutral200);padding-top:13px;margin-top:4px}
+  .tenant .stats div span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--neutral500);font-weight:600}
+  .tenant .stats div b{font-size:16px;color:var(--brand800);font-family:"Fraunces"}
+  .health{height:6px;border-radius:999px;background:var(--neutral200);overflow:hidden;margin-top:12px}
+  .health i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--earth400),var(--accent400))}
+  .tenant .access{margin-top:14px;width:100%;border:none;cursor:pointer;background:var(--brand800);
+    color:#fff;font-weight:600;font-size:13px;padding:10px;border-radius:11px;transition:.15s;
+    display:flex;align-items:center;justify-content:center;gap:7px}
+  .tenant .access:hover{background:var(--brand900)}
+
+  /* Lower grid */
+  .lower{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-top:22px}
+  .panel{background:var(--card);border:1px solid var(--neutral200);border-radius:var(--radius);
+    padding:20px;box-shadow:var(--shadow)}
+  .panel h3{font-family:"Fraunces";font-size:17px;color:var(--brand900);margin-bottom:4px}
+  .panel .sub{font-size:12.5px;color:var(--neutral500);margin-bottom:16px}
+  .chart{width:100%;height:200px}
+  .legend{display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--neutral600)}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:middle}
+
+  /* Plan distribution */
+  .plan-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--neutral200)}
+  .plan-row:last-child{border-bottom:none}
+  .plan-row .sw{width:12px;height:12px;border-radius:4px;flex-shrink:0}
+  .plan-row b{font-size:13.5px;color:var(--brand800)}
+  .plan-row span{font-size:12px;color:var(--neutral500)}
+  .plan-row .num{margin-left:auto;font-family:"Fraunces";font-size:17px;color:var(--brand900)}
+
+  /* Activity feed */
+  .feed{margin-top:22px}
+  .feed-item{display:flex;gap:13px;padding:12px 0;border-bottom:1px solid var(--neutral200)}
+  .feed-item:last-child{border-bottom:none}
+  .feed-item .ic{width:32px;height:32px;border-radius:10px;flex-shrink:0;display:grid;place-items:center}
+  .feed-item .tx b{color:var(--brand900);font-size:13.5px}
+  .feed-item .tx p{font-size:12.5px;color:var(--neutral600);margin-top:2px}
+  .feed-item .tm{margin-left:auto;font-size:11.5px;color:var(--neutral500);white-space:nowrap}
+
+  @media (max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.tenants{grid-template-columns:repeat(2,1fr)}.lower{grid-template-columns:1fr}}
+  @media (max-width:760px){.shell{grid-template-columns:1fr}.sidebar{display:none}.tenants{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">T</div>
+      <div><b>TableReserve</b><small>Super Admin</small></div>
+    </div>
+
+    <div class="nav-group">Platform</div>
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Overview
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>
+      Tenants <span class="badge">128</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+      Plans &amp; Billing
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+      Analytics
+    </div>
+
+    <div class="nav-group">Operations</div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+      Reservations
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0112 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14a5 5 0 016 6"/></svg>
+      Users
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M16 11a4 4 0 10-8 0M4 20a8 8 0 0116 0"/></svg>
+      Staff
+    </div>
+
+    <div class="nav-group">System</div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 00-1.7-1L16.5 3h-4l-.3 2.5a7 7 0 00-1.7 1l-2.4-1-2 3.5L5.1 11A7 7 0 005 12c0 .3 0 .7.1 1l-2 1.5 2 3.5 2.4-1a7 7 0 001.7 1l.3 2.5h4l.3-2.5a7 7 0 001.7-1l2.4 1 2-3.5-2-1.5c.1-.3.1-.7.1-1z"/></svg>
+      Feature Flags
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 4h16v12H7l-3 3z"/></svg>
+      Audit Log
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+      Settings
+    </div>
+
+    <div class="side-foot">
+      <div class="av">AK</div>
+      <div><b>Ada K.",</b><span>Platform Owner</span></div>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+    <div class="topbar">
+      <div class="title-block">
+        <h1 class="display">Platform Overview</h1>
+        <p>Cross-tenant health, revenue, and operations — updated 2 min ago</p>
+      </div>
+      <div class="spacer"></div>
+      <div class="mode-flag"><span class="dot"></span> TENANT_MODE: enabled</div>
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        Search tenants, plans…
+        <kbd>⌘K</kbd>
+      </div>
+      <div class="pill-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        New Tenant
+      </div>
+    </div>
+
+    <!-- KPI STRIP -->
+    <section class="kpis">
+      <div class="kpi">
+        <div class="lbl">Total Tenants</div>
+        <div class="val">128</div>
+        <span class="delta up">▲ 6 this wk</span>
+        <svg class="spark" viewBox="0 0 74 30" fill="none"><polyline points="0,22 12,18 24,20 36,12 48,14 60,7 74,5" stroke="#4d7c0f" stroke-width="2" fill="none"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="lbl">Active Tenants</div>
+        <div class="val">114</div>
+        <span class="delta up">▲ 89% active</span>
+        <svg class="spark" viewBox="0 0 74 30" fill="none"><polyline points="0,14 12,16 24,11 36,13 48,8 60,10 74,6" stroke="#4d7c0f" stroke-width="2" fill="none"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="lbl">Platform MRR</div>
+        <div class="val">$48.2k</div>
+        <span class="delta up">▲ 12.4%</span>
+        <svg class="spark" viewBox="0 0 74 30" fill="none"><polyline points="0,24 12,20 24,21 36,14 48,15 60,9 74,4" stroke="#d97706" stroke-width="2" fill="none"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="lbl">At-Risk / Past Due</div>
+        <div class="val">7</div>
+        <span class="delta down">▼ 2 churned</span>
+        <svg class="spark" viewBox="0 0 74 30" fill="none"><polyline points="0,8 12,10 24,7 36,12 48,11 60,16 74,18" stroke="#f43f5e" stroke-width="2" fill="none"/></svg>
+      </div>
+    </section>
+
+    <!-- TENANT WORKSPACE GRID -->
+    <div class="sec-head">
+      <h2>Tenant Workspaces</h2>
+      <a href="#">View all 128 tenants →</a>
+    </div>
+    <section class="tenants">
+      <!-- card 1 -->
+      <article class="tenant">
+        <div class="top">
+          <div class="logo" style="background:linear-gradient(135deg,#d97706,#b45309)">O</div>
+          <div class="nm"><b>Olive &amp; Vine</b><span>olive-vine · NYC</span></div>
+          <span class="status st-active">Active</span>
+        </div>
+        <div class="stats">
+          <div><span>MRR</span><b>$520</b></div>
+          <div><span>Seats</span><b>24</b></div>
+          <div><span>Res/today</span><b>38</b></div>
+        </div>
+        <div class="health"><i style="width:92%"></i></div>
+        <button class="access">Access Tenant →</button>
+      </article>
+      <!-- card 2 -->
+      <article class="tenant">
+        <div class="top">
+          <div class="logo" style="background:linear-gradient(135deg,#4d7c0f,#365314)">M</div>
+          <div class="nm"><b>Maples Bistro</b><span>maples · Boston</span></div>
+          <span class="status st-trial">Trial</span>
+        </div>
+        <div class="stats">
+          <div><span>MRR</span><b>$0</b></div>
+          <div><span>Seats</span><b>8</b></div>
+          <div><span>Res/today</span><b>11</b></div>
+        </div>
+        <div class="health"><i style="width:64%"></i></div>
+        <button class="access">Access Tenant →</button>
+      </article>
+      <!-- card 3 -->
+      <article class="tenant">
+        <div class="top">
+          <div class="logo" style="background:linear-gradient(135deg,#b87a62,#6b4a3a)">S</div>
+          <div class="nm"><b>The Salt Cellar</b><span>salt-cellar · SF</span></div>
+          <span class="status st-pastdue">Past Due</span>
+        </div>
+        <div class="stats">
+          <div><span>MRR</span><b>$310</b></div>
+          <div><span>Seats</span><b>14</b></div>
+          <div><span>Res/today</span><b>19</b></div>
+        </div>
+        <div class="health"><i style="width:41%"></i></div>
+        <button class="access">Access Tenant →</button>
+      </article>
+      <!-- card 4 -->
+      <article class="tenant">
+        <div class="top">
+          <div class="logo" style="background:linear-gradient(135deg,#3b82f6,#1e40af)">H</div>
+          <div class="nm"><b>Harbor Table</b><span>harbor · Seattle</span></div>
+          <span class="status st-active">Active</span>
+        </div>
+        <div class="stats">
+          <div><span>MRR</span><b>$780</b></div>
+          <div><span>Seats</span><b>32</b></div>
+          <div><span>Res/today</span><b>57</b></div>
+        </div>
+        <div class="health"><i style="width:96%"></i></div>
+        <button class="access">Access Tenant →</button>
+      </article>
+      <!-- card 5 -->
+      <article class="tenant">
+        <div class="top">
+          <div class="logo" style="background:linear-gradient(135deg,#8c5e4a,#4a352b)">C</div>
+          <div class="nm"><b>Cedarhouse Grill</b><span>cedar · Austin</span></div>
+          <span class="status st-active">Active</span>
+        </div>
+        <div class="stats">
+          <div><span>MRR</span><b>$450</b></div>
+          <div><span>Seats</span><b>19</b></div>
+          <div><span>Res/today</span><b>29</b></div>
+        </div>
+        <div class="health"><i style="width:88%"></i></div>
+        <button class="access">Access Tenant →</button>
+      </article>
+      <!-- card 6 -->
+      <article class="tenant">
+        <div class="top">
+          <div class="logo" style="background:linear-gradient(135deg,#f59e0b,#b45309)">L</div>
+          <div class="nm"><b>Lumiere Dining</b><span>lumiere · Chicago</span></div>
+          <span class="status st-active">Active</span>
+        </div>
+        <div class="stats">
+          <div><span>MRR</span><b>$1.2k</b></div>
+          <div><span>Seats</span><b>46</b></div>
+          <div><span>Res/today</span><b>73</b></div>
+        </div>
+        <div class="health"><i style="width:99%"></i></div>
+        <button class="access">Access Tenant →</button>
+      </article>
+    </section>
+
+    <!-- LOWER GRID -->
+    <section class="lower">
+      <!-- MRR chart -->
+      <div class="panel">
+        <h3>Revenue &amp; Tenant Growth</h3>
+        <div class="sub">Last 12 months · platform aggregate</div>
+        <svg class="chart" viewBox="0 0 600 200" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#d97706" stop-opacity=".28"/>
+              <stop offset="100%" stop-color="#d97706" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <g stroke="#e7e4de" stroke-width="1">
+            <line x1="0" y1="40" x2="600" y2="40"/><line x1="0" y1="90" x2="600" y2="90"/>
+            <line x1="0" y1="140" x2="600" y2="140"/><line x1="0" y1="190" x2="600" y2="190"/>
+          </g>
+          <path d="M0,160 C60,150 90,120 140,128 C200,138 230,90 290,96 C350,102 380,60 440,66 C500,72 540,40 600,30 L600,200 L0,200 Z" fill="url(#g)"/>
+          <path d="M0,160 C60,150 90,120 140,128 C200,138 230,90 290,96 C350,102 380,60 440,66 C500,72 540,40 600,30" fill="none" stroke="#d97706" stroke-width="2.5"/>
+          <path d="M0,180 C70,176 120,170 180,168 C250,166 300,150 360,148 C430,146 500,130 600,120" fill="none" stroke="#4d7c0f" stroke-width="2.5" stroke-dasharray="2 6" stroke-linecap="round"/>
+        </svg>
+        <div class="legend">
+          <span><i style="background:#d97706"></i>Platform MRR</span>
+          <span><i style="background:#4d7c0f"></i>Active Tenants</span>
+        </div>
+      </div>
+
+      <!-- Plan distribution -->
+      <div class="panel">
+        <h3>Plan Distribution</h3>
+        <div class="sub">Across 128 tenants</div>
+        <div class="plan-row"><span class="sw" style="background:#365314"></span><div><b>Enterprise</b><br><span>Dedicated support, SSO</span></div><span class="num">18</span></div>
+        <div class="plan-row"><span class="sw" style="background:#d97706"></span><div><b>Growth</b><br><span>Multi-location</span></div><span class="num">54</span></div>
+        <div class="plan-row"><span class="sw" style="background:#b87a62"></span><div><b>Starter</b><br><span>Single location</span></div><span class="num">41</span></div>
+        <div class="plan-row"><span class="sw" style="background:#9a9389"></span><div><b>Trial / Free</b><br><span>14-day window</span></div><span class="num">15</span></div>
+      </div>
+    </section>
+
+    <!-- ACTIVITY FEED -->
+    <div class="sec-head"><h2>Recent Platform Activity</h2><a href="#">Open audit log →</a></div>
+    <section class="panel feed">
+      <div class="feed-item">
+        <div class="ic" style="background:#ecfccb"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#365314" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <div class="tx"><b>Lumiere Dining</b> upgraded to Enterprise plan<p>Triggered by in-app checkout · $1.2k/mo</p></div>
+        <div class="tm">12 min ago</div>
+      </div>
+      <div class="feed-item">
+        <div class="ic" style="background:#ffe4e6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></div>
+        <div class="tx"><b>The Salt Cellar</b> payment failed — invoice past due<p>3 retry attempts scheduled via billing worker</p></div>
+        <div class="tm">47 min ago</div>
+      </div>
+      <div class="feed-item">
+        <div class="ic" style="background:#dbeafe"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
+        <div class="tx"><b>Maples Bistro</b> started 14-day trial<p>Provisioned tenant · slug maples · 8 seats</p></div>
+        <div class="tm">2 hr ago</div>
+      </div>
+      <div class="feed-item">
+        <div class="ic" style="background:#fef3c7"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></div>
+        <div class="tx"><b>Feature flag</b> <code>server_overlay</code> enabled platform-wide<p>Rolled out to 114 active tenants</p></div>
+        <div class="tm">5 hr ago</div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

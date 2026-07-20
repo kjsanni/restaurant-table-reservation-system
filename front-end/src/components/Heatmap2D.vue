@@ -728,7 +728,7 @@ const openDrillDown = async (day) => {
 }
 
 .drill-date {
-  font-family: "Lora", Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 14px;
   color: var(--ink-muted);
   margin: 0;

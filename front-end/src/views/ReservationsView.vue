@@ -1,123 +1,154 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
-import PageHeader from "@/components/PageHeader.vue";
-import TheReservations from "@/components/TheReservations.vue";
-import { VaSkeleton } from "vuestic-ui";
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import reservationAPI from "@/services/reservationAPI";
 import logger from "@/utils/logger";
 
-const view = ref<"list" | "timeline" | "calendar">("list");
-const coversByHour = ref<{ hour: string; count: number }[]>([]);
-const peakHour = ref("—");
+interface Reservation {
+  id: number;
+  resDate: string;
+  resTime: string;
+  people: number;
+  tableName?: string;
+  tableId?: number | string;
+  resStatus?: string;
+  status?: string;
+  Customer?: { name?: string; phone?: string };
+}
 
-const HOURS = ["17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
-const maxCovers = computed(() =>
-  Math.max(1, ...coversByHour.value.map((c) => c.count))
-);
+const router = useRouter();
+const reservations = ref<Reservation[]>([]);
+const loading = ref(true);
+const activeFilter = ref<string>("All");
 
-const loadCovers = async () => {
+const filters = ["All", "Confirmed", "Pending", "Seated", "Cancelled"];
+
+const filteredReservations = computed(() => {
+  if (activeFilter.value === "All") return reservations.value;
+  return reservations.value.filter(
+    (r) => r.resStatus === activeFilter.value.toLowerCase()
+  );
+});
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return "—";
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const formatTime = (timeStr: string) => {
+  if (!timeStr) return "—";
+  return timeStr.slice(0, 5);
+};
+
+const getStatusColor = (status: string) => {
+  const colors: Record<string, string> = {
+    confirmed: "confirmed",
+    pending: "pending",
+    seated: "seated",
+    cancelled: "cancelled",
+    completed: "completed",
+    missed: "missed",
+  };
+  return colors[status] || "secondary";
+};
+
+const loadReservations = async () => {
+  loading.value = true;
   try {
-    const res = await reservationAPI.getReservationStats({ range: "today" });
-    const stats = res.data?.stats || res.data || {};
-    const byHour = stats.coversByHour || stats.byHour || {};
-    coversByHour.value = HOURS.map((h) => ({
-      hour: h,
-      count: Number(byHour[h] || 0),
-    }));
-    const peak = coversByHour.value.reduce(
-      (a, b) => (b.count > a.count ? b : a),
-      { hour: "—", count: 0 }
-    );
-    peakHour.value = peak.count > 0 ? peak.hour : "—";
-  } catch (e) {
-    logger.warn("Covers-by-hour unavailable", { error: e?.message });
-    coversByHour.value = HOURS.map((h) => ({ hour: h, count: 0 }));
+    const res = await reservationAPI.getReservations({});
+    reservations.value = res.data.collection || res.data || [];
+  } catch (err) {
+    logger.error("Failed to load reservations", { error: err });
+  } finally {
+    loading.value = false;
   }
 };
 
-onMounted(loadCovers);
+onMounted(loadReservations);
 </script>
 
 <template>
   <div class="main-wrapper">
-    <PageHeader
-      title="Reservations"
-      subtitle="View calendar and search all bookings"
-    />
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Reservations</h1>
+        <p>Manage bookings and walk-ins</p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-primary" @click="router.push('/new-reservation')">
+          + New Reservation
+        </button>
+      </div>
+    </div>
 
     <div class="content-wrapper">
       <div class="toolbar">
-        <div class="seg">
-          <button :class="{ on: view === 'list' }" @click="view = 'list'">
-            List
-          </button>
-          <button
-            :class="{ on: view === 'timeline' }"
-            @click="view = 'timeline'"
-          >
-            Timeline
-          </button>
-          <button
-            :class="{ on: view === 'calendar' }"
-            @click="view = 'calendar'"
-          >
-            Calendar
-          </button>
-        </div>
-        <div class="filters">
-          <select aria-label="Filter status">
-            <option>All statuses</option>
-            <option>Confirmed</option>
-            <option>Seated</option>
-            <option>Pending</option>
-            <option>Cancelled</option>
-          </select>
-          <select aria-label="Filter party size">
-            <option>All party sizes</option>
-            <option>1–2</option>
-            <option>3–4</option>
-            <option>5+</option>
-          </select>
-          <select aria-label="Filter area">
-            <option>All areas</option>
-            <option>Window</option>
-            <option>Bar</option>
-            <option>Patio</option>
-            <option>Private</option>
-          </select>
-        </div>
+        <button
+          v-for="filter in filters"
+          :key="filter"
+          :class="['chip', { active: activeFilter === filter }]"
+          @click="activeFilter = filter"
+        >
+          {{ filter }}
+        </button>
       </div>
 
-      <div class="reservations-layout">
-        <div class="reservations-main">
-          <Suspense>
-            <template #default>
-              <TheReservations :view="view" />
-            </template>
-            <template #fallback>
-              <div class="loading-state">
-                <VaSkeleton variant="text" :lines="5" />
-              </div>
-            </template>
-          </Suspense>
-        </div>
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading reservations...</p>
+      </div>
 
-        <aside class="covers-panel">
-          <h3>Covers by Hour</h3>
-          <span class="panel-count">peak {{ peakHour }}</span>
-          <div class="covers-bars">
-            <div v-for="c in coversByHour" :key="c.hour" class="cslot">
-              <div class="chour">{{ c.hour.slice(0, 2) }}</div>
-              <div class="cbar">
-                <i
-                  :class="{ seated: c.count >= maxCovers * 0.8 }"
-                  :style="{ width: (c.count / maxCovers) * 100 + '%' }"
-                ></i>
-              </div>
-              <div class="ccount">{{ c.count }}</div>
-            </div>
-          </div>
-        </aside>
+      <div v-else class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Guest</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Party</th>
+              <th>Table</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="res in filteredReservations" :key="res.id">
+              <td>
+                <b>{{ res.Customer?.name || "Guest" }}</b>
+                <br />
+                <span class="guest-phone">{{ res.Customer?.phone || "" }}</span>
+              </td>
+              <td>{{ formatDate(res.resDate) }}</td>
+              <td>{{ formatTime(res.resTime) }}</td>
+              <td>{{ res.people }}</td>
+              <td>{{ res.tableName || res.tableId || "—" }}</td>
+              <td>
+                <span
+                  :class="[
+                    'pill',
+                    getStatusColor(res.resStatus || res.status || 'pending'),
+                  ]"
+                >
+                  {{ res.resStatus || res.status }}
+                </span>
+              </td>
+              <td>
+                <button
+                  class="link"
+                  @click="router.push(`/reservations/${res.id}`)"
+                >
+                  View
+                </button>
+              </td>
+            </tr>
+            <tr v-if="!filteredReservations.length">
+              <td colspan="7" class="empty-row">No reservations found.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -126,165 +157,240 @@ onMounted(loadCovers);
 <style scoped>
 .main-wrapper {
   min-height: 100vh;
-  background: var(--background);
+  background: var(--background-warm);
   display: flex;
   flex-direction: column;
 }
 
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.topbar-left h1 {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--neutral-900);
+}
+
+.topbar-left p {
+  color: var(--neutral-600);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .content-wrapper {
   flex: 1;
-  margin: var(--page-margin-y) var(--page-margin-x);
-  padding: 0;
+  margin: var(--space-8) var(--space-6);
   max-width: var(--content-max-width);
   width: 100%;
   margin-left: auto;
   margin-right: auto;
 }
 
-.toolbar {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  margin-bottom: var(--space-4);
-  flex-wrap: wrap;
-}
-.seg {
-  display: inline-flex;
-  background: var(--neutral-100);
-  border-radius: var(--radius-lg);
-  padding: var(--space-1);
-}
-.seg button {
-  border: none;
-  background: transparent;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  color: var(--ink-muted);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
-.seg button.on {
-  background: var(--surface);
-  color: var(--brand-800);
-  box-shadow: var(--shadow-sm);
-}
-.filters {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-.filters select {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-sans);
-}
-
-.reservations-layout {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: var(--space-4);
-  align-items: start;
-}
-.reservations-main {
-  min-width: 0;
-}
-.loading-state {
-  padding: var(--space-20) var(--space-6);
-  display: flex;
-  justify-content: center;
-  background: var(--background);
-  min-height: 60vh;
-}
-
-.covers-panel {
-  background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-5);
-  position: sticky;
-  top: var(--space-4);
-}
-.covers-panel h3 {
-  font-family: var(--font-serif);
-  font-size: var(--text-base);
-  color: var(--ink);
-  letter-spacing: var(--tracking-tight);
-}
-.panel-count {
-  font-size: var(--text-xs);
-  color: var(--ink-muted);
-  background: var(--neutral-100);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-full);
-  font-weight: 600;
-  margin-left: var(--space-2);
-}
-.covers-bars {
-  margin-top: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-.cslot {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.chour {
-  font-family: var(--font-serif);
-  font-size: var(--text-xs);
-  color: var(--ink-muted);
-  min-width: 28px;
-}
-.cbar {
-  flex: 1;
-  height: 22px;
-  background: var(--neutral-100);
-  border-radius: var(--radius-md);
-  position: relative;
-  overflow: hidden;
-}
-.cbar i {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  background: linear-gradient(90deg, var(--accent-400), var(--accent-600));
-  border-radius: var(--radius-md);
-  opacity: 0.85;
-  transition: width var(--duration-300) var(--ease-out);
-}
-.cbar i.seated {
-  background: linear-gradient(90deg, var(--earth-400), var(--earth-600));
-}
-.ccount {
-  font-size: var(--text-xs);
-  color: var(--ink-muted);
-  min-width: 28px;
-  text-align: right;
-  font-weight: 600;
-}
-
-@media (max-width: 980px) {
-  .reservations-layout {
-    grid-template-columns: 1fr;
-  }
-  .covers-panel {
-    position: static;
-  }
-}
 @media (min-width: 1024px) {
   .content-wrapper {
     margin-top: var(--space-10);
     margin-bottom: var(--space-10);
   }
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--neutral-300);
+  background: var(--white);
+  color: var(--neutral-800);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  font-family: var(--font-sans);
+}
+
+.chip:hover,
+.chip.active {
+  background: var(--brand-100);
+  border-color: var(--brand-300);
+  color: var(--brand-800);
+}
+
+.table-wrap {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 30px rgba(26, 20, 16, 0.05);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+thead {
+  background: var(--neutral-50);
+  border-bottom: 1px solid var(--neutral-200);
+}
+
+th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--neutral-600);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--font-sans);
+}
+
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--neutral-100);
+  color: var(--neutral-800);
+  font-family: var(--font-sans);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr {
+  transition: background 0.2s ease;
+}
+
+tr:hover td {
+  background: rgba(243, 221, 211, 0.35);
+}
+
+.pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.pill.confirmed {
+  background: var(--accent-100);
+  color: var(--accent-600);
+}
+.pill.pending {
+  background: var(--sky-100);
+  color: var(--sky-600);
+}
+.pill.seated {
+  background: var(--earth-100);
+  color: var(--earth-600);
+}
+.pill.cancelled {
+  background: var(--rose-100);
+  color: var(--rose-600);
+}
+.pill.completed {
+  background: var(--neutral-100);
+  color: var(--neutral-600);
+}
+.pill.missed {
+  background: var(--rose-100);
+  color: var(--rose-600);
+}
+.pill.secondary {
+  background: var(--neutral-100);
+  color: var(--neutral-600);
+}
+
+.guest-phone {
+  font-size: 11px;
+  color: var(--neutral-600);
+}
+
+.link {
+  font-size: 12px;
+  color: var(--accent-600);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+  font-family: var(--font-sans);
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.empty-row {
+  text-align: center;
+  padding: var(--space-10);
+  color: var(--ink-secondary);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-20) var(--space-6);
+  gap: var(--space-4);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: var(--radius-full);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-state p {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+}
+
+.btn-primary {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+  color: var(--white);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(74, 53, 43, 0.22);
 }
 </style>

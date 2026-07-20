@@ -2,29 +2,43 @@ import { defineStore } from "pinia";
 import { ref, computed, onMounted } from "vue";
 import authAPI from "@/services/authAPI";
 
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: "admin" | "manager" | "staff";
+  permissions?: Record<string, boolean>;
+  tenantId?: number;
+}
+
 export const useAuthStore = defineStore("auth", () => {
-  const user = ref(null);
+  const user = ref<User | null>(null);
   const isAuthenticated = computed(() => !!user.value);
   const isLoading = ref(true);
-  const currentTenant = ref(null);
+  const currentTenant = ref<{ id: number; name: string; slug?: string } | null>(null);
   const tenantModeEnabled = ref(false);
   const branding = ref({ brandName: "", logoUrl: "", primaryColor: "" });
   const currencyLocale = ref({ currency: "GHS", locale: "en-GH" });
+  const authError = ref<string | null>(null);
 
-  const applySetting = (settings, key, target) => {
+  const applySetting = (
+    settings: Array<{ key: string; value: unknown }>,
+    key: string,
+    target: Record<string, unknown>
+  ) => {
     const s = settings.find((d) => d.key === key);
     if (!s || s.value == null) return;
     const v = typeof s.value === "string" ? JSON.parse(s.value) : s.value;
     if (v && typeof v === "object") Object.assign(target, v);
   };
 
-  const login = async (email, password) => {
+  const login = async (email: string, password: string) => {
     const response = await authAPI.login(email, password);
     user.value = response.data.user;
     return response;
   };
 
-  const register = async (username, email, password) => {
+  const register = async (username: string, email: string, password: string) => {
     const response = await authAPI.register(username, email, password);
     return response;
   };
@@ -57,7 +71,7 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       const settings = await authAPI.getSettings();
       const setting = (settings.data.settings || []).find(
-        (s) => s.key === "tenant_mode_enabled"
+        (s: { key: string }) => s.key === "tenant_mode_enabled"
       );
       if (setting) {
         const v =
@@ -78,12 +92,12 @@ export const useAuthStore = defineStore("auth", () => {
     return tenantModeEnabled.value;
   };
 
-  const fetchRegistrationStatus = async () => {
-    const response = await authAPI.getRegistrationStatus();
-    return response.data.registrationEnabled;
+  const refreshToken = async () => {
+    const response = await authAPI.refreshToken();
+    return response.data;
   };
 
-  const updateSettings = async (key, value) => {
+  const updateSettings = async (key: string, value: unknown) => {
     const response = await authAPI.updateSettings(key, value);
     if (key === "tenant_mode_enabled") {
       tenantModeEnabled.value = Boolean(value);
@@ -91,7 +105,7 @@ export const useAuthStore = defineStore("auth", () => {
     return response.data.setting;
   };
 
-  const setTenant = (tenant) => {
+  const setTenant = (tenant: { id: number; name: string; slug?: string } | null) => {
     currentTenant.value = tenant;
   };
 
@@ -102,11 +116,25 @@ export const useAuthStore = defineStore("auth", () => {
   onMounted(async () => {
     try {
       await getMe();
-    } catch {
-      // not authenticated
+      await fetchTenantMode();
+    } catch (err) {
+      const error = err as { response?: { status?: number } };
+      if (error.response?.status !== 401) {
+        try {
+          await getMe();
+          await fetchTenantMode();
+        } catch {
+          authError.value =
+            "Session expired or unreachable. Please log in again.";
+          user.value = null;
+        }
+      } else {
+        authError.value = "Session expired. Please log in again.";
+        user.value = null;
+      }
+    } finally {
+      isLoading.value = false;
     }
-    isLoading.value = false;
-    fetchTenantMode();
   });
 
   return {
@@ -117,15 +145,16 @@ export const useAuthStore = defineStore("auth", () => {
     tenantModeEnabled,
     branding,
     currencyLocale,
+    authError,
     login,
     register,
     logout,
     getMe,
     fetchSettings,
     fetchTenantMode,
-    fetchRegistrationStatus,
     updateSettings,
     setTenant,
     clearTenant,
+    refreshToken,
   };
 });

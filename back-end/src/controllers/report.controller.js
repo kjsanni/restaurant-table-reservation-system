@@ -149,6 +149,52 @@ const getTurnTimeHandler = async (req, res) => {
   return res.status(200).json({ success: true, report });
 };
 
+const getOrderStatsHandler = async (req, res) => {
+  const filters = {
+    from: req.query.from,
+    to: req.query.to,
+  };
+  const stats = await reportService.getOrderAnalytics(filters, req.tenant?.id);
+  return res.status(200).json({ success: true, stats });
+};
+
+const getTopSellingItemsHandler = async (req, res) => {
+  const filters = {
+    from: req.query.from,
+    to: req.query.to,
+  };
+  const items = await reportService.getTopSellingItems(filters, req.tenant?.id);
+  return res.status(200).json({ success: true, items });
+};
+
+const exportOrderCSVHandler = async (req, res) => {
+  const filters = {
+    from: req.query.from,
+    to: req.query.to,
+    status: req.query.status,
+    paymentStatus: req.query.paymentStatus,
+  };
+  const tenantId = req.tenant?.id;
+  const csv = await reportService.exportOrderCSV(filters, tenantId);
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", "attachment; filename=orders.csv");
+  res.send(csv);
+};
+
+const exportOrderPDFHandler = async (req, res) => {
+  const filters = {
+    from: req.query.from,
+    to: req.query.to,
+    status: req.query.status,
+    paymentStatus: req.query.paymentStatus,
+  };
+  const tenantId = req.tenant?.id;
+  const pdf = await reportService.exportOrderPDF(filters, tenantId);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", "attachment; filename=orders.pdf");
+  res.send(pdf);
+};
+
 module.exports = {
   getReservationReportHandler,
   getTimeSeriesHandler,
@@ -158,4 +204,8 @@ module.exports = {
   exportCSVHandler,
   exportPDFHandler,
   getTurnTimeHandler,
+  getOrderStatsHandler,
+  getTopSellingItemsHandler,
+  exportOrderCSVHandler,
+  exportOrderPDFHandler,
 };

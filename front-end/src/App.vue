@@ -19,6 +19,12 @@ import {
 import PageHeader from "@/components/PageHeader.vue";
 import TenantSwitcher from "@/components/TenantSwitcher.vue";
 import { useTenantBranding } from "@/composables/useTenantBranding";
+import { getCurrentInstance } from "vue";
+
+const app = getCurrentInstance()?.appContext?.app;
+if (app) {
+  app.config.errorHandler = (err) => handleError(err, "vue");
+}
 
 defineOptions({
   components: { PageHeader },
@@ -31,7 +37,31 @@ useTenantBranding();
 
 const sidebarVisible = ref(true);
 const collapsed = ref(false);
-const windowWidth = ref(null);
+const windowWidth = ref<number>(
+  typeof window !== "undefined" ? window.innerWidth : 1024
+);
+const hasError = ref(false);
+const errorMessage = ref("");
+
+const handleError = (err: unknown, context = "app") => {
+  console.error(`[${context}]`, err);
+  hasError.value = true;
+  errorMessage.value =
+    (err as Error)?.message || "Something went wrong. Please refresh the page.";
+};
+
+window.addEventListener("error", (event) => {
+  handleError(event.error, "window");
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  handleError(event.reason, "unhandledrejection");
+});
+
+const resetError = () => {
+  hasError.value = false;
+  errorMessage.value = "";
+};
 
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 const isAdmin = computed(() => authStore.user?.role === "admin");
@@ -68,14 +98,20 @@ const toggleSidebar = () => {
   }
 };
 
-const isActive = (name) => route.name === name;
+const isActive = (name: string) => route.name === name;
 
-const shouldShow = (item) => {
+const shouldShow = (item: {
+  tenantOnly?: boolean;
+  requiresAuth?: boolean;
+  requiresAdmin?: boolean;
+  requiresPermission?: string;
+}) => {
+  if (item.tenantOnly && !authStore.tenantModeEnabled) return false;
   if (item.requiresAuth && !isAuthenticated.value) return false;
   if (item.requiresAdmin && !isAdmin.value) return false;
   if (
     item.requiresPermission &&
-    !user.value?.permissions?.[item.requiresPermission]
+    !authStore.user?.permissions?.[item.requiresPermission]
   )
     return false;
   return true;
@@ -104,14 +140,15 @@ const desktopMargin = computed(() => {
 });
 
 const logout = async () => {
+  if (!isAuthenticated.value) return;
   await authStore.logout();
   router.push({ name: "home" });
 };
 
-const handleKeydown = (event) => {
+const handleKeydown = (event: KeyboardEvent) => {
   const key = event.key.toLowerCase();
   const isInputFocused = ["input", "textarea", "select"].includes(
-    event.target?.tagName?.toLowerCase()
+    (event.target as HTMLElement)?.tagName?.toLowerCase() || ""
   );
   const isModalOpen =
     document.querySelector(".va-modal_overlay") ||
@@ -152,8 +189,15 @@ onUnmounted(() => {
 
 <template>
   <VaConfig>
-    <VaLayout>
-      <template #left>
+    <div v-if="hasError" class="error-boundary">
+      <div class="error-boundary-inner">
+        <h1>Something went wrong</h1>
+        <p>{{ errorMessage }}</p>
+        <VaButton preset="primary" @click="resetError">Try again</VaButton>
+      </div>
+    </div>
+    <VaLayout v-else>
+      <template #left v-if="!route.meta.standalone">
         <VaSidebar
           v-model="sidebarVisible"
           width="260"
@@ -182,9 +226,11 @@ onUnmounted(() => {
                 <VaSidebarItem
                   v-for="item in allNavItems"
                   :key="item.routeName"
-                  :active="isActive(item.routeName)"
                   :to="{ name: item.routeName }"
-                  class="nav-item"
+                  :class="[
+                    'nav-item',
+                    { 'is-active': isActive(item.routeName) },
+                  ]"
                 >
                   <template #icon>
                     <Icon :icon="item.icon" width="20" height="20" />
@@ -208,7 +254,7 @@ onUnmounted(() => {
               </div>
               <VaSidebarItem
                 :active="false"
-                @click="logout"
+                @click.stop="logout"
                 class="nav-item logout-item"
               >
                 <template #icon>
@@ -222,8 +268,135 @@ onUnmounted(() => {
       </template>
 
       <template #default>
-        <div class="content-wrapper" :style="{ marginLeft: desktopMargin }">
-          <header class="app-topbar-integrated">
+        <div
+          class="content-wrapper"
+          :style="{
+            marginLeft: route.meta.standalone ? '0px' : desktopMargin,
+            display:
+              route.meta.standalone && route.name !== 'home' && isAuthenticated
+                ? 'grid'
+                : 'block',
+            gridTemplateColumns:
+              route.meta.standalone && route.name !== 'home' && isAuthenticated
+                ? '250px 1fr'
+                : 'none',
+          }"
+        >
+          <aside
+            v-if="
+              route.meta.standalone &&
+              route.name !== 'login' &&
+              route.name !== 'register' &&
+              route.name !== 'home' &&
+              isAuthenticated
+            "
+            class="standalone-sidebar"
+          >
+            <div class="standalone-sidebar-brand">
+              <div class="standalone-sidebar-mark">R</div>
+              <div class="standalone-sidebar-name">
+                Restaurant<br />Reservations
+              </div>
+            </div>
+            <nav class="standalone-nav-group">
+              <div class="standalone-nav-group-title">Operations</div>
+              <RouterLink
+                :to="{ name: 'tenant-landing' }"
+                class="standalone-nav-item"
+                active-class="active"
+              >
+                <span class="standalone-nav-icon">◆</span> Dashboard
+              </RouterLink>
+              <RouterLink
+                :to="{ name: 'reservations' }"
+                class="standalone-nav-item"
+                active-class="active"
+              >
+                <span class="standalone-nav-icon">▦</span> Reservations
+              </RouterLink>
+              <RouterLink
+                :to="{ name: 'table-management' }"
+                class="standalone-nav-item"
+                active-class="active"
+              >
+                <span class="standalone-nav-icon">▦</span> Tables
+              </RouterLink>
+              <RouterLink
+                :to="{ name: 'schedule' }"
+                class="standalone-nav-item"
+                active-class="active"
+              >
+                <span class="standalone-nav-icon">◷</span> Schedule
+              </RouterLink>
+              <RouterLink
+                :to="{ name: 'calendar' }"
+                class="standalone-nav-item"
+                active-class="active"
+              >
+                <span class="standalone-nav-icon">▤</span> Calendar
+              </RouterLink>
+              <RouterLink
+                :to="{ name: 'floor-plan' }"
+                class="standalone-nav-item"
+                active-class="active"
+              >
+                <span class="standalone-nav-icon">◻</span> Floor Plan
+              </RouterLink>
+            </nav>
+            <nav class="standalone-nav-group">
+              <div class="standalone-nav-group-title">Guests</div>
+              <RouterLink
+                :to="{ name: 'waitlist' }"
+                class="standalone-nav-item"
+                active-class="active"
+              >
+                <span class="standalone-nav-icon">◌</span> Waitlist
+              </RouterLink>
+              <RouterLink
+                :to="{ name: 'customer-profile' }"
+                class="standalone-nav-item"
+                active-class="active"
+              >
+                <span class="standalone-nav-icon">👤</span> Customer Portal
+              </RouterLink>
+            </nav>
+            <nav class="standalone-nav-group">
+              <div class="standalone-nav-group-title">Insights</div>
+              <RouterLink
+                :to="{ name: 'reports' }"
+                class="standalone-nav-item"
+                active-class="active"
+              >
+                <span class="standalone-nav-icon">📊</span> Reports
+              </RouterLink>
+              <RouterLink
+                :to="{ name: 'heatmap' }"
+                class="standalone-nav-item"
+                active-class="active"
+              >
+                <span class="standalone-nav-icon">🌡</span> Heatmap
+              </RouterLink>
+            </nav>
+            <nav class="standalone-nav-group" style="margin-top: auto">
+              <div class="standalone-nav-group-title">Admin</div>
+              <RouterLink
+                :to="{ name: 'admin-settings' }"
+                class="standalone-nav-item"
+                active-class="active"
+              >
+                <span class="standalone-nav-icon">⚙</span> Settings
+              </RouterLink>
+              <span
+                class="standalone-nav-item"
+                style="cursor: pointer"
+                @click.stop="logout"
+              >
+                <span class="standalone-nav-icon">↪</span> Logout
+              </span>
+            </nav>
+          </aside>
+
+          <header v-if="!route.meta.standalone" class="app-topbar-integrated">
             <div class="topbar-left">
               <VaButton
                 preset="secondary"
@@ -261,17 +434,22 @@ onUnmounted(() => {
           </header>
 
           <div
-            v-if="sidebarVisible && windowWidth <= 768"
+            v-if="
+              !route.meta.standalone && sidebarVisible && windowWidth <= 768
+            "
             class="sidebar-backdrop"
             @click="toggleSidebar"
           ></div>
-          <main class="main-content">
+          <main
+            class="main-content"
+            :style="route.meta.standalone ? { padding: 0 } : {}"
+          >
             <RouterView v-slot="{ Component }">
               <component v-if="Component" :is="Component" :key="$route.name" />
             </RouterView>
           </main>
 
-          <footer class="app-footer">
+          <footer v-if="!route.meta.standalone" class="app-footer">
             <div class="footer-inner">
               <span class="footer-text"
                 >&copy; {{ currentYear }} Vibespot Technologies Ltd. Made by:
@@ -330,6 +508,31 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.error-boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-8);
+  background: var(--surface);
+}
+.error-boundary-inner {
+  text-align: center;
+  max-width: 420px;
+}
+.error-boundary-inner h1 {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: var(--space-3);
+}
+.error-boundary-inner p {
+  font-size: var(--text-base);
+  color: var(--ink-secondary);
+  margin-bottom: var(--space-5);
+}
+
 :deep(.va-layout) {
   overflow: visible;
   height: auto;
@@ -492,9 +695,24 @@ onUnmounted(() => {
   z-index: 1;
 }
 
-.nav-item:hover .nav-text,
 .nav-item:deep(.va-sidebar-item--active .nav-text) {
   color: white;
+}
+.nav-item.is-active {
+  background: linear-gradient(
+    90deg,
+    rgba(217, 119, 6, 0.18) 0%,
+    rgba(180, 83, 9, 0.08) 100%
+  ) !important;
+  border-radius: var(--radius-lg);
+}
+.nav-item.is-active .nav-text {
+  color: white;
+  font-weight: 600;
+}
+.nav-item.is-active::before {
+  opacity: 1;
+  box-shadow: inset 3px 0 0 var(--accent) !important;
 }
 
 .sidebar-bottom {
@@ -718,5 +936,100 @@ onUnmounted(() => {
   color: var(--accent-600);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+.standalone-sidebar {
+  background: linear-gradient(
+    180deg,
+    var(--brand-900) 0%,
+    var(--brand-800) 100%
+  );
+  color: var(--white);
+  padding: 28px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.standalone-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.standalone-sidebar-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--accent-400), var(--accent-500));
+  display: grid;
+  place-items: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--brand-900);
+}
+.standalone-sidebar-name {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.standalone-nav-group {
+  margin-top: 8px;
+}
+.standalone-nav-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 12px 12px 6px;
+}
+.standalone-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  cursor: pointer;
+}
+.standalone-nav-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--white);
+  transform: translateX(2px);
+}
+.standalone-nav-item.active {
+  background: linear-gradient(
+    90deg,
+    rgba(217, 119, 6, 0.18),
+    rgba(217, 119, 6, 0.06)
+  );
+  color: var(--accent-300);
+  font-weight: 600;
+}
+.standalone-nav-icon {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  opacity: 0.85;
+}
+
+@media screen and (max-width: 960px) {
+  .standalone-sidebar {
+    display: none;
+  }
+  .content-wrapper {
+    grid-template-columns: 1fr !important;
+  }
 }
 </style>

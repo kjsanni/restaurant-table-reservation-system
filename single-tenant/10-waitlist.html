@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Restaurant Reservations — Waitlist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --brand-900: #1a1410;
+    --brand-800: #2d221c;
+    --brand-700: #4a352b;
+    --brand-600: #6b4a3a;
+    --brand-500: #8c5e4a;
+    --brand-400: #b87a62;
+    --brand-300: #d9a086;
+    --brand-200: #e8c4b5;
+    --brand-100: #f3ddd3;
+    --brand-50: #faf6f3;
+    --accent-600: #b45309;
+    --accent-500: #d97706;
+    --accent-400: #f59e0b;
+    --accent-300: #fbbf24;
+    --accent-100: #fef3c7;
+    --accent-50: #fffbeb;
+    --earth-600: #365314;
+    --earth-500: #4d7c0f;
+    --earth-100: #ecfccb;
+    --sky-600: #1e40af;
+    --sky-500: #3b82f6;
+    --sky-100: #dbeafe;
+    --rose-600: #e11d48;
+    --rose-500: #f43f5e;
+    --rose-100: #ffe4e6;
+    --neutral-900: #312e2a;
+    --neutral-800: #4a4540;
+    --neutral-600: #7d766c;
+    --neutral-500: #9a9389;
+    --neutral-300: #d6d1c9;
+    --neutral-200: #e7e4de;
+    --neutral-100: #f3f1ed;
+    --neutral-50: #faf9f7;
+    --white: #ffffff;
+    --font-serif: 'Fraunces', serif;
+    --font-sans: 'Public Sans', sans-serif;
+    --radius-xl: 20px;
+    --radius-lg: 14px;
+    --radius-md: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--brand-50);
+    color: var(--neutral-900);
+    min-height: 100vh;
+  }
+  .app {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    min-height: 100vh;
+  }
+  .sidebar {
+    background: linear-gradient(180deg, var(--brand-900) 0%, var(--brand-800) 100%);
+    color: var(--white);
+    padding: 28px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+    animation: fadeDown 0.6s ease-out both;
+  }
+  .sidebar-mark {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--accent-400), var(--accent-500));
+    display: grid; place-items: center;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--brand-900);
+  }
+  .sidebar-name {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .nav-group { margin-top: 8px; }
+  .nav-group-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.45);
+    padding: 12px 12px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.78);
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  }
+  .nav-item:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    transform: translateX(2px);
+  }
+  .nav-item.active {
+    background: linear-gradient(90deg, rgba(217,119,6,0.18), rgba(217,119,6,0.06));
+    color: var(--accent-300);
+    font-weight: 600;
+  }
+  .nav-icon { width: 18px; height: 18px; display: grid; place-items: center; opacity: 0.85; }
+
+  .main { padding: 36px 40px 60px; overflow-y: auto; }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    animation: fadeDown 0.6s ease-out both;
+  }
+  .topbar-left h1 {
+    font-family: var(--font-serif);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .topbar-left p {
+    color: var(--neutral-600);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .topbar-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .btn {
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+    color: var(--white);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(74,53,43,0.22);
+  }
+
+  .waitlist-card {
+    background: var(--white);
+    border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 10px 30px rgba(26,20,16,0.05);
+    overflow: hidden;
+    animation: fadeUp 0.7s 0.15s ease-out both;
+  }
+  .waitlist-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--neutral-100);
+    transition: background 0.2s ease;
+  }
+  .waitlist-item:last-child { border-bottom: none; }
+  .waitlist-item:hover { background: rgba(243,221,211,0.25); }
+  .waitlist-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--brand-100);
+    color: var(--brand-800);
+    display: grid; place-items: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .waitlist-meta { flex: 1; }
+  .waitlist-meta b {
+    display: block;
+    font-size: 14px;
+    color: var(--neutral-900);
+  }
+  .waitlist-meta span {
+    font-size: 12px;
+    color: var(--neutral-600);
+  }
+  .waitlist-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .btn-sm {
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .btn-accent {
+    background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+    color: var(--white);
+  }
+  .btn-accent:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(74,53,43,0.18);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 960px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-mark">R</div>
+        <div class="sidebar-name">Restaurant<br/>Reservations</div>
+      </div>
+      <nav class="nav-group">
+        <div class="nav-group-title">Operations</div>
+        <a class="nav-item" href="03-dashboard.html"><span class="nav-icon">◆</span> Dashboard</a>
+        <a class="nav-item" href="04-reservations.html"><span class="nav-icon">▦</span> Reservations</a>
+        <a class="nav-item" href="06-tables.html"><span class="nav-icon">▦</span> Tables</a>
+        <a class="nav-item" href="07-schedule.html"><span class="nav-icon">◷</span> Schedule</a>
+        <a class="nav-item" href="08-calendar.html"><span class="nav-icon">▤</span> Calendar</a>
+        <a class="nav-item" href="09-floorplan.html"><span class="nav-icon">◻</span> Floor Plan</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">Guests</div>
+        <a class="nav-item active" href="10-waitlist.html"><span class="nav-icon">◌</span> Waitlist</a>
+        <a class="nav-item" href="13-customer-portal.html"><span class="nav-icon">👤</span> Customer Portal</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">Insights</div>
+        <a class="nav-item" href="11-reports.html"><span class="nav-icon">📊</span> Reports</a>
+        <a class="nav-item" href="12-heatmap.html"><span class="nav-icon">🌡</span> Heatmap</a>
+      </nav>
+      <nav class="nav-group" style="margin-top:auto;">
+        <div class="nav-group-title">Admin</div>
+        <a class="nav-item" href="14-settings.html"><span class="nav-icon">⚙</span> Settings</a>
+        <a class="nav-item" href="01-login.html"><span class="nav-icon">↪</span> Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h1>Waitlist</h1>
+          <p>Walk-ins and queued guests</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary">+ Add to Waitlist</button>
+        </div>
+      </div>
+
+      <div class="waitlist-card">
+        <div class="waitlist-item">
+          <div class="waitlist-avatar">S</div>
+          <div class="waitlist-meta">
+            <b>Slavyan Hristov</b>
+            <span>5 guests · Added 17:20</span>
+          </div>
+          <div class="waitlist-actions">
+            <button class="btn-sm btn-accent">Seat</button>
+          </div>
+        </div>
+        <div class="waitlist-item">
+          <div class="waitlist-avatar">R</div>
+          <div class="waitlist-meta">
+            <b>Rex Gyamif</b>
+            <span>8 guests · Added 17:30</span>
+          </div>
+          <div class="waitlist-actions">
+            <button class="btn-sm btn-accent">Seat</button>
+          </div>
+        </div>
+        <div class="waitlist-item">
+          <div class="waitlist-avatar">I</div>
+          <div class="waitlist-meta">
+            <b>Isolated Customer</b>
+            <span>3 guests · Added 18:05</span>
+          </div>
+          <div class="waitlist-actions">
+            <button class="btn-sm btn-accent">Seat</button>
+          </div>
+        </div>
+        <div class="waitlist-item">
+          <div class="waitlist-avatar">J</div>
+          <div class="waitlist-meta">
+            <b>Jane Doe</b>
+            <span>8 guests · Added 18:12</span>
+          </div>
+          <div class="waitlist-actions">
+            <button class="btn-sm btn-accent">Seat</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

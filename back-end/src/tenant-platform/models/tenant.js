@@ -91,6 +91,28 @@ module.exports = (sequelize, DataTypes) => {
       paystackSecretKey: {
         type: DataTypes.STRING(100),
         allowNull: true,
+        get() {
+          const raw = this.getDataValue("paystackSecretKey");
+          if (!raw) return raw;
+          try {
+            const { decrypt } = require("../../../utils/encryption");
+            return decrypt(raw);
+          } catch {
+            return raw;
+          }
+        },
+        set(value) {
+          if (!value) {
+            this.setDataValue("paystackSecretKey", value);
+            return;
+          }
+          try {
+            const { encrypt } = require("../../../utils/encryption");
+            this.setDataValue("paystackSecretKey", encrypt(value));
+          } catch {
+            this.setDataValue("paystackSecretKey", value);
+          }
+        },
       },
       billingEmail: {
         type: DataTypes.STRING(100),

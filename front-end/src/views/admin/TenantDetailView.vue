@@ -242,6 +242,7 @@ const addNote = async () => {
 };
 
 const removeNote = async (note) => {
+  if (!confirm("Permanently delete this support note?")) return;
   await noteAPI.deleteNote(route.params.id, note.id);
   notes.value = notes.value.filter((n) => n.id !== note.id);
 };
@@ -261,8 +262,13 @@ const enableTenant = async () => {
 };
 
 const disableTenant = async () => {
-  const reason = prompt("Reason for disabling tenant:");
-  if (!reason) return;
+  if (
+    !confirm(
+      "Are you sure you want to disable this tenant? This will prevent them from accessing the platform."
+    )
+  )
+    return;
+  const reason = prompt("Reason for disabling tenant (optional):") || "";
   await tenantAdminAPI.disable(route.params.id, { reason });
   await loadTenant();
 };

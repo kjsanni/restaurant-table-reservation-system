@@ -1,10 +1,13 @@
-<script setup lang="ts">
-import PageHeader from "@/components/PageHeader.vue";
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="About" subtitle="Restaurant Table Reservation System" />
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1 class="topbar-title">About</h1>
+        <p class="topbar-subtitle">Restaurant Table Reservation System</p>
+      </div>
+    </div>
     <div class="content-wrapper">
       <div class="about">
         <h1>About This System</h1>
@@ -18,6 +21,29 @@ import PageHeader from "@/components/PageHeader.vue";
 </template>
 
 <style scoped>
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-5) var(--page-margin-x);
+}
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.topbar-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+.topbar-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  margin: 4px 0 0;
+}
+
 .main-wrapper {
   min-height: calc(100vh - 64px);
   background: var(--background);

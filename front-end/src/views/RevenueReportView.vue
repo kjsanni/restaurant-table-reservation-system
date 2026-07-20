@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import PageHeader from "@/components/PageHeader.vue";
 import { ref, computed, onMounted, watch } from "vue";
 import reservationAPI from "@/services/reservationAPI";
 import {
@@ -9,17 +8,37 @@ import {
 import { useCurrency } from "@/composables/useCurrency";
 import logger from "@/utils/logger";
 
+interface RevenueByMethod {
+  cash: { total: number };
+  card: { total: number };
+  transfer: { total: number };
+  other: { total: number };
+}
+
+interface RevenuePoint {
+  periodLabel: string;
+  total: number;
+  count: number;
+  byMethod?: RevenueByMethod;
+}
+
+interface RevenueSummary {
+  totalRevenue: number;
+  totalPayments: number;
+  avgPayment: number;
+}
+
 const { format: fmtMoney } = useCurrency();
 
 const loading = ref(true);
-const series = ref([]);
-const summary = ref({
+const series = ref<RevenuePoint[]>([]);
+const summary = ref<RevenueSummary>({
   totalRevenue: 0,
   totalPayments: 0,
   avgPayment: 0,
 });
 
-const granularity = ref("day");
+const granularity = ref<string>("day");
 const { rangeMode, customFrom, customTo, getDateRange, dateRangeLabel } =
   useDateRange("month");
 
@@ -91,8 +110,8 @@ const exportCSV = () => {
   URL.revokeObjectURL(url);
 };
 
-const getMethodColor = (method) => {
-  const colors = {
+const getMethodColor = (method: string) => {
+  const colors: Record<string, string> = {
     cash: "#4d7c0f",
     card: "#3b82f6",
     transfer: "#d97706",
@@ -101,19 +120,24 @@ const getMethodColor = (method) => {
   return colors[method] || "#9a9389";
 };
 
-const getStackedHeight = (amount) => {
+const getStackedHeight = (amount: number) => {
   if (!series.value.length) return 0;
   const max = Math.max(...series.value.map((s) => s.total));
   if (max === 0) return 0;
   return (amount / max) * 160;
 };
 
-const getStackedY = (item, methodKey, _mIndex) => {
+const getStackedY = (
+  item: RevenuePoint,
+  methodKey: string,
+  _mIndex: number
+) => {
   const methods = Object.keys(item.byMethod || {});
   let y = 180;
   for (let i = 0; i < methods.indexOf(methodKey); i++) {
-    const prev = item.byMethod[methods[i]];
-    y -= getStackedHeight(prev.total);
+    const key = methods[i] as keyof RevenueByMethod;
+    const prev = item.byMethod?.[key];
+    y -= getStackedHeight(prev?.total || 0);
   }
   return y;
 };
@@ -121,10 +145,12 @@ const getStackedY = (item, methodKey, _mIndex) => {
 
 <template>
   <div class="main-wrapper">
-    <PageHeader
-      title="Revenue Report"
-      subtitle="Financial insights and analytics"
-    />
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1 class="topbar-title">Revenue Report</h1>
+        <p class="topbar-subtitle">Financial insights and analytics</p>
+      </div>
+    </div>
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -295,11 +321,32 @@ const getStackedY = (item, methodKey, _mIndex) => {
 </template>
 
 <style scoped>
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-5) var(--page-margin-x);
+}
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.topbar-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+.topbar-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  margin: 4px 0 0;
+}
+
 .main-wrapper {
   min-height: 100vh;
   background: var(--border);
-}
-
 }
 
 .content-wrapper {

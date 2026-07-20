@@ -353,3 +353,75 @@ Across all modernized pages:
 - Backend: tests pass
 - Git: committed as `76d194c` and pushed to `RTRS` remote (main)
 
+
+### Platform Admin — Tenant Management, Pricing & Payments
+- **Enhanced tenant dashboard** — `TenantDashboardView.vue` now shows active/inactive summary cards, MRR, quick-action links to Tenants/Pricing/Payments, and "Access Tenant" buttons that switch context via `TenantSwitcher`
+- **Subscription plan management** — New `PlansManagementView.vue` at `/admin/plans` with full CRUD for plans (name, slug, price, currency, max tables, max reservations/month). Backed by `subscription_plans` DB table with migration `20260719000001`. Plans are cached for 30s in `tenantSubscription.service.js` with `DEFAULT_PLANS` fallback.
+- **Platform payment dashboard** — New `PlatformPaymentDashboard.vue` at `/admin/payments` showing per-tenant reservation payment counts (unpaid/deposit/partial/paid), expected revenue, collected amount, outstanding balance, and recent payment history across all tenants.
+- **Access Tenant flow** — `TenantDetailView.vue` and tenant table rows include "Access" button that sets `authStore.currentTenant` and redirects to `/reservations`, causing all API requests to include `X-Tenant-Id`.
+- **Backend** — Added `/api/v1/admin/plans/*` routes (plan.controller.js + plan.router.js), `/api/v1/admin/payments/summary` (platformPayment.controller.js + platformPayment.router.js), and updated `resolveTenant.js` to exempt new platform-admin paths.
+- **Tests** — Backend: 126/126 tests pass (22 suites). Updated `tenantSubscription.test.js` to mock `db.subscriptionPlan`.
+
+### Verification
+- Frontend: `npm run build` succeeds
+- Backend: tests pass
+- Git: committed as `9f37837` and pushed to `RTRS` remote (main)
+
+### Platform Admin — 14 Expanded Features
+- **Tenant usage monitoring** — `/admin/usage` shows per-tenant usage vs plan limits with 80%+ warnings. Backend: `usage.controller.js`, `usage.dao.js`, `usage.router.js`.
+- **Revenue reports** — `/admin/revenue` with MRR trends, revenue by plan, LTV by tenant. Backend: `revenue.controller.js`, `revenue.dao.js`, `revenue.router.js`.
+- **Bulk operations** — `/admin/bulk` for bulk suspend, change plan, send email. Backend: `bulkAction.controller.js`, `bulk.dao.js`, `bulkAction.router.js`.
+- **Support notes** — Integrated into `TenantDetailView.vue` with add/delete. Backend: `note.controller.js`, `note.dao.js`, `note.router.js`.
+- **Trial management** — `/admin/trials` to extend trial days and convert trial-to-paid. Backend: `trial.controller.js`, `trial.router.js`.
+- **Invoice management** — `/admin/tenants/:id/invoices` with full CRUD. Backend: `invoice.controller.js`, `invoice.dao.js`, `invoice.router.js`.
+- **Billing email templates** — `/admin/billing-emails` for payment reminders, suspension notices, trial expiry. Backend: `billingEmail.controller.js`, `billingEmail.router.js`.
+- **Tenant status timeline** — `/admin/tenants/:id/timeline` visualizes status changes and audit entries. Backend: `statusTimeline.controller.js`, `statusTimeline.router.js`.
+- **Grace period configuration** — `/admin/tenants/:id/grace-period` per-tenant/plan override. Backend: `gracePeriod.controller.js`, `gracePeriod.router.js`.
+- **White-label branding** — `/admin/tenants/:id/branding` logo, primary color, custom domain. Backend: `whiteLabel.controller.js`, `whiteLabel.router.js`.
+- **API key management** — `/admin/tenants/:id/api-keys` create/revoke with scopes. Backend: `apiKey.controller.js`, `apiKey.dao.js`, `apiKey.router.js`.
+- **Platform audit log** — `/admin/audit` platform admin action trail. Backend: `platformAudit.controller.js`, `platformAudit.dao.js`, `platformAudit.router.js`.
+- **Notification center** — `/admin/notifications` create/manage platform notifications. Backend: `notification.controller.js`, `notification.dao.js`, `notification.router.js`.
+- **Onboarding checklist** — `/admin/tenants/:id/onboarding` tracks setup progress. Backend: `onboarding.controller.js`, `onboarding.dao.js`, `onboarding.router.js`.
+
+**Database:** Migration `20260720000001-platform-admin-tables.js` creates 6 new tables (`tenant_notes`, `invoices`, `api_keys`, `platform_audit_logs`, `notifications`, `tenant_onboarding`) and adds columns to `tenants` and `subscription_plans`.
+
+**Verification:**
+- Frontend: `npm run build` + `npm run lint` pass
+- Backend: 126/126 tests pass (22 suites)
+- Git: committed as `8e41e6f` and pushed to `RTRS` remote (main)
+
+---
+
+## 2026-07-20 Session — Mockup Alignment, Test Teardown & Platform Fixes
+
+### Frontend — PageHeader removal & mockup alignment
+- Removed `<PageHeader>` from **all** `front-end/src/views/*.vue` files.
+- Replaced each with an inline `topbar` div using the same pattern as earlier rewrites.
+- Views updated: `RevenueReportView`, `AuditLogView`, `PaymentDashboardView`, `GroupManagementView`, `NoShowView`, `AboutView`, `RoleManagementView`, `FloorPlanEditorView`, `EmailTemplatesView`, `CustomerProfileView`, `SuperAdminOverviewView`, `HeatmapView`.
+- `LoginView.vue` already matched `01-login.html` split-screen mockup; no rewrite needed.
+
+### Backend — BullMQ/Jest teardown fix
+- Root cause: `src/queues/queue.js`, `notification.queue.js`, and `report.queue.js` opened BullMQ Queue/Worker connections at module load time but never closed them.
+- Fix: Added `closeAllQueues()`, `closeNotificationWorker()`, `closeReportWorker()`, and a `globalTeardown` in `jest.config.js`.
+- Added `src/__mocks__/bullmq.js` with `moduleNameMapper` so tests never open real Redis TCP connections.
+- Removed `--forceExit` from `back-end/package.json` test script.
+- Result: `npm test` exits cleanly with **0 warnings**, **25 suites**, **155 tests passed**.
+
+### Backend — Missing DB fields for trial/grace period
+- Added `tenants.trialExtendsTo` and `tenants.convertedFromTrialAt` (migration `20260720000011`).
+- Added `subscription_plans.gracePeriodDays` (migration `20260720000012`).
+- Updated `db/models/tenant.js` and `db/models/subscriptionPlan.js` so Sequelize knows about the new columns.
+
+### Backend — Notification route permission fix
+- `src/tenant-platform/routes/notification.router.js` now requires `requirePermission("manage_tenants")` on all routes.
+- Previously any authenticated user could create/list platform notifications.
+
+### Backend — Revenue DAO hardcoded prices fixed
+- `src/tenant-platform/DAOs/revenue.dao.js` hardcoded `29/79/0` for starter/growth/enterprise.
+- Updated `getMrrTrends`, `getRevenueByPlan`, and `getLtvByTenant` to dynamically read prices from `subscription_plans`.
+
+### Verification
+- `cd front-end && npm run build` ✅ passes
+- `cd front-end && npm run lint` ✅ passes
+- `cd front-end && npm run test:unit` ✅ passes (20/20)
+- `cd back-end && npm test` ✅ passes (25 suites, 155 tests) with **0 Jest teardown warnings**

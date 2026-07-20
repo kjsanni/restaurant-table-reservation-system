@@ -24,7 +24,7 @@ const notificationRouter = require("../routes/notification.router");
 const emailTemplateRouter = require("../routes/emailTemplate.router");
 const webhookRouter = require("../routes/webhook.router");
 const legalRouter = require("../routes/legal.router");
-const { setCsrfCookie, CSRF_HEADER_NAME, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
+const { setCsrfCookie, generateCsrfToken, CSRF_HEADER_NAME, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
 const { requestLogger } = require("../middleware/requestLogger");
 const { logAction } = require("../middleware/auditLog");
@@ -194,6 +194,9 @@ const createServer = () => {
   app.use("/api/v1/waitlist", logAction, validateCsrfToken, bulkOperationLimiter, waitlistRouter);
   app.use("/api/v1/payments", logAction, validateCsrfToken, paymentRouter);
   app.use("/api/v1/reports", logAction, validateCsrfToken, reportRouter);
+  app.use("/api/v1/menu", logAction, validateCsrfToken, require("../routes/menu.router"));
+  app.use("/api/v1/orders", logAction, validateCsrfToken, require("../routes/order.router"));
+  app.use("/api/v1/promotions", logAction, validateCsrfToken, require("../routes/promotion.router"));
   app.use("/api/v1/customers", logAction, validateCsrfToken, customerRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminRouter);
   if (TENANT_MODE) {
@@ -215,7 +218,7 @@ const createServer = () => {
     app.use("/api/v1/admin/billing-emails", logAction, validateCsrfToken, billingEmailRoutes);
     app.use("/api/v1/admin/audit", logAction, validateCsrfToken, platformAuditRoutes);
     app.use("/api/v1/admin/notifications", logAction, validateCsrfToken, notificationRoutes);
-    app.use("/api/v1/billing", logAction, billingRoutes);
+    app.use("/api/v1/billing", logAction, validateCsrfToken, billingRoutes);
   }
   app.use("/api/v1/customer-portal", logAction, validateCsrfToken, customerPortalRouter);
   app.use("/api/v1/notifications", logAction, validateCsrfToken, notificationRouter);

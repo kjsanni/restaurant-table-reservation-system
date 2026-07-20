@@ -1,43 +1,34 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
-import { useToastStore } from "@/stores/toast";
 import customerPortalAPI from "@/services/customerPortalAPI";
 import logger from "@/utils/logger";
-import RESERVATION_STATUS from "@/constants/reservationStatus";
+
+interface Reservation {
+  id: number;
+  resDate: string;
+  resTime: string;
+  people: number;
+  tableName?: string;
+  occasion?: string;
+  resStatus: string;
+}
+
+interface Profile {
+  name?: string;
+  email?: string;
+}
 
 const authStore = useAuthStore();
-const toastStore = useToastStore();
-
-const reservations = ref([]);
-const profile = ref(null);
+const reservations = ref<Reservation[]>([]);
+const profile = ref<Profile | null>(null);
 const loading = ref(false);
-const cancelling = ref<number | null>(null);
-
-const firstName = computed(() => {
-  const name =
-    profile.value?.name ||
-    authStore.user?.username ||
-    authStore.user?.name ||
-    "there";
-  return String(name).split(" ")[0];
-});
-
-const reservationsByState = computed(() => {
-  const list = reservations.value || [];
-  const isUpcoming = (r: any) =>
-    r.resStatus === RESERVATION_STATUS.CONFIRMED ||
-    r.resStatus === RESERVATION_STATUS.PENDING;
-  return {
-    upcoming: list.filter(isUpcoming),
-    past: list.filter((r: any) => !isUpcoming(r)),
-  };
-});
+const searchQuery = ref("");
 
 const loadProfile = async () => {
   try {
     const res = await customerPortalAPI.getProfile();
-    profile.value = res.data?.profile || res.data || null;
+    profile.value = (res.data?.profile || res.data || null) as Profile | null;
   } catch (err) {
     logger.warn("Customer profile unavailable", { error: err });
   }
@@ -47,7 +38,7 @@ const loadReservations = async () => {
   loading.value = true;
   try {
     const res = await customerPortalAPI.getReservations();
-    reservations.value = res.data.reservations || [];
+    reservations.value = (res.data?.reservations || []) as Reservation[];
   } catch (err) {
     logger.error("Failed to load reservations", { error: err });
   } finally {
@@ -55,26 +46,38 @@ const loadReservations = async () => {
   }
 };
 
-const cancelReservation = async (id: number) => {
-  cancelling.value = id;
-  try {
-    const res = await customerPortalAPI.cancelReservation(id);
-    if (res.data.success) {
-      toastStore.add("Reservation cancelled", "success");
-      await loadReservations();
-    } else {
-      toastStore.add(
-        res.data.message || "Failed to cancel reservation",
-        "error"
-      );
-    }
-  } catch (err) {
-    logger.error("Failed to cancel reservation", { error: err });
-    toastStore.add("Failed to cancel reservation", "error");
-  } finally {
-    cancelling.value = null;
-  }
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+const startPolling = () => {
+  pollTimer = setInterval(() => {
+    loadReservations();
+  }, 30000);
 };
+
+const firstName = computed(() => {
+  const name =
+    profile.value?.name ||
+    authStore.user?.username ||
+    (authStore.user as any)?.name ||
+    "Guest";
+  return String(name).split(" ")[0];
+});
+
+const filteredReservations = computed(() => {
+  if (!searchQuery.value) return reservations.value;
+  const q = searchQuery.value.toLowerCase();
+  return reservations.value.filter((r: Reservation) => {
+    const occasion = (r.occasion || "").toLowerCase();
+    const table = (r.tableName || "").toLowerCase();
+    const date = (r.resDate || "").toLowerCase();
+    const id = String(r.id || "");
+    return (
+      occasion.includes(q) ||
+      table.includes(q) ||
+      date.includes(q) ||
+      id.includes(q)
+    );
+  });
+});
 
 const dateParts = (d: string) => {
   if (!d) return { mon: "—", day: "" };
@@ -99,263 +102,219 @@ const statusLabel = (s: string) => {
 };
 
 const statusClass = (s: string) => {
-  if (s === RESERVATION_STATUS.CONFIRMED || s === RESERVATION_STATUS.PENDING)
-    return "t-upcoming";
-  if (s === RESERVATION_STATUS.CANCELLED) return "t-past";
+  if (s === "confirmed" || s === "pending") return "t-upcoming";
   return "t-past";
 };
 
 onMounted(async () => {
   await Promise.all([loadProfile(), loadReservations()]);
+  startPolling();
+});
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer);
 });
 </script>
 
 <template>
-  <div class="portal-page">
-    <div class="hero">
-      <h1>Welcome back, {{ firstName }}</h1>
-      <p>
-        Manage your reservations at
-        {{ authStore.currentTenant?.name || "your restaurant" }}
-      </p>
-      <div class="search">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4-4" />
-        </svg>
-        <input placeholder="Find a booking by name, date, or confirmation #" />
-        <button>Search</button>
+  <div class="main-wrapper">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Customer Portal</h1>
+        <p>Find and manage your bookings</p>
       </div>
     </div>
 
-    <div class="portal-grid">
-      <section class="card">
-        <h3>Your Reservations</h3>
+    <div class="content-wrapper">
+      <div class="portal-hero">
+        <h2>Welcome back, {{ firstName }}</h2>
+        <p>
+          Manage your reservations at
+          {{ authStore.currentTenant?.name || "your restaurant" }}
+        </p>
+        <div class="portal-search">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Find a booking by name, date, or confirmation #"
+          />
+        </div>
+      </div>
 
+      <div class="bookings">
+        <h3>Your Reservations</h3>
         <div v-if="loading" class="state">Loading…</div>
-        <div v-else-if="!reservations.length" class="state">
+        <div v-else-if="!filteredReservations.length" class="state">
           No reservations found.
         </div>
-
         <template v-else>
-          <div
-            v-for="r in reservationsByState.upcoming"
-            :key="r.id"
-            class="booking"
-          >
-            <div class="booking-date">
+          <div v-for="r in filteredReservations" :key="r.id" class="booking">
+            <div class="date-badge">
               {{ dateParts(r.resDate).mon
               }}<small>{{ dateParts(r.resDate).day }}</small>
             </div>
-            <div class="booking-who">
+            <div class="booking-meta">
               <b>{{ r.occasion || "Reservation" }}</b>
-              <p>
+              <span>
                 {{ r.resTime }} · Party of {{ r.people }} ·
                 {{ r.tableName || "Unassigned" }}
-              </p>
+              </span>
             </div>
-            <span class="booking-tag" :class="statusClass(r.resStatus)">
+            <span :class="['pill', statusClass(r.resStatus)]">
               {{ statusLabel(r.resStatus) }}
             </span>
-            <button
-              class="cancel-btn"
-              :disabled="cancelling === r.id"
-              @click="cancelReservation(r.id)"
-            >
-              {{ cancelling === r.id ? "Cancelling…" : "Cancel" }}
-            </button>
-          </div>
-
-          <div v-if="reservationsByState.past.length" class="past-label">
-            Past
-          </div>
-          <div
-            v-for="r in reservationsByState.past"
-            :key="r.id"
-            class="booking"
-          >
-            <div class="booking-date">
-              {{ dateParts(r.resDate).mon
-              }}<small>{{ dateParts(r.resDate).day }}</small>
-            </div>
-            <div class="booking-who">
-              <b>{{ r.occasion || "Reservation" }}</b>
-              <p>
-                {{ r.resTime }} · Party of {{ r.people }} ·
-                {{ r.tableName || "Unassigned" }}
-              </p>
-            </div>
-            <span class="booking-tag t-past">{{
-              statusLabel(r.resStatus)
-            }}</span>
           </div>
         </template>
-      </section>
-
-      <aside class="card profile-card">
-        <h3>Profile</h3>
-        <div class="prof">
-          <div class="prof-av">
-            {{ (profile?.name || firstName || "G").charAt(0).toUpperCase() }}
-          </div>
-          <div>
-            <b>{{ profile?.name || firstName }}</b>
-            <span>{{ profile?.email || authStore.user?.email || "" }}</span>
-          </div>
-        </div>
-        <div class="plist">
-          <div>
-            <span>Total visits</span><b>{{ profile?.totalVisits ?? "—" }}</b>
-          </div>
-          <div>
-            <span>Member since</span><b>{{ profile?.memberSince ?? "—" }}</b>
-          </div>
-          <div>
-            <span>Loyalty tier</span><b>{{ profile?.loyaltyTier ?? "—" }}</b>
-          </div>
-          <div>
-            <span>Dietary notes</span
-            ><b>{{ profile?.dietaryNotes ?? "None" }}</b>
-          </div>
-        </div>
-        <div class="cta">
-          <button class="primary">Book Again</button>
-          <button>Edit Profile</button>
-        </div>
-      </aside>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.portal-page {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: var(--space-7) var(--space-6) var(--space-10);
+.main-wrapper {
+  min-height: 100vh;
+  background: var(--background-warm);
+  display: flex;
+  flex-direction: column;
 }
-.hero {
-  background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-8);
-  text-align: center;
-  margin-bottom: var(--space-6);
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.topbar-left h1 {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--neutral-900);
+}
+
+.topbar-left p {
+  color: var(--neutral-600);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.content-wrapper {
+  flex: 1;
+  margin: var(--space-8) var(--space-6);
+  max-width: var(--content-max-width);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 1024px) {
+  .content-wrapper {
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-10);
+  }
+}
+
+.portal-hero {
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+  color: var(--white);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  margin-bottom: 22px;
   position: relative;
   overflow: hidden;
 }
-.hero::before {
+
+.portal-hero::before {
   content: "";
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    600px 200px at 50% -40%,
-    var(--accent-soft),
+    360px 160px at 100% -20%,
+    rgba(251, 191, 36, 0.25),
     transparent 60%
   );
-}
-.hero h1 {
-  font-family: var(--font-serif);
-  font-size: var(--text-3xl);
-  color: var(--ink);
-  letter-spacing: var(--tracking-tight);
-  position: relative;
-}
-.hero p {
-  color: var(--ink-muted);
-  font-size: var(--text-sm);
-  margin-top: var(--space-2);
-  position: relative;
-}
-.search {
-  display: flex;
-  gap: var(--space-2);
-  margin-top: var(--space-5);
-  position: relative;
-  max-width: 520px;
-  margin-left: auto;
-  margin-right: auto;
-  align-items: center;
-}
-.search svg {
-  position: absolute;
-  left: var(--space-4);
-  color: var(--ink-muted);
-}
-.search input {
-  flex: 1;
-  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-9);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  font-family: var(--font-sans);
-  background: var(--surface);
-  color: var(--ink);
-}
-.search input:focus {
-  outline: none;
-  border-color: var(--accent-500);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.search button {
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  border: none;
-  padding: 0 var(--space-5);
-  border-radius: var(--radius-lg);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  cursor: pointer;
-  font-family: var(--font-sans);
+  pointer-events: none;
 }
 
-.portal-grid {
-  display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  gap: var(--space-5);
-  align-items: start;
-}
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-6);
-}
-.card h3 {
+.portal-hero h2 {
   font-family: var(--font-serif);
-  font-size: var(--text-lg);
-  color: var(--ink);
-  letter-spacing: var(--tracking-tight);
-  margin-bottom: var(--space-4);
+  font-size: 24px;
+  font-weight: 700;
+  position: relative;
 }
-.state {
-  text-align: center;
-  padding: var(--space-8);
-  color: var(--ink-muted);
-  font-size: var(--text-sm);
+
+.portal-hero p {
+  position: relative;
+  opacity: 0.85;
+  margin-top: 6px;
+  font-size: 14px;
 }
+
+.portal-search {
+  margin-top: 14px;
+  position: relative;
+  max-width: 420px;
+}
+
+.portal-search input {
+  width: 100%;
+  padding: 12px 14px 12px 38px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  backdrop-filter: blur(6px);
+}
+
+.portal-search input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.portal-search::before {
+  content: "🔍";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.bookings {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  padding: 22px;
+  box-shadow: 0 10px 30px rgba(26, 20, 16, 0.05);
+}
+
+.bookings h3 {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--neutral-900);
+}
+
 .booking {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid var(--border-subtle);
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--neutral-100);
 }
+
 .booking:last-child {
   border-bottom: none;
 }
-.booking-date {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-lg);
+
+.date-badge {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md);
   background: var(--brand-100);
   color: var(--brand-800);
   display: grid;
@@ -364,144 +323,57 @@ onMounted(async () => {
   font-weight: 700;
   line-height: 1.1;
   flex-shrink: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
 }
-.booking-date small {
+
+.date-badge small {
   display: block;
-  font-size: 10px;
+  font-size: 9px;
   text-transform: uppercase;
 }
-.booking-who {
+
+.booking-meta {
+  flex: 1;
   min-width: 0;
 }
-.booking-who b {
-  color: var(--ink);
-  font-size: var(--text-sm);
+
+.booking-meta b {
+  display: block;
+  font-size: 14px;
+  color: var(--neutral-900);
 }
-.booking-who p {
-  font-size: var(--text-xs);
-  color: var(--ink-muted);
-  margin-top: 2px;
+
+.booking-meta span {
+  font-size: 12px;
+  color: var(--neutral-600);
 }
-.booking-tag {
+
+.pill {
   margin-left: auto;
-  font-size: var(--text-xs);
+  font-size: 11px;
   font-weight: 700;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  border-radius: 999px;
   white-space: nowrap;
+  font-family: var(--font-sans);
 }
+
 .t-upcoming {
-  background: var(--sky-100);
-  color: var(--sky-600);
+  background: var(--accent-100);
+  color: var(--accent-600);
 }
+
 .t-past {
   background: var(--neutral-100);
   color: var(--neutral-600);
 }
-.cancel-btn {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--rose-600);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
-.cancel-btn:hover:not(:disabled) {
-  border-color: var(--rose-200);
-  background: var(--rose-100);
-}
-.cancel-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.past-label {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-  color: var(--ink-muted);
-  font-weight: 600;
-  margin-top: var(--space-4);
-}
 
-.profile-card {
-  position: sticky;
-  top: var(--space-4);
-}
-.prof {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-.prof-av {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--brand-500);
-  color: var(--white);
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  font-size: var(--text-lg);
-}
-.prof b {
-  font-size: var(--text-sm);
-  color: var(--ink);
-  display: block;
-}
-.prof span {
-  font-size: var(--text-xs);
-  color: var(--ink-muted);
-}
-.plist div {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--text-sm);
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--border-subtle);
-}
-.plist div:last-child {
-  border-bottom: none;
-}
-.plist span {
-  color: var(--ink-muted);
-}
-.plist b {
-  color: var(--brand-800);
-}
-.cta {
-  display: flex;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
-}
-.cta button {
-  flex: 1;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  color: var(--brand-800);
-  cursor: pointer;
+.state {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--ink-secondary);
   font-family: var(--font-sans);
-}
-.cta button.primary {
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  border: none;
-}
-
-@media (max-width: 860px) {
-  .portal-grid {
-    grid-template-columns: 1fr;
-  }
-  .profile-card {
-    position: static;
-  }
+  font-size: var(--text-sm);
 }
 </style>

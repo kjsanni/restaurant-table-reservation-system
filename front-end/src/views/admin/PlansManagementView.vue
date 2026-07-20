@@ -135,9 +135,12 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { useToastStore } from "@/stores/toast";
 import planAPI from "@/services/planAPI";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
+
+const toastStore = useToastStore();
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -205,7 +208,11 @@ const submitPlan = async () => {
     await loadPlans();
     closeModal();
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to save plan");
+    toastStore.add(
+      err.response?.data?.message || "Failed to save plan",
+      "error",
+      4000
+    );
   }
 };
 
@@ -215,7 +222,11 @@ const deletePlan = async (plan) => {
     await planAPI.deletePlan(plan.id);
     await loadPlans();
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to delete plan");
+    toastStore.add(
+      err.response?.data?.message || "Failed to delete plan",
+      "error",
+      4000
+    );
   }
 };
 

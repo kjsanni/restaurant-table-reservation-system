@@ -194,8 +194,10 @@ const setResult = (message, type = "success") => {
 };
 
 const handleBulkSuspend = async () => {
-  const reason = prompt("Reason for suspending selected tenants:");
-  if (!reason) return;
+  if (!confirm(`Suspend ${selectedTenants.value.length} selected tenant(s)?`))
+    return;
+  const reason =
+    prompt("Reason for suspending selected tenants (optional):") || "";
   actionLoading.value.suspend = true;
   resultMessage.value = "";
   try {
@@ -216,6 +218,12 @@ const handleBulkSuspend = async () => {
 };
 
 const handleBulkChangePlan = async () => {
+  if (
+    !confirm(
+      `Change plan for ${selectedTenants.value.length} selected tenant(s)?`
+    )
+  )
+    return;
   actionLoading.value.plan = true;
   resultMessage.value = "";
   try {
@@ -237,6 +245,12 @@ const handleBulkChangePlan = async () => {
 };
 
 const handleBulkSendEmail = async () => {
+  if (
+    !confirm(
+      `Send email to ${selectedTenants.value.length} selected tenant(s)?`
+    )
+  )
+    return;
   actionLoading.value.email = true;
   resultMessage.value = "";
   try {

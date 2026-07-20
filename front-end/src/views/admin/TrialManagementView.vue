@@ -123,9 +123,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useToastStore } from "@/stores/toast";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import trialAPI from "@/services/trialAPI";
 import planAPI from "@/services/planAPI";
+
+const toastStore = useToastStore();
 
 const loading = ref(false);
 const tenants = ref([]);
@@ -152,7 +155,11 @@ const loadTrials = async () => {
     const response = await tenantAdminAPI.getAll({ status: "trialing" });
     tenants.value = response.data.collection || [];
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to load trials");
+    toastStore.add(
+      err.response?.data?.message || "Failed to load trials",
+      "error",
+      4000
+    );
   } finally {
     loading.value = false;
   }
@@ -187,9 +194,13 @@ const submitExtend = async () => {
     await trialAPI.extendTrial(selectedTenant.value.id, extendDays.value);
     await loadTrials();
     closeExtendModal();
-    alert("Trial extended successfully");
+    toastStore.add("Trial extended successfully", "success", 3000);
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to extend trial");
+    toastStore.add(
+      err.response?.data?.message || "Failed to extend trial",
+      "error",
+      4000
+    );
   }
 };
 
@@ -214,9 +225,13 @@ const submitConvert = async () => {
     await trialAPI.convertTrial(selectedTenant.value.id, convertForm.value);
     await loadTrials();
     closeConvertModal();
-    alert("Tenant converted to paid successfully");
+    toastStore.add("Tenant converted to paid successfully", "success", 3000);
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to convert trial");
+    toastStore.add(
+      err.response?.data?.message || "Failed to convert trial",
+      "error",
+      4000
+    );
   }
 };
 

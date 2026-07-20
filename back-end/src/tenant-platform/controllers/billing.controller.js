@@ -1,6 +1,8 @@
 const crypto = require("crypto");
 const { verifyWebhookSignature } = require("../services/paystack.service");
 const { syncFromPaymentGateway } = require("../services/tenantSubscription.service");
+const orderDAO = require("../../DAOs/order.dao");
+const paymentDAO = require("../../DAOs/payment.dao");
 const db = require("../../db/models");
 
 const webhookHandler = async (req, res) => {
@@ -25,12 +27,13 @@ const webhookHandler = async (req, res) => {
   }
 
   try {
+    const resolvedTenantId = await resolveTenantFromWebhook(data);
     switch (event) {
       case "invoice.payment_succeeded":
       case "invoice.payment_failed":
       case "subscription.cancelled":
-        if (data.metadata && data.metadata.tenantId) {
-          await syncFromPaymentGateway(data.metadata.tenantId, {
+        if (resolvedTenantId) {
+          await syncFromPaymentGateway(resolvedTenantId, {
             event,
             nextBillingDate: data.next_payment_date,
             graceDays: 7,
@@ -38,8 +41,8 @@ const webhookHandler = async (req, res) => {
         }
         break;
       case "charge.success":
-        if (data.metadata && data.metadata.tenantId) {
-          const tenant = await db.tenant.findByPk(data.metadata.tenantId);
+        if (resolvedTenantId) {
+          const tenant = await db.tenant.findByPk(resolvedTenantId);
           if (tenant) {
             await tenant.update({
               lastPaymentAt: new Date(),
@@ -47,6 +50,30 @@ const webhookHandler = async (req, res) => {
               status: "active",
               graceEndsAt: null,
             });
+          }
+
+          const metadata = data?.metadata || {};
+          const orderId = metadata.orderId;
+          if (orderId) {
+            const order = await orderDAO.getOrderById(orderId, resolvedTenantId);
+            if (order) {
+              const paidAmount = parseFloat(data.amount || 0) / 100;
+              await paymentDAO.create({
+                orderId: order.id,
+                amount: paidAmount,
+                method: "card",
+                paidBy: data.customer?.email || null,
+                reference: data.reference || data.id,
+              }, resolvedTenantId);
+
+              const payments = await paymentDAO.getOrderPayments(order.id, resolvedTenantId);
+              const totalPaid = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+              const orderTotal = parseFloat(order.total || 0);
+              const paymentStatus = totalPaid >= orderTotal ? "paid" : totalPaid > 0 ? "partial" : "unpaid";
+              if (order.paymentStatus !== paymentStatus) {
+                await orderDAO.updateOrder(order.id, resolvedTenantId, { paymentStatus });
+              }
+            }
           }
         }
         break;
@@ -57,7 +84,7 @@ const webhookHandler = async (req, res) => {
     if (eventId) {
       await db.paystackEvent.create({
         paystackEventId: String(eventId),
-        tenantId: data.metadata && data.metadata.tenantId,
+        tenantId: resolvedTenantId,
         event,
       });
     }
@@ -67,6 +94,36 @@ const webhookHandler = async (req, res) => {
     console.error("Webhook processing error:", err.message);
     res.status(500).json({ success: false, message: "Webhook processing failed" });
   }
+};
+
+// Resolve tenant from webhook data WITHOUT trusting metadata.tenantId alone.
+// Prefer Paystack's own identifiers (customer_code / authorization) so a
+// forged payload with a guessed metadata.tenantId cannot target another tenant.
+const resolveTenantFromWebhook = async (data) => {
+  const customerCode = data?.customer?.customer_code;
+  const authorization = data?.authorization;
+  const metadataTenantId = data?.metadata?.tenantId;
+
+  if (customerCode) {
+    const byCustomer = await db.tenant.findOne({
+      where: { paystackCustomerCode: customerCode },
+    });
+    if (byCustomer) return byCustomer.id;
+  }
+
+  if (authorization) {
+    const byAuth = await db.tenant.findOne({
+      where: { paystackAuthorization: authorization },
+    });
+    if (byAuth) return byAuth.id;
+  }
+
+  if (metadataTenantId) {
+    const byMeta = await db.tenant.findByPk(metadataTenantId);
+    if (byMeta) return metadataTenantId;
+  }
+
+  return null;
 };
 
 const testWebhookHandler = async (req, res) => {

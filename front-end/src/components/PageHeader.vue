@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 defineProps({
   title: { type: String, default: "" },
   subtitle: { type: String, default: "" },
+  variant: { type: String, default: "dark" },
 });
 
 const route = useRoute();
@@ -19,7 +20,11 @@ const breadcrumbs = computed(() => {
 </script>
 
 <template>
-  <header class="app-page-header" role="banner">
+  <header
+    class="app-page-header"
+    :class="{ 'is-light': variant === 'light' }"
+    role="banner"
+  >
     <div class="header-content">
       <div
         v-if="breadcrumbs.length > 1"
@@ -50,6 +55,24 @@ const breadcrumbs = computed(() => {
   );
   position: relative;
   overflow: hidden;
+}
+.app-page-header.is-light {
+  background: transparent;
+  padding: var(--space-6) var(--space-6) 0;
+}
+.app-page-header.is-light::before,
+.app-page-header.is-light::after {
+  display: none;
+}
+.app-page-header.is-light .page-title {
+  color: var(--neutral-900);
+  text-shadow: none;
+}
+.app-page-header.is-light .page-subtitle {
+  color: var(--neutral-600);
+}
+.app-page-header.is-light .breadcrumbs {
+  color: var(--neutral-600);
 }
 
 .app-page-header::before {

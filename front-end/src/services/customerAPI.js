@@ -33,6 +33,15 @@ class CustomerAPI {
   search(query) {
     return API.get("/customers/search", { params: { q: query } });
   }
+  checkWhatsApp(phone) {
+    return API.post("/customers/check-whatsapp", { phone });
+  }
+  sendOtp(payload) {
+    return API.post("/customers/send-otp", payload);
+  }
+  verifyOtp(phone, code) {
+    return API.post("/customers/verify-otp", { phone, code });
+  }
 }
 
 export default new CustomerAPI();

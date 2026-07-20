@@ -1,183 +1,529 @@
-<script setup>
-import { ref, onMounted } from "vue";
+<script setup lang="ts">
+import { ref, onMounted, computed } from "vue";
 import reportAPI from "@/services/reportAPI";
-import PopupBox from "@/components/PopupBox.vue";
-import { getApiErrorMessage } from "@/utils/apiError";
-import PageHeader from "@/components/PageHeader.vue";
+import logger from "@/utils/logger";
+import { useCurrency } from "@/composables/useCurrency";
 
-const report = ref(null);
-const filters = ref({
-  from: "",
-  to: "",
-  paymentStatus: "",
-  resStatus: "",
+const { format: fmt } = useCurrency();
+
+type Tab = "reservations" | "orders";
+const activeTab = ref<Tab>("reservations");
+
+const reservationReport = ref<any | null>(null);
+const orderStats = ref<any | null>(null);
+const topItems = ref<any[]>([]);
+const loading = ref(true);
+const from = ref("");
+const to = ref("");
+
+const coversBySource = computed(() => {
+  if (!reservationReport.value?.coversBySource) return [];
+  const total = Object.values(reservationReport.value.coversBySource).reduce(
+    (sum: number, val: any) => sum + (Number(val) || 0),
+    0
+  );
+  return Object.entries(reservationReport.value.coversBySource).map(
+    ([label, value]: [string, any]) => ({
+      label,
+      value: Number(value) || 0,
+      percent: total > 0 ? Math.round((Number(value) / total) * 100) : 0,
+    })
+  );
 });
-const loading = ref(false);
-const generated = ref(false);
-const errorMsg = ref("");
 
-const loadReport = async () => {
+const loadReservationReport = async () => {
   loading.value = true;
-  errorMsg.value = "";
-  generated.value = false;
   try {
-    const res = await reportAPI.getReservationReport(filters.value);
-    report.value = res.data.report;
-    generated.value = true;
+    const res = await reportAPI.getReservationReport({
+      from: from.value,
+      to: to.value,
+    });
+    reservationReport.value = res.data?.report || null;
   } catch (err) {
-    errorMsg.value = getApiErrorMessage(err, "Failed to load report");
+    logger.error("Failed to load reservation report", { error: err });
   } finally {
     loading.value = false;
   }
 };
 
+const loadOrderStats = async () => {
+  loading.value = true;
+  try {
+    const [statsRes, itemsRes] = await Promise.all([
+      reportAPI.getOrderStats({ from: from.value, to: to.value }),
+      reportAPI.getTopSellingItems({ from: from.value, to: to.value }),
+    ]);
+    orderStats.value = statsRes.data?.stats || null;
+    topItems.value = itemsRes.data?.items || [];
+  } catch (err) {
+    logger.error("Failed to load order report", { error: err });
+  } finally {
+    loading.value = false;
+  }
+};
+
+const loadReport = async () => {
+  if (activeTab.value === "reservations") {
+    await loadReservationReport();
+  } else {
+    await loadOrderStats();
+  }
+};
+
 const exportCSV = async () => {
-  const res = await reportAPI.exportCSV(filters.value);
-  const blob = new Blob([res.data], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "reservations.csv";
-  a.click();
-  URL.revokeObjectURL(url);
+  try {
+    const res =
+      activeTab.value === "reservations"
+        ? await reportAPI.exportCSV({ from: from.value, to: to.value })
+        : await reportAPI.exportOrderCSV({ from: from.value, to: to.value });
+    const blob = new Blob([res.data], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download =
+      activeTab.value === "reservations" ? "reservations.csv" : "orders.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    logger.error("Failed to export CSV", { error: err });
+  }
 };
 
 const exportPDF = async () => {
-  const res = await reportAPI.exportPDF(filters.value);
-  const blob = new Blob([res.data], { type: "application/pdf" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "reservations.pdf";
-  a.click();
-  URL.revokeObjectURL(url);
+  try {
+    const res =
+      activeTab.value === "reservations"
+        ? await reportAPI.exportPDF({ from: from.value, to: to.value })
+        : await reportAPI.exportOrderPDF({ from: from.value, to: to.value });
+    const blob = new Blob([res.data], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download =
+      activeTab.value === "reservations" ? "reservations.pdf" : "orders.pdf";
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    logger.error("Failed to export PDF", { error: err });
+  }
 };
 
-onMounted(() => {
-  loadReport();
-});
+onMounted(loadReport);
 </script>
 
 <template>
   <div class="main-wrapper">
-    <PageHeader
-      title="Reports"
-      subtitle="Generate and export reservation reports"
-    />
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Reports</h1>
+        <p>Covers, revenue, and performance trends</p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-secondary" @click="exportCSV">Export CSV</button>
+        <button class="btn-primary" @click="exportPDF">Export PDF</button>
+      </div>
+    </div>
+
     <div class="content-wrapper">
-      <div class="filters-card">
-        <h2 class="card-title">Filters</h2>
-        <div class="filters-grid">
-          <div class="filter-field">
-            <label class="field-label">From</label>
-            <input type="date" v-model="filters.from" class="field-input" />
-          </div>
-          <div class="filter-field">
-            <label class="field-label">To</label>
-            <input type="date" v-model="filters.to" class="field-input" />
-          </div>
-          <div class="filter-field">
-            <label class="field-label">Payment Status</label>
-            <select v-model="filters.paymentStatus" class="field-input">
-              <option value="">All</option>
-              <option value="unpaid">Unpaid</option>
-              <option value="deposit">Deposit</option>
-              <option value="partial">Partial</option>
-              <option value="paid">Paid</option>
-            </select>
-          </div>
-          <div class="filter-field">
-            <label class="field-label">Reservation Status</label>
-            <select v-model="filters.resStatus" class="field-input">
-              <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="seated">Seated</option>
-              <option value="missed">Missed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-        </div>
-        <div class="filters-actions">
+      <div class="controls">
+        <div class="tabs">
           <button
-            class="btn btn-primary"
-            @click="loadReport"
-            :disabled="loading"
+            :class="['tab', activeTab === 'reservations' && 'active']"
+            @click="
+              activeTab = 'reservations';
+              loadReport();
+            "
           >
-            {{ loading ? "Generating..." : "Generate Report" }}
+            Reservations
+          </button>
+          <button
+            :class="['tab', activeTab === 'orders' && 'active']"
+            @click="
+              activeTab = 'orders';
+              loadReport();
+            "
+          >
+            Orders
           </button>
         </div>
-      </div>
-
-      <div class="export-bar">
-        <button class="btn btn-secondary" @click="exportCSV">Export CSV</button>
-        <button class="btn btn-secondary" @click="exportPDF">
-          Export Report
-        </button>
+        <div class="filters">
+          <input v-model="from" type="date" />
+          <input v-model="to" type="date" />
+          <button class="btn-small" @click="loadReport">Apply</button>
+        </div>
       </div>
 
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Generating report...</p>
+        <p>Loading reports...</p>
       </div>
-      <div v-else-if="errorMsg" class="error-state">
-        <span class="error-icon">⚠️</span>
-        <p>{{ errorMsg }}</p>
-      </div>
-      <div v-else-if="generated && report" class="report-container">
+
+      <template v-else-if="activeTab === 'reservations' && reservationReport">
         <div class="kpi-strip">
           <div class="kpi-tile">
-            <span class="kpi-value">{{ report.totalReservations }}</span>
-            <span class="kpi-label">Total Reservations</span>
+            <div class="kpi-label">Total Covers</div>
+            <div class="kpi-value">
+              {{ reservationReport.totalCovers?.toLocaleString() || "—" }}
+            </div>
           </div>
           <div class="kpi-tile">
-            <span class="kpi-value kpi-accent">
-              GHS {{ report.paymentBreakdown?.totalRevenue?.toFixed(2) }}
-            </span>
-            <span class="kpi-label">Revenue</span>
+            <div class="kpi-label">Revenue</div>
+            <div class="kpi-value">
+              {{
+                reservationReport.revenue
+                  ? `GHS ${(reservationReport.revenue / 1000).toFixed(1)}k`
+                  : "—"
+              }}
+            </div>
           </div>
           <div class="kpi-tile">
-            <span class="kpi-value">
-              GHS {{ report.paymentBreakdown?.avgPayment?.toFixed(2) }}
-            </span>
-            <span class="kpi-label">Avg Payment</span>
+            <div class="kpi-label">Avg Party</div>
+            <div class="kpi-value">
+              {{ reservationReport.avgParty?.toFixed(1) || "—" }}
+            </div>
           </div>
         </div>
 
-        <div class="breakdown-card">
-          <h2 class="card-title">Payment Breakdown</h2>
-          <div
-            v-if="report.paymentBreakdown?.byMethod?.length"
-            class="breakdown-list"
-          >
-            <div
-              v-for="m in report.paymentBreakdown.byMethod"
-              :key="m.method"
-              class="breakdown-row"
-            >
-              <span class="breakdown-method">{{ m.method }}</span>
-              <span class="breakdown-amount"
-                >GHS {{ m.total?.toFixed(2) }}</span
-              >
-              <span class="breakdown-count">{{ m.count }}</span>
+        <div class="chart-card">
+          <h3>Covers by Source</h3>
+          <div v-for="item in coversBySource" :key="item.label" class="bar-row">
+            <div class="bar-label">{{ item.label }}</div>
+            <div class="bar-track">
+              <div
+                class="bar-fill"
+                :style="{ width: item.percent + '%' }"
+              ></div>
+            </div>
+            <div class="bar-value">{{ item.percent }}%</div>
+          </div>
+          <div v-if="!coversBySource.length" class="empty-state">
+            No source data available
+          </div>
+        </div>
+      </template>
+
+      <template v-else-if="activeTab === 'orders' && orderStats">
+        <div class="kpi-strip">
+          <div class="kpi-tile">
+            <div class="kpi-label">Total Orders</div>
+            <div class="kpi-value">
+              {{ orderStats.totalOrders?.toLocaleString() || "—" }}
             </div>
           </div>
-          <div v-else class="empty-state">No payment data available</div>
+          <div class="kpi-tile">
+            <div class="kpi-label">Revenue</div>
+            <div class="kpi-value">
+              {{
+                orderStats.totalRevenue
+                  ? `GHS ${orderStats.totalRevenue.toLocaleString()}`
+                  : "—"
+              }}
+            </div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">Avg Order Value</div>
+            <div class="kpi-value">
+              {{
+                orderStats.avgOrderValue
+                  ? `GHS ${orderStats.avgOrderValue.toFixed(2)}`
+                  : "—"
+              }}
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div class="chart-card">
+          <h3>Status Breakdown</h3>
+          <div
+            v-for="item in orderStats.statusBreakdown"
+            :key="item.status"
+            class="bar-row"
+          >
+            <div class="bar-label">{{ item.status }}</div>
+            <div class="bar-track">
+              <div
+                class="bar-fill"
+                :style="{
+                  width:
+                    (orderStats.totalOrders
+                      ? (item.count / orderStats.totalOrders) * 100
+                      : 0) + '%',
+                }"
+              ></div>
+            </div>
+            <div class="bar-value">{{ item.count }}</div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Payment Breakdown</h3>
+          <div
+            v-for="item in orderStats.paymentBreakdown"
+            :key="item.status"
+            class="bar-row"
+          >
+            <div class="bar-label">{{ item.status }}</div>
+            <div class="bar-track">
+              <div
+                class="bar-fill"
+                :style="{
+                  width:
+                    (orderStats.totalOrders
+                      ? (item.count / orderStats.totalOrders) * 100
+                      : 0) + '%',
+                }"
+              ></div>
+            </div>
+            <div class="bar-value">{{ item.count }}</div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Top Selling Items</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in topItems" :key="item.menuItemId">
+                <td>{{ item.name }}</td>
+                <td>{{ item.totalQuantity }}</td>
+                <td>{{ fmt(item.totalRevenue) }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="!topItems.length" class="empty-state">
+            No order data available
+          </div>
+        </div>
+      </template>
+
+      <div v-else class="empty-state">No report data available.</div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.content-wrapper {
-  margin-top: var(--page-margin-y);
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
-  padding: 0;
+.main-wrapper {
+  min-height: 100vh;
+  background: var(--background-warm);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.topbar-left h1 {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--neutral-900);
+}
+
+.topbar-left p {
+  color: var(--neutral-600);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.content-wrapper {
+  flex: 1;
+  margin: var(--space-8) var(--space-6);
+  max-width: var(--content-max-width);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 1024px) {
+  .content-wrapper {
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-10);
+  }
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-1);
+}
+
+.tab {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+
+.tab.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.tab:hover:not(.active) {
+  color: var(--ink);
+}
+
+.filters {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.filters input {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}
+
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.kpi-tile {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  padding: 18px 20px;
+  box-shadow: 0 8px 24px rgba(26, 20, 16, 0.04);
+}
+
+.kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--neutral-600);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+  font-family: var(--font-sans);
+}
+
+.kpi-value {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--neutral-900);
+  letter-spacing: -0.02em;
+}
+
+.chart-card {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(26, 20, 16, 0.05);
+  margin-bottom: 22px;
+}
+
+.chart-card h3 {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--neutral-900);
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.bar-label {
+  width: 70px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neutral-700);
+  font-family: var(--font-sans);
+}
+
+.bar-track {
+  flex: 1;
+  height: 10px;
+  background: var(--neutral-100);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-400), var(--accent-500));
+  transition: width 0.6s ease;
+}
+
+.bar-value {
+  width: 50px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neutral-900);
+  font-family: var(--font-sans);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}
+
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+  font-weight: 600;
+  color: var(--ink-secondary);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .loading-state {
@@ -185,16 +531,13 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-20) var(--space-5);
+  padding: var(--space-20) var(--space-6);
   gap: var(--space-4);
-  color: var(--ink-muted);
-  font-family: var(--font-sans);
-  font-weight: 300;
 }
 
 .spinner {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: 3px solid var(--border);
   border-top-color: var(--accent);
   border-radius: var(--radius-full);
@@ -207,237 +550,70 @@ onMounted(() => {
   }
 }
 
-.filters-card {
-  background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--card-radius);
-  padding: var(--card-padding);
-  box-shadow: var(--card-shadow);
-}
-
-.card-title {
+.loading-state p {
   font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: var(--text-lg);
-  color: var(--ink);
-  margin: 0 0 var(--space-5) 0;
-}
-
-.filters-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-4);
-}
-
-.filter-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1-5);
-}
-
-.field-label {
-  font-family: var(--font-sans);
-  font-weight: 500;
   font-size: var(--text-sm);
-  color: var(--ink-muted);
-}
-
-.field-input {
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-family: var(--font-sans);
-  font-weight: 300;
-  font-size: var(--text-sm);
-  color: var(--ink);
-  background: var(--surface);
-  transition: border-color var(--duration-150) var(--ease-in-out),
-    box-shadow var(--duration-150) var(--ease-in-out);
-}
-
-.field-input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-
-.filters-actions {
-  margin-top: var(--space-5);
-  display: flex;
-  justify-content: flex-end;
-}
-
-.kpi-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-4);
-}
-
-.kpi-tile {
-  background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  padding: var(--space-5) var(--space-6);
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.kpi-value {
-  font-family: var(--font-serif);
-  font-size: var(--text-2xl);
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: var(--tracking-tight);
-  line-height: 1;
-}
-
-.kpi-label {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  color: var(--ink-muted);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-}
-
-.kpi-accent {
-  color: var(--accent-600);
-}
-
-.export-bar {
-  display: flex;
-  gap: var(--space-3);
-}
-
-.error-state {
-  background: var(--rose-50);
-  border: 1px solid var(--rose-200, #fecaca);
-  border-radius: var(--card-radius);
-  padding: var(--space-5);
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  color: var(--rose-600);
-  font-family: var(--font-sans);
-  font-weight: 300;
-}
-
-.error-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.report-container {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.breakdown-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--card-radius);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-sm);
-}
-
-.breakdown-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.breakdown-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-3-5) 0;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.breakdown-row:last-child {
-  border-bottom: none;
-}
-
-.breakdown-method {
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: var(--text-sm);
-  color: var(--ink);
-  text-transform: capitalize;
-}
-
-.breakdown-amount {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: var(--text-sm);
-  color: var(--ink);
-}
-
-.breakdown-count {
-  font-family: var(--font-sans);
-  font-weight: 300;
-  font-size: var(--text-xs);
-  color: var(--ink-muted);
-  background: var(--neutral-100);
-  padding: var(--space-0-5) var(--space-2);
-  border-radius: var(--radius-sm, 6px);
+  color: var(--ink-secondary);
 }
 
 .empty-state {
   text-align: center;
-  padding: var(--space-8);
-  color: var(--ink-muted);
+  padding: var(--space-10);
+  color: var(--ink-secondary);
   font-family: var(--font-sans);
-  font-weight: 300;
   font-size: var(--text-sm);
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-5);
-  border: none;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  transition: all var(--duration-150) var(--ease-in-out);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--ink) 0%, var(--ink-secondary) 100%);
-  color: white;
-  box-shadow: var(--shadow-sm);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+  color: var(--white);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 
-.btn-primary:hover:not(:disabled) {
-  box-shadow: var(--shadow-md);
+.btn-primary:hover {
   transform: translateY(-1px);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  box-shadow: 0 10px 24px rgba(74, 53, 43, 0.22);
 }
 
 .btn-secondary {
-  background-color: var(--neutral-50);
-  color: var(--ink);
-  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid var(--neutral-300);
+  background: var(--white);
+  color: var(--neutral-800);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background-color: var(--neutral-100);
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-@media screen and (min-width: 640px) {
-  .filters-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+.btn-small {
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--accent);
+  color: white;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+
+.btn-small:hover {
+  background: var(--accent-hover);
 }
 </style>

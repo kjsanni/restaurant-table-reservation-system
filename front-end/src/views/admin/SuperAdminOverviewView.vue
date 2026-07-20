@@ -1,9 +1,13 @@
 <template>
   <div class="super-overview">
-    <PageHeader
-      title="Platform Overview"
-      :subtitle="`Cross-tenant health, revenue, and operations — ${lastUpdatedLabel}`"
-    />
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1 class="topbar-title">Platform Overview</h1>
+        <p class="topbar-subtitle">
+          Cross-tenant health, revenue, and operations
+        </p>
+      </div>
+    </div>
 
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
@@ -151,7 +155,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import PageHeader from "@/components/PageHeader.vue";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import planAPI from "@/services/planAPI";
 import { useAuthStore } from "@/stores/auth";
@@ -415,6 +418,29 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-5) var(--page-margin-x);
+}
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.topbar-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+.topbar-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  margin: 4px 0 0;
+}
+
 .content-wrapper {
   margin: var(--page-margin-y) var(--page-margin-x);
   padding: 0;

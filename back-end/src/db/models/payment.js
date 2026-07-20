@@ -5,8 +5,12 @@ module.exports = (sequelize, DataTypes) => {
   class Payment extends Model {
     static associate(models) {
       Payment.belongsTo(models.reservation, {
-        foreignKey: { allowNull: false },
-        onDelete: "cascade",
+        foreignKey: { allowNull: true },
+        onDelete: "SET NULL",
+      });
+      Payment.belongsTo(models.order, {
+        foreignKey: "orderId",
+        onDelete: "SET NULL",
       });
     }
   }
@@ -19,7 +23,11 @@ module.exports = (sequelize, DataTypes) => {
       },
       reservationId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
+      },
+      orderId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
       },
       amount: {
         type: DataTypes.DECIMAL(10, 2),

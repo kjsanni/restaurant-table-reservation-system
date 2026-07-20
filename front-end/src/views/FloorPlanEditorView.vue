@@ -4,7 +4,6 @@ import tableAPI from "@/services/tableAPI";
 import floorPlanAPI from "@/services/floorPlanAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
-import PageHeader from "@/components/PageHeader.vue";
 
 const tables = ref([]);
 const loading = ref(true);
@@ -244,10 +243,12 @@ onUnmounted(() => {
 
 <template>
   <div class="main-wrapper">
-    <PageHeader
-      title="Floor Plan Editor"
-      subtitle="Design and customize table layout"
-    />
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1 class="topbar-title">Floor Plan Editor</h1>
+        <p class="topbar-subtitle">Design and customize table layout</p>
+      </div>
+    </div>
     <div class="content-wrapper">
       <div class="toolbar">
         <div class="toolbar-left">
@@ -372,6 +373,29 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-5) var(--page-margin-x);
+}
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.topbar-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+.topbar-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  margin: 4px 0 0;
+}
+
 .toolbar {
   display: flex;
   align-items: center;

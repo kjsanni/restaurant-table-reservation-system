@@ -45,13 +45,35 @@ const protect = async (req, res, next) => {
 
     req.user = user;
 
+    // Tenant isolation: override whatever resolveTenant set from client
+    // headers with the tenant from the authenticated user's JWT. This makes
+    // x-tenant-id spoofing harmless — the DB lookup still happens in
+    // resolveTenant, but the result is never exposed to controllers.
     if (process.env.TENANT_MODE === "enabled" && user.tenantId) {
       try {
         const Tenant = require("../../tenant-platform/models/tenant")(require("../db/models").sequelize, require("sequelize").DataTypes);
         const tenant = await Tenant.findByPk(user.tenantId);
-        if (tenant) req.tenant = tenant;
+        if (tenant) {
+          req.tenant = tenant;
+        } else {
+          return res.status(403).json({
+            success: false,
+            message: "Your account is not assigned to a tenant.",
+          });
+        }
       } catch (err) {
         console.warn("Tenant load failed:", err.message);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to resolve tenant.",
+        });
+      }
+    } else if (process.env.TENANT_MODE === "enabled" && !user.tenantId) {
+      // Super-admin / platform user: allow tenant-scoped routes without a
+      // tenant, but only if resolveTenant was explicitly bypassed (platform
+      // admin paths). If resolveTenant set one from a spoofed header, clear it.
+      if (req.tenant && !req.path.startsWith("/api/v1/admin/tenants") && !req.path.startsWith("/api/v1/admin/plans") && !req.path.startsWith("/api/v1/admin/payments") && !req.path.startsWith("/api/v1/admin/usage") && !req.path.startsWith("/api/v1/admin/revenue") && !req.path.startsWith("/api/v1/admin/bulk") && !req.path.startsWith("/api/v1/admin/billing-emails") && !req.path.startsWith("/api/v1/admin/audit") && !req.path.startsWith("/api/v1/admin/notifications")) {
+        req.tenant = null;
       }
     }
 

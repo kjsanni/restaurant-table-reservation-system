@@ -168,6 +168,9 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         view_audit_logs: true,
         manage_audit_logs: true,
         manage_settings: true,
+        manage_menu: true,
+        view_orders: true,
+        edit_orders: true,
       },
       manager: {
         view_reservations: true,
@@ -179,6 +182,9 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         manage_groups: false,
         view_audit_logs: true,
         manage_audit_logs: true,
+        manage_menu: true,
+        view_orders: true,
+        edit_orders: true,
       },
       staff: {
         view_reservations: true,
@@ -190,6 +196,9 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         manage_groups: false,
         view_audit_logs: false,
         manage_audit_logs: false,
+        manage_menu: true,
+        view_orders: true,
+        edit_orders: true,
       },
     };
     permissions = defaults[user.role] || defaults.staff;

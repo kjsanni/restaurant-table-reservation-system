@@ -1,10 +1,31 @@
 <script setup lang="ts">
-import PageHeader from "@/components/PageHeader.vue";
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import auditAPI from "@/services/auditAPI";
+import { useToastStore } from "@/stores/toast";
 import logger from "@/utils/logger";
 
-const logs = ref([]);
+interface AuditLog {
+  id: number;
+  createdAt: string;
+  userId: number;
+  userRole?: string;
+  action: string;
+  entityType: string;
+  entityId?: number;
+  changes?: string;
+  ipAddress?: string;
+}
+
+interface AuditStats {
+  byAction: Array<{ action: string; count: number }>;
+  byEntity: Array<{ entityType: string; count: number }>;
+  topUsers: Array<{ userId: number; count: number }>;
+  total: number;
+}
+
+const toastStore = useToastStore();
+
+const logs = ref<AuditLog[]>([]);
 const loading = ref(true);
 const page = ref(1);
 const pageSize = ref(25);
@@ -19,10 +40,10 @@ const dateTo = ref("");
 const expandedRows = ref<Set<number>>(new Set());
 const selectedIds = ref<Set<number>>(new Set());
 
-const sortBy = ref("createdAt");
+const sortBy = ref<string>("createdAt");
 const sortOrder = ref<"ASC" | "DESC">("DESC");
 
-const stats = ref({
+const stats = ref<AuditStats>({
   byAction: [],
   byEntity: [],
   topUsers: [],
@@ -30,7 +51,7 @@ const stats = ref({
 });
 const showStats = ref(false);
 
-let pollInterval = null;
+let pollInterval: ReturnType<typeof setInterval> | null = null;
 
 const availableActions = computed(() => {
   const actions = new Set(logs.value.map((log) => log.action));
@@ -118,7 +139,7 @@ const loadLogs = async (showLoading = true) => {
     total.value = res.data.total || 0;
     totalPages.value = res.data.totalPages || 0;
   } catch (err) {
-    logger.error("Failed to load audit logs", err);
+    logger.error("Failed to load audit logs", err as any);
   } finally {
     if (showLoading) loading.value = false;
   }
@@ -134,11 +155,11 @@ const loadStats = async () => {
 
     stats.value = await auditAPI.getStats(params);
   } catch (err) {
-    logger.error("Failed to load stats", err);
+    logger.error("Failed to load stats", err as any);
   }
 };
 
-const goToPage = async (next) => {
+const goToPage = async (next: number) => {
   const target = Math.min(Math.max(1, next), totalPages.value || 1);
   if (target === page.value) return;
   page.value = target;
@@ -176,7 +197,7 @@ const toggleSelectAll = () => {
   }
 };
 
-const handleSort = (column) => {
+const handleSort = (column: string) => {
   if (sortBy.value === column) {
     sortOrder.value = sortOrder.value === "ASC" ? "DESC" : "ASC";
   } else {
@@ -186,7 +207,7 @@ const handleSort = (column) => {
   loadLogs();
 };
 
-const getSortIcon = (column) => {
+const getSortIcon = (column: string) => {
   if (sortBy.value !== column) return "↕";
   return sortOrder.value === "ASC" ? "↑" : "↓";
 };
@@ -215,44 +236,44 @@ const handleBulkDelete = async () => {
     selectedIds.value.clear();
     await loadLogs();
   } catch (err) {
-    logger.error("Failed to delete logs", err);
-    alert("Failed to delete selected logs");
+    logger.error("Failed to delete logs", err as any);
+    toastStore.add("Failed to delete selected logs", "error", 4000);
   }
 };
 
 const handleExportCSV = async () => {
   try {
-    const blob = await auditAPI.exportCSV({
+    const res = await auditAPI.exportCSV({
       search: searchQuery.value || undefined,
       action: actionFilter.value !== "all" ? actionFilter.value : undefined,
       entityType: entityFilter.value !== "all" ? entityFilter.value : undefined,
       from: dateFrom.value || undefined,
       to: dateTo.value || undefined,
     });
-    downloadBlob(blob, "audit-logs.csv", "text/csv");
+    downloadBlob(res.data as Blob, "audit-logs.csv", "text/csv");
   } catch (err) {
-    logger.error("Failed to export CSV", err);
-    alert("Failed to export CSV");
+    logger.error("Failed to export CSV", err as any);
+    toastStore.add("Failed to export CSV", "error", 4000);
   }
 };
 
 const handleExportJSON = async () => {
   try {
-    const blob = await auditAPI.exportJSON({
+    const res = await auditAPI.exportJSON({
       search: searchQuery.value || undefined,
       action: actionFilter.value !== "all" ? actionFilter.value : undefined,
       entityType: entityFilter.value !== "all" ? entityFilter.value : undefined,
       from: dateFrom.value || undefined,
       to: dateTo.value || undefined,
     });
-    downloadBlob(blob, "audit-logs.json", "application/json");
+    downloadBlob(res.data as Blob, "audit-logs.json", "application/json");
   } catch (err) {
-    logger.error("Failed to export JSON", err);
-    alert("Failed to export JSON");
+    logger.error("Failed to export JSON", err as any);
+    toastStore.add("Failed to export JSON", "error", 4000);
   }
 };
 
-const downloadBlob = (blob, filename, mimeType) => {
+const downloadBlob = (blob: Blob, filename: string, _mimeType: string) => {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -261,7 +282,7 @@ const downloadBlob = (blob, filename, mimeType) => {
   window.URL.revokeObjectURL(url);
 };
 
-const formatDate = (date) => {
+const formatDate = (date: string) => {
   if (!date) return "";
   const d = new Date(date);
   return d.toLocaleString("en-GB", {
@@ -274,9 +295,9 @@ const formatDate = (date) => {
   });
 };
 
-const getActionClass = (action) => {
+const getActionClass = (action: string) => {
   if (!action) return "action-default";
-  const map = {
+  const map: Record<string, string> = {
     created: "action-create",
     updated: "action-update",
     deleted: "action-delete",
@@ -288,8 +309,8 @@ const getActionClass = (action) => {
   return map[key] || "action-default";
 };
 
-const getActionIcon = (action) => {
-  const map = {
+const getActionIcon = (action: string) => {
+  const map: Record<string, string> = {
     created: "＋",
     updated: "✎",
     deleted: "✕",
@@ -303,10 +324,12 @@ const getActionIcon = (action) => {
 
 <template>
   <div class="main-wrapper">
-    <PageHeader
-      title="Audit Logs"
-      subtitle="Track system activity and changes"
-    />
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1 class="topbar-title">Audit Logs</h1>
+        <p class="topbar-subtitle">Track system activity and changes</p>
+      </div>
+    </div>
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -588,6 +611,29 @@ const getActionIcon = (action) => {
 </template>
 
 <style scoped>
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-5) var(--page-margin-x);
+}
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.topbar-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+.topbar-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  margin: 4px 0 0;
+}
+
 .content-wrapper {
   margin-top: 12px;
   margin-bottom: var(--page-margin-y);

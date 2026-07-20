@@ -36,7 +36,8 @@ describe("billingController.webhookHandler", () => {
       create: jest.fn(),
     };
     db.tenant = {
-      findByPk: jest.fn(),
+      findOne: jest.fn().mockResolvedValue(null),
+      findByPk: jest.fn().mockResolvedValue({ id: 1 }),
     };
 
     billingController = require("../tenant-platform/controllers/billing.controller");

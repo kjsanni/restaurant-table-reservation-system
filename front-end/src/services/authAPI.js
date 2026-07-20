@@ -28,6 +28,10 @@ const updateSettings = async (key, value) => {
   return await API.put("/auth/settings", { key, value });
 };
 
+const refreshToken = async () => {
+  return await API.post("/auth/refresh");
+};
+
 const getStaff = async () => {
   return await API.get("/auth/staff");
 };
@@ -56,6 +60,7 @@ export default {
   logout,
   getSettings,
   updateSettings,
+  refreshToken,
   getStaff,
   getUsers,
   createStaff,

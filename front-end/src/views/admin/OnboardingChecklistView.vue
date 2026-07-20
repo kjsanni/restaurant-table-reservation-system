@@ -80,10 +80,13 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { useToastStore } from "@/stores/toast";
 import onboardingAPI from "@/services/onboardingAPI";
 import legalAcceptanceAPI, {
   LEGAL_DOCUMENT_VERSIONS,
 } from "@/services/legalAcceptanceAPI";
+
+const toastStore = useToastStore();
 
 const route = useRoute();
 const tenantId = route.params.id;
@@ -209,7 +212,11 @@ const acceptPolicy = async (slug) => {
       },
     };
   } catch (err) {
-    alert("Failed to record policy acceptance. Please try again.");
+    toastStore.add(
+      "Failed to record policy acceptance. Please try again.",
+      "error",
+      4000
+    );
   } finally {
     accepting.value = false;
   }
@@ -226,22 +233,28 @@ const save = async () => {
         done: s.done,
       }))
   );
-  alert("Progress saved");
+  toastStore.add("Progress saved", "success", 3000);
 };
 
 const complete = async () => {
   if (missingRequired.value.length) {
-    alert(
-      "Please accept all required policies before marking onboarding complete."
+    toastStore.add(
+      "Please accept all required policies before marking onboarding complete.",
+      "error",
+      4000
     );
     return;
   }
   if (accepting.value) {
-    alert("Please wait for policy acceptance to finish.");
+    toastStore.add(
+      "Please wait for policy acceptance to finish.",
+      "error",
+      4000
+    );
     return;
   }
   await onboardingAPI.completeOnboarding(tenantId);
-  alert("Onboarding marked as complete");
+  toastStore.add("Onboarding marked as complete", "success", 3000);
 };
 
 onMounted(() => {

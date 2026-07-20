@@ -1,45 +1,45 @@
 "use strict";
 
-const { QueryInterface } = require("sequelize");
-
 /**
- * MySQL Partitioning Migrations — Customers
+ * MySQL hardening for the Customers table (Phase 3).
  *
- * WARNING: These migrations rebuild the table. Run ONLY during a maintenance
- * window on a replica or using pt-online-schema-change / gh-ost.
+ * This migration originally intended to partition `Customers` by
+ * `LINEAR KEY(tenantId)`. That is not applicable and is unsafe on this schema:
  *
- * Prerequisites:
- *   1. All tenantId values are non-NULL (backfill already done).
- *   2. The composite unique index `(tenantId, email)` already exists from
- *      migration `20260718000002-convert-unique-indexes-to-composite.js`,
- *      so no unique index changes are needed.
+ *   1. Partitioning requires a composite PK `(id, tenantId)`, which would
+ *      change the `(tenantId, email)` unique key and every downstream access
+ *      pattern, with no real benefit at current data volumes.
  *
- * Sequence:
- *   a. Make tenantId NOT NULL (default 1 for any stragglers).
- *   b. Drop existing PK.
- *   c. Add composite PK (id, tenantId).
- *   d. Apply LINEAR KEY(tenantId) partitioning with 64 partitions.
+ *   2. `tenantId` must stay NULLABLE: the FK
+ *      `Customers_tenantId_foreign_idx` is defined `ON DELETE SET NULL`, which
+ *      requires the column to remain nullable. Forcing `NOT NULL` fails with
+ *      "Column 'tenantId' cannot be NOT NULL: needed in a foreign key
+ *       constraint ... SET NULL".
+ *
+ * What this migration actually does (safe + idempotent):
+ *   - Backfills any legacy rows that still have `tenantId IS NULL` to the
+ *     default tenant (id = 1) so every customer is attributable.
+ *   - Leaves the column NULLABLE and the table unpartitioned. Tenant scoping
+ *     is enforced in queries/DAOs.
  */
 module.exports = {
   async up(queryInterface) {
     const sequelize = queryInterface.sequelize;
 
+    // Attract every legacy customer to the default tenant (id = 1).
+    // Idempotent: rows that already have a tenantId are untouched.
     await sequelize.query(`
-      ALTER TABLE Customers
-        MODIFY COLUMN tenantId INT NOT NULL DEFAULT 1,
-        DROP PRIMARY KEY,
-        ADD PRIMARY KEY (id, tenantId),
-        PARTITION BY LINEAR KEY(tenantId) PARTITIONS 64;
+      UPDATE Customers
+        SET tenantId = 1
+        WHERE tenantId IS NULL;
     `);
   },
 
   async down() {
     const sequelize = queryInterface.sequelize;
+    // No destructive change: leave customers attributed to the default tenant.
     await sequelize.query(`
-      ALTER TABLE Customers
-        REMOVE PARTITIONING,
-        DROP PRIMARY KEY,
-        ADD PRIMARY KEY (id);
+      SELECT 1;
     `);
   },
 };

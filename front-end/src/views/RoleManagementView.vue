@@ -2,7 +2,6 @@
 import { ref, onMounted } from "vue";
 import roleAPI from "@/services/roleAPI";
 import logger from "@/utils/logger";
-import PageHeader from "@/components/PageHeader.vue";
 
 const roles = ref([]);
 const templates = ref([]);
@@ -125,10 +124,12 @@ const confirmAction = async () => {
 
 <template>
   <div class="main-wrapper">
-    <PageHeader
-      title="Roles"
-      subtitle="Manage permissions and access control"
-    />
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1 class="topbar-title">Roles</h1>
+        <p class="topbar-subtitle">Manage permissions and access control</p>
+      </div>
+    </div>
     <div class="content-wrapper">
       <div class="action-bar">
         <button class="btn btn-primary" @click="openCreate">Create Role</button>
@@ -286,6 +287,29 @@ const confirmAction = async () => {
 </template>
 
 <style scoped>
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-5) var(--page-margin-x);
+}
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.topbar-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+.topbar-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  margin: 4px 0 0;
+}
+
 .content-wrapper {
   margin-top: var(--page-margin-y);
   margin-bottom: var(--page-margin-y);

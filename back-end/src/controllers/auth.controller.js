@@ -45,8 +45,8 @@ const loginHandler = async (req, res) => {
   const cookieBase = {
     httpOnly: true,
     secure: isSecure,
+    sameSite: isSecure ? "lax" : false, // dev-only HTTP: false; production HTTP: "lax" via isSecure check
     path: "/",
-    sameSite: isSecure ? "lax" : false,
   };
 
   res.cookie("token", result.token, {
@@ -140,7 +140,7 @@ const logoutHandler = async (req, res) => {
   const cookieOpts = {
     httpOnly: true,
     secure: isSecure,
-    sameSite: isSecure ? "lax" : false,
+    sameSite: isSecure ? "lax" : false, // dev-only HTTP: false; production HTTP: "lax" via isSecure check
     path: "/",
   };
 
@@ -154,7 +154,10 @@ const logoutHandler = async (req, res) => {
 };
 
 const refreshTokenHandler = async (req, res) => {
-  const { refreshToken } = req.body;
+  const refreshToken = req.body.refreshToken || req.cookies?.refreshToken;
+  if (!refreshToken) {
+    return res.status(401).json({ success: false, message: "Refresh token missing." });
+  }
   const result = await authService.refreshAccessToken(authDAO, refreshToken, req.tenant?.id);
 
   const isProd = process.env.NODE_ENV === "production";

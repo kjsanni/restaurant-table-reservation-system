@@ -1,221 +1,86 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import authAPI from "@/services/authAPI";
-import roleAPI from "@/services/roleAPI";
 import logger from "@/utils/logger";
-import PageHeader from "@/components/PageHeader.vue";
 
-const staff = ref([]);
+interface StaffUser {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+}
+
+const router = useRouter();
+const staff = ref<StaffUser[]>([]);
 const loading = ref(true);
-const roles = ref([]);
-const rolesLoading = ref(true);
-const showAddDialog = ref(false);
-const newStaff = ref({
-  username: "",
-  email: "",
-  password: "",
-  role: "staff",
-  permissions: {
-    view_reservations: true,
-    edit_reservations: true,
-    manage_tables: true,
-    manage_schedule: false,
-    manage_staff: false,
-  },
-});
-
-const permissionKeys = [
-  { key: "view_reservations", label: "View Reservations" },
-  { key: "edit_reservations", label: "Edit Reservations" },
-  { key: "manage_tables", label: "Manage Tables" },
-  { key: "manage_schedule", label: "Manage Schedule" },
-  { key: "manage_staff", label: "Manage Staff" },
-];
-
-onMounted(async () => {
-  await loadStaff();
-  await loadRoles();
-});
 
 const loadStaff = async () => {
   loading.value = true;
   try {
     const res = await authAPI.getStaff();
-    staff.value = res.data.users;
+    staff.value = res.data.users || [];
   } catch (err) {
-    logger.error("Failed to load staff", { error: err.message });
+    logger.error("Failed to load staff", { error: err });
   } finally {
     loading.value = false;
   }
 };
 
-const loadRoles = async () => {
-  rolesLoading.value = true;
-  try {
-    const res = await roleAPI.getAllRoles();
-    const roleList = res.data.roles || [];
-    roles.value = roleList
-      .map((r) => (typeof r === "string" ? r : r.name))
-      .filter(Boolean);
-  } catch (err) {
-    logger.error("Failed to load roles", { error: err.message });
-  } finally {
-    rolesLoading.value = false;
-  }
+const getInitials = (name: string) => {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 };
 
-const formError = ref("");
-const saving = ref(false);
-
-const addStaff = async () => {
-  try {
-    await authAPI.createStaff(newStaff.value);
-    showAddDialog.value = false;
-    newStaff.value = {
-      username: "",
-      email: "",
-      password: "",
-      role: "staff",
-      permissions: {
-        view_reservations: true,
-        edit_reservations: true,
-        manage_tables: true,
-        manage_schedule: false,
-        manage_staff: false,
-      },
-    };
-    await loadStaff();
-  } catch (err) {
-    logger.error("Failed to add staff", { error: err.message });
-  }
+const roleClass = (role: string) => {
+  const r = (role || "").toLowerCase();
+  if (r === "manager") return "manager";
+  if (r === "server") return "server";
+  if (r === "host") return "host";
+  return "server";
 };
 
-const updatePermission = async (staffMember, permission, value) => {
-  const updatedPerms = { ...staffMember.permissions, [permission]: value };
-  await authAPI.updateStaff(staffMember.id, { permissions: updatedPerms });
-};
-
-const deleteStaffMember = async (id) => {
-  await authAPI.deleteStaff(id);
-  await loadStaff();
-};
+onMounted(loadStaff);
 </script>
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="Staff" subtitle="Manage team members and roles" />
-    <div class="content-wrapper">
-      <div class="action-bar">
-        <button class="btn btn-primary" @click="showAddDialog = true">
-          Add Staff
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Staff</h1>
+        <p>Team members and roles</p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-primary" @click="router.push('/staff/add')">
+          + Add Staff
         </button>
       </div>
+    </div>
 
+    <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
         <p>Loading staff...</p>
       </div>
+
       <div v-else class="staff-grid">
         <div v-for="member in staff" :key="member.id" class="staff-card">
-          <div class="staff-header">
-            <div class="staff-avatar">
-              {{ member.username.charAt(0).toUpperCase() }}
-            </div>
-            <div class="staff-info">
-              <h3 class="staff-name">
-                {{ member.username }}
-                <span class="role-badge">{{ member.role }}</span>
-              </h3>
-              <p class="staff-email">{{ member.email }}</p>
-            </div>
-            <button
-              class="btn btn-danger btn-sm"
-              @click="deleteStaffMember(member.id)"
-            >
-              Remove
-            </button>
-          </div>
-
-          <div class="permissions-section">
-            <span class="meta-label">Permissions</span>
-            <div class="perm-grid">
-              <label
-                v-for="perm in permissionKeys"
-                :key="perm.key"
-                class="perm-item"
-              >
-                <input
-                  type="checkbox"
-                  :checked="member.permissions?.[perm.key]"
-                  @change="
-                    updatePermission(member, perm.key, $event.target.checked)
-                  "
-                />
-                <span>{{ perm.label }}</span>
-              </label>
-            </div>
+          <div class="staff-avatar">{{ getInitials(member.username) }}</div>
+          <div class="staff-info">
+            <b>{{ member.username }}</b>
+            <span>{{ member.email }}</span>
+            <span class="role-pill" :class="roleClass(member.role)">
+              {{ member.role }}
+            </span>
           </div>
         </div>
-
         <div v-if="!staff.length" class="empty-state">
           No staff members found.
-        </div>
-      </div>
-
-      <div v-if="showAddDialog" class="modal-overlay">
-        <div class="modal">
-          <h3 class="modal-title">Add Staff Member</h3>
-          <div class="field">
-            <label>Username</label>
-            <input
-              v-model="newStaff.username"
-              placeholder="Username"
-              class="modal-input"
-            />
-          </div>
-          <div class="field">
-            <label>Email</label>
-            <input
-              v-model="newStaff.email"
-              type="email"
-              placeholder="Email"
-              class="modal-input"
-            />
-          </div>
-          <div class="field">
-            <label>Password</label>
-            <input
-              v-model="newStaff.password"
-              type="password"
-              placeholder="Password"
-              class="modal-input"
-            />
-            <p class="field-hint">
-              Minimum 12 characters, with uppercase, lowercase, number and
-              special character.
-            </p>
-          </div>
-          <div class="field">
-            <label>Role</label>
-            <select v-model="newStaff.role" class="modal-select">
-              <option v-for="role in roles" :key="role.name" :value="role.name">
-                {{ role.name }}
-              </option>
-            </select>
-          </div>
-          <div v-if="formError" class="form-error">{{ formError }}</div>
-          <div class="modal-actions">
-            <button class="btn btn-secondary" @click="showAddDialog = false">
-              Cancel
-            </button>
-            <button
-              class="btn btn-primary"
-              :disabled="saving"
-              @click="addStaff"
-            >
-              {{ saving ? "Adding..." : "Add" }}
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -223,16 +88,141 @@ const deleteStaffMember = async (id) => {
 </template>
 
 <style scoped>
-.content-wrapper {
-  margin-top: var(--page-margin-y);
-  margin-bottom: var(--page-margin-y);
-  margin-left: var(--page-margin-x);
-  margin-right: var(--page-margin-x);
-  padding: 0;
+.main-wrapper {
+  min-height: 100vh;
+  background: var(--background-warm);
+  display: flex;
+  flex-direction: column;
 }
 
-.action-bar {
-  margin-bottom: 20px;
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.topbar-left h1 {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--neutral-900);
+}
+
+.topbar-left p {
+  color: var(--neutral-600);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.content-wrapper {
+  flex: 1;
+  margin: var(--space-8) var(--space-6);
+  max-width: var(--content-max-width);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 1024px) {
+  .content-wrapper {
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-10);
+  }
+}
+
+.staff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.staff-card {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(26, 20, 16, 0.04);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.staff-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(26, 20, 16, 0.08);
+}
+
+.staff-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
+  color: var(--white);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.staff-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.staff-info b {
+  display: block;
+  font-size: 14px;
+  color: var(--neutral-900);
+  font-weight: 600;
+}
+
+.staff-info span {
+  display: block;
+  font-size: 12px;
+  color: var(--neutral-600);
+  margin-top: 2px;
+}
+
+.role-pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+.role-pill.manager {
+  background: var(--accent-100);
+  color: var(--accent-600);
+}
+
+.role-pill.server {
+  background: var(--sky-100);
+  color: var(--sky-600);
+}
+
+.role-pill.host {
+  background: var(--earth-100);
+  color: var(--earth-600);
+}
+
+.role-pill.admin {
+  background: var(--rose-100);
+  color: var(--rose-600);
 }
 
 .loading-state {
@@ -240,18 +230,16 @@ const deleteStaffMember = async (id) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
-  gap: 16px;
-  color: var(--ink-muted);
-  font-family: "Inter-Light";
+  padding: var(--space-20) var(--space-6);
+  gap: var(--space-4);
 }
 
 .spinner {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: 3px solid var(--border);
-  border-top-color: var(--sky-600);
-  border-radius: 50%;
+  border-top-color: var(--accent);
+  border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -261,270 +249,35 @@ const deleteStaffMember = async (id) => {
   }
 }
 
-.staff-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-.staff-card {
-  background: var(--surface);
-  border: 1px solid #f0f0f0;
-  border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.staff-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.staff-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
-  color: var(--sky-600);
-  font-family: "Inter-Bold";
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.staff-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.staff-name {
-  font-family: "Inter-Medium";
-  font-size: 15px;
-  color: var(--ink);
-  margin: 0 0 4px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.staff-email {
-  font-family: "Inter-Light";
-  font-size: 13px;
-  color: var(--ink-muted);
-  margin: 0;
-}
-
-.role-badge {
-  font-size: 11px;
-  background-color: #f3f4f6;
-  color: #6b7280;
-  padding: 3px 10px;
-  border-radius: 6px;
-  text-transform: capitalize;
-}
-
-.permissions-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.meta-label {
-  font-family: "Inter-Medium";
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--ink-muted);
-}
-
-.perm-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.perm-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-family: "Inter-Light";
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.perm-item input {
-  accent-color: var(--sky-600);
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-
-.btn-primary {
-  background-color: var(--sky-600);
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #2563eb;
-}
-
-.btn-danger {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-.btn-danger:hover {
-  background-color: #ffe4e6;
-}
-
-.btn-secondary {
-  background-color: #f3f4f6;
-  color: var(--ink);
-}
-
-.btn-secondary:hover {
-  background-color: #e5e7eb;
-}
-
-.btn-sm {
-  padding: 6px 12px;
-  font-size: 12px;
+.loading-state p {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
 }
 
 .empty-state {
   text-align: center;
-  padding: 40px;
-  color: var(--ink-muted);
-  font-family: "Inter-Light";
+  padding: var(--space-10);
+  color: var(--ink-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal {
-  background-color: white;
-  padding: 24px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 420px;
-}
-
-.modal-title {
-  font-family: "Inter-Bold";
-  font-size: 18px;
-  color: var(--ink);
-  margin: 0 0 20px 0;
-}
-
-.field {
-  margin-bottom: 16px;
-}
-
-.field-hint {
-  margin: 6px 0 0 0;
-  font-family: "Inter-Light";
-  font-size: 12px;
-  color: var(--ink-muted);
-  line-height: 1.4;
-}
-
-.form-error {
-  margin: 0 0 16px 0;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background-color: #fef2f2;
-  color: #dc2626;
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.field label {
-  display: block;
-  margin-bottom: 6px;
+.btn-primary {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
   font-weight: 600;
-  font-family: "Inter-Medium";
-  font-size: 14px;
-  color: var(--ink);
-}
-
-.modal-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
-  color: var(--ink);
-  box-sizing: border-box;
-}
-
-.modal-input:focus {
-  outline: none;
-  border-color: var(--sky-600);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-.modal-select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-family: "Inter-Light";
-  font-size: 14px;
-  color: var(--ink);
-  background-color: white;
-  box-sizing: border-box;
+  font-size: 13px;
   cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+  color: var(--white);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 
-.modal-select:focus {
-  outline: none;
-  border-color: var(--sky-600);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-@media screen and (min-width: 640px) {
-  .staff-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(74, 53, 43, 0.22);
 }
 </style>

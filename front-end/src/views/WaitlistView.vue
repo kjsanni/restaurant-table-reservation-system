@@ -1,545 +1,100 @@
-<script setup>
-import { ref, computed, onMounted } from "vue";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import waitlistAPI from "@/services/waitlistAPI";
-import tableAPI from "@/services/tableAPI";
-import customerAPI from "@/services/customerAPI";
-import PopupBox from "@/components/PopupBox.vue";
-import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
-import { useAuthStore } from "@/stores/auth";
-import PageHeader from "@/components/PageHeader.vue";
-import { Icon } from "@iconify/vue";
 
-const authStore = useAuthStore();
-const canAddToWaitlist = computed(
-  () => authStore.user?.role === "admin" || authStore.user?.role === "staff"
-);
+interface WaitlistEntry {
+  id: number;
+  name: string;
+  partySize: number;
+  desiredTime?: string;
+  createdAt?: string;
+}
 
-const entries = ref([]);
-const stats = ref({
-  waiting: 0,
-  seated: 0,
-  expired: 0,
-  cancelled: 0,
-  total: 0,
-});
+const router = useRouter();
+const entries = ref<WaitlistEntry[]>([]);
 const loading = ref(true);
-const showPopup = ref(false);
-const popupMode = ref(null);
-const selectedEntry = ref(null);
-const showDeleteModal = ref(false);
-const deleteTargetId = ref(null);
 
-const form = ref({
-  name: "",
-  partySize: 2,
-  phone: "",
-  email: "",
-  desiredTime: "",
-  notes: "",
-});
-
-const customerSearch = ref("");
-const customerResults = ref([]);
-const selectedCustomer = ref(null);
-const searchDebounce = ref(null);
-
-const freeTables = ref([]);
-const actionLoading = ref(false);
-const actionError = ref("");
-
-const loadData = async () => {
+const loadEntries = async () => {
   loading.value = true;
   try {
-    const [entriesRes, statsRes] = await Promise.all([
-      waitlistAPI.getEntries(),
-      waitlistAPI.getStats(),
-    ]);
-    entries.value = entriesRes.data.entries;
-    stats.value = statsRes.data.stats;
+    const res = await waitlistAPI.getEntries();
+    entries.value = res.data.entries || [];
   } catch (err) {
-    logger.error("Failed to load waitlist", { error: err.message });
+    logger.error("Failed to load waitlist", { error: err });
   } finally {
     loading.value = false;
   }
 };
 
-const openAdd = () => {
-  popupMode.value = "add";
-  selectedEntry.value = null;
-  selectedCustomer.value = null;
-  customerSearch.value = "";
-  customerResults.value = [];
-  form.value = {
-    name: "",
-    partySize: 2,
-    phone: "",
-    email: "",
-    desiredTime: "",
-    notes: "",
-  };
-  showPopup.value = true;
-};
-
-const searchCustomer = async () => {
-  if (searchDebounce.value) clearTimeout(searchDebounce.value);
-  const q = customerSearch.value.trim();
-  if (!q) {
-    customerResults.value = [];
-    return;
-  }
-  searchDebounce.value = setTimeout(async () => {
-    try {
-      const res = await customerAPI.search(q);
-      customerResults.value = res.data.customers || [];
-    } catch (err) {
-      logger.error("Customer search failed", { error: err.message });
-    }
-  }, 300);
-};
-
-const selectCustomer = (customer) => {
-  selectedCustomer.value = customer;
-  customerResults.value = [];
-  customerSearch.value = `${customer.firstName} ${customer.lastName}`;
-  form.value.name = `${customer.firstName} ${customer.lastName}`;
-  if (customer.phone) form.value.phone = customer.phone;
-  if (customer.email) form.value.email = customer.email;
-  if (customer.visitCount)
-    form.value.notes = `${
-      form.value.notes ? form.value.notes + " | " : ""
-    }Returning guest (${customer.visitCount} visits)`;
-};
-
-const openSeat = async (entry) => {
-  popupMode.value = "seat";
-  selectedEntry.value = entry;
-  actionError.value = "";
+const seatGuest = async (entryId: number) => {
   try {
-    const res = await tableAPI.getTables();
-    freeTables.value = res.data.collection.filter(
-      (t) => !t.reservationId && !t.isBlocked
-    );
-  } catch {
-    freeTables.value = [];
-  }
-  showPopup.value = true;
-};
-
-const openCancel = (entry) => {
-  popupMode.value = "cancel";
-  selectedEntry.value = entry;
-  actionError.value = "";
-  showPopup.value = true;
-};
-
-const closePopup = () => {
-  showPopup.value = false;
-  selectedEntry.value = null;
-  popupMode.value = null;
-  actionError.value = "";
-  freeTables.value = [];
-};
-
-const handleAdd = async () => {
-  actionLoading.value = true;
-  actionError.value = "";
-  try {
-    await waitlistAPI.addEntry(form.value);
-    closePopup();
-    await loadData();
+    await waitlistAPI.seatEntry(entryId);
+    await loadEntries();
   } catch (err) {
-    actionError.value = getApiErrorMessage(err, "Failed to add to waitlist");
-  } finally {
-    actionLoading.value = false;
+    logger.error("Failed to seat guest", { error: err });
   }
 };
 
-const handleSeat = async (tableId) => {
-  if (!selectedEntry.value || !tableId) return;
-  actionLoading.value = true;
-  actionError.value = "";
-  try {
-    await waitlistAPI.seatEntry(selectedEntry.value.id);
-    await loadData();
-    closePopup();
-  } catch (err) {
-    actionError.value = getApiErrorMessage(err, "Failed to seat guest");
-  } finally {
-    actionLoading.value = false;
-  }
+const getInitials = (name: string) => {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 };
 
-const handleCancel = async () => {
-  if (!selectedEntry.value) return;
-  actionLoading.value = true;
-  actionError.value = "";
-  try {
-    await waitlistAPI.cancelEntry(selectedEntry.value.id);
-    closePopup();
-    await loadData();
-  } catch (err) {
-    actionError.value = getApiErrorMessage(err, "Failed to cancel entry");
-  } finally {
-    actionLoading.value = false;
-  }
-};
-
-const handleDelete = async (entry) => {
-  deleteTargetId.value = entry.id;
-  showDeleteModal.value = true;
-};
-
-const confirmDelete = async () => {
-  if (!deleteTargetId.value) return;
-  try {
-    await waitlistAPI.deleteEntry(deleteTargetId.value);
-    await loadData();
-  } catch (err) {
-    logger.error("Failed to delete", { error: err.message });
-  } finally {
-    showDeleteModal.value = false;
-    deleteTargetId.value = null;
-  }
-};
-
-const handleExpire = async () => {
-  try {
-    await waitlistAPI.expireOld();
-    await loadData();
-  } catch (err) {
-    logger.error("Failed to expire entries", { error: err.message });
-  }
-};
-
-const formatTime = (time) => {
+const formatTime = (time: string) => {
   if (!time) return "ASAP";
   return time;
 };
 
-onMounted(() => {
-  loadData();
-});
+onMounted(loadEntries);
 </script>
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="Waitlist" subtitle="Manage guest queue and seating" />
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Waitlist</h1>
+        <p>Walk-ins and queued guests</p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-primary" @click="router.push('/waitlist/add')">
+          + Add to Waitlist
+        </button>
+      </div>
+    </div>
+
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
         <p>Loading waitlist...</p>
       </div>
-      <template v-else>
-        <div class="stats-row">
-          <div class="stat-pill waiting">
-            <span class="stat-icon"
-              ><Icon icon="mdi:clock-outline" width="20" height="20"
-            /></span>
-            <div class="stat-text">
-              <span class="stat-number">{{ stats.waiting }}</span>
-              <span class="stat-label">Waiting</span>
-            </div>
+
+      <div v-else class="waitlist-card">
+        <div v-for="entry in entries" :key="entry.id" class="waitlist-item">
+          <div class="waitlist-avatar">{{ getInitials(entry.name) }}</div>
+          <div class="waitlist-meta">
+            <b>{{ entry.name }}</b>
+            <span
+              >{{ entry.partySize }} guests · Added
+              {{ formatTime(entry.desiredTime || entry.createdAt || "") }}</span
+            >
           </div>
-          <div class="stat-pill seated">
-            <span class="stat-icon"
-              ><Icon icon="mdi:check-circle" width="20" height="20"
-            /></span>
-            <div class="stat-text">
-              <span class="stat-number">{{ stats.seated }}</span>
-              <span class="stat-label">Seated</span>
-            </div>
-          </div>
-          <div class="stat-pill expired">
-            <span class="stat-icon"
-              ><Icon icon="mdi:clock-alert" width="20" height="20"
-            /></span>
-            <div class="stat-text">
-              <span class="stat-number">{{ stats.expired }}</span>
-              <span class="stat-label">Expired</span>
-            </div>
-          </div>
-          <div class="stat-pill total">
-            <span class="stat-icon"
-              ><Icon icon="mdi:chart-bar" width="20" height="20"
-            /></span>
-            <div class="stat-text">
-              <span class="stat-number">{{ stats.total }}</span>
-              <span class="stat-label">Total</span>
-            </div>
+          <div class="waitlist-actions">
+            <button class="btn-sm btn-accent" @click="seatGuest(entry.id)">
+              Seat
+            </button>
           </div>
         </div>
-
-        <div class="action-bar">
-          <button
-            v-if="canAddToWaitlist"
-            class="btn btn-primary"
-            @click="openAdd"
-          >
-            + Add to Waitlist
-          </button>
-          <button class="btn btn-secondary" @click="handleExpire">
-            Expire Old Entries
-          </button>
+        <div v-if="!entries.length" class="empty-state">
+          No one on the waitlist
         </div>
-
-        <div v-if="entries.length === 0" class="empty-state">
-          <span class="empty-icon"
-            ><Icon icon="mdi:inbox" width="48" height="48"
-          /></span>
-          <p>No one on the waitlist</p>
-        </div>
-        <div v-else class="entries-grid">
-          <div v-for="entry in entries" :key="entry.id" class="entry-card">
-            <div class="entry-header">
-              <div class="guest-identity">
-                <span class="guest-avatar">
-                  {{ (entry.name || "G")[0]?.toUpperCase() }}
-                </span>
-                <div class="guest-info">
-                  <span class="guest-name">{{ entry.name }}</span>
-                  <span class="party-badge">{{ entry.partySize }} guests</span>
-                </div>
-              </div>
-              <span class="status-badge waiting">Waiting</span>
-            </div>
-
-            <div class="entry-body">
-              <div v-if="entry.phone" class="info-item">
-                <span class="info-icon"
-                  ><Icon icon="mdi:phone" width="16" height="16"
-                /></span>
-                <span>{{ entry.phone }}</span>
-              </div>
-              <div v-if="entry.email" class="info-item">
-                <span class="info-icon"
-                  ><Icon icon="mdi:email" width="16" height="16"
-                /></span>
-                <span>{{ entry.email }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-icon"
-                  ><Icon icon="mdi:clock-outline" width="16" height="16"
-                /></span>
-                <span
-                  >Desired: {{ formatTime(entry.desiredTime) || "ASAP" }}</span
-                >
-              </div>
-              <div v-if="entry.notes" class="info-item notes-item">
-                <span class="info-icon"
-                  ><Icon icon="mdi:note-text" width="16" height="16"
-                /></span>
-                <span>{{ entry.notes }}</span>
-              </div>
-            </div>
-
-            <div class="entry-footer">
-              <button
-                class="btn btn-success btn-sm"
-                @click="openSeat(entry)"
-                title="Seat Guest"
-              >
-                <Icon icon="mdi:seat" width="16" height="16" /> Seat
-              </button>
-              <button
-                class="btn btn-danger btn-sm"
-                @click="openCancel(entry)"
-                title="Cancel"
-              >
-                <Icon icon="mdi:close" width="16" height="16" />
-              </button>
-              <button
-                class="btn btn-outline btn-sm"
-                @click="handleDelete(entry)"
-                title="Delete"
-              >
-                <Icon icon="mdi:delete" width="16" height="16" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <PopupBox
-        :is-open="showPopup"
-        :header-text="
-          popupMode === 'add'
-            ? 'Add to Waitlist'
-            : popupMode === 'seat'
-            ? 'Seat Guest'
-            : 'Cancel Entry'
-        "
-        :is-closable="true"
-        @close-modal="closePopup"
-      >
-        <template #popup-content>
-          <div class="popup-body">
-            <div v-if="actionError" class="error-msg">{{ actionError }}</div>
-
-            <div v-if="popupMode === 'add'" class="form-section">
-              <div class="field">
-                <label class="field-label">Find Existing Customer</label>
-                <input
-                  v-model="customerSearch"
-                  class="field-input"
-                  placeholder="Search by name, email, or phone..."
-                  @input="searchCustomer"
-                />
-                <div v-if="customerResults.length" class="customer-results">
-                  <div
-                    v-for="customer in customerResults"
-                    :key="customer.id"
-                    class="customer-result-item"
-                    @click="selectCustomer(customer)"
-                  >
-                    <span class="customer-name"
-                      >{{ customer.firstName }} {{ customer.lastName }}</span
-                    >
-                    <span class="customer-meta"
-                      >{{ customer.email }} ·
-                      {{ customer.visitCount }} visits</span
-                    >
-                  </div>
-                </div>
-              </div>
-              <div class="field">
-                <label class="field-label">Name *</label>
-                <input
-                  v-model="form.name"
-                  class="field-input"
-                  placeholder="Guest name"
-                />
-              </div>
-              <div class="field">
-                <label class="field-label">Party Size</label>
-                <input
-                  type="number"
-                  v-model="form.partySize"
-                  class="field-input"
-                  min="1"
-                />
-              </div>
-              <div class="field">
-                <label class="field-label">Phone</label>
-                <input
-                  v-model="form.phone"
-                  class="field-input"
-                  placeholder="Phone number"
-                />
-              </div>
-              <div class="field">
-                <label class="field-label">Email</label>
-                <input
-                  v-model="form.email"
-                  class="field-input"
-                  placeholder="Email address"
-                />
-              </div>
-              <div class="field">
-                <label class="field-label">Desired Time</label>
-                <input
-                  type="time"
-                  v-model="form.desiredTime"
-                  class="field-input"
-                />
-              </div>
-              <div class="field">
-                <label class="field-label">Notes</label>
-                <textarea
-                  v-model="form.notes"
-                  class="field-input"
-                  rows="2"
-                  placeholder="Special requests..."
-                ></textarea>
-              </div>
-              <div class="popup-actions">
-                <button class="btn btn-secondary" @click="closePopup">
-                  Cancel
-                </button>
-                <button
-                  class="btn btn-primary"
-                  @click="handleAdd"
-                  :disabled="actionLoading"
-                >
-                  {{ actionLoading ? "Adding..." : "Add to Waitlist" }}
-                </button>
-              </div>
-            </div>
-
-            <div v-else-if="popupMode === 'seat'" class="form-section">
-              <p class="seat-info">
-                Assign a table to <strong>{{ selectedEntry?.name }}</strong> ({{
-                  selectedEntry?.partySize
-                }}
-                guests)
-              </p>
-              <div v-if="freeTables.length === 0" class="empty-msg">
-                No free tables available
-              </div>
-              <div class="table-grid">
-                <button
-                  v-for="table in freeTables"
-                  :key="table.id"
-                  class="table-btn"
-                  @click="handleSeat(table.id)"
-                  :disabled="actionLoading"
-                >
-                  Table {{ table.name || table.id }}
-                </button>
-              </div>
-              <div class="popup-actions">
-                <button class="btn btn-secondary" @click="closePopup">
-                  Cancel
-                </button>
-              </div>
-            </div>
-
-            <div v-else-if="popupMode === 'cancel'" class="form-section">
-              <p class="cancel-text">
-                Cancel waitlist entry for
-                <strong>{{ selectedEntry?.name }}</strong
-                >?
-              </p>
-              <div class="popup-actions">
-                <button class="btn btn-secondary" @click="closePopup">
-                  Keep
-                </button>
-                <button
-                  class="btn btn-danger"
-                  @click="handleCancel"
-                  :disabled="actionLoading"
-                >
-                  {{ actionLoading ? "Cancelling..." : "Yes, Cancel" }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </template>
-      </PopupBox>
-
-      <PopupBox
-        :is-open="showDeleteModal"
-        header-text="Confirm Delete"
-        :is-closable="true"
-        @close-modal="showDeleteModal = false"
-      >
-        <template #popup-content>
-          <div class="confirm-content">
-            <p>Are you sure you want to delete this waitlist entry?</p>
-            <div class="confirm-actions">
-              <button
-                class="btn btn-secondary"
-                @click="showDeleteModal = false"
-              >
-                Cancel
-              </button>
-              <button class="btn btn-danger" @click="confirmDelete">
-                Delete
-              </button>
-            </div>
-          </div>
-        </template>
-      </PopupBox>
+      </div>
     </div>
   </div>
 </template>
@@ -547,23 +102,131 @@ onMounted(() => {
 <style scoped>
 .main-wrapper {
   min-height: 100vh;
-  background: var(--background);
+  background: var(--background-warm);
   display: flex;
   flex-direction: column;
 }
 
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.topbar-left h1 {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--neutral-900);
+}
+
+.topbar-left p {
+  color: var(--neutral-600);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .content-wrapper {
   flex: 1;
-  margin: var(--space-6) var(--space-6);
-  padding: 0;
-  max-width: 1400px;
+  margin: var(--space-8) var(--space-6);
+  max-width: var(--content-max-width);
   width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @media (min-width: 1024px) {
   .content-wrapper {
-    margin: var(--space-8) var(--space-8);
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-10);
   }
+}
+
+.waitlist-card {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 30px rgba(26, 20, 16, 0.05);
+  overflow: hidden;
+}
+
+.waitlist-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--neutral-100);
+  transition: background 0.2s ease;
+}
+
+.waitlist-item:last-child {
+  border-bottom: none;
+}
+
+.waitlist-item:hover {
+  background: rgba(243, 221, 211, 0.25);
+}
+
+.waitlist-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--brand-100);
+  color: var(--brand-800);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.waitlist-meta {
+  flex: 1;
+}
+
+.waitlist-meta b {
+  display: block;
+  font-size: 14px;
+  color: var(--neutral-900);
+}
+
+.waitlist-meta span {
+  font-size: 12px;
+  color: var(--neutral-600);
+}
+
+.waitlist-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-sm {
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+  color: var(--white);
+}
+
+.btn-accent:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(74, 53, 43, 0.18);
 }
 
 .loading-state {
@@ -596,504 +259,29 @@ onMounted(() => {
   color: var(--ink-secondary);
 }
 
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-}
-
-@media (min-width: 640px) {
-  .stats-row {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-.stat-pill {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out);
-}
-
-.stat-pill:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.waiting .stat-icon {
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--accent-600);
-}
-
-.seated .stat-icon {
-  background: rgba(22, 163, 74, 0.1);
-  color: var(--earth-600);
-}
-
-.expired .stat-icon {
-  background: rgba(220, 38, 38, 0.1);
-  color: var(--rose-600);
-}
-
-.total .stat-icon {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--sky-600);
-}
-
-.stat-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.stat-number {
-  font-family: var(--font-serif);
-  font-size: var(--text-2xl);
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: var(--tracking-tight);
-}
-
-.stat-label {
-  font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  color: var(--ink-secondary);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.stat-pill.waiting {
-  border-left: 4px solid var(--accent-500);
-}
-
-.stat-pill.seated {
-  border-left: 4px solid var(--earth-600);
-}
-
-.stat-pill.expired {
-  border-left: 4px solid var(--rose-600);
-}
-
-.stat-pill.total {
-  border-left: 4px solid var(--sky-500);
-}
-
-.action-bar {
-  display: flex;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  margin-bottom: var(--space-6);
-}
-
 .empty-state {
   text-align: center;
-  padding: var(--space-16) var(--space-6);
+  padding: var(--space-10);
   color: var(--ink-secondary);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.empty-icon {
-  opacity: 0.4;
-  color: var(--ink-secondary);
-}
-
-.entries-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-}
-
-@media (min-width: 640px) {
-  .entries-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.entry-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out);
-}
-
-.entry-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.entry-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-3);
-}
-
-.guest-identity {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.guest-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  background: var(--neutral-100);
-  color: var(--ink);
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: var(--text-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.guest-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.guest-name {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.party-badge {
-  font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  background: var(--neutral-50);
-  color: var(--ink-secondary);
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-full);
-  display: inline-block;
-  width: fit-content;
-}
-
-.status-badge {
-  font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  white-space: nowrap;
-  text-transform: capitalize;
-  flex-shrink: 0;
-}
-
-.status-badge.waiting {
-  background: var(--accent-100);
-  color: var(--accent-600);
-}
-
-.entry-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  color: var(--ink-secondary);
-}
-
-.info-icon {
-  display: flex;
-  align-items: center;
-  color: var(--ink-secondary);
-  flex-shrink: 0;
-}
-
-.info-item.notes-item {
-  background: var(--accent-50);
-  color: #92400e;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  margin-top: var(--space-2);
-}
-
-.entry-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
-}
-
-.customer-results {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.customer-result-item {
-  padding: 10px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.customer-result-item:hover {
-  background: #f9fafb;
-}
-
-.customer-name {
-  font-family: "Inter-Medium";
-  font-size: 13px;
-  color: var(--primary-black);
-}
-
-.customer-meta {
-  font-family: "Inter-Light";
-  font-size: 12px;
-  color: var(--secondary-gray);
-}
-
-.popup-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.form-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.field-label {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--ink);
-}
-
-.field-input {
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  color: var(--ink);
-  background: var(--surface);
-  width: 100%;
-  box-sizing: border-box;
-  transition: border-color var(--duration-fast) var(--ease-in-out),
-    box-shadow var(--duration-fast) var(--ease-in-out);
-}
-
-.field-input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-}
-
-textarea.field-input {
-  resize: vertical;
-}
-
-.seat-info {
-  font-size: var(--text-sm);
-  color: var(--ink);
-  margin-bottom: var(--space-2);
-  line-height: var(--leading-relaxed);
-}
-
-.cancel-text {
-  font-size: var(--text-sm);
-  color: var(--ink);
-  margin-bottom: var(--space-2);
-  line-height: var(--leading-relaxed);
-}
-
-.empty-msg {
-  text-align: center;
-  color: var(--ink-secondary);
-  font-family: var(--font-sans);
-  padding: var(--space-4);
-}
-
-.error-msg {
-  background: var(--rose-50);
-  color: var(--rose-600);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-}
-
-.popup-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border);
-}
-
-.table-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: var(--space-2);
-  margin: var(--space-3) 0;
-}
-
-.table-btn {
-  padding: var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  transition: all var(--duration-fast) var(--ease-in-out);
-}
-
-.table-btn:hover:not(:disabled) {
-  background: var(--neutral-50);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.table-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  transition: all var(--duration-fast) var(--ease-in-out);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--ink) 0%, var(--ink-secondary) 100%);
-  color: white;
-  box-shadow: var(--shadow-sm);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+  color: var(--white);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .btn-primary:hover {
-  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
-}
-
-.btn-secondary {
-  background: var(--neutral-50);
-  color: var(--ink);
-  border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-  background: var(--neutral-100);
-}
-
-.btn-danger {
-  background: var(--rose-50);
-  color: var(--rose-600);
-}
-
-.btn-danger:hover {
-  background: var(--rose-100);
-}
-
-.btn-success {
-  background: var(--earth-50);
-  color: var(--earth-600);
-}
-
-.btn-success:hover {
-  background: var(--earth-100);
-}
-
-.btn-outline {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--ink);
-}
-
-.btn-outline:hover {
-  background: var(--neutral-50);
-}
-
-.btn-sm {
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-xs);
-}
-
-.confirm-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.confirm-content p {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--ink);
-  margin: 0;
-}
-
-.confirm-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
+  box-shadow: 0 10px 24px rgba(74, 53, 43, 0.22);
 }
 </style>

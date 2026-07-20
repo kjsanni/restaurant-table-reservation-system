@@ -259,6 +259,138 @@ const getNoShowAnalytics = async (filters = {}, tenantId) => {
   return { total, byDay: Object.values(byDay).sort((a, b) => a.date.localeCompare(b.date)), byTime: Object.values(byTime).sort((a, b) => a.time.localeCompare(b.time)) };
 };
 
+const getOrderAnalytics = async (filters = {}, tenantId) => {
+  const where = {};
+  if (filters.from) where.orderedAt = { ...where.orderedAt, [Op.gte]: new Date(filters.from) };
+  if (filters.to) where.orderedAt = { ...where.orderedAt, [Op.lte]: new Date(filters.to) };
+
+  const result = await db.order.findOne({
+    attributes: [
+      [db.sequelize.fn("COUNT", db.sequelize.col("id")), "totalOrders"],
+      [db.sequelize.fn("SUM", db.sequelize.col("total")), "totalRevenue"],
+      [db.sequelize.fn("AVG", db.sequelize.col("total")), "avgOrderValue"],
+    ],
+    where: { ...where, tenantId },
+    raw: true,
+  });
+
+  const statusBreakdown = await db.order.findAll({
+    attributes: ["status", [db.sequelize.fn("COUNT", db.sequelize.col("id")), "count"]],
+    where: { ...where, tenantId },
+    group: ["status"],
+    raw: true,
+  });
+
+  const paymentBreakdown = await db.order.findAll({
+    attributes: ["paymentStatus", [db.sequelize.fn("COUNT", db.sequelize.col("id")), "count"]],
+    where: { ...where, tenantId },
+    group: ["paymentStatus"],
+    raw: true,
+  });
+
+  return {
+    totalOrders: parseInt(result?.totalOrders || 0),
+    totalRevenue: parseFloat(result?.totalRevenue || 0),
+    avgOrderValue: parseFloat(result?.avgOrderValue || 0),
+    statusBreakdown: statusBreakdown.map((r) => ({ status: r.status, count: parseInt(r.count) })),
+    paymentBreakdown: paymentBreakdown.map((r) => ({ status: r.paymentStatus, count: parseInt(r.count) })),
+  };
+};
+
+const getTopSellingItems = async (filters = {}, tenantId) => {
+  const where = {};
+  if (filters.from) where.createdAt = { ...where.createdAt, [Op.gte]: new Date(filters.from) };
+  if (filters.to) where.createdAt = { ...where.createdAt, [Op.lte]: new Date(filters.to) };
+
+  const items = await db.orderItem.findAll({
+    include: [
+      {
+        model: db.order,
+        where: { ...where, tenantId },
+        attributes: [],
+      },
+      {
+        model: db.menuItem,
+        attributes: ["id", "name", "price"],
+      },
+    ],
+    attributes: [
+      "menuItemId",
+      [db.sequelize.fn("SUM", db.sequelize.col("quantity")), "totalQuantity"],
+      [db.sequelize.fn("SUM", db.sequelize.col("lineTotal")), "totalRevenue"],
+    ],
+    group: ["menuItemId", "menuItem.id"],
+    order: [[db.sequelize.fn("SUM", db.sequelize.col("quantity")), "DESC"]],
+    limit: 20,
+    raw: true,
+  });
+
+  return items.map((item) => ({
+    menuItemId: item.menuItemId,
+    name: item["menuItem.name"],
+    price: parseFloat(item["menuItem.price"] || 0),
+    totalQuantity: parseInt(item.totalQuantity || 0),
+    totalRevenue: parseFloat(item.totalRevenue || 0),
+  }));
+};
+
+const exportOrderCSV = async (filters = {}, tenantId) => {
+  const { orders } = await orderDAO.getOrders(tenantId, filters, {});
+  const header = ["Order ID", "Date", "Status", "Payment Status", "Customer", "Total", "Discount Code"];
+  let csv = header.map(csvCell).join(",") + "\n";
+  orders.forEach((o) => {
+    csv +=
+      [
+        o.id,
+        o.orderedAt ? new Date(o.orderedAt).toISOString().slice(0, 10) : "",
+        o.status,
+        o.paymentStatus,
+        [o.Customer?.firstName, o.Customer?.lastName].filter(Boolean).join(" ") || "",
+        o.total,
+        o.discountCode || "",
+      ]
+        .map(csvCell)
+        .join(",") + "\n";
+  });
+  return csv;
+};
+
+const exportOrderPDF = async (filters = {}, tenantId) => {
+  const { orders } = await orderDAO.getOrders(tenantId, filters, {});
+  const analytics = await getOrderAnalytics(filters, tenantId);
+
+  const lines = [];
+  lines.push("ORDER REPORT");
+  lines.push("============");
+  lines.push("");
+  lines.push(`Generated: ${new Date().toLocaleString()}`);
+  const range =
+    [filters.from, filters.to].filter(Boolean).join(" to ") || "All dates";
+  lines.push(`Period: ${range}`);
+  lines.push(`Total Orders: ${analytics.totalOrders}`);
+  lines.push(`Total Revenue: GHS ${analytics.totalRevenue.toFixed(2)}`);
+  lines.push(`Average Order Value: GHS ${analytics.avgOrderValue.toFixed(2)}`);
+  lines.push("");
+  lines.push("STATUS BREAKDOWN");
+  analytics.statusBreakdown.forEach((s) => {
+    lines.push(`  ${s.status}: ${s.count}`);
+  });
+  lines.push("");
+  lines.push("PAYMENT BREAKDOWN");
+  analytics.paymentBreakdown.forEach((s) => {
+    lines.push(`  ${s.status}: ${s.count}`);
+  });
+  lines.push("");
+  lines.push("ORDERS:");
+  orders.forEach((o, i) => {
+    lines.push(
+      `${i + 1}. Order #${o.id} - ${new Date(o.orderedAt).toLocaleString()} - ${o.status} - GHS ${o.total}`
+    );
+  });
+
+  return generateTextPdf(lines);
+};
+
 module.exports = {
   getReservationReport,
   getTurnTimeReport,
@@ -268,4 +400,8 @@ module.exports = {
   getCustomerAnalytics,
   getTableUtilization,
   getNoShowAnalytics,
+  getOrderAnalytics,
+  getTopSellingItems,
+  exportOrderCSV,
+  exportOrderPDF,
 };

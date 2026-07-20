@@ -1,5 +1,4 @@
 <script setup>
-import PageHeader from "@/components/PageHeader.vue";
 import { ref } from "vue";
 import Heatmap2D from "@/components/Heatmap2D.vue";
 import { useToday, useDaysAgo } from "@/composables/useReservationCalendar";
@@ -13,7 +12,11 @@ const to = ref(today.value);
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="Reservation Heatmap" />
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1 class="topbar-title">Reservation Heatmap</h1>
+      </div>
+    </div>
     <div class="content-wrapper">
       <Heatmap2D :mode="mode" :from="from" :to="to" />
     </div>
@@ -21,6 +24,23 @@ const to = ref(today.value);
 </template>
 
 <style scoped>
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-5) var(--page-margin-x);
+}
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.topbar-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
 .main-wrapper {
   min-height: 100vh;
   background: var(--background);

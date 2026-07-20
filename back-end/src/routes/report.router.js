@@ -44,4 +44,24 @@ router
   .get(...protectedRoute("view_reservations", reportController.getNoShowAnalyticsHandler))
   .all(httpMethodError);
 
+router
+  .route("/orders")
+  .get(...protectedRoute("view_orders", reportController.getOrderStatsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/orders/top-items")
+  .get(...protectedRoute("view_orders", reportController.getTopSellingItemsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/orders/csv")
+  .get(...protectedRoute("view_orders", reportController.exportOrderCSVHandler))
+  .all(httpMethodError);
+
+router
+  .route("/orders/pdf")
+  .get(...protectedRoute("view_orders", reportController.exportOrderPDFHandler))
+  .all(httpMethodError);
+
 module.exports = router;

@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { VaButton, VaCard, VaCardContent, VaInput, VaAlert } from "vuestic-ui";
+import { RouterLink } from "vue-router";
 
 import { useAuthStore } from "@/stores/auth";
-import { useBranding } from "@/composables/useBranding";
 import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
 
 const router = useRouter();
 const authStore = useAuthStore();
-const { brandName, logoUrl, primaryColor } = useBranding();
 
 const credentials = ref({
   email: "",
@@ -47,7 +45,7 @@ const handleLogin = async () => {
   generalError.value = null;
   try {
     await authStore.login(credentials.value.email, credentials.value.password);
-    router.push("/reservations");
+    router.push("/dashboard");
   } catch (err) {
     generalError.value = getApiErrorMessage(err);
     validationErrors.value = getApiErrors(err);
@@ -61,240 +59,313 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <div class="auth-wrapper">
-    <VaCard
-      class="auth-card"
-      flat
-      :style="primaryColor ? { '--brand-accent': primaryColor } : null"
-    >
-      <VaCardContent>
-        <div class="auth-header">
-          <div class="brand">
-            <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="brand-logo" />
-            <span v-else class="brand-icon">🍽️</span>
-            <span class="brand-text">{{ brandName || "RTRS" }}</span>
+  <div class="page">
+    <aside class="brand-side">
+      <div class="brand-top">
+        <div class="brand-mark">R</div>
+        <div class="brand-name">Restaurant Reservations</div>
+      </div>
+      <div class="brand-center">
+        <h1>Run your floor<br />with clarity.</h1>
+        <p>
+          Reservations, tables, schedule, and guest history — one calm, fast
+          workspace for your team.
+        </p>
+      </div>
+      <div class="brand-bottom">© 2026 Vibespot Technologies Ltd</div>
+    </aside>
+
+    <main class="form-side">
+      <div class="form-card">
+        <h2>Welcome back</h2>
+        <p class="subtitle">Sign in to your restaurant dashboard</p>
+        <form @submit.prevent="handleLogin">
+          <div class="field">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              v-model="credentials.email"
+              type="email"
+              placeholder="you@restaurant.com"
+              autocomplete="email"
+            />
           </div>
-          <h1 class="auth-title">Sign In</h1>
-          <p class="auth-subtitle">Access your restaurant dashboard</p>
-        </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input
+              id="password"
+              v-model="credentials.password"
+              type="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+          </div>
 
-        <form @submit.prevent="handleLogin" class="auth-form">
-          <VaInput
-            v-model="credentials.email"
-            label="Email"
-            type="email"
-            :error-messages="validationErrors?.email"
-            class="auth-input"
-            autocomplete="email"
-          />
-          <VaInput
-            v-model="credentials.password"
-            label="Password"
-            type="password"
-            :error-messages="validationErrors?.password"
-            class="auth-input"
-            autocomplete="current-password"
-          />
+          <div v-if="lockoutRemaining > 0" class="alert alert-warning">
+            Account locked. Try again in
+            {{ formatLockoutTime(lockoutRemaining) }}
+          </div>
 
-          <VaAlert
-            v-if="lockoutRemaining > 0"
-            color="warning"
-            class="auth-alert"
-          >
-            <span class="lockout-text">
-              Account locked. Try again in
-              {{ formatLockoutTime(lockoutRemaining) }}
-            </span>
-          </VaAlert>
-
-          <VaAlert v-if="generalError" color="danger" class="auth-alert">
+          <div v-if="generalError" class="alert alert-danger">
             {{ generalError }}
-          </VaAlert>
+          </div>
 
-          <VaButton
-            type="submit"
-            preset="primary"
-            size="large"
-            block
-            class="auth-submit"
-            :disabled="submitting"
-          >
-            {{ submitting ? "Signing in..." : "Sign In" }}
-          </VaButton>
+          <div class="actions">
+            <button type="submit" class="btn-primary" :disabled="submitting">
+              {{ submitting ? "Signing in..." : "Sign In" }}
+            </button>
+            <RouterLink to="/register" class="link">Create account</RouterLink>
+          </div>
         </form>
-
-        <div class="auth-footer">
-          <RouterLink to="/register" class="auth-link"
-            >Create account</RouterLink
-          >
-        </div>
-      </VaCardContent>
-    </VaCard>
+        <div class="footer-note">Restaurant Reservations — vibespotgh.com</div>
+      </div>
+    </main>
   </div>
 </template>
 
 <style scoped>
-.auth-wrapper {
+.page {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-6) var(--space-4);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.brand-side {
   background: linear-gradient(
-    135deg,
-    var(--background-warm) 0%,
-    var(--neutral-100) 100%
+    160deg,
+    var(--brand-900) 0%,
+    var(--brand-700) 55%,
+    var(--brand-600) 100%
   );
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 56px 64px;
   position: relative;
   overflow: hidden;
 }
-
-.auth-wrapper::before {
+.brand-side::before {
   content: "";
   position: absolute;
-  top: -40%;
-  right: -25%;
-  width: 700px;
-  height: 700px;
+  inset: 0;
   background: radial-gradient(
-    circle,
-    rgba(217, 119, 6, 0.08) 0%,
-    transparent 65%
-  );
-  border-radius: 50%;
+      420px 220px at 0% 0%,
+      rgba(251, 191, 36, 0.18),
+      transparent 60%
+    ),
+    radial-gradient(
+      360px 180px at 100% 100%,
+      rgba(217, 119, 6, 0.18),
+      transparent 60%
+    );
   pointer-events: none;
 }
-
-.auth-wrapper::after {
-  content: "";
-  position: absolute;
-  bottom: -35%;
-  left: -15%;
-  width: 550px;
-  height: 550px;
-  background: radial-gradient(
-    circle,
-    rgba(180, 83, 9, 0.06) 0%,
-    transparent 65%
-  );
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.auth-card {
-  width: 100%;
-  max-width: 420px;
-  border-radius: var(--radius-2xl);
-  border: 1px solid var(--border-subtle);
-  box-shadow: var(--shadow-xl);
+.brand-top {
   position: relative;
-  z-index: 1;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px) saturate(1.25);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: fadeDown 0.7s ease-out both;
+}
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-400), var(--accent-500));
+  display: grid;
+  place-items: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--brand-900);
+  box-shadow: 0 10px 30px rgba(217, 119, 6, 0.25);
+}
+.brand-name {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.brand-center {
+  position: relative;
+  animation: fadeUp 0.8s 0.1s ease-out both;
+}
+.brand-center h1 {
+  font-family: var(--font-serif);
+  font-size: 46px;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 18px;
+  color: var(--white);
+}
+.brand-center p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 420px;
+}
+.brand-bottom {
+  position: relative;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  animation: fadeUp 0.8s 0.25s ease-out both;
 }
 
-.auth-header {
-  text-align: center;
-  margin-bottom: var(--space-8);
-}
-
-.brand {
-  display: inline-flex;
+.form-side {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-6);
-  padding: var(--space-2) var(--space-4);
-  background: var(--brand-50);
-  border: 1px solid var(--brand-200);
-  border-radius: var(--radius-full);
+  padding: 40px;
+  animation: fadeIn 0.7s 0.15s ease-out both;
 }
-
-.brand-icon {
-  font-size: 20px;
-}
-
-.brand-text {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: var(--text-sm);
-  color: var(--brand-800);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-.auth-title {
-  font-family: var(--font-sans);
-  font-size: var(--text-3xl);
-  color: var(--ink);
-  margin: 0 0 var(--space-2) 0;
-  letter-spacing: var(--tracking-tight);
-  font-weight: 700;
-}
-
-.auth-subtitle {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  color: var(--ink-muted);
-  margin: 0;
-}
-
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.auth-input {
+.form-card {
   width: 100%;
+  max-width: 420px;
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(26, 20, 16, 0.08),
+    0 1px 2px rgba(26, 20, 16, 0.04);
 }
-
-.auth-alert {
-  border-radius: var(--radius-lg);
-  font-family: var(--font-sans);
+.form-card h2 {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--neutral-900);
+  margin-bottom: 6px;
 }
-
-.lockout-text {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 500;
+.subtitle {
+  font-size: 14px;
+  color: var(--neutral-600);
+  margin-bottom: 28px;
 }
-
-.auth-submit {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
+.field {
+  margin-bottom: 18px;
+}
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neutral-800);
   text-transform: uppercase;
-  margin-top: var(--space-2);
-  height: 48px;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(
-    135deg,
-    var(--brand-700) 0%,
-    var(--brand-600) 100%
-  ) !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
 }
-
-.auth-footer {
-  text-align: center;
-  margin-top: var(--space-6);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--border-subtle);
-}
-
-.auth-link {
+.field input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid var(--neutral-300);
+  border-radius: var(--radius-md);
   font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--accent);
-  text-decoration: none;
-  transition: color var(--duration-150) var(--ease-in-out);
+  font-size: 14px;
+  color: var(--neutral-900);
+  background: var(--neutral-50);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.auth-link:hover {
-  color: var(--accent-hover);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.field input:focus {
+  outline: none;
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+}
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+.btn-primary {
+  flex: 1;
+  padding: 13px 18px;
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(74, 53, 43, 0.25);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.link {
+  font-size: 13px;
+  color: var(--accent-600);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+.link:hover {
+  color: var(--accent-500);
+}
+.alert {
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.alert-warning {
+  background: var(--accent-100);
+  color: var(--accent-600);
+}
+.alert-danger {
+  background: var(--rose-100);
+  color: var(--rose-600);
+}
+.footer-note {
+  margin-top: 22px;
+  font-size: 13px;
+  color: var(--neutral-600);
+  text-align: center;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 860px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+  .brand-side {
+    display: none;
+  }
+  .form-side {
+    padding: 24px;
+  }
 }
 </style>

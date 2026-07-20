@@ -1,11 +1,14 @@
 const { Worker } = require("bullmq");
 const { Queue } = require("bullmq");
-const { connection, defaultJobOptions } = require("./queue");
+const { connection, defaultJobOptions, registerQueue } = require("./queue");
 const logger = require("../utils/logger");
 const db = require("../db/models");
 
 const DLQ_NAME = "notifications-dlq";
 const dlqQueue = connection ? new Queue(DLQ_NAME, { connection }) : null;
+if (dlqQueue) registerQueue(dlqQueue);
+
+let notificationWorker = null;
 
 const isTenantActive = async (tenantId) => {
   if (!tenantId || !db.tenant) return true;
@@ -54,8 +57,6 @@ const startNotificationWorker = () => {
       if (!(await isTenantActive(tenantId))) {
         return { skipped: true, reason: "tenant_suspended" };
       }
-      // Reminder/confirmation/cancellation jobs are enqueued as a single batch
-      // containing one payload per channel; expand and process each.
       if (type === "batch") {
         const items = Array.isArray(job.data.items) ? job.data.items : [];
         const results = [];
@@ -91,7 +92,20 @@ const startNotificationWorker = () => {
     logger.error("[NotificationWorker] Worker error:", err.message);
   });
 
+  notificationWorker = worker;
   return worker;
+};
+
+const closeNotificationWorker = async () => {
+  if (notificationWorker) {
+    try {
+      await notificationWorker.close();
+    } catch (err) {
+      logger.warn("[NotificationWorker] Failed to close worker:", err.message);
+    } finally {
+      notificationWorker = null;
+    }
+  }
 };
 
 const processItem = async (item) => {
@@ -109,7 +123,6 @@ const processItem = async (item) => {
 const sendEmailJob = async (payload) => {
   const { to, templateKey, data, tenantId } = payload;
   const mailService = require("../services/mail.service");
-  // mailService.sendMail is tenant-aware (emailTemplateDAO scoped by tenantId).
   return await mailService.sendMail(to, templateKey, data || {}, tenantId);
 };
 
@@ -119,4 +132,8 @@ const sendWhatsAppJob = async (payload) => {
   return await whatsappService.sendWhatsAppText(to, text, tenantId);
 };
 
-module.exports = { startNotificationWorker, DLQ_NAME };
+module.exports = {
+  startNotificationWorker,
+  closeNotificationWorker,
+  DLQ_NAME,
+};

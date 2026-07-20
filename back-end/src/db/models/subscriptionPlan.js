@@ -44,6 +44,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
       },
+      gracePeriodDays: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 7,
+      },
     },
     {
       sequelize,

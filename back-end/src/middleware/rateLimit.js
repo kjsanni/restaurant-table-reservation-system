@@ -19,7 +19,9 @@ const numEnv = (name, fallback) => {
   return Number.isFinite(v) && v > 0 ? v : fallback;
 };
 
-const RATE_LIMIT_DISABLED = process.env.RATE_LIMIT_DISABLED === "true";
+const RATE_LIMIT_DISABLED =
+  process.env.NODE_ENV !== "production" &&
+  process.env.RATE_LIMIT_DISABLED === "true";
 
 const makeLimiter = (prefix, opts) => {
   if (RATE_LIMIT_DISABLED) {

@@ -5,6 +5,7 @@ export interface NavItem {
   requiresAuth?: boolean
   requiresAdmin?: boolean
   requiresPermission?: string
+  tenantOnly?: boolean
   section?: string
 }
 
@@ -25,20 +26,24 @@ export const authenticatedNavItems: NavItem[] = [
   { routeName: 'waitlist', text: 'Waitlist', icon: 'mdi:clock', requiresAuth: true },
   { routeName: 'reports', text: 'Reports', icon: 'mdi:chart-bar', requiresAuth: true },
   { routeName: 'heatmap', text: 'Heatmap', icon: 'mdi:chart-area', requiresAuth: true },
+  { routeName: 'payments', text: 'Payments', icon: 'mdi:currency-usd', requiresAuth: true },
+  { routeName: 'revenue-report', text: 'Revenue', icon: 'mdi:trending-up', requiresAuth: true },
+  { routeName: 'search', text: 'Search', icon: 'mdi:magnify', requiresAuth: true },
+  { routeName: 'about', text: 'About', icon: 'mdi:information', requiresAuth: true },
 ]
 
 export const adminNavItems: NavItem[] = [
-  { routeName: 'super-admin-overview', text: 'Overview', icon: 'mdi:view-dashboard', requiresAuth: true, requiresPermission: 'manage_tenants' },
+  { routeName: 'super-admin-overview', text: 'Overview', icon: 'mdi:view-dashboard', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
   { routeName: 'admin-settings', text: 'Settings', icon: 'mdi:cog', requiresAuth: true, requiresAdmin: true },
-  { routeName: 'tenant-dashboard', text: 'Tenants', icon: 'mdi:account-group', requiresAuth: true, requiresPermission: 'manage_tenants' },
-  { routeName: 'plans-management', text: 'Pricing', icon: 'mdi:tag-outline', requiresAuth: true, requiresPermission: 'manage_tenants' },
-  { routeName: 'platform-payment-dashboard', text: 'Payments', icon: 'mdi:currency-usd', requiresAuth: true, requiresPermission: 'manage_tenants' },
-  { routeName: 'platform-usage', text: 'Usage', icon: 'mdi:chart-bar', requiresAuth: true, requiresPermission: 'manage_tenants' },
-  { routeName: 'platform-revenue', text: 'Revenue', icon: 'mdi:trending-up', requiresAuth: true, requiresPermission: 'manage_tenants' },
-  { routeName: 'platform-bulk-actions', text: 'Bulk Actions', icon: 'mdi:check-all', requiresAuth: true, requiresPermission: 'manage_tenants' },
-  { routeName: 'billing-email-templates', text: 'Billing Emails', icon: 'mdi:email-send', requiresAuth: true, requiresPermission: 'manage_tenants' },
-  { routeName: 'platform-audit-log', text: 'Audit Log', icon: 'mdi:clipboard-list', requiresAuth: true, requiresPermission: 'manage_tenants' },
-  { routeName: 'platform-notifications', text: 'Notifications', icon: 'mdi:bell', requiresAuth: true, requiresPermission: 'manage_tenants' },
+  { routeName: 'tenant-dashboard', text: 'Tenants', icon: 'mdi:account-group', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
+  { routeName: 'plans-management', text: 'Pricing', icon: 'mdi:tag-outline', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
+  { routeName: 'platform-payment-dashboard', text: 'Payments', icon: 'mdi:currency-usd', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
+  { routeName: 'platform-usage', text: 'Usage', icon: 'mdi:chart-bar', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
+  { routeName: 'platform-revenue', text: 'Revenue', icon: 'mdi:trending-up', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
+  { routeName: 'platform-bulk-actions', text: 'Bulk Actions', icon: 'mdi:check-all', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
+  { routeName: 'billing-email-templates', text: 'Billing Emails', icon: 'mdi:email-send', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
+  { routeName: 'platform-audit-log', text: 'Audit Log', icon: 'mdi:clipboard-list', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
+  { routeName: 'platform-notifications', text: 'Notifications', icon: 'mdi:bell', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
   { routeName: 'role-management', text: 'Roles', icon: 'mdi:key', requiresAuth: true },
   { routeName: 'group-management', text: 'Groups', icon: 'mdi:account-multiple', requiresAuth: true },
   { routeName: 'audit-logs', text: 'Audit', icon: 'mdi:file-document-text', requiresAuth: true },

@@ -7,153 +7,310 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: () => import("../views/HomeView.vue"),
+      component: () => import("../views/CustomerLandingView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/customer",
+      name: "customer-landing",
+      component: () => import("../views/CustomerLandingView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/onboarding",
+      name: "onboarding",
+      component: () => import("../views/OnboardingView.vue"),
+      meta: { standalone: true },
     },
     {
       path: "/login",
       name: "login",
       component: () => import("../views/LoginView.vue"),
+      meta: { standalone: true },
     },
     {
       path: "/register",
       name: "register",
       component: () => import("../views/RegisterView.vue"),
+      meta: { standalone: true },
     },
     {
       path: "/reservations",
       name: "reservations",
       component: () => import("../views/ReservationsView.vue"),
-      meta: { requiresAuth: true },
+      meta: { standalone: true, requiresAuth: true },
     },
     {
       path: "/dashboard",
       name: "tenant-landing",
       component: () => import("../views/TenantDashboardView.vue"),
-      meta: { requiresAuth: true },
+      meta: { standalone: true, requiresAuth: true },
     },
     {
       path: "/new-reservation",
       name: "new-reservation",
       component: () => import("../views/NewReservationView.vue"),
-      meta: { requiresAuth: true },
+      meta: { standalone: true, requiresAuth: true },
     },
     {
       path: "/admin/settings",
       name: "admin-settings",
       component: () => import("../views/AdminSettingsView.vue"),
-      meta: { requiresAuth: true, requiresAdmin: true },
+      meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
     },
     {
       path: "/schedule",
       name: "schedule",
       component: () => import("../views/ScheduleView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_schedule" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_schedule",
+      },
     },
     {
       path: "/calendar",
       name: "calendar",
       component: () => import("../views/CalendarView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_schedule" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_schedule",
+      },
     },
     {
       path: "/floor-plan",
       name: "floor-plan",
       component: () => import("../views/FloorPlanView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_tables" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_tables",
+      },
     },
     {
       path: "/reports",
       name: "reports",
       component: () => import("../views/ReportView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "view_reservations" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "view_reservations",
+      },
     },
     {
       path: "/heatmap",
       name: "heatmap",
       component: () => import("../views/HeatmapView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "view_reservations" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "view_reservations",
+      },
     },
     {
       path: "/tables/manage",
       name: "table-management",
       component: () => import("../views/TableManagementView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_tables" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_tables",
+      },
     },
     {
       path: "/admin/floorplan",
       name: "floorplan-editor",
       component: () => import("../views/FloorPlanEditorView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_tables" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_tables",
+      },
     },
     {
       path: "/admin/email-templates",
       name: "email-templates",
       component: () => import("../views/EmailTemplatesView.vue"),
-      meta: { requiresAuth: true, requiresAdmin: true },
+      meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
     },
     {
       path: "/staff/manage",
       name: "staff-management",
       component: () => import("../views/StaffManagementView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_staff" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_staff",
+      },
     },
     {
       path: "/roles/manage",
       name: "role-management",
       component: () => import("../views/RoleManagementView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_roles" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_roles",
+      },
     },
     {
       path: "/groups/manage",
       name: "group-management",
       component: () => import("../views/GroupManagementView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_groups" },
-    },
-    {
-      path: "/admin/payments",
-      name: "platform-payment-dashboard",
-      component: () => import("../views/admin/PlatformPaymentDashboard.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_groups",
+      },
     },
     {
       path: "/waitlist",
       name: "waitlist",
       component: () => import("../views/WaitlistView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_tables" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_tables",
+      },
     },
     {
       path: "/audit-logs",
       name: "audit-logs",
       component: () => import("../views/AuditLogView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "view_audit_logs" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "view_audit_logs",
+      },
+    },
+    {
+      path: "/search",
+      name: "search",
+      component: () => import("../views/SearchView.vue"),
+      meta: { standalone: true, requiresAuth: true },
+    },
+    {
+      path: "/menu",
+      name: "menu",
+      component: () => import("../views/MenuView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/menu/manage",
+      name: "menu-management",
+      component: () => import("../views/MenuManagementView.vue"),
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_menu",
+      },
+    },
+    {
+      path: "/checkout",
+      name: "checkout",
+      component: () => import("../views/CheckoutView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/checkout/success/:orderId",
+      name: "order-confirmation",
+      component: () => import("../views/OrderConfirmationView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/orders",
+      name: "orders",
+      component: () => import("../views/customer/CustomerPortalOrdersView.vue"),
+      meta: { standalone: true, requiresAuth: true },
+    },
+    {
+      path: "/orders/manage",
+      name: "order-dashboard",
+      component: () => import("../views/OrderDashboardView.vue"),
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "view_orders",
+      },
+    },
+    {
+      path: "/promotions",
+      name: "promotions-management",
+      component: () => import("../views/PromotionsManagementView.vue"),
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_settings",
+      },
+    },
+    {
+      path: "/about",
+      name: "about",
+      component: () => import("../views/AboutView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/payments",
+      name: "payments",
+      component: () => import("../views/PaymentDashboardView.vue"),
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "view_reservations",
+      },
+    },
+    {
+      path: "/revenue",
+      name: "revenue-report",
+      component: () => import("../views/RevenueReportView.vue"),
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "view_reservations",
+      },
     },
     {
       path: "/admin/email-templates",
       name: "email-template-list",
       component: () => import("../views/EmailTemplateListView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_settings" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "manage_settings",
+      },
     },
     {
       path: "/admin/customers/:id",
       name: "admin-customer-profile",
       component: () => import("../views/CustomerProfileView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "view_reservations" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "view_reservations",
+      },
     },
     {
       path: "/no-shows",
       name: "no-shows",
       component: () => import("../views/NoShowView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "view_reservations" },
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "view_reservations",
+      },
     },
     {
       path: "/legal/:slug",
       name: "legal-document",
       component: () => import("../views/legal/LegalDocumentView.vue"),
+      meta: { standalone: true },
     },
     {
       path: "/:pathMatch(.*)*",
       name: "notFound",
       component: () => import("../views/NotFoundView.vue"),
+      meta: { standalone: true },
     },
   ],
 });
@@ -302,6 +459,12 @@ router.beforeEach((to, from, next) => {
     !authStore.user?.permissions?.[to.meta.requiresPermission]
   ) {
     next({ name: "home" });
+  } else if (
+    to.name === "home" &&
+    authStore.isAuthenticated &&
+    !authStore.isLoading
+  ) {
+    next({ name: "tenant-landing" });
   } else {
     next();
   }
@@ -319,6 +482,12 @@ const customerPortalRoutes = [
     name: "customer-reservations",
     component: () =>
       import("../views/customer/CustomerPortalReservationsView.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/portal/orders",
+    name: "customer-orders",
+    component: () => import("../views/customer/CustomerPortalOrdersView.vue"),
     meta: { requiresAuth: true },
   },
 ];

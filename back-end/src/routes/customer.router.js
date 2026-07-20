@@ -43,4 +43,19 @@ router
   .get(...protectedRoute("view_reservations", customerController.searchCustomersHandler))
   .all(httpMethodError);
 
+router
+  .route("/check-whatsapp")
+  .post(generalLimiter, tryCatchHandler(customerController.checkWhatsAppHandler))
+  .all(httpMethodError);
+
+router
+  .route("/send-otp")
+  .post(generalLimiter, tryCatchHandler(customerController.sendOtpHandler))
+  .all(httpMethodError);
+
+router
+  .route("/verify-otp")
+  .post(generalLimiter, tryCatchHandler(customerController.verifyOtpHandler))
+  .all(httpMethodError);
+
 module.exports = router;

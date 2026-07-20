@@ -64,8 +64,11 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { useToastStore } from "@/stores/toast";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import gracePeriodAPI from "@/services/gracePeriodAPI";
+
+const toastStore = useToastStore();
 
 const route = useRoute();
 const tenant = ref({ name: "" });
@@ -105,7 +108,11 @@ const saveGrace = async () => {
     saved.value = true;
     setTimeout(() => (saved.value = false), 2000);
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to save grace period");
+    toastStore.add(
+      err.response?.data?.message || "Failed to save grace period",
+      "error",
+      4000
+    );
   } finally {
     saving.value = false;
   }

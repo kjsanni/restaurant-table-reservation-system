@@ -1,10 +1,13 @@
 const { Worker, Queue } = require("bullmq");
-const { connection, defaultJobOptions } = require("./queue");
+const { connection, defaultJobOptions, registerQueue } = require("./queue");
 const logger = require("../utils/logger");
 const db = require("../db/models");
 
 const DLQ_NAME = "reports-dlq";
 const dlqQueue = connection ? new Queue(DLQ_NAME, { connection }) : null;
+if (dlqQueue) registerQueue(dlqQueue);
+
+let reportWorker = null;
 
 const isTenantActive = async (tenantId) => {
   if (!tenantId || !db.tenant) return true;
@@ -83,7 +86,20 @@ const startReportWorker = () => {
     logger.error("[ReportWorker] Worker error:", err.message);
   });
 
+  reportWorker = worker;
   return worker;
+};
+
+const closeReportWorker = async () => {
+  if (reportWorker) {
+    try {
+      await reportWorker.close();
+    } catch (err) {
+      logger.warn("[ReportWorker] Failed to close worker:", err.message);
+    } finally {
+      reportWorker = null;
+    }
+  }
 };
 
 const generateCSVReport = async (filters, tenantId) => {
@@ -96,4 +112,8 @@ const generatePDFReport = async (filters, tenantId) => {
   return await reportService.exportPDF(filters, tenantId);
 };
 
-module.exports = { startReportWorker, DLQ_NAME };
+module.exports = {
+  startReportWorker,
+  closeReportWorker,
+  DLQ_NAME,
+};

@@ -1,290 +1,227 @@
-<script setup>
-import { ref, onMounted, watch } from "vue";
-import { paymentOptions } from "@/constants";
-import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import reservationAPI from "@/services/reservationAPI";
-import customerAPI from "@/services/customerAPI";
 import tableAPI from "@/services/tableAPI";
-import SuccessMessage from "@/components/SuccessMessage.vue";
-import ErrorMessage from "@/components/ErrorMessage.vue";
-import SaveIcon from "~icons/fluent/save-16-regular";
 import logger from "@/utils/logger";
-import PageHeader from "@/components/PageHeader.vue";
-import getValues from "@/utils/getValues";
-import { validateReservation } from "@/utils/validation";
+
+const route = useRoute();
+const router = useRouter();
 
 const reservation = ref({
-  firstName: "",
-  lastName: "",
+  guestName: "",
   phone: "",
   email: "",
+  occasion: "None",
   resDate: "",
   resTime: "",
-  people: "",
-  expectedTotal: "",
-  paymentStatus: "unpaid",
+  people: 2,
+  tablePreference: "Auto-assign",
   notes: "",
-  recurrence: null,
 });
 
-const customerId = ref(null);
-const visitCount = ref(0);
-const customerTags = ref([]);
-const loyaltyLoaded = ref(false);
-
-const isRecurring = ref(false);
-const recurrenceFrequency = ref("weekly");
-const recurrenceInterval = ref(1);
-const recurrenceUntil = ref("");
-const recurrenceByDay = ref([]);
-
-const availableTags = [
-  { key: "vip", label: "⭐ VIP", color: "#d97706" },
-  { key: "allergy_dairy", label: "🥛 Dairy allergy", color: "#f43f5e" },
-  { key: "allergy_nuts", label: "🥜 Nut allergy", color: "#f43f5e" },
-  { key: "allergy_gluten", label: "🌾 Gluten-free", color: "#f43f5e" },
-  { key: "allergy_shellfish", label: "🦐 Shellfish allergy", color: "#f43f5e" },
-  { key: "birthday", label: "🎂 Birthday", color: "#3b82f6" },
-  { key: "anniversary", label: "💍 Anniversary", color: "#d97706" },
-  { key: "regular", label: "🔄 Regular", color: "#4d7c0f" },
-];
-
-const loadCustomerLoyalty = async (email) => {
-  if (!email || !email.includes("@")) {
-    loyaltyLoaded.value = false;
-    return;
-  }
-  try {
-    const res = await customerAPI.findOrCreate({
-      email,
-      firstName: reservation.value.firstName,
-      lastName: reservation.value.lastName,
-      phone: reservation.value.phone,
-    });
-    const customer = res.data.customer;
-    customerId.value = customer.id;
-    visitCount.value = customer.visitCount || 0;
-    customerTags.value = customer.tags || [];
-    loyaltyLoaded.value = true;
-  } catch (err) {
-    logger.error("Failed to load customer loyalty", { error: err.message });
-  }
-};
-
-const toggleTag = async (tagKey) => {
-  if (!customerId.value) return;
-  const idx = customerTags.value.indexOf(tagKey);
-  if (idx >= 0) {
-    customerTags.value.splice(idx, 1);
-  } else {
-    customerTags.value.push(tagKey);
-  }
-  try {
-    await customerAPI.updateTags(customerId.value, customerTags.value);
-  } catch (err) {
-    logger.error("Failed to update tags", { error: err.message });
-  }
-};
-
-const isSuccessful = ref(false);
-const generalError = ref(null);
 const submitting = ref(false);
+const isSuccessful = ref(false);
+const generalError = ref("");
+const validationErrors = ref<Record<string, string>>({});
 
-const capitalize = (s) => {
-  const str = String(s || "").trim();
-  if (!str) return str;
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+const occasions = ["None", "Birthday", "Anniversary", "Business"];
+const tableOptions = ref<{ value: string; label: string }[]>([]);
+
+const validateForm = () => {
+  validationErrors.value = {};
+  const r = reservation.value;
+
+  if (!r.guestName.trim())
+    validationErrors.value.guestName = "Guest name is required.";
+  if (!r.phone.trim()) {
+    validationErrors.value.phone = "Phone number is required.";
+  } else if (!/^[+]?[\d\s()-]{7,20}$/.test(r.phone.trim())) {
+    validationErrors.value.phone = "Enter a valid phone number.";
+  }
+  if (!r.email.trim()) {
+    validationErrors.value.email = "Email is required.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email.trim())) {
+    validationErrors.value.email = "Enter a valid email address.";
+  }
+  if (!r.resDate) validationErrors.value.resDate = "Date is required.";
+  if (!r.resTime) validationErrors.value.resTime = "Time is required.";
+  if (!r.people || r.people < 1)
+    validationErrors.value.people = "At least 1 guest is required.";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (r.resDate && new Date(r.resDate) < today) {
+    validationErrors.value.resDate = "Date cannot be in the past.";
+  }
+
+  return Object.keys(validationErrors.value).length === 0;
 };
 
-const cleanPhone = (phone) =>
-  String(phone || "")
-    .trim()
-    .replace(/\D/g, "")
-    .slice(0, 15);
-
-watch(
-  () => reservation.value.people,
-  async (newVal) => {
-    const count = parseInt(newVal, 10);
-    if (!count || count < 1) {
-      reservation.value.expectedTotal = "";
-      return;
-    }
-    try {
-      const res = await tableAPI.calculatePrice(count);
-      reservation.value.expectedTotal = res.data.price || "";
-    } catch {
-      reservation.value.expectedTotal = "";
-    }
+const loadTables = async () => {
+  try {
+    const res = await tableAPI.getTables();
+    const tables = res.data.collection || res.data.tables || [];
+    tableOptions.value = [
+      { value: "Auto-assign", label: "Auto-assign" },
+      ...tables.map((t: any) => ({
+        value: String(t.id),
+        label: `${t.name || `T${t.id}`}${t.section ? ` — ${t.section}` : ""}`,
+      })),
+    ];
+  } catch {
+    tableOptions.value = [
+      { value: "Auto-assign", label: "Auto-assign" },
+      { value: "T1", label: "T1 — Window" },
+      { value: "T2", label: "T2 — Patio" },
+      { value: "T3", label: "T3 — Main" },
+    ];
   }
-);
+};
 
-let loyaltyTimer = null;
-watch(
-  () => reservation.value.email,
-  (email) => {
-    if (loyaltyTimer) clearTimeout(loyaltyTimer);
-    loyaltyTimer = setTimeout(() => loadCustomerLoyalty(email), 400);
-  }
-);
-
-const registerReservation = async () => {
-  if (submitting.value) return;
+const submitReservation = async () => {
+  if (!validateForm()) return;
   submitting.value = true;
   isSuccessful.value = false;
-  generalError.value = null;
-  const clientErrors = validateReservation(reservation.value);
-  if (clientErrors.length) {
-    generalError.value = clientErrors[0];
-    return;
-  }
+  generalError.value = "";
+
   try {
-    const payload = {
-      ...reservation.value,
-      firstName: capitalize(reservation.value.firstName),
-      lastName: capitalize(reservation.value.lastName),
-      phone: cleanPhone(reservation.value.phone),
+    const payload: any = {
+      resDate: reservation.value.resDate,
+      resTime: reservation.value.resTime,
+      people: reservation.value.people,
+      name: reservation.value.guestName,
+      phone: reservation.value.phone,
+      email: reservation.value.email,
+      notes: reservation.value.notes,
     };
 
-    if (isRecurring.value) {
-      payload.recurrence = {
-        frequency: recurrenceFrequency.value,
-        interval: Number(recurrenceInterval.value) || 1,
-        until: recurrenceUntil.value || null,
-        byDay: recurrenceByDay.value || [],
-      };
-    } else {
-      payload.recurrence = null;
+    if (reservation.value.occasion && reservation.value.occasion !== "None") {
+      payload.occasion = reservation.value.occasion;
     }
 
-    const res = await reservationAPI.registerReservation(payload);
-    logger.debug("Reservation created", { id: res?.data?.id });
+    if (
+      reservation.value.tablePreference &&
+      reservation.value.tablePreference !== "Auto-assign"
+    ) {
+      payload.tableId = Number(reservation.value.tablePreference);
+    }
+
+    await reservationAPI.registerReservation(payload);
     isSuccessful.value = true;
-    reservation.value = {
-      firstName: "",
-      lastName: "",
-      phone: "",
-      email: "",
-      resDate: "",
-      resTime: "",
-      people: "",
-      expectedTotal: "",
-      paymentStatus: "unpaid",
-      notes: "",
-      recurrence: null,
-    };
-    isRecurring.value = false;
-    recurrenceFrequency.value = "weekly";
-    recurrenceInterval.value = 1;
-    recurrenceUntil.value = "";
-    recurrenceByDay.value = [];
-    customerId.value = null;
-    visitCount.value = 0;
-    customerTags.value = [];
-    loyaltyLoaded.value = false;
-    setTimeout(() => (isSuccessful.value = false), 3000);
+    setTimeout(() => router.push("/reservations"), 1500);
   } catch (err) {
-    logger.error("Reservation creation failed", {
-      error: err.message,
-      details: getApiErrors(err),
-    });
-    generalError.value = getApiErrorMessage(err);
+    generalError.value =
+      err.response?.data?.message || "Failed to create reservation";
   } finally {
     submitting.value = false;
   }
 };
+
+onMounted(() => {
+  loadTables();
+  if (route.query.tableId) {
+    tableAPI
+      .getTables()
+      .then((res) => {
+        const table = (res.data.collection || res.data.tables || []).find(
+          (t: any) => t.id === Number(route.query.tableId)
+        );
+        if (table)
+          reservation.value.notes = `Prefer table ${table.name || table.id}`;
+      })
+      .catch(() => {});
+  }
+});
 </script>
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="New Reservation" subtitle="Create a new booking" />
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>New Reservation</h1>
+        <p>Create a booking for a guest</p>
+      </div>
+    </div>
+
     <div class="content-wrapper">
-      <form @submit.prevent="registerReservation" class="reservation-form">
-        <div class="form-section">
-          <h2 class="section-title">Guest Details</h2>
-          <div class="fields-grid">
-            <div class="field">
-              <label class="field-label">First Name</label>
-              <input
-                v-model="reservation.firstName"
-                class="field-input"
-                placeholder="Enter first name..."
-              />
-            </div>
-            <div class="field">
-              <label class="field-label">Last Name</label>
-              <input
-                v-model="reservation.lastName"
-                class="field-input"
-                placeholder="Enter last name..."
-              />
-            </div>
-          </div>
-          <div class="field">
-            <label class="field-label">Phone Number</label>
+      <form @submit.prevent="submitReservation" class="form-card">
+        <div class="form-grid">
+          <div class="field full">
+            <label for="guestName">Guest Name</label>
             <input
-              v-model="reservation.phone"
-              class="field-input"
-              placeholder="Enter phone number..."
+              id="guestName"
+              v-model="reservation.guestName"
+              type="text"
+              placeholder="Full name"
             />
+            <span v-if="validationErrors.guestName" class="field-error">
+              {{ validationErrors.guestName }}
+            </span>
           </div>
           <div class="field">
-            <label class="field-label">Email Address</label>
+            <label for="phone">Phone</label>
             <input
+              id="phone"
+              v-model="reservation.phone"
+              type="tel"
+              placeholder="+233 ..."
+            />
+            <span v-if="validationErrors.phone" class="field-error">
+              {{ validationErrors.phone }}
+            </span>
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input
+              id="email"
               v-model="reservation.email"
               type="email"
-              class="field-input"
-              placeholder="Enter email address..."
+              placeholder="guest@example.com"
             />
-          </div>
-        </div>
-
-        <div class="form-section">
-          <h2 class="section-title">Reservation Details</h2>
-          <div class="fields-grid">
-            <div class="field">
-              <label class="field-label">Date</label>
-              <input
-                v-model="reservation.resDate"
-                type="date"
-                class="field-input"
-              />
-            </div>
-            <div class="field">
-              <label class="field-label">Time</label>
-              <input
-                v-model="reservation.resTime"
-                type="time"
-                class="field-input"
-              />
-            </div>
+            <span v-if="validationErrors.email" class="field-error">
+              {{ validationErrors.email }}
+            </span>
           </div>
           <div class="field">
-            <label class="field-label">Number of People</label>
+            <label for="occasion">Occasion</label>
+            <select id="occasion" v-model="reservation.occasion">
+              <option v-for="opt in occasions" :key="opt" :value="opt">
+                {{ opt }}
+              </option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="date">Date</label>
+            <input id="date" v-model="reservation.resDate" type="date" />
+            <span v-if="validationErrors.resDate" class="field-error">
+              {{ validationErrors.resDate }}
+            </span>
+          </div>
+          <div class="field">
+            <label for="time">Time</label>
+            <input id="time" v-model="reservation.resTime" type="time" />
+            <span v-if="validationErrors.resTime" class="field-error">
+              {{ validationErrors.resTime }}
+            </span>
+          </div>
+          <div class="field">
+            <label for="people">Party Size</label>
             <input
+              id="people"
               v-model="reservation.people"
               type="number"
               min="1"
-              class="field-input"
-              placeholder="Number of guests..."
             />
+            <span v-if="validationErrors.people" class="field-error">
+              {{ validationErrors.people }}
+            </span>
           </div>
           <div class="field">
-            <label class="field-label">Expected Total (GHS)</label>
-            <input
-              v-model="reservation.expectedTotal"
-              type="number"
-              min="0"
-              step="0.01"
-              class="field-input"
-              placeholder="Expected total amount..."
-            />
-          </div>
-          <div class="field">
-            <label class="field-label">Payment Status</label>
-            <select v-model="reservation.paymentStatus" class="field-input">
+            <label for="table">Table Preference</label>
+            <select id="table" v-model="reservation.tablePreference">
               <option
-                v-for="opt in paymentOptions"
+                v-for="opt in tableOptions"
                 :key="opt.value"
                 :value="opt.value"
               >
@@ -292,92 +229,24 @@ const registerReservation = async () => {
               </option>
             </select>
           </div>
-          <div class="field">
-            <label class="field-label">Notes / Special Requests</label>
+          <div class="field full">
+            <label for="notes">Notes</label>
             <textarea
+              id="notes"
               v-model="reservation.notes"
-              class="field-input"
-              rows="3"
-              placeholder="Anniversary, window seat, allergies..."
+              placeholder="Allergies, seating preferences, special requests..."
             ></textarea>
           </div>
         </div>
-
-        <div class="form-section">
-          <div class="recurrence-header">
-            <label class="field-label">Recurring Reservation</label>
-            <input type="checkbox" v-model="isRecurring" />
-          </div>
-          <div v-if="isRecurring" class="fields-grid">
-            <div class="field">
-              <label class="field-label">Frequency</label>
-              <select v-model="recurrenceFrequency" class="field-input">
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-              </select>
-            </div>
-            <div class="field">
-              <label class="field-label">Interval</label>
-              <input
-                v-model="recurrenceInterval"
-                type="number"
-                min="1"
-                class="field-input"
-              />
-            </div>
-            <div class="field">
-              <label class="field-label">Repeat Until</label>
-              <input
-                v-model="recurrenceUntil"
-                type="date"
-                class="field-input"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div v-if="loyaltyLoaded" class="form-section loyalty-section">
-          <div class="loyalty-header">
-            <span class="loyalty-badge">
-              {{ visitCount }} visit{{ visitCount !== 1 ? "s" : "" }}
-            </span>
-            <h2 class="section-title">Customer Tags</h2>
-          </div>
-          <div class="tags-grid">
-            <button
-              v-for="tag in availableTags"
-              :key="tag.key"
-              :class="['tag-btn', { active: customerTags.includes(tag.key) }]"
-              :style="
-                customerTags.includes(tag.key)
-                  ? {
-                      backgroundColor: tag.color,
-                      color: 'white',
-                      borderColor: tag.color,
-                    }
-                  : {}
-              "
-              @click="toggleTag(tag.key)"
-              type="button"
-            >
-              {{ tag.label }}
-            </button>
-          </div>
-        </div>
-
         <div class="form-actions">
-          <SuccessMessage
-            :is-successful="isSuccessful"
-            success-message="Successfully registered your reservation!"
-          />
-          <ErrorMessage
-            :error-flag="generalError"
-            :error-message="generalError"
-          />
-          <button type="submit" class="btn btn-submit" :disabled="submitting">
-            <SaveIcon class="btn-icon" />
-            {{ submitting ? "Submitting..." : "Submit Reservation" }}
+          <div v-if="isSuccessful" class="success-message">
+            Reservation created! Redirecting...
+          </div>
+          <div v-if="generalError" class="error-message">
+            {{ generalError }}
+          </div>
+          <button type="submit" class="btn-primary" :disabled="submitting">
+            {{ submitting ? "Creating..." : "Create Reservation" }}
           </button>
         </div>
       </form>
@@ -386,230 +255,173 @@ const registerReservation = async () => {
 </template>
 
 <style scoped>
-.content-wrapper {
-  flex: 1;
-  margin: var(--page-margin-y) var(--page-margin-x);
-  padding: 0;
-  max-width: var(--content-max-width);
-  width: 100%;
-}
-
-.reservation-form {
-  max-width: 800px;
-  margin: 0 auto;
+.main-wrapper {
+  min-height: 100vh;
+  background: var(--background-warm);
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
 }
 
-.form-section {
-  background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--card-radius);
-  padding: var(--card-padding);
-  box-shadow: var(--card-shadow);
-  transition: box-shadow var(--duration-200) var(--ease-out),
-    transform var(--duration-200) var(--ease-out);
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
 }
 
-.form-section:hover {
-  box-shadow: var(--shadow-md);
+.topbar-left h1 {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--neutral-900);
 }
 
-.section-title {
-  font-family: var(--font-sans);
-  font-size: var(--text-lg);
-  font-weight: 650;
-  color: var(--ink);
-  margin: 0 0 var(--space-5) 0;
-  letter-spacing: var(--tracking-tight);
+.topbar-left p {
+  color: var(--neutral-600);
+  font-size: 14px;
+  margin-top: 4px;
 }
 
-.fields-grid {
+.content-wrapper {
+  flex: 1;
+  margin: var(--space-8) var(--space-6);
+  max-width: var(--content-max-width);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 1024px) {
+  .content-wrapper {
+    margin-top: var(--space-10);
+    margin-bottom: var(--space-10);
+  }
+}
+
+.form-card {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  box-shadow: 0 10px 30px rgba(26, 20, 16, 0.05);
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.form-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-5);
+  gap: 18px;
+}
+
+@media (min-width: 640px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 8px;
 }
 
-.field-label {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--ink-secondary);
-  letter-spacing: var(--tracking-wide);
+.field.full {
+  grid-column: 1 / -1;
 }
 
-.field-input {
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--input-radius);
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neutral-800);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   font-family: var(--font-sans);
-  font-size: var(--text-base);
-  color: var(--ink);
-  background: var(--surface);
+}
+
+.field input,
+.field select,
+.field textarea {
   width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--neutral-300);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--neutral-900);
+  background: var(--neutral-50);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
-  transition: border-color var(--duration-150) var(--ease-in-out),
-    box-shadow var(--duration-150) var(--ease-in-out);
 }
 
-.field-input:hover {
-  border-color: var(--neutral-300);
-}
-
-.field-input:focus {
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
 }
 
-textarea.field-input {
+.field textarea {
   resize: vertical;
   min-height: 80px;
 }
 
-.loyalty-section {
-  background: linear-gradient(
-    180deg,
-    var(--brand-50) 0%,
-    var(--accent-50) 100%
-  );
-  border: 1px solid var(--brand-200);
-}
-
-.loyalty-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-
-.loyalty-badge {
+.field-error {
+  font-size: 12px;
+  color: #dc2626;
+  margin-top: 4px;
   font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  background: linear-gradient(
-    135deg,
-    var(--brand-700) 0%,
-    var(--brand-600) 100%
-  );
-  color: white;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-full);
-  box-shadow: var(--shadow-sm);
-}
-
-.tags-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.tag-btn {
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: var(--surface);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  transition: all var(--duration-150) var(--ease-in-out);
-}
-
-.tag-btn:hover {
-  border-color: var(--accent);
-  transform: translateY(-1px);
-}
-
-.tag-btn.active {
-  color: white;
-  border-color: transparent;
 }
 
 .form-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
-}
-
-.btn-submit {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-8);
-  border: none;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  transition: all var(--duration-150) var(--ease-in-out);
-  background: linear-gradient(135deg, var(--sky-600) 0%, var(--sky-500) 100%);
-  color: white;
-  box-shadow: var(--shadow-md);
-  width: 100%;
-  max-width: 300px;
-}
-
-.btn-submit:hover {
-  background: linear-gradient(135deg, var(--sky-700) 0%, var(--sky-600) 100%);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
-}
-
-.btn-submit:active {
-  transform: translateY(0);
-}
-
-.btn-icon {
-  width: 18px;
-  height: 18px;
-}
-
-@media screen and (min-width: 640px) {
-  .fields-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.recurrence-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-top: 24px;
 }
 
-.recurrence-header .field-label {
-  margin: 0;
-}
-
-.recurrence-header input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--primary-blue);
+.btn-primary {
+  padding: 11px 18px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+  color: var(--white);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 
-.loyalty-section {
-  border: 1px dashed var(--primary-blue);
-  background: #f8fafc;
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(74, 53, 43, 0.22);
 }
 
-@media screen and (min-width: 1024px) {
-  .btn-submit {
-    width: auto;
-    min-width: 260px;
-  }
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.success-message {
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--earth-100);
+  color: var(--earth-600);
+  font-size: 13px;
+  font-family: var(--font-sans);
+}
+
+.error-message {
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--rose-100);
+  color: var(--rose-600);
+  font-size: 13px;
+  font-family: var(--font-sans);
 }
 </style>

@@ -7,7 +7,6 @@ import PopupBox from "@/components/PopupBox.vue";
 import EditReservation from "@/components/EditReservation.vue";
 import logger from "@/utils/logger";
 import { getApiErrorMessage } from "@/utils/apiError";
-import PageHeader from "@/components/PageHeader.vue";
 
 const loading = ref(true);
 const reservations = ref([]);
@@ -212,7 +211,12 @@ onMounted(loadData);
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="Payments" subtitle="Track revenue and payment status" />
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1 class="topbar-title">Payments</h1>
+        <p class="topbar-subtitle">Track revenue and payment status</p>
+      </div>
+    </div>
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -400,6 +404,29 @@ onMounted(loadData);
 </template>
 
 <style scoped>
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-5) var(--page-margin-x);
+}
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.topbar-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+.topbar-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  margin: 4px 0 0;
+}
+
 .content-wrapper {
   margin-top: var(--page-margin-y);
   margin-bottom: var(--page-margin-y);

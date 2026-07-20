@@ -120,8 +120,11 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { useToastStore } from "@/stores/toast";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import apiKeyAPI from "@/services/apiKeyAPI";
+
+const toastStore = useToastStore();
 
 const route = useRoute();
 const tenant = ref({ name: "" });
@@ -180,7 +183,11 @@ const submitKey = async () => {
     rawKey.value = response.data.rawKey || response.data.key || "";
     await loadKeys();
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to create API key");
+    toastStore.add(
+      err.response?.data?.message || "Failed to create API key",
+      "error",
+      4000
+    );
   }
 };
 
@@ -190,7 +197,11 @@ const revokeKey = async (key) => {
     await apiKeyAPI.revokeApiKey(route.params.id, key.id);
     await loadKeys();
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to revoke API key");
+    toastStore.add(
+      err.response?.data?.message || "Failed to revoke API key",
+      "error",
+      4000
+    );
   }
 };
 

@@ -3,7 +3,6 @@ import { ref, onMounted } from "vue";
 import groupAPI from "@/services/groupAPI";
 import authAPI from "@/services/authAPI";
 import logger from "@/utils/logger";
-import PageHeader from "@/components/PageHeader.vue";
 
 const groups = ref([]);
 const users = ref([]);
@@ -151,7 +150,12 @@ const confirmAction = async () => {
 
 <template>
   <div class="main-wrapper">
-    <PageHeader title="Groups" subtitle="Organize staff into groups" />
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1 class="topbar-title">Groups</h1>
+        <p class="topbar-subtitle">Organize staff into groups</p>
+      </div>
+    </div>
     <div class="content-wrapper">
       <div class="action-bar">
         <button class="btn btn-primary" @click="openCreate">
@@ -307,6 +311,29 @@ const confirmAction = async () => {
 </template>
 
 <style scoped>
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-5) var(--page-margin-x);
+}
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.topbar-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+.topbar-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  margin: 4px 0 0;
+}
+
 .content-wrapper {
   margin-top: var(--page-margin-y);
   margin-bottom: var(--page-margin-y);

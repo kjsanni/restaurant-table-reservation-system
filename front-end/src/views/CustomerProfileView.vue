@@ -2,9 +2,10 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import customerAPI from "@/services/customerAPI";
+import orderAPI from "@/services/orderAPI";
 import PopupBox from "@/components/PopupBox.vue";
-import PageHeader from "@/components/PageHeader.vue";
 import { useCurrency } from "@/composables/useCurrency";
+import logger from "@/utils/logger";
 
 const { format: fmt } = useCurrency();
 
@@ -15,6 +16,7 @@ const customerId = route.params.id;
 const loading = ref(true);
 const errorMsg = ref("");
 const profile = ref(null);
+const ordersByReservation = ref({});
 
 const customer = computed(() => profile.value?.customer || {});
 const history = computed(() => profile.value?.history || []);
@@ -62,6 +64,25 @@ const loadProfile = async () => {
         : [];
     }
     profile.value = res.data.profile;
+
+    if (res.data.profile?.customer?.id) {
+      try {
+        const ordersRes = await orderAPI.getCustomerOrders(
+          res.data.profile.customer.id
+        );
+        const orders = ordersRes.data?.orders || [];
+        const map = {};
+        for (const order of orders) {
+          if (order.reservationId) {
+            if (!map[order.reservationId]) map[order.reservationId] = [];
+            map[order.reservationId].push(order);
+          }
+        }
+        ordersByReservation.value = map;
+      } catch (err) {
+        logger.warn("Failed to load customer orders", { error: err });
+      }
+    }
   } catch {
     errorMsg.value = "Failed to load customer profile.";
   } finally {
@@ -163,10 +184,12 @@ const savePreferences = async () => {
 
 <template>
   <div class="main-wrapper">
-    <PageHeader
-      title="Customer Profile"
-      subtitle="View customer details and history"
-    />
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1 class="topbar-title">Customer Profile</h1>
+        <p class="topbar-subtitle">View customer details and history</p>
+      </div>
+    </div>
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -287,6 +310,33 @@ const savePreferences = async () => {
                 </div>
                 <div v-if="res.notes" class="history-notes">
                   {{ res.notes }}
+                </div>
+                <div
+                  v-if="ordersByReservation[res.id]?.length"
+                  class="history-orders"
+                >
+                  <div
+                    class="orders-toggle"
+                    @click="
+                      $event.target.nextElementSibling.style.display =
+                        $event.target.nextElementSibling.style.display ===
+                        'none'
+                          ? 'block'
+                          : 'none'
+                    "
+                  >
+                    View Orders ({{ ordersByReservation[res.id].length }})
+                  </div>
+                  <div style="display: none" class="orders-list">
+                    <div
+                      v-for="order in ordersByReservation[res.id]"
+                      :key="order.id"
+                      class="order-summary"
+                    >
+                      <span>Order #{{ order.id }} — {{ order.status }}</span>
+                      <span>{{ fmt(order.total) }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -425,6 +475,29 @@ const savePreferences = async () => {
 </template>
 
 <style scoped>
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-5) var(--page-margin-x);
+}
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.topbar-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+.topbar-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
+  margin: 4px 0 0;
+}
+
 .main-wrapper {
   display: flex;
   flex-direction: column;
@@ -1026,5 +1099,39 @@ const savePreferences = async () => {
   color: var(--ink-muted);
   font-family: var(--font-sans);
   font-weight: 300;
+}
+
+.history-orders {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.orders-toggle {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--text-xs);
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.orders-list {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.order-summary {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--text-xs);
+  color: var(--ink-secondary);
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
 }
 </style>

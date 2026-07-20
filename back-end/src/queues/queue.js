@@ -10,11 +10,15 @@ const connection = shouldConnect
     }
   : undefined;
 
+const queues = [];
+
 const createQueue = (name) => {
   if (!connection) {
     return null;
   }
-  return new Queue(name, { connection });
+  const queue = new Queue(name, { connection });
+  queues.push(queue);
+  return queue;
 };
 
 // Shared retry policy with exponential backoff. Applied to every enqueued job
@@ -66,11 +70,30 @@ const isRedisAvailable = async () => {
 const notificationQueue = createQueue("notifications");
 const reportQueue = createQueue("reports");
 
+const registerQueue = (queue) => {
+  if (queue && !queues.includes(queue)) {
+    queues.push(queue);
+  }
+};
+
+const closeAllQueues = async () => {
+  for (const queue of queues) {
+    try {
+      await queue.close();
+    } catch (err) {
+      console.warn("[Queue] Failed to close queue:", err.message);
+    }
+  }
+  queues.length = 0;
+};
+
 module.exports = {
   connection,
   notificationQueue,
   reportQueue,
   createQueue,
+  registerQueue,
+  closeAllQueues,
   safeAdd,
   defaultJobOptions,
   isRedisAvailable,

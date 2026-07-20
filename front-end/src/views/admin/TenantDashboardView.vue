@@ -191,9 +191,12 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useToastStore } from "@/stores/toast";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import planAPI from "@/services/planAPI";
 import { useAuthStore } from "@/stores/auth";
+
+const toastStore = useToastStore();
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -293,7 +296,11 @@ const createTenant = async () => {
     await loadDashboard();
     closeCreateModal();
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to create tenant");
+    toastStore.add(
+      err.response?.data?.message || "Failed to create tenant",
+      "error",
+      4000
+    );
   }
 };
 
@@ -304,8 +311,13 @@ const enableTenant = async (id) => {
 };
 
 const disableTenant = async (id) => {
-  const reason = prompt("Reason for disabling tenant:");
-  if (!reason) return;
+  if (
+    !confirm(
+      "Are you sure you want to disable this tenant? This will prevent them from accessing the platform."
+    )
+  )
+    return;
+  const reason = prompt("Reason for disabling tenant (optional):") || "";
   await tenantAdminAPI.disable(id, { reason });
   await loadTenants();
   await loadDashboard();

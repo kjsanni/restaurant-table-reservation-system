@@ -30,7 +30,13 @@ const requestMetrics = (req, res, next) => {
 
 const errorHandler = (err, req, res, next) => {
   metrics.errors++;
-  console.error(err.stack);
+
+  if (process.env.NODE_ENV === "production") {
+    console.error(err.message || "Internal server error");
+  } else {
+    console.error(err.stack);
+  }
+
   res.status(500).json({
     success: false,
     message: "Internal server error",

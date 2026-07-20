@@ -149,8 +149,11 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { useToastStore } from "@/stores/toast";
 import invoiceAPI from "@/services/invoiceAPI";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
+
+const toastStore = useToastStore();
 
 const loading = ref(false);
 const tenants = ref([]);
@@ -186,7 +189,11 @@ const loadInvoices = async () => {
     const response = await invoiceAPI.listInvoices(tenantId, params);
     invoices.value = response.data.collection || response.data.items || [];
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to load invoices");
+    toastStore.add(
+      err.response?.data?.message || "Failed to load invoices",
+      "error",
+      4000
+    );
   } finally {
     loading.value = false;
   }
@@ -238,14 +245,16 @@ const editInvoice = (invoice) => {
 };
 
 const viewInvoice = (invoice) => {
-  alert(
-    `Invoice ${invoice.invoiceNumber}\nTenant: ${getTenantName(
+  toastStore.add(
+    `Invoice ${invoice.invoiceNumber} | Tenant: ${getTenantName(
       invoice.tenantId
-    )}\nAmount: ${invoice.currency} ${formatAmount(invoice.amount)}\nStatus: ${
-      invoice.status
-    }\nDue: ${formatDate(invoice.dueDate)}\nPaid: ${formatDate(
-      invoice.paidAt
-    )}\nNotes: ${invoice.notes || "—"}`
+    )} | Amount: ${invoice.currency} ${formatAmount(
+      invoice.amount
+    )} | Status: ${invoice.status} | Due: ${formatDate(
+      invoice.dueDate
+    )} | Paid: ${formatDate(invoice.paidAt)} | Notes: ${invoice.notes || "—"}`,
+    "info",
+    5000
   );
 };
 
@@ -261,7 +270,7 @@ const submitInvoice = async () => {
       try {
         lineItems = JSON.parse(form.value.lineItemsJson);
       } catch {
-        alert("Invalid JSON for line items");
+        toastStore.add("Invalid JSON for line items", "error", 4000);
         return;
       }
     }
@@ -294,7 +303,11 @@ const submitInvoice = async () => {
     await loadInvoices();
     closeModal();
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to save invoice");
+    toastStore.add(
+      err.response?.data?.message || "Failed to save invoice",
+      "error",
+      4000
+    );
   }
 };
 
@@ -304,7 +317,11 @@ const deleteInvoice = async (invoice) => {
     await invoiceAPI.deleteInvoice(invoice.tenantId, invoice.id);
     await loadInvoices();
   } catch (err) {
-    alert(err.response?.data?.message || "Failed to delete invoice");
+    toastStore.add(
+      err.response?.data?.message || "Failed to delete invoice",
+      "error",
+      4000
+    );
   }
 };
 
