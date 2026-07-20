@@ -13,7 +13,7 @@ const resolveTenant = async (req, res, next) => {
   // Platform-admin tenant management is not itself a tenant-scoped operation.
   // Super-admins list/create/suspend tenants without belonging to one, so skip
   // resolution (and the "tenant identifier required" error) for those routes.
-  const PLATFORM_ADMIN_PATHS = ["/api/v1/admin/tenants", "/api/v1/billing"];
+  const PLATFORM_ADMIN_PATHS = ["/api/v1/admin/tenants", "/api/v1/admin/plans", "/api/v1/admin/payments", "/api/v1/billing"];
   if (PLATFORM_ADMIN_PATHS.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
     return next();
   }

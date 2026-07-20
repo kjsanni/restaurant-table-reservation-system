@@ -105,9 +105,9 @@ const router = createRouter({
     },
     {
       path: "/admin/payments",
-      name: "payment-dashboard",
-      component: () => import("../views/PaymentDashboardView.vue"),
-      meta: { requiresAuth: true, requiresAdmin: true },
+      name: "platform-payment-dashboard",
+      component: () => import("../views/admin/PlatformPaymentDashboard.vue"),
+      meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
     },
     {
       path: "/waitlist",
@@ -163,6 +163,18 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     path: "/admin/tenants/:id",
     name: "tenant-detail",
     component: () => import("../views/admin/TenantDetailView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/plans",
+    name: "plans-management",
+    component: () => import("../views/admin/PlansManagementView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/payments",
+    name: "platform-payment-dashboard",
+    component: () => import("../views/admin/PlatformPaymentDashboard.vue"),
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
 }

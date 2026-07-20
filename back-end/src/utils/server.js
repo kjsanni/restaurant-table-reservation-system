@@ -40,12 +40,16 @@ const TENANT_MODE = process.env.TENANT_MODE === "enabled";
 let resolveTenant = null;
 let requireActiveTenant = null;
 let tenantAdminRoutes = null;
+let planRoutes = null;
+let platformPaymentRoutes = null;
 let billingRoutes = null;
 
 if (TENANT_MODE) {
   ({ resolveTenant } = require("../tenant-platform/middleware/resolveTenant"));
   ({ requireActiveTenant } = require("../tenant-platform/middleware/tenantStatus"));
   tenantAdminRoutes = require("../tenant-platform/routes/tenantAdmin.router");
+  planRoutes = require("../tenant-platform/routes/plan.router");
+  platformPaymentRoutes = require("../tenant-platform/routes/platformPayment.router");
   billingRoutes = require("../tenant-platform/routes/billing.router");
 }
 
@@ -163,6 +167,8 @@ const createServer = () => {
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminRouter);
   if (TENANT_MODE) {
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, tenantAdminRoutes);
+    app.use("/api/v1/admin/plans", logAction, validateCsrfToken, planRoutes);
+    app.use("/api/v1/admin/payments", logAction, validateCsrfToken, platformPaymentRoutes);
     app.use("/api/v1/billing", logAction, billingRoutes);
   }
   app.use("/api/v1/customer-portal", logAction, validateCsrfToken, customerPortalRouter);

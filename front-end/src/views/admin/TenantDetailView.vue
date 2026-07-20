@@ -4,6 +4,7 @@
       <button @click="$router.back()" class="back-btn">← Back</button>
       <h1>{{ tenant.name }}</h1>
       <span :class="['status-badge', tenant.status]">{{ tenant.status }}</span>
+      <button @click="accessTenant" class="btn-access">Access Tenant</button>
     </div>
 
     <div class="grid">
@@ -141,10 +142,14 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
+import { useAuthStore } from "@/stores/auth";
 
 const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+
 const tenant = ref({ users: [] });
 const savingPaystack = ref(false);
 const paystackSaved = ref(false);
@@ -162,6 +167,15 @@ const loadTenant = async () => {
     paystackPublicKey: tenant.value.paystackPublicKey || "",
     paystackSecretKey: "",
   };
+};
+
+const accessTenant = () => {
+  authStore.setTenant({
+    id: tenant.value.id,
+    name: tenant.value.name,
+    slug: tenant.value.slug,
+  });
+  router.push("/reservations");
 };
 
 const enableTenant = async () => {
@@ -217,9 +231,36 @@ onMounted(() => {
   border: none;
   color: var(--accent);
   cursor: pointer;
-  font-size: var(--text-sm);
   font-family: var(--font-sans);
-  transition: color var(--duration-150) var(--ease-in-out);
+  font-size: var(--text-sm);
+}
+.back-btn:hover {
+  color: var(--accent-600);
+}
+.btn-access {
+  margin-left: auto;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: none;
+  background: linear-gradient(
+    135deg,
+    var(--brand-700) 0%,
+    var(--brand-600) 100%
+  );
+  color: var(--white);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-family: var(--font-sans);
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+.btn-access:hover {
+  background: linear-gradient(
+    135deg,
+    var(--brand-600) 0%,
+    var(--brand-500) 100%
+  );
+  box-shadow: var(--shadow-md);
 }
 .back-btn:hover {
   color: var(--accent-hover);
@@ -355,7 +396,11 @@ onMounted(() => {
   font-weight: 600;
 }
 .btn.success {
-  background: linear-gradient(135deg, var(--earth-500) 0%, var(--earth-600) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--earth-500) 0%,
+    var(--earth-600) 100%
+  );
   color: var(--white);
 }
 .btn.success:hover {

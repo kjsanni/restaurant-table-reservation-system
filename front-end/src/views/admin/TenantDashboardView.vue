@@ -1,8 +1,10 @@
 <template>
   <div class="tenant-dashboard">
     <div class="dashboard-header">
-      <h1>Tenant Dashboard</h1>
-      <p class="subtitle">Platform-wide subscription and tenant management</p>
+      <h1>Platform Admin</h1>
+      <p class="subtitle">
+        Manage tenants, plans, and billing across the platform
+      </p>
     </div>
 
     <div class="summary-cards">
@@ -15,6 +17,15 @@
         <div class="card-value success">{{ dashboard.active }}</div>
       </div>
       <div class="card">
+        <div class="card-label">Inactive</div>
+        <div class="card-value muted">
+          {{
+            dashboard.inactive ||
+            dashboard.suspended + dashboard.cancelled + dashboard.trialing
+          }}
+        </div>
+      </div>
+      <div class="card">
         <div class="card-label">Past Due</div>
         <div class="card-value warning">{{ dashboard.pastDue }}</div>
       </div>
@@ -23,13 +34,24 @@
         <div class="card-value danger">{{ dashboard.suspended }}</div>
       </div>
       <div class="card">
-        <div class="card-label">Cancelled</div>
-        <div class="card-value muted">{{ dashboard.cancelled }}</div>
-      </div>
-      <div class="card">
         <div class="card-label">MRR (GHS)</div>
-        <div class="card-value">{{ dashboard.mrr }}</div>
+        <div class="card-value">{{ formatMrr(dashboard.mrr) }}</div>
       </div>
+    </div>
+
+    <div class="quick-actions">
+      <button @click="goTo('/admin/tenants')" class="qa-card">
+        <span class="qa-icon">🏢</span>
+        <span class="qa-text">Tenants</span>
+      </button>
+      <button @click="goTo('/admin/tenants?view=plans')" class="qa-card">
+        <span class="qa-icon">💰</span>
+        <span class="qa-text">Pricing</span>
+      </button>
+      <button @click="goTo('/admin/payments')" class="qa-card">
+        <span class="qa-icon">💳</span>
+        <span class="qa-text">Payments</span>
+      </button>
     </div>
 
     <div class="filters">
@@ -72,9 +94,9 @@
           <div class="form-group">
             <label>Plan</label>
             <select v-model="form.plan">
-              <option value="starter">Starter</option>
-              <option value="growth">Growth</option>
-              <option value="enterprise">Enterprise</option>
+              <option v-for="plan in plans" :key="plan.slug" :value="plan.slug">
+                {{ plan.name }} — {{ plan.currency }} {{ plan.price }} / mo
+              </option>
             </select>
           </div>
           <div class="form-group">
@@ -134,6 +156,9 @@
             <td>{{ tenant.subscriptionStatus }}</td>
             <td>{{ formatDate(tenant.currentPeriodEnd) }}</td>
             <td class="actions">
+              <button @click="accessTenant(tenant)" class="btn-small success">
+                Access
+              </button>
               <button @click="viewTenant(tenant.id)" class="btn-small">
                 View
               </button>
@@ -167,8 +192,11 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
+import planAPI from "@/services/planAPI";
+import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
+const authStore = useAuthStore();
 const dashboard = ref({
   total: 0,
   active: 0,
@@ -180,6 +208,7 @@ const dashboard = ref({
   recentTenants: [],
 });
 const tenants = ref([]);
+const plans = ref([]);
 const searchQuery = ref("");
 const filterStatus = ref("");
 const showCreateModal = ref(false);
@@ -215,6 +244,27 @@ const loadTenants = async () => {
   tenants.value = response.data.collection || [];
 };
 
+const loadPlans = async () => {
+  try {
+    const response = await planAPI.listPlans();
+    plans.value = response.data.collection || [];
+    if (plans.value.length > 0 && !form.value.plan) {
+      form.value.plan = plans.value[0].slug;
+    }
+  } catch {
+    plans.value = [];
+  }
+};
+
+const accessTenant = (tenant) => {
+  authStore.setTenant(tenant);
+  router.push("/reservations");
+};
+
+const goTo = (path) => {
+  router.push(path);
+};
+
 const viewTenant = (id) => {
   router.push(`/admin/tenants/${id}`);
 };
@@ -224,7 +274,7 @@ const openCreateModal = () => {
     name: "",
     slug: "",
     domain: "",
-    plan: "starter",
+    plan: plans.value[0]?.slug || "starter",
     billingEmail: "",
     billingName: "",
     currency: "GHS",
@@ -266,9 +316,15 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString();
 };
 
+const formatMrr = (val) => {
+  if (val == null) return "—";
+  return Number(val).toLocaleString();
+};
+
 onMounted(async () => {
   await loadDashboard();
   await loadTenants();
+  await loadPlans();
 });
 </script>
 
@@ -296,7 +352,7 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--space-4);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
 }
 .card {
   background: var(--surface);
@@ -328,6 +384,34 @@ onMounted(async () => {
 }
 .card-value.muted {
   color: var(--ink-muted);
+}
+.quick-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.qa-card {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+.qa-card:hover {
+  border-color: var(--accent);
+  background: var(--surface-sunken);
+}
+.qa-icon {
+  font-size: 18px;
+  line-height: 1;
 }
 .filters {
   display: flex;
@@ -413,6 +497,7 @@ onMounted(async () => {
 .actions {
   display: flex;
   gap: var(--space-2);
+  flex-wrap: wrap;
 }
 .btn-small {
   padding: var(--space-1-5) var(--space-3);
@@ -449,7 +534,11 @@ onMounted(async () => {
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-lg);
   border: none;
-  background: linear-gradient(135deg, var(--brand-700) 0%, var(--brand-600) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--brand-700) 0%,
+    var(--brand-600) 100%
+  );
   color: var(--white);
   cursor: pointer;
   font-size: var(--text-sm);
@@ -458,7 +547,11 @@ onMounted(async () => {
   transition: all var(--duration-150) var(--ease-in-out);
 }
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-500) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--brand-600) 0%,
+    var(--brand-500) 100%
+  );
   box-shadow: var(--shadow-md);
 }
 .btn-secondary {

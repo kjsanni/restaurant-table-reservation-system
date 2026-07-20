@@ -6,6 +6,7 @@ describe("tenantSubscription.getTenantDashboard", () => {
   let mockTenantSum;
   let mockTenantCount;
   let mockTenantFindAll;
+  let mockPlanFindAll;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -14,9 +15,13 @@ describe("tenantSubscription.getTenantDashboard", () => {
       sum: jest.fn(),
       findAll: jest.fn(),
     };
+    db.subscriptionPlan = {
+      findAll: jest.fn().mockResolvedValue([]),
+    };
     mockTenantCount = db.tenant.count;
     mockTenantSum = db.tenant.sum;
     mockTenantFindAll = db.tenant.findAll;
+    mockPlanFindAll = db.subscriptionPlan.findAll;
   });
 
   it("calculates MRR by normalizing plan strings to numeric prices", async () => {

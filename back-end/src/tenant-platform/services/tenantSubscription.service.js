@@ -1,10 +1,46 @@
 const db = require("../../db/models");
 const { io } = require("../../utils/server");
 
-const PLANS = {
+const DEFAULT_PLANS = {
   starter: { maxTables: 10, maxReservationsPerMonth: 500, price: 29 },
   growth: { maxTables: 30, maxReservationsPerMonth: 2000, price: 79 },
   enterprise: { maxTables: Infinity, maxReservationsPerMonth: Infinity, price: null },
+};
+
+const getPlans = async () => {
+  const rows = await db.subscriptionPlan.findAll({
+    where: { isActive: true },
+    order: [["sortOrder", "ASC"], ["price", "ASC"]],
+  });
+  const plans = {};
+  for (const row of rows) {
+    plans[row.slug] = {
+      maxTables: row.maxTables,
+      maxReservationsPerMonth: row.maxReservationsPerMonth,
+      price: parseFloat(row.price),
+      currency: row.currency,
+      name: row.name,
+    };
+  }
+  return { ...DEFAULT_PLANS, ...plans };
+};
+
+let PLANS_CACHE = null;
+let PLANS_CACHE_AT = 0;
+const PLANS_CACHE_TTL = 30000;
+
+const getPlansCached = async () => {
+  const now = Date.now();
+  if (!PLANS_CACHE || now - PLANS_CACHE_AT > PLANS_CACHE_TTL) {
+    PLANS_CACHE = await getPlans();
+    PLANS_CACHE_AT = now;
+  }
+  return PLANS_CACHE;
+};
+
+const invalidatePlansCache = () => {
+  PLANS_CACHE = null;
+  PLANS_CACHE_AT = 0;
 };
 
 const checkPastDue = async () => {
@@ -73,11 +109,12 @@ const getTenantDashboard = async () => {
   const cancelled = await db.tenant.count({ where: { status: "cancelled" } });
   const trialing = await db.tenant.count({ where: { status: "trialing" } });
 
+  const plans = await getPlansCached();
   const mrr = await db.tenant.sum(db.sequelize.literal(`
     CASE plan
-      WHEN 'starter' THEN 29
-      WHEN 'growth' THEN 79
-      WHEN 'enterprise' THEN 0
+      ${Object.keys(plans)
+        .map((slug) => `WHEN '${slug}' THEN ${plans[slug].price || 0}`)
+        .join("\n      ")}
       ELSE 0
     END
   `), {
@@ -150,13 +187,14 @@ const syncFromPaymentGateway = async (tenantId, payload) => {
   return tenant;
 };
 
-  const checkUsageLimit = async (tenantId, resource) => {
+const checkUsageLimit = async (tenantId, resource) => {
   if (!tenantId) return;
 
   const tenant = await db.tenant.findByPk(tenantId);
   if (!tenant) throw { status: 404, message: "Tenant not found" };
 
-  const plan = PLANS[tenant.plan] || PLANS.starter;
+  const plans = await getPlansCached();
+  const plan = plans[tenant.plan] || plans.starter;
 
   if (resource === "tables") {
     if (plan.maxTables === Infinity) return;
@@ -196,5 +234,6 @@ module.exports = {
   getTenantDashboard,
   syncFromPaymentGateway,
   checkUsageLimit,
-  PLANS,
+  getPlansCached,
+  invalidatePlansCache,
 };

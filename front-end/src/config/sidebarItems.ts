@@ -28,9 +28,11 @@ export const authenticatedNavItems: NavItem[] = [
 
 export const adminNavItems: NavItem[] = [
   { routeName: 'admin-settings', text: 'Settings', icon: 'mdi:cog', requiresAuth: true, requiresAdmin: true },
+  { routeName: 'tenant-dashboard', text: 'Tenants', icon: 'mdi:account-group', requiresAuth: true, requiresPermission: 'manage_tenants' },
+  { routeName: 'plans-management', text: 'Pricing', icon: 'mdi:tag-outline', requiresAuth: true, requiresPermission: 'manage_tenants' },
+  { routeName: 'platform-payment-dashboard', text: 'Payments', icon: 'mdi:currency-usd', requiresAuth: true, requiresPermission: 'manage_tenants' },
   { routeName: 'role-management', text: 'Roles', icon: 'mdi:key', requiresAuth: true },
-  { routeName: 'group-management', text: 'Groups', icon: 'mdi:account-group', requiresAuth: true },
-  { routeName: 'payment-dashboard', text: 'Payments', icon: 'mdi:currency-usd', requiresAuth: true, requiresAdmin: true },
+  { routeName: 'group-management', text: 'Groups', icon: 'mdi:account-multiple', requiresAuth: true },
   { routeName: 'audit-logs', text: 'Audit', icon: 'mdi:file-document-text', requiresAuth: true },
   { routeName: 'email-templates', text: 'Email Templates', icon: 'mdi:email', requiresAuth: true, requiresAdmin: true },
 ]

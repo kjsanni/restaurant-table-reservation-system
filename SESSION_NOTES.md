@@ -332,3 +332,24 @@ Across all modernized pages:
 - `Booking a table is only available on the reservation date!` — backend business rule enforced during floor-plan drag-and-drop
 - Duplicate `console.log` in `TheReservations.vue` (existing debug output)
 - `TableView.vue` is the only remaining table-row component in a card-based UI (now converted to cards)
+
+---
+
+## 2026-07-19 Session — Admin Fixes, Staff Seeding & UI Theme Unification
+
+### Backend Fixes
+- **Admin login** — Fixed `Invalid credentials!` by resetting admin (id=25) password. Root cause: seeder generated random password when `ADMIN_INITIAL_PASSWORD` env var was unset. Set env var for deterministic seeds.
+- **Business hours setting** — Added `"business_hours"` to `updateSettingsHandler` allowedKeys in `auth.controller.js`; fixes 400 on `PUT /api/v1/auth/settings` from ScheduleView.
+- **Staff seeding** — Created staff users `alice`, `bob`, `carol` and seeded 5 `table_staff` assignments (tables 1, 2, 3, 20) so the floor-plan Server Overlay is functional.
+
+### UI/UX Theme Unification
+- **Shared palette** — Added `front-end/src/theme/colors.js` centralizing brand/earth/sky/rose/neutral/accent color tokens for JS contexts.
+- **Normalized 30+ files** — Converted hardcoded Tailwind/Bootstrap/foreign hex values to brand CSS custom properties or brand-aligned literals across all views and components in both single-tenant and multi-tenant modes.
+- **Status colors** — Updated `reservationDisplay.js` to use brand palette.
+- **Tenant branding** — Existing `useTenantBranding.js` composable continues to override CSS vars for multi-tenant; unified token usage ensures consistency across both modes.
+
+### Verification
+- Frontend: `npm run build` succeeds
+- Backend: tests pass
+- Git: committed as `76d194c` and pushed to `RTRS` remote (main)
+
