@@ -42,6 +42,20 @@ let requireActiveTenant = null;
 let tenantAdminRoutes = null;
 let planRoutes = null;
 let platformPaymentRoutes = null;
+let usageRoutes = null;
+let revenueRoutes = null;
+let bulkActionRoutes = null;
+let noteRoutes = null;
+let trialRoutes = null;
+let invoiceRoutes = null;
+let billingEmailRoutes = null;
+let statusTimelineRoutes = null;
+let gracePeriodRoutes = null;
+let whiteLabelRoutes = null;
+let apiKeyRoutes = null;
+let platformAuditRoutes = null;
+let notificationRoutes = null;
+let onboardingRoutes = null;
 let billingRoutes = null;
 
 if (TENANT_MODE) {
@@ -50,6 +64,20 @@ if (TENANT_MODE) {
   tenantAdminRoutes = require("../tenant-platform/routes/tenantAdmin.router");
   planRoutes = require("../tenant-platform/routes/plan.router");
   platformPaymentRoutes = require("../tenant-platform/routes/platformPayment.router");
+  usageRoutes = require("../tenant-platform/routes/usage.router");
+  revenueRoutes = require("../tenant-platform/routes/revenue.router");
+  bulkActionRoutes = require("../tenant-platform/routes/bulkAction.router");
+  noteRoutes = require("../tenant-platform/routes/note.router");
+  trialRoutes = require("../tenant-platform/routes/trial.router");
+  invoiceRoutes = require("../tenant-platform/routes/invoice.router");
+  billingEmailRoutes = require("../tenant-platform/routes/billingEmail.router");
+  statusTimelineRoutes = require("../tenant-platform/routes/statusTimeline.router");
+  gracePeriodRoutes = require("../tenant-platform/routes/gracePeriod.router");
+  whiteLabelRoutes = require("../tenant-platform/routes/whiteLabel.router");
+  apiKeyRoutes = require("../tenant-platform/routes/apiKey.router");
+  platformAuditRoutes = require("../tenant-platform/routes/platformAudit.router");
+  notificationRoutes = require("../tenant-platform/routes/notification.router");
+  onboardingRoutes = require("../tenant-platform/routes/onboarding.router");
   billingRoutes = require("../tenant-platform/routes/billing.router");
 }
 
@@ -169,6 +197,20 @@ const createServer = () => {
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, tenantAdminRoutes);
     app.use("/api/v1/admin/plans", logAction, validateCsrfToken, planRoutes);
     app.use("/api/v1/admin/payments", logAction, validateCsrfToken, platformPaymentRoutes);
+    app.use("/api/v1/admin/usage", logAction, validateCsrfToken, usageRoutes);
+    app.use("/api/v1/admin/revenue", logAction, validateCsrfToken, revenueRoutes);
+    app.use("/api/v1/admin/bulk", logAction, validateCsrfToken, bulkActionRoutes);
+    app.use("/api/v1/admin/tenants/:id/notes", logAction, validateCsrfToken, noteRoutes);
+    app.use("/api/v1/admin/tenants/:id/trial", logAction, validateCsrfToken, trialRoutes);
+    app.use("/api/v1/admin/tenants/:id/invoices", logAction, validateCsrfToken, invoiceRoutes);
+    app.use("/api/v1/admin/billing-emails", logAction, validateCsrfToken, billingEmailRoutes);
+    app.use("/api/v1/admin/tenants/:id/timeline", logAction, validateCsrfToken, statusTimelineRoutes);
+    app.use("/api/v1/admin/tenants/:id/grace-period", logAction, validateCsrfToken, gracePeriodRoutes);
+    app.use("/api/v1/admin/tenants/:id/branding", logAction, validateCsrfToken, whiteLabelRoutes);
+    app.use("/api/v1/admin/tenants/:id/api-keys", logAction, validateCsrfToken, apiKeyRoutes);
+    app.use("/api/v1/admin/audit", logAction, validateCsrfToken, platformAuditRoutes);
+    app.use("/api/v1/admin/notifications", logAction, validateCsrfToken, notificationRoutes);
+    app.use("/api/v1/admin/tenants/:id/onboarding", logAction, validateCsrfToken, onboardingRoutes);
     app.use("/api/v1/billing", logAction, billingRoutes);
   }
   app.use("/api/v1/customer-portal", logAction, validateCsrfToken, customerPortalRouter);

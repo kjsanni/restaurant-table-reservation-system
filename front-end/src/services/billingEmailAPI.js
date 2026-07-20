@@ -4,7 +4,7 @@ import { useAuthStore } from "@/stores/auth";
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 
 const client = axios.create({
-  baseURL: `${API_BASE}/admin/notifications`,
+  baseURL: `${API_BASE}/admin/billing-emails`,
   withCredentials: true,
   xsrfCookieName: "XSRF-TOKEN",
   xsrfHeaderName: "x-xsrf-token",
@@ -21,8 +21,11 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-export const listNotifications = (params = {}) => client.get("/", { params });
-export const createNotification = (data) => client.post("/", data);
-export const markRead = (id) => client.post(`/${id}/read`);
+export const sendPaymentReminder = (tenantIds) =>
+  client.post("/payment-reminder", { tenantIds });
+export const sendSuspensionNotice = (tenantIds) =>
+  client.post("/suspension-notice", { tenantIds });
+export const sendTrialExpiry = (tenantIds) =>
+  client.post("/trial-expiry", { tenantIds });
 
-export default { listNotifications, createNotification, markRead };
+export default { sendPaymentReminder, sendSuspensionNotice, sendTrialExpiry };

@@ -114,6 +114,34 @@
       </button>
     </div>
 
+    <div class="section notes-section">
+      <h2>Notes</h2>
+      <div class="note-form">
+        <textarea
+          v-model="newNote"
+          rows="2"
+          placeholder="Add a support note for this tenant..."
+        ></textarea>
+        <button
+          class="btn"
+          @click="addNote"
+          :disabled="addingNote || !newNote.trim()"
+        >
+          {{ addingNote ? "Adding..." : "Add Note" }}
+        </button>
+      </div>
+      <ul class="notes-list" v-if="notes.length">
+        <li v-for="note in notes" :key="note.id" class="note-item">
+          <div class="note-body">
+            <p class="note-text">{{ note.note }}</p>
+            <span class="note-date">{{ formatDate(note.createdAt) }}</span>
+          </div>
+          <button class="note-delete" @click="removeNote(note)">Delete</button>
+        </li>
+      </ul>
+      <p v-else class="notes-empty">No notes yet.</p>
+    </div>
+
     <div class="section users-section">
       <h2>Users ({{ tenant.users?.length || 0 }})</h2>
       <table class="users-table">
@@ -137,6 +165,28 @@
         </tbody>
       </table>
     </div>
+
+    <div class="section notes-section">
+      <h2>Support Notes</h2>
+      <div class="notes-list">
+        <div v-for="note in notes" :key="note.id" class="note-item">
+          <div class="note-text">{{ note.note }}</div>
+          <div class="note-meta">{{ formatDate(note.createdAt) }}</div>
+          <button @click="removeNote(note)" class="btn-small danger">
+            Delete
+          </button>
+        </div>
+        <div v-if="!notes.length" class="empty-notes">No notes yet</div>
+      </div>
+      <div class="note-form">
+        <input
+          v-model="newNote"
+          placeholder="Add a note..."
+          class="note-input"
+        />
+        <button @click="addNote" class="btn-primary">Add</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -144,6 +194,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
+import noteAPI from "@/services/noteAPI";
 import { useAuthStore } from "@/stores/auth";
 
 const route = useRoute();
@@ -151,6 +202,9 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 const tenant = ref({ users: [] });
+const notes = ref([]);
+const newNote = ref("");
+const addingNote = ref(false);
 const savingPaystack = ref(false);
 const paystackSaved = ref(false);
 const paystackForm = ref({
@@ -167,6 +221,29 @@ const loadTenant = async () => {
     paystackPublicKey: tenant.value.paystackPublicKey || "",
     paystackSecretKey: "",
   };
+  await loadNotes();
+};
+
+const loadNotes = async () => {
+  const response = await noteAPI.listNotes(route.params.id);
+  notes.value = response.data.collection || response.data.items || [];
+};
+
+const addNote = async () => {
+  if (!newNote.value.trim()) return;
+  addingNote.value = true;
+  try {
+    await noteAPI.createNote(route.params.id, newNote.value.trim());
+    newNote.value = "";
+    await loadNotes();
+  } finally {
+    addingNote.value = false;
+  }
+};
+
+const removeNote = async (note) => {
+  await noteAPI.deleteNote(route.params.id, note.id);
+  notes.value = notes.value.filter((n) => n.id !== note.id);
 };
 
 const accessTenant = () => {
@@ -212,6 +289,7 @@ const formatDate = (date) => {
 
 onMounted(() => {
   loadTenant();
+  loadNotes();
 });
 </script>
 
@@ -413,6 +491,87 @@ onMounted(() => {
 .btn.danger:hover {
   box-shadow: var(--shadow-md);
 }
+.notes-section h2 {
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: 650;
+  margin: 0 0 var(--space-4) 0;
+  color: var(--ink);
+}
+.note-form {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  align-items: flex-start;
+}
+.note-form textarea {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  resize: vertical;
+}
+.note-form textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.notes-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.note-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+}
+.note-body {
+  flex: 1;
+}
+.note-text {
+  margin: 0 0 var(--space-1) 0;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.note-date {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+.note-delete {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--rose-600);
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+.note-delete:hover {
+  background: var(--rose-100);
+  border-color: var(--rose-300);
+}
+.notes-empty {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin: 0;
+}
 .users-table {
   width: 100%;
   border-collapse: collapse;
@@ -434,5 +593,54 @@ onMounted(() => {
 }
 .users-table tbody tr:hover {
   background: var(--surface-sunken);
+}
+.notes-section {
+  margin-top: var(--space-6);
+}
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.note-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--surface-sunken);
+  border-radius: var(--radius-lg);
+}
+.note-text {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.note-meta {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+.empty-notes {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  padding: var(--space-3);
+}
+.note-form {
+  display: flex;
+  gap: var(--space-3);
+}
+.note-input {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
 }
 </style>

@@ -4,7 +4,7 @@ import { useAuthStore } from "@/stores/auth";
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 
 const client = axios.create({
-  baseURL: `${API_BASE}/admin/notifications`,
+  baseURL: `${API_BASE}/admin/usage`,
   withCredentials: true,
   xsrfCookieName: "XSRF-TOKEN",
   xsrfHeaderName: "x-xsrf-token",
@@ -21,8 +21,7 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-export const listNotifications = (params = {}) => client.get("/", { params });
-export const createNotification = (data) => client.post("/", data);
-export const markRead = (id) => client.post(`/${id}/read`);
+export const listUsage = (params = {}) => client.get("/", { params });
+export const getUsage = (id) => client.get(`/${id}`);
 
-export default { listNotifications, createNotification, markRead };
+export default { listUsage, getUsage };

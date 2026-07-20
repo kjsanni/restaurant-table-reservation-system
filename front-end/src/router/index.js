@@ -166,6 +166,60 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/tenants/:id/api-keys",
+    name: "tenant-api-keys",
+    component: () => import("../views/admin/ApiKeyManagementView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/tenants/:id/branding",
+    name: "tenant-branding",
+    component: () => import("../views/admin/WhiteLabelBrandingView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/tenants/:id/grace-period",
+    name: "tenant-grace-period",
+    component: () => import("../views/admin/GracePeriodSettingsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/tenants/:id/timeline",
+    name: "tenant-timeline",
+    component: () => import("../views/admin/TenantStatusTimelineView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/tenants/:id/timeline",
+    name: "tenant-timeline",
+    component: () => import("../views/admin/TenantStatusTimelineView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/tenants/:id/notes",
+    name: "tenant-notes",
+    component: () => import("../views/admin/TenantDetailView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/tenants/:id/trial",
+    name: "tenant-trial",
+    component: () => import("../views/admin/TrialManagementView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/tenants/:id/invoices",
+    name: "tenant-invoices",
+    component: () => import("../views/admin/InvoiceManagementView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/tenants/:id/onboarding",
+    name: "tenant-onboarding",
+    component: () => import("../views/admin/OnboardingChecklistView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/plans",
     name: "plans-management",
     component: () => import("../views/admin/PlansManagementView.vue"),
@@ -175,6 +229,42 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     path: "/admin/payments",
     name: "platform-payment-dashboard",
     component: () => import("../views/admin/PlatformPaymentDashboard.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/usage",
+    name: "platform-usage",
+    component: () => import("../views/admin/PlatformUsageView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/revenue",
+    name: "platform-revenue",
+    component: () => import("../views/admin/RevenueReportsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/bulk",
+    name: "platform-bulk-actions",
+    component: () => import("../views/admin/BulkActionsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/billing-emails",
+    name: "billing-email-templates",
+    component: () => import("../views/admin/BillingEmailTemplatesView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/audit",
+    name: "platform-audit-log",
+    component: () => import("../views/admin/PlatformAuditLogView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/notifications",
+    name: "platform-notifications",
+    component: () => import("../views/admin/NotificationCenterView.vue"),
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
 }

@@ -4,7 +4,7 @@ import { useAuthStore } from "@/stores/auth";
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 
 const client = axios.create({
-  baseURL: `${API_BASE}/admin/notifications`,
+  baseURL: `${API_BASE}/admin/revenue`,
   withCredentials: true,
   xsrfCookieName: "XSRF-TOKEN",
   xsrfHeaderName: "x-xsrf-token",
@@ -21,8 +21,9 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-export const listNotifications = (params = {}) => client.get("/", { params });
-export const createNotification = (data) => client.post("/", data);
-export const markRead = (id) => client.post(`/${id}/read`);
+export const getMrrTrends = (months = 12) =>
+  client.get("/mrr-trends", { params: { months } });
+export const getRevenueByPlan = () => client.get("/by-plan");
+export const getLtv = () => client.get("/ltv");
 
-export default { listNotifications, createNotification, markRead };
+export default { getMrrTrends, getRevenueByPlan, getLtv };
