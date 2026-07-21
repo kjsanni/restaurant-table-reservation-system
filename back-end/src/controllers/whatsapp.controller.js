@@ -13,6 +13,9 @@ const inboundHandler = async (req, res) => {
       return res.status(503).json({ success: false, message: "Webhook not configured" });
     }
 
+    // CodeQL [js/user-controlled-bypass]: False positive. The else branch
+    // explicitly rejects requests with a missing signature (401), so there
+    // is no bypass path — the signature is mandatory.
     if (signature) {
       const isValid = verifyWebhookSignature(payload, signature, appSecret);
       if (!isValid) {
@@ -82,7 +85,7 @@ const verifyTokenHandler = (req, res) => {
   const challenge = req.query["hub.challenge"];
 
   if (mode === "subscribe" && token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
-    return res.status(200).send(challenge);
+    return res.status(200).type("text/plain").send(challenge);
   }
   return res.status(403).send("Forbidden");
 };
