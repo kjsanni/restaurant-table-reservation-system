@@ -3,12 +3,10 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import orderAPI from "@/services/orderAPI";
-import { useCurrency } from "@/composables/useCurrency";
 import logger from "@/utils/logger";
 
 const route = useRoute();
 const router = useRouter();
-const { format: fmt } = useCurrency();
 
 const orderId = ref<number | null>(null);
 const order = ref<any | null>(null);

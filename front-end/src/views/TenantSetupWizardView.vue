@@ -3,7 +3,6 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
-import logger from "@/utils/logger";
 
 const router = useRouter();
 const authStore = useAuthStore();

@@ -11,6 +11,16 @@ router
   .all(httpMethodError);
 
 router
+  .route("/test-email")
+  .post(...writeRoute("manage_settings", emailTemplateController.sendTestEmailHandler))
+  .all(httpMethodError);
+
+router
+  .route("/test-template")
+  .post(...writeRoute("manage_settings", emailTemplateController.sendTemplateTestHandler))
+  .all(httpMethodError);
+
+router
   .route("/:id")
   .get(...protectedRoute("manage_settings", emailTemplateController.getByIdHandler))
   .patch(...writeRoute("manage_settings", emailTemplateController.updateHandler))

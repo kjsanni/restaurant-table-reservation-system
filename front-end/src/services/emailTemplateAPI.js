@@ -16,6 +16,16 @@ class EmailTemplateAPI {
   delete(id) {
     return API.delete("/email-templates/" + id);
   }
+  sendTestEmail(to) {
+    return API.post("/email-templates/test-email", { to });
+  }
+  sendTemplate(templateType, to, data = {}) {
+    return API.post("/email-templates/test-template", {
+      templateType,
+      to,
+      data,
+    });
+  }
 }
 
 export default new EmailTemplateAPI();

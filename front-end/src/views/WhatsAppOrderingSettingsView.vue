@@ -71,7 +71,9 @@ const orderingHours = ref({
 const templates = ref<Record<string, string>>({});
 const templateDefinitions = TEMPLATE_DEFINITIONS;
 
-const days = [
+type DayKey = keyof typeof orderingHours.value;
+
+const days: Array<{ key: DayKey; label: string }> = [
   { key: "monday", label: "Monday" },
   { key: "tuesday", label: "Tuesday" },
   { key: "wednesday", label: "Wednesday" },
@@ -80,8 +82,6 @@ const days = [
   { key: "saturday", label: "Saturday" },
   { key: "sunday", label: "Sunday" },
 ];
-
-onMounted(loadSettings);
 
 const loadSettings = async () => {
   loading.value = true;
@@ -121,6 +121,8 @@ const loadSettings = async () => {
     loading.value = false;
   }
 };
+
+onMounted(loadSettings);
 
 const saveSettings = async () => {
   saving.value = true;

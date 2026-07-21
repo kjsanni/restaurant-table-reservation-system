@@ -28,9 +28,6 @@ const capabilities = computed(() => authStore.capabilities);
 const hasDineIn = computed(() =>
   capabilities.value?.serviceModes?.includes("dine_in")
 );
-const hasTakeaway = computed(() =>
-  capabilities.value?.serviceModes?.includes("takeaway")
-);
 const hasDelivery = computed(() =>
   capabilities.value?.serviceModes?.includes("delivery")
 );
@@ -156,7 +153,6 @@ const addToCart = async (item: any) => {
       menuItemId: item.id,
       name: item.name,
       price: parseFloat(item.price),
-      quantity: 1,
       selectedOptions: [],
       itemNotes: null,
     });
@@ -174,7 +170,7 @@ const goToCheckout = () => {
 };
 
 const goToMenu = () => router.push("/menu");
-const goToReserve = (tableId?: number) => {
+const goToReserve = () => {
   if (!isAuthenticated.value) {
     router.push({ name: "login", query: { redirect: "/new-reservation" } });
   } else {
@@ -446,7 +442,7 @@ onMounted(() => {
                 <span class="table-capacity">{{ table.capacity }} seats</span>
               </div>
               <p class="table-section">{{ table.section || "Main" }}</p>
-              <button class="btn-reserve" @click="goToReserve(table.id)">
+              <button class="btn-reserve" @click="goToReserve()">
                 Reserve
               </button>
             </div>

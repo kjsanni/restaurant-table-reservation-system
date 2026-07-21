@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { VaSwitch, VaButton, VaCard } from "vuestic-ui";
-import { useAuthStore } from "@/stores/auth";
+import { VaSwitch } from "vuestic-ui";
 import { useToastStore } from "@/stores/toast";
 import webhookAPI from "@/services/webhookAPI";
 import logger from "@/utils/logger";
@@ -10,7 +9,6 @@ const props = defineProps<{
   data: { key: string; value: any }[];
 }>();
 
-const authStore = useAuthStore();
 const toastStore = useToastStore();
 
 const webhooks = ref({ enabled: false, subscriptions: [] as any[] });

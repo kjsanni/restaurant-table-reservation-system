@@ -6,7 +6,6 @@ import logger from "@/utils/logger";
 const loading = ref(true);
 const reservations = ref([]);
 const currentDate = ref(new Date());
-const selectedDate = ref(null);
 
 const monthLabel = computed(() => {
   return currentDate.value.toLocaleDateString("en-US", {

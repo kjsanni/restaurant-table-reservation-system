@@ -1,4 +1,33 @@
 const emailTemplateService = require("../services/emailTemplate.service");
+const emailService = require("../services/emailService");
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const sendTestEmailHandler = async (req, res) => {
+  const { to } = req.body || {};
+  if (!to || !EMAIL_RE.test(to)) {
+    return res.status(400).json({ success: false, message: "Valid recipient email is required" });
+  }
+  await emailService.sendEmail({
+    to,
+    subject: "Test email from Restaurant Reservation System",
+    text: "Your email settings are working correctly.",
+    html: "<p>Your email settings are working correctly.</p>",
+  });
+  return res.status(200).json({ success: true, message: "Test email sent" });
+};
+
+const sendTemplateTestHandler = async (req, res) => {
+  const { templateType, to, data } = req.body || {};
+  if (!to || !EMAIL_RE.test(to)) {
+    return res.status(400).json({ success: false, message: "Valid recipient email is required" });
+  }
+  if (!templateType) {
+    return res.status(400).json({ success: false, message: "templateType is required" });
+  }
+  await emailService.sendTemplate({ templateType, to, data: data || {} });
+  return res.status(200).json({ success: true, message: "Template test email sent" });
+};
 
 const getAllHandler = async (req, res) => {
   const templates = await emailTemplateService.getAllTemplates(req.tenant?.id);
@@ -51,4 +80,6 @@ module.exports = {
   createHandler,
   updateHandler,
   deleteHandler,
+  sendTestEmailHandler,
+  sendTemplateTestHandler,
 };
