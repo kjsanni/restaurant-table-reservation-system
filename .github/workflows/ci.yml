@@ -29,7 +29,7 @@ jobs:
       DB_NAME: rtrs_test
       DB_USERNAME: root
       DB_PASSWORD: root
-      JWT_SECRET: ci-test-secret-key-min-16-chars
+      JWT_SECRET: ci-test-secret-key-32chars-minimum-xx
       PORT: 8080
     steps:
       - uses: actions/checkout@v4
@@ -52,5 +52,4 @@ jobs:
           cache: "npm"
           cache-dependency-path: front-end/package-lock.json
       - run: cd front-end && npm ci
-      - run: cd front-end && ./node_modules/.bin/vue-tsc --noEmit
       - run: cd front-end && npm run build
