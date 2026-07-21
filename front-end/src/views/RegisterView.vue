@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { RouterLink } from "vue-router";
-import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
 import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
 

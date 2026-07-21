@@ -11,6 +11,12 @@ export interface User {
   tenantId?: number;
 }
 
+export interface TenantCapabilities {
+  restaurantType: string;
+  serviceModes: string[];
+  featureFlags: Record<string, boolean>;
+}
+
 export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
   const isAuthenticated = computed(() => !!user.value);
@@ -20,6 +26,7 @@ export const useAuthStore = defineStore("auth", () => {
   const branding = ref({ brandName: "", logoUrl: "", primaryColor: "" });
   const currencyLocale = ref({ currency: "GHS", locale: "en-GH" });
   const authError = ref<string | null>(null);
+  const capabilities = ref<TenantCapabilities | null>(null);
 
   const applySetting = (
     settings: Array<{ key: string; value: unknown }>,
@@ -92,6 +99,15 @@ export const useAuthStore = defineStore("auth", () => {
     return tenantModeEnabled.value;
   };
 
+  const fetchCapabilities = async () => {
+    try {
+      const response = await authAPI.getTenantCapabilities();
+      capabilities.value = response.data.capabilities;
+    } catch {
+      capabilities.value = null;
+    }
+  };
+
   const refreshToken = async () => {
     const response = await authAPI.refreshToken();
     return response.data;
@@ -113,16 +129,23 @@ export const useAuthStore = defineStore("auth", () => {
     currentTenant.value = null;
   };
 
+  const fetchRegistrationStatus = async () => {
+    const response = await authAPI.getRegistrationStatus();
+    return response.data.enabled;
+  };
+
   onMounted(async () => {
     try {
       await getMe();
       await fetchTenantMode();
+      await fetchCapabilities();
     } catch (err) {
       const error = err as { response?: { status?: number } };
       if (error.response?.status !== 401) {
         try {
           await getMe();
           await fetchTenantMode();
+          await fetchCapabilities();
         } catch {
           authError.value =
             "Session expired or unreachable. Please log in again.";
@@ -146,12 +169,15 @@ export const useAuthStore = defineStore("auth", () => {
     branding,
     currencyLocale,
     authError,
+    capabilities,
     login,
     register,
     logout,
     getMe,
     fetchSettings,
     fetchTenantMode,
+    fetchCapabilities,
+    fetchRegistrationStatus,
     updateSettings,
     setTenant,
     clearTenant,

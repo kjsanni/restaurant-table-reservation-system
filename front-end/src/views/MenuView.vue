@@ -17,6 +17,26 @@ const items = ref<Array<any>>([]);
 const loading = ref(false);
 const activeCategory = ref<number | null>(null);
 const cartOpen = ref(false);
+const dietaryFilters = ref({
+  vegetarian: false,
+  vegan: false,
+  glutenFree: false,
+  spicy: false,
+  nutFree: false,
+});
+
+const dietaryOptions = [
+  { key: "vegetarian", label: "Vegetarian", icon: "mdi:leaf" },
+  { key: "vegan", label: "Vegan", icon: "mdi:plant" },
+  { key: "glutenFree", label: "Gluten Free", icon: "mdi:barley-off" },
+  { key: "spicy", label: "Spicy", icon: "mdi:chili-hot" },
+  { key: "nutFree", label: "Nut Free", icon: "mdi:peanut-off" },
+];
+
+const toggleFilter = (key: string) => {
+  dietaryFilters.value[key] = !dietaryFilters.value[key];
+  loadMenu();
+};
 
 onMounted(async () => {
   cartStore.hydrate();
@@ -28,7 +48,14 @@ const loadMenu = async () => {
   try {
     const [catRes, itemRes] = await Promise.all([
       menuAPI.getCategories(),
-      menuAPI.getMenuItems({ isAvailable: "true" }),
+      menuAPI.getMenuItems({
+        isAvailable: "true",
+        ...Object.fromEntries(
+          Object.entries(dietaryFilters.value)
+            .filter(([, v]) => v)
+            .map(([k]) => [k, "true"])
+        ),
+      }),
     ]);
     categories.value = catRes.data?.categories || [];
     items.value = itemRes.data?.items || [];
@@ -40,8 +67,19 @@ const loadMenu = async () => {
 };
 
 const filteredItems = computed(() => {
-  if (!activeCategory.value) return items.value;
-  return items.value.filter((i) => i.categoryId === activeCategory.value);
+  let result = items.value;
+  if (activeCategory.value) {
+    result = result.filter((i) => i.categoryId === activeCategory.value);
+  }
+
+  const active = Object.entries(dietaryFilters.value)
+    .filter(([, v]) => v)
+    .map(([k]) => k);
+  if (active.length) {
+    result = result.filter((item) => active.every((filter) => item[filter]));
+  }
+
+  return result;
 });
 
 const addToCart = (item: any) => {
@@ -77,6 +115,20 @@ const goToCheckout = () => {
     </div>
 
     <div class="content-wrapper">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <button
+            v-for="filter in dietaryOptions"
+            :key="filter.key"
+            :class="['filter-chip', { active: dietaryFilters[filter.key] }]"
+            @click="toggleFilter(filter.key)"
+          >
+            <Icon :icon="filter.icon" width="16" height="16" />
+            {{ filter.label }}
+          </button>
+        </div>
+      </div>
+
       <div class="menu-layout">
         <aside class="menu-sidebar">
           <button
@@ -172,6 +224,43 @@ const goToCheckout = () => {
 </template>
 
 <style scoped>
+.filter-bar {
+  margin-bottom: var(--space-4);
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+
+.filter-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.filter-chip.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
 .menu-layout {
   display: flex;
   gap: var(--space-4);

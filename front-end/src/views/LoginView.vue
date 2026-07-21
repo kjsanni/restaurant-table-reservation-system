@@ -28,14 +28,15 @@ const formatLockoutTime = (seconds: number) => {
 
 const startLockoutTimer = (remainingSeconds: number) => {
   lockoutRemaining.value = remainingSeconds;
-  if (lockoutTimer.value) clearInterval(lockoutTimer.value);
-  lockoutTimer.value = window.setInterval(() => {
+  if (lockoutTimer.value) clearInterval(lockoutTimer.value as unknown as ReturnType<typeof setInterval>);
+  const timerId = window.setInterval(() => {
     lockoutRemaining.value--;
     if (lockoutRemaining.value <= 0) {
-      clearInterval(lockoutTimer.value);
+      clearInterval(timerId);
       lockoutTimer.value = null;
     }
   }, 1000);
+  lockoutTimer.value = timerId as unknown as number;
 };
 
 const handleLogin = async () => {
@@ -49,8 +50,9 @@ const handleLogin = async () => {
   } catch (err) {
     generalError.value = getApiErrorMessage(err);
     validationErrors.value = getApiErrors(err);
-    if (err?.response?.data?.remainingSeconds) {
-      startLockoutTimer(err.response.data.remainingSeconds);
+    const error = err as { response?: { data?: { remainingSeconds?: number } } };
+    if (error.response?.data?.remainingSeconds) {
+      startLockoutTimer(error.response.data.remainingSeconds);
     }
   } finally {
     submitting.value = false;

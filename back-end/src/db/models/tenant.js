@@ -146,6 +146,16 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "GHS",
       },
+      restaurantType: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        defaultValue: "full_service",
+      },
+      serviceModes: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: ["dine_in", "takeaway", "delivery"],
+      },
       trialExtendsTo: {
         type: DataTypes.DATE,
         allowNull: true,

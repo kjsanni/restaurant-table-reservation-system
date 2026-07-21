@@ -82,9 +82,15 @@ const submitForm = async () => {
       description: form.value.description || null,
       discountType: form.value.discountType,
       discountValue: parseFloat(form.value.discountValue),
-      minOrderAmount: form.value.minOrderAmount ? parseFloat(form.value.minOrderAmount) : 0,
-      maxDiscountAmount: form.value.maxDiscountAmount ? parseFloat(form.value.maxDiscountAmount) : null,
-      usageLimit: form.value.usageLimit ? parseInt(form.value.usageLimit, 10) : null,
+      minOrderAmount: form.value.minOrderAmount
+        ? parseFloat(form.value.minOrderAmount)
+        : 0,
+      maxDiscountAmount: form.value.maxDiscountAmount
+        ? parseFloat(form.value.maxDiscountAmount)
+        : null,
+      usageLimit: form.value.usageLimit
+        ? parseInt(form.value.usageLimit, 10)
+        : null,
       isActive: form.value.isActive,
       validFrom: form.value.validFrom || null,
       validUntil: form.value.validUntil || null,
@@ -137,7 +143,11 @@ const discountLabel = (type: string) => (type === "percentage" ? "%" : "GHS");
           <div class="form-grid">
             <div class="field">
               <label>Code</label>
-              <input v-model="form.code" placeholder="SUMMER25" :disabled="!!editingId" />
+              <input
+                v-model="form.code"
+                placeholder="SUMMER25"
+                :disabled="!!editingId"
+              />
             </div>
             <div class="field">
               <label>Type</label>
@@ -148,19 +158,38 @@ const discountLabel = (type: string) => (type === "percentage" ? "%" : "GHS");
             </div>
             <div class="field">
               <label>Value</label>
-              <input v-model.number="form.discountValue" type="number" step="0.01" placeholder="10" />
+              <input
+                v-model.number="form.discountValue"
+                type="number"
+                step="0.01"
+                placeholder="10"
+              />
             </div>
             <div class="field">
               <label>Min order (GHS)</label>
-              <input v-model.number="form.minOrderAmount" type="number" step="0.01" placeholder="0" />
+              <input
+                v-model.number="form.minOrderAmount"
+                type="number"
+                step="0.01"
+                placeholder="0"
+              />
             </div>
             <div class="field">
               <label>Max discount (GHS)</label>
-              <input v-model.number="form.maxDiscountAmount" type="number" step="0.01" placeholder="optional" />
+              <input
+                v-model.number="form.maxDiscountAmount"
+                type="number"
+                step="0.01"
+                placeholder="optional"
+              />
             </div>
             <div class="field">
               <label>Usage limit</label>
-              <input v-model.number="form.usageLimit" type="number" placeholder="unlimited" />
+              <input
+                v-model.number="form.usageLimit"
+                type="number"
+                placeholder="unlimited"
+              />
             </div>
             <div class="field">
               <label>Valid from</label>
@@ -181,29 +210,46 @@ const discountLabel = (type: string) => (type === "percentage" ? "%" : "GHS");
             <button class="btn-primary" :disabled="saving" @click="submitForm">
               {{ saving ? "Saving…" : editingId ? "Update" : "Create" }}
             </button>
-            <button v-if="editingId" class="btn-ghost" @click="resetForm">Cancel</button>
+            <button v-if="editingId" class="btn-ghost" @click="resetForm">
+              Cancel
+            </button>
           </div>
         </div>
 
         <div class="list-card">
           <h2>Promotions</h2>
           <div v-if="loading" class="state">Loading…</div>
-          <div v-else-if="!promotions.length" class="state">No promotions yet.</div>
+          <div v-else-if="!promotions.length" class="state">
+            No promotions yet.
+          </div>
           <div v-else class="promo-list">
             <div v-for="promo in promotions" :key="promo.id" class="promo-item">
               <div class="promo-main">
                 <div class="promo-code">{{ promo.code }}</div>
                 <div class="promo-meta">
-                  {{ promo.discountType === "percentage" ? promo.discountValue + "%" : fmt(promo.discountValue) }}
-                  <span v-if="promo.minOrderAmount > 0">· min {{ fmt(promo.minOrderAmount) }}</span>
+                  {{
+                    promo.discountType === "percentage"
+                      ? promo.discountValue + "%"
+                      : fmt(promo.discountValue)
+                  }}
+                  <span v-if="promo.minOrderAmount > 0"
+                    >· min {{ fmt(promo.minOrderAmount) }}</span
+                  >
                 </div>
                 <div class="promo-usage">
-                  Used {{ promo.usedCount }}{{ promo.usageLimit ? ` / ${promo.usageLimit}` : "" }}
+                  Used {{ promo.usedCount
+                  }}{{ promo.usageLimit ? ` / ${promo.usageLimit}` : "" }}
                 </div>
               </div>
               <div class="promo-actions">
-                <button class="btn-small" @click="startEdit(promo)">Edit</button>
-                <button class="btn-small btn-danger" @click="deletePromotion(promo.id)" :disabled="deleting === promo.id">
+                <button class="btn-small" @click="startEdit(promo)">
+                  Edit
+                </button>
+                <button
+                  class="btn-small btn-danger"
+                  @click="deletePromotion(promo.id)"
+                  :disabled="deleting === promo.id"
+                >
                   {{ deleting === promo.id ? "…" : "Delete" }}
                 </button>
               </div>

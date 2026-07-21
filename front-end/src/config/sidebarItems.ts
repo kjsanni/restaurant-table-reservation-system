@@ -5,6 +5,7 @@ export interface NavItem {
   requiresAuth?: boolean
   requiresAdmin?: boolean
   requiresPermission?: string
+  requiresFeature?: string
   tenantOnly?: boolean
   section?: string
 }
@@ -16,16 +17,16 @@ export const guestNavItems: NavItem[] = [
 
 export const authenticatedNavItems: NavItem[] = [
   { routeName: 'tenant-landing', text: 'Dashboard', icon: 'mdi:view-dashboard', requiresAuth: true },
-  { routeName: 'reservations', text: 'Reservations', icon: 'mdi:format-list-bulleted', requiresAuth: true },
-  { routeName: 'table-management', text: 'Tables', icon: 'mdi:table', requiresAuth: true },
-  { routeName: 'schedule', text: 'Schedule', icon: 'mdi:calendar', requiresAuth: true },
-  { routeName: 'calendar', text: 'Calendar', icon: 'mdi:calendar', requiresAuth: true },
-  { routeName: 'staff-management', text: 'Staff', icon: 'mdi:account-group', requiresAuth: true },
-  { routeName: 'floor-plan', text: 'Floor Plan', icon: 'mdi:map', requiresAuth: true },
-  { routeName: 'floorplan-editor', text: 'Floor Plan Editor', icon: 'mdi:map-edit', requiresAuth: true, requiresPermission: 'manage_tables' },
-  { routeName: 'waitlist', text: 'Waitlist', icon: 'mdi:clock', requiresAuth: true },
+  { routeName: 'reservations', text: 'Reservations', icon: 'mdi:format-list-bulleted', requiresAuth: true, requiresFeature: 'dine_in' },
+  { routeName: 'table-management', text: 'Tables', icon: 'mdi:table', requiresAuth: true, requiresFeature: 'table_management' },
+  { routeName: 'schedule', text: 'Schedule', icon: 'mdi:calendar', requiresAuth: true, requiresFeature: 'staff_scheduling' },
+  { routeName: 'calendar', text: 'Calendar', icon: 'mdi:calendar', requiresAuth: true, requiresFeature: 'dine_in' },
+  { routeName: 'staff-management', text: 'Staff', icon: 'mdi:account-group', requiresAuth: true, requiresFeature: 'staff_scheduling' },
+  { routeName: 'floor-plan', text: 'Floor Plan', icon: 'mdi:map', requiresAuth: true, requiresFeature: 'table_management' },
+  { routeName: 'floorplan-editor', text: 'Floor Plan Editor', icon: 'mdi:map-edit', requiresAuth: true, requiresPermission: 'manage_tables', requiresFeature: 'table_management' },
+  { routeName: 'waitlist', text: 'Waitlist', icon: 'mdi:clock', requiresAuth: true, requiresFeature: 'waitlist' },
   { routeName: 'reports', text: 'Reports', icon: 'mdi:chart-bar', requiresAuth: true },
-  { routeName: 'heatmap', text: 'Heatmap', icon: 'mdi:chart-area', requiresAuth: true },
+  { routeName: 'heatmap', text: 'Heatmap', icon: 'mdi:chart-area', requiresAuth: true, requiresFeature: 'dine_in' },
   { routeName: 'payments', text: 'Payments', icon: 'mdi:currency-usd', requiresAuth: true },
   { routeName: 'revenue-report', text: 'Revenue', icon: 'mdi:trending-up', requiresAuth: true },
   { routeName: 'search', text: 'Search', icon: 'mdi:magnify', requiresAuth: true },
@@ -44,6 +45,8 @@ export const adminNavItems: NavItem[] = [
   { routeName: 'billing-email-templates', text: 'Billing Emails', icon: 'mdi:email-send', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
   { routeName: 'platform-audit-log', text: 'Audit Log', icon: 'mdi:clipboard-list', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
   { routeName: 'platform-notifications', text: 'Notifications', icon: 'mdi:bell', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
+  { routeName: 'platform-benchmarks', text: 'Benchmarks', icon: 'mdi:chart-box', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
+  { routeName: 'tenant-dsar', text: 'DSAR', icon: 'mdi:shield-account', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
   { routeName: 'role-management', text: 'Roles', icon: 'mdi:key', requiresAuth: true },
   { routeName: 'group-management', text: 'Groups', icon: 'mdi:account-multiple', requiresAuth: true },
   { routeName: 'audit-logs', text: 'Audit', icon: 'mdi:file-document-text', requiresAuth: true },

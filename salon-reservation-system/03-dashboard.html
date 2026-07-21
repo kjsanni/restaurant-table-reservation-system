@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Glow Studio — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --brand-900: #1a1410;
+    --brand-800: #2d221c;
+    --brand-700: #4a352b;
+    --brand-600: #6b4a3a;
+    --brand-500: #8c5e4a;
+    --brand-400: #b87a62;
+    --brand-300: #d9a086;
+    --brand-200: #e8c4b5;
+    --brand-100: #f3ddd3;
+    --brand-50: #faf6f3;
+    --accent-600: #b45309;
+    --accent-500: #d97706;
+    --accent-400: #f59e0b;
+    --accent-300: #fbbf24;
+    --accent-100: #fef3c7;
+    --accent-50: #fffbeb;
+    --earth-600: #365314;
+    --earth-500: #4d7c0f;
+    --earth-100: #ecfccb;
+    --sky-600: #1e40af;
+    --sky-500: #3b82f6;
+    --sky-100: #dbeafe;
+    --rose-600: #e11d48;
+    --rose-500: #f43f5e;
+    --rose-100: #ffe4e6;
+    --neutral-900: #312e2a;
+    --neutral-800: #4a4540;
+    --neutral-600: #7d766c;
+    --neutral-500: #9a9389;
+    --neutral-300: #d6d1c9;
+    --neutral-200: #e7e4de;
+    --neutral-100: #f3f1ed;
+    --neutral-50: #faf9f7;
+    --white: #ffffff;
+    --font-serif: 'Fraunces', serif;
+    --font-sans: 'Public Sans', sans-serif;
+    --radius-xl: 20px;
+    --radius-lg: 14px;
+    --radius-md: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--brand-50);
+    color: var(--neutral-900);
+    min-height: 100vh;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    min-height: 100vh;
+  }
+  .sidebar {
+    background: linear-gradient(180deg, var(--brand-900) 0%, var(--brand-800) 100%);
+    color: var(--white);
+    padding: 28px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+    animation: fadeDown 0.6s ease-out both;
+  }
+  .sidebar-mark {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--accent-400), var(--accent-500));
+    display: grid; place-items: center;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--brand-900);
+  }
+  .sidebar-name {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .nav-group {
+    margin-top: 8px;
+  }
+  .nav-group-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.45);
+    padding: 12px 12px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.78);
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    cursor: pointer;
+  }
+  .nav-item:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--white);
+    transform: translateX(2px);
+  }
+  .nav-item.active {
+    background: linear-gradient(90deg, rgba(217,119,6,0.18), rgba(217,119,6,0.06));
+    color: var(--accent-300);
+    font-weight: 600;
+  }
+  .nav-icon {
+    width: 18px; height: 18px;
+    display: grid; place-items: center;
+    opacity: 0.85;
+  }
+
+  .main {
+    padding: 36px 40px 60px;
+    overflow-y: auto;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    animation: fadeDown 0.6s ease-out both;
+  }
+  .topbar-left h1 {
+    font-family: var(--font-serif);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .topbar-left p {
+    color: var(--neutral-600);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand-500), var(--brand-400));
+    color: var(--white);
+    display: grid; place-items: center;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+  .kpi-tile {
+    background: var(--white);
+    border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-xl);
+    padding: 22px 24px;
+    box-shadow: 0 10px 30px rgba(26,20,16,0.05);
+    animation: fadeUp 0.6s ease-out both;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .kpi-tile:nth-child(1) { animation-delay: 0.05s; }
+  .kpi-tile:nth-child(2) { animation-delay: 0.1s; }
+  .kpi-tile:nth-child(3) { animation-delay: 0.15s; }
+  .kpi-tile:nth-child(4) { animation-delay: 0.2s; }
+  .kpi-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(26,20,16,0.08);
+  }
+  .kpi-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--neutral-600);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-family: var(--font-serif);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--neutral-900);
+    letter-spacing: -0.02em;
+  }
+  .kpi-meta {
+    font-size: 12px;
+    color: var(--neutral-600);
+    margin-top: 6px;
+  }
+
+  .panels {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 20px;
+  }
+  .panel {
+    background: var(--white);
+    border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(26,20,16,0.05);
+    animation: fadeUp 0.7s 0.2s ease-out both;
+  }
+  .panel h3 {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--neutral-900);
+  }
+  .booking {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--neutral-100);
+  }
+  .booking:last-child { border-bottom: none; }
+  .date-badge {
+    width: 48px; height: 48px;
+    border-radius: var(--radius-md);
+    background: var(--brand-100);
+    color: var(--brand-800);
+    display: grid; place-items: center;
+    text-align: center;
+    font-weight: 700;
+    line-height: 1.1;
+    flex-shrink: 0;
+  }
+  .date-badge small {
+    display: block;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .booking-meta b {
+    display: block;
+    font-size: 14px;
+    color: var(--neutral-900);
+  }
+  .booking-meta span {
+    font-size: 12px;
+    color: var(--neutral-600);
+  }
+  .pill {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .pill.confirmed { background: var(--accent-100); color: var(--accent-600); }
+  .pill.pending { background: var(--sky-100); color: var(--sky-600); }
+  .pill.in-progress { background: var(--earth-100); color: var(--earth-600); }
+
+  .quick-actions {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    animation: fadeUp 0.7s 0.3s ease-out both;
+  }
+  .quick-btn {
+    background: var(--white);
+    border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    text-decoration: none;
+    display: block;
+  }
+  .quick-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(26,20,16,0.08);
+    border-color: var(--accent-300);
+  }
+  .quick-btn strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--neutral-900);
+    margin-bottom: 4px;
+  }
+  .quick-btn span {
+    font-size: 12px;
+    color: var(--neutral-600);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 960px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { padding: 24px; }
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .panels { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-mark">G</div>
+        <div class="sidebar-name">Glow<br/>Studio</div>
+      </div>
+      <nav class="nav-group">
+        <div class="nav-group-title">Operations</div>
+        <a class="nav-item active" href="03-dashboard.html"><span class="nav-icon">◆</span> Dashboard</a>
+        <a class="nav-item" href="04-appointments.html"><span class="nav-icon">▦</span> Appointments</a>
+        <a class="nav-item" href="10-stations.html"><span class="nav-icon">▦</span> Stations</a>
+        <a class="nav-item" href="11-schedule.html"><span class="nav-icon">◷</span> Schedule</a>
+        <a class="nav-item" href="12-calendar.html"><span class="nav-icon">▤</span> Calendar</a>
+        <a class="nav-item" href="13-station-map.html"><span class="nav-icon">◻</span> Station Map</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">Clients & Services</div>
+        <a class="nav-item" href="06-services.html"><span class="nav-icon">✂</span> Services</a>
+        <a class="nav-item" href="08-clients.html"><span class="nav-icon">👤</span> Clients</a>
+        <a class="nav-item" href="14-waitlist.html"><span class="nav-icon">◌</span> Walk-in Queue</a>
+        <a class="nav-item" href="17-client-portal.html"><span class="nav-icon">📋</span> Client Portal</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">WhatsApp</div>
+        <a class="nav-item" href="18-whatsapp-booking.html"><span class="nav-icon">💬</span> WhatsApp Bookings</a>
+        <a class="nav-item" href="19-whatsapp-payment.html"><span class="nav-icon">💳</span> WhatsApp Payments</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">Insights</div>
+        <a class="nav-item" href="15-reports.html"><span class="nav-icon">📊</span> Reports</a>
+      </nav>
+      <nav class="nav-group" style="margin-top:auto;">
+        <div class="nav-group-title">Admin</div>
+        <a class="nav-item" href="16-staff.html"><span class="nav-icon">👥</span> Staff</a>
+        <a class="nav-item" href="20-settings.html"><span class="nav-icon">⚙</span> Settings</a>
+        <a class="nav-item" href="01-login.html"><span class="nav-icon">↪</span> Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h1>Good morning, Ama</h1>
+          <p>Monday 20 Jul · Glow Studio</p>
+        </div>
+        <div class="topbar-right">
+          <div class="avatar">A</div>
+        </div>
+      </div>
+
+      <section class="kpi-strip">
+        <div class="kpi-tile">
+          <div class="kpi-label">Appointments Today</div>
+          <div class="kpi-value">14</div>
+          <div class="kpi-meta">▲ 2 vs yesterday</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">Revenue</div>
+          <div class="kpi-value">GHS 1.8k</div>
+          <div class="kpi-meta">Today's estimate</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">Clients Today</div>
+          <div class="kpi-value">11</div>
+          <div class="kpi-meta">3 new clients</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">Chair Utilization</div>
+          <div class="kpi-value">72%</div>
+          <div class="kpi-meta">8 of 11 stations active</div>
+        </div>
+      </section>
+
+      <section class="panels">
+        <div class="panel">
+          <h3>Today's Appointments</h3>
+          <div class="booking">
+            <div class="date-badge">JUL<small>20</small></div>
+            <div class="booking-meta">
+              <b>Kofi Mensah — Haircut + Beard</b>
+              <span>10:00 · Stylist: Ama · Chair 1</span>
+            </div>
+            <span class="pill confirmed">Confirmed</span>
+          </div>
+          <div class="booking">
+            <div class="date-badge">JUL<small>20</small></div>
+            <div class="booking-meta">
+              <b>Abena Owusu — Hair Color</b>
+              <span>11:30 · Stylist: Yaa · Color Room</span>
+            </div>
+            <span class="pill in-progress">In Progress</span>
+          </div>
+          <div class="booking">
+            <div class="date-badge">JUL<small>20</small></div>
+            <div class="booking-meta">
+              <b>Akosua Frimpong — Manicure</b>
+              <span>13:00 · Stylist: Esi · Nail Bar 1</span>
+            </div>
+            <span class="pill pending">Pending</span>
+          </div>
+          <div class="booking">
+            <div class="date-badge">JUL<small>20</small></div>
+            <div class="booking-meta">
+              <b>Kwame Asante — Massage</b>
+              <span>14:30 · Stylist: Adwoa · Therapy Room</span>
+            </div>
+            <span class="pill confirmed">Confirmed</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Live Stations</h3>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+            <div style="background:var(--accent-50);border:1px solid var(--accent-100);border-radius:12px;padding:14px;">
+              <div style="font-size:24px;font-weight:700;color:var(--accent-600);font-family:var(--font-serif);">8</div>
+              <div style="font-size:12px;color:var(--neutral-600);font-weight:600;">Occupied</div>
+            </div>
+            <div style="background:var(--earth-100);border:1px solid var(--earth-100);border-radius:12px;padding:14px;">
+              <div style="font-size:24px;font-weight:700;color:var(--earth-600);font-family:var(--font-serif);">3</div>
+              <div style="font-size:12px;color:var(--neutral-600);font-weight:600;">Free</div>
+            </div>
+            <div style="background:var(--sky-100);border:1px solid var(--sky-100);border-radius:12px;padding:14px;">
+              <div style="font-size:24px;font-weight:700;color:var(--sky-600);font-family:var(--font-serif);">2</div>
+              <div style="font-size:12px;color:var(--neutral-600);font-weight:600;">Reserved</div>
+            </div>
+            <div style="background:var(--neutral-100);border:1px solid var(--neutral-200);border-radius:12px;padding:14px;">
+              <div style="font-size:24px;font-weight:700;color:var(--neutral-700);font-family:var(--font-serif);">1</div>
+              <div style="font-size:12px;color:var(--neutral-600);font-weight:600;">Blocked</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="quick-actions">
+        <a class="quick-btn" href="05-new-appointment.html">
+          <strong>New Appointment</strong>
+          <span>Book a client in</span>
+        </a>
+        <a class="quick-btn" href="13-station-map.html">
+          <strong>Open Station Map</strong>
+          <span>View live chair layout</span>
+        </a>
+        <a class="quick-btn" href="14-waitlist.html">
+          <strong>Add to Walk-in Queue</strong>
+          <span>Walk-ins waiting</span>
+        </a>
+        <a class="quick-btn" href="15-reports.html">
+          <strong>View Reports</strong>
+          <span>Revenue & trends</span>
+        </a>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -2,6 +2,11 @@ const dateTimeValidator = require("../utils/dateAndTimeValidator");
 const scheduleService = require("./scheduleService");
 const webhookService = require("./webhook.service");
 
+const buildSyntheticEmail = (phone) => {
+  const digits = String(phone).replace(/\D/g, "");
+  return `wa_${digits}@rtrs.local`;
+};
+
 const getAllReservations = async (reservationDAO, filters = {}, pagination = {}, tenantId) => {
   if (Object.keys(filters).length > 0) {
     return await reservationDAO.searchReservations(filters, pagination, tenantId);
@@ -297,6 +302,102 @@ const unmergeReservationTables = async (reservationDAO, reservationId, tenantId)
   return await reservationDAO.unmergeReservationTables(reservationId, tenantId);
 };
 
+const createFromWhatsApp = async (tenantId, customerPhone, data) => {
+  const reservationDAO = require("../DAOs/reservation.dao");
+  const authDAO = require("../DAOs/auth.dao");
+  const whatsappService = require("./whatsapp.service");
+
+  const normalizedPhone = whatsappService.formatPhoneNumber(customerPhone);
+  if (!normalizedPhone) {
+    throw { status: 400, message: "Invalid customer phone number." };
+  }
+
+  const { resDate, resTime, people, notes } = data;
+  if (!resDate || !resTime || !people) {
+    throw { status: 400, message: "Reservation date, time, and party size are required." };
+  }
+
+  const todayStr = dateTimeValidator.asDateString(new Date());
+  if (resDate < todayStr) {
+    throw { status: 400, message: "Reservation date cannot be in the past!" };
+  }
+
+  validateTime(new Date(), resDate, resTime);
+
+  const maintenance = await authDAO.getSettingValue(
+    "maintenance_mode",
+    { enabled: false, message: "" },
+    tenantId
+  );
+  if (maintenance && maintenance.enabled) {
+    throw {
+      status: 503,
+      message: maintenance.message || "Online booking is temporarily unavailable.",
+    };
+  }
+
+  const window = await authDAO.getSettingValue(
+    "reservation_window",
+    { minLeadMinutes: 0, maxLeadDays: 365, maxPerSlot: 1 },
+    tenantId
+  );
+  if (window) {
+    const resDateTime = new Date(`${resDate}T${resTime}`);
+    const now = new Date();
+    if (window.minLeadMinutes && resDateTime.getTime() - now.getTime() < window.minLeadMinutes * 60000) {
+      throw { status: 400, message: `Reservations must be made at least ${window.minLeadMinutes} minute(s) in advance.` };
+    }
+    if (window.maxLeadDays) {
+      const maxDate = new Date(now.getTime() + window.maxLeadDays * 86400000);
+      if (resDateTime.getTime() > maxDate.getTime()) {
+        throw { status: 400, message: `Reservations cannot be made more than ${window.maxLeadDays} days in advance.` };
+      }
+    }
+  }
+
+  try {
+    await scheduleService.checkBusinessHours(resDate, resTime, tenantId);
+  } catch (err) {
+    if (err && err.status) throw err;
+    throw { status: 500, message: "Unable to verify business hours for this reservation." };
+  }
+
+  const { checkUsageLimit } = require("../tenant-platform/services/tenantSubscription.service");
+  await checkUsageLimit(tenantId, "reservations");
+
+  const customer = await reservationDAO.findOrCreateCustomer(
+    {
+      email: buildSyntheticEmail(normalizedPhone),
+      firstName: "WhatsApp",
+      lastName: "Customer",
+      phone: normalizedPhone,
+    },
+    null,
+    tenantId
+  );
+
+  if (!customer) {
+    throw { status: 500, message: "Unable to create or find customer for WhatsApp reservation." };
+  }
+
+  const reservation = await reservationDAO.createReservation(
+    {
+      resDate,
+      resTime,
+      people: parseInt(people, 10),
+      notes: notes || null,
+      customerId: customer.id,
+      source: "whatsapp",
+      paymentStatus: "unpaid",
+      expectedTotal: 0,
+    },
+    tenantId
+  );
+
+  webhookService.dispatch("reservation.created", reservation, tenantId);
+  return reservation;
+};
+
 module.exports = {
   getAllReservations,
   registerReservation,
@@ -310,4 +411,5 @@ module.exports = {
   mergeReservationTables,
   unmergeReservationTables,
   getRevenueTimeSeries,
+  createFromWhatsApp,
 };

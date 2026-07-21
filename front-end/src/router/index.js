@@ -59,6 +59,18 @@ const router = createRouter({
       meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
     },
     {
+      path: "/admin/settings/whatsapp-ordering",
+      name: "whatsapp-ordering-settings",
+      component: () => import("../views/WhatsAppOrderingSettingsView.vue"),
+      meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
+    },
+    {
+      path: "/admin/settings/whatsapp-preview",
+      name: "whatsapp-chat-preview",
+      component: () => import("../views/WhatsAppChatPreviewView.vue"),
+      meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
+    },
+    {
       path: "/schedule",
       name: "schedule",
       component: () => import("../views/ScheduleView.vue"),
@@ -225,9 +237,25 @@ const router = createRouter({
       meta: { standalone: true, requiresAuth: true },
     },
     {
+      path: "/orders/track/:orderId",
+      name: "order-track",
+      component: () => import("../views/OrderTrackView.vue"),
+      meta: { standalone: true },
+    },
+    {
       path: "/orders/manage",
       name: "order-dashboard",
       component: () => import("../views/OrderDashboardView.vue"),
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "view_orders",
+      },
+    },
+    {
+      path: "/deliveries",
+      name: "delivery-dashboard",
+      component: () => import("../views/DeliveryDashboardView.vue"),
       meta: {
         standalone: true,
         requiresAuth: true,
@@ -304,6 +332,12 @@ const router = createRouter({
       path: "/legal/:slug",
       name: "legal-document",
       component: () => import("../views/legal/LegalDocumentView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/dsar",
+      name: "dsar-submit",
+      component: () => import("../views/DsarSubmissionView.vue"),
       meta: { standalone: true },
     },
     {
@@ -389,6 +423,18 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/tenants/:id/dsar",
+    name: "tenant-dsar",
+    component: () => import("../views/admin/DsarManagementView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/onboarding/wizard",
+    name: "tenant-setup-wizard",
+    component: () => import("../views/TenantSetupWizardView.vue"),
+    meta: { requiresAuth: true },
+  });
+  router.addRoute({
     path: "/admin/plans",
     name: "plans-management",
     component: () => import("../views/admin/PlansManagementView.vue"),
@@ -434,6 +480,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     path: "/admin/notifications",
     name: "platform-notifications",
     component: () => import("../views/admin/NotificationCenterView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/benchmarks",
+    name: "platform-benchmarks",
+    component: () => import("../views/admin/BenchmarkView.vue"),
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
 }

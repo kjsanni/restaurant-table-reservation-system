@@ -16,6 +16,10 @@ const getMe = async () => {
   return await API.get("/auth/me");
 };
 
+const getTenantCapabilities = async () => {
+  return await API.get("/auth/tenant/capabilities");
+};
+
 const logout = async () => {
   return await API.post("/auth/logout");
 };
@@ -57,6 +61,7 @@ export default {
   register,
   login,
   getMe,
+  getTenantCapabilities,
   logout,
   getSettings,
   updateSettings,

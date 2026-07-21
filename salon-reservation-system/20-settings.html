@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Glow Studio — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --brand-900: #1a1410; --brand-800: #2d221c; --brand-700: #4a352b; --brand-600: #6b4a3a;
+    --brand-500: #8c5e4a; --brand-400: #b87a62; --brand-300: #d9a086; --brand-200: #e8c4b5;
+    --brand-100: #f3ddd3; --brand-50: #faf6f3;
+    --accent-600: #b45309; --accent-500: #d97706; --accent-400: #f59e0b; --accent-300: #fbbf24;
+    --accent-100: #fef3c7; --accent-50: #fffbeb;
+    --earth-600: #365314; --earth-500: #4d7c0f; --earth-100: #ecfccb;
+    --sky-600: #1e40af; --sky-500: #3b82f6; --sky-100: #dbeafe;
+    --rose-600: #e11d48; --rose-500: #f43f5e; --rose-100: #ffe4e6;
+    --neutral-900: #312e2a; --neutral-800: #4a4540; --neutral-600: #7d766c; --neutral-500: #9a9389;
+    --neutral-300: #d6d1c9; --neutral-200: #e7e4de; --neutral-100: #f3f1ed; --neutral-50: #faf9f7;
+    --white: #ffffff; --font-serif: 'Fraunces', serif; --font-sans: 'Public Sans', sans-serif;
+    --radius-xl: 20px; --radius-lg: 14px; --radius-md: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); background: var(--brand-50); color: var(--neutral-900); min-height: 100vh; }
+  .app { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+  .sidebar { background: linear-gradient(180deg, var(--brand-900) 0%, var(--brand-800) 100%); color: var(--white); padding: 28px 22px; display: flex; flex-direction: column; gap: 6px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; animation: fadeDown 0.6s ease-out both; }
+  .sidebar-mark { width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(135deg, var(--accent-400), var(--accent-500)); display: grid; place-items: center; font-family: var(--font-serif); font-weight: 700; font-size: 16px; color: var(--brand-900); }
+  .sidebar-name { font-family: var(--font-serif); font-size: 16px; font-weight: 700; line-height: 1.15; }
+  .nav-group { margin-top: 8px; }
+  .nav-group-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(255,255,255,0.45); padding: 12px 12px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.78); text-decoration: none; transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: var(--white); transform: translateX(2px); }
+  .nav-item.active { background: linear-gradient(90deg, rgba(217,119,6,0.18), rgba(217,119,6,0.06)); color: var(--accent-300); font-weight: 600; }
+  .nav-icon { width: 18px; height: 18px; display: grid; place-items: center; opacity: 0.85; }
+  .main { padding: 36px 40px 60px; overflow-y: auto; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; animation: fadeDown 0.6s ease-out both; }
+  .topbar-left h1 { font-family: var(--font-serif); font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+  .topbar-left p { color: var(--neutral-600); font-size: 14px; margin-top: 4px; }
+  .settings-stack { display: flex; flex-direction: column; gap: 18px; max-width: 760px; animation: fadeUp 0.7s 0.15s ease-out both; }
+  .settings-card { background: var(--white); border: 1px solid var(--neutral-200); border-radius: var(--radius-xl); padding: 24px; box-shadow: 0 10px 30px rgba(26,20,16,0.05); }
+  .settings-card h3 { font-family: var(--font-serif); font-size: 17px; font-weight: 700; margin-bottom: 14px; color: var(--neutral-900); }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: var(--neutral-800); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .field input, .field select { width: 100%; padding: 12px 14px; border: 1px solid var(--neutral-300); border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 14px; color: var(--neutral-900); background: var(--neutral-50); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent-500); box-shadow: 0 0 0 3px rgba(217,119,6,0.12); }
+  .field-hint { font-size: 11px; color: var(--neutral-500); margin-top: 4px; }
+  .form-actions { display: flex; justify-content: flex-end; margin-top: 6px; }
+  .btn { padding: 11px 18px; border-radius: var(--radius-md); font-family: var(--font-sans); font-weight: 700; font-size: 13px; cursor: pointer; border: none; transition: transform 0.15s ease, box-shadow 0.2s ease; text-decoration: none; display: inline-block; }
+  .btn-primary { background: linear-gradient(135deg, var(--brand-700), var(--brand-600)); color: var(--white); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(74,53,43,0.22); }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--neutral-100); }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-row label { font-size: 14px; font-weight: 600; color: var(--neutral-800); text-transform: none; letter-spacing: 0; margin-bottom: 0; }
+  .toggle-row .toggle-desc { font-size: 12px; color: var(--neutral-600); margin-top: 2px; }
+  .toggle { width: 42px; height: 24px; border-radius: 999px; background: var(--neutral-300); position: relative; cursor: pointer; transition: background 0.2s ease; flex-shrink: 0; }
+  .toggle.on { background: var(--earth-500); }
+  .toggle::after { content: ""; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--white); top: 3px; left: 3px; transition: transform 0.2s ease; }
+  .toggle.on::after { transform: translateX(18px); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+  @media (max-width: 960px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 24px; } }
+</style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-mark">G</div>
+        <div class="sidebar-name">Glow<br/>Studio</div>
+      </div>
+      <nav class="nav-group">
+        <div class="nav-group-title">Operations</div>
+        <a class="nav-item" href="03-dashboard.html"><span class="nav-icon">◆</span> Dashboard</a>
+        <a class="nav-item" href="04-appointments.html"><span class="nav-icon">▦</span> Appointments</a>
+        <a class="nav-item" href="10-stations.html"><span class="nav-icon">▦</span> Stations</a>
+        <a class="nav-item" href="11-schedule.html"><span class="nav-icon">◷</span> Schedule</a>
+        <a class="nav-item" href="12-calendar.html"><span class="nav-icon">▤</span> Calendar</a>
+        <a class="nav-item" href="13-station-map.html"><span class="nav-icon">◻</span> Station Map</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">Clients & Services</div>
+        <a class="nav-item" href="06-services.html"><span class="nav-icon">✂</span> Services</a>
+        <a class="nav-item" href="08-clients.html"><span class="nav-icon">👤</span> Clients</a>
+        <a class="nav-item" href="14-waitlist.html"><span class="nav-icon">◌</span> Walk-in Queue</a>
+        <a class="nav-item" href="17-client-portal.html"><span class="nav-icon">📋</span> Client Portal</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">WhatsApp</div>
+        <a class="nav-item" href="18-whatsapp-booking.html"><span class="nav-icon">💬</span> WhatsApp Bookings</a>
+        <a class="nav-item" href="19-whatsapp-payment.html"><span class="nav-icon">💳</span> WhatsApp Payments</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">Insights</div>
+        <a class="nav-item" href="15-reports.html"><span class="nav-icon">📊</span> Reports</a>
+      </nav>
+      <nav class="nav-group" style="margin-top:auto;">
+        <div class="nav-group-title">Admin</div>
+        <a class="nav-item" href="16-staff.html"><span class="nav-icon">👥</span> Staff</a>
+        <a class="nav-item active" href="20-settings.html"><span class="nav-icon">⚙</span> Settings</a>
+        <a class="nav-item" href="01-login.html"><span class="nav-icon">↪</span> Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h1>Settings</h1>
+          <p>Salon profile, WhatsApp, and payment preferences</p>
+        </div>
+      </div>
+
+      <div class="settings-stack">
+        <div class="settings-card">
+          <h3>Salon Profile</h3>
+          <div class="field">
+            <label>Salon Name</label>
+            <input type="text" value="Glow Studio" />
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" value="hello@glowstudio.com" />
+          </div>
+          <div class="field">
+            <label>Phone</label>
+            <input type="tel" value="+233 30 111 222" />
+          </div>
+          <div class="field">
+            <label>Address</label>
+            <input type="text" value="15 Oxford Street, Osu, Accra" />
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary">Save Changes</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>WhatsApp Configuration</h3>
+          <div class="field">
+            <label>WhatsApp Business Number</label>
+            <input type="tel" value="+233 30 111 222" />
+            <div class="field-hint">The number clients message to book and pay</div>
+          </div>
+          <div class="field">
+            <label>WhatsApp API Token</label>
+            <input type="password" value="••••••••••••••••" />
+            <div class="field-hint">Meta WhatsApp Business API token</div>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <label>Auto-reply to bookings</label>
+              <div class="toggle-desc">Bot confirms bookings instantly via WhatsApp</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <label>Send WhatsApp reminders</label>
+              <div class="toggle-desc">Remind clients 2 hours before appointment</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <label>Accept WhatsApp payments</label>
+              <div class="toggle-desc">Send Mobile Money payment links via WhatsApp</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary">Update WhatsApp</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Payment Settings</h3>
+          <div class="field">
+            <label>Currency</label>
+            <input type="text" value="GHS (Ghana Cedi)" disabled />
+          </div>
+          <div class="field">
+            <label>Paystack Secret Key</label>
+            <input type="password" value="sk_live_••••••••••••" />
+            <div class="field-hint">For card and Mobile Money payments</div>
+          </div>
+          <div class="field">
+            <label>Mobile Money Provider</label>
+            <select>
+              <option>All providers (MTN, Vodafone, AirtelTigo)</option>
+              <option>MTN MoMo only</option>
+              <option>Vodafone Cash only</option>
+            </select>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <label>Require deposit for booking</label>
+              <div class="toggle-desc">Force clients to pay a deposit to confirm</div>
+            </div>
+            <div class="toggle"></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary">Update Payments</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Notifications</h3>
+          <div class="toggle-row">
+            <div>
+              <label>Email notifications</label>
+              <div class="toggle-desc">Receive booking summaries by email</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <label>WhatsApp staff alerts</label>
+              <div class="toggle-desc">Notify stylists of new appointments</div>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary">Update Preferences</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -24,6 +24,7 @@ const resolveTenant = async (req, res, next) => {
     "/api/v1/admin/audit",
     "/api/v1/admin/notifications",
     "/api/v1/billing",
+    "/api/v1/public/dsar-request",
   ];
   if (PLATFORM_ADMIN_PATHS.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
     return next();

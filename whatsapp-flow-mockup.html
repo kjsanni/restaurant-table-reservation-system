@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp-First Delivery & Reservation Flow — RTRS Mockup</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: #f0f2f5;
+  color: #1a1a1a;
+  line-height: 1.5;
+}
+
+.page-header {
+  background: linear-gradient(135deg, #075e54, #128c7e);
+  color: white;
+  padding: 48px 24px;
+  text-align: center;
+}
+.page-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.page-header p { font-size: 16px; opacity: 0.9; }
+.page-header .tag {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 4px 16px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.flow-section {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 24px;
+}
+.flow-section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #075e54;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #128c7e;
+}
+.flow-section-desc {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.phones-row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.phone-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.phone-card-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.phone-frame {
+  width: 340px;
+  background: #1a1a1a;
+  border-radius: 36px;
+  padding: 10px 6px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+}
+.phone-screen {
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 580px;
+}
+
+.wa-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #075e54;
+  color: white;
+  height: 52px;
+}
+.wa-back { font-size: 22px; opacity: 0.9; }
+.wa-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: #25d366;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+}
+.wa-contact-name { font-size: 14px; font-weight: 600; }
+.wa-contact-status { font-size: 11px; opacity: 0.8; }
+.wa-actions { margin-left: auto; font-size: 18px; opacity: 0.7; }
+
+.wa-chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #e5ddd5;
+}
+
+.msg {
+  max-width: 78%;
+  padding: 6px 10px 4px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+  position: relative;
+}
+.msg.incoming { align-self: flex-start; background: white; border-top-left-radius: 0; }
+.msg.outgoing { align-self: flex-end; background: #dcf8c6; border-top-right-radius: 0; }
+.msg pre {
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+}
+.msg .ts {
+  font-size: 9px;
+  color: #999;
+  text-align: right;
+  margin-top: 2px;
+}
+
+.msg-special {
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.msg-special .icon { font-size: 18px; flex-shrink: 0; }
+.msg-location {
+  display: flex; align-items: center; gap: 8px;
+  color: #128c7e; font-weight: 600;
+}
+
+.wa-input {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; background: #f0f0f0;
+}
+.wa-input-field {
+  flex: 1; padding: 7px 12px;
+  background: white; border-radius: 20px;
+  font-size: 13px; color: #999;
+}
+.wa-send {
+  width: 34px; height: 34px;
+  border-radius: 50%; background: #075e54;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 14px;
+}
+
+.arrow {
+  display: flex; align-items: center;
+  font-size: 32px; color: #128c7e;
+  padding: 0 8px;
+}
+
+.legend {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.legend h3 { font-size: 18px; color: #075e54; margin-bottom: 16px; }
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.legend-item {
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.legend-icon {
+  font-size: 24px; flex-shrink: 0;
+}
+.legend-title { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+.legend-desc { font-size: 12px; color: #666; }
+
+.architecture {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.architecture h3 { font-size: 18px; color: #075e54; margin-bottom: 16px; }
+.arch-flow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.arch-node {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 100px;
+}
+.arch-node.customer { background: #dcf8c6; color: #075e54; }
+.arch-node.backend { background: #e7e4de; color: #4a4540; border: 1px solid #d6d1c9; }
+.arch-node.paystack { background: #dbeafe; color: #1e40af; }
+.arch-node.shaq { background: #ecfccb; color: #365314; }
+.arch-arrow { font-size: 20px; color: #999; }
+
+.footer {
+  text-align: center;
+  padding: 32px 24px;
+  color: #999;
+  font-size: 13px;
+}
+.footer strong { color: #075e54; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>WhatsApp-First Delivery & Reservation Flow</h1>
+  <p>RTRS — Vibespot Technologies Ltd. (Ghana)</p>
+  <span class="tag">Stakeholder Design Mockup · GHS · Mobile Money</span>
+</div>
+
+<!-- FLOW 1: Welcome + Reservation -->
+<div class="flow-section">
+  <h2 class="flow-section-title">Flow 1: Welcome & Reservation</h2>
+  <p class="flow-section-desc">Customer sends "Hi", gets the welcome menu, and creates a dine-in reservation via conversation.</p>
+  <div class="phones-row">
+    <div class="phone-card">
+      <div class="phone-card-label">1. Welcome Menu</div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="wa-header">
+            <span class="wa-back">‹</span>
+            <div class="wa-avatar">V</div>
+            <div>
+              <div class="wa-contact-name">Vibespot Restaurant</div>
+              <div class="wa-contact-status">online</div>
+            </div>
+            <span class="wa-actions">⋮</span>
+          </div>
+          <div class="wa-chat">
+            <div class="msg outgoing"><pre>Hi</pre><div class="ts">2:30 PM ✓✓</div></div>
+            <div class="msg incoming"><pre>Welcome to Vibespot Restaurant!
+
+What would you like to do?
+1. Make a reservation
+2. Order delivery
+3. Check order status
+4. Talk to someone</pre><div class="ts">2:30 PM</div></div>
+          </div>
+          <div class="wa-input">
+            <div class="wa-input-field">Type a message</div>
+            <div class="wa-send">➤</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="phone-card">
+      <div class="phone-card-label">2. Reservation Conversation</div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="wa-header">
+            <span class="wa-back">‹</span>
+            <div class="wa-avatar">V</div>
+            <div>
+              <div class="wa-contact-name">Vibespot Restaurant</div>
+              <div class="wa-contact-status">online</div>
+            </div>
+            <span class="wa-actions">⋮</span>
+          </div>
+          <div class="wa-chat">
+            <div class="msg outgoing"><pre>1</pre><div class="ts">2:31 PM ✓✓</div></div>
+            <div class="msg incoming"><pre>Great! Let's book a table.
+What date? (e.g. 2026-07-22 or 'tomorrow')</pre><div class="ts">2:31 PM</div></div>
+            <div class="msg outgoing"><pre>tomorrow</pre><div class="ts">2:31 PM ✓✓</div></div>
+            <div class="msg incoming"><pre>What time? (e.g. 7:00 PM)</pre><div class="ts">2:31 PM</div></div>
+            <div class="msg outgoing"><pre>7pm</pre><div class="ts">2:32 PM ✓✓</div></div>
+            <div class="msg incoming"><pre>How many people?</pre><div class="ts">2:32 PM</div></div>
+            <div class="msg outgoing"><pre>4</pre><div class="ts">2:32 PM ✓✓</div></div>
+            <div class="msg incoming"><pre>Any special requests? (Type 'skip' if none)</pre><div class="ts">2:32 PM</div></div>
+            <div class="msg outgoing"><pre>window seat please</pre><div class="ts">2:33 PM ✓✓</div></div>
+          </div>
+          <div class="wa-input">
+            <div class="wa-input-field">Type a message</div>
+            <div class="wa-send">➤</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="phone-card">
+      <div class="phone-card-label">3. Confirmation</div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="wa-header">
+            <span class="wa-back">‹</span>
+            <div class="wa-avatar">V</div>
+            <div>
+              <div class="wa-contact-name">Vibespot Restaurant</div>
+              <div class="wa-contact-status">online</div>
+            </div>
+            <span class="wa-actions">⋮</span>
+          </div>
+          <div class="wa-chat">
+            <div class="msg incoming"><pre>Here's your reservation summary:
+📅 2026-07-22 at 7:00 PM
+👥 4 people
+📝 Window seat please
+Confirm? (yes/no)</pre><div class="ts">2:33 PM</div></div>
+            <div class="msg outgoing"><pre>yes</pre><div class="ts">2:33 PM ✓✓</div></div>
+            <div class="msg incoming"><pre>✅ Confirmed! Reservation #42.
+See you tomorrow at 7:00 PM.</pre><div class="ts">2:33 PM</div></div>
+          </div>
+          <div class="wa-input">
+            <div class="wa-input-field">Type a message</div>
+            <div class="wa-send">➤</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FLOW 2: Delivery + Location -->
+<div class="flow-section">
+  <h2 class="flow-section-title">Flow 2: Delivery & Location</h2>
+  <p class="flow-section-desc">Customer orders delivery, shares location via WhatsApp, pays via Paystack, and receives tracking.</p>
+  <div class="phones-row">
+    <div class="phone-card">
+      <div class="phone-card-label">1. Browse & Cart</div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="wa-header">
+            <span class="wa-back">‹</span>
+            <div class="wa-avatar">V</div>
+            <div>
+              <div class="wa-contact-name">Vibespot Restaurant</div>
+              <div class="wa-contact-status">online</div>
+            </div>
+            <span class="wa-actions">⋮</span>
+          </div>
+          <div class="wa-chat">
+            <div class="msg outgoing"><pre>2</pre><div class="ts">3:00 PM ✓✓</div></div>
+            <div class="msg incoming"><pre>Great! Let's set up your delivery.
+Browse our menu:
+1. Mains
+2. Sides
+3. Drinks</pre><div class="ts">3:00 PM</div></div>
+            <div class="msg outgoing"><pre>1</pre><div class="ts">3:01 PM ✓✓</div></div>
+            <div class="msg incoming"><pre>Mains:
+1. Jollof Rice — GHS 60.00
+2. Grilled Chicken — GHS 80.00
+3. Banku & Tilapia — GHS 90.00</pre><div class="ts">3:01 PM</div></div>
+            <div class="msg outgoing"><pre>1</pre><div class="ts">3:01 PM ✓✓</div></div>
+            <div class="msg incoming"><pre>Added Jollof Rice to cart.
+• Jollof Rice x1 = GHS 60.00
+Total: GHS 60.00
+Reply 'checkout' to place order.</pre><div class="ts">3:01 PM</div></div>
+            <div class="msg outgoing"><pre>checkout</pre><div class="ts">3:02 PM ✓✓</div></div>
+          </div>
+          <div class="wa-input">
+            <div class="wa-input-field">Type a message</div>
+            <div class="wa-send">➤</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="phone-card">
+      <div class="phone-card-label">2. Location Share</div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="wa-header">
+            <span class="wa-back">‹</span>
+            <div class="wa-avatar">V</div>
+            <div>
+              <div class="wa-contact-name">Vibespot Restaurant</div>
+              <div class="wa-contact-status">online</div>
+            </div>
+            <span class="wa-actions">⋮</span>
+          </div>
+          <div class="wa-chat">
+            <div class="msg incoming"><pre>Your cart:
+• Jollof Rice x1 = GHS 60.00
+Total: GHS 60.00
+Confirm order? (yes/no)</pre><div class="ts">3:02 PM</div></div>
+            <div class="msg outgoing"><pre>yes</pre><div class="ts">3:02 PM ✓✓</div></div>
+            <div class="msg incoming"><pre>Where should we deliver?
+📍 Share your location (attachment → Location)
+or type your address.</pre><div class="ts">3:02 PM</div></div>
+            <div class="msg outgoing">
+              <div class="msg-location">📍 Location shared</div>
+              <div class="ts">3:03 PM ✓✓</div>
+            </div>
+            <div class="msg incoming"><pre>📍 Got your location!
+Near Methodist Church, Accra
+Confirm delivery address? (yes/no)</pre><div class="ts">3:03 PM</div></div>
+            <div class="msg outgoing"><pre>yes</pre><div class="ts">3:03 PM ✓✓</div></div>
+          </div>
+          <div class="wa-input">
+            <div class="wa-input-field">Type a message</div>
+            <div class="wa-send">➤</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="phone-card">
+      <div class="phone-card-label">3. Payment + Tracking</div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="wa-header">
+            <span class="wa-back">‹</span>
+            <div class="wa-avatar">V</div>
+            <div>
+              <div class="wa-contact-name">Vibespot Restaurant</div>
+              <div class="wa-contact-status">online</div>
+            </div>
+            <span class="wa-actions">⋮</span>
+          </div>
+          <div class="wa-chat">
+            <div class="msg incoming">
+              <div class="msg-special"><span class="icon">💳</span><pre>Order #100 created!
+Pay here: https://paystack.com/pay/abc123
+You'll receive a tracking number once payment is confirmed.</pre></div>
+              <div class="ts">3:03 PM</div>
+            </div>
+            <div class="msg incoming">
+              <div class="msg-special"><span class="icon">🚚</span><pre>Your order is on the way!
+Tracking: C561819A
+Driver: Kwame
+ETA: 30-45 mins</pre></div>
+              <div class="ts">3:45 PM</div>
+            </div>
+            <div class="msg incoming"><pre>✅ Delivered! Your order arrived at 3:45 PM.
+Rate your experience: 1-5 ⭐</pre><div class="ts">4:15 PM</div></div>
+          </div>
+          <div class="wa-input">
+            <div class="wa-input-field">Type a message</div>
+            <div class="wa-send">➤</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Architecture Flow -->
+<div class="architecture">
+  <h3>Backend Architecture Flow</h3>
+  <div class="arch-flow">
+    <div class="arch-node customer">Customer<br><small>WhatsApp</small></div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-node backend">WhatsApp<br>Webhook</div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-node backend">Session<br>State Machine<br><small>Redis</small></div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-node backend">Geocoding<br><small>Nominatim</small></div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-node paystack">Paystack<br><small>Payment</small></div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-node shaq">ShaQ Express<br><small>Delivery</small></div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-node customer">Tracking<br>Updates</div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <h3>Key Components</h3>
+  <div class="legend-grid">
+    <div class="legend-item">
+      <span class="legend-icon">💬</span>
+      <div>
+        <div class="legend-title">WhatsApp Business API</div>
+        <div class="legend-desc">Primary customer touchpoint — all interactions happen here</div>
+      </div>
+    </div>
+    <div class="legend-item">
+      <span class="legend-icon">📍</span>
+      <div>
+        <div class="legend-title">Location Messages</div>
+        <div class="legend-desc">Native WhatsApp location sharing with lat/lng extraction</div>
+      </div>
+    </div>
+    <div class="legend-item">
+      <span class="legend-icon">🗺️</span>
+      <div>
+        <div class="legend-title">Geocoding (Nominatim)</div>
+        <div class="legend-desc">Reverse geocode lat/lng → address, or forward geocode text → coords</div>
+      </div>
+    </div>
+    <div class="legend-item">
+      <span class="legend-icon">💳</span>
+      <div>
+        <div class="legend-title">Paystack Payments</div>
+        <div class="legend-desc">GHS via Mobile Money (MTN, Vodafone, AirtelTigo), cards, banks</div>
+      </div>
+    </div>
+    <div class="legend-item">
+      <span class="legend-icon">🚚</span>
+      <div>
+        <div class="legend-title">ShaQ Express</div>
+        <div class="legend-desc">Ghanaian delivery partner — creates packages, returns tracking</div>
+      </div>
+    </div>
+    <div class="legend-item">
+      <span class="legend-icon">🗄️</span>
+      <div>
+        <div class="legend-title">Redis Sessions</div>
+        <div class="legend-desc">24h TTL conversation state — cart, reservation, delivery progress</div>
+      </div>
+    </div>
+    <div class="legend-item">
+      <span class="legend-icon">📅</span>
+      <div>
+        <div class="legend-title">NL Date/Time Parser</div>
+        <div class="legend-desc">Understands "tomorrow", "7pm", "next Monday" in conversation</div>
+      </div>
+    </div>
+    <div class="legend-item">
+      <span class="legend-icon">🇬🇭</span>
+      <div>
+        <div class="legend-title">Ghana Region Resolution</div>
+        <div class="legend-desc">16 region bounding-box lookup from coordinates</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <strong>RTRS — Restaurant Table Reservation System</strong> · Vibespot Technologies Ltd. (Ghana)<br>
+  WhatsApp-First Delivery & Reservation Flow · Design Mockup · 2026-07-21
+</div>
+
+</body>
+</html>

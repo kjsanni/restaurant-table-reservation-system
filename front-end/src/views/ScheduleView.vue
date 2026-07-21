@@ -4,8 +4,15 @@ import { useRouter } from "vue-router";
 import scheduleAPI from "@/services/scheduleAPI";
 import logger from "@/utils/logger";
 
+interface Schedule {
+  day: string;
+  openTime?: string;
+  closeTime?: string;
+  isClosed?: boolean;
+}
+
 const router = useRouter();
-const schedules = ref([]);
+const schedules = ref<Schedule[]>([]);
 const loading = ref(true);
 
 const weekDays = [

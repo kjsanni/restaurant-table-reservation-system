@@ -96,8 +96,76 @@ const formatPhoneNumber = (phone) => {
   return cleaned || null;
 };
 
+const sendLocationMessage = async (to, { latitude, longitude, name = null, address = null }, tenantId) => {
+  const { token, phoneNumberId, enabled } = await resolveConfig(tenantId);
+  if (!enabled) {
+    throw new Error("WhatsApp is not configured.");
+  }
+
+  const payload = {
+    messaging_product: "whatsapp",
+    to: formatPhoneNumber(to),
+    type: "location",
+    location: {
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      ...(name ? { name } : {}),
+      ...(address ? { address } : {}),
+    },
+  };
+
+  try {
+    const response = await buildClient(token, phoneNumberId).post("/messages", payload);
+    return response.data;
+  } catch (err) {
+    const message = err.response?.data?.error?.message || err.message;
+    throw new Error(`WhatsApp send failed: ${message}`);
+  }
+};
+
+const sendInteractiveMessage = async (to, { bodyText, buttons = [] }, tenantId) => {
+  const { token, phoneNumberId, enabled } = await resolveConfig(tenantId);
+  if (!enabled) {
+    throw new Error("WhatsApp is not configured.");
+  }
+
+  const payload = {
+    messaging_product: "whatsapp",
+    to: formatPhoneNumber(to),
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: { text: bodyText },
+      action: {
+        buttons: buttons.slice(0, 3).map((btn) => ({
+          type: "reply",
+          reply: { id: btn.id, title: btn.title.slice(0, 20) },
+        })),
+      },
+    },
+  };
+
+  try {
+    const response = await buildClient(token, phoneNumberId).post("/messages", payload);
+    return response.data;
+  } catch (err) {
+    const message = err.response?.data?.error?.message || err.message;
+    throw new Error(`WhatsApp send failed: ${message}`);
+  }
+};
+
+const verifyWebhookSignature = (payload, signature, appSecret) => {
+  if (!appSecret || !signature) return false;
+  const crypto = require("crypto");
+  const expected = crypto.createHmac("sha256", appSecret).update(JSON.stringify(payload)).digest("hex");
+  return signature === expected;
+};
+
 module.exports = {
   sendWhatsAppMessage,
   sendWhatsAppText,
+  sendLocationMessage,
+  sendInteractiveMessage,
   formatPhoneNumber,
+  verifyWebhookSignature,
 };

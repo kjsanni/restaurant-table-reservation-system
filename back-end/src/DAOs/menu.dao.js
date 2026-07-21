@@ -66,6 +66,11 @@ const getMenuItems = async (tenantId, filters = {}) => {
   const where = withTenant({}, tenantId);
   if (filters.categoryId) where.categoryId = filters.categoryId;
   if (filters.isAvailable !== undefined) where.isAvailable = filters.isAvailable;
+  if (filters.isVegetarian !== undefined) where.isVegetarian = filters.isVegetarian;
+  if (filters.isVegan !== undefined) where.isVegan = filters.isVegan;
+  if (filters.isGlutenFree !== undefined) where.isGlutenFree = filters.isGlutenFree;
+  if (filters.isSpicy !== undefined) where.isSpicy = filters.isSpicy;
+  if (filters.isNutFree !== undefined) where.isNutFree = filters.isNutFree;
 
   return await MenuItem.findAll({
     where,

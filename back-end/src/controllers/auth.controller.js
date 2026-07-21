@@ -49,6 +49,11 @@ const loginHandler = async (req, res) => {
     path: "/",
   };
 
+  // Runtime guard: warn if sameSite is false in production
+  if (!isSecure && process.env.NODE_ENV === "production") {
+    console.warn("[AUTH] Cookie sameSite=false requested in production - forcing lax");
+  }
+
   res.cookie("token", result.token, {
     ...cookieBase,
     maxAge: 30 * 60 * 1000,
@@ -122,6 +127,26 @@ const getMeHandler = async (req, res) => {
     user: {
       ...user.toJSON(),
       permissions: effectivePermissions,
+    },
+  });
+};
+
+const getTenantCapabilitiesHandler = async (req, res) => {
+  if (!req.tenant) {
+    return res.status(200).json({
+      success: true,
+      capabilities: null,
+    });
+  }
+
+  const featureFlags = req.tenant.settings?.featureFlags || {};
+
+  return res.status(200).json({
+    success: true,
+    capabilities: {
+      restaurantType: req.tenant.restaurantType || "full_service",
+      serviceModes: Array.isArray(req.tenant.serviceModes) ? req.tenant.serviceModes : ["dine_in", "takeaway", "delivery"],
+      featureFlags,
     },
   });
 };
@@ -344,6 +369,7 @@ module.exports = {
   registerHandler,
   loginHandler,
   getMeHandler,
+  getTenantCapabilitiesHandler,
   logoutHandler,
   refreshTokenHandler,
   revokeTokenHandler,

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Glow Studio — WhatsApp Bookings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --brand-900: #1a1410; --brand-800: #2d221c; --brand-700: #4a352b; --brand-600: #6b4a3a;
+    --brand-500: #8c5e4a; --brand-400: #b87a62; --brand-300: #d9a086; --brand-200: #e8c4b5;
+    --brand-100: #f3ddd3; --brand-50: #faf6f3;
+    --accent-600: #b45309; --accent-500: #d97706; --accent-400: #f59e0b; --accent-300: #fbbf24;
+    --accent-100: #fef3c7; --accent-50: #fffbeb;
+    --earth-600: #365314; --earth-500: #4d7c0f; --earth-100: #ecfccb;
+    --sky-600: #1e40af; --sky-500: #3b82f6; --sky-100: #dbeafe;
+    --rose-600: #e11d48; --rose-500: #f43f5e; --rose-100: #ffe4e6;
+    --neutral-900: #312e2a; --neutral-800: #4a4540; --neutral-600: #7d766c; --neutral-500: #9a9389;
+    --neutral-300: #d6d1c9; --neutral-200: #e7e4de; --neutral-100: #f3f1ed; --neutral-50: #faf9f7;
+    --white: #ffffff; --font-serif: 'Fraunces', serif; --font-sans: 'Public Sans', sans-serif;
+    --radius-xl: 20px; --radius-lg: 14px; --radius-md: 10px;
+    --wa: #25D366; --wa-dark: #128C7E;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); background: var(--brand-50); color: var(--neutral-900); min-height: 100vh; }
+  .app { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+  .sidebar { background: linear-gradient(180deg, var(--brand-900) 0%, var(--brand-800) 100%); color: var(--white); padding: 28px 22px; display: flex; flex-direction: column; gap: 6px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; animation: fadeDown 0.6s ease-out both; }
+  .sidebar-mark { width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(135deg, var(--accent-400), var(--accent-500)); display: grid; place-items: center; font-family: var(--font-serif); font-weight: 700; font-size: 16px; color: var(--brand-900); }
+  .sidebar-name { font-family: var(--font-serif); font-size: 16px; font-weight: 700; line-height: 1.15; }
+  .nav-group { margin-top: 8px; }
+  .nav-group-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(255,255,255,0.45); padding: 12px 12px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.78); text-decoration: none; transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: var(--white); transform: translateX(2px); }
+  .nav-item.active { background: linear-gradient(90deg, rgba(217,119,6,0.18), rgba(217,119,6,0.06)); color: var(--accent-300); font-weight: 600; }
+  .nav-icon { width: 18px; height: 18px; display: grid; place-items: center; opacity: 0.85; }
+  .main { padding: 36px 40px 60px; overflow-y: auto; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; animation: fadeDown 0.6s ease-out both; }
+  .topbar-left h1 { font-family: var(--font-serif); font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+  .topbar-left p { color: var(--neutral-600); font-size: 14px; margin-top: 4px; }
+  .wa-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 20px; align-items: start; }
+  .chat-phone { background: var(--white); border: 1px solid var(--neutral-200); border-radius: var(--radius-xl); box-shadow: 0 10px 30px rgba(26,20,16,0.05); overflow: hidden; animation: fadeUp 0.7s 0.1s ease-out both; }
+  .phone-header { background: var(--wa-dark); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+  .phone-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-400), var(--accent-500)); display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+  .phone-name { font-weight: 700; font-size: 14px; }
+  .phone-status { font-size: 11px; opacity: 0.8; }
+  .chat-body { background: linear-gradient(180deg, #e5ddd5 0%, #d9d1c9 100%); padding: 18px; min-height: 420px; max-height: 520px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.4; position: relative; }
+  .msg.bot { background: var(--white); color: var(--neutral-900); align-self: flex-start; border-top-left-radius: 4px; }
+  .msg.client { background: #dcf8c6; color: var(--neutral-900); align-self: flex-end; border-top-right-radius: 4px; }
+  .msg-time { font-size: 9px; color: var(--neutral-500); text-align: right; margin-top: 2px; }
+  .opt-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .opt { background: var(--brand-100); color: var(--brand-800); padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid var(--brand-200); cursor: pointer; }
+  .opt:hover { background: var(--brand-200); }
+  .phone-input { display: flex; gap: 8px; padding: 10px; background: var(--neutral-50); border-top: 1px solid var(--neutral-200); }
+  .phone-input input { flex: 1; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--neutral-300); font-family: var(--font-sans); font-size: 13px; background: var(--white); }
+  .send-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--wa); color: var(--white); border: none; cursor: pointer; display: grid; place-items: center; font-size: 16px; }
+  .flow-panel { background: var(--white); border: 1px solid var(--neutral-200); border-radius: var(--radius-xl); padding: 24px; box-shadow: 0 10px 30px rgba(26,20,16,0.05); animation: fadeUp 0.7s 0.2s ease-out both; }
+  .flow-panel h3 { font-family: var(--font-serif); font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+  .step { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--neutral-100); }
+  .step:last-child { border-bottom: none; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-400), var(--accent-500)); color: var(--brand-900); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .step-content b { display: block; font-size: 14px; color: var(--neutral-900); }
+  .step-content span { font-size: 12px; color: var(--neutral-600); line-height: 1.5; }
+  .pill { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; display: inline-block; margin-left: 8px; }
+  .pill.bot { background: var(--earth-100); color: var(--earth-600); }
+  .pill.client { background: var(--sky-100); color: var(--sky-600); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+  @media (max-width: 960px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 24px; } .wa-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-mark">G</div>
+        <div class="sidebar-name">Glow<br/>Studio</div>
+      </div>
+      <nav class="nav-group">
+        <div class="nav-group-title">Operations</div>
+        <a class="nav-item" href="03-dashboard.html"><span class="nav-icon">◆</span> Dashboard</a>
+        <a class="nav-item" href="04-appointments.html"><span class="nav-icon">▦</span> Appointments</a>
+        <a class="nav-item" href="10-stations.html"><span class="nav-icon">▦</span> Stations</a>
+        <a class="nav-item" href="11-schedule.html"><span class="nav-icon">◷</span> Schedule</a>
+        <a class="nav-item" href="12-calendar.html"><span class="nav-icon">▤</span> Calendar</a>
+        <a class="nav-item" href="13-station-map.html"><span class="nav-icon">◻</span> Station Map</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">Clients & Services</div>
+        <a class="nav-item" href="06-services.html"><span class="nav-icon">✂</span> Services</a>
+        <a class="nav-item" href="08-clients.html"><span class="nav-icon">👤</span> Clients</a>
+        <a class="nav-item" href="14-waitlist.html"><span class="nav-icon">◌</span> Walk-in Queue</a>
+        <a class="nav-item" href="17-client-portal.html"><span class="nav-icon">📋</span> Client Portal</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">WhatsApp</div>
+        <a class="nav-item active" href="18-whatsapp-booking.html"><span class="nav-icon">💬</span> WhatsApp Bookings</a>
+        <a class="nav-item" href="19-whatsapp-payment.html"><span class="nav-icon">💳</span> WhatsApp Payments</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">Insights</div>
+        <a class="nav-item" href="15-reports.html"><span class="nav-icon">📊</span> Reports</a>
+      </nav>
+      <nav class="nav-group" style="margin-top:auto;">
+        <div class="nav-group-title">Admin</div>
+        <a class="nav-item" href="16-staff.html"><span class="nav-icon">👥</span> Staff</a>
+        <a class="nav-item" href="20-settings.html"><span class="nav-icon">⚙</span> Settings</a>
+        <a class="nav-item" href="01-login.html"><span class="nav-icon">↪</span> Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h1>WhatsApp Bookings</h1>
+          <p>How clients book appointments via WhatsApp</p>
+        </div>
+      </div>
+
+      <div class="wa-grid">
+        <div class="chat-phone">
+          <div class="phone-header">
+            <div class="phone-avatar">G</div>
+            <div>
+              <div class="phone-name">Glow Studio</div>
+              <div class="phone-status">● Online</div>
+            </div>
+          </div>
+          <div class="chat-body">
+            <div class="msg bot">
+              Hello! Welcome to Glow Studio. How can I help you today?
+              <div class="opt-list">
+                <div class="opt">1. Book an appointment</div>
+                <div class="opt">2. View services & prices</div>
+                <div class="opt">3. Reschedule / Cancel</div>
+                <div class="opt">4. Pay for a service</div>
+              </div>
+              <div class="msg-time">09:42</div>
+            </div>
+            <div class="msg client">
+              1
+              <div class="msg-time">09:42</div>
+            </div>
+            <div class="msg bot">
+              Great! Let's book your appointment. Please choose a service:
+              <div class="opt-list">
+                <div class="opt">A. Haircut — GHS 50 · 30min</div>
+                <div class="opt">B. Haircut + Beard — GHS 75 · 45min</div>
+                <div class="opt">C. Hair Color — GHS 150 · 2hr</div>
+                <div class="opt">D. Manicure — GHS 40 · 45min</div>
+                <div class="opt">E. Massage — GHS 100 · 60min</div>
+                <div class="opt">F. View all services</div>
+              </div>
+              <div class="msg-time">09:42</div>
+            </div>
+            <div class="msg client">
+              B
+              <div class="msg-time">09:43</div>
+            </div>
+            <div class="msg bot">
+              Haircut + Beard Trim (GHS 75, 45min). What date works for you?
+              <div class="msg-time">09:43</div>
+            </div>
+            <div class="msg client">
+              Tomorrow
+              <div class="msg-time">09:43</div>
+            </div>
+            <div class="msg bot">
+              Available slots for Tue 21 Jul:
+              <div class="opt-list">
+                <div class="opt">1. 10:00 — Chair 1 (Ama)</div>
+                <div class="opt">2. 11:00 — Chair 3 (Kofi)</div>
+                <div class="opt">3. 14:00 — Chair 2 (Ama)</div>
+                <div class="opt">4. 16:00 — Chair 1 (Kofi)</div>
+              </div>
+              <div class="msg-time">09:43</div>
+            </div>
+            <div class="msg client">
+              2
+              <div class="msg-time">09:44</div>
+            </div>
+            <div class="msg bot">
+              ✅ Booked! Tue 21 Jul, 11:00 with Kofi at Chair 3. Total: GHS 75. Would you like to pay now via Mobile Money or pay at the salon?
+              <div class="msg-time">09:44</div>
+            </div>
+          </div>
+          <div class="phone-input">
+            <input type="text" placeholder="Type a message..." />
+            <button class="send-btn">→</button>
+          </div>
+        </div>
+
+        <div class="flow-panel">
+          <h3>WhatsApp Booking Flow</h3>
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <b>Client messages salon <span class="pill bot">Bot</span></b>
+              <span>Client sends any message to your WhatsApp Business number. The bot greets and shows a menu: Book, View services, Reschedule, Pay.</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <b>Client selects a service <span class="pill client">Client</span></b>
+              <span>Bot lists services with prices and durations. Client replies with a letter or number. Bot checks real-time availability.</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <b>Client picks a date & slot <span class="pill client">Client</span></b>
+              <span>Bot shows open time slots for the requested date, filtered by stylist/station availability. Client selects a slot number.</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <b>Bot confirms booking <span class="pill bot">Bot</span></b>
+              <span>Appointment is created in the system. Bot sends confirmation with date, time, stylist, station, and total price.</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-content">
+              <b>Client pays or defers <span class="pill client">Client</span></b>
+              <span>Bot asks if client wants to pay now (Mobile Money link) or at the salon. Payment links are sent via WhatsApp. See <a href="19-whatsapp-payment.html" style="color:var(--accent-600);font-weight:700;">WhatsApp Payments</a>.</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">6</div>
+            <div class="step-content">
+              <b>Reminders sent automatically <span class="pill bot">Bot</span></b>
+              <span>2 hours before the appointment, the bot sends a WhatsApp reminder. Client can confirm, reschedule, or cancel by replying.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

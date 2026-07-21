@@ -9,6 +9,11 @@ const getMenuItemsHandler = async (req, res) => {
   const filters = {};
   if (req.query.categoryId) filters.categoryId = req.query.categoryId;
   if (req.query.available === "true") filters.isAvailable = true;
+  if (req.query.vegetarian === "true") filters.isVegetarian = true;
+  if (req.query.vegan === "true") filters.isVegan = true;
+  if (req.query.glutenFree === "true") filters.isGlutenFree = true;
+  if (req.query.spicy === "true") filters.isSpicy = true;
+  if (req.query.nutFree === "true") filters.isNutFree = true;
 
   const items = await menuService.getMenuItems(req.tenant?.id, filters);
   return res.status(200).json({ success: true, items });

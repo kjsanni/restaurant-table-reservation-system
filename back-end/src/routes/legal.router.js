@@ -99,7 +99,73 @@ const getHandler = (req, res) => {
   return res.status(200).json({ success: true, document: doc });
 };
 
+const SUBPROCESSORS = [
+  {
+    name: "Paystack",
+    category: "payments",
+    purpose: "Payment processing (Mobile Money, cards, banks) for Ghana Cedi transactions",
+    location: "Nigeria / Ghana",
+    dataTypes: ["payment details", "billing address", "transaction metadata"],
+    contract: "https://paystack.com/docs/legal/dpa",
+    safeguards: ["TLS 1.2+", "PCI-DSS compliant", "encrypted API keys"],
+  },
+  {
+    name: "ShaQ Express",
+    category: "logistics",
+    purpose: "Delivery routing, tracking, and dispatch for restaurant orders",
+    location: "Ghana",
+    dataTypes: ["delivery addresses", "recipient phone", "order details"],
+    contract: "https://shaqexpress.com/legal/dpa",
+    safeguards: ["encrypted transit", "access logging", "data retention limits"],
+  },
+  {
+    name: "AWS",
+    category: "infrastructure",
+    purpose: "Cloud hosting, object storage, and compute for application infrastructure",
+    location: "Ireland / South Africa (AWS Africa regions)",
+    dataTypes: ["IP addresses", "request logs", "infrastructure metrics"],
+    contract: "https://aws.amazon.com/compliance/gdpr/",
+    safeguards: ["encryption at rest", "IAM access controls", "VPC isolation"],
+  },
+  {
+    name: "Redis Labs",
+    category: "infrastructure",
+    purpose: "Job queue (BullMQ) and caching layer for real-time operations",
+    location: "USA / EU",
+    dataTypes: ["session tokens", "queue metadata", "cache keys"],
+    contract: "https://redis.io/legal/dpa",
+    safeguards: ["TLS in transit", "encrypted persistence", "RBAC"],
+  },
+  {
+    name: "Sentry",
+    category: "observability",
+    purpose: "Error tracking and performance monitoring",
+    location: "USA / EU",
+    dataTypes: ["error traces", "stack traces", "breadcrumbs", "IP addresses"],
+    contract: "https://sentry.io/legal/dpa/",
+    safeguards: ["data scrubbing", "PII masking", "retention policies"],
+  },
+  {
+    name: "Vercel",
+    category: "infrastructure",
+    purpose: "Frontend deployment and edge network for customer-facing UI",
+    location: "USA / EU / Asia-Pacific",
+    dataTypes: ["HTTP logs", "edge IPs", "build artifacts"],
+    contract: "https://vercel.com/legal/dpa",
+    safeguards: ["edge encryption", "SOC 2 Type II", "access logs"],
+  },
+];
+
+const subprocessorsHandler = (req, res) => {
+  return res.status(200).json({
+    success: true,
+    lastUpdated: "2026-07-21",
+    subprocessors: SUBPROCESSORS,
+  });
+};
+
 router.route("/").get(listHandler).all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
+router.route("/subprocessors").get(subprocessorsHandler).all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
 router.route("/:slug").get(getHandler).all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
 
 module.exports = router;

@@ -56,11 +56,16 @@ const cache = {
 };
 
 const closeClient = async () => {
+  if (client && !client.isOpen) {
+    return;
+  }
   if (client) {
     try {
       await client.quit();
     } catch (err) {
-      console.warn("[Cache] Failed to close Redis client:", err.message);
+      if (err.message && !err.message.includes("The client is closed")) {
+        console.warn("[Cache] Failed to close Redis client:", err.message);
+      }
     }
   }
 };

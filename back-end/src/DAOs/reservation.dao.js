@@ -373,6 +373,10 @@ const createReservation = async (resDetails, tenantId) => {
         paymentStatus: resDetails.paymentStatus || "unpaid",
         expectedTotal: parseFloat(resDetails.expectedTotal || 0),
         notes: notes || null,
+        source: resDetails.source || "web",
+        deliveryAddress: resDetails.deliveryAddress || null,
+        deliveryLat: resDetails.deliveryLat || null,
+        deliveryLng: resDetails.deliveryLng || null,
         ...withTenant({}, tenantId),
       },
       { transaction: t }

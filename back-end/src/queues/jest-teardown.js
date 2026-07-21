@@ -9,7 +9,7 @@ module.exports = async () => {
     closeNotificationWorker(),
     closeReportWorker(),
     closeAllQueues(),
-    closeClient(),
+    closeClient().catch(() => {}),
   ]);
   console.log("[Jest Teardown] Done.");
 };

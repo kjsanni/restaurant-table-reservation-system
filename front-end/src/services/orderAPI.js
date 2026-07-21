@@ -56,6 +56,10 @@ class OrderAPI {
   updateOrder(id, data) {
     return API.patch(`/orders/${id}`, data);
   }
+
+  trackOrder(orderId) {
+    return API.get(`/orders/track/${orderId}`);
+  }
 }
 
 export default new OrderAPI();

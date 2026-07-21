@@ -4,9 +4,10 @@ const {
   disableTenant,
   getTenantDashboard,
 } = require("../services/tenantSubscription.service");
+const { applyTypeDefaults } = require("../services/tenantTypeDefaults.service");
 
 const createTenantHandler = async (req, res) => {
-  const { name, slug, domain, plan, status, billingEmail, billingName, currency } = req.body;
+  const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType } = req.body;
 
   if (!name || !slug) {
     return res.status(400).json({ success: false, message: "Name and slug are required" });
@@ -23,6 +24,9 @@ const createTenantHandler = async (req, res) => {
     currency: currency || "GHS",
     settings: {},
   });
+
+  applyTypeDefaults(tenant, restaurantType || "full_service");
+  await tenant.save();
 
   res.status(201).json({ success: true, item: tenant });
 };
@@ -53,6 +57,9 @@ const getTenantsHandler = async (req, res) => {
       "graceEndsAt",
       "suspendedAt",
       "suspendedReason",
+      "currency",
+      "restaurantType",
+      "serviceModes",
       "createdAt",
       "updatedAt",
     ],
@@ -91,13 +98,18 @@ const updateTenantHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
 
-  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "paystackSubaccountCode", "paystackPublicKey", "paystackSecretKey"];
+  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "paystackSubaccountCode", "paystackPublicKey", "paystackSecretKey", "restaurantType", "serviceModes"];
   const updates = {};
 
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(req.body, key)) {
       updates[key] = req.body[key];
     }
+  }
+
+  if (updates.restaurantType && updates.restaurantType !== tenant.restaurantType) {
+    applyTypeDefaults(tenant, updates.restaurantType);
+    await tenant.save();
   }
 
   await tenant.update(updates);

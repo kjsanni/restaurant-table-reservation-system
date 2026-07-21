@@ -3,6 +3,9 @@ const { verifyWebhookSignature } = require("../services/paystack.service");
 const { syncFromPaymentGateway } = require("../services/tenantSubscription.service");
 const orderDAO = require("../../DAOs/order.dao");
 const paymentDAO = require("../../DAOs/payment.dao");
+const deliveryService = require("../../services/delivery.service");
+const whatsappService = require("../../services/whatsapp.service");
+const messageTemplates = require("../../services/messageTemplates.service");
 const db = require("../../db/models");
 
 const webhookHandler = async (req, res) => {
@@ -69,9 +72,41 @@ const webhookHandler = async (req, res) => {
               const payments = await paymentDAO.getOrderPayments(order.id, resolvedTenantId);
               const totalPaid = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
               const orderTotal = parseFloat(order.total || 0);
-              const paymentStatus = totalPaid >= orderTotal ? "paid" : totalPaid > 0 ? "partial" : "unpaid";
+              const discountAmount = parseFloat(metadata.discountAmount || 0);
+              const effectiveTotal = orderTotal - discountAmount;
+              const paymentStatus = totalPaid >= effectiveTotal ? "paid" : totalPaid > 0 ? "partial" : "unpaid";
               if (order.paymentStatus !== paymentStatus) {
                 await orderDAO.updateOrder(order.id, resolvedTenantId, { paymentStatus });
+              }
+
+              if (paymentStatus === "paid" && metadata.deliveryLocation) {
+                try {
+                  const customerPhone = metadata.customerPhone || order.customer?.phone;
+                  const customerName = order.customer
+                    ? `${order.customer.firstName || ""} ${order.customer.lastName || ""}`.trim()
+                    : "WhatsApp Customer";
+                  const delivery = await deliveryService.createFromWhatsApp(
+                    resolvedTenantId,
+                    order.id,
+                    metadata.deliveryLocation,
+                    customerName,
+                    customerPhone
+                  );
+                  if (delivery && delivery.trackingNumber && customerPhone) {
+                    const trackingMsg = await messageTemplates.render(
+                      "delivery_tracking",
+                      { trackingNumber: delivery.trackingNumber },
+                      resolvedTenantId
+                    );
+                    await whatsappService.sendWhatsAppText(
+                      customerPhone,
+                      trackingMsg,
+                      resolvedTenantId
+                    );
+                  }
+                } catch (deliveryErr) {
+                  console.error("Failed to create WhatsApp delivery after payment:", deliveryErr.message);
+                }
               }
             }
           }

@@ -2,11 +2,14 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn("subscription_plans", "gracePeriodDays", {
-      type: Sequelize.INTEGER,
-      allowNull: false,
-      defaultValue: 7,
-    });
+    const columns = await queryInterface.describeTable("subscription_plans");
+    if (!columns.gracePeriodDays) {
+      await queryInterface.addColumn("subscription_plans", "gracePeriodDays", {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 7,
+      });
+    }
   },
 
   down: async (queryInterface) => {

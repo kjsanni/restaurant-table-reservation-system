@@ -3,7 +3,6 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
-import logger from "@/utils/logger";
 
 const route = useRoute();
 const router = useRouter();
@@ -111,8 +110,9 @@ const submitReservation = async () => {
     isSuccessful.value = true;
     setTimeout(() => router.push("/reservations"), 1500);
   } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } };
     generalError.value =
-      err.response?.data?.message || "Failed to create reservation";
+      error.response?.data?.message || "Failed to create reservation";
   } finally {
     submitting.value = false;
   }

@@ -96,8 +96,25 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.JSON,
         allowNull: true,
       },
+      source: {
+        type: DataTypes.ENUM("web", "whatsapp", "phone", "walkin"),
+        allowNull: false,
+        defaultValue: "web",
+      },
       mergedFromTableIds: {
         type: DataTypes.JSON,
+        allowNull: true,
+      },
+      deliveryAddress: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      deliveryLat: {
+        type: DataTypes.DECIMAL(10, 8),
+        allowNull: true,
+      },
+      deliveryLng: {
+        type: DataTypes.DECIMAL(11, 8),
         allowNull: true,
       },
     },

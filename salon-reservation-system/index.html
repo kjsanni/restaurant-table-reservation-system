@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Glow Studio — Salon Booking & Payments, WhatsApp-native</title>
+<meta name="description" content="Glow Studio is a WhatsApp-native salon booking platform in Ghana. Book appointments, pay via Mobile Money, manage stylists — all from one calm dashboard." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --brand-900: #1a1410;
+    --brand-800: #2d221c;
+    --brand-700: #4a352b;
+    --brand-600: #6b4a3a;
+    --brand-500: #8c5e4a;
+    --brand-400: #b87a62;
+    --brand-300: #d9a086;
+    --brand-200: #e8c4b5;
+    --brand-100: #f3ddd3;
+    --brand-50: #faf6f3;
+    --accent-600: #b45309;
+    --accent-500: #d97706;
+    --accent-400: #f59e0b;
+    --accent-300: #fbbf24;
+    --accent-100: #fef3c7;
+    --accent-50: #fffbeb;
+    --earth-600: #365314;
+    --earth-500: #4d7c0f;
+    --earth-100: #ecfccb;
+    --sky-600: #1e40af;
+    --sky-500: #3b82f6;
+    --sky-100: #dbeafe;
+    --rose-600: #e11d48;
+    --rose-500: #f43f5e;
+    --rose-100: #ffe4e6;
+    --wa: #25D366;
+    --wa-dark: #128C7E;
+    --neutral-900: #312e2a;
+    --neutral-800: #4a4540;
+    --neutral-700: #5a544c;
+    --neutral-600: #7d766c;
+    --neutral-500: #9a9389;
+    --neutral-300: #d6d1c9;
+    --neutral-200: #e7e4de;
+    --neutral-100: #f3f1ed;
+    --neutral-50: #faf9f7;
+    --white: #ffffff;
+    --font-serif: 'Fraunces', serif;
+    --font-sans: 'Public Sans', sans-serif;
+    --radius-xl: 24px;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --shadow-soft: 0 10px 30px rgba(26,20,16,0.06);
+    --shadow-lift: 0 24px 60px rgba(26,20,16,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--brand-50);
+    color: var(--neutral-900);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--accent-300); color: var(--brand-900); }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 18px 0;
+    transition: background 0.3s ease, box-shadow 0.3s ease, padding 0.3s ease;
+  }
+  .nav.scrolled {
+    background: rgba(250,246,243,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 1px 0 rgba(26,20,16,0.06);
+    padding: 12px 0;
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto; padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .brand-mark {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent-400), var(--accent-500));
+    display: grid; place-items: center;
+    font-family: var(--font-serif); font-weight: 700; font-size: 18px;
+    color: var(--brand-900);
+    box-shadow: 0 8px 20px rgba(217,119,6,0.3);
+  }
+  .brand-name { font-family: var(--font-serif); font-size: 20px; font-weight: 700; color: var(--brand-900); letter-spacing: -0.02em; }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-links a { font-size: 14px; font-weight: 500; color: var(--neutral-700); text-decoration: none; transition: color 0.2s ease; }
+  .nav-links a:hover { color: var(--accent-600); }
+  .nav-cta {
+    padding: 10px 18px; border-radius: var(--radius-md);
+    background: var(--brand-900); color: var(--white);
+    font-size: 13px; font-weight: 700; text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(26,20,16,0.3); }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    position: relative;
+    padding: 140px 28px 80px;
+    overflow: hidden;
+    background: linear-gradient(170deg, var(--brand-50) 0%, var(--brand-100) 100%);
+  }
+  .hero::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(600px 400px at 15% 10%, rgba(251,191,36,0.18), transparent 60%),
+      radial-gradient(500px 350px at 90% 80%, rgba(217,119,6,0.14), transparent 60%);
+    pointer-events: none;
+  }
+  .hero-grid {
+    max-width: 1200px; margin: 0 auto; position: relative;
+    display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 60px; align-items: center;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 14px; border-radius: 999px;
+    background: var(--white); border: 1px solid var(--neutral-200);
+    box-shadow: var(--shadow-soft);
+    font-size: 12px; font-weight: 700; color: var(--accent-600);
+    letter-spacing: 0.04em; text-transform: uppercase;
+    animation: fadeUp 0.7s ease-out both;
+  }
+  .hero-eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--wa); box-shadow: 0 0 0 3px rgba(37,211,102,0.2); }
+  .hero h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(44px, 6.5vw, 76px);
+    line-height: 1.02;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    color: var(--brand-900);
+    margin: 22px 0 0;
+    animation: fadeUp 0.8s 0.1s ease-out both;
+  }
+  .hero h1 em {
+    font-style: italic;
+    background: linear-gradient(120deg, var(--accent-500), var(--accent-400));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-weight: 900;
+  }
+  .hero p.lead {
+    font-size: 18px; line-height: 1.6; color: var(--neutral-700);
+    max-width: 520px; margin: 22px 0 32px;
+    animation: fadeUp 0.8s 0.2s ease-out both;
+  }
+  .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; animation: fadeUp 0.8s 0.3s ease-out both; }
+  .btn {
+    padding: 15px 26px; border-radius: var(--radius-md);
+    font-family: var(--font-sans); font-weight: 700; font-size: 15px;
+    cursor: pointer; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .btn-wa { background: var(--wa); color: var(--white); box-shadow: 0 12px 30px rgba(37,211,102,0.3); }
+  .btn-wa:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(37,211,102,0.4); }
+  .btn-ghost { background: var(--white); color: var(--brand-900); border: 1px solid var(--neutral-300); }
+  .btn-ghost:hover { transform: translateY(-2px); border-color: var(--accent-400); box-shadow: var(--shadow-soft); }
+  .hero-stats {
+    display: flex; gap: 36px; margin-top: 44px;
+    animation: fadeUp 0.8s 0.4s ease-out both;
+  }
+  .hero-stat b { display: block; font-family: var(--font-serif); font-size: 30px; font-weight: 700; color: var(--brand-900); letter-spacing: -0.02em; }
+  .hero-stat span { font-size: 12px; color: var(--neutral-600); font-weight: 500; }
+
+  /* Hero phone mockup */
+  .hero-visual { position: relative; animation: fadeUp 0.9s 0.25s ease-out both; }
+  .phone {
+    width: 320px; margin: 0 auto; background: var(--brand-900);
+    border-radius: 36px; padding: 10px;
+    box-shadow: var(--shadow-lift), 0 0 0 1px rgba(26,20,16,0.1);
+    position: relative; z-index: 2;
+  }
+  .phone-screen {
+    background: linear-gradient(180deg, #e5ddd5 0%, #d9d1c9 100%);
+    border-radius: 28px; overflow: hidden; height: 460px;
+    display: flex; flex-direction: column;
+  }
+  .phone-top { background: var(--wa-dark); color: var(--white); padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+  .phone-top .pa { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-400), var(--accent-500)); display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+  .phone-top .pn { font-size: 13px; font-weight: 700; }
+  .phone-top .ps { font-size: 10px; opacity: 0.8; }
+  .phone-chat { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .pmsg { max-width: 82%; padding: 8px 12px; border-radius: 12px; font-size: 12px; line-height: 1.4; }
+  .pmsg.bot { background: var(--white); color: var(--neutral-900); align-self: flex-start; border-top-left-radius: 4px; animation: pop 0.4s ease-out both; }
+  .pmsg.client { background: #dcf8c6; color: var(--neutral-900); align-self: flex-end; border-top-right-radius: 4px; animation: pop 0.4s 0.2s ease-out both; }
+  .pmsg:nth-child(3) { animation-delay: 0.5s; }
+  .pmsg:nth-child(4) { animation-delay: 0.7s; }
+  .pmsg:nth-child(5) { animation-delay: 0.9s; }
+  .popt { background: var(--brand-100); color: var(--brand-800); padding: 5px 9px; border-radius: 8px; font-size: 11px; font-weight: 600; margin-top: 5px; display: inline-block; }
+  .popt.wa-pay { background: var(--wa); color: var(--white); text-align: center; display: block; }
+  .hero-float {
+    position: absolute; background: var(--white); border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-md); padding: 14px 18px; box-shadow: var(--shadow-lift);
+    display: flex; align-items: center; gap: 10px;
+    animation: float 4s ease-in-out infinite;
+  }
+  .hero-float.f1 { top: 30px; left: -20px; }
+  .hero-float.f2 { bottom: 40px; right: -30px; animation-delay: 1s; }
+  .hero-float .ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; }
+  .hero-float .ic.ghs { background: var(--earth-100); color: var(--earth-600); }
+  .hero-float .ic.book { background: var(--accent-100); color: var(--accent-600); }
+  .hero-float b { font-size: 14px; color: var(--neutral-900); }
+  .hero-float span { font-size: 11px; color: var(--neutral-600); }
+
+  /* ---------- SECTION BASE ---------- */
+  section { padding: 100px 28px; position: relative; }
+  .container { max-width: 1200px; margin: 0 auto; }
+  .section-head { text-align: center; max-width: 680px; margin: 0 auto 64px; }
+  .section-eyebrow {
+    display: inline-block; font-size: 12px; font-weight: 700; color: var(--accent-600);
+    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 14px;
+  }
+  .section-head h2 {
+    font-family: var(--font-serif); font-size: clamp(34px, 4.5vw, 50px);
+    font-weight: 700; letter-spacing: -0.03em; color: var(--brand-900); line-height: 1.05;
+  }
+  .section-head p { font-size: 17px; line-height: 1.6; color: var(--neutral-700); margin-top: 16px; }
+
+  /* ---------- FEATURES ---------- */
+  .features { background: var(--white); }
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .feature-card {
+    padding: 32px; border-radius: var(--radius-xl); border: 1px solid var(--neutral-200);
+    background: var(--neutral-50); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); border-color: var(--accent-200); }
+  .feature-ic {
+    width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center;
+    font-size: 24px; margin-bottom: 20px;
+  }
+  .feature-ic.a { background: var(--accent-100); color: var(--accent-600); }
+  .feature-ic.b { background: var(--earth-100); color: var(--earth-600); }
+  .feature-ic.c { background: var(--sky-100); color: var(--sky-600); }
+  .feature-ic.d { background: var(--rose-100); color: var(--rose-600); }
+  .feature-ic.e { background: var(--brand-100); color: var(--brand-700); }
+  .feature-ic.f { background: var(--accent-50); color: var(--accent-600); }
+  .feature-card h3 { font-family: var(--font-serif); font-size: 20px; font-weight: 700; color: var(--brand-900); margin-bottom: 10px; }
+  .feature-card p { font-size: 14px; line-height: 1.6; color: var(--neutral-700); }
+  .feature-card .more { display: inline-block; margin-top: 14px; font-size: 13px; font-weight: 700; color: var(--accent-600); text-decoration: none; }
+  .feature-card .more:hover { color: var(--accent-500); }
+
+  /* ---------- WHATSAPP SHOWCASE ---------- */
+  .wa-showcase {
+    background: linear-gradient(160deg, var(--brand-900) 0%, var(--brand-800) 100%);
+    color: var(--white); overflow: hidden;
+  }
+  .wa-showcase::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(500px 300px at 80% 20%, rgba(37,211,102,0.15), transparent 60%);
+    pointer-events: none;
+  }
+  .wa-showcase .section-head h2 { color: var(--white); }
+  .wa-showcase .section-head p { color: rgba(255,255,255,0.75); }
+  .wa-showcase .section-eyebrow { color: var(--accent-300); }
+  .wa-grid { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 60px; align-items: center; position: relative; }
+  .wa-steps { display: flex; flex-direction: column; gap: 8px; }
+  .wa-step {
+    display: flex; gap: 18px; padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .wa-step:last-child { border-bottom: none; }
+  .wa-num {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent-400), var(--accent-500));
+    color: var(--brand-900); display: grid; place-items: center;
+    font-family: var(--font-serif); font-weight: 700; font-size: 15px;
+  }
+  .wa-step b { font-size: 16px; color: var(--white); display: block; margin-bottom: 4px; }
+  .wa-step span { font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.5; }
+
+  /* ---------- SERVICES ---------- */
+  .services-strip { background: var(--brand-50); }
+  .svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .svc-card {
+    padding: 28px; border-radius: var(--radius-xl); background: var(--white);
+    border: 1px solid var(--neutral-200); text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .svc-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); }
+  .svc-emoji { font-size: 36px; margin-bottom: 12px; }
+  .svc-card h4 { font-family: var(--font-serif); font-size: 17px; font-weight: 700; color: var(--brand-900); margin-bottom: 6px; }
+  .svc-price { font-family: var(--font-serif); font-size: 22px; font-weight: 700; color: var(--accent-600); }
+  .svc-dur { font-size: 12px; color: var(--neutral-600); margin-top: 4px; }
+
+  /* ---------- PRICING ---------- */
+  .pricing { background: var(--white); }
+  .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1100px; margin: 0 auto; }
+  .price-card {
+    padding: 40px 32px; border-radius: var(--radius-xl); border: 1px solid var(--neutral-200);
+    background: var(--neutral-50); position: relative; transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .price-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); }
+  .price-card.featured {
+    background: linear-gradient(160deg, var(--brand-900), var(--brand-800));
+    color: var(--white); border: none;
+    transform: scale(1.04);
+  }
+  .price-card.featured:hover { transform: scale(1.04) translateY(-4px); }
+  .price-tag { position: absolute; top: 24px; right: 24px; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--accent-400); color: var(--brand-900); text-transform: uppercase; letter-spacing: 0.06em; }
+  .price-name { font-family: var(--font-serif); font-size: 22px; font-weight: 700; }
+  .price-card.featured .price-name { color: var(--accent-300); }
+  .price-amount { font-family: var(--font-serif); font-size: 48px; font-weight: 700; margin: 12px 0 4px; letter-spacing: -0.03em; }
+  .price-amount small { font-size: 16px; font-weight: 500; color: var(--neutral-600); }
+  .price-card.featured .price-amount small { color: rgba(255,255,255,0.6); }
+  .price-desc { font-size: 13px; color: var(--neutral-600); margin-bottom: 24px; }
+  .price-card.featured .price-desc { color: rgba(255,255,255,0.7); }
+  .price-list { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+  .price-list li { font-size: 14px; display: flex; gap: 10px; align-items: flex-start; }
+  .price-list li::before { content: "✓"; color: var(--earth-500); font-weight: 700; }
+  .price-card.featured .price-list li::before { color: var(--accent-300); }
+  .price-card.featured .price-list li { color: rgba(255,255,255,0.85); }
+  .price-btn { display: block; text-align: center; padding: 13px; border-radius: var(--radius-md); font-weight: 700; font-size: 14px; text-decoration: none; transition: transform 0.15s ease; }
+  .price-card:not(.featured) .price-btn { background: var(--brand-900); color: var(--white); }
+  .price-card.featured .price-btn { background: linear-gradient(135deg, var(--accent-400), var(--accent-500)); color: var(--brand-900); }
+  .price-btn:hover { transform: translateY(-1px); }
+
+  /* ---------- CTA BAND ---------- */
+  .cta-band { padding: 80px 28px; background: var(--brand-50); }
+  .cta-inner {
+    max-width: 1000px; margin: 0 auto; text-align: center;
+    background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+    border-radius: var(--radius-xl); padding: 64px 40px; position: relative; overflow: hidden;
+    box-shadow: var(--shadow-lift);
+  }
+  .cta-inner::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(400px 200px at 50% -10%, rgba(251,191,36,0.3), transparent 60%);
+  }
+  .cta-inner h2 { font-family: var(--font-serif); font-size: clamp(30px, 4vw, 44px); font-weight: 700; color: var(--white); letter-spacing: -0.03em; position: relative; }
+  .cta-inner p { font-size: 16px; color: rgba(255,255,255,0.8); margin: 14px 0 28px; position: relative; }
+  .cta-inner .btn-wa { position: relative; }
+
+  /* ---------- FOOTER ---------- */
+  footer { background: var(--brand-900); color: rgba(255,255,255,0.7); padding: 64px 28px 32px; }
+  .footer-grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; }
+  .footer-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .footer-brand .brand-mark { box-shadow: none; }
+  .footer-brand .brand-name { color: var(--white); }
+  .footer-col p { font-size: 13px; line-height: 1.6; max-width: 280px; }
+  .footer-col h5 { font-family: var(--font-serif); font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 16px; }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col a { font-size: 13px; color: rgba(255,255,255,0.6); text-decoration: none; transition: color 0.2s ease; }
+  .footer-col a:hover { color: var(--accent-300); }
+  .footer-bottom { max-width: 1200px; margin: 48px auto 0; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: rgba(255,255,255,0.5); }
+
+  /* ---------- ANIMATIONS ---------- */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pop { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 960px) {
+    .nav-links { display: none; }
+    .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+    .hero-visual { order: -1; }
+    .feature-grid, .svc-grid, .price-grid { grid-template-columns: 1fr; }
+    .price-card.featured { transform: none; }
+    .wa-grid { grid-template-columns: 1fr; gap: 40px; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    section { padding: 72px 24px; }
+  }
+  @media (max-width: 560px) {
+    .footer-grid { grid-template-columns: 1fr; }
+    .hero-stats { gap: 24px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#top">
+        <div class="brand-mark">G</div>
+        <div class="brand-name">Glow Studio</div>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#whatsapp">WhatsApp</a>
+        <a href="#services">Services</a>
+        <a href="#pricing">Pricing</a>
+        <a href="17-client-portal.html">Client Portal</a>
+      </div>
+      <a class="nav-cta" href="01-login.html">Sign In</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero" id="top">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <span class="hero-eyebrow"><span class="dot"></span> WhatsApp-native salon platform</span>
+        <h1>Book. Pay.<br/><em>Glow.</em></h1>
+        <p class="lead">The salon management platform built for Ghana. Appointments, Mobile Money payments, and client history — all flowing through WhatsApp. Your clients book by chatting. You get a calm dashboard.</p>
+        <div class="hero-cta">
+          <a class="btn btn-wa" href="18-whatsapp-booking.html">💬 See WhatsApp Booking</a>
+          <a class="btn btn-ghost" href="03-dashboard.html">View Dashboard</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><b>2 min</b><span>Average booking time</span></div>
+          <div class="hero-stat"><b>GHS 0</b><span>Setup fees</span></div>
+          <div class="hero-stat"><b>24/7</b><span>WhatsApp bot</span></div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-float f1">
+          <div class="ic book">📅</div>
+          <div><b>Appointment</b><br/><span>Tue 11:00 · Chair 3</span></div>
+        </div>
+        <div class="hero-float f2">
+          <div class="ic ghs">₵</div>
+          <div><b>GHS 75 Paid</b><br/><span>MTN MoMo · Confirmed</span></div>
+        </div>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="phone-top">
+              <div class="pa">G</div>
+              <div><div class="pn">Glow Studio</div><div class="ps">● online</div></div>
+            </div>
+            <div class="phone-chat">
+              <div class="pmsg bot">Hi! Welcome to Glow Studio 👋 How can I help?
+                <span class="popt">1. Book appointment</span>
+                <span class="popt">2. View services</span>
+                <span class="popt">3. Pay for service</span>
+              </div>
+              <div class="pmsg client">1</div>
+              <div class="pmsg bot">Pick a service:
+                <span class="popt">B. Haircut + Beard — GHS 75</span>
+              </div>
+              <div class="pmsg client">B</div>
+              <div class="pmsg bot">✅ Tue 11:00 with Kofi. Pay now?
+                <span class="popt wa-pay">💳 Pay GHS 75 via MoMo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="section-eyebrow">Everything in one place</span>
+        <h2>A full salon, in your pocket</h2>
+        <p>From the first message to the final payment, Glow Studio handles every step of the client journey — and gives your team a calm, fast workspace behind it.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card reveal">
+          <div class="feature-ic a">📅</div>
+          <h3>Smart Appointments</h3>
+          <p>Book by service, stylist, or station. Conflict detection, deposits, and automatic reminders keep your chairs full and your calendar clean.</p>
+          <a class="more" href="04-appointments.html">Manage appointments →</a>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-ic b">💬</div>
+          <h3>WhatsApp Booking Bot</h3>
+          <p>Clients book by chatting your salon number. The bot checks availability live, confirms, and asks for payment — no app to install.</p>
+          <a class="more" href="18-whatsapp-booking.html">See the flow →</a>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-ic c">💳</div>
+          <h3>Mobile Money Payments</h3>
+          <p>Send Paystack payment links right inside WhatsApp. MTN, Vodafone, AirtelTigo — clients pay in taps, you get instant confirmation.</p>
+          <a class="more" href="19-whatsapp-payment.html">How payments work →</a>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-ic d">✂</div>
+          <h3>Service Catalog</h3>
+          <p>Define every service with price, duration, deposit, and assigned stylist. Clients see exactly what's on offer before they book.</p>
+          <a class="more" href="06-services.html">Browse services →</a>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-ic e">👤</div>
+          <h3>Client Profiles</h3>
+          <p>Every visit, preference, and payment in one record. Birthdays, hair type, preferred stylist — know your clients before they sit down.</p>
+          <a class="more" href="08-clients.html">View clients →</a>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-ic f">📊</div>
+          <h3>Reports & Insights</h3>
+          <p>Revenue by service, top stylists, booking sources. Export to CSV or PDF. Understand what's working — and what's next.</p>
+          <a class="more" href="15-reports.html">See reports →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHATSAPP SHOWCASE -->
+  <section class="wa-showcase" id="whatsapp">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="section-eyebrow">The WhatsApp difference</span>
+        <h2>Your clients already use it</h2>
+        <p>No downloads. No logins. Just a message to your salon number — and the booking happens. This is how Ghana actually books.</p>
+      </div>
+      <div class="wa-grid">
+        <div class="phone" style="margin:0;">
+          <div class="phone-screen">
+            <div class="phone-top">
+              <div class="pa">G</div>
+              <div><div class="pn">Glow Studio</div><div class="ps">● online</div></div>
+            </div>
+            <div class="phone-chat">
+              <div class="pmsg bot">Booking confirmed ✅ Tue 21 Jul, 11:00 — Haircut + Beard (GHS 75). Pay now?</div>
+              <div class="pmsg client">Yes, MTN</div>
+              <div class="pmsg bot">Tap to pay GHS 75:
+                <span class="popt wa-pay">💳 Pay with MTN MoMo</span>
+              </div>
+              <div class="pmsg client">✅ Approved</div>
+              <div class="pmsg bot">🎉 Payment received! Receipt: PSK-7X3K2. See you Tuesday!</div>
+            </div>
+          </div>
+        </div>
+        <div class="wa-steps">
+          <div class="wa-step reveal">
+            <div class="wa-num">1</div>
+            <div><b>Client messages your number</b><span>The bot greets instantly with a menu: book, view services, reschedule, or pay.</span></div>
+          </div>
+          <div class="wa-step reveal">
+            <div class="wa-num">2</div>
+            <div><b>Pick a service &amp; slot</b><span>Live availability from your dashboard. The bot only offers open chairs and free stylists.</span></div>
+          </div>
+          <div class="wa-step reveal">
+            <div class="wa-num">3</div>
+            <div><b>Confirm &amp; pay in chat</b><span>A Paystack payment card appears in WhatsApp. MTN, Vodafone, AirtelTigo — all supported.</span></div>
+          </div>
+          <div class="wa-step reveal">
+            <div class="wa-num">4</div>
+            <div><b>Automatic reminders</b><span>Two hours before the appointment, the bot pings the client. Fewer no-shows, fuller chairs.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="services-strip" id="services">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="section-eyebrow">Built for every chair</span>
+        <h2>From haircut to massage</h2>
+        <p>Glow Studio handles the full beauty spectrum. Set your own prices, durations, and deposits — the catalog powers your whole booking flow.</p>
+      </div>
+      <div class="svc-grid">
+        <div class="svc-card reveal"><div class="svc-emoji">💈</div><h4>Haircut</h4><div class="svc-price">GHS 50</div><div class="svc-dur">30 min</div></div>
+        <div class="svc-card reveal"><div class="svc-emoji">🎨</div><h4>Hair Color</h4><div class="svc-price">GHS 150</div><div class="svc-dur">2 hours</div></div>
+        <div class="svc-card reveal"><div class="svc-emoji">💅</div><h4>Manicure</h4><div class="svc-price">GHS 40</div><div class="svc-dur">45 min</div></div>
+        <div class="svc-card reveal"><div class="svc-emoji">💆</div><h4>Massage</h4><div class="svc-price">GHS 100</div><div class="svc-dur">60 min</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="section-eyebrow">Simple pricing</span>
+        <h2>Pay for what you grow into</h2>
+        <p>Start free for 14 days. No setup fees, no contracts. Cancel anytime.</p>
+      </div>
+      <div class="price-grid">
+        <div class="price-card reveal">
+          <div class="price-name">Starter</div>
+          <div class="price-amount">GHS 99<small>/mo</small></div>
+          <div class="price-desc">For solo stylists &amp; small chairs</div>
+          <ul class="price-list">
+            <li>Up to 5 stations</li>
+            <li>WhatsApp booking bot</li>
+            <li>Mobile Money payments</li>
+            <li>Client profiles</li>
+            <li>Email support</li>
+          </ul>
+          <a class="price-btn" href="02-register.html">Start free trial</a>
+        </div>
+        <div class="price-card featured reveal">
+          <span class="price-tag">Most popular</span>
+          <div class="price-name">Growth</div>
+          <div class="price-amount">GHS 199<small>/mo</small></div>
+          <div class="price-desc">For busy salons with a team</div>
+          <ul class="price-list">
+            <li>Up to 15 stations</li>
+            <li>Everything in Starter</li>
+            <li>Staff &amp; roles (RBAC)</li>
+            <li>Reports &amp; analytics</li>
+            <li>Deposit &amp; partial payments</li>
+            <li>Priority WhatsApp support</li>
+          </ul>
+          <a class="price-btn" href="02-register.html">Start free trial</a>
+        </div>
+        <div class="price-card reveal">
+          <div class="price-name">Studio Pro</div>
+          <div class="price-amount">GHS 429<small>/mo</small></div>
+          <div class="price-desc">For multi-location &amp; franchises</div>
+          <ul class="price-list">
+            <li>Unlimited stations</li>
+            <li>Everything in Growth</li>
+            <li>Multi-branch dashboard</li>
+            <li>Custom branding</li>
+            <li>API access</li>
+            <li>Dedicated account manager</li>
+          </ul>
+          <a class="price-btn" href="02-register.html">Contact sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BAND -->
+  <section class="cta-band">
+    <div class="cta-inner reveal">
+      <h2>Ready to glow?</h2>
+      <p>Set up your salon in 10 minutes. Your first 14 days are on us.</p>
+      <a class="btn btn-wa" href="18-whatsapp-booking.html">💬 Try the WhatsApp demo</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-brand">
+          <div class="brand-mark">G</div>
+          <div class="brand-name">Glow Studio</div>
+        </div>
+        <p>The WhatsApp-native salon platform built for Ghana. Operated by Vibespot Technologies Ltd.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <ul>
+          <li><a href="03-dashboard.html">Dashboard</a></li>
+          <li><a href="04-appointments.html">Appointments</a></li>
+          <li><a href="06-services.html">Services</a></li>
+          <li><a href="15-reports.html">Reports</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>WhatsApp</h5>
+        <ul>
+          <li><a href="18-whatsapp-booking.html">Booking demo</a></li>
+          <li><a href="19-whatsapp-payment.html">Payment demo</a></li>
+          <li><a href="17-client-portal.html">Client Portal</a></li>
+          <li><a href="20-settings.html">Settings</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <ul>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="01-login.html">Sign In</a></li>
+          <li><a href="02-register.html">Create account</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Vibespot Technologies Ltd · Accra, Ghana</span>
+      <span>GHS · MTN · Vodafone · AirtelTigo · Paystack</span>
+    </div>
+  </footer>
+
+  <script>
+    // Nav scroll state
+    const nav = document.getElementById('nav');
+    const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 30);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // Reveal on scroll
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  </script>
+</body>
+</html>

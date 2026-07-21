@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Glow Studio — Add Service</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --brand-900: #1a1410; --brand-800: #2d221c; --brand-700: #4a352b; --brand-600: #6b4a3a;
+    --brand-500: #8c5e4a; --brand-400: #b87a62; --brand-300: #d9a086; --brand-200: #e8c4b5;
+    --brand-100: #f3ddd3; --brand-50: #faf6f3;
+    --accent-600: #b45309; --accent-500: #d97706; --accent-400: #f59e0b; --accent-300: #fbbf24;
+    --accent-100: #fef3c7; --accent-50: #fffbeb;
+    --earth-600: #365314; --earth-500: #4d7c0f; --earth-100: #ecfccb;
+    --sky-600: #1e40af; --sky-500: #3b82f6; --sky-100: #dbeafe;
+    --rose-600: #e11d48; --rose-500: #f43f5e; --rose-100: #ffe4e6;
+    --neutral-900: #312e2a; --neutral-800: #4a4540; --neutral-600: #7d766c; --neutral-500: #9a9389;
+    --neutral-300: #d6d1c9; --neutral-200: #e7e4de; --neutral-100: #f3f1ed; --neutral-50: #faf9f7;
+    --white: #ffffff; --font-serif: 'Fraunces', serif; --font-sans: 'Public Sans', sans-serif;
+    --radius-xl: 20px; --radius-lg: 14px; --radius-md: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); background: var(--brand-50); color: var(--neutral-900); min-height: 100vh; }
+  .app { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+  .sidebar { background: linear-gradient(180deg, var(--brand-900) 0%, var(--brand-800) 100%); color: var(--white); padding: 28px 22px; display: flex; flex-direction: column; gap: 6px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; animation: fadeDown 0.6s ease-out both; }
+  .sidebar-mark { width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(135deg, var(--accent-400), var(--accent-500)); display: grid; place-items: center; font-family: var(--font-serif); font-weight: 700; font-size: 16px; color: var(--brand-900); }
+  .sidebar-name { font-family: var(--font-serif); font-size: 16px; font-weight: 700; line-height: 1.15; }
+  .nav-group { margin-top: 8px; }
+  .nav-group-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(255,255,255,0.45); padding: 12px 12px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.78); text-decoration: none; transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: var(--white); transform: translateX(2px); }
+  .nav-item.active { background: linear-gradient(90deg, rgba(217,119,6,0.18), rgba(217,119,6,0.06)); color: var(--accent-300); font-weight: 600; }
+  .nav-icon { width: 18px; height: 18px; display: grid; place-items: center; opacity: 0.85; }
+  .main { padding: 36px 40px 60px; overflow-y: auto; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; animation: fadeDown 0.6s ease-out both; }
+  .topbar-left h1 { font-family: var(--font-serif); font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+  .topbar-left p { color: var(--neutral-600); font-size: 14px; margin-top: 4px; }
+  .form-card { background: var(--white); border: 1px solid var(--neutral-200); border-radius: var(--radius-xl); padding: 32px; box-shadow: 0 10px 30px rgba(26,20,16,0.05); max-width: 820px; animation: fadeUp 0.7s 0.1s ease-out both; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .field { margin-bottom: 2px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: var(--neutral-800); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .field input, .field select, .field textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--neutral-300); border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 14px; color: var(--neutral-900); background: var(--neutral-50); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent-500); box-shadow: 0 0 0 3px rgba(217,119,6,0.12); }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field-hint { font-size: 11px; color: var(--neutral-500); margin-top: 4px; }
+  .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+  .btn { padding: 11px 18px; border-radius: var(--radius-md); font-family: var(--font-sans); font-weight: 700; font-size: 13px; cursor: pointer; border: none; transition: transform 0.15s ease, box-shadow 0.2s ease; text-decoration: none; display: inline-block; }
+  .btn-primary { background: linear-gradient(135deg, var(--brand-700), var(--brand-600)); color: var(--white); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(74,53,43,0.22); }
+  .btn-secondary { background: var(--white); color: var(--neutral-800); border: 1px solid var(--neutral-300); }
+  .section-label { font-family: var(--font-serif); font-size: 14px; font-weight: 700; color: var(--neutral-600); text-transform: uppercase; letter-spacing: 0.08em; margin: 20px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--neutral-100); grid-column: 1 / -1; }
+  .preview-card { grid-column: 1 / -1; background: var(--accent-50); border: 1px solid var(--accent-100); border-radius: var(--radius-md); padding: 18px; display: flex; align-items: center; justify-content: space-between; }
+  .preview-card .pname { font-family: var(--font-serif); font-size: 18px; font-weight: 700; color: var(--neutral-900); }
+  .preview-card .pprice { font-family: var(--font-serif); font-size: 22px; font-weight: 700; color: var(--accent-600); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+  @media (max-width: 960px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 24px; } .form-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-mark">G</div>
+        <div class="sidebar-name">Glow<br/>Studio</div>
+      </div>
+      <nav class="nav-group">
+        <div class="nav-group-title">Operations</div>
+        <a class="nav-item" href="03-dashboard.html"><span class="nav-icon">◆</span> Dashboard</a>
+        <a class="nav-item" href="04-appointments.html"><span class="nav-icon">▦</span> Appointments</a>
+        <a class="nav-item" href="10-stations.html"><span class="nav-icon">▦</span> Stations</a>
+        <a class="nav-item" href="11-schedule.html"><span class="nav-icon">◷</span> Schedule</a>
+        <a class="nav-item" href="12-calendar.html"><span class="nav-icon">▤</span> Calendar</a>
+        <a class="nav-item" href="13-station-map.html"><span class="nav-icon">◻</span> Station Map</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">Clients & Services</div>
+        <a class="nav-item active" href="06-services.html"><span class="nav-icon">✂</span> Services</a>
+        <a class="nav-item" href="08-clients.html"><span class="nav-icon">👤</span> Clients</a>
+        <a class="nav-item" href="14-waitlist.html"><span class="nav-icon">◌</span> Walk-in Queue</a>
+        <a class="nav-item" href="17-client-portal.html"><span class="nav-icon">📋</span> Client Portal</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">WhatsApp</div>
+        <a class="nav-item" href="18-whatsapp-booking.html"><span class="nav-icon">💬</span> WhatsApp Bookings</a>
+        <a class="nav-item" href="19-whatsapp-payment.html"><span class="nav-icon">💳</span> WhatsApp Payments</a>
+      </nav>
+      <nav class="nav-group">
+        <div class="nav-group-title">Insights</div>
+        <a class="nav-item" href="15-reports.html"><span class="nav-icon">📊</span> Reports</a>
+      </nav>
+      <nav class="nav-group" style="margin-top:auto;">
+        <div class="nav-group-title">Admin</div>
+        <a class="nav-item" href="16-staff.html"><span class="nav-icon">👥</span> Staff</a>
+        <a class="nav-item" href="20-settings.html"><span class="nav-icon">⚙</span> Settings</a>
+        <a class="nav-item" href="01-login.html"><span class="nav-icon">↪</span> Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h1>Add Service</h1>
+          <p>Create a new service for your catalog</p>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-grid">
+          <div class="field full">
+            <label>Service Name</label>
+            <input type="text" placeholder="e.g. Deep Tissue Massage" />
+          </div>
+          <div class="field">
+            <label>Category</label>
+            <select>
+              <option>Hair</option>
+              <option>Color</option>
+              <option>Nails</option>
+              <option>Massage</option>
+              <option>Facial</option>
+              <option>Treatment</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Price (GHS)</label>
+            <input type="number" placeholder="120" />
+          </div>
+          <div class="field">
+            <label>Duration (minutes)</label>
+            <input type="number" placeholder="75" />
+          </div>
+          <div class="field">
+            <label>Assigned Stylist</label>
+            <select>
+              <option>Any available</option>
+              <option>Ama — Senior Stylist</option>
+              <option>Yaa — Color Specialist</option>
+              <option>Kofi — Barber</option>
+              <option>Esi — Nail Technician</option>
+              <option>Adwoa — Massage Therapist</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Required Deposit (GHS)</label>
+            <input type="number" placeholder="0" value="0" />
+            <div class="field-hint">Set a deposit clients must pay to confirm</div>
+          </div>
+          <div class="field">
+            <label>WhatsApp Booking Enabled</label>
+            <select>
+              <option>Yes — clients can book via WhatsApp</option>
+              <option>No — in-salon only</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label>Description</label>
+            <textarea placeholder="Describe the service, what's included, and any preparation notes..."></textarea>
+          </div>
+          <div class="preview-card">
+            <div>
+              <div class="pname">Service Preview</div>
+              <div style="font-size:12px;color:var(--neutral-600);margin-top:4px;">This is how the service appears to clients</div>
+            </div>
+            <div class="pprice">GHS 120</div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <a class="btn btn-secondary" href="06-services.html">Cancel</a>
+          <a class="btn btn-primary" href="06-services.html">Save Service</a>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
