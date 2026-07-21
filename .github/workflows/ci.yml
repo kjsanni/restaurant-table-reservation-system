@@ -32,6 +32,7 @@ jobs:
       DB_PASSWORD: root
       JWT_SECRET: ci-test-secret-key-32chars-minimum-xx
       PORT: 8080
+      ENCRYPTION_KEY: ci-dummy-encryption-key-for-testing-must-be-32-xx
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
