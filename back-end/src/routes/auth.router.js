@@ -36,7 +36,7 @@ router
 
 router
   .route("/tenant/setup")
-  .post(...writeRoute("", authController.setupTenantHandler));
+  .post(...writeRoute("manage_settings", authController.setupTenantHandler));
 
 router
   .route("/settings")

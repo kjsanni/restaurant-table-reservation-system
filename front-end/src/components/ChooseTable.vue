@@ -6,25 +6,31 @@ import { ref } from "vue";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
 
+interface TableOption {
+  id: number;
+  name: string;
+}
+
 const props = defineProps({
-  freeTables: Array,
-  reservation: Object,
+  freeTables: Array as () => TableOption[],
+  reservation: Object as () => { id: number } | undefined,
 });
 
 const emit = defineEmits(["onChosen"]);
 
-const payload = ref({
+const payload = ref<{ tableId: TableOption | null }>({
   tableId: null,
 });
 
-const errMsg = ref(null);
+const errMsg = ref<string | null>(null);
 const isSuccessful = ref(false);
 
 const chooseTable = async () => {
   errMsg.value = null;
   isSuccessful.value = false;
+  if (!props.reservation) return;
   try {
-    const res = await reservationAPI.chooseTable(
+    await reservationAPI.chooseTable(
       props.reservation.id,
       payload.value.tableId
     );
@@ -32,11 +38,12 @@ const chooseTable = async () => {
     isSuccessful.value = true;
     emit("onChosen");
   } catch (err) {
-    if (err.response && err.response.status === 400) {
+    const error = err as { response?: { status?: number }; message?: string };
+    if (error.response && error.response.status === 400) {
       emit("onChosen");
       errMsg.value = getApiErrorMessage(err);
     }
-    logger.error("Choose table failed", { error: err.message });
+    logger.error("Choose table failed", { error: error.message });
   }
 };
 </script>
