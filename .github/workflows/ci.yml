@@ -27,6 +27,7 @@ jobs:
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
       DB_NAME: rtrs_test
+      DB_NAME_TEST: rtrs_test
       DB_USERNAME: root
       DB_PASSWORD: root
       JWT_SECRET: ci-test-secret-key-32chars-minimum-xx
