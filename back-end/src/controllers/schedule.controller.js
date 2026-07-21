@@ -1,5 +1,4 @@
 const scheduleDAO = require("../DAOs/schedule.dao");
-const puppeteer = require("puppeteer");
 
 const escapeHtml = (str) => {
   if (!str) return "";
@@ -187,8 +186,10 @@ const exportSchedulePDFHandler = async (req, res) => {
     </html>
   `;
 
+  let browser = null;
   try {
-    const browser = await puppeteer.launch({ args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+    const puppeteer = require("puppeteer");
+    browser = await puppeteer.launch({ args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "domcontentloaded" });
     const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
