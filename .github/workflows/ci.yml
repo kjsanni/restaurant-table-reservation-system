@@ -54,4 +54,5 @@ jobs:
           cache: "npm"
           cache-dependency-path: front-end/package-lock.json
       - run: cd front-end && npm ci
+      - run: cd front-end && npx vue-tsc --noEmit
       - run: cd front-end && npm run build
