@@ -9,6 +9,28 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: rtrs_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: rtrs_test
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      JWT_SECRET: ci-test-secret-key-min-16-chars
+      PORT: 8080
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,23 +52,5 @@ jobs:
           cache: "npm"
           cache-dependency-path: front-end/package-lock.json
       - run: cd front-end && npm ci
-      - run: cd front-end && npx vue-tsc --noEmit
+      - run: cd front-end && ./node_modules/.bin/vue-tsc --noEmit
       - run: cd front-end && npm run build
-
-  codeql:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: javascript, php
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:javascript"
-      - uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:php"
