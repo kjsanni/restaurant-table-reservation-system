@@ -41,7 +41,7 @@ module.exports = {
     for (const table of tables) {
       try {
         await queryInterface.sequelize.query(
-          `UPDATE ${table} SET tenantId = 1 WHERE tenantId IS NULL`
+          `UPDATE \`${table}\` SET tenantId = 1 WHERE tenantId IS NULL`
         );
       } catch (err) {
         console.log(`Skip backfill ${table}: ${err.message}`);
@@ -52,7 +52,7 @@ module.exports = {
     for (const jt of junctionTables) {
       try {
         await queryInterface.sequelize.query(
-          `UPDATE ${jt} SET tenantId = 1 WHERE tenantId IS NULL`
+          `UPDATE \`${jt}\` SET tenantId = 1 WHERE tenantId IS NULL`
         );
       } catch (err) {
         console.log(`Skip backfill ${jt}: ${err.message}`);
