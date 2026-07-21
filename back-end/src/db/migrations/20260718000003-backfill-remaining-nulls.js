@@ -18,7 +18,7 @@ module.exports = {
       "Reservations",
       "Tables",
       "payments",
-      "Waitlist",
+      "waitlist",
       "AuditLogs",
       "settings",
       "schedules",
