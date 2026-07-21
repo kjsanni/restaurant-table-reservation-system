@@ -84,10 +84,10 @@ const verifyTokenHandler = (req, res) => {
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  // codeql[js/reflected-xss]: Webhook verification endpoint. `challenge`
-  // is a numeric string from Meta's servers returned as text/plain; it is
-  // never rendered as HTML in a browser context.
   if (mode === "subscribe" && token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
+    // codeql[js/reflected-xss]: Webhook verification endpoint. `challenge`
+    // is a numeric string from Meta's servers returned as text/plain; it is
+    // never rendered as HTML in a browser context.
     return res.status(200).type("text/plain").send(challenge);
   }
   return res.status(403).send("Forbidden");
