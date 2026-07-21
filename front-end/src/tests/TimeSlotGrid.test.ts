@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from "vitest"
 import TimeSlotGrid from '../components/TimeSlotGrid.vue'
 import { VaButton, VaCard, VaChip } from 'vuestic-ui'
 

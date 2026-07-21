@@ -7,7 +7,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   selectedOptions: Array<{ name: string; priceAdjustment: number }>;
-  itemNotes: string;
+  itemNotes: string | null;
 }
 
 export const useCartStore = defineStore("cart", () => {
@@ -33,13 +33,13 @@ export const useCartStore = defineStore("cart", () => {
     }
   };
 
-  const removeItem = (menuItemId: number, itemNotes?: string) => {
+  const removeItem = (menuItemId: number, itemNotes?: string | null) => {
     items.value = items.value.filter(
       (i) => !(i.menuItemId === menuItemId && i.itemNotes === itemNotes)
     );
   };
 
-  const updateQuantity = (menuItemId: number, quantity: number, itemNotes?: string) => {
+  const updateQuantity = (menuItemId: number, quantity: number, itemNotes?: string | null) => {
     const item = items.value.find(
       (i) => i.menuItemId === menuItemId && i.itemNotes === itemNotes
     );

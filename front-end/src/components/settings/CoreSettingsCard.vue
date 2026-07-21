@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { VaSwitch } from "vuestic-ui";
 import { useAuthStore } from "@/stores/auth";
-import { useToastStore } from "@/stores/toast";
 import logger from "@/utils/logger";
 
 const props = defineProps<{
@@ -33,7 +32,6 @@ const props = defineProps<{
 }>();
 
 const authStore = useAuthStore();
-const toastStore = useToastStore();
 const savingKeys = new Set<string>();
 const savedKeys = new Set<string>();
 

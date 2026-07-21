@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 declare module '~icons/fluent/*' {
   const component: any
   export default component

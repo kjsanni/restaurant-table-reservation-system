@@ -25,15 +25,18 @@ const dietaryFilters = ref({
   nutFree: false,
 });
 
-const dietaryOptions = [
-  { key: "vegetarian", label: "Vegetarian", icon: "mdi:leaf" },
-  { key: "vegan", label: "Vegan", icon: "mdi:plant" },
-  { key: "glutenFree", label: "Gluten Free", icon: "mdi:barley-off" },
-  { key: "spicy", label: "Spicy", icon: "mdi:chili-hot" },
-  { key: "nutFree", label: "Nut Free", icon: "mdi:peanut-off" },
-];
+type DietaryKey = keyof typeof dietaryFilters.value;
 
-const toggleFilter = (key: string) => {
+const dietaryOptions: Array<{ key: DietaryKey; label: string; icon: string }> =
+  [
+    { key: "vegetarian", label: "Vegetarian", icon: "mdi:leaf" },
+    { key: "vegan", label: "Vegan", icon: "mdi:plant" },
+    { key: "glutenFree", label: "Gluten Free", icon: "mdi:barley-off" },
+    { key: "spicy", label: "Spicy", icon: "mdi:chili-hot" },
+    { key: "nutFree", label: "Nut Free", icon: "mdi:peanut-off" },
+  ];
+
+const toggleFilter = (key: DietaryKey) => {
   dietaryFilters.value[key] = !dietaryFilters.value[key];
   loadMenu();
 };

@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import emailTemplateAPI from "@/services/emailTemplateAPI";
-import notificationAPI from "@/services/notificationAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
 import { useAuthStore } from "@/stores/auth";
@@ -153,7 +152,10 @@ const isSafeImageUrl = (url: string) => {
 const buildPreviewHtml = (type: string) => {
   const t = templates.value[type];
   if (!t) return "";
-  const merged = { ...SAMPLE_DATA, brandName: theme.brandName || "Restaurant" };
+  const merged: Record<string, string> = {
+    ...SAMPLE_DATA,
+    brandName: theme.brandName || "Restaurant",
+  };
   const body = (t.html || "").replace(
     /\{\{(\w+)\}\}/g,
     (_, k: string) => merged[k] ?? placeholder(k)
@@ -183,7 +185,10 @@ const previewSrcdoc = (type: string) => buildPreviewHtml(type);
 const previewSubject = (type: string) => {
   const t = templates.value[type];
   if (!t) return "";
-  const merged = { ...SAMPLE_DATA, brandName: theme.brandName || "Restaurant" };
+  const merged: Record<string, string> = {
+    ...SAMPLE_DATA,
+    brandName: theme.brandName || "Restaurant",
+  };
   return (t.subject || "").replace(
     /\{\{(\w+)\}\}/g,
     (_, k: string) => merged[k] ?? placeholder(k)
@@ -194,7 +199,7 @@ const sendTest = async () => {
   testStatus.value = "sending";
   testMessage.value = "";
   try {
-    await notificationAPI.sendTestEmail(testEmail.value);
+    await emailTemplateAPI.sendTestEmail(testEmail.value);
     testStatus.value = "sent";
     testMessage.value = "Test email sent.";
   } catch (e: any) {
@@ -206,7 +211,7 @@ const sendTest = async () => {
 const sendTemplateTest = async (type: string) => {
   perTemplateTest[type] = { status: "sending", message: "" };
   try {
-    await notificationAPI.sendTemplate(type, testEmail.value, {
+    await emailTemplateAPI.sendTemplate(type, testEmail.value, {
       ...SAMPLE_DATA,
     });
     perTemplateTest[type] = { status: "sent", message: "Test sent." };

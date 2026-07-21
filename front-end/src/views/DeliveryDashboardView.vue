@@ -2,10 +2,7 @@
 import { ref, onMounted } from "vue";
 import { Icon } from "@iconify/vue";
 import deliveryAPI from "@/services/deliveryAPI";
-import { useCurrency } from "@/composables/useCurrency";
 import logger from "@/utils/logger";
-
-const { format: fmt } = useCurrency();
 
 const deliveries = ref<any[]>([]);
 const loading = ref(true);

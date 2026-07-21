@@ -9,6 +9,9 @@ const client = axios.create({
   xsrfHeaderName: "x-xsrf-token",
 });
 
+/**
+ * @param {string} [plan] - Optional plan filter
+ */
 export const getPlatformBenchmarks = (plan = null) => {
   const params = plan ? { plan } : {};
   return client.get("/", { params });

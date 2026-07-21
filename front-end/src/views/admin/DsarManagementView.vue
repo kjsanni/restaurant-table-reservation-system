@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { useRoute } from "vue-router";
 import dsarAPI from "@/services/dsarAPI";
 import logger from "@/utils/logger";

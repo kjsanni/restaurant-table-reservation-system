@@ -123,8 +123,6 @@ const deletePromotion = async (id: number) => {
     deleting.value = null;
   }
 };
-
-const discountLabel = (type: string) => (type === "percentage" ? "%" : "GHS");
 </script>
 
 <template>
