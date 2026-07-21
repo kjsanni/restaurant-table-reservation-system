@@ -13,16 +13,16 @@ module.exports = {
     }
 
     const tables = [
-      "Users",
+      "users",
       "Customers",
       "Reservations",
       "Tables",
-      "Payments",
+      "payments",
       "Waitlist",
       "AuditLogs",
-      "Settings",
+      "settings",
       "Schedule",
-      "Holidays",
+      "holidays",
       "ReservationStatusHistory",
       "Refunds",
       "EmailTemplates",

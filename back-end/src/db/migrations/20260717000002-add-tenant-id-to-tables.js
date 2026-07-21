@@ -3,16 +3,16 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const tables = [
-      "Users",
+      "users",
       "Customers",
       "Reservations",
       "Tables",
-      "Payments",
+      "payments",
       "Waitlist",
       "AuditLogs",
-      "Settings",
+      "settings",
       "schedules",
-      "Holidays",
+      "holidays",
       "reservation_status_history",
       "Refunds",
       "emailTemplates",
@@ -76,16 +76,16 @@ module.exports = {
 
   down: async (queryInterface, Sequelize) => {
     const tables = [
-      "Users",
+      "users",
       "Customers",
       "Reservations",
       "Tables",
-      "Payments",
+      "payments",
       "Waitlist",
       "AuditLogs",
-      "Settings",
+      "settings",
       "schedules",
-      "Holidays",
+      "holidays",
       "reservation_status_history",
       "Refunds",
       "emailTemplates",

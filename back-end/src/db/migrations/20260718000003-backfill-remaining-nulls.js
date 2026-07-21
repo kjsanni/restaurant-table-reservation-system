@@ -13,16 +13,16 @@ module.exports = {
     }
 
     const tables = [
-      "Users",
+      "users",
       "Customers",
       "Reservations",
       "Tables",
-      "Payments",
+      "payments",
       "Waitlist",
       "AuditLogs",
-      "Settings",
+      "settings",
       "schedules",
-      "Holidays",
+      "holidays",
       "reservation_status_history",
       "Refunds",
       "emailTemplates",
@@ -34,8 +34,8 @@ module.exports = {
       "login_attempts",
       "refresh_tokens",
       "paystackEvents",
-      "Groups",
-      "Roles",
+      "groups",
+      "roles",
     ];
 
     for (const table of tables) {
