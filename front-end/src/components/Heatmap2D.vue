@@ -4,6 +4,30 @@ import { VaModal } from "vuestic-ui";
 import reservationAPI from "@/services/reservationAPI";
 import dateNavigator from "@/utils/dateNavigator";
 
+interface DateHourData {
+  hours: string[];
+  dates: string[];
+  matrix: number[][];
+  totalsPerDay: number[];
+}
+
+interface CalendarDay {
+  date: string;
+  count: number;
+  peakHour?: string;
+}
+
+interface CalendarData {
+  days: CalendarDay[];
+}
+
+type HeatmapData = DateHourData & Partial<CalendarData>;
+
+interface DrillDownHour {
+  hour: string;
+  count: number;
+}
+
 const props = defineProps({
   mode: {
     type: String,
@@ -17,7 +41,7 @@ const props = defineProps({
 const emit = defineEmits(["update:mode", "update:from", "update:to"]);
 
 const loading = ref(true);
-const data = ref(null);
+const data = ref<HeatmapData | null>(null);
 const errorMsg = ref("");
 
 const internalMode = ref(props.mode);
@@ -37,10 +61,10 @@ function getDefaultTo() {
 const maxCount = computed(() => {
   if (!data.value) return 1;
   if (props.mode === "date-hour") {
-    const flat = data.value.matrix.flat();
+    const flat = (data.value.matrix || []).flat();
     return flat.length ? Math.max(...flat) : 1;
   }
-  const counts = data.value.days.map((d) => d.count);
+  const counts = (data.value.days || []).map((d) => d.count);
   return counts.length ? Math.max(...counts) : 1;
 });
 
@@ -63,7 +87,7 @@ const drillDownMax = computed(() => {
   return Math.max(...drillDownHours.value.map((h) => h.count), 1);
 });
 
-const cellColor = (count) => {
+const cellColor = (count: number) => {
   if (count === 0) return "#faf9f7";
   const ratio = count / maxCount.value;
   if (ratio < 0.25) return "#dbeafe";
@@ -72,7 +96,7 @@ const cellColor = (count) => {
   return "#1e40af";
 };
 
-const calendarCellColor = (count) => {
+const calendarCellColor = (count: number) => {
   if (count === 0) return "#faf9f7";
   const ratio = count / maxCount.value;
   if (ratio < 0.25) return "#ecfccb";
@@ -81,9 +105,9 @@ const calendarCellColor = (count) => {
   return "#365314";
 };
 
-let debounceTimer = null;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 const loadData = async () => {
-  clearTimeout(debounceTimer);
+  if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(async () => {
     loading.value = true;
     errorMsg.value = "";
@@ -93,7 +117,7 @@ const loadData = async () => {
         to: internalTo.value,
         mode: props.mode,
       });
-      data.value = res.data;
+      data.value = res.data as HeatmapData;
     } catch (err) {
       errorMsg.value = "Failed to load heatmap data.";
       data.value = null;
@@ -115,19 +139,19 @@ watch(
 
 onMounted(loadData);
 
-const setMode = (m) => {
+const setMode = (m: string) => {
   emit("update:mode", m);
 };
 
-const setFrom = (v) => emit("update:from", v);
-const setTo = (v) => emit("update:to", v);
+const setFrom = (v: string) => emit("update:from", v);
+const setTo = (v: string) => emit("update:to", v);
 
-const selectedDay = ref(null);
+const selectedDay = ref<CalendarDay | null>(null);
 const drillDownOpen = ref(false);
 const drillDownLoading = ref(false);
-const drillDownHours = ref([]);
+const drillDownHours = ref<DrillDownHour[]>([]);
 
-const openDrillDown = async (day) => {
+const openDrillDown = async (day: CalendarDay) => {
   if (props.mode !== "calendar") return;
   selectedDay.value = day;
   drillDownOpen.value = true;
@@ -139,13 +163,13 @@ const openDrillDown = async (day) => {
       to: day.date,
       mode: "date-hour",
     });
-    const hours = new Set();
-    (res.data.hours || []).forEach((h) => hours.add(h));
+    const hours = new Set<string>();
+    ((res.data.hours || []) as string[]).forEach((h) => hours.add(h));
 
-    const breakdown = [];
+    const breakdown: DrillDownHour[] = [];
     hours.forEach((hour) => {
-      const dateIdx = res.data.dates.indexOf(day.date);
-      const hIdx = res.data.hours.indexOf(hour);
+      const dateIdx = (res.data.dates as string[]).indexOf(day.date);
+      const hIdx = (res.data.hours as string[]).indexOf(hour);
       const count =
         dateIdx >= 0 && hIdx >= 0 ? res.data.matrix[dateIdx]?.[hIdx] || 0 : 0;
       breakdown.push({ hour, count });
