@@ -2,13 +2,13 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn("reservations", "recurrence", {
+    await queryInterface.addColumn("Reservations", "recurrence", {
       type: Sequelize.JSON,
       allowNull: true,
     });
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.removeColumn("reservations", "recurrence");
+    await queryInterface.removeColumn("Reservations", "recurrence");
   },
 };

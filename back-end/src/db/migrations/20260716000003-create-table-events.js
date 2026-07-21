@@ -26,7 +26,7 @@ module.exports = {
       actorId: {
         type: Sequelize.INTEGER,
         allowNull: true,
-        references: { model: "Users", key: "id" },
+        references: { model: "users", key: "id" },
       },
       createdAt: {
         type: Sequelize.DATE,

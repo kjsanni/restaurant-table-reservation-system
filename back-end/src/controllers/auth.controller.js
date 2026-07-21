@@ -1,7 +1,7 @@
 const authService = require("../services/authService");
 const authDAO = require("../DAOs/auth.dao");
 const roleDAO = require("../DAOs/role.dao");
-const { applyTypeDefaults } = require("../tenant-platform/services/tenantTypeDefaults.service");
+const { applyTypeDefaults, TYPE_DEFAULTS } = require("../tenant-platform/services/tenantTypeDefaults.service");
 
 const registerStatusHandler = async (req, res) => {
   const { registrationEnabled } = await authService.checkRegistrationStatus(
@@ -160,17 +160,44 @@ const setupTenantHandler = async (req, res) => {
   const { restaurantType, serviceModes } = req.body;
   const tenant = req.tenant;
 
-  if (restaurantType && restaurantType !== tenant.restaurantType) {
-    applyTypeDefaults(tenant, restaurantType);
+  const VALID_MODES = ["dine_in", "takeaway", "delivery"];
+  const VALID_TYPES = Object.keys(TYPE_DEFAULTS);
+
+  if (restaurantType !== undefined) {
+    if (!VALID_TYPES.includes(restaurantType)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid restaurantType. Must be one of: ${VALID_TYPES.join(", ")}`,
+      });
+    }
+    if (restaurantType !== tenant.restaurantType) {
+      applyTypeDefaults(tenant, restaurantType);
+    }
   }
 
-  if (Array.isArray(serviceModes)) {
+  if (serviceModes !== undefined) {
+    if (!Array.isArray(serviceModes) || serviceModes.length === 0) {
+      return res.status(400).json({ success: false, message: "serviceModes must be a non-empty array" });
+    }
+    const allValid = serviceModes.every((m) => VALID_MODES.includes(m));
+    if (!allValid) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid serviceModes. Must be from: ${VALID_MODES.join(", ")}`,
+      });
+    }
     tenant.serviceModes = serviceModes;
   }
 
   await tenant.save();
 
-  return res.status(200).json({ success: true, item: tenant });
+  return res.status(200).json({
+    success: true,
+    item: {
+      restaurantType: tenant.restaurantType,
+      serviceModes: tenant.serviceModes,
+    },
+  });
 };
 
 const logoutHandler = async (req, res) => {

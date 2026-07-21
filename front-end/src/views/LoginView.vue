@@ -28,7 +28,10 @@ const formatLockoutTime = (seconds: number) => {
 
 const startLockoutTimer = (remainingSeconds: number) => {
   lockoutRemaining.value = remainingSeconds;
-  if (lockoutTimer.value) clearInterval(lockoutTimer.value as unknown as ReturnType<typeof setInterval>);
+  if (lockoutTimer.value)
+    clearInterval(
+      lockoutTimer.value as unknown as ReturnType<typeof setInterval>
+    );
   const timerId = window.setInterval(() => {
     lockoutRemaining.value--;
     if (lockoutRemaining.value <= 0) {
@@ -50,7 +53,9 @@ const handleLogin = async () => {
   } catch (err) {
     generalError.value = getApiErrorMessage(err);
     validationErrors.value = getApiErrors(err);
-    const error = err as { response?: { data?: { remainingSeconds?: number } } };
+    const error = err as {
+      response?: { data?: { remainingSeconds?: number } };
+    };
     if (error.response?.data?.remainingSeconds) {
       startLockoutTimer(error.response.data.remainingSeconds);
     }
