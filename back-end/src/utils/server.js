@@ -200,7 +200,7 @@ const createServer = () => {
   app.use("/api/v1/schedule", logAction, validateCsrfToken, TENANT_MODE ? requireFeature("staff_scheduling") : null, scheduleRouter);
   app.use("/api/v1/shifts", logAction, validateCsrfToken, TENANT_MODE ? requireFeature("staff_scheduling") : null, shiftRouter);
   app.use("/api/v1/time-offs", logAction, validateCsrfToken, TENANT_MODE ? requireFeature("staff_scheduling") : null, timeOffRouter);
-  app.use("/api/v1/floor-plans", logAction, validateCsrfToken, floorPlanRouter);
+  app.use("/api/v1/floor-plans", logAction, validateCsrfToken, TENANT_MODE ? requireFeature("table_management") : null, floorPlanRouter);
   app.use("/api/v1/audit-logs", auditLogRouter);
   app.use("/api/v1/rbac", logAction, validateCsrfToken, rbacRouter);
   app.use("/api/v1/waitlist", logAction, validateCsrfToken, bulkOperationLimiter, TENANT_MODE ? [requireFeature("waitlist"), requiresServiceMode("dine_in")] : null, waitlistRouter);

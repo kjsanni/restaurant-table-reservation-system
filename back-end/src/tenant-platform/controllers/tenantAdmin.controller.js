@@ -109,7 +109,6 @@ const updateTenantHandler = async (req, res) => {
 
   if (updates.restaurantType && updates.restaurantType !== tenant.restaurantType) {
     applyTypeDefaults(tenant, updates.restaurantType);
-    await tenant.save();
   }
 
   await tenant.update(updates);

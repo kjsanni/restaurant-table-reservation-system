@@ -35,6 +35,10 @@ router
   .get(...protectedRoute("", authController.getTenantCapabilitiesHandler));
 
 router
+  .route("/tenant/setup")
+  .post(...writeRoute("", authController.setupTenantHandler));
+
+router
   .route("/settings")
   .get(generalLimiter, tryCatchHandler(protect), tryCatchHandler(admin), tryCatchHandler(authController.getSettingsHandler))
   .put(generalLimiter, tryCatchHandler(protect), tryCatchHandler(admin), tryCatchHandler(authController.updateSettingsHandler));

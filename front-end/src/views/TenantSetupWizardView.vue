@@ -104,7 +104,7 @@ const submitSetup = async () => {
   submitting.value = true;
   errorMsg.value = "";
   try {
-    const response = await fetch("/api/v1/tenant/setup", {
+    const response = await fetch("/api/v1/auth/tenant/setup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

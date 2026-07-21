@@ -1,6 +1,7 @@
 const authService = require("../services/authService");
 const authDAO = require("../DAOs/auth.dao");
 const roleDAO = require("../DAOs/role.dao");
+const { applyTypeDefaults } = require("../tenant-platform/services/tenantTypeDefaults.service");
 
 const registerStatusHandler = async (req, res) => {
   const { registrationEnabled } = await authService.checkRegistrationStatus(
@@ -149,6 +150,27 @@ const getTenantCapabilitiesHandler = async (req, res) => {
       featureFlags,
     },
   });
+};
+
+const setupTenantHandler = async (req, res) => {
+  if (!req.tenant) {
+    return res.status(400).json({ success: false, message: "Tenant context required" });
+  }
+
+  const { restaurantType, serviceModes } = req.body;
+  const tenant = req.tenant;
+
+  if (restaurantType && restaurantType !== tenant.restaurantType) {
+    applyTypeDefaults(tenant, restaurantType);
+  }
+
+  if (Array.isArray(serviceModes)) {
+    tenant.serviceModes = serviceModes;
+  }
+
+  await tenant.save();
+
+  return res.status(200).json({ success: true, item: tenant });
 };
 
 const logoutHandler = async (req, res) => {
@@ -370,6 +392,7 @@ module.exports = {
   loginHandler,
   getMeHandler,
   getTenantCapabilitiesHandler,
+  setupTenantHandler,
   logoutHandler,
   refreshTokenHandler,
   revokeTokenHandler,
