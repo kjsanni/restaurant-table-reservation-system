@@ -1,7 +1,7 @@
 const emailTemplateService = require("../services/emailTemplate.service");
 const emailService = require("../services/emailService");
 
-// CodeQL [js/polynomial-redos]: False positive. EMAIL_RE is a simple anchored
+// codeql[js/polynomial-redos]: False positive. EMAIL_RE is a simple anchored
 // email pattern (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`) with no nested quantifiers,
 // alternation, or ambiguous subpatterns — it cannot exhibit polynomial
 // backtracking regardless of input.
