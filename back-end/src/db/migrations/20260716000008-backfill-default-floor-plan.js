@@ -25,11 +25,7 @@ module.exports = {
         "INSERT INTO FloorPlans (name, createdAt, updatedAt) VALUES ('Main Floor', NOW(), NOW())",
         { type: Sequelize.QueryTypes.INSERT }
       );
-      const main = await sequelize.query(
-        "SELECT id FROM FloorPlans WHERE name = 'Main Floor' LIMIT 1",
-        { type: Sequelize.QueryTypes.SELECT }
-      );
-      mainPlanId = main[0].id;
+      mainPlanId = inserted[0][0];
     }
 
     // Backfill legacy tables (floorPlanId IS NULL) to the Main Floor plan.
