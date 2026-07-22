@@ -6,6 +6,7 @@ export interface NavItem {
   requiresAdmin?: boolean
   requiresPermission?: string
   requiresFeature?: string
+  requiresVertical?: string
   tenantOnly?: boolean
   section?: string
 }
@@ -31,6 +32,10 @@ export const authenticatedNavItems: NavItem[] = [
   { routeName: 'revenue-report', text: 'Revenue', icon: 'mdi:trending-up', requiresAuth: true },
   { routeName: 'search', text: 'Search', icon: 'mdi:magnify', requiresAuth: true },
   { routeName: 'about', text: 'About', icon: 'mdi:information', requiresAuth: true },
+  { routeName: 'appointments', text: 'Appointments', icon: 'mdi:calendar-check', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'stations', text: 'Stations', icon: 'mdi:chair-rolling', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'station-map', text: 'Station Map', icon: 'mdi:map', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-services', text: 'Services', icon: 'mdi:content-cut', requiresAuth: true, requiresVertical: 'salon' },
 ]
 
 export const adminNavItems: NavItem[] = [

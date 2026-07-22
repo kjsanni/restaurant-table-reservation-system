@@ -98,6 +98,10 @@ const getMeHandler = async (req, res) => {
         manage_groups: true,
         view_audit_logs: true,
         manage_settings: true,
+        view_appointments: true,
+        edit_appointments: true,
+        manage_stations: true,
+        manage_services: true,
       },
       manager: {
         view_reservations: true,
@@ -108,6 +112,10 @@ const getMeHandler = async (req, res) => {
         manage_roles: false,
         manage_groups: false,
         view_audit_logs: true,
+        view_appointments: true,
+        edit_appointments: true,
+        manage_stations: true,
+        manage_services: true,
       },
       staff: {
         view_reservations: true,
@@ -118,6 +126,10 @@ const getMeHandler = async (req, res) => {
         manage_roles: false,
         manage_groups: false,
         view_audit_logs: false,
+        view_appointments: true,
+        edit_appointments: true,
+        manage_stations: false,
+        manage_services: false,
       },
     };
     effectivePermissions = defaults[user.role] || defaults.staff;
@@ -145,6 +157,7 @@ const getTenantCapabilitiesHandler = async (req, res) => {
   return res.status(200).json({
     success: true,
     capabilities: {
+      businessVertical: req.tenant.businessVertical || "restaurant",
       restaurantType: req.tenant.restaurantType || "full_service",
       serviceModes: Array.isArray(req.tenant.serviceModes) ? req.tenant.serviceModes : ["dine_in", "takeaway", "delivery"],
       featureFlags,

@@ -106,6 +106,7 @@ const shouldShow = (item: {
   requiresAdmin?: boolean;
   requiresPermission?: string;
   requiresFeature?: string;
+  requiresVertical?: string;
 }) => {
   if (item.tenantOnly && !authStore.tenantModeEnabled) return false;
   if (item.requiresAuth && !isAuthenticated.value) return false;
@@ -118,6 +119,12 @@ const shouldShow = (item: {
   if (
     item.requiresFeature &&
     !authStore.capabilities?.featureFlags?.[item.requiresFeature]
+  ) {
+    return false;
+  }
+  if (
+    item.requiresVertical &&
+    authStore.currentTenant?.businessVertical !== item.requiresVertical
   ) {
     return false;
   }

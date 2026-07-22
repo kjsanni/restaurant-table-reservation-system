@@ -12,6 +12,7 @@ export interface User {
 }
 
 export interface TenantCapabilities {
+  businessVertical?: string;
   restaurantType: string;
   serviceModes: string[];
   featureFlags: Record<string, boolean>;
@@ -21,7 +22,7 @@ export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
   const isAuthenticated = computed(() => !!user.value);
   const isLoading = ref(true);
-  const currentTenant = ref<{ id: number; name: string; slug?: string } | null>(null);
+  const currentTenant = ref<{ id: number; name: string; slug?: string; businessVertical?: string } | null>(null);
   const tenantModeEnabled = ref(false);
   const branding = ref({ brandName: "", logoUrl: "", primaryColor: "" });
   const currencyLocale = ref({ currency: "GHS", locale: "en-GH" });

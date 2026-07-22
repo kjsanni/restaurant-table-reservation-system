@@ -68,6 +68,11 @@ let billingRoutes = null;
 let requireFeature = null;
 let requiresServiceMode = null;
 
+let requireVertical = null;
+let salonAppointmentRoutes = null;
+let salonStationRoutes = null;
+let salonServiceRoutes = null;
+
 if (TENANT_MODE) {
   ({ resolveTenant } = require("../tenant-platform/middleware/resolveTenant"));
   ({ requireActiveTenant } = require("../tenant-platform/middleware/tenantStatus"));
@@ -94,6 +99,10 @@ if (TENANT_MODE) {
   publicDsarRoutes = require("../tenant-platform/routes/publicDsar.router");
   benchmarkRoutes = require("../tenant-platform/routes/benchmark.router");
   billingRoutes = require("../tenant-platform/routes/billing.router");
+  ({ requireVertical } = require("../middleware/requireVertical"));
+  salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
+  salonStationRoutes = require("../verticals/salon/routes/station.router");
+  salonServiceRoutes = require("../verticals/salon/routes/service.router");
 }
 
 const requestTimeout = (timeout = 15000) => {
@@ -233,6 +242,9 @@ const createServer = () => {
     app.use("/api/v1/admin/audit", logAction, validateCsrfToken, platformAuditRoutes);
     app.use("/api/v1/admin/notifications", logAction, validateCsrfToken, notificationRoutes);
     app.use("/api/v1/billing", logAction, validateCsrfToken, billingRoutes);
+    app.use("/api/v1/salon/appointments", logAction, validateCsrfToken, salonAppointmentRoutes);
+    app.use("/api/v1/salon/stations", logAction, validateCsrfToken, salonStationRoutes);
+    app.use("/api/v1/salon/services", logAction, validateCsrfToken, salonServiceRoutes);
   }
   app.use("/api/v1/customer-portal", logAction, validateCsrfToken, customerPortalRouter);
   app.use("/api/v1/notifications", logAction, validateCsrfToken, notificationRouter);

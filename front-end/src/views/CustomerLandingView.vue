@@ -17,9 +17,17 @@ const { format: fmt } = useCurrency();
 const loading = ref(true);
 const menuItems = ref<any[]>([]);
 const tables = ref<any[]>([]);
-const activeTab = ref<"menu" | "tables">("menu");
+const services = ref<any[]>([]);
+const activeTab = ref<"menu" | "tables" | "services">("menu");
 const addingToCart = ref<number | null>(null);
 const heroLoaded = ref(false);
+const businessVertical = computed(
+  () =>
+    authStore.currentTenant?.businessVertical ||
+    authStore.capabilities?.businessVertical ||
+    "restaurant"
+);
+const isSalon = computed(() => businessVertical.value === "salon");
 
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 const menuTotal = computed(() => cartStore.total);
@@ -36,7 +44,12 @@ const hasTableManagement = computed(
 );
 
 onMounted(async () => {
-  await Promise.all([loadMenu(), loadTables()]);
+  if (isSalon.value) {
+    activeTab.value = "services";
+    await loadServices();
+  } else {
+    await Promise.all([loadMenu(), loadTables()]);
+  }
   heroLoaded.value = true;
   initScrollReveal();
 });
@@ -123,6 +136,53 @@ const demoTables = [
   },
 ];
 
+const demoServices = [
+  {
+    id: 1,
+    name: "Classic Haircut",
+    description: "Precision cut tailored to your style.",
+    price: 50,
+    durationMinutes: 30,
+    depositAmount: 0,
+    category: { name: "Hair" },
+    isAvailable: true,
+    image: "",
+  },
+  {
+    id: 2,
+    name: "Deep Conditioning Treatment",
+    description: "Intensive moisture repair for all hair types.",
+    price: 80,
+    durationMinutes: 45,
+    depositAmount: 20,
+    category: { name: "Treatment" },
+    isAvailable: true,
+    image: "",
+  },
+  {
+    id: 3,
+    name: "Full Color",
+    description: "Full head color application with premium products.",
+    price: 150,
+    durationMinutes: 90,
+    depositAmount: 30,
+    category: { name: "Color" },
+    isAvailable: true,
+    image: "",
+  },
+  {
+    id: 4,
+    name: "Manicure",
+    description: "Classic nail care with polish.",
+    price: 45,
+    durationMinutes: 40,
+    depositAmount: 0,
+    category: { name: "Nails" },
+    isAvailable: true,
+    image: "",
+  },
+];
+
 const loadMenu = async () => {
   try {
     const res = await menuAPI.getAvailableMenu();
@@ -143,6 +203,18 @@ const loadTables = async () => {
   } catch (err) {
     tables.value = demoTables;
     logger.error("Failed to load tables", { error: err });
+  }
+};
+
+const loadServices = async () => {
+  try {
+    await menuAPI.getAvailableMenu?.();
+    services.value = demoServices;
+  } catch (err) {
+    services.value = demoServices;
+    logger.error("Failed to load services", { error: err });
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -354,6 +426,7 @@ onMounted(() => {
       </div>
       <div class="tab-bar">
         <button
+          v-if="!isSalon"
           :class="['tab', activeTab === 'menu' && 'tab-active']"
           @click="activeTab = 'menu'"
         >
@@ -361,12 +434,20 @@ onMounted(() => {
           Menu
         </button>
         <button
-          v-if="hasTableManagement"
+          v-if="!isSalon && hasTableManagement"
           :class="['tab', activeTab === 'tables' && 'tab-active']"
           @click="activeTab = 'tables'"
         >
           <Icon icon="mdi:table-chair" width="18" height="18" />
           Free Tables
+        </button>
+        <button
+          v-if="isSalon"
+          :class="['tab', activeTab === 'services' && 'tab-active']"
+          @click="activeTab = 'services'"
+        >
+          <Icon icon="mdi:content-cut" width="18" height="18" />
+          Services
         </button>
       </div>
 
@@ -376,7 +457,7 @@ onMounted(() => {
       </div>
 
       <template v-else>
-        <div v-if="activeTab === 'menu'" class="menu-grid">
+        <div v-if="!isSalon && activeTab === 'menu'" class="menu-grid">
           <div v-for="item in menuItems" :key="item.id" class="menu-card">
             <div class="menu-card-media">
               <img
@@ -427,6 +508,33 @@ onMounted(() => {
           </div>
         </div>
 
+        <div
+          v-else-if="isSalon && activeTab === 'services'"
+          class="services-grid"
+        >
+          <div v-for="svc in services" :key="svc.id" class="service-card">
+            <div class="service-card-body">
+              <h3>{{ svc.name }}</h3>
+              <p class="service-desc">{{ svc.description }}</p>
+              <div class="service-meta">
+                <span class="service-price">{{ fmt(svc.price) }}</span>
+                <span class="service-duration"
+                  >{{ svc.durationMinutes }} min</span
+                >
+              </div>
+              <p v-if="svc.depositAmount > 0" class="service-deposit">
+                Deposit: {{ fmt(svc.depositAmount) }}
+              </p>
+              <span v-if="svc.category" class="service-category">{{
+                svc.category.name
+              }}</span>
+            </div>
+            <button class="btn-book" @click="goToReserve()">Book Now</button>
+          </div>
+          <div v-if="!services.length" class="empty-state">
+            No services available right now.
+          </div>
+        </div>
         <div v-else class="tables-grid">
           <div v-for="table in tables" :key="table.id" class="table-card">
             <div class="table-media">
@@ -457,13 +565,22 @@ onMounted(() => {
     <section class="cta-strip reveal-section">
       <div class="cta-inner">
         <div>
-          <h2>Ready to dine?</h2>
-          <p>Join 2,400+ guests who order and book with us every month.</p>
+          <h2 v-if="isSalon">Ready for your appointment?</h2>
+          <h2 v-else>Ready to dine?</h2>
+          <p v-if="isSalon">
+            Book your next haircut, color, or treatment online.
+          </p>
+          <p v-else>
+            Join 2,400+ guests who order and book with us every month.
+          </p>
         </div>
         <div class="cta-actions">
-          <button class="btn-primary-lg" @click="goToMenu">Order Now</button>
+          <button v-if="!isSalon" class="btn-primary-lg" @click="goToMenu">
+            Order Now
+          </button>
           <button class="btn-secondary-lg" @click="goToReserve">
-            Book Table
+            <span v-if="isSalon">Book Now</span>
+            <span v-else>Book Table</span>
           </button>
         </div>
       </div>
