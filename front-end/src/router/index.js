@@ -488,6 +488,30 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     component: () => import("../views/admin/BenchmarkView.vue"),
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
+  router.addRoute({
+    path: "/appointments",
+    name: "appointments",
+    component: () => import("../views/salon/AppointmentsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "view_appointments" },
+  });
+  router.addRoute({
+    path: "/stations",
+    name: "stations",
+    component: () => import("../views/salon/StationsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_stations" },
+  });
+  router.addRoute({
+    path: "/station-map",
+    name: "station-map",
+    component: () => import("../views/salon/StationMapView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "view_appointments" },
+  });
+  router.addRoute({
+    path: "/services",
+    name: "salon-services",
+    component: () => import("../views/salon/ServicesView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_services" },
+  });
 }
 
 router.beforeEach((to, from, next) => {
