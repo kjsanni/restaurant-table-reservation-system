@@ -513,6 +513,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_services" },
   });
   router.addRoute({
+    path: "/salon/settings",
+    name: "salon-settings",
+    component: () => import("../views/salon/SalonSettingsView.vue"),
+    meta: { requiresAuth: true, requiresVertical: "salon" },
+  });
+  router.addRoute({
     path: "/salon/walkins",
     name: "salon-walkins",
     component: () => import("../views/salon/SalonWalkInQueueView.vue"),

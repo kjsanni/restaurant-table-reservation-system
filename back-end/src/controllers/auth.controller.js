@@ -324,6 +324,11 @@ const updateSettingsHandler = async (req, res) => {
     "branding",
     "message_templates",
     "email_server",
+    "salon_whatsapp_config",
+    "salon_payment_config",
+    "salon_message_templates",
+    "salon_sms_fallback_enabled",
+    "salon_feature_flags",
   ];
   if (!allowedKeys.includes(key)) {
     return res.status(400).json({ success: false, message: "Unknown or protected setting key." });

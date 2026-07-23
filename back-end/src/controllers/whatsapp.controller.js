@@ -45,6 +45,14 @@ const inboundHandler = async (req, res) => {
     const isSalon = tenant?.businessVertical === "salon";
 
     if (isSalon) {
+      const settings = tenant?.settings || {};
+      const flags = settings.featureFlags || {};
+      const waBookingEnabled = flags.salon_whatsapp_booking !== false;
+
+      if (!waBookingEnabled) {
+        return res.status(200).json({ success: true });
+      }
+
       if (message.type === "text" && message.text && message.text.body) {
         const session = await whatsappAppointmentService.getSession(phone);
         if (session.state === "idle") {
