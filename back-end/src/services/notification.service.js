@@ -1,6 +1,7 @@
 const mailService = require("./mail.service");
 const whatsappService = require("./whatsapp.service");
 const reservationDAO = require("../DAOs/reservation.dao");
+const salonAppointmentDao = require("../verticals/salon/DAOs/appointment.dao");
 const settingDAO = require("../DAOs/auth.dao");
 const dateTimeValidator = require("../utils/dateAndTimeValidator");
 const { notificationQueue, safeAdd } = require("../queues/queue");
@@ -247,6 +248,52 @@ const enqueueReminders = async (tenantId, channels = null) => {
   return { enqueued: result.enqueued, count: result.enqueued ? items.length : 0 };
 };
 
+const enqueueSalonAppointmentReminders = async (tenantId, channels = null) => {
+  const resolved = await resolveChannels(tenantId, channels);
+  const now = new Date();
+  const windowEnd = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+  const result = await salonAppointmentDao.findAllForTenant(tenantId, {
+    status: "confirmed",
+    from: now.toISOString(),
+    to: windowEnd.toISOString(),
+    limit: 100,
+  });
+
+  const appointments = result.data || [];
+  const items = [];
+  for (const appointment of appointments) {
+    const customer = appointment.customer || {};
+    const service = appointment.service || {};
+    const templateData = {
+      __template: "salon_appointment_reminder",
+      name: customer.firstName || customer.lastName || "Guest",
+      service: service.name || "Appointment",
+      date: appointment.start ? new Date(appointment.start).toISOString().slice(0, 10) : "",
+      time: appointment.start ? new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+      duration: appointment.durationMinutes || 30,
+      salonName: process.env.APP_NAME || "Salon",
+    };
+    items.push({
+      type: "whatsapp",
+      tenantId,
+      to: customer.phone,
+      payload: { text: buildWhatsAppText(templateData), templateData },
+    });
+  }
+
+  if (items.length === 0) {
+    return { enqueued: true, count: 0 };
+  }
+
+  const enqueueResult = await safeAdd(notificationQueue, "salon_appointment_reminders", {
+    type: "batch",
+    tenantId,
+    items,
+  });
+  return { enqueued: enqueueResult.enqueued, count: enqueueResult.enqueued ? items.length : 0 };
+};
+
 module.exports = {
   scheduleReminders,
   sendConfirmation,
@@ -254,6 +301,7 @@ module.exports = {
   enqueueConfirmation,
   enqueueCancellation,
   enqueueReminders,
+  enqueueSalonAppointmentReminders,
   sendViaChannels,
   buildWhatsAppText,
   renderTemplate,

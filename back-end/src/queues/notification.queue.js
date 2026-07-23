@@ -115,6 +115,8 @@ const processItem = async (item) => {
       return await sendEmailJob(payload);
     case "whatsapp":
       return await sendWhatsAppJob(payload);
+    case "salon_appointment_reminder":
+      return await sendSalonAppointmentReminderJob(payload);
     default:
       throw new Error(`Unknown notification type: ${type}`);
   }
@@ -127,6 +129,12 @@ const sendEmailJob = async (payload) => {
 };
 
 const sendWhatsAppJob = async (payload) => {
+  const { to, text, tenantId } = payload;
+  const whatsappService = require("../services/whatsapp.service");
+  return await whatsappService.sendWhatsAppText(to, text, tenantId);
+};
+
+const sendSalonAppointmentReminderJob = async (payload) => {
   const { to, text, tenantId } = payload;
   const whatsappService = require("../services/whatsapp.service");
   return await whatsappService.sendWhatsAppText(to, text, tenantId);

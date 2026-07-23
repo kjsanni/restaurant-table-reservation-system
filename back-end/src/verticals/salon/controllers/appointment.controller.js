@@ -3,6 +3,7 @@ const salonModels = require("../models");
 const appointmentDao = require("../DAOs/appointment.dao");
 const staffServiceSkillDao = require("../DAOs/staffServiceSkill.dao");
 const { logAction } = require("../../../middleware/auditLog");
+const { enqueueSalonAppointmentReminders } = require("../../../services/notification.service");
 
 const appointmentController = {
   async getAllAppointments(req, res) {
@@ -40,6 +41,10 @@ const appointmentController = {
         serviceId: appointment.serviceId,
         start: appointment.start,
       });
+
+      if (appointment.status === "confirmed") {
+        enqueueSalonAppointmentReminders(tenantId).catch(() => {});
+      }
 
       res.status(201).json({ success: true, data: appointment });
     } catch (error) {
