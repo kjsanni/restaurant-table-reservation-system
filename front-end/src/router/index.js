@@ -554,6 +554,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     component: () => import("../views/salon/SalonReportsView.vue"),
     meta: { requiresAuth: true, requiresPermission: "view_appointments" },
   });
+  router.addRoute({
+    path: "/salon/recurring",
+    name: "salon-recurring",
+    component: () => import("../views/salon/SalonRecurringView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "view_appointments" },
+  });
 }
 
 router.beforeEach((to, from, next) => {
