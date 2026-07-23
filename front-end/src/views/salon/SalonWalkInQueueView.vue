@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import appointmentAPI from "@/services/appointmentAPI";
 import serviceAPI from "@/services/serviceAPI";
 import stationAPI from "@/services/stationAPI";
+import customerAPI from "@/services/customerAPI";
 import logger from "@/utils/logger";
 
 interface Appointment {
@@ -92,25 +93,28 @@ const formatTime = (iso: string) => {
 };
 
 const form = ref({
-  customerFirstName: "",
-  customerLastName: "",
-  customerPhone: "",
+  customerId: null as number | null,
+  customerSearch: "",
   serviceId: "",
   stationId: "",
   stylistId: "",
   notes: "",
 });
 
+const customerResults = ref<{ id: number; firstName?: string; lastName?: string; phone?: string; email?: string }[]>([]);
+const selectedCustomerName = ref("");
+
 const resetForm = () => {
   form.value = {
-    customerFirstName: "",
-    customerLastName: "",
-    customerPhone: "",
+    customerId: null,
+    customerSearch: "",
     serviceId: "",
     stationId: "",
     stylistId: "",
     notes: "",
   };
+  customerResults.value = [];
+  selectedCustomerName.value = "";
   stylists.value = [];
 };
 
@@ -145,6 +149,33 @@ const loadStylists = async (serviceId: number) => {
   }
 };
 
+const searchCustomers = async () => {
+  const query = form.value.customerSearch?.trim();
+  if (!query) {
+    customerResults.value = [];
+    return;
+  }
+  try {
+    const res = await customerAPI.search(query);
+    customerResults.value = res.data.data || res.data || [];
+  } catch (err) {
+    logger.error("Failed to search customers", { error: err });
+  }
+};
+
+const selectCustomer = (customer: { id: number; firstName?: string; lastName?: string }) => {
+  form.value.customerId = customer.id;
+  selectedCustomerName.value = [customer.firstName, customer.lastName].filter(Boolean).join(" ") || `Customer #${customer.id}`;
+  customerResults.value = [];
+};
+
+const clearCustomer = () => {
+  form.value.customerId = null;
+  selectedCustomerName.value = "";
+  form.value.customerSearch = "";
+  customerResults.value = [];
+};
+
 const handleServiceChange = async () => {
   const serviceId = Number(form.value.serviceId);
   stylists.value = [];
@@ -160,7 +191,7 @@ const submitForm = async () => {
   try {
     const service = services.value.find((s) => s.id === Number(form.value.serviceId));
     const payload: any = {
-      customerId: null,
+      customerId: form.value.customerId,
       serviceId: Number(form.value.serviceId),
       stationId: form.value.stationId ? Number(form.value.stationId) : null,
       stylistId: form.value.stylistId ? Number(form.value.stylistId) : null,
@@ -244,17 +275,31 @@ onMounted(async () => {
       <div v-if="showForm" class="form-panel">
         <h3>New Walk-in</h3>
         <div class="form-grid">
-          <div class="field">
-            <label for="customerFirstName">First name</label>
-            <input id="customerFirstName" v-model="form.customerFirstName" />
-          </div>
-          <div class="field">
-            <label for="customerLastName">Last name</label>
-            <input id="customerLastName" v-model="form.customerLastName" />
-          </div>
-          <div class="field">
-            <label for="customerPhone">Phone</label>
-            <input id="customerPhone" v-model="form.customerPhone" />
+          <div class="field full">
+            <label for="customerSearch">Customer</label>
+            <input
+              id="customerSearch"
+              v-model="form.customerSearch"
+              placeholder="Search existing customers by name, phone, or email"
+              autocomplete="off"
+              @input="searchCustomers"
+            />
+            <div v-if="selectedCustomerName" class="field-hint">
+              Selected: {{ selectedCustomerName }}
+              <button class="link-clear" type="button" @click="clearCustomer">Clear</button>
+            </div>
+            <div v-if="customerResults.length" class="customer-results">
+              <button
+                v-for="customer in customerResults"
+                :key="customer.id"
+                type="button"
+                class="customer-option"
+                @click="selectCustomer(customer)"
+              >
+                <b>{{ customer.firstName }} {{ customer.lastName }}</b>
+                <span>{{ customer.phone || customer.email }}</span>
+              </button>
+            </div>
           </div>
           <div class="field">
             <label for="service">Service</label>
@@ -462,6 +507,49 @@ onMounted(async () => {
 .field-hint {
   font-size: 12px;
   color: var(--neutral-600);
+}
+.customer-results {
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  margin-top: 6px;
+  overflow: hidden;
+}
+.customer-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid var(--neutral-100);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  color: var(--neutral-900);
+}
+.customer-option:last-child {
+  border-bottom: none;
+}
+.customer-option:hover {
+  background: var(--neutral-50);
+}
+.customer-option b {
+  font-weight: 600;
+}
+.customer-option span {
+  font-size: 12px;
+  color: var(--neutral-600);
+}
+.link-clear {
+  background: transparent;
+  border: none;
+  color: var(--brand-600);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 8px;
 }
 .error-msg {
   margin-top: 10px;

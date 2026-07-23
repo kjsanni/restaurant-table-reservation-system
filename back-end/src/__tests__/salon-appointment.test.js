@@ -67,4 +67,41 @@ describe("appointment.controller", () => {
     expect(ref.res.status).toHaveBeenCalledWith(404);
     ref.expectJson({ success: false, message: "Appointment not found" });
   });
+
+  it("getAllAppointments filters by source=walkin", async () => {
+    require("../verticals/salon/DAOs/appointment.dao").findAllForTenant.mockResolvedValue({
+      total: 1,
+      data: [{ id: 10, source: "walkin" }],
+    });
+
+    var ref = makeRes();
+    var req = { tenant: { id: 1 }, query: { source: "walkin" } };
+
+    await appointmentController.getAllAppointments(req, ref.res);
+
+    expect(require("../verticals/salon/DAOs/appointment.dao").findAllForTenant).toHaveBeenCalledWith(1, { source: "walkin" });
+    ref.expectJson({ success: true, total: 1, data: [{ id: 10, source: "walkin" }] });
+  });
+
+  it("createAppointment accepts walkin source", async () => {
+    require("../verticals/salon/DAOs/appointment.dao").create.mockResolvedValue({
+      id: 11,
+      source: "walkin",
+      status: "pending",
+    });
+
+    var ref = makeRes();
+    var req = {
+      tenant: { id: 1 },
+      body: { serviceId: 2, start: "2026-07-22T10:00:00.000Z", source: "walkin", status: "pending" },
+    };
+
+    await appointmentController.createAppointment(req, ref.res);
+
+    expect(ref.res.status).toHaveBeenCalledWith(201);
+    ref.expectJson({
+      success: true,
+      data: { id: 11, source: "walkin", status: "pending" },
+    });
+  });
 });

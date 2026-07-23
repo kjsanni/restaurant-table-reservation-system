@@ -132,7 +132,7 @@ onMounted(loadData);
 
       <div v-else>
         <div class="form-panel">
-          <h3>Add Shift</h3>
+          <h2>Add Shift</h2>
           <div class="form-grid">
             <div class="field">
               <label for="staff">Staff</label>
@@ -262,7 +262,7 @@ onMounted(loadData);
   box-shadow: 0 10px 30px rgba(26, 20, 16, 0.05);
   margin-bottom: 18px;
 }
-.form-panel h3 {
+.form-panel h2 {
   font-family: var(--font-serif);
   font-size: 17px;
   font-weight: 700;
