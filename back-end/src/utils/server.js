@@ -104,7 +104,7 @@ if (TENANT_MODE) {
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
   salonServiceRoutes = require("../verticals/salon/routes/service.router");
-  salonCustomerPortalRoutes = require("./routes/salon-customer-portal.router");
+  salonCustomerPortalRoutes = require("../routes/salon-customer-portal.router");
 }
 
 const requestTimeout = (timeout = 15000) => {

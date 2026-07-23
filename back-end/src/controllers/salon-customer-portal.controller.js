@@ -1,6 +1,6 @@
 "use strict";
-const reservationDAO = require("../../DAOs/reservation.dao");
-const appointmentDao = require("../DAOs/appointment.dao");
+const reservationDAO = require("../DAOs/reservation.dao");
+const appointmentDao = require("../verticals/salon/DAOs/appointment.dao");
 
 const buildCustomerDetails = (user) => {
   const email = user?.email;
