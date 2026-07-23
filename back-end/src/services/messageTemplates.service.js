@@ -47,6 +47,8 @@ const DEFAULT_TEMPLATES = {
     "A staff member will reach out to you shortly. For urgent matters, please call the restaurant directly.",
   unrecognized: "I didn't understand that. Reply 'hi' for the main menu or 'menu' to browse.",
   service_unavailable: "Sorry, this service is not configured. Please contact the restaurant directly.",
+  salon_appointment_reminder:
+    "Reminder: {{name}}, you have an appointment at {{salonName}} today at {{time}} for {{duration}} mins ({{service}}).\nReply 'cancel' to cancel.",
 };
 
 let templateCache = {};
@@ -74,11 +76,10 @@ const loadTemplates = async (tenantId) => {
   }
 
   const merged = { ...DEFAULT_TEMPLATES, ...customTemplates };
-  // codeql[js/remote-property-injection]: False positive. `cacheKey` is an
-  // internal cache key derived from tenant/template identifiers, not an
-  // arbitrary user-controlled string, and `templateCache` is a plain object
-  // with no prototype chain exposure.
-  templateCache[cacheKey] = merged;
+  const safeKey = ["__proto__", "constructor", "prototype"].includes(cacheKey) ? null : cacheKey;
+  if (safeKey) {
+    templateCache[safeKey] = merged;
+  }
   cacheLoadedAt = now;
   return merged;
 };
