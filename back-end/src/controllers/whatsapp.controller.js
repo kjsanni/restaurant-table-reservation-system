@@ -1,6 +1,9 @@
 const whatsappOrderService = require("../services/whatsapp-order.service");
 const { verifyWebhookSignature } = require("../services/whatsapp.service");
+const whatsappAppointmentService = require("../verticals/salon/services/whatsappAppointment.service");
 const logger = require("../utils/logger");
+const { Op } = require("sequelize");
+const db = require("../db/models");
 
 const inboundHandler = async (req, res) => {
   try {
@@ -13,16 +16,12 @@ const inboundHandler = async (req, res) => {
       return res.status(503).json({ success: false, message: "Webhook not configured" });
     }
 
-    // codeql[js/user-controlled-bypass]: False positive. The else branch
-    // explicitly rejects requests with a missing signature (401), so there
-    // is no bypass path — the signature is mandatory.
-    if (signature) {
-      const isValid = verifyWebhookSignature(payload, signature, appSecret);
-      if (!isValid) {
-        return res.status(401).json({ success: false, message: "Invalid signature" });
-      }
-    } else {
+    if (!signature) {
       return res.status(401).json({ success: false, message: "Missing signature" });
+    }
+    const isValid = verifyWebhookSignature(payload, signature, appSecret);
+    if (!isValid) {
+      return res.status(401).json({ success: false, message: "Invalid signature" });
     }
 
     const entry = payload.entry && payload.entry[0];
@@ -37,6 +36,25 @@ const inboundHandler = async (req, res) => {
     const message = messages[0];
     const phone = message.from;
     const tenantId = await resolveTenantId(value.metadata || {});
+
+    if (!tenantId) {
+      return res.status(200).json({ success: true });
+    }
+
+    const tenant = await db.tenant.findByPk(tenantId);
+    const isSalon = tenant?.businessVertical === "salon";
+
+    if (isSalon) {
+      if (message.type === "text" && message.text && message.text.body) {
+        const session = await whatsappAppointmentService.getSession(phone);
+        if (session.state === "idle") {
+          await whatsappAppointmentService.startSalonAppointmentFlow(phone, tenantId);
+        } else {
+          await whatsappAppointmentService.handleSalonAppointmentState(phone, message.text.body.toLowerCase(), message.text.body, session, tenantId);
+        }
+      }
+      return res.status(200).json({ success: true });
+    }
 
     if (message.type === "text" && message.text && message.text.body) {
       await whatsappOrderService.processMessage(phone, message.text.body, tenantId);
