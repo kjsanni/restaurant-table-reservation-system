@@ -7,6 +7,7 @@ const { cache } = require("../../utils/cache");
 const { sendWithSmsFallback } = require("../../services/notification.service");
 const customerService = require("../../services/customerService");
 const messageTemplates = require("../../services/messageTemplates.service");
+const { withRetry } = require("../../utils/retry");
 
 const SESSION_PREFIX = "whatsapp:salon:session:";
 const SESSION_TTL = 60 * 60 * 24;
@@ -23,7 +24,7 @@ const setSession = async (phone, session) => {
 };
 
 const sendText = async (phone, text, tenantId) => {
-  await sendWithSmsFallback(phone, text, tenantId);
+  await withRetry(() => sendWithSmsFallback(phone, text, tenantId), 3, 1000);
 };
 
 const ensureCustomer = async (phone, tenantId) => {
@@ -193,9 +194,14 @@ const handleSalonAppointmentState = async (phone, normalized, rawMessage, sessio
         session.appointmentId = appointment.id;
         await setSession(phone, { ...session, state: "salon_payment" });
         const amount = (service?.price || 50) * 100;
-        const payment = await initializeCharge(
-          { email: customer.email || `wa_${phone}@salon.local`, amount, metadata: { appointmentId: appointment.id, service: service?.name } },
-          { paystackSecretKey: process.env.PAYSTACK_SECRET_KEY }
+        const payment = await withRetry(
+          () =>
+            initializeCharge(
+              { email: customer.email || `wa_${phone}@salon.local`, amount, metadata: { appointmentId: appointment.id, service: service?.name } },
+              { paystackSecretKey: process.env.PAYSTACK_SECRET_KEY }
+            ),
+          2,
+          1500
         );
         session.paymentReference = payment.reference;
         await sendText(phone, `Booking confirmed! 🎉\nAppointment ID: #${appointment.id}\n\nPay now to secure your slot:\n${payment.authorization_url}\n\nReference: ${payment.reference}`, tenantId);
