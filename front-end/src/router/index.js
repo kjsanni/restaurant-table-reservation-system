@@ -596,6 +596,12 @@ const customerPortalRoutes = [
     component: () => import("../views/customer/CustomerPortalOrdersView.vue"),
     meta: { requiresAuth: true },
   },
+  {
+    path: "/portal/appointments",
+    name: "customer-appointments",
+    component: () => import("../views/customer/CustomerPortalAppointmentsView.vue"),
+    meta: { requiresAuth: true },
+  },
 ];
 
 customerPortalRoutes.forEach((route) => router.addRoute(route));
