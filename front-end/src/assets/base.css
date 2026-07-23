@@ -238,4 +238,18 @@
   --card-padding: var(--space-6);
   --card-shadow: var(--shadow-sm);
   --input-radius: var(--radius-lg);
+
+  /* ─── WhatsApp Tokens (fixed, non-tenant-overridable) ─── */
+  --wa-600: #1c4532;
+  --wa-500: #25d366;
+  --wa-400: #38e07a;
+  --wa-300: #5ee89a;
+  --wa-200: #8ef0b8;
+  --wa-100: #c8f7dc;
+  --wa-dark-600: #0d3d22;
+  --wa-dark-500: #128c7e;
+  --wa-dark-400: #25d366;
+  --wa-dark-300: #37e87a;
+  --wa-dark-200: #64f0a0;
+  --wa-dark-100: #a8f7cd;
 }
