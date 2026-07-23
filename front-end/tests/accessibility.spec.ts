@@ -14,6 +14,9 @@ const routes = [
   { name: "Salon Stations", path: "/stations" },
   { name: "Salon Services", path: "/services" },
   { name: "Salon Station Map", path: "/station-map" },
+  { name: "Salon Calendar", path: "/salon/calendar" },
+  { name: "Salon Schedule", path: "/salon/schedule" },
+  { name: "Salon Holidays", path: "/salon/holidays" },
 ];
 
 for (const route of routes) {

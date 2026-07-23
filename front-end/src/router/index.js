@@ -512,6 +512,24 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     component: () => import("../views/salon/ServicesView.vue"),
     meta: { requiresAuth: true, requiresPermission: "manage_services" },
   });
+  router.addRoute({
+    path: "/salon/calendar",
+    name: "salon-calendar",
+    component: () => import("../views/salon/SalonCalendarView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "view_appointments" },
+  });
+  router.addRoute({
+    path: "/salon/schedule",
+    name: "salon-schedule",
+    component: () => import("../views/ScheduleView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_schedule" },
+  });
+  router.addRoute({
+    path: "/salon/holidays",
+    name: "salon-holidays",
+    component: () => import("../views/salon/SalonHolidaysView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_schedule" },
+  });
 }
 
 router.beforeEach((to, from, next) => {
