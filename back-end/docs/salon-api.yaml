@@ -1,0 +1,676 @@
+openapi: 3.0.3
+info:
+  title: Salon Module API
+  version: 1.0.0
+  description: Salon-specific endpoints under /api/v1/salon/*. Requires salon tenant context.
+servers:
+  - url: /api/v1/salon
+paths:
+  /stations:
+    get:
+      tags: [Stations]
+      summary: List stations
+      parameters:
+        - in: query
+          name: floorPlanId
+          schema: { type: integer }
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated station list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: array, items: { $ref: '#/components/schemas/Station' } }
+    post:
+      tags: [Stations]
+      summary: Create station
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                type: { type: string, enum: [hair, nails, spa, barber, other] }
+                floorPlanId: { type: integer }
+                status: { type: string, enum: [active, maintenance, inactive] }
+      responses:
+        "201":
+          description: Station created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Station' }
+  /stations/{id}:
+    get:
+      tags: [Stations]
+      summary: Get station
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Station detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Station' }
+        "404":
+          description: Not found
+    put:
+      tags: [Stations]
+      summary: Update station
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                type: { type: string, enum: [hair, nails, spa, barber, other] }
+                floorPlanId: { type: integer }
+                status: { type: string, enum: [active, maintenance, inactive] }
+      responses:
+        "200":
+          description: Station updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Station' }
+    delete:
+      tags: [Stations]
+      summary: Delete station
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Station deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+  /stations/utilization:
+    get:
+      tags: [Stations]
+      summary: Station utilization stats
+      responses:
+        "200":
+          description: Utilization aggregates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        stationId: { type: integer }
+                        stationName: { type: string }
+                        totalAppointments: { type: integer }
+                        completedAppointments: { type: integer }
+                        utilizationRate: { type: number }
+  /services:
+    get:
+      tags: [Services]
+      summary: List services
+      parameters:
+        - in: query
+          name: categoryId
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Paginated service list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: array, items: { $ref: '#/components/schemas/Service' } }
+    post:
+      tags: [Services]
+      summary: Create service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, durationMinutes, price]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                durationMinutes: { type: integer }
+                price: { type: number }
+                categoryId: { type: integer }
+                isActive: { type: boolean }
+      responses:
+        "201":
+          description: Service created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Service' }
+  /services/{id}:
+    get:
+      tags: [Services]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Service detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Service' }
+    put:
+      tags: [Services]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                durationMinutes: { type: integer }
+                price: { type: number }
+                categoryId: { type: integer }
+                isActive: { type: boolean }
+      responses:
+        "200":
+          description: Service updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Service' }
+    delete:
+      tags: [Services]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Service deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+  /staff:
+    get:
+      tags: [Staff]
+      summary: List staff
+      responses:
+        "200":
+          description: Staff list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        username: { type: string }
+                        role: { type: string }
+  /appointments:
+    get:
+      tags: [Appointments]
+      summary: List appointments
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: source
+          schema: { type: string, enum: [web, whatsapp, phone, walkin] }
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Paginated appointment list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { type: array, items: { $ref: '#/components/schemas/Appointment' } }
+    post:
+      tags: [Appointments]
+      summary: Create appointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [serviceId, start]
+              properties:
+                customerId: { type: integer, nullable: true }
+                serviceId: { type: integer }
+                stationId: { type: integer, nullable: true }
+                stylistId: { type: integer, nullable: true }
+                start: { type: string, format: date-time }
+                durationMinutes: { type: integer }
+                status: { type: string, enum: [pending, confirmed, in_progress, completed, cancelled, no_show] }
+                paymentStatus: { type: string, enum: [unpaid, paid, refunded] }
+                depositAmount: { type: number }
+                notes: { type: string, nullable: true }
+                source: { type: string, enum: [web, whatsapp, phone, walkin] }
+      responses:
+        "201":
+          description: Appointment created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Appointment' }
+  /appointments/{id}:
+    get:
+      tags: [Appointments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Appointment detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Appointment' }
+    put:
+      tags: [Appointments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerId: { type: integer, nullable: true }
+                serviceId: { type: integer }
+                stationId: { type: integer, nullable: true }
+                stylistId: { type: integer, nullable: true }
+                start: { type: string, format: date-time }
+                durationMinutes: { type: integer }
+                status: { type: string, enum: [pending, confirmed, in_progress, completed, cancelled, no_show] }
+                paymentStatus: { type: string, enum: [unpaid, paid, refunded] }
+                depositAmount: { type: number }
+                notes: { type: string, nullable: true }
+                source: { type: string, enum: [web, whatsapp, phone, walkin] }
+      responses:
+        "200":
+          description: Appointment updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Appointment' }
+    delete:
+      tags: [Appointments]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Appointment deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+  /appointments/services/{serviceId}/stylists:
+    get:
+      tags: [Appointments]
+      summary: Get stylists qualified for a service
+      parameters:
+        - in: path
+          name: serviceId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Stylists ordered by available skill level for the service
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        username: { type: string }
+                        email: { type: string }
+                        skillLevel: { type: string, enum: [trainee, proficient, expert] }
+  /floor-plans:
+    get:
+      tags: [Floor Plans]
+      summary: List floor plans
+      responses:
+        "200":
+          description: Floor plan list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/FloorPlan' }
+    post:
+      tags: [Floor Plans]
+      summary: Create floor plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+      responses:
+        "201":
+          description: Floor plan created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/FloorPlan' }
+  /floor-plans/{id}:
+    get:
+      tags: [Floor Plans]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Floor plan detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/FloorPlan' }
+    put:
+      tags: [Floor Plans]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+      responses:
+        "200":
+          description: Floor plan updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/FloorPlan' }
+    delete:
+      tags: [Floor Plans]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Floor plan deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+  /holidays:
+    get:
+      tags: [Schedule]
+      summary: List salon holidays
+      responses:
+        "200":
+          description: Holiday list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Holiday' }
+    post:
+      tags: [Schedule]
+      summary: Create holiday
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, name]
+              properties:
+                date: { type: string, format: date }
+                name: { type: string }
+                notes: { type: string, nullable: true }
+      responses:
+        "201":
+          description: Holiday created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/Holiday' }
+  /holidays/{id}:
+    delete:
+      tags: [Schedule]
+      summary: Delete holiday
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Holiday deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+  /schedule:
+    get:
+      tags: [Schedule]
+      summary: Get salon schedule
+      responses:
+        "200":
+          description: Schedule data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      schedules:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id: { type: integer }
+                            userId: { type: integer }
+                            startTime: { type: string, format: time }
+                            endTime: { type: string, format: time }
+                      holidays:
+                        type: array
+                        items: { $ref: '#/components/schemas/Holiday' }
+components:
+  schemas:
+    Station:
+      type: object
+      properties:
+        id: { type: integer }
+        tenantId: { type: integer }
+        floorPlanId: { type: integer, nullable: true }
+        name: { type: string }
+        type: { type: string, enum: [hair, nails, spa, barber, other] }
+        status: { type: string, enum: [active, maintenance, inactive] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Service:
+      type: object
+      properties:
+        id: { type: integer }
+        tenantId: { type: integer }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        durationMinutes: { type: integer }
+        price: { type: number }
+        categoryId: { type: integer, nullable: true }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Appointment:
+      type: object
+      properties:
+        id: { type: integer }
+        tenantId: { type: integer }
+        customerId: { type: integer, nullable: true }
+        serviceId: { type: integer }
+        stationId: { type: integer, nullable: true }
+        stylistId: { type: integer, nullable: true }
+        start: { type: string, format: date-time }
+        end: { type: string, format: date-time }
+        durationMinutes: { type: integer }
+        status: { type: string, enum: [pending, confirmed, in_progress, completed, cancelled, no_show] }
+        paymentStatus: { type: string, enum: [unpaid, paid, refunded] }
+        depositAmount: { type: number }
+        notes: { type: string, nullable: true }
+        source: { type: string, enum: [web, whatsapp, phone, walkin] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    FloorPlan:
+      type: object
+      properties:
+        id: { type: integer }
+        tenantId: { type: integer }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Holiday:
+      type: object
+      properties:
+        id: { type: integer }
+        tenantId: { type: integer }
+        date: { type: string, format: date }
+        name: { type: string }
+        notes: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
