@@ -24,6 +24,9 @@ describe("salon-reports.controller", () => {
     appointmentDao.getAppointmentsBySource.mockResolvedValue([
       { source: "walkin", appointmentCount: 3, totalMinutes: 90 },
     ]);
+    appointmentDao.getPeakHours.mockResolvedValue([
+      { hour: 10, dayOfWeek: 6, appointmentCount: 5, totalMinutes: 150 },
+    ]);
 
     const req = buildReq();
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() };
@@ -41,6 +44,7 @@ describe("salon-reports.controller", () => {
       revenueByService: [{ serviceId: 1, serviceName: "Haircut", servicePrice: 50, appointmentCount: 10, revenue: 500 }],
       topStylists: [{ stylistId: 1, stylistName: "Jane", stylistEmail: "jane@test.com", appointmentCount: 5, revenue: 250 }],
       appointmentsBySource: [{ source: "walkin", appointmentCount: 3, totalMinutes: 90 }],
+      peakHours: [{ hour: 10, dayOfWeek: 6, appointmentCount: 5, totalMinutes: 150 }],
     });
   });
 

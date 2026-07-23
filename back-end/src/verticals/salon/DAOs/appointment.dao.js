@@ -215,6 +215,37 @@ const appointmentDao = {
       totalMinutes: Number(row.get("totalMinutes") || 0),
     }));
   },
+
+  async getPeakHours(tenantId, from, to) {
+    const where = {
+      tenantId,
+      status: { [Op.notIn]: ["cancelled", "no_show"] },
+    };
+    if (from || to) {
+      where.start = {};
+      if (from) where.start[Op.gte] = new Date(from);
+      if (to) where.start[Op.lte] = new Date(to);
+    }
+
+    const results = await salonModels.sequelize.models.appointment.findAll({
+      where,
+      attributes: [
+        [salonModels.sequelize.fn("HOUR", salonModels.sequelize.col("appointment.start")), "hour"],
+        [salonModels.sequelize.fn("DAYOFWEEK", salonModels.sequelize.col("appointment.start")), "dayOfWeek"],
+        [salonModels.sequelize.fn("COUNT", salonModels.sequelize.col("appointment.id")), "appointmentCount"],
+        [salonModels.sequelize.fn("SUM", salonModels.sequelize.col("appointment.durationMinutes")), "totalMinutes"],
+      ],
+      group: ["hour", "dayOfWeek"],
+      order: [["hour", "ASC"], ["dayOfWeek", "ASC"]],
+    });
+
+    return results.map((row) => ({
+      hour: Number(row.get("hour") || 0),
+      dayOfWeek: Number(row.get("dayOfWeek") || 0),
+      appointmentCount: Number(row.get("appointmentCount") || 0),
+      totalMinutes: Number(row.get("totalMinutes") || 0),
+    }));
+  },
 };
 
 module.exports = appointmentDao;

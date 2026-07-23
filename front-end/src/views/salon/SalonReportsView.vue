@@ -16,6 +16,7 @@ const summary = ref({
 const revenueByService = ref<any[]>([]);
 const topStylists = ref<any[]>([]);
 const appointmentsBySource = ref<any[]>([]);
+const peakHours = ref<any[]>([]);
 
 const loadReports = async () => {
   loading.value = true;
@@ -29,6 +30,7 @@ const loadReports = async () => {
     revenueByService.value = data.revenueByService || [];
     topStylists.value = data.topStylists || [];
     appointmentsBySource.value = data.appointmentsBySource || [];
+    peakHours.value = data.peakHours || [];
   } catch (err) {
     logger.error("Failed to load salon reports", { error: err });
   } finally {
@@ -154,6 +156,36 @@ onMounted(loadReports);
               <tr v-if="!appointmentsBySource.length">
                 <td colspan="3" class="empty-state">
                   No source data available
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="report-section">
+          <h3>Peak Hours</h3>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Hour</th>
+                <th>Appointments</th>
+                <th>Total Minutes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="item in peakHours"
+                :key="`${item.dayOfWeek}-${item.hour}`"
+              >
+                <td>{{ item.dayOfWeek }}</td>
+                <td>{{ String(item.hour).padStart(2, "0") }}:00</td>
+                <td>{{ item.appointmentCount }}</td>
+                <td>{{ item.totalMinutes }}</td>
+              </tr>
+              <tr v-if="!peakHours.length">
+                <td colspan="4" class="empty-state">
+                  No peak-hour data available
                 </td>
               </tr>
             </tbody>

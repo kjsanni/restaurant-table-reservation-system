@@ -6,10 +6,11 @@ const getSalonReportsHandler = async (req, res) => {
     const tenantId = req.tenant?.id;
     const { from, to } = req.query;
 
-    const [revenueByService, topStylists, appointmentsBySource] = await Promise.all([
+    const [revenueByService, topStylists, appointmentsBySource, peakHours] = await Promise.all([
       appointmentDao.getRevenueByService(tenantId, from, to),
       appointmentDao.getTopStylists(tenantId, from, to),
       appointmentDao.getAppointmentsBySource(tenantId, from, to),
+      appointmentDao.getPeakHours(tenantId, from, to),
     ]);
 
     const totalRevenue = revenueByService.reduce((sum, item) => sum + item.revenue, 0);
@@ -25,6 +26,7 @@ const getSalonReportsHandler = async (req, res) => {
       revenueByService,
       topStylists,
       appointmentsBySource,
+      peakHours,
     });
   } catch (err) {
     console.error("getSalonReportsHandler error:", err.message);
