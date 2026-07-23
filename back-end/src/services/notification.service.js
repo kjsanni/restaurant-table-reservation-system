@@ -5,6 +5,8 @@ const salonAppointmentDao = require("../verticals/salon/DAOs/appointment.dao");
 const settingDAO = require("../DAOs/auth.dao");
 const dateTimeValidator = require("../utils/dateAndTimeValidator");
 const { notificationQueue, safeAdd } = require("../queues/queue");
+const { client } = require("../utils/cache");
+const smsService = require("./sms.service");
 
 const resolveChannels = async (tenantId, requested) => {
   if (Array.isArray(requested) && requested.length > 0) return requested;
@@ -294,6 +296,59 @@ const enqueueSalonAppointmentReminders = async (tenantId, channels = null) => {
   return { enqueued: enqueueResult.enqueued, count: enqueueResult.enqueued ? items.length : 0 };
 };
 
+const FALLBACK_FAILURE_THRESHOLD = 2;
+const FALLBACK_TTL_SECONDS = 60 * 60;
+
+const getFailureKey = (tenantId, phone, channel = "whatsapp") =>
+  `notification:fallback:${tenantId}:${phone}:${channel}`;
+
+const getSmsFallbackEnabled = async (tenantId) => {
+  try {
+    const setting = await settingDAO.getSettingValue(
+      "salon_sms_fallback_enabled",
+      false,
+      tenantId
+    );
+    return !!setting;
+  } catch {
+    return false;
+  }
+};
+
+const incrementFailureCount = async (tenantId, phone) => {
+  if (!client || !client.isReady) return 0;
+  const key = getFailureKey(tenantId, phone);
+  const count = await client.incr(key);
+  await client.expire(key, FALLBACK_TTL_SECONDS);
+  return count;
+};
+
+const resetFailureCount = async (tenantId, phone) => {
+  if (!client || !client.isReady) return;
+  const key = getFailureKey(tenantId, phone);
+  await client.del(key);
+};
+
+const sendWithSmsFallback = async (phone, text, tenantId) => {
+  try {
+    await whatsappService.sendWhatsAppText(phone, text, tenantId);
+    await resetFailureCount(tenantId, phone);
+    return { channel: "whatsapp", success: true };
+  } catch (err) {
+    const failures = await incrementFailureCount(tenantId, phone);
+    if (failures >= FALLBACK_FAILURE_THRESHOLD && (await getSmsFallbackEnabled(tenantId))) {
+      try {
+        await smsService.sendSMS({ to: phone, message: text }, tenantId);
+        await resetFailureCount(tenantId, phone);
+        return { channel: "sms", success: true, fallback: true };
+      } catch (smsErr) {
+        return { channel: "whatsapp", success: false, error: err.message, smsError: smsErr.message };
+      }
+    }
+    return { channel: "whatsapp", success: false, error: err.message, failures };
+  }
+};
+
 module.exports = {
   scheduleReminders,
   sendConfirmation,
@@ -306,4 +361,6 @@ module.exports = {
   buildWhatsAppText,
   renderTemplate,
   getWhatsAppReminderTemplate,
+  sendWithSmsFallback,
+  getSmsFallbackEnabled,
 };

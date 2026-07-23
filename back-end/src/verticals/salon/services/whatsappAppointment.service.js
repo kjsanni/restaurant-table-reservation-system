@@ -4,7 +4,7 @@ const appointmentDao = require("../DAOs/appointment.dao");
 const { initializeCharge } = require("../../tenant-platform/services/paystack.service");
 const salonModels = require("../models");
 const { cache } = require("../../utils/cache");
-const whatsappService = require("../../services/whatsapp.service");
+const { sendWithSmsFallback } = require("../../services/notification.service");
 const customerService = require("../../services/customerService");
 const messageTemplates = require("../../services/messageTemplates.service");
 
@@ -23,7 +23,7 @@ const setSession = async (phone, session) => {
 };
 
 const sendText = async (phone, text, tenantId) => {
-  await whatsappService.sendWhatsAppText(phone, text, tenantId);
+  await sendWithSmsFallback(phone, text, tenantId);
 };
 
 const ensureCustomer = async (phone, tenantId) => {

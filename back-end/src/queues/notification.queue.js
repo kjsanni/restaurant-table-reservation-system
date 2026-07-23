@@ -130,14 +130,14 @@ const sendEmailJob = async (payload) => {
 
 const sendWhatsAppJob = async (payload) => {
   const { to, text, tenantId } = payload;
-  const whatsappService = require("../services/whatsapp.service");
-  return await whatsappService.sendWhatsAppText(to, text, tenantId);
+  const notificationService = require("../services/notification.service");
+  return await notificationService.sendWithSmsFallback(to, text, tenantId);
 };
 
 const sendSalonAppointmentReminderJob = async (payload) => {
   const { to, text, tenantId } = payload;
-  const whatsappService = require("../services/whatsapp.service");
-  return await whatsappService.sendWhatsAppText(to, text, tenantId);
+  const notificationService = require("../services/notification.service");
+  return await notificationService.sendWithSmsFallback(to, text, tenantId);
 };
 
 module.exports = {
