@@ -8,9 +8,17 @@ const stationDao = {
     if (filters.zone) where.zone = filters.zone;
     if (filters.isOccupied !== undefined) where.isOccupied = filters.isOccupied;
     if (filters.isBlocked !== undefined) where.isBlocked = filters.isBlocked;
+    if (filters.floorPlanId) where.floorPlanId = filters.floorPlanId;
 
     const { count, rows } = await salonModels.sequelize.models.station.findAndCountAll({
       where,
+      include: [
+        {
+          model: salonModels.sequelize.models.floorPlan,
+          as: "floorPlan",
+          attributes: ["id", "name"],
+        },
+      ],
       order: [["zone", "ASC"], ["name", "ASC"]],
       limit: filters.limit || 100,
       offset: filters.offset || 0,
@@ -19,7 +27,16 @@ const stationDao = {
   },
 
   async findById(id, tenantId) {
-    return salonModels.sequelize.models.station.findOne({ where: { id, tenantId } });
+    return salonModels.sequelize.models.station.findOne({
+      where: { id, tenantId },
+      include: [
+        {
+          model: salonModels.sequelize.models.floorPlan,
+          as: "floorPlan",
+          attributes: ["id", "name"],
+        },
+      ],
+    });
   },
 
   async create(data) {

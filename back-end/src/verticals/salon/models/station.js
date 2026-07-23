@@ -2,16 +2,20 @@
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Station extends Model {
-    static associate(models) {
-      Station.belongsTo(models.user, {
-        foreignKey: "defaultStylistId",
-        as: "defaultStylist",
-      });
-      Station.hasMany(models.appointment, {
-        foreignKey: "stationId",
-        as: "appointments",
-      });
-    }
+  static associate(models) {
+    Station.belongsTo(models.user, {
+      foreignKey: "defaultStylistId",
+      as: "defaultStylist",
+    });
+    Station.belongsTo(models.floorPlan, {
+      foreignKey: "floorPlanId",
+      as: "floorPlan",
+    });
+    Station.hasMany(models.appointment, {
+      foreignKey: "stationId",
+      as: "appointments",
+    });
+  }
   }
   Station.init(
     {
