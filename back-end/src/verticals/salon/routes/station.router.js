@@ -46,21 +46,21 @@ router
   .all(httpMethodError);
 
 router
-  .route("/:id/utilization")
-  .get(
-    tryCatchHandler(protect),
-    tryCatchHandler(requireVertical("salon")),
-    tryCatchHandler(requirePermission("view_appointments")),
-    tryCatchHandler(stationController.getStationUtilization)
-  );
-
-router
   .route("/utilization")
   .get(
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("view_appointments")),
     tryCatchHandler(stationController.getAggregateUtilization)
+  );
+
+router
+  .route("/:id/utilization")
+  .get(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("view_appointments")),
+    tryCatchHandler(stationController.getStationUtilization)
   );
 
 module.exports = router;

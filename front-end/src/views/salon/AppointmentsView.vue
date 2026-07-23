@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import appointmentAPI from "@/services/appointmentAPI";
+import serviceAPI from "@/services/serviceAPI";
+import stationAPI from "@/services/stationAPI";
 import logger from "@/utils/logger";
 
 interface Appointment {
@@ -15,8 +17,34 @@ interface Appointment {
   stylist?: { name?: string };
 }
 
+interface ServiceOption {
+  id: number;
+  name: string;
+  durationMinutes: number;
+}
+
+interface StationOption {
+  id: number;
+  name: string;
+}
+
+interface StylistOption {
+  id: number;
+  username: string;
+  email: string;
+  skillLevel: string;
+}
+
 const appointments = ref<Appointment[]>([]);
 const loading = ref(true);
+const showForm = ref(false);
+const submitting = ref(false);
+const generalError = ref("");
+
+const services = ref<ServiceOption[]>([]);
+const stations = ref<StationOption[]>([]);
+const stylists = ref<StylistOption[]>([]);
+
 const statusOptions = [
   "pending",
   "confirmed",
@@ -25,6 +53,15 @@ const statusOptions = [
   "cancelled",
   "no_show",
 ];
+
+const skillLevelLabel = (level: string) => {
+  const map: Record<string, string> = {
+    trainee: "Trainee",
+    proficient: "Proficient",
+    expert: "Expert",
+  };
+  return map[level] || level;
+};
 
 const statusClass = (status: string) => {
   const map: Record<string, string> = {
@@ -60,6 +97,93 @@ const formatDate = (iso: string) => {
   });
 };
 
+const form = ref({
+  customerFirstName: "",
+  customerLastName: "",
+  customerPhone: "",
+  serviceId: "",
+  stationId: "",
+  stylistId: "",
+  start: "",
+  notes: "",
+});
+
+const resetForm = () => {
+  form.value = {
+    customerFirstName: "",
+    customerLastName: "",
+    customerPhone: "",
+    serviceId: "",
+    stationId: "",
+    stylistId: "",
+    start: "",
+    notes: "",
+  };
+  stylists.value = [];
+};
+
+const loadOptions = async () => {
+  try {
+    const [svcRes, stationRes] = await Promise.all([
+      serviceAPI.getServices({ limit: 100 }),
+      stationAPI.getStations({ limit: 100 }),
+    ]);
+    services.value = (svcRes.data.data || []).map((s: any) => ({
+      id: s.id,
+      name: s.name,
+      durationMinutes: s.durationMinutes,
+    }));
+    stations.value = (stationRes.data.data || []).map((s: any) => ({
+      id: s.id,
+      name: s.name,
+    }));
+  } catch (err) {
+    logger.error("Failed to load options", { error: err });
+  }
+};
+
+const loadStylists = async (serviceId: number) => {
+  stylists.value = [];
+  if (!serviceId) return;
+  try {
+    const res = await appointmentAPI.getStylistsForService(serviceId);
+    stylists.value = res.data.data || [];
+  } catch (err) {
+    logger.error("Failed to load stylists", { error: err });
+  }
+};
+
+const submitForm = async () => {
+  submitting.value = true;
+  generalError.value = "";
+  try {
+    const start = new Date(form.value.start).toISOString();
+    const service = services.value.find((s) => s.id === Number(form.value.serviceId));
+    const payload: any = {
+      customerId: null,
+      serviceId: Number(form.value.serviceId),
+      stationId: form.value.stationId ? Number(form.value.stationId) : null,
+      stylistId: form.value.stylistId ? Number(form.value.stylistId) : null,
+      start,
+      durationMinutes: service?.durationMinutes || 30,
+      status: "pending",
+      paymentStatus: "unpaid",
+      depositAmount: 0,
+      notes: form.value.notes || null,
+      source: "web",
+    };
+
+    await appointmentAPI.createAppointment(payload);
+    resetForm();
+    showForm.value = false;
+    await loadAppointments();
+  } catch (err) {
+    generalError.value = err instanceof Error ? err.message : "Failed to create appointment";
+  } finally {
+    submitting.value = false;
+  }
+};
+
 const loadAppointments = async () => {
   loading.value = true;
   try {
@@ -93,7 +217,25 @@ const deleteAppointment = async (id: number) => {
   }
 };
 
-onMounted(loadAppointments);
+onMounted(async () => {
+  await loadAppointments();
+});
+
+const openForm = async () => {
+  resetForm();
+  generalError.value = "";
+  await loadOptions();
+  showForm.value = true;
+};
+
+const handleServiceChange = async () => {
+  const serviceId = Number(form.value.serviceId);
+  stylists.value = [];
+  form.value.stylistId = "";
+  if (serviceId) {
+    await loadStylists(serviceId);
+  }
+};
 </script>
 
 <template>
@@ -106,6 +248,73 @@ onMounted(loadAppointments);
     </div>
 
     <div class="content-wrapper">
+      <div class="panel-head" style="margin-bottom: 16px;">
+        <h3>Appointments</h3>
+        <button class="btn-primary" @click="openForm">New Appointment</button>
+      </div>
+
+      <div v-if="showForm" class="form-panel">
+        <h4>New Appointment</h4>
+        <div class="form-grid">
+          <div class="field">
+            <label for="customerFirstName">First name</label>
+            <input id="customerFirstName" v-model="form.customerFirstName" />
+          </div>
+          <div class="field">
+            <label for="customerLastName">Last name</label>
+            <input id="customerLastName" v-model="form.customerLastName" />
+          </div>
+          <div class="field">
+            <label for="customerPhone">Phone</label>
+            <input id="customerPhone" v-model="form.customerPhone" />
+          </div>
+          <div class="field">
+            <label for="service">Service</label>
+            <select id="service" v-model="form.serviceId" @change="handleServiceChange">
+              <option value="">Select service</option>
+              <option v-for="svc in services" :key="svc.id" :value="String(svc.id)">
+                {{ svc.name }} ({{ svc.durationMinutes }}m)
+              </option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="stylist">Stylist</label>
+            <select id="stylist" v-model="form.stylistId" :disabled="!stylists.length">
+              <option value="">Auto-assign</option>
+              <option v-for="stylist in stylists" :key="stylist.id" :value="String(stylist.id)">
+                {{ stylist.username }} — {{ skillLevelLabel(stylist.skillLevel) }}
+              </option>
+            </select>
+            <div v-if="!stylists.length && form.serviceId" class="field-hint">No stylists mapped for this service.</div>
+          </div>
+          <div class="field">
+            <label for="station">Station</label>
+            <select id="station" v-model="form.stationId">
+              <option value="">Unassigned</option>
+              <option v-for="station in stations" :key="station.id" :value="String(station.id)">
+                {{ station.name }}
+              </option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="start">Start</label>
+            <input id="start" type="datetime-local" v-model="form.start" />
+          </div>
+          <div class="field full">
+            <label for="notes">Notes</label>
+            <textarea id="notes" v-model="form.notes" rows="3" />
+          </div>
+        </div>
+        <div v-if="generalError" class="error-msg">{{ generalError }}</div>
+        <div class="form-actions">
+          <button class="btn-secondary" :disabled="submitting" @click="showForm = false">Cancel</button>
+          <button class="btn-primary" :disabled="submitting" @click="submitForm">
+            <span v-if="!submitting">Create</span>
+            <span v-else>Saving...</span>
+          </button>
+        </div>
+      </div>
+
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
         <p>Loading appointments...</p>
@@ -336,5 +545,109 @@ onMounted(loadAppointments);
   text-align: center;
   padding: 40px 20px;
   color: var(--neutral-600);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.panel-head h3 {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--neutral-900);
+}
+
+.btn-primary {
+  background: var(--brand-500);
+  color: var(--white);
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: var(--neutral-100);
+  color: var(--neutral-900);
+  border: 1px solid var(--neutral-200);
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.form-panel {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(26, 20, 16, 0.05);
+  margin-bottom: 18px;
+}
+
+.form-panel h4 {
+  margin: 0 0 14px;
+  font-family: var(--font-serif);
+  font-size: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field.full {
+  grid-column: span 3;
+}
+
+.field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neutral-700);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.field input,
+.field select,
+.field textarea {
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  padding: 10px 12px;
+  font-size: 14px;
+  background: var(--white);
+  color: var(--neutral-900);
+  width: 100%;
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--neutral-600);
+}
+
+.error-msg {
+  margin-top: 12px;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
 }
 </style>

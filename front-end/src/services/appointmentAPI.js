@@ -16,6 +16,9 @@ class AppointmentAPI {
   deleteAppointment(id) {
     return API.delete("/salon/appointments/" + id);
   }
+  getStylistsForService(serviceId) {
+    return API.get("/salon/appointments/services/" + serviceId + "/stylists");
+  }
 }
 
 export default new AppointmentAPI();

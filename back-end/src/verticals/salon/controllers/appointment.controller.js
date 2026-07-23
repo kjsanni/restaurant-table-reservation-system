@@ -1,6 +1,7 @@
 "use strict";
 const salonModels = require("../models");
 const appointmentDao = require("../DAOs/appointment.dao");
+const staffServiceSkillDao = require("../DAOs/staffServiceSkill.dao");
 const { logAction } = require("../../../middleware/auditLog");
 
 const appointmentController = {
@@ -73,6 +74,25 @@ const appointmentController = {
         return res.status(404).json({ success: false, message: "Appointment not found" });
       }
       res.json({ success: true, message: "Appointment deleted" });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  async getStylistsForService(req, res) {
+    try {
+      const tenantId = req.tenant?.id;
+      const serviceId = Number(req.params.serviceId);
+      const skills = await staffServiceSkillDao.findByService(serviceId, tenantId);
+      const stylists = skills
+        .map((skill) => ({
+          id: skill.user?.id,
+          username: skill.user?.username,
+          email: skill.user?.email,
+          skillLevel: skill.skillLevel,
+        }))
+        .filter((item) => item.id != null);
+      res.json({ success: true, data: stylists });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }

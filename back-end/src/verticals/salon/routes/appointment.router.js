@@ -45,4 +45,13 @@ router
   )
   .all(httpMethodError);
 
+router
+  .route("/services/:serviceId/stylists")
+  .get(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("view_appointments")),
+    tryCatchHandler(appointmentController.getStylistsForService)
+  );
+
 module.exports = router;
