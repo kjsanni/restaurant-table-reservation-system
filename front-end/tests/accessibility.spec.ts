@@ -18,6 +18,7 @@ const routes = [
   { name: "Salon Schedule", path: "/salon/schedule" },
   { name: "Salon Holidays", path: "/salon/holidays" },
   { name: "Salon Walk-ins", path: "/salon/walkins" },
+  { name: "Salon Staff Shifts", path: "/salon/shifts" },
 ];
 
 for (const route of routes) {
