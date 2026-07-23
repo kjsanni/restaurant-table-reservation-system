@@ -19,6 +19,9 @@ class StationAPI {
   getUtilization(id, params = {}) {
     return API.get("/salon/stations/" + id + "/utilization", { params });
   }
+  getAggregateUtilization(params = {}) {
+    return API.get("/salon/stations/utilization", { params });
+  }
 }
 
 export default new StationAPI();

@@ -73,6 +73,18 @@ const stationController = {
       res.status(500).json({ success: false, message: error.message });
     }
   },
+
+  async getAggregateUtilization(req, res) {
+    try {
+      const tenantId = req.tenant?.id;
+      const start = req.query.start ? new Date(req.query.start) : new Date(new Date().setHours(0, 0, 0, 0));
+      const end = req.query.end ? new Date(req.query.end) : new Date(new Date().setHours(23, 59, 59, 999));
+      const utilization = await stationDao.getUtilization(tenantId, start, end);
+      res.json({ success: true, data: utilization });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
 };
 
 module.exports = stationController;

@@ -54,4 +54,13 @@ router
     tryCatchHandler(stationController.getStationUtilization)
   );
 
+router
+  .route("/utilization")
+  .get(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("view_appointments")),
+    tryCatchHandler(stationController.getAggregateUtilization)
+  );
+
 module.exports = router;

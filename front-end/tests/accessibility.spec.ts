@@ -10,6 +10,10 @@ const routes = [
   { name: "Tables", path: "/tables" },
   { name: "Schedule", path: "/schedule" },
   { name: "Settings", path: "/settings" },
+  { name: "Salon Appointments", path: "/appointments" },
+  { name: "Salon Stations", path: "/stations" },
+  { name: "Salon Services", path: "/services" },
+  { name: "Salon Station Map", path: "/station-map" },
 ];
 
 for (const route of routes) {

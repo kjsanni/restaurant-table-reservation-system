@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
     "@rushstack/eslint-patch": "^1.1.4",
     "@typescript-eslint/parser": "^5.62.0",
     "@vitejs/plugin-vue": "^5.2.4",
