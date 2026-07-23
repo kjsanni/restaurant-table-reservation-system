@@ -158,7 +158,9 @@ const submitForm = async () => {
   generalError.value = "";
   try {
     const start = new Date(form.value.start).toISOString();
-    const service = services.value.find((s) => s.id === Number(form.value.serviceId));
+    const service = services.value.find(
+      (s) => s.id === Number(form.value.serviceId)
+    );
     const payload: any = {
       customerId: null,
       serviceId: Number(form.value.serviceId),
@@ -178,7 +180,8 @@ const submitForm = async () => {
     showForm.value = false;
     await loadAppointments();
   } catch (err) {
-    generalError.value = err instanceof Error ? err.message : "Failed to create appointment";
+    generalError.value =
+      err instanceof Error ? err.message : "Failed to create appointment";
   } finally {
     submitting.value = false;
   }
@@ -238,7 +241,9 @@ const bulkUpdateStatus = async () => {
   if (!bulkStatus.value || !selectedIds.value.length) return;
   try {
     await Promise.all(
-      selectedIds.value.map((id) => appointmentAPI.updateAppointment(id, { status: bulkStatus.value }))
+      selectedIds.value.map((id) =>
+        appointmentAPI.updateAppointment(id, { status: bulkStatus.value })
+      )
     );
     appointments.value.forEach((apt) => {
       if (selectedIds.value.includes(apt.id)) apt.status = bulkStatus.value;
@@ -254,8 +259,12 @@ const bulkCancel = async () => {
   if (!selectedIds.value.length) return;
   if (!confirm(`Cancel ${selectedIds.value.length} appointment(s)?`)) return;
   try {
-    await Promise.all(selectedIds.value.map((id) => appointmentAPI.deleteAppointment(id)));
-    appointments.value = appointments.value.filter((a) => !selectedIds.value.includes(a.id));
+    await Promise.all(
+      selectedIds.value.map((id) => appointmentAPI.deleteAppointment(id))
+    );
+    appointments.value = appointments.value.filter(
+      (a) => !selectedIds.value.includes(a.id)
+    );
     selectedIds.value = [];
   } catch (err) {
     logger.error("Bulk cancel failed", { error: err });
@@ -293,7 +302,7 @@ const handleServiceChange = async () => {
     </div>
 
     <div class="content-wrapper">
-      <div class="panel-head" style="margin-bottom: 16px;">
+      <div class="panel-head" style="margin-bottom: 16px">
         <h2>Appointments</h2>
         <button class="btn-primary" @click="openForm">New Appointment</button>
       </div>
@@ -315,28 +324,51 @@ const handleServiceChange = async () => {
           </div>
           <div class="field">
             <label for="service">Service</label>
-            <select id="service" v-model="form.serviceId" @change="handleServiceChange">
+            <select
+              id="service"
+              v-model="form.serviceId"
+              @change="handleServiceChange"
+            >
               <option value="">Select service</option>
-              <option v-for="svc in services" :key="svc.id" :value="String(svc.id)">
+              <option
+                v-for="svc in services"
+                :key="svc.id"
+                :value="String(svc.id)"
+              >
                 {{ svc.name }} ({{ svc.durationMinutes }}m)
               </option>
             </select>
           </div>
           <div class="field">
             <label for="stylist">Stylist</label>
-            <select id="stylist" v-model="form.stylistId" :disabled="!stylists.length">
+            <select
+              id="stylist"
+              v-model="form.stylistId"
+              :disabled="!stylists.length"
+            >
               <option value="">Auto-assign</option>
-              <option v-for="stylist in stylists" :key="stylist.id" :value="String(stylist.id)">
-                {{ stylist.username }} — {{ skillLevelLabel(stylist.skillLevel) }}
+              <option
+                v-for="stylist in stylists"
+                :key="stylist.id"
+                :value="String(stylist.id)"
+              >
+                {{ stylist.username }} —
+                {{ skillLevelLabel(stylist.skillLevel) }}
               </option>
             </select>
-            <div v-if="!stylists.length && form.serviceId" class="field-hint">No stylists mapped for this service.</div>
+            <div v-if="!stylists.length && form.serviceId" class="field-hint">
+              No stylists mapped for this service.
+            </div>
           </div>
           <div class="field">
             <label for="station">Station</label>
             <select id="station" v-model="form.stationId">
               <option value="">Unassigned</option>
-              <option v-for="station in stations" :key="station.id" :value="String(station.id)">
+              <option
+                v-for="station in stations"
+                :key="station.id"
+                :value="String(station.id)"
+              >
                 {{ station.name }}
               </option>
             </select>
@@ -352,8 +384,18 @@ const handleServiceChange = async () => {
         </div>
         <div v-if="generalError" class="error-msg">{{ generalError }}</div>
         <div class="form-actions">
-          <button class="btn-secondary" :disabled="submitting" @click="showForm = false">Cancel</button>
-          <button class="btn-primary" :disabled="submitting" @click="submitForm">
+          <button
+            class="btn-secondary"
+            :disabled="submitting"
+            @click="showForm = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn-primary"
+            :disabled="submitting"
+            @click="submitForm"
+          >
             <span v-if="!submitting">Create</span>
             <span v-else>Saving...</span>
           </button>
@@ -364,10 +406,20 @@ const handleServiceChange = async () => {
         <span class="bulk-count">{{ selectedIds.length }} selected</span>
         <select v-model="bulkStatus" class="bulk-select">
           <option value="">Update status...</option>
-          <option v-for="s in statusOptions" :key="s" :value="s">{{ s.replace("_", " ") }}</option>
+          <option v-for="s in statusOptions" :key="s" :value="s">
+            {{ s.replace("_", " ") }}
+          </option>
         </select>
-        <button class="btn-primary" :disabled="!bulkStatus" @click="bulkUpdateStatus">Apply</button>
-        <button class="btn-danger-sm" @click="bulkCancel">Cancel selected</button>
+        <button
+          class="btn-primary"
+          :disabled="!bulkStatus"
+          @click="bulkUpdateStatus"
+        >
+          Apply
+        </button>
+        <button class="btn-danger-sm" @click="bulkCancel">
+          Cancel selected
+        </button>
         <button class="btn-secondary" @click="selectedIds = []">Clear</button>
       </div>
 
@@ -383,7 +435,10 @@ const handleServiceChange = async () => {
               <th class="checkbox-cell">
                 <input
                   type="checkbox"
-                  :checked="selectedIds.length === appointments.length && appointments.length > 0"
+                  :checked="
+                    selectedIds.length === appointments.length &&
+                    appointments.length > 0
+                  "
                   @change="toggleSelectAll"
                 />
               </th>

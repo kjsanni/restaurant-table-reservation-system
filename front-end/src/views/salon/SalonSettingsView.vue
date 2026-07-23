@@ -50,11 +50,13 @@ const loadSettings = async () => {
       try {
         salonPaymentConfig.value = JSON.parse(paymentRaw);
       } catch {
-        salonPaymentConfig.value.currency = map.get("salon_payment_currency") || "GHS";
+        salonPaymentConfig.value.currency =
+          map.get("salon_payment_currency") || "GHS";
       }
     }
 
-    salonSmsFallback.value.enabled = map.get("salon_sms_fallback_enabled") === "true";
+    salonSmsFallback.value.enabled =
+      map.get("salon_sms_fallback_enabled") === "true";
   } catch (err) {
     logger.error("Failed to load salon settings", { error: err });
   } finally {
@@ -65,7 +67,10 @@ const loadSettings = async () => {
 const saveWhatsApp = async () => {
   saving.value = true;
   try {
-    await authAPI.updateSettings("salon_whatsapp_config", salonWhatsAppConfig.value);
+    await authAPI.updateSettings(
+      "salon_whatsapp_config",
+      salonWhatsAppConfig.value
+    );
   } catch (err) {
     logger.error("Failed to save WhatsApp settings", { error: err });
   } finally {
@@ -76,7 +81,10 @@ const saveWhatsApp = async () => {
 const savePayments = async () => {
   saving.value = true;
   try {
-    await authAPI.updateSettings("salon_payment_config", salonPaymentConfig.value);
+    await authAPI.updateSettings(
+      "salon_payment_config",
+      salonPaymentConfig.value
+    );
   } catch (err) {
     logger.error("Failed to save payment settings", { error: err });
   } finally {
@@ -87,7 +95,10 @@ const savePayments = async () => {
 const saveSmsFallback = async () => {
   saving.value = true;
   try {
-    await authAPI.updateSettings("salon_sms_fallback_enabled", String(salonSmsFallback.value.enabled));
+    await authAPI.updateSettings(
+      "salon_sms_fallback_enabled",
+      String(salonSmsFallback.value.enabled)
+    );
   } catch (err) {
     logger.error("Failed to save SMS fallback settings", { error: err });
   } finally {
@@ -103,7 +114,10 @@ onMounted(loadSettings);
     <div class="topbar">
       <div class="topbar-left">
         <h1>Salon Settings</h1>
-        <p>Manage WhatsApp, payment, and notification behavior for salon appointments</p>
+        <p>
+          Manage WhatsApp, payment, and notification behavior for salon
+          appointments
+        </p>
       </div>
     </div>
 
@@ -125,14 +139,25 @@ onMounted(loadSettings);
           </div>
           <div class="field">
             <label>Phone Number ID</label>
-            <input v-model="salonWhatsAppConfig.phoneNumberId" class="field-input" />
+            <input
+              v-model="salonWhatsAppConfig.phoneNumberId"
+              class="field-input"
+            />
           </div>
           <div class="field">
             <label>WhatsApp Token</label>
-            <input v-model="salonWhatsAppConfig.token" class="field-input" type="password" />
+            <input
+              v-model="salonWhatsAppConfig.token"
+              class="field-input"
+              type="password"
+            />
           </div>
           <div class="form-actions">
-            <button class="btn-primary" :disabled="saving" @click="saveWhatsApp">
+            <button
+              class="btn-primary"
+              :disabled="saving"
+              @click="saveWhatsApp"
+            >
               {{ saving ? "Saving..." : "Save WhatsApp Settings" }}
             </button>
           </div>
@@ -150,17 +175,30 @@ onMounted(loadSettings);
           </div>
           <div class="field">
             <label>Require deposit</label>
-            <select v-model="salonPaymentConfig.depositRequired" class="field-input">
+            <select
+              v-model="salonPaymentConfig.depositRequired"
+              class="field-input"
+            >
               <option :value="true">Yes</option>
               <option :value="false">No</option>
             </select>
           </div>
           <div class="field">
             <label>Default deposit percent</label>
-            <input v-model.number="salonPaymentConfig.defaultDepositPercent" class="field-input" type="number" min="0" max="100" />
+            <input
+              v-model.number="salonPaymentConfig.defaultDepositPercent"
+              class="field-input"
+              type="number"
+              min="0"
+              max="100"
+            />
           </div>
           <div class="form-actions">
-            <button class="btn-primary" :disabled="saving" @click="savePayments">
+            <button
+              class="btn-primary"
+              :disabled="saving"
+              @click="savePayments"
+            >
               {{ saving ? "Saving..." : "Save Payment Settings" }}
             </button>
           </div>
@@ -175,11 +213,16 @@ onMounted(loadSettings);
               <option :value="false">Disabled</option>
             </select>
             <p class="field-hint">
-              Automatically send an SMS if WhatsApp delivery fails twice or more.
+              Automatically send an SMS if WhatsApp delivery fails twice or
+              more.
             </p>
           </div>
           <div class="form-actions">
-            <button class="btn-primary" :disabled="saving" @click="saveSmsFallback">
+            <button
+              class="btn-primary"
+              :disabled="saving"
+              @click="saveSmsFallback"
+            >
               {{ saving ? "Saving..." : "Save SMS Settings" }}
             </button>
           </div>

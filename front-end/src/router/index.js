@@ -548,6 +548,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     component: () => import("../views/salon/SalonHolidaysView.vue"),
     meta: { requiresAuth: true, requiresPermission: "manage_schedule" },
   });
+  router.addRoute({
+    path: "/salon/reports",
+    name: "salon-reports",
+    component: () => import("../views/salon/SalonReportsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "view_appointments" },
+  });
 }
 
 router.beforeEach((to, from, next) => {
@@ -605,7 +611,8 @@ const customerPortalRoutes = [
   {
     path: "/portal/appointments",
     name: "customer-appointments",
-    component: () => import("../views/customer/CustomerPortalAppointmentsView.vue"),
+    component: () =>
+      import("../views/customer/CustomerPortalAppointmentsView.vue"),
     meta: { requiresAuth: true },
   },
 ];

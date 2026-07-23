@@ -101,7 +101,15 @@ const form = ref({
   notes: "",
 });
 
-const customerResults = ref<{ id: number; firstName?: string; lastName?: string; phone?: string; email?: string }[]>([]);
+const customerResults = ref<
+  {
+    id: number;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    email?: string;
+  }[]
+>([]);
 const selectedCustomerName = ref("");
 
 const resetForm = () => {
@@ -163,9 +171,15 @@ const searchCustomers = async () => {
   }
 };
 
-const selectCustomer = (customer: { id: number; firstName?: string; lastName?: string }) => {
+const selectCustomer = (customer: {
+  id: number;
+  firstName?: string;
+  lastName?: string;
+}) => {
   form.value.customerId = customer.id;
-  selectedCustomerName.value = [customer.firstName, customer.lastName].filter(Boolean).join(" ") || `Customer #${customer.id}`;
+  selectedCustomerName.value =
+    [customer.firstName, customer.lastName].filter(Boolean).join(" ") ||
+    `Customer #${customer.id}`;
   customerResults.value = [];
 };
 
@@ -189,7 +203,9 @@ const submitForm = async () => {
   submitting.value = true;
   generalError.value = "";
   try {
-    const service = services.value.find((s) => s.id === Number(form.value.serviceId));
+    const service = services.value.find(
+      (s) => s.id === Number(form.value.serviceId)
+    );
     const payload: any = {
       customerId: form.value.customerId,
       serviceId: Number(form.value.serviceId),
@@ -209,7 +225,8 @@ const submitForm = async () => {
     showForm.value = false;
     await loadWalkins();
   } catch (err) {
-    generalError.value = err instanceof Error ? err.message : "Failed to add walk-in";
+    generalError.value =
+      err instanceof Error ? err.message : "Failed to add walk-in";
   } finally {
     submitting.value = false;
   }
@@ -218,7 +235,10 @@ const submitForm = async () => {
 const loadWalkins = async () => {
   loading.value = true;
   try {
-    const res = await appointmentAPI.getAppointments({ source: "walkin", limit: 100 });
+    const res = await appointmentAPI.getAppointments({
+      source: "walkin",
+      limit: 100,
+    });
     walkins.value = res.data.data || [];
   } catch (err) {
     logger.error("Failed to load walk-ins", { error: err });
@@ -286,7 +306,9 @@ onMounted(async () => {
             />
             <div v-if="selectedCustomerName" class="field-hint">
               Selected: {{ selectedCustomerName }}
-              <button class="link-clear" type="button" @click="clearCustomer">Clear</button>
+              <button class="link-clear" type="button" @click="clearCustomer">
+                Clear
+              </button>
             </div>
             <div v-if="customerResults.length" class="customer-results">
               <button
@@ -303,28 +325,51 @@ onMounted(async () => {
           </div>
           <div class="field">
             <label for="service">Service</label>
-            <select id="service" v-model="form.serviceId" @change="handleServiceChange">
+            <select
+              id="service"
+              v-model="form.serviceId"
+              @change="handleServiceChange"
+            >
               <option value="">Select service</option>
-              <option v-for="svc in services" :key="svc.id" :value="String(svc.id)">
+              <option
+                v-for="svc in services"
+                :key="svc.id"
+                :value="String(svc.id)"
+              >
                 {{ svc.name }} ({{ svc.durationMinutes }}m)
               </option>
             </select>
           </div>
           <div class="field">
             <label for="stylist">Stylist</label>
-            <select id="stylist" v-model="form.stylistId" :disabled="!stylists.length">
+            <select
+              id="stylist"
+              v-model="form.stylistId"
+              :disabled="!stylists.length"
+            >
               <option value="">Auto-assign</option>
-              <option v-for="stylist in stylists" :key="stylist.id" :value="String(stylist.id)">
-                {{ stylist.username }} — {{ skillLevelLabel(stylist.skillLevel) }}
+              <option
+                v-for="stylist in stylists"
+                :key="stylist.id"
+                :value="String(stylist.id)"
+              >
+                {{ stylist.username }} —
+                {{ skillLevelLabel(stylist.skillLevel) }}
               </option>
             </select>
-            <div v-if="!stylists.length && form.serviceId" class="field-hint">No stylists mapped for this service.</div>
+            <div v-if="!stylists.length && form.serviceId" class="field-hint">
+              No stylists mapped for this service.
+            </div>
           </div>
           <div class="field">
             <label for="station">Station</label>
             <select id="station" v-model="form.stationId">
               <option value="">Unassigned</option>
-              <option v-for="station in stations" :key="station.id" :value="String(station.id)">
+              <option
+                v-for="station in stations"
+                :key="station.id"
+                :value="String(station.id)"
+              >
                 {{ station.name }}
               </option>
             </select>
@@ -336,8 +381,18 @@ onMounted(async () => {
         </div>
         <div v-if="generalError" class="error-msg">{{ generalError }}</div>
         <div class="form-actions">
-          <button class="btn-secondary" :disabled="submitting" @click="showForm = false">Cancel</button>
-          <button class="btn-primary" :disabled="submitting" @click="submitForm">
+          <button
+            class="btn-secondary"
+            :disabled="submitting"
+            @click="showForm = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn-primary"
+            :disabled="submitting"
+            @click="submitForm"
+          >
             <span v-if="!submitting">Add to Queue</span>
             <span v-else>Saving...</span>
           </button>
@@ -353,7 +408,9 @@ onMounted(async () => {
         <div v-for="column in columns" :key="column.key" class="queue-column">
           <div class="column-header">
             <h3>{{ column.label }}</h3>
-            <span class="column-count">{{ walkins.filter((w) => w.status === column.key).length }}</span>
+            <span class="column-count">{{
+              walkins.filter((w) => w.status === column.key).length
+            }}</span>
           </div>
           <div class="column-body">
             <div
@@ -362,15 +419,17 @@ onMounted(async () => {
               :class="['queue-card', statusClass(apt.status)]"
             >
               <div class="card-header">
-                <b>{{ apt.service?.name || 'Service' }}</b>
+                <b>{{ apt.service?.name || "Service" }}</b>
                 <span class="card-time">{{ formatTime(apt.start) }}</span>
               </div>
               <div class="card-body">
                 <div class="card-client">
-                  {{ apt.customer?.firstName || 'Guest' }} {{ apt.customer?.lastName || '' }}
+                  {{ apt.customer?.firstName || "Guest" }}
+                  {{ apt.customer?.lastName || "" }}
                 </div>
                 <div class="card-meta">
-                  {{ apt.stylist?.name || 'Unassigned' }} · {{ apt.station?.name || 'Unassigned' }}
+                  {{ apt.stylist?.name || "Unassigned" }} ·
+                  {{ apt.station?.name || "Unassigned" }}
                 </div>
                 <div class="card-duration">{{ apt.durationMinutes }}m</div>
               </div>
@@ -384,10 +443,15 @@ onMounted(async () => {
                     {{ s.replace("_", " ") }}
                   </option>
                 </select>
-                <button class="btn-danger-sm" @click="removeWalkin(apt.id)">Remove</button>
+                <button class="btn-danger-sm" @click="removeWalkin(apt.id)">
+                  Remove
+                </button>
               </div>
             </div>
-            <div v-if="!walkins.filter((w) => w.status === column.key).length" class="empty-cell">
+            <div
+              v-if="!walkins.filter((w) => w.status === column.key).length"
+              class="empty-cell"
+            >
               —
             </div>
           </div>
@@ -451,7 +515,9 @@ onMounted(async () => {
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .loading-state p {
   font-family: var(--font-sans);

@@ -177,7 +177,9 @@ const loadDashboard = async () => {
       });
       salonAppointments.value = apptRes.data?.data || apptRes.data || [];
     } catch (e: unknown) {
-      logger.warn("Failed to load salon dashboard data", { error: e instanceof Error ? e.message : "" });
+      logger.warn("Failed to load salon dashboard data", {
+        error: e instanceof Error ? e.message : "",
+      });
     } finally {
       salonLoading.value = false;
     }

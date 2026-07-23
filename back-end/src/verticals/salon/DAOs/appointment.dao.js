@@ -113,6 +113,108 @@ const appointmentDao = {
       return new Date(start) < aptEnd && end > new Date(aptStart);
     });
   },
+
+  async getRevenueByService(tenantId, from, to) {
+    const where = {
+      tenantId,
+      status: { [Op.notIn]: ["cancelled", "no_show"] },
+    };
+    if (from || to) {
+      where.start = {};
+      if (from) where.start[Op.gte] = new Date(from);
+      if (to) where.start[Op.lte] = new Date(to);
+    }
+
+    const results = await salonModels.sequelize.models.appointment.findAll({
+      where,
+      include: [
+        { model: salonModels.sequelize.models.service, as: "service", attributes: ["id", "name", "price"] },
+      ],
+      attributes: [
+        [salonModels.sequelize.col("service.id"), "serviceId"],
+        [salonModels.sequelize.col("service.name"), "serviceName"],
+        [salonModels.sequelize.col("service.price"), "servicePrice"],
+        [salonModels.sequelize.fn("COUNT", salonModels.sequelize.col("appointment.id")), "appointmentCount"],
+        [salonModels.sequelize.fn("SUM", salonModels.sequelize.col("service.price")), "revenue"],
+      ],
+      group: ["service.id", "service.name", "service.price"],
+      order: [[salonModels.sequelize.fn("SUM", salonModels.sequelize.col("service.price")), "DESC"]],
+    });
+
+    return results.map((row) => ({
+      serviceId: row.get("serviceId"),
+      serviceName: row.get("serviceName"),
+      servicePrice: Number(row.get("servicePrice") || 0),
+      appointmentCount: Number(row.get("appointmentCount") || 0),
+      revenue: Number(row.get("revenue") || 0),
+    }));
+  },
+
+  async getTopStylists(tenantId, from, to) {
+    const where = {
+      tenantId,
+      status: { [Op.notIn]: ["cancelled", "no_show"] },
+    };
+    if (from || to) {
+      where.start = {};
+      if (from) where.start[Op.gte] = new Date(from);
+      if (to) where.start[Op.lte] = new Date(to);
+    }
+
+    const results = await salonModels.sequelize.models.appointment.findAll({
+      where,
+      include: [
+        { model: salonModels.sequelize.models.user, as: "stylist", attributes: ["id", "name", "email"] },
+        { model: salonModels.sequelize.models.service, as: "service", attributes: ["id", "name", "price"] },
+      ],
+      attributes: [
+        [salonModels.sequelize.col("stylist.id"), "stylistId"],
+        [salonModels.sequelize.col("stylist.name"), "stylistName"],
+        [salonModels.sequelize.col("stylist.email"), "stylistEmail"],
+        [salonModels.sequelize.fn("COUNT", salonModels.sequelize.col("appointment.id")), "appointmentCount"],
+        [salonModels.sequelize.fn("SUM", salonModels.sequelize.col("service.price")), "revenue"],
+      ],
+      group: ["stylist.id", "stylist.name", "stylist.email"],
+      order: [[salonModels.sequelize.fn("SUM", salonModels.sequelize.col("service.price")), "DESC"]],
+      limit: 10,
+    });
+
+    return results.map((row) => ({
+      stylistId: row.get("stylistId"),
+      stylistName: row.get("stylistName"),
+      stylistEmail: row.get("stylistEmail"),
+      appointmentCount: Number(row.get("appointmentCount") || 0),
+      revenue: Number(row.get("revenue") || 0),
+    }));
+  },
+
+  async getAppointmentsBySource(tenantId, from, to) {
+    const where = {
+      tenantId,
+    };
+    if (from || to) {
+      where.start = {};
+      if (from) where.start[Op.gte] = new Date(from);
+      if (to) where.start[Op.lte] = new Date(to);
+    }
+
+    const results = await salonModels.sequelize.models.appointment.findAll({
+      where,
+      attributes: [
+        "source",
+        [salonModels.sequelize.fn("COUNT", salonModels.sequelize.col("appointment.id")), "appointmentCount"],
+        [salonModels.sequelize.fn("SUM", salonModels.sequelize.col("appointment.durationMinutes")), "totalMinutes"],
+      ],
+      group: ["source"],
+      order: [[salonModels.sequelize.fn("COUNT", salonModels.sequelize.col("appointment.id")), "DESC"]],
+    });
+
+    return results.map((row) => ({
+      source: row.get("source") || "unknown",
+      appointmentCount: Number(row.get("appointmentCount") || 0),
+      totalMinutes: Number(row.get("totalMinutes") || 0),
+    }));
+  },
 };
 
 module.exports = appointmentDao;

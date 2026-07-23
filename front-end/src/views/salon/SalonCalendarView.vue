@@ -38,7 +38,10 @@ const weekEnd = computed(() => {
 });
 
 const dayKey = (date: Date) => {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(date.getDate()).padStart(2, "0")}`;
 };
 
 const weekDays = computed(() => {
@@ -64,7 +67,10 @@ const grouped = computed<Record<string, Appointment[]>>(() => {
 
   appointments.value.forEach((apt) => {
     const start = new Date(apt.start);
-    const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
+    const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${String(start.getDate()).padStart(2, "0")}`;
     if (!map[key]) map[key] = [];
     map[key].push(apt);
   });
@@ -109,9 +115,11 @@ const nextWeek = () => {
 
 const isToday = (date: Date) => {
   const today = new Date();
-  return date.getDate() === today.getDate() &&
+  return (
+    date.getDate() === today.getDate() &&
     date.getMonth() === today.getMonth() &&
-    date.getFullYear() === today.getFullYear();
+    date.getFullYear() === today.getFullYear()
+  );
 };
 
 const statusClass = (status: string) => {
@@ -166,7 +174,9 @@ onMounted(loadAppointments);
             :key="day.toISOString()"
             :class="['calendar-day-header', isToday(day) && 'today']"
           >
-            <div class="day-name">{{ day.toLocaleDateString([], { weekday: "short" }) }}</div>
+            <div class="day-name">
+              {{ day.toLocaleDateString([], { weekday: "short" }) }}
+            </div>
             <div class="day-date">{{ day.getDate() }}</div>
           </div>
         </div>
@@ -178,7 +188,11 @@ onMounted(loadAppointments);
             </div>
           </div>
 
-          <div v-for="day in weekDays" :key="day.toISOString()" class="calendar-column">
+          <div
+            v-for="day in weekDays"
+            :key="day.toISOString()"
+            class="calendar-column"
+          >
             <div
               v-for="slot in timeSlots"
               :key="slot + day.toISOString()"
@@ -192,10 +206,17 @@ onMounted(loadAppointments);
                 :style="appointmentStyle(apt)"
                 @click="router.push(`/appointments`)"
               >
-                <div class="block-title">{{ apt.service?.name || 'Service' }}</div>
+                <div class="block-title">
+                  {{ apt.service?.name || "Service" }}
+                </div>
                 <div class="block-time">{{ formatHour(apt.start) }}</div>
-                <div class="block-client">{{ apt.customer?.firstName }} {{ apt.customer?.lastName }}</div>
-                <div class="block-meta">{{ apt.stylist?.name || '' }} {{ apt.station?.name ? '· ' + apt.station.name : '' }}</div>
+                <div class="block-client">
+                  {{ apt.customer?.firstName }} {{ apt.customer?.lastName }}
+                </div>
+                <div class="block-meta">
+                  {{ apt.stylist?.name || "" }}
+                  {{ apt.station?.name ? "· " + apt.station.name : "" }}
+                </div>
               </div>
             </template>
           </div>
@@ -259,7 +280,9 @@ onMounted(loadAppointments);
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .loading-state p {
   font-family: var(--font-sans);

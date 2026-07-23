@@ -88,7 +88,8 @@ const submitShift = async () => {
     role.value = "";
     await loadData();
   } catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : "Failed to create shift";
+    errorMsg.value =
+      err instanceof Error ? err.message : "Failed to create shift";
   } finally {
     submitting.value = false;
   }
@@ -164,7 +165,11 @@ onMounted(loadData);
               <input id="role" v-model="role" placeholder="e.g. Stylist" />
             </div>
             <div class="field-actions">
-              <button class="btn-primary" :disabled="submitting || !userId" @click="submitShift">
+              <button
+                class="btn-primary"
+                :disabled="submitting || !userId"
+                @click="submitShift"
+              >
                 <span v-if="!submitting">Add Shift</span>
                 <span v-else>Saving...</span>
               </button>
@@ -180,11 +185,22 @@ onMounted(loadData);
               <span class="column-count">{{ groupedByDay[day].length }}</span>
             </div>
             <div class="column-body">
-              <div v-for="shift in groupedByDay[day]" :key="shift.id" class="shift-card">
-                <div class="shift-name">{{ shift.user?.username || "Staff" }}</div>
-                <div class="shift-time">{{ formatTime(shift.startTime) }} — {{ formatTime(shift.endTime) }}</div>
+              <div
+                v-for="shift in groupedByDay[day]"
+                :key="shift.id"
+                class="shift-card"
+              >
+                <div class="shift-name">
+                  {{ shift.user?.username || "Staff" }}
+                </div>
+                <div class="shift-time">
+                  {{ formatTime(shift.startTime) }} —
+                  {{ formatTime(shift.endTime) }}
+                </div>
                 <div v-if="shift.role" class="shift-role">{{ shift.role }}</div>
-                <button class="btn-danger-sm" @click="removeShift(shift.id)">Remove</button>
+                <button class="btn-danger-sm" @click="removeShift(shift.id)">
+                  Remove
+                </button>
               </div>
               <div v-if="!groupedByDay[day].length" class="empty-cell">
                 No shifts
@@ -247,7 +263,9 @@ onMounted(loadData);
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .loading-state p {
   font-family: var(--font-sans);

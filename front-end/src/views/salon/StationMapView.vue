@@ -42,7 +42,10 @@ const grouped = computed(() => {
 
   return Array.from(map.entries()).map(([key, items]) => ({
     key: String(key),
-    label: key === "unassigned" ? "Unassigned" : floorPlans.value.find((p) => p.id === key)?.name || `Floor ${key}`,
+    label:
+      key === "unassigned"
+        ? "Unassigned"
+        : floorPlans.value.find((p) => p.id === key)?.name || `Floor ${key}`,
     stations: items,
   }));
 });
@@ -155,7 +158,9 @@ onMounted(loadStations);
   margin: 0 auto 16px;
 }
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .zones-container {
   display: flex;

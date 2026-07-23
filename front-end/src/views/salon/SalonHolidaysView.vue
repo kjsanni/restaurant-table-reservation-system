@@ -38,7 +38,8 @@ const submitHoliday = async () => {
     date.value = "";
     await loadHolidays();
   } catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : "Failed to add holiday";
+    errorMsg.value =
+      err instanceof Error ? err.message : "Failed to add holiday";
   } finally {
     submitting.value = false;
   }
@@ -78,14 +79,22 @@ onMounted(loadHolidays);
           <div class="form-row">
             <div class="field">
               <label for="name">Name</label>
-              <input id="name" v-model="name" placeholder="e.g. Independence Day" />
+              <input
+                id="name"
+                v-model="name"
+                placeholder="e.g. Independence Day"
+              />
             </div>
             <div class="field">
               <label for="date">Date</label>
               <input id="date" type="date" v-model="date" />
             </div>
             <div class="field-actions">
-              <button class="btn-primary" :disabled="submitting || !name || !date" @click="submitHoliday">
+              <button
+                class="btn-primary"
+                :disabled="submitting || !name || !date"
+                @click="submitHoliday"
+              >
                 <span v-if="!submitting">Add</span>
                 <span v-else>Saving...</span>
               </button>
@@ -96,12 +105,20 @@ onMounted(loadHolidays);
 
         <div class="list-card">
           <h3>Upcoming Holidays</h3>
-          <div v-if="!holidays.length" class="empty-state">No holidays configured.</div>
+          <div v-if="!holidays.length" class="empty-state">
+            No holidays configured.
+          </div>
           <div v-else class="holiday-list">
-            <div v-for="holiday in holidays" :key="holiday.id" class="holiday-row">
+            <div
+              v-for="holiday in holidays"
+              :key="holiday.id"
+              class="holiday-row"
+            >
               <div class="holiday-name">{{ holiday.name }}</div>
               <div class="holiday-date">{{ holiday.date }}</div>
-              <button class="btn-danger-sm" @click="removeHoliday(holiday.id)">Remove</button>
+              <button class="btn-danger-sm" @click="removeHoliday(holiday.id)">
+                Remove
+              </button>
             </div>
           </div>
         </div>
@@ -160,7 +177,9 @@ onMounted(loadHolidays);
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .loading-state p {
   font-family: var(--font-sans);

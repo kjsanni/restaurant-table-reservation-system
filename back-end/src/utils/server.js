@@ -105,6 +105,7 @@ if (TENANT_MODE) {
   salonStationRoutes = require("../verticals/salon/routes/station.router");
   salonServiceRoutes = require("../verticals/salon/routes/service.router");
   salonCustomerPortalRoutes = require("../routes/salon-customer-portal.router");
+  salonReportsRoutes = require("../routes/salon-reports.router");
 }
 
 const requestTimeout = (timeout = 15000) => {
@@ -248,6 +249,7 @@ const createServer = () => {
     app.use("/api/v1/salon/stations", logAction, validateCsrfToken, salonStationRoutes);
     app.use("/api/v1/salon/services", logAction, validateCsrfToken, salonServiceRoutes);
     app.use("/api/v1/salon/customer-portal", logAction, validateCsrfToken, salonCustomerPortalRoutes);
+    app.use("/api/v1/salon/reports", logAction, validateCsrfToken, salonReportsRoutes);
   }
   app.use("/api/v1/customer-portal", logAction, validateCsrfToken, customerPortalRouter);
   app.use("/api/v1/notifications", logAction, validateCsrfToken, notificationRouter);

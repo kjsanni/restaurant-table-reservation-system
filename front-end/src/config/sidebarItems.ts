@@ -41,6 +41,7 @@ export const authenticatedNavItems: NavItem[] = [
   { routeName: 'station-map', text: 'Station Map', icon: 'mdi:map', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-services', text: 'Services', icon: 'mdi:content-cut', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-settings', text: 'Salon Settings', icon: 'mdi:cog', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-reports', text: 'Reports', icon: 'mdi:chart-bar', requiresAuth: true, requiresVertical: 'salon' },
 ]
 
 export const adminNavItems: NavItem[] = [

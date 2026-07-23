@@ -40,8 +40,11 @@ const loadData = async () => {
       salonCustomerPortalAPI.getProfile(),
       salonCustomerPortalAPI.getAppointments(),
     ]);
-    profile.value = (profileRes.data?.customer || profileRes.data || null) as CustomerProfile | null;
-    appointments.value = (appointmentsRes.data?.appointments || []) as SalonAppointment[];
+    profile.value = (profileRes.data?.customer ||
+      profileRes.data ||
+      null) as CustomerProfile | null;
+    appointments.value = (appointmentsRes.data?.appointments ||
+      []) as SalonAppointment[];
   } catch (err) {
     logger.error("Failed to load salon portal data", { error: err });
   } finally {
@@ -55,7 +58,9 @@ const customerName = computed(() => {
   return last ? `${first} ${last}` : first;
 });
 
-const customerPhone = computed(() => profile.value?.phone || (authStore.user as any)?.phone || "");
+const customerPhone = computed(
+  () => profile.value?.phone || (authStore.user as any)?.phone || ""
+);
 
 const filteredAppointments = computed(() => {
   if (!searchQuery.value) return appointments.value;
@@ -79,13 +84,20 @@ const filteredAppointments = computed(() => {
 const formatDate = (iso: string) => {
   if (!iso) return "";
   const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  return d.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
 };
 
 const formatTime = (iso: string) => {
   if (!iso) return "";
   const d = new Date(iso);
-  return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const statusLabel = (status: string) => {
@@ -127,13 +139,16 @@ onMounted(loadData);
     <div class="topbar">
       <div class="topbar-left">
         <h1>My Salon Appointments</h1>
-        <p>Manage your bookings at {{ authStore.currentTenant?.name || "the salon" }}</p>
+        <p>
+          Manage your bookings at
+          {{ authStore.currentTenant?.name || "the salon" }}
+        </p>
       </div>
     </div>
 
     <div class="content-wrapper">
       <div class="portal-hero">
-        <h2>Welcome back, {{ customerName.split(' ')[0] }}</h2>
+        <h2>Welcome back, {{ customerName.split(" ")[0] }}</h2>
         <p v-if="customerPhone">Contact: {{ customerPhone }}</p>
         <div class="portal-search">
           <input
@@ -151,9 +166,13 @@ onMounted(loadData);
           No appointments found.
         </div>
         <template v-else>
-          <div v-for="apt in filteredAppointments" :key="apt.id" class="booking">
+          <div
+            v-for="apt in filteredAppointments"
+            :key="apt.id"
+            class="booking"
+          >
             <div class="date-badge">
-              {{ formatDate(apt.start).split(' ')[0]?.toUpperCase() || 'APT' }}
+              {{ formatDate(apt.start).split(" ")[0]?.toUpperCase() || "APT" }}
               <small>{{ new Date(apt.start).getDate() }}</small>
             </div>
             <div class="booking-meta">
@@ -173,7 +192,7 @@ onMounted(loadData);
               :disabled="cancellingId === apt.id"
               @click="cancelAppointment(apt)"
             >
-              {{ cancellingId === apt.id ? 'Cancelling…' : 'Cancel' }}
+              {{ cancellingId === apt.id ? "Cancelling…" : "Cancel" }}
             </button>
           </div>
         </template>

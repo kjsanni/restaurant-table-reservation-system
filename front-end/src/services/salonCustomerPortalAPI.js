@@ -8,7 +8,9 @@ class SalonCustomerPortalAPI {
     return API.get("/salon/customer-portal/appointments");
   }
   cancelAppointment(appointmentId) {
-    return API.post(`/salon/customer-portal/appointments/${appointmentId}/cancel`);
+    return API.post(
+      `/salon/customer-portal/appointments/${appointmentId}/cancel`
+    );
   }
 }
 
