@@ -217,6 +217,51 @@ const deleteAppointment = async (id: number) => {
   }
 };
 
+const selectedIds = ref<number[]>([]);
+const bulkStatus = ref("");
+
+const toggleSelect = (id: number) => {
+  const idx = selectedIds.value.indexOf(id);
+  if (idx >= 0) selectedIds.value.splice(idx, 1);
+  else selectedIds.value.push(id);
+};
+
+const toggleSelectAll = () => {
+  if (selectedIds.value.length === appointments.value.length) {
+    selectedIds.value = [];
+  } else {
+    selectedIds.value = appointments.value.map((a) => a.id);
+  }
+};
+
+const bulkUpdateStatus = async () => {
+  if (!bulkStatus.value || !selectedIds.value.length) return;
+  try {
+    await Promise.all(
+      selectedIds.value.map((id) => appointmentAPI.updateAppointment(id, { status: bulkStatus.value }))
+    );
+    appointments.value.forEach((apt) => {
+      if (selectedIds.value.includes(apt.id)) apt.status = bulkStatus.value;
+    });
+    selectedIds.value = [];
+    bulkStatus.value = "";
+  } catch (err) {
+    logger.error("Bulk status update failed", { error: err });
+  }
+};
+
+const bulkCancel = async () => {
+  if (!selectedIds.value.length) return;
+  if (!confirm(`Cancel ${selectedIds.value.length} appointment(s)?`)) return;
+  try {
+    await Promise.all(selectedIds.value.map((id) => appointmentAPI.deleteAppointment(id)));
+    appointments.value = appointments.value.filter((a) => !selectedIds.value.includes(a.id));
+    selectedIds.value = [];
+  } catch (err) {
+    logger.error("Bulk cancel failed", { error: err });
+  }
+};
+
 onMounted(async () => {
   await loadAppointments();
 });
@@ -249,12 +294,12 @@ const handleServiceChange = async () => {
 
     <div class="content-wrapper">
       <div class="panel-head" style="margin-bottom: 16px;">
-        <h3>Appointments</h3>
+        <h2>Appointments</h2>
         <button class="btn-primary" @click="openForm">New Appointment</button>
       </div>
 
       <div v-if="showForm" class="form-panel">
-        <h4>New Appointment</h4>
+        <h3>New Appointment</h3>
         <div class="form-grid">
           <div class="field">
             <label for="customerFirstName">First name</label>
@@ -315,6 +360,17 @@ const handleServiceChange = async () => {
         </div>
       </div>
 
+      <div v-if="selectedIds.length" class="bulk-bar">
+        <span class="bulk-count">{{ selectedIds.length }} selected</span>
+        <select v-model="bulkStatus" class="bulk-select">
+          <option value="">Update status...</option>
+          <option v-for="s in statusOptions" :key="s" :value="s">{{ s.replace("_", " ") }}</option>
+        </select>
+        <button class="btn-primary" :disabled="!bulkStatus" @click="bulkUpdateStatus">Apply</button>
+        <button class="btn-danger-sm" @click="bulkCancel">Cancel selected</button>
+        <button class="btn-secondary" @click="selectedIds = []">Clear</button>
+      </div>
+
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
         <p>Loading appointments...</p>
@@ -324,6 +380,13 @@ const handleServiceChange = async () => {
         <table class="data-table">
           <thead>
             <tr>
+              <th class="checkbox-cell">
+                <input
+                  type="checkbox"
+                  :checked="selectedIds.length === appointments.length && appointments.length > 0"
+                  @change="toggleSelectAll"
+                />
+              </th>
               <th>Client</th>
               <th>Date / Time</th>
               <th>Service</th>
@@ -336,6 +399,13 @@ const handleServiceChange = async () => {
           </thead>
           <tbody>
             <tr v-for="apt in appointments" :key="apt.id">
+              <td class="checkbox-cell">
+                <input
+                  type="checkbox"
+                  :checked="selectedIds.includes(apt.id)"
+                  @change="toggleSelect(apt.id)"
+                />
+              </td>
               <td>
                 {{ apt.customer?.firstName }} {{ apt.customer?.lastName }}
                 <div class="sub-text">{{ apt.customer?.phone }}</div>
@@ -649,5 +719,33 @@ const handleServiceChange = async () => {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 14px;
+}
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+}
+.bulk-count {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--neutral-900);
+}
+.bulk-select {
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  padding: 8px 10px;
+  font-size: 13px;
+  background: var(--white);
+  color: var(--neutral-900);
+}
+.checkbox-cell {
+  width: 40px;
+  text-align: center;
 }
 </style>
