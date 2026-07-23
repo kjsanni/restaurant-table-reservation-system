@@ -170,13 +170,21 @@ const setupTenantHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "Tenant context required" });
   }
 
-  const { restaurantType, serviceModes } = req.body;
+  const { businessVertical, restaurantType, serviceModes } = req.body;
   const tenant = req.tenant;
 
   const VALID_MODES = ["dine_in", "takeaway", "delivery"];
   const VALID_TYPES = Object.keys(TYPE_DEFAULTS);
 
-  if (restaurantType !== undefined) {
+  if (businessVertical) {
+    tenant.businessVertical = businessVertical;
+  }
+
+  if (businessVertical === "salon") {
+    if (!tenant.restaurantType || tenant.restaurantType !== "salon") {
+      applyTypeDefaults(tenant, "salon");
+    }
+  } else if (restaurantType !== undefined) {
     if (!VALID_TYPES.includes(restaurantType)) {
       return res.status(400).json({
         success: false,
@@ -188,7 +196,7 @@ const setupTenantHandler = async (req, res) => {
     }
   }
 
-  if (serviceModes !== undefined) {
+  if (businessVertical !== "salon" && serviceModes !== undefined) {
     if (!Array.isArray(serviceModes) || serviceModes.length === 0) {
       return res.status(400).json({ success: false, message: "serviceModes must be a non-empty array" });
     }
@@ -207,6 +215,7 @@ const setupTenantHandler = async (req, res) => {
   return res.status(200).json({
     success: true,
     item: {
+      businessVertical: tenant.businessVertical,
       restaurantType: tenant.restaurantType,
       serviceModes: tenant.serviceModes,
     },

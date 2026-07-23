@@ -51,6 +51,20 @@ const TYPE_DEFAULTS = {
       pos_sync: false,
     },
   },
+  salon: {
+    serviceModes: ["appointments", "walkins"],
+    featureFlags: {
+      table_management: false,
+      waitlist: false,
+      staff_scheduling: true,
+      loyalty: false,
+      pos_sync: false,
+      salon_appointments: true,
+      salon_walkins: true,
+      salon_client_profiles: true,
+      salon_whatsapp_booking: true,
+    },
+  },
 };
 
 const applyTypeDefaults = (tenant, restaurantType) => {
