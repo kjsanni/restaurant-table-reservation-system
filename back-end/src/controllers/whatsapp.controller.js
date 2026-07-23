@@ -37,33 +37,6 @@ const inboundHandler = async (req, res) => {
     const phone = message.from;
     const tenantId = await resolveTenantId(value.metadata || {});
 
-    if (!tenantId) {
-      return res.status(200).json({ success: true });
-    }
-
-    const tenant = await db.tenant.findByPk(tenantId);
-    const isSalon = tenant?.businessVertical === "salon";
-
-    if (isSalon) {
-      const settings = tenant?.settings || {};
-      const flags = settings.featureFlags || {};
-      const waBookingEnabled = flags.salon_whatsapp_booking !== false;
-
-      if (!waBookingEnabled) {
-        return res.status(200).json({ success: true });
-      }
-
-      if (message.type === "text" && message.text && message.text.body) {
-        const session = await whatsappAppointmentService.getSession(phone);
-        if (session.state === "idle") {
-          await whatsappAppointmentService.startSalonAppointmentFlow(phone, tenantId);
-        } else {
-          await whatsappAppointmentService.handleSalonAppointmentState(phone, message.text.body.toLowerCase(), message.text.body, session, tenantId);
-        }
-      }
-      return res.status(200).json({ success: true });
-    }
-
     if (message.type === "text" && message.text && message.text.body) {
       await whatsappOrderService.processMessage(phone, message.text.body, tenantId);
     } else if (message.type === "location" && message.location) {
@@ -77,6 +50,26 @@ const inboundHandler = async (req, res) => {
       const reply = message.interactive.button_reply || message.interactive.list_reply;
       if (reply && reply.id) {
         await whatsappOrderService.processMessage(phone, reply.id, tenantId);
+      }
+    }
+
+    if (tenantId) {
+      const tenant = await db.tenant.findByPk(tenantId);
+      const isSalon = tenant?.businessVertical === "salon";
+
+      if (isSalon) {
+        const settings = tenant?.settings || {};
+        const flags = settings.featureFlags || {};
+        const waBookingEnabled = flags.salon_whatsapp_booking !== false;
+
+        if (waBookingEnabled && message.type === "text" && message.text && message.text.body) {
+          const session = await whatsappAppointmentService.getSession(phone);
+          if (session.state === "idle") {
+            await whatsappAppointmentService.startSalonAppointmentFlow(phone, tenantId);
+          } else {
+            await whatsappAppointmentService.handleSalonAppointmentState(phone, message.text.body.toLowerCase(), message.text.body, session, tenantId);
+          }
+        }
       }
     }
 

@@ -1,13 +1,14 @@
 "use strict";
 const appointmentSchedulingService = require("./appointmentScheduling.service");
 const appointmentDao = require("../DAOs/appointment.dao");
-const { initializeCharge } = require("../../tenant-platform/services/paystack.service");
+const { initializeCharge } = require("../../../tenant-platform/services/paystack.service");
 const salonModels = require("../models");
-const { cache } = require("../../utils/cache");
-const { sendWithSmsFallback } = require("../../services/notification.service");
-const customerService = require("../../services/customerService");
-const messageTemplates = require("../../services/messageTemplates.service");
-const { withRetry } = require("../../utils/retry");
+const { cache } = require("../../../utils/cache");
+const { sendWithSmsFallback } = require("../../../services/notification.service");
+const customerService = require("../../../services/customerService");
+const messageTemplates = require("../../../services/messageTemplates.service");
+const { withRetry } = require("../../../utils/retry");
+const whatsappService = require("../../../services/whatsapp.service");
 
 const SESSION_PREFIX = "whatsapp:salon:session:";
 const SESSION_TTL = 60 * 60 * 24;

@@ -1,8 +1,9 @@
 "use strict";
 const { Op } = require("sequelize");
-const salonModels = require("../models");
-const Holiday = require("../../db/models/holiday")(salonModels.sequelize, require("sequelize").DataTypes);
-const StaffShift = require("../../db/models/staffShift")(salonModels.sequelize, require("sequelize").DataTypes);
+const salonModels = require("../../../db/models");
+const dbModels = require("../../../db/models");
+const Holiday = dbModels.holiday;
+const StaffShift = dbModels.staffShift;
 
 const buildExtendedEnd = (start, durationMinutes, bufferMinutes) => {
   return new Date(new Date(start).getTime() + (durationMinutes + bufferMinutes) * 60000);
