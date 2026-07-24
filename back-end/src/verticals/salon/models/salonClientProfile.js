@@ -53,6 +53,34 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATEONLY,
         allowNull: true,
       },
+      tier: {
+        type: DataTypes.ENUM("bronze", "silver", "gold", "platinum"),
+        allowNull: false,
+        defaultValue: "bronze",
+      },
+      totalVisits: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      totalSpent: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      noShowCount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      lastVisitAt: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+      },
+      lastNoShowAt: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+      },
     },
     {
       sequelize,

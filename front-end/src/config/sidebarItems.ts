@@ -43,6 +43,7 @@ export const authenticatedNavItems: NavItem[] = [
   { routeName: 'salon-settings', text: 'Salon Settings', icon: 'mdi:cog', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-reports', text: 'Reports', icon: 'mdi:chart-bar', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-recurring', text: 'Recurring', icon: 'mdi:repeat', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-clients', text: 'Clients', icon: 'mdi:account-group', requiresAuth: true, requiresVertical: 'salon' },
 ]
 
 export const adminNavItems: NavItem[] = [
