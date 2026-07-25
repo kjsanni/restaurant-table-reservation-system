@@ -40,6 +40,24 @@
           </div>
         </div>
         <div class="field">
+          <label>Secondary Color</label>
+          <div class="color-input-row">
+            <input
+              v-model="form.secondaryColor"
+              type="color"
+              class="color-picker"
+            />
+            <input
+              v-model="form.secondaryColor"
+              placeholder="#1a1410"
+              class="color-text"
+            />
+          </div>
+          <span class="field-hint">
+            Used for strong accents and sidebar chrome when set.
+          </span>
+        </div>
+        <div class="field">
           <label>Custom Domain</label>
           <input
             v-model="form.customDomain"
@@ -78,6 +96,15 @@
             >
               Reserve a Table
             </div>
+            <div
+              class="preview-chip"
+              :style="{
+                borderColor: preview.secondaryColor,
+                color: preview.secondaryColor,
+              }"
+            >
+              Secondary accent
+            </div>
             <div class="preview-chips">
               <span class="preview-chip">Menu</span>
               <span class="preview-chip">Hours</span>
@@ -94,30 +121,40 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useToastStore } from "@/stores/toast";
+import { useAuthStore } from "@/stores/auth";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import whiteLabelAPI from "@/services/whiteLabelAPI";
 
 const toastStore = useToastStore();
+const authStore = useAuthStore();
 
 const route = useRoute();
 const tenant = ref({ name: "" });
 const branding = ref({
   logoUrl: "",
   primaryColor: "#d97706",
+  secondaryColor: "",
   customDomain: "",
 });
-const form = ref({ logoUrl: "", primaryColor: "#d97706", customDomain: "" });
+const form = ref({
+  logoUrl: "",
+  primaryColor: "#d97706",
+  secondaryColor: "",
+  customDomain: "",
+});
 const saving = ref(false);
 const saved = ref(false);
 
 const preview = computed(() => ({
   logoUrl: form.value.logoUrl,
   primaryColor: form.value.primaryColor || "#d97706",
+  secondaryColor: form.value.secondaryColor || "#1a1410",
   customDomain: form.value.customDomain,
 }));
 
 const previewStyles = computed(() => ({
   borderColor: preview.value.primaryColor || "#d97706",
+  accentColor: preview.value.secondaryColor || "#1a1410",
 }));
 
 const loadData = async () => {
@@ -131,6 +168,7 @@ const loadData = async () => {
     form.value = {
       logoUrl: branding.value.logoUrl || "",
       primaryColor: branding.value.primaryColor || "#d97706",
+      secondaryColor: branding.value.secondaryColor || "",
       customDomain: branding.value.customDomain || "",
     };
   } catch (err) {
@@ -145,9 +183,10 @@ const saveBranding = async () => {
     await whiteLabelAPI.updateBranding(route.params.id, {
       logoUrl: form.value.logoUrl || null,
       primaryColor: form.value.primaryColor || null,
+      secondaryColor: form.value.secondaryColor || null,
       customDomain: form.value.customDomain || null,
     });
-    await loadData();
+    await Promise.all([loadData(), authStore.fetchSettings()]);
     saved.value = true;
     setTimeout(() => (saved.value = false), 2000);
   } catch (err) {
@@ -234,6 +273,11 @@ onMounted(() => {
   font-size: var(--text-sm);
   color: var(--ink-muted);
   font-weight: 500;
+}
+.field-hint {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  margin-top: var(--space-1);
 }
 .field input[type="text"] {
   padding: var(--space-2) var(--space-3);

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, onUnmounted } from "vue";
 import stationAPI from "@/services/stationAPI";
 import floorPlanAPI from "@/services/floorPlanAPI";
 import logger from "@/utils/logger";
+import { io, Socket } from "socket.io-client";
 
 interface Station {
   id: number;
@@ -23,6 +24,7 @@ interface FloorPlan {
 const stations = ref<Station[]>([]);
 const floorPlans = ref<FloorPlan[]>([]);
 const loading = ref(true);
+const socket = ref<Socket | null>(null);
 
 const grouped = computed(() => {
   const map = new Map<number | string, Station[]>();
@@ -66,7 +68,18 @@ const loadStations = async () => {
   }
 };
 
-onMounted(loadStations);
+onMounted(async () => {
+  await loadStations();
+  socket.value = io("", { path: "/socket.io" });
+  socket.value.on("salon-appointment-created", loadStations);
+  socket.value.on("salon-appointment-updated", loadStations);
+  socket.value.on("salon-appointment-deleted", loadStations);
+});
+
+onUnmounted(() => {
+  socket.value?.disconnect();
+  socket.value = null;
+});
 </script>
 
 <template>

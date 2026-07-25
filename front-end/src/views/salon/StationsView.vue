@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import stationAPI from "@/services/stationAPI";
 import logger from "@/utils/logger";
+import { io, Socket } from "socket.io-client";
 
 interface Station {
   id: number;
@@ -18,6 +19,7 @@ const loading = ref(true);
 const showForm = ref(false);
 const editingId = ref<number | null>(null);
 const form = ref({ name: "", type: "chair", zone: "", maintenanceNotes: "" });
+const socket = ref<Socket | null>(null);
 
 const typeOptions = ["chair", "wash", "color", "nail", "therapy"];
 
@@ -77,7 +79,18 @@ const deleteStation = async (id: number) => {
   }
 };
 
-onMounted(loadStations);
+onMounted(async () => {
+  await loadStations();
+  socket.value = io("", { path: "/socket.io" });
+  socket.value.on("salon-appointment-created", loadStations);
+  socket.value.on("salon-appointment-updated", loadStations);
+  socket.value.on("salon-appointment-deleted", loadStations);
+});
+
+onUnmounted(() => {
+  socket.value?.disconnect();
+  socket.value = null;
+});
 </script>
 
 <template>

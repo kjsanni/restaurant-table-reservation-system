@@ -49,6 +49,12 @@ const DEFAULT_TEMPLATES = {
   service_unavailable: "Sorry, this service is not configured. Please contact the restaurant directly.",
   salon_appointment_reminder:
     "Reminder: {{name}}, you have an appointment at {{salonName}} today at {{time}} for {{duration}} mins ({{service}}).\nReply 'cancel' to cancel.",
+  salon_appointment_confirmation:
+    "Booking confirmed! Appointment #{{appointmentId}} at {{salonName}} on {{date}} at {{time}} for {{duration}} mins ({{service}}). Stylist: {{stylist}}.\nPay to secure: {{paymentUrl}}\nReference: {{reference}}",
+  salon_appointment_cancellation:
+    "Your appointment #{{appointmentId}} at {{salonName}} on {{date}} at {{time}} has been cancelled. Reply to book again.",
+  salon_payment_confirmed:
+    "Payment confirmed for appointment #{{appointmentId}} at {{salonName}} on {{date}} at {{time}}. We look forward to seeing you!",
 };
 
 let templateCache = {};

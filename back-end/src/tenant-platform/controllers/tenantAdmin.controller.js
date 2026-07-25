@@ -5,6 +5,7 @@ const {
   getTenantDashboard,
 } = require("../services/tenantSubscription.service");
 const { applyTypeDefaults } = require("../services/tenantTypeDefaults.service");
+const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const createTenantHandler = async (req, res) => {
   const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType } = req.body;
@@ -13,9 +14,19 @@ const createTenantHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "Name and slug are required" });
   }
 
+  const normalizedSlug = String(slug).trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  if (!normalizedSlug) {
+    return res.status(400).json({ success: false, message: "Slug must contain only lowercase letters, numbers, and hyphens" });
+  }
+
+  const existing = await db.tenant.findOne({ where: { slug: normalizedSlug } });
+  if (existing) {
+    return res.status(409).json({ success: false, message: `Slug "${normalizedSlug}" is already in use` });
+  }
+
   const tenant = await db.tenant.create({
     name,
-    slug,
+    slug: normalizedSlug,
     domain,
     plan: plan || "starter",
     status: status || "active",
@@ -98,12 +109,18 @@ const updateTenantHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
 
-  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "paystackSubaccountCode", "paystackPublicKey", "paystackSecretKey", "restaurantType", "serviceModes"];
+  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "paystackSubaccountCode", "paystackPublicKey", "paystackSecretKey", "restaurantType", "serviceModes", "businessVertical"];
   const updates = {};
+  const changes = {};
 
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(req.body, key)) {
-      updates[key] = req.body[key];
+      const next = req.body[key];
+      const prev = tenant[key];
+      if (prev !== next) {
+        updates[key] = next;
+        changes[key] = { from: prev, to: next };
+      }
     }
   }
 
@@ -114,6 +131,19 @@ const updateTenantHandler = async (req, res) => {
   }
 
   await tenant.update(updates);
+
+  if (Object.keys(changes).length > 0) {
+    await platformAuditDAO.log(
+      req.user?.id || null,
+      "tenant.updated",
+      "tenant",
+      tenant.id,
+      tenant.id,
+      { changes },
+      req.ip
+    );
+  }
+
   res.status(200).json({ success: true, item: tenant });
 };
 

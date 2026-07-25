@@ -40,10 +40,6 @@ const loadPaystackConfig = async () => {
   return cachedConfig;
 };
 
-if (!envSecretKey) {
-  console.warn("PAYSTACK_SECRET_KEY is not set. Billing features will fail.");
-}
-
 const buildClient = (secretKey) =>
   axios.create({
     baseURL: PAYSTACK_BASE,

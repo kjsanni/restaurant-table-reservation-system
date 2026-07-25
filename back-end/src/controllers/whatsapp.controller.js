@@ -37,39 +37,48 @@ const inboundHandler = async (req, res) => {
     const phone = message.from;
     const tenantId = await resolveTenantId(value.metadata || {});
 
-    if (message.type === "text" && message.text && message.text.body) {
-      await whatsappOrderService.processMessage(phone, message.text.body, tenantId);
-    } else if (message.type === "location" && message.location) {
-      const { latitude, longitude, address } = message.location;
-      await whatsappOrderService.processLocationMessage(
-        phone,
-        { latitude, longitude, address },
-        tenantId
-      );
-    } else if (message.type === "interactive" && message.interactive) {
-      const reply = message.interactive.button_reply || message.interactive.list_reply;
-      if (reply && reply.id) {
-        await whatsappOrderService.processMessage(phone, reply.id, tenantId);
+    let isSalon = false;
+    let salonBookingEnabled = false;
+    if (tenantId) {
+      const tenant = await db.tenant.findByPk(tenantId);
+      isSalon = tenant?.businessVertical === "salon";
+      if (isSalon) {
+        const flags = tenant?.settings?.featureFlags || {};
+        salonBookingEnabled = flags.salon_whatsapp_booking !== false;
       }
     }
 
-    if (tenantId) {
-      const tenant = await db.tenant.findByPk(tenantId);
-      const isSalon = tenant?.businessVertical === "salon";
+    const isSalonBookingMessage =
+      isSalon &&
+      salonBookingEnabled &&
+      message.type === "text" &&
+      message.text &&
+      message.text.body;
 
-      if (isSalon) {
-        const settings = tenant?.settings || {};
-        const flags = settings.featureFlags || {};
-        const waBookingEnabled = flags.salon_whatsapp_booking !== false;
-
-        if (waBookingEnabled && message.type === "text" && message.text && message.text.body) {
-          const session = await whatsappAppointmentService.getSession(phone);
-          if (session.state === "idle") {
-            await whatsappAppointmentService.startSalonAppointmentFlow(phone, tenantId);
-          } else {
-            await whatsappAppointmentService.handleSalonAppointmentState(phone, message.text.body.toLowerCase(), message.text.body, session, tenantId);
-          }
+    if (!isSalonBookingMessage) {
+      if (message.type === "text" && message.text && message.text.body) {
+        await whatsappOrderService.processMessage(phone, message.text.body, tenantId);
+      } else if (message.type === "location" && message.location) {
+        const { latitude, longitude, address } = message.location;
+        await whatsappOrderService.processLocationMessage(
+          phone,
+          { latitude, longitude, address },
+          tenantId
+        );
+      } else if (message.type === "interactive" && message.interactive) {
+        const reply = message.interactive.button_reply || message.interactive.list_reply;
+        if (reply && reply.id) {
+          await whatsappOrderService.processMessage(phone, reply.id, tenantId);
         }
+      }
+    }
+
+    if (tenantId && isSalon && salonBookingEnabled && message.type === "text" && message.text && message.text.body) {
+      const session = await whatsappAppointmentService.getSession(phone);
+      if (session.state === "idle") {
+        await whatsappAppointmentService.startSalonAppointmentFlow(phone, tenantId);
+      } else {
+        await whatsappAppointmentService.handleSalonAppointmentState(phone, message.text.body.toLowerCase(), message.text.body, session, tenantId);
       }
     }
 

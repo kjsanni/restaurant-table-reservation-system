@@ -20,4 +20,9 @@ router
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(bulkController.bulkSendEmailHandler))
   .all(httpMethodError);
 
+router
+  .route("/change-vertical")
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(bulkController.bulkChangeVerticalHandler))
+  .all(httpMethodError);
+
 module.exports = router;

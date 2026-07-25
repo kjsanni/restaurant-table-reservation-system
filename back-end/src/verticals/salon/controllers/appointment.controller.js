@@ -3,7 +3,18 @@ const salonModels = require("../models");
 const appointmentDao = require("../DAOs/appointment.dao");
 const staffServiceSkillDao = require("../DAOs/staffServiceSkill.dao");
 const { logAction } = require("../../../middleware/auditLog");
-const { enqueueSalonAppointmentReminders } = require("../../../services/notification.service");
+const { enqueueSalonAppointmentReminders, sendSalonConfirmation, sendSalonCancellation } = require("../../../services/notification.service");
+
+const emitSalonAppointmentEvent = (req, event, payload) => {
+  try {
+    const io = req.app?.get("io");
+    if (!io) return;
+    const room = `salon:appointments:${req.tenant?.id}`;
+    io.to(room).emit(event, payload);
+  } catch (err) {
+    console.error("Failed to emit salon appointment event:", err.message);
+  }
+};
 
 const appointmentController = {
   async getAllAppointments(req, res) {
@@ -43,8 +54,11 @@ const appointmentController = {
       });
 
       if (appointment.status === "confirmed") {
+        sendSalonConfirmation(appointment, tenantId).catch(() => {});
         enqueueSalonAppointmentReminders(tenantId).catch(() => {});
       }
+
+      emitSalonAppointmentEvent(req, "salon-appointment-created", appointment);
 
       res.status(201).json({ success: true, data: appointment });
     } catch (error) {
@@ -65,6 +79,8 @@ const appointmentController = {
         changes: req.body,
       });
 
+      emitSalonAppointmentEvent(req, "salon-appointment-updated", appointment);
+
       res.json({ success: true, data: appointment });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -74,10 +90,23 @@ const appointmentController = {
   async deleteAppointment(req, res) {
     try {
       const tenantId = req.tenant?.id;
+      const appointment = await appointmentDao.findById(req.params.id, tenantId);
+      if (!appointment) {
+        return res.status(404).json({ success: false, message: "Appointment not found" });
+      }
       const deleted = await appointmentDao.delete(req.params.id, tenantId);
       if (!deleted) {
         return res.status(404).json({ success: false, message: "Appointment not found" });
       }
+      await logAction(req, "appointment_deleted", {
+        appointmentId: req.params.id,
+        customerId: appointment.customerId,
+        serviceId: appointment.serviceId,
+      });
+      if (appointment.status !== "cancelled" && appointment.status !== "no_show") {
+        sendSalonCancellation(appointment, tenantId).catch(() => {});
+      }
+      emitSalonAppointmentEvent(req, "salon-appointment-deleted", { id: appointment.id });
       res.json({ success: true, message: "Appointment deleted" });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });

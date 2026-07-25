@@ -2,9 +2,11 @@ const reportService = require("../services/reportService");
 
 jest.mock("../DAOs/reservation.dao");
 jest.mock("../services/paymentService");
+jest.mock("../DAOs/payment.dao");
 
 const reservationDAO = require("../DAOs/reservation.dao");
 const paymentService = require("../services/paymentService");
+const paymentDAO = require("../DAOs/payment.dao");
 
 describe("Advanced reporting", () => {
   beforeEach(() => jest.clearAllMocks());
@@ -62,5 +64,28 @@ describe("Advanced reporting", () => {
     expect(result.total).toBe(3);
     expect(result.byDay).toHaveLength(2);
     expect(result.byTime).toHaveLength(2);
+  });
+
+  it("getGraTaxReport returns tax breakdown with default VAT", async () => {
+    paymentDAO.getTaxReport.mockResolvedValue({
+      period: { from: "2026-07-01", to: "2026-07-31" },
+      currency: "GHS",
+      vatRate: 0.15,
+      totalRevenue: 1000,
+      totalDiscount: 100,
+      netRevenue: 900,
+      vatAmount: 135,
+      totalTransactions: 10,
+      byMethod: [
+        { method: "mobile_money", total: 600, count: 6 },
+        { method: "card", total: 300, count: 3 },
+      ],
+    });
+
+    const result = await reportService.getGraTaxReport({ from: "2026-07-01", to: "2026-07-31" }, "tenant-1");
+    expect(result.reportType).toBe("gra_tax");
+    expect(result.netRevenue).toBe(900);
+    expect(result.vatAmount).toBe(135);
+    expect(result.byMethod).toHaveLength(2);
   });
 });

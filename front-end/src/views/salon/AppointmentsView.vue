@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import appointmentAPI from "@/services/appointmentAPI";
 import serviceAPI from "@/services/serviceAPI";
 import stationAPI from "@/services/stationAPI";
 import logger from "@/utils/logger";
+import { io, Socket } from "socket.io-client";
 
 interface Appointment {
   id: number;
@@ -44,6 +45,7 @@ const generalError = ref("");
 const services = ref<ServiceOption[]>([]);
 const stations = ref<StationOption[]>([]);
 const stylists = ref<StylistOption[]>([]);
+const socket = ref<Socket | null>(null);
 
 const statusOptions = [
   "pending",
@@ -273,6 +275,21 @@ const bulkCancel = async () => {
 
 onMounted(async () => {
   await loadAppointments();
+  socket.value = io("", { path: "/socket.io" });
+  socket.value.on("salon-appointment-created", async () => {
+    await loadAppointments();
+  });
+  socket.value.on("salon-appointment-updated", async () => {
+    await loadAppointments();
+  });
+  socket.value.on("salon-appointment-deleted", async () => {
+    await loadAppointments();
+  });
+});
+
+onUnmounted(() => {
+  socket.value?.disconnect();
+  socket.value = null;
 });
 
 const openForm = async () => {

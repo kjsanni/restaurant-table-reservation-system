@@ -184,6 +184,10 @@ const setupTenantHandler = async (req, res) => {
     if (!tenant.restaurantType || tenant.restaurantType !== "salon") {
       applyTypeDefaults(tenant, "salon");
     }
+    const { seedSalonSettings } = require("../tenant-platform/services/tenantTypeDefaults.service");
+    seedSalonSettings(tenant.id).catch((err) => {
+      console.error("Failed to seed salon settings:", err.message);
+    });
   } else if (restaurantType !== undefined) {
     if (!VALID_TYPES.includes(restaurantType)) {
       return res.status(400).json({
@@ -292,6 +296,24 @@ const revokeTokenHandler = async (req, res) => {
     success: true,
     message: "Token revoked successfully!",
   });
+};
+
+const getLocaleHandler = async (req, res) => {
+  const locale = req.user?.locale || "en";
+  return res.status(200).json({ success: true, locale });
+};
+
+const updateLocaleHandler = async (req, res) => {
+  const { locale } = req.body;
+  if (!locale || typeof locale !== "string") {
+    return res.status(400).json({ success: false, message: "Invalid locale" });
+  }
+  const user = await authDAO.findUserById(req.user.id, req.tenant?.id);
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+  await authDAO.updateUser(req.user.id, { locale });
+  return res.status(200).json({ success: true, locale });
 };
 
 const getSettingsHandler = async (req, res) => {
@@ -452,9 +474,10 @@ module.exports = {
   revokeTokenHandler,
   getSettingsHandler,
   updateSettingsHandler,
+  getLocaleHandler,
+  updateLocaleHandler,
   getAllStaffHandler,
   getAllUsersHandler,
-  createStaffHandler,
   updateStaffHandler,
   deleteStaffHandler,
 };

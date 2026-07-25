@@ -246,6 +246,66 @@ const appointmentDao = {
       totalMinutes: Number(row.get("totalMinutes") || 0),
     }));
   },
+
+  async findExistingInstance(tenantId, customerId, serviceId, dateStr) {
+    const start = new Date(dateStr);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+
+    return salonModels.sequelize.models.appointment.findOne({
+      where: {
+        tenantId,
+        customerId,
+        serviceId,
+        start: { [Op.gte]: start, [Op.lt]: end },
+      },
+    });
+  },
+
+  async getTodayStats(tenantId) {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+
+    const where = {
+      tenantId,
+      start: { [Op.gte]: startOfDay, [Op.lt]: endOfDay },
+      status: { [Op.notIn]: ["cancelled", "no_show"] },
+    };
+
+    const [appointmentsToday, clientsToday, revenueToday] = await Promise.all([
+      salonModels.sequelize.models.appointment.count({ where }),
+      salonModels.sequelize.models.appointment.count({
+        where: { ...where, customerId: { [Op.notNull]: true } },
+        distinct: true,
+        col: "customerId",
+      }),
+      salonModels.sequelize.models.appointment.findAll({
+        where,
+        include: [
+          {
+            model: salonModels.sequelize.models.service,
+            as: "service",
+            attributes: ["price"],
+            required: true,
+          },
+        ],
+        attributes: [
+          [salonModels.sequelize.fn("SUM", salonModels.sequelize.col("service.price")), "revenue"],
+        ],
+        raw: true,
+      }),
+    ]);
+
+    const totalRevenue = revenueToday.length > 0 ? Number(revenueToday[0].revenue || 0) : 0;
+
+    return {
+      appointmentsToday: Number(appointmentsToday || 0),
+      clientsToday: Number(clientsToday || 0),
+      revenueToday: totalRevenue,
+    };
+  },
 };
 
 module.exports = appointmentDao;

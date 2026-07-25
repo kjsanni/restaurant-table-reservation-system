@@ -70,3 +70,19 @@ describe("checkRegistrationStatus", () => {
     expect(status.registrationEnabled).toBe(true);
   });
 });
+
+describe("seedSalonSettings", () => {
+  it("seeds default salon settings for a new salon tenant", async () => {
+    const { seedSalonSettings } = require("../tenant-platform/services/tenantTypeDefaults.service");
+    await seedSalonSettings(1);
+
+    const whatsapp = await authDAO.getSettingByKey("salon_whatsapp_config", 1);
+    const payment = await authDAO.getSettingByKey("salon_payment_config", 1);
+    const sms = await authDAO.getSettingByKey("salon_sms_fallback_enabled", 1);
+
+    expect(whatsapp).toBeDefined();
+    expect(payment).toBeDefined();
+    expect(sms).toBeDefined();
+    expect(sms.value).toBe(false);
+  });
+});

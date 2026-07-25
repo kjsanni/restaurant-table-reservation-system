@@ -36,4 +36,50 @@ router
   )
   .all(httpMethodError);
 
+router
+  .route("/appointments/:appointmentId/rebook")
+  .post(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("manage_appointments")),
+    tryCatchHandler(salonCustomerPortalController.rebookSalonAppointmentHandler)
+  )
+  .all(httpMethodError);
+
+router
+  .route("/gift-cards")
+  .get(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(salonCustomerPortalController.getCustomerGiftCardsHandler)
+  )
+  .all(httpMethodError);
+
+router
+  .route("/referrals")
+  .get(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(salonCustomerPortalController.getCustomerReferralsHandler)
+  )
+  .all(httpMethodError);
+
+router
+  .route("/packages")
+  .get(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(salonCustomerPortalController.listServicePackagesHandler)
+  )
+  .all(httpMethodError);
+
+router
+  .route("/pricing-rules")
+  .get(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(salonCustomerPortalController.listPricingRulesHandler)
+  )
+  .all(httpMethodError);
+
 module.exports = router;

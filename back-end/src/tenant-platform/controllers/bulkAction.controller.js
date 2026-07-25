@@ -1,5 +1,6 @@
 const bulkDAO = require("../DAOs/bulk.dao");
 const { requirePermission } = require("../../middleware/auth");
+const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const bulkSuspendHandler = async (req, res) => {
   const { tenantIds, reason } = req.body;
@@ -28,8 +29,29 @@ const bulkSendEmailHandler = async (req, res) => {
   res.status(200).json({ success: true, results });
 };
 
+const bulkChangeVerticalHandler = async (req, res) => {
+  const { tenantIds, businessVertical } = req.body;
+  if (!Array.isArray(tenantIds) || tenantIds.length === 0 || !businessVertical) {
+    return res.status(400).json({ success: false, message: "tenantIds array and businessVertical are required" });
+  }
+  const updated = await bulkDAO.changeVertical(tenantIds, businessVertical);
+  for (const item of updated) {
+    await platformAuditDAO.log(
+      req.user?.id || null,
+      "tenant.vertical.changed",
+      "tenant",
+      item.id,
+      item.id,
+      { businessVertical, tenantName: item.name },
+      req.ip
+    );
+  }
+  res.status(200).json({ success: true, message: `Updated vertical for ${updated.length} tenants`, items: updated });
+};
+
 module.exports = {
   bulkSuspendHandler,
   bulkChangePlanHandler,
   bulkSendEmailHandler,
+  bulkChangeVerticalHandler,
 };

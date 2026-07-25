@@ -6,15 +6,17 @@ import { useCurrency } from "@/composables/useCurrency";
 
 const { format: fmt } = useCurrency();
 
-type Tab = "reservations" | "orders";
+type Tab = "reservations" | "orders" | "tax";
 const activeTab = ref<Tab>("reservations");
 
 const reservationReport = ref<any | null>(null);
 const orderStats = ref<any | null>(null);
 const topItems = ref<any[]>([]);
+const taxReport = ref<any | null>(null);
 const loading = ref(true);
 const from = ref("");
 const to = ref("");
+const vatRate = ref("15");
 
 const coversBySource = computed(() => {
   if (!reservationReport.value?.coversBySource) return [];
@@ -65,8 +67,26 @@ const loadOrderStats = async () => {
 const loadReport = async () => {
   if (activeTab.value === "reservations") {
     await loadReservationReport();
-  } else {
+  } else if (activeTab.value === "orders") {
     await loadOrderStats();
+  } else if (activeTab.value === "tax") {
+    await loadTaxReport();
+  }
+};
+
+const loadTaxReport = async () => {
+  loading.value = true;
+  try {
+    const res = await reportAPI.getGraTaxReport({
+      from: from.value,
+      to: to.value,
+      vatRate: vatRate.value ? Number(vatRate.value) / 100 : undefined,
+    });
+    taxReport.value = res.data?.report || null;
+  } catch (err) {
+    logger.error("Failed to load tax report", { error: err });
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -145,10 +165,28 @@ onMounted(loadReport);
           >
             Orders
           </button>
+          <button
+            :class="['tab', activeTab === 'tax' && 'active']"
+            @click="
+              activeTab = 'tax';
+              loadReport();
+            "
+          >
+            Tax (GRA)
+          </button>
         </div>
         <div class="filters">
           <input v-model="from" type="date" />
           <input v-model="to" type="date" />
+          <input
+            v-if="activeTab === 'tax'"
+            v-model="vatRate"
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            style="width: 80px"
+          />
           <button class="btn-small" @click="loadReport">Apply</button>
         </div>
       </div>
@@ -298,6 +336,69 @@ onMounted(loadReport);
           </table>
           <div v-if="!topItems.length" class="empty-state">
             No order data available
+          </div>
+        </div>
+      </template>
+
+      <template v-else-if="activeTab === 'tax' && taxReport">
+        <div class="kpi-strip">
+          <div class="kpi-tile">
+            <div class="kpi-label">Total Revenue</div>
+            <div class="kpi-value">
+              GHS {{ taxReport.totalRevenue?.toLocaleString() || "—" }}
+            </div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">VAT Amount</div>
+            <div class="kpi-value">
+              GHS
+              {{
+                taxReport.vatAmount?.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }) || "—"
+              }}
+            </div>
+            <div class="kpi-delta">
+              {{ ((taxReport.vatRate || 0.15) * 100).toFixed(0) }}% rate
+            </div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">Net Revenue</div>
+            <div class="kpi-value">
+              GHS {{ taxReport.netRevenue?.toLocaleString() || "—" }}
+            </div>
+          </div>
+          <div class="kpi-tile">
+            <div class="kpi-label">Transactions</div>
+            <div class="kpi-value">
+              {{ taxReport.totalTransactions?.toLocaleString() || "—" }}
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Payment Method Breakdown</h3>
+          <div
+            v-for="item in taxReport.byMethod"
+            :key="item.method"
+            class="bar-row"
+          >
+            <div class="bar-label">{{ item.method }}</div>
+            <div class="bar-track">
+              <div
+                class="bar-fill"
+                :style="{
+                  width:
+                    (taxReport.totalRevenue
+                      ? (item.total / taxReport.totalRevenue) * 100
+                      : 0) + '%',
+                }"
+              ></div>
+            </div>
+            <div class="bar-value">
+              GHS {{ item.total.toLocaleString() }} ({{ item.count }})
+            </div>
           </div>
         </div>
       </template>

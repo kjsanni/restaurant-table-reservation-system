@@ -70,4 +70,10 @@ router
   .post(...protectedRoute("", authController.revokeTokenHandler))
   .all(httpMethodError);
 
+router
+  .route("/locale")
+  .get(generalLimiter, tryCatchHandler(protect), tryCatchHandler(authController.getLocaleHandler))
+  .put(generalLimiter, tryCatchHandler(protect), tryCatchHandler(authController.updateLocaleHandler))
+  .all(httpMethodError);
+
 module.exports = router;

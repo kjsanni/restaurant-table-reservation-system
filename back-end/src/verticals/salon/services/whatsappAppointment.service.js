@@ -45,14 +45,18 @@ const ensureCustomer = async (phone, tenantId) => {
 };
 
 const formatServices = async (tenantId) => {
-  const { data } = await appointmentDao.findAllForTenant(tenantId, { limit: 20 });
-  const services = await Promise.all(
-    (data || []).map(async (apt) => {
-      const service = apt.service || await salonModels.sequelize.models.service.findByPk(apt.serviceId);
-      return { id: apt.serviceId, name: service?.name || `Service ${apt.serviceId}`, durationMinutes: service?.durationMinutes || 30 };
-    })
-  );
-  return [...new Map(services.map((s) => [s.id, s])).values()];
+  const services = await salonModels.sequelize.models.service.findAll({
+    where: { tenantId, isActive: true },
+    attributes: ["id", "name", "durationMinutes", "price"],
+    order: [["name", "ASC"]],
+    limit: 20,
+  });
+  return services.map((s) => ({
+    id: s.id,
+    name: s.name,
+    durationMinutes: s.durationMinutes || 30,
+    price: s.price || 0,
+  }));
 };
 
 const formatStylists = async (tenantId, serviceId) => {
@@ -179,14 +183,44 @@ const handleSalonAppointmentState = async (phone, normalized, rawMessage, sessio
       try {
         const service = session.services.find((s) => s.id === session.selectedServiceId);
         const customer = await ensureCustomer(phone, tenantId);
+        const start = new Date(session.selectedSlot.start);
+        const durationMinutes = service?.durationMinutes || 30;
+        const bufferMinutes = service?.bufferMinutes || 0;
+
+        const conflict = await appointmentSchedulingService.checkConflicts(
+          tenantId,
+          null,
+          session.selectedStylistId,
+          start,
+          durationMinutes,
+          bufferMinutes,
+          null
+        );
+
+        if (conflict.hasConflict) {
+          const reasons = [];
+          if (conflict.holiday) reasons.push("the salon is closed");
+          if (conflict.stylistOccupied) reasons.push("the stylist is double-booked");
+          if (conflict.stationOccupied) reasons.push("a station conflict exists");
+          if (conflict.shiftViolation) reasons.push("the stylist is not on shift");
+
+          await sendText(
+            phone,
+            `Sorry, this slot is no longer available: ${reasons.join(", ")}. Reply to book again.`,
+            tenantId
+          );
+          await setSession(phone, { state: "idle", tenantId });
+          return;
+        }
+
         const appointment = await appointmentDao.create({
           tenantId,
           customerId: customer.id,
           serviceId: session.selectedServiceId,
           stylistId: session.selectedStylistId,
-          start: new Date(session.selectedSlot.start).toISOString(),
-          end: new Date(session.selectedSlot.end).toISOString(),
-          durationMinutes: service?.durationMinutes || 30,
+          start: start.toISOString(),
+          end: new Date(start.getTime() + durationMinutes * 60000).toISOString(),
+          durationMinutes,
           status: "confirmed",
           paymentStatus: "unpaid",
           depositAmount: 0,
@@ -223,6 +257,21 @@ const handleSalonAppointmentState = async (phone, normalized, rawMessage, sessio
   }
 
   if (session.state === "salon_payment") {
+    if (["status", "check", "paid", "payment"].includes(normalized)) {
+      try {
+        const appointment = await appointmentDao.findById(session.appointmentId, tenantId);
+        if (!appointment) {
+          await sendText(phone, "Booking not found. Please start again.", tenantId);
+          await setSession(phone, { state: "idle", tenantId });
+          return;
+        }
+        const status = appointment.paymentStatus === "paid" ? "Payment confirmed! ✅" : `Payment status: ${appointment.paymentStatus}. Your slot is held temporarily.`;
+        await sendText(phone, `${status}\nAppointment #${appointment.id} on ${new Date(appointment.start).toISOString().slice(0, 10)} at ${new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`, tenantId);
+      } catch (err) {
+        await sendText(phone, "Could not check payment status right now. Please try again later.", tenantId);
+      }
+      return;
+    }
     await sendText(phone, "We will confirm your payment shortly. Reply 'status' to check.", tenantId);
     return;
   }

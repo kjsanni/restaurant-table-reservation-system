@@ -58,12 +58,15 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: true,
       },
+      lastGeneratedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
     {
       sequelize,
       modelName: "recurring_appointment",
       tableName: "recurring_appointments",
-      underscored: true,
     }
   );
 

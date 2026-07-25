@@ -1,6 +1,10 @@
 "use strict";
 const reservationDAO = require("../DAOs/reservation.dao");
 const appointmentDao = require("../verticals/salon/DAOs/appointment.dao");
+const giftCardDao = require("../verticals/salon/DAOs/giftCard.dao");
+const referralDao = require("../verticals/salon/DAOs/referral.dao");
+const servicePackageDao = require("../verticals/salon/DAOs/servicePackage.dao");
+const pricingRuleDao = require("../verticals/salon/DAOs/pricingRule.dao");
 
 const buildCustomerDetails = (user) => {
   const email = user?.email;
@@ -71,8 +75,119 @@ const cancelSalonAppointmentHandler = async (req, res) => {
   }
 };
 
+const rebookSalonAppointmentHandler = async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+    const appointment = await appointmentDao.findById(appointmentId, req.tenant?.id);
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+    if (!["completed", "cancelled"].includes(appointment.status)) {
+      return res.status(400).json({ success: false, message: "Only completed or cancelled appointments can be rebooked" });
+    }
+
+    const customer = await reservationDAO.findOrCreateCustomer(
+      buildCustomerDetails(req.user),
+      null,
+      req.tenant?.id
+    );
+
+    const now = new Date();
+    const start = new Date(now.getTime() + 60 * 60 * 1000);
+    const end = new Date(start.getTime() + (appointment.durationMinutes || 30) * 60000);
+
+    const newAppointment = await appointmentDao.create({
+      tenantId: req.tenant?.id,
+      customerId: customer.id,
+      serviceId: appointment.serviceId,
+      stylistId: appointment.stylistId,
+      stationId: appointment.stationId,
+      start: start.toISOString(),
+      end: end.toISOString(),
+      durationMinutes: appointment.durationMinutes || 30,
+      status: "confirmed",
+      paymentStatus: "unpaid",
+      depositAmount: 0,
+      source: "web",
+      notes: `Rebooked from appointment #${appointment.id}`,
+    });
+
+    return res.status(200).json({ success: true, appointment: newAppointment });
+  } catch (err) {
+    console.error("rebookSalonAppointmentHandler error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to rebook appointment" });
+  }
+};
+
+const getCustomerGiftCardsHandler = async (req, res) => {
+  try {
+    const customer = await reservationDAO.findOrCreateCustomer(
+      buildCustomerDetails(req.user),
+      null,
+      req.tenant?.id
+    );
+    if (!customer) {
+      return res.status(200).json({ success: true, giftCards: [] });
+    }
+    const giftCards = await giftCardDao.findAll(req.tenant?.id, {});
+    const customerCards = giftCards.filter(
+      (card) => card.purchasedByCustomerId === customer.id || card.redeemedByCustomerId === customer.id
+    );
+    return res.status(200).json({ success: true, giftCards: customerCards });
+  } catch (err) {
+    console.error("getCustomerGiftCardsHandler error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to load gift cards" });
+  }
+};
+
+const getCustomerReferralsHandler = async (req, res) => {
+  try {
+    const customer = await reservationDAO.findOrCreateCustomer(
+      buildCustomerDetails(req.user),
+      null,
+      req.tenant?.id
+    );
+    if (!customer) {
+      return res.status(200).json({ success: true, referrals: [] });
+    }
+    const referrals = await referralDao.findAll(req.tenant?.id, {});
+    const customerReferrals = referrals.filter(
+      (r) => r.referrerCustomerId === customer.id || r.refereeCustomerId === customer.id
+    );
+    return res.status(200).json({ success: true, referrals: customerReferrals });
+  } catch (err) {
+    console.error("getCustomerReferralsHandler error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to load referrals" });
+  }
+};
+
+const listServicePackagesHandler = async (req, res) => {
+  try {
+    const packages = await servicePackageDao.findAll(req.tenant?.id, {});
+    return res.status(200).json({ success: true, packages });
+  } catch (err) {
+    console.error("listServicePackagesHandler error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to load packages" });
+  }
+};
+
+const listPricingRulesHandler = async (req, res) => {
+  try {
+    const rules = await pricingRuleDao.findAll(req.tenant?.id, { isActive: true });
+    return res.status(200).json({ success: true, rules });
+  } catch (err) {
+    console.error("listPricingRulesHandler error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to load pricing rules" });
+  }
+};
+
 module.exports = {
   getSalonCustomerProfileHandler,
   getSalonCustomerAppointmentsHandler,
   cancelSalonAppointmentHandler,
+  rebookSalonAppointmentHandler,
+  getCustomerGiftCardsHandler,
+  getCustomerReferralsHandler,
+  listServicePackagesHandler,
+  listPricingRulesHandler,
 };

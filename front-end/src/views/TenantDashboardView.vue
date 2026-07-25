@@ -6,6 +6,7 @@ import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
 import stationAPI from "@/services/stationAPI";
 import appointmentAPI from "@/services/appointmentAPI";
+import salonDashboardAPI from "@/services/salonDashboardAPI";
 import logger from "@/utils/logger";
 
 interface Booking {
@@ -44,10 +45,11 @@ const loading = ref(true);
 const isSalon = computed(
   () => authStore.currentTenant?.businessVertical === "salon"
 );
-const salonStationUtilization = ref<{
-  utilizationPercent: number;
-  occupiedCount: number;
-  totalCount: number;
+const salonDashboard = ref<{
+  appointmentsToday: number;
+  revenueToday: number;
+  clientsToday: number;
+  chairUtilization: { percent: number; occupied: number; total: number };
 } | null>(null);
 const salonLoading = ref(false);
 const salonAppointments = ref<any[]>([]);
@@ -116,11 +118,11 @@ const kpis = computed(() => {
     },
   ];
 
-  if (isSalon.value && salonStationUtilization.value) {
+  if (isSalon.value && salonDashboard.value) {
     base.push({
       label: "Station Utilisation",
-      value: `${salonStationUtilization.value.utilizationPercent}%`,
-      delta: `${salonStationUtilization.value.occupiedCount} of ${salonStationUtilization.value.totalCount} stations`,
+      value: `${salonDashboard.value.chairUtilization.percent}%`,
+      delta: `${salonDashboard.value.chairUtilization.occupied} of ${salonDashboard.value.chairUtilization.total} stations`,
     });
   }
 
@@ -167,15 +169,20 @@ const loadDashboard = async () => {
   if (isSalon.value) {
     salonLoading.value = true;
     try {
-      const res = await stationAPI.getAggregateUtilization();
-      salonStationUtilization.value = res.data?.data || res.data || null;
-
-      const today = new Date().toISOString().slice(0, 10);
-      const apptRes = await appointmentAPI.getAppointments({
-        date: today,
-        limit: 10,
-      });
-      salonAppointments.value = apptRes.data?.data || apptRes.data || [];
+      const [dashRes, apptRes] = await Promise.allSettled([
+        salonDashboardAPI.getDashboard(),
+        appointmentAPI.getAppointments({
+          date: new Date().toISOString().slice(0, 10),
+          limit: 10,
+        }),
+      ]);
+      if (dashRes.status === "fulfilled") {
+        salonDashboard.value = dashRes.value?.data?.kpis || null;
+      }
+      if (apptRes.status === "fulfilled") {
+        const data = apptRes.value?.data;
+        salonAppointments.value = data?.data || data || [];
+      }
     } catch (e: unknown) {
       logger.warn("Failed to load salon dashboard data", {
         error: e instanceof Error ? e.message : "",
@@ -342,28 +349,28 @@ onMounted(async () => {
               <div class="floor-grid">
                 <div class="floor-stat occupied">
                   <div class="floor-num">
-                    {{ salonStationUtilization?.occupiedCount ?? 0 }}
+                    {{ salonDashboard?.chairUtilization.occupied ?? 0 }}
                   </div>
                   <div class="floor-label">Busy</div>
                 </div>
                 <div class="floor-stat free">
                   <div class="floor-num">
                     {{
-                      (salonStationUtilization?.totalCount ?? 0) -
-                      (salonStationUtilization?.occupiedCount ?? 0)
+                      (salonDashboard?.chairUtilization.total ?? 0) -
+                      (salonDashboard?.chairUtilization.occupied ?? 0)
                     }}
                   </div>
                   <div class="floor-label">Available</div>
                 </div>
                 <div class="floor-stat reserved">
                   <div class="floor-num">
-                    {{ salonStationUtilization?.utilizationPercent ?? 0 }}%
+                    {{ salonDashboard?.chairUtilization.percent ?? 0 }}%
                   </div>
                   <div class="floor-label">Utilisation</div>
                 </div>
                 <div class="floor-stat blocked">
                   <div class="floor-num">
-                    {{ salonStationUtilization?.totalCount ?? 0 }}
+                    {{ salonDashboard?.chairUtilization.total ?? 0 }}
                   </div>
                   <div class="floor-label">Total</div>
                 </div>

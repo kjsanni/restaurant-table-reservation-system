@@ -1,0 +1,50 @@
+# Restaurant Table Reservation System (RTRS)
+
+> Multi-tenant restaurant and salon reservation SaaS operated by Vibespot Technologies Ltd. (Ghana). Built with Node.js + Express + Sequelize + MySQL backend and Vue 3 + TypeScript + Vite frontend. Supports WhatsApp-first ordering, Paystack payments (GHS), ShaQ Express delivery, and Ghana-localized legal compliance. Single-tenant by default; multi-tenant platform code is gated behind `TENANT_MODE=enabled`.
+
+## Agent Instructions
+
+- [AGENTS.md](AGENTS.md): Project conventions, verification commands, recommended skills, and critical constraints (do not commit unless asked, do not reintroduce NOT NULL/PARTITION BY on `tenantId`, always sync Obsidian vault, refresh this file on architecture shifts).
+
+## Documentation
+
+- [README.md](README.md): Primary project documentation, key features, tech stack, project structure, quick start, multi-tenant mode, and testing commands.
+- [CHANGELOG.md](CHANGELOG.md): Version history and release notes.
+- [SESSION_NOTES.md](SESSION_NOTES.md): Recent development session notes and status.
+- [docs/README.md](docs/README.md): In-repo documentation index with links to architecture, security, RBAC, payments, and feature deep-dives.
+- [back-end/src/tenant-platform/README.md](back-end/src/tenant-platform/README.md): Multi-tenant module overview, activation, tenant resolution, subscription plans, and platform admin API.
+
+## Architecture & Specifications
+
+- [Specs/ADR-0001-separate-actor-entry-points.md](Specs/ADR-0001-separate-actor-entry-points.md): Accepted ADR for separate super-admin, tenant-staff, and customer entry points.
+- [Specs/001-multi-tenant-production-readiness.md](Specs/001-multi-tenant-production-readiness.md): Multi-tenant production readiness plan.
+- [Specs/004-super-admin-role-separation.md](Specs/004-super-admin-role-separation.md): Implementation plan for super-admin hard boundary (Phase 1 complete).
+- [Specs/005-staff-integrity-fraud-prevention.md](Specs/005-staff-integrity-fraud-prevention.md): Specification for void/comp tracking, refund anomaly detection, cash reconciliation, inventory shrinkage, and staff behavior scoring.
+- [Specs/whatsapp-ordering-plan.md](Specs/whatsapp-ordering-plan.md): WhatsApp-native ordering and delivery flow design.
+- [Specs/production-deployment-checklist.md](Specs/production-deployment-checklist.md): Pre-launch production checklist.
+- [Specs/mysql-partitioning-design.md](Specs/mysql-partitioning-design.md): Partitioning decision and rejected approaches.
+- [Specs/read-replica-integration.md](Specs/read-replica-integration.md): Read-replica integration notes.
+- [Specs/data-backfill-report.md](Specs/data-backfill-report.md): Tenant data backfill report.
+- [Specs/load-testing-report.md](Specs/load-testing-report.md): Load testing results.
+
+## Security & Operations
+
+- [SECURITY_AUDIT_REPORT.md](SECURITY_AUDIT_REPORT.md): Security findings and remediation status.
+- [DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md): Production deployment guide for Apache/Nginx + PM2.
+- [legal/README.md](legal/README.md): Ghana-localized legal documents and tamper-evident acceptance workflow.
+
+## Configuration
+
+- [package.json](package.json): Root package manifest and npm scripts.
+- [back-end/package.json](back-end/package.json): Backend dependencies and scripts.
+- [front-end/package.json](front-end/package.json): Frontend dependencies and scripts.
+- [docker-compose.yml](docker-compose.yml): Local Docker services (MySQL, Redis).
+- [ecosystem.config.js](ecosystem.config.js): PM2 production process configuration.
+- [nginx-production.conf](nginx-production.conf): Nginx production config template.
+- [apache-production.conf](apache-production.conf): Apache production config template.
+
+## Optional
+
+- [mobile/README.md](mobile/README.md): Mobile-related documentation.
+- [salon-reservation-system/index.html](salon-reservation-system/index.html): Ghana salon mockup.
+- [salon-nigeria/index.html](salon-nigeria/index.html): Nigeria salon mockup.

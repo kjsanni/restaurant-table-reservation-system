@@ -43,4 +43,12 @@ bulkDAO.sendEmail = async (tenantIds, subject, body) => {
   return results;
 };
 
+bulkDAO.changeVertical = async (tenantIds, vertical) => {
+  const tenants = await db.tenant.findAll({ where: { id: { [db.Sequelize.Op.in]: tenantIds } } });
+  for (const t of tenants) {
+    await t.update({ businessVertical: vertical });
+  }
+  return tenants.map((t) => ({ id: t.id, name: t.name, businessVertical: t.businessVertical }));
+};
+
 module.exports = bulkDAO;

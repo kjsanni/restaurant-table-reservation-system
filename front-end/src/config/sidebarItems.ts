@@ -8,6 +8,7 @@ export interface NavItem {
   requiresFeature?: string
   requiresVertical?: string
   tenantOnly?: boolean
+  platformOnly?: boolean
   section?: string
 }
 
@@ -40,26 +41,36 @@ export const authenticatedNavItems: NavItem[] = [
   { routeName: 'stations', text: 'Stations', icon: 'mdi:chair-rolling', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'station-map', text: 'Station Map', icon: 'mdi:map', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-services', text: 'Services', icon: 'mdi:content-cut', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-packages', text: 'Packages', icon: 'mdi:package-variant-closed', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-gift-cards', text: 'Gift Cards', icon: 'mdi:gift', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-referrals', text: 'Referrals', icon: 'mdi:account-group', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-locations', text: 'Locations', icon: 'mdi:map-marker-multiple', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-inventory', text: 'Inventory', icon: 'mdi:warehouse', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-expenses', text: 'Expenses', icon: 'mdi:cash-minus', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-pricing', text: 'Pricing Rules', icon: 'mdi:tag-outline', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-settings', text: 'Salon Settings', icon: 'mdi:cog', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-reports', text: 'Reports', icon: 'mdi:chart-bar', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-recurring', text: 'Recurring', icon: 'mdi:repeat', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-clients', text: 'Clients', icon: 'mdi:account-group', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-dashboard', text: 'Dashboard', icon: 'mdi:view-dashboard', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-marketing', text: 'Marketing', icon: 'mdi:bullhorn', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-gallery', text: 'Gallery', icon: 'mdi:image-multiple', requiresAuth: true, requiresVertical: 'salon' },
 ]
 
 export const adminNavItems: NavItem[] = [
-  { routeName: 'super-admin-overview', text: 'Overview', icon: 'mdi:view-dashboard', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
-  { routeName: 'admin-settings', text: 'Settings', icon: 'mdi:cog', requiresAuth: true, requiresAdmin: true },
-  { routeName: 'tenant-dashboard', text: 'Tenants', icon: 'mdi:account-group', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
-  { routeName: 'plans-management', text: 'Pricing', icon: 'mdi:tag-outline', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
-  { routeName: 'platform-payment-dashboard', text: 'Payments', icon: 'mdi:currency-usd', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
-  { routeName: 'platform-usage', text: 'Usage', icon: 'mdi:chart-bar', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
-  { routeName: 'platform-revenue', text: 'Revenue', icon: 'mdi:trending-up', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
-  { routeName: 'platform-bulk-actions', text: 'Bulk Actions', icon: 'mdi:check-all', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
-  { routeName: 'billing-email-templates', text: 'Billing Emails', icon: 'mdi:email-send', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
-  { routeName: 'platform-audit-log', text: 'Audit Log', icon: 'mdi:clipboard-list', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
-  { routeName: 'platform-notifications', text: 'Notifications', icon: 'mdi:bell', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
-  { routeName: 'platform-benchmarks', text: 'Benchmarks', icon: 'mdi:chart-box', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
-  { routeName: 'tenant-dsar', text: 'DSAR', icon: 'mdi:shield-account', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true },
+  { routeName: 'super-admin-overview', text: 'Overview', icon: 'mdi:view-dashboard', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'admin-settings', text: 'Settings', icon: 'mdi:cog', requiresAuth: true, requiresAdmin: true, platformOnly: true },
+  { routeName: 'tenant-dashboard', text: 'Tenants', icon: 'mdi:account-group', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'plans-management', text: 'Pricing', icon: 'mdi:tag-outline', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-payment-dashboard', text: 'Payments', icon: 'mdi:currency-usd', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-usage', text: 'Usage', icon: 'mdi:chart-bar', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-revenue', text: 'Revenue', icon: 'mdi:trending-up', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-bulk-actions', text: 'Bulk Actions', icon: 'mdi:check-all', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'billing-email-templates', text: 'Billing Emails', icon: 'mdi:email-send', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-audit-log', text: 'Audit Log', icon: 'mdi:clipboard-list', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-notifications', text: 'Notifications', icon: 'mdi:bell', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-benchmarks', text: 'Benchmarks', icon: 'mdi:chart-box', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'tenant-dsar', text: 'DSAR', icon: 'mdi:shield-account', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'role-management', text: 'Roles', icon: 'mdi:key', requiresAuth: true },
   { routeName: 'group-management', text: 'Groups', icon: 'mdi:account-multiple', requiresAuth: true },
   { routeName: 'audit-logs', text: 'Audit', icon: 'mdi:file-document-text', requiresAuth: true },

@@ -296,6 +296,114 @@ const enqueueSalonAppointmentReminders = async (tenantId, channels = null) => {
   return { enqueued: enqueueResult.enqueued, count: enqueueResult.enqueued ? items.length : 0 };
 };
 
+const sendSalonConfirmation = async (appointment, tenantId) => {
+  const customer = appointment.customer || {};
+  const service = appointment.service || {};
+  const templateData = {
+    __template: "salon_appointment_confirmation",
+    appointmentId: appointment.id,
+    name: customer.firstName || customer.lastName || "Guest",
+    date: appointment.start ? new Date(appointment.start).toISOString().slice(0, 10) : "",
+    time: appointment.start ? new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+    duration: appointment.durationMinutes || 30,
+    service: service.name || "Appointment",
+    stylist: appointment.stylist?.name || "Any",
+    salonName: process.env.APP_NAME || "Salon",
+    paymentUrl: "",
+    reference: "",
+  };
+  const text = buildWhatsAppText(templateData);
+  try {
+    await sendWithSmsFallback(customer.phone, text, tenantId);
+  } catch (err) {
+    console.error("Failed to send salon confirmation:", err.message);
+  }
+};
+
+const sendSalonCancellation = async (appointment, tenantId) => {
+  const customer = appointment.customer || {};
+  const service = appointment.service || {};
+  const templateData = {
+    __template: "salon_appointment_cancellation",
+    appointmentId: appointment.id,
+    name: customer.firstName || customer.lastName || "Guest",
+    date: appointment.start ? new Date(appointment.start).toISOString().slice(0, 10) : "",
+    time: appointment.start ? new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+    salonName: process.env.APP_NAME || "Salon",
+  };
+  const text = buildWhatsAppText(templateData);
+  try {
+    await sendWithSmsFallback(customer.phone, text, tenantId);
+  } catch (err) {
+    console.error("Failed to send salon cancellation:", err.message);
+  }
+};
+
+const enqueueSalonConfirmation = async (appointment, tenantId) => {
+  const customer = appointment.customer || {};
+  const service = appointment.service || {};
+  const templateData = {
+    __template: "salon_appointment_confirmation",
+    appointmentId: appointment.id,
+    name: customer.firstName || customer.lastName || "Guest",
+    date: appointment.start ? new Date(appointment.start).toISOString().slice(0, 10) : "",
+    time: appointment.start ? new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+    duration: appointment.durationMinutes || 30,
+    service: service.name || "Appointment",
+    stylist: appointment.stylist?.name || "Any",
+    salonName: process.env.APP_NAME || "Salon",
+    paymentUrl: "",
+    reference: "",
+  };
+  const payloads = [
+    {
+      type: "whatsapp",
+      tenantId,
+      payload: {
+        to: customer.phone,
+        text: buildWhatsAppText(templateData),
+        templateData,
+      },
+    },
+  ];
+  const result = await safeAdd(notificationQueue, "salon_appointment_confirmation", {
+    type: "batch",
+    tenantId,
+    items: payloads,
+  });
+  return result.enqueued;
+};
+
+const enqueueSalonCancellation = async (appointment, tenantId) => {
+  const customer = appointment.customer || {};
+  const service = appointment.service || {};
+  const templateData = {
+    __template: "salon_appointment_cancellation",
+    appointmentId: appointment.id,
+    name: customer.firstName || customer.lastName || "Guest",
+    date: appointment.start ? new Date(appointment.start).toISOString().slice(0, 10) : "",
+    time: appointment.start ? new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+    salonName: process.env.APP_NAME || "Salon",
+  };
+  const payloads = [
+    {
+      type: "whatsapp",
+      tenantId,
+      payload: {
+        to: customer.phone,
+        text: buildWhatsAppText(templateData),
+        templateData,
+      },
+    },
+  ];
+  const result = await safeAdd(notificationQueue, "salon_appointment_cancellation", {
+    type: "batch",
+    tenantId,
+    items: payloads,
+  });
+  return result.enqueued;
+};
+
 const FALLBACK_FAILURE_THRESHOLD = 2;
 const FALLBACK_TTL_SECONDS = 60 * 60;
 
@@ -357,6 +465,10 @@ module.exports = {
   enqueueCancellation,
   enqueueReminders,
   enqueueSalonAppointmentReminders,
+  sendSalonConfirmation,
+  sendSalonCancellation,
+  enqueueSalonConfirmation,
+  enqueueSalonCancellation,
   sendViaChannels,
   buildWhatsAppText,
   renderTemplate,

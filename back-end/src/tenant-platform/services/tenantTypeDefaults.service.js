@@ -65,6 +65,11 @@ const TYPE_DEFAULTS = {
       salon_whatsapp_booking: true,
     },
   },
+  salonDefaults: {
+    salon_whatsapp_config: { enabled: false, phoneNumberId: "", token: "" },
+    salon_payment_config: { currency: "GHS", depositRequired: false, defaultDepositPercent: 0 },
+    salon_sms_fallback_enabled: "false",
+  },
 };
 
 const applyTypeDefaults = (tenant, restaurantType) => {
@@ -79,6 +84,14 @@ const applyTypeDefaults = (tenant, restaurantType) => {
   tenant.restaurantType = restaurantType;
 
   return tenant;
+};
+
+const seedSalonSettings = async (tenantId) => {
+  const { updateSetting } = require("../../DAOs/auth.dao");
+  const defaults = TYPE_DEFAULTS.salonDefaults || {};
+  for (const [key, value] of Object.entries(defaults)) {
+    await updateSetting(key, value, tenantId);
+  }
 };
 
 const getFeatureFlag = (tenant, flag) => {
@@ -96,4 +109,5 @@ module.exports = {
   applyTypeDefaults,
   getFeatureFlag,
   hasServiceMode,
+  seedSalonSettings,
 };

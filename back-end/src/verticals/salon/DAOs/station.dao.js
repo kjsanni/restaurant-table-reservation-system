@@ -69,18 +69,23 @@ const stationDao = {
 
     if (totalStations === 0) return { utilizationPercent: 0, occupiedCount: 0, totalCount: 0 };
 
+    const appointmentWhere = {
+      tenantId,
+      status: ["pending", "confirmed", "in_progress"],
+    };
+    if (start && end) {
+      appointmentWhere.start = { [Op.gte]: start, [Op.lt]: end };
+    } else if (start) {
+      appointmentWhere.start = { [Op.gte]: start };
+    }
+
     const { count: occupiedCount } = await salonModels.sequelize.models.appointment.findAndCountAll({
-      where: {
-        tenantId,
-        status: ["pending", "confirmed", "in_progress"],
-        start: { [Op.lt]: end },
-      },
+      where: appointmentWhere,
       include: [
         {
           model: salonModels.sequelize.models.service,
           as: "service",
           required: true,
-          where: {},
         },
         {
           model: salonModels.sequelize.models.station,
@@ -89,6 +94,8 @@ const stationDao = {
           where: { tenantId },
         },
       ],
+      distinct: true,
+      col: "stationId",
     });
 
     const utilizationPercent = Math.round((occupiedCount / totalStations) * 100);

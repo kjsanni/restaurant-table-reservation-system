@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import authAPI from "@/services/authAPI";
 import logger from "@/utils/logger";
 
@@ -107,6 +107,15 @@ const saveSmsFallback = async () => {
 };
 
 onMounted(loadSettings);
+
+onBeforeUnmount(() => {
+  if (saving.value) {
+    const ok = confirm("Settings are still saving. Leave anyway?");
+    if (!ok) {
+      throw new Error("Navigation cancelled");
+    }
+  }
+});
 </script>
 
 <template>

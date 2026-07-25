@@ -32,6 +32,7 @@ const appointments = ref<SalonAppointment[]>([]);
 const profile = ref<CustomerProfile | null>(null);
 const searchQuery = ref("");
 const cancellingId = ref<number | null>(null);
+const rebookingId = ref<number | null>(null);
 
 const loadData = async () => {
   loading.value = true;
@@ -131,6 +132,23 @@ const cancelAppointment = async (apt: SalonAppointment) => {
   }
 };
 
+const rebookAppointment = async (apt: SalonAppointment) => {
+  if (!confirm("Rebook this appointment?")) return;
+  rebookingId.value = apt.id;
+  try {
+    const res = await salonCustomerPortalAPI.rebookAppointment(apt.id);
+    const newApt = res.data?.appointment;
+    if (newApt) {
+      appointments.value.push(newApt);
+      apt.status = "cancelled";
+    }
+  } catch (err) {
+    logger.error("Failed to rebook appointment", { error: err });
+  } finally {
+    rebookingId.value = null;
+  }
+};
+
 onMounted(loadData);
 </script>
 
@@ -193,6 +211,14 @@ onMounted(loadData);
               @click="cancelAppointment(apt)"
             >
               {{ cancellingId === apt.id ? "Cancelling…" : "Cancel" }}
+            </button>
+            <button
+              v-if="['completed', 'cancelled'].includes(apt.status)"
+              class="btn-primary-sm"
+              :disabled="rebookingId === apt.id"
+              @click="rebookAppointment(apt)"
+            >
+              {{ rebookingId === apt.id ? "Rebooking…" : "Rebook" }}
             </button>
           </div>
         </template>

@@ -69,6 +69,14 @@ export const disable = async (id, data = {}) => {
   return response;
 };
 
+export const bulkChangeVertical = async (tenantIds, businessVertical) => {
+  const response = await client.post("/bulk/change-vertical", {
+    tenantIds,
+    businessVertical,
+  });
+  return response;
+};
+
 export default {
   create,
   getDashboard,

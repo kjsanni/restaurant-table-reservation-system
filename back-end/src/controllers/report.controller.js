@@ -195,6 +195,16 @@ const exportOrderPDFHandler = async (req, res) => {
   res.send(pdf);
 };
 
+const getGraTaxReportHandler = async (req, res) => {
+  const filters = {
+    from: req.query.from,
+    to: req.query.to,
+    vatRate: req.query.vatRate,
+  };
+  const report = await reportService.getGraTaxReport(filters, req.tenant?.id);
+  return res.status(200).json({ success: true, report });
+};
+
 module.exports = {
   getReservationReportHandler,
   getTimeSeriesHandler,
@@ -208,4 +218,5 @@ module.exports = {
   getTopSellingItemsHandler,
   exportOrderCSVHandler,
   exportOrderPDFHandler,
+  getGraTaxReportHandler,
 };

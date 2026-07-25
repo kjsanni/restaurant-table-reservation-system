@@ -1,5 +1,18 @@
 const whatsappAppointmentService = require("../verticals/salon/services/whatsappAppointment.service");
 
+jest.mock("../verticals/salon/models", () => ({
+  sequelize: {
+    models: {
+      service: {
+        findAll: jest.fn(),
+      },
+      user: {
+        findAll: jest.fn(),
+      },
+    },
+  },
+}));
+
 jest.mock("../verticals/salon/services/appointmentScheduling.service", () => ({
   findAvailableSlots: jest.fn(),
   checkConflicts: jest.fn(),
@@ -49,6 +62,7 @@ jest.mock("../utils/cache", () => ({
 
 const appointmentSchedulingService = require("../verticals/salon/services/appointmentScheduling.service");
 const appointmentDao = require("../verticals/salon/DAOs/appointment.dao");
+const salonModels = require("../verticals/salon/models");
 const customerService = require("../services/customerService");
 const { cache } = require("../utils/cache");
 
@@ -61,10 +75,12 @@ describe("whatsappAppointment.service — salon booking flow", () => {
       { start: "2026-08-01T10:00:00.000Z", end: "2026-08-01T10:30:00.000Z" },
     ]);
     appointmentSchedulingService.checkConflicts.mockResolvedValue({ hasConflict: false });
-    appointmentDao.findAllForTenant.mockResolvedValue({
-      total: 1,
-      data: [{ id: 1, serviceId: 1, service: { id: 1, name: "Haircut", durationMinutes: 30, price: 50 } }],
-    });
+    salonModels.sequelize.models.service.findAll.mockResolvedValue([
+      { id: 1, name: "Haircut", durationMinutes: 30, price: 50 },
+    ]);
+    salonModels.sequelize.models.user.findAll.mockResolvedValue([
+      { id: 2, name: "Stylist A" },
+    ]);
     appointmentDao.create.mockResolvedValue({ id: 10, status: "confirmed" });
     customerService.searchCustomers.mockResolvedValue([]);
     customerService.findOrCreateCustomer.mockResolvedValue({ id: 99, email: "wa_+233241234567@salon.local" });

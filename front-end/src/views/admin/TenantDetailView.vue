@@ -30,6 +30,12 @@
           <span class="label">Billing Email</span>
           <span class="value">{{ tenant.billingEmail || "—" }}</span>
         </div>
+        <div class="info-row">
+          <span class="label">Module</span>
+          <span class="value">{{
+            tenant.businessVertical || "restaurant"
+          }}</span>
+        </div>
       </div>
 
       <div class="section">
@@ -112,6 +118,29 @@
       >
         Disable Tenant
       </button>
+    </div>
+
+    <div class="section">
+      <h2>Module Configuration</h2>
+      <p class="section-hint">
+        Switch the tenant's business vertical. This enables the corresponding
+        module (restaurant or salon) and branding.
+      </p>
+      <div class="field">
+        <label>Business Vertical</label>
+        <select v-model="businessVertical" :disabled="savingVertical">
+          <option value="restaurant">Restaurant</option>
+          <option value="salon">Salon</option>
+        </select>
+      </div>
+      <button
+        class="btn primary"
+        @click="saveVertical"
+        :disabled="savingVertical"
+      >
+        {{ savingVertical ? "Saving..." : "Save Module" }}
+      </button>
+      <span v-if="verticalSaved" class="saved-tag">Saved</span>
     </div>
 
     <div class="section notes-section">
@@ -207,6 +236,9 @@ const newNote = ref("");
 const addingNote = ref(false);
 const savingPaystack = ref(false);
 const paystackSaved = ref(false);
+const businessVertical = ref("restaurant");
+const savingVertical = ref(false);
+const verticalSaved = ref(false);
 const paystackForm = ref({
   paystackSubaccountCode: "",
   paystackPublicKey: "",
@@ -216,6 +248,7 @@ const paystackForm = ref({
 const loadTenant = async () => {
   const response = await tenantAdminAPI.getById(route.params.id);
   tenant.value = response.data.item;
+  businessVertical.value = tenant.value.businessVertical || "restaurant";
   paystackForm.value = {
     paystackSubaccountCode: tenant.value.paystackSubaccountCode || "",
     paystackPublicKey: tenant.value.paystackPublicKey || "",
@@ -285,6 +318,28 @@ const savePaystack = async () => {
     await loadTenant();
   } finally {
     savingPaystack.value = false;
+  }
+};
+
+const saveVertical = async () => {
+  savingVertical.value = true;
+  verticalSaved.value = false;
+  try {
+    await tenantAdminAPI.update(route.params.id, {
+      businessVertical: businessVertical.value,
+    });
+    verticalSaved.value = true;
+    setTimeout(() => (verticalSaved.value = false), 2000);
+    await loadTenant();
+    if (authStore.currentTenant?.id === tenant.value.id) {
+      authStore.setTenant({
+        ...authStore.currentTenant,
+        businessVertical: businessVertical.value,
+      });
+      await authStore.fetchCapabilities();
+    }
+  } finally {
+    savingVertical.value = false;
   }
 };
 

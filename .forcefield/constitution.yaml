@@ -1,0 +1,53 @@
+version: "1"
+name: "Standard Protection"
+
+defaults:
+  protection_level: confirm
+  sensitivity: medium
+  auto_kill_critical: true
+
+scope:
+  allowed_paths: []
+  denied_paths: [".git/**", "node_modules/**"]
+
+files:
+  - pattern: ".env*"
+    action: block
+    reason: "Environment files may contain secrets"
+  - pattern: "*.pem"
+    action: block
+    reason: "PEM certificate/key files"
+  - pattern: "*.key"
+    action: block
+    reason: "Private key files"
+  - pattern: "id_rsa*"
+    action: block
+    reason: "SSH private keys"
+
+commands:
+  - pattern: "rm\\s+-rf"
+    action: block
+    reason: "Recursive file deletion"
+  - pattern: "curl.*\\|\\s*(sh|bash)"
+    action: block
+    reason: "Piped remote code execution"
+  - pattern: "chmod\\s+777"
+    action: block
+    reason: "World-writable permissions"
+  - pattern: "git push.*--force"
+    action: confirm
+    reason: "Force push to remote"
+
+tools:
+  - name: execute_shell
+    action: block
+  - name: write_file
+    action: confirm
+  - name: delete_file
+    action: confirm
+
+content:
+  block_pii: true
+  block_secrets: true
+  moderation: true
+  max_risk_score: 0.7
