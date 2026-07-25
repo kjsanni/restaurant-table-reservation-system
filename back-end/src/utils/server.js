@@ -35,7 +35,14 @@ const { cspHeaders } = require("../middleware/csp");
 const { getCurrentSecret } = require("../utils/jwtRotation");
 const { Server } = require("socket.io");
 const tryCatchHandler = require("../middleware/tryCatch");
-const { protect } = require("../middleware/auth");
+const { protect, requireSuperAdmin } = require("../middleware/auth");
+
+const superAdminProtect = (req, res, next) => {
+  protect(req, res, () => {
+    requireSuperAdmin(req, res, next);
+  });
+};
+
 const { authLimiter, generalLimiter, bulkOperationLimiter, adminActionLimiter, syncLimiter, webhookLimiter } = require("../middleware/rateLimit");
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
@@ -68,11 +75,19 @@ let billingRoutes = null;
 let requireFeature = null;
 let requiresServiceMode = null;
 
-let requireVertical = null;
-let salonAppointmentRoutes = null;
-let salonStationRoutes = null;
-let salonServiceRoutes = null;
-let salonCustomerPortalRoutes = null;
+  let requireVertical = null;
+  let salonAppointmentRoutes = null;
+  let salonStationRoutes = null;
+  let salonServiceRoutes = null;
+  let salonServicePackageRoutes = null;
+  let salonGiftCardRoutes = null;
+  let salonReferralRoutes = null;
+  let salonLocationRoutes = null;
+  let salonInventoryRoutes = null;
+  let salonExpensesRoutes = null;
+  let salonPricingRulesRoutes = null;
+  let salonCustomerPortalRoutes = null;
+  let salonDashboardRoutes = null;
 
 if (TENANT_MODE) {
   ({ resolveTenant } = require("../tenant-platform/middleware/resolveTenant"));
@@ -98,16 +113,27 @@ if (TENANT_MODE) {
   legalAcceptanceRoutes = require("../tenant-platform/routes/legalAcceptance.router");
   dsarRequestRoutes = require("../tenant-platform/routes/dsarRequest.router");
   publicDsarRoutes = require("../tenant-platform/routes/publicDsar.router");
+  publicTenantRoutes = require("../tenant-platform/routes/publicTenant.router");
   benchmarkRoutes = require("../tenant-platform/routes/benchmark.router");
   billingRoutes = require("../tenant-platform/routes/billing.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
   salonServiceRoutes = require("../verticals/salon/routes/service.router");
+  salonServicePackageRoutes = require("../verticals/salon/routes/servicePackage.router");
+  salonGiftCardRoutes = require("../verticals/salon/routes/giftCard.router");
+  salonReferralRoutes = require("../verticals/salon/routes/referral.router");
+  salonLocationRoutes = require("../verticals/salon/routes/location.router");
+  salonInventoryRoutes = require("../verticals/salon/routes/inventoryItem.router");
+  salonExpensesRoutes = require("../verticals/salon/routes/expense.router");
+  salonPricingRulesRoutes = require("../verticals/salon/routes/pricingRule.router");
   salonCustomerPortalRoutes = require("../routes/salon-customer-portal.router");
   salonReportsRoutes = require("../routes/salon-reports.router");
   salonRecurringAppointmentRoutes = require("../verticals/salon/routes/recurring-appointment.router");
   salonClientSegmentationRoutes = require("../verticals/salon/routes/client-segmentation.router");
+  salonMarketingCampaignRoutes = require("../verticals/salon/routes/marketing-campaign.router");
+  salonGalleryRoutes = require("../verticals/salon/routes/gallery.router");
+  salonDashboardRoutes = require("../routes/salon-dashboard.router");
 }
 
 const requestTimeout = (timeout = 15000) => {
@@ -151,6 +177,10 @@ const createServer = () => {
     const { runTenantCron } = require("../tenant-platform/utils/tenantCron");
     runTenantCron();
     setInterval(runTenantCron, 6 * 60 * 60 * 1000);
+
+    const { runSalonCron } = require("../verticals/salon/utils/salonCron");
+    runSalonCron().catch((err) => console.error("[SalonCron] startup error:", err.message));
+    setInterval(() => runSalonCron().catch((err) => console.error("[SalonCron] error:", err.message)), 60 * 60 * 1000);
   }
 
   const workers = [];
@@ -224,36 +254,46 @@ const createServer = () => {
   app.use("/api/v1/orders", logAction, validateCsrfToken, require("../routes/order.router"));
   app.use("/api/v1/promotions", logAction, validateCsrfToken, require("../routes/promotion.router"));
   app.use("/api/v1/customers", logAction, validateCsrfToken, customerRouter);
-  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminRouter);
+  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, superAdminProtect, adminRouter);
   if (TENANT_MODE) {
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, trialRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, invoiceRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, statusTimelineRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, gracePeriodRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, whiteLabelRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, apiKeyRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, onboardingRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, legalAcceptanceRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, dsarRequestRoutes);
-    app.use("/api/v1/admin/benchmarks", logAction, validateCsrfToken, benchmarkRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, noteRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, tenantAdminRoutes);
-    app.use("/api/v1/admin/plans", logAction, validateCsrfToken, planRoutes);
-    app.use("/api/v1/admin/payments", logAction, validateCsrfToken, platformPaymentRoutes);
-    app.use("/api/v1/admin/usage", logAction, validateCsrfToken, usageRoutes);
-    app.use("/api/v1/admin/revenue", logAction, validateCsrfToken, revenueRoutes);
-    app.use("/api/v1/admin/bulk", logAction, validateCsrfToken, bulkActionRoutes);
-    app.use("/api/v1/admin/billing-emails", logAction, validateCsrfToken, billingEmailRoutes);
-    app.use("/api/v1/admin/audit", logAction, validateCsrfToken, platformAuditRoutes);
-    app.use("/api/v1/admin/notifications", logAction, validateCsrfToken, notificationRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, superAdminProtect, trialRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, superAdminProtect, invoiceRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, superAdminProtect, statusTimelineRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, superAdminProtect, gracePeriodRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, superAdminProtect, whiteLabelRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, superAdminProtect, apiKeyRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, superAdminProtect, onboardingRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, superAdminProtect, legalAcceptanceRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, superAdminProtect, dsarRequestRoutes);
+    app.use("/api/v1/admin/benchmarks", logAction, validateCsrfToken, superAdminProtect, benchmarkRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, superAdminProtect, noteRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, superAdminProtect, tenantAdminRoutes);
+    app.use("/api/v1/admin/plans", logAction, validateCsrfToken, superAdminProtect, planRoutes);
+    app.use("/api/v1/admin/payments", logAction, validateCsrfToken, superAdminProtect, platformPaymentRoutes);
+    app.use("/api/v1/admin/usage", logAction, validateCsrfToken, superAdminProtect, usageRoutes);
+    app.use("/api/v1/admin/revenue", logAction, validateCsrfToken, superAdminProtect, revenueRoutes);
+    app.use("/api/v1/admin/bulk", logAction, validateCsrfToken, superAdminProtect, bulkActionRoutes);
+    app.use("/api/v1/admin/billing-emails", logAction, validateCsrfToken, superAdminProtect, billingEmailRoutes);
+    app.use("/api/v1/admin/audit", logAction, validateCsrfToken, superAdminProtect, platformAuditRoutes);
+    app.use("/api/v1/admin/notifications", logAction, validateCsrfToken, superAdminProtect, notificationRoutes);
     app.use("/api/v1/billing", logAction, validateCsrfToken, billingRoutes);
     app.use("/api/v1/salon/appointments", logAction, validateCsrfToken, salonAppointmentRoutes);
     app.use("/api/v1/salon/stations", logAction, validateCsrfToken, salonStationRoutes);
     app.use("/api/v1/salon/services", logAction, validateCsrfToken, salonServiceRoutes);
+    app.use("/api/v1/salon/packages", logAction, validateCsrfToken, salonServicePackageRoutes);
+    app.use("/api/v1/salon/gift-cards", logAction, validateCsrfToken, salonGiftCardRoutes);
+    app.use("/api/v1/salon/referrals", logAction, validateCsrfToken, salonReferralRoutes);
+    app.use("/api/v1/salon/locations", logAction, validateCsrfToken, salonLocationRoutes);
+    app.use("/api/v1/salon/inventory", logAction, validateCsrfToken, salonInventoryRoutes);
+    app.use("/api/v1/salon/expenses", logAction, validateCsrfToken, salonExpensesRoutes);
+    app.use("/api/v1/salon/pricing", logAction, validateCsrfToken, salonPricingRulesRoutes);
     app.use("/api/v1/salon/customer-portal", logAction, validateCsrfToken, salonCustomerPortalRoutes);
     app.use("/api/v1/salon/reports", logAction, validateCsrfToken, salonReportsRoutes);
     app.use("/api/v1/salon/recurring-appointments", logAction, validateCsrfToken, salonRecurringAppointmentRoutes);
     app.use("/api/v1/salon/client-segmentation", logAction, validateCsrfToken, salonClientSegmentationRoutes);
+    app.use("/api/v1/salon/marketing-campaigns", logAction, validateCsrfToken, salonMarketingCampaignRoutes);
+    app.use("/api/v1/salon/gallery", logAction, validateCsrfToken, salonGalleryRoutes);
+    app.use("/api/v1/salon/dashboard", logAction, validateCsrfToken, salonDashboardRoutes);
   }
   app.use("/api/v1/customer-portal", logAction, validateCsrfToken, customerPortalRouter);
   app.use("/api/v1/notifications", logAction, validateCsrfToken, notificationRouter);
@@ -266,6 +306,9 @@ const createServer = () => {
   app.use("/api/v1/legal", legalRouter);
   if (TENANT_MODE && publicDsarRoutes) {
     app.use("/api/v1/public/dsar-request", publicDsarRoutes);
+  }
+  if (TENANT_MODE && publicTenantRoutes) {
+    app.use("/api/v1/public/tenants", publicTenantRoutes);
   }
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());

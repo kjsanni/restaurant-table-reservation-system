@@ -351,6 +351,24 @@ const router = createRouter({
 
 if (import.meta.env.VITE_TENANT_MODE === "enabled") {
   router.addRoute({
+    path: "/super-admin/login",
+    name: "super-admin-login",
+    component: () => import("../views/admin/SuperAdminLoginView.vue"),
+    meta: { standalone: true },
+  });
+  router.addRoute({
+    path: "/t/:tenantSlug/login",
+    name: "tenant-login",
+    component: () => import("../views/tenant/TenantLoginView.vue"),
+    meta: { standalone: true },
+  });
+  router.addRoute({
+    path: "/t/:tenantSlug/portal",
+    name: "customer-portal",
+    component: () => import("../views/customer/CustomerPortalView.vue"),
+    meta: { tenantScoped: true },
+  });
+  router.addRoute({
     path: "/admin/tenants",
     name: "tenant-dashboard",
     component: () => import("../views/admin/TenantDashboardView.vue"),
@@ -513,6 +531,48 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_services" },
   });
   router.addRoute({
+    path: "/packages",
+    name: "salon-packages",
+    component: () => import("../views/salon/SalonPackagesView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_services" },
+  });
+  router.addRoute({
+    path: "/gift-cards",
+    name: "salon-gift-cards",
+    component: () => import("../views/salon/SalonGiftCardsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_settings" },
+  });
+  router.addRoute({
+    path: "/referrals",
+    name: "salon-referrals",
+    component: () => import("../views/salon/SalonReferralsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_settings" },
+  });
+  router.addRoute({
+    path: "/locations",
+    name: "salon-locations",
+    component: () => import("../views/salon/SalonLocationsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/inventory",
+    name: "salon-inventory",
+    component: () => import("../views/salon/SalonInventoryView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_settings" },
+  });
+  router.addRoute({
+    path: "/expenses",
+    name: "salon-expenses",
+    component: () => import("../views/salon/SalonExpensesView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_settings" },
+  });
+  router.addRoute({
+    path: "/pricing",
+    name: "salon-pricing",
+    component: () => import("../views/salon/SalonPricingRulesView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_settings" },
+  });
+  router.addRoute({
     path: "/salon/settings",
     name: "salon-settings",
     component: () => import("../views/salon/SalonSettingsView.vue"),
@@ -566,6 +626,24 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     component: () => import("../views/salon/SalonClientsView.vue"),
     meta: { requiresAuth: true, requiresPermission: "view_appointments" },
   });
+  router.addRoute({
+    path: "/salon/marketing",
+    name: "salon-marketing",
+    component: () => import("../views/salon/MarketingCampaignsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_settings" },
+  });
+  router.addRoute({
+    path: "/salon/gallery",
+    name: "salon-gallery",
+    component: () => import("../views/salon/SalonGalleryView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_services" },
+  });
+  router.addRoute({
+    path: "/salon/dashboard",
+    name: "salon-dashboard",
+    component: () => import("../views/salon/SalonDashboardView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "view_appointments" },
+  });
 }
 
 router.beforeEach((to, from, next) => {
@@ -590,17 +668,62 @@ router.beforeEach((to, from, next) => {
   ) {
     next({ name: "home" });
   } else if (
+    to.meta.requiresVertical &&
+    authStore.currentTenant?.businessVertical !== to.meta.requiresVertical
+  ) {
+    next({ name: "home" });
+  } else if (
+    to.path.startsWith("/admin") &&
+    !authStore.isSuperAdmin &&
+    !["/admin/settings", "/admin/floorplan", "/admin/email-templates"].some(
+      (p) => to.path === p || to.path.startsWith(`${p}/`)
+    )
+  ) {
+    next({ name: "home" });
+  } else if (
+    (to.name === "login" ||
+      to.name === "super-admin-login" ||
+      to.name === "tenant-login") &&
+    authStore.isAuthenticated &&
+    !authStore.isLoading
+  ) {
+    if (authStore.isSuperAdmin) {
+      next({ name: "super-admin-overview" });
+    } else if (
+      authStore.user?.permissions?.manage_tenants ||
+      authStore.user?.role === "admin"
+    ) {
+      next({ name: "tenant-landing" });
+    } else {
+      next({ name: "tenant-landing" });
+    }
+  } else if (
     to.name === "home" &&
     authStore.isAuthenticated &&
     !authStore.isLoading
   ) {
-    next({ name: "tenant-landing" });
+    if (authStore.isSuperAdmin) {
+      next({ name: "super-admin-overview" });
+    } else if (
+      authStore.user?.permissions?.manage_tenants ||
+      authStore.user?.role === "admin"
+    ) {
+      next({ name: "tenant-landing" });
+    } else {
+      next({ name: "tenant-landing" });
+    }
   } else {
     next();
   }
 });
 
 const customerPortalRoutes = [
+  {
+    path: "/portal",
+    name: "customer-portal-home",
+    component: () => import("../views/customer/CustomerPortalHomeView.vue"),
+    meta: { requiresAuth: true },
+  },
   {
     path: "/portal/profile",
     name: "customer-profile",
@@ -625,7 +748,27 @@ const customerPortalRoutes = [
     name: "customer-appointments",
     component: () =>
       import("../views/customer/CustomerPortalAppointmentsView.vue"),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresVertical: "salon" },
+  },
+  {
+    path: "/portal/gift-cards",
+    name: "customer-gift-cards",
+    component: () =>
+      import("../views/customer/CustomerPortalGiftCardsView.vue"),
+    meta: { requiresAuth: true, requiresVertical: "salon" },
+  },
+  {
+    path: "/portal/referrals",
+    name: "customer-referrals",
+    component: () =>
+      import("../views/customer/CustomerPortalReferralsView.vue"),
+    meta: { requiresAuth: true, requiresVertical: "salon" },
+  },
+  {
+    path: "/portal/packages",
+    name: "customer-packages",
+    component: () => import("../views/customer/CustomerPortalPackagesView.vue"),
+    meta: { requiresAuth: true, requiresVertical: "salon" },
   },
 ];
 

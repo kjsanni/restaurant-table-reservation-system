@@ -1,5 +1,6 @@
 const { verifyToken } = require("../services/authService");
 const authDAO = require("../DAOs/auth.dao");
+const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 
 const protect = async (req, res, next) => {
   let token;
@@ -98,6 +99,30 @@ const admin = (req, res, next) => {
   }
 };
 
+const requireSuperAdmin = (req, res, next) => {
+  if (req.user && req.user.isSuperAdmin) {
+    next();
+  } else {
+    const actorUserId = req.user?.id || null;
+    const tenantId = req.tenant?.id || null;
+    platformAuditDAO
+      .log(
+        actorUserId,
+        "super_admin.access_denied",
+        "admin",
+        null,
+        tenantId,
+        { path: req.path, method: req.method, ipAddress: req.ip },
+        req.ip
+      )
+      .catch(() => {});
+    return res.status(403).json({
+      success: false,
+      message: "Super admin access required!",
+    });
+  }
+};
+
 const staff = (req, res, next) => {
   if (req.user && (req.user.role === "admin" || req.user.role === "staff")) {
     next();
@@ -140,4 +165,4 @@ const requirePermission = (permission) => {
   };
 };
 
-module.exports = { protect, admin, staff, staffOnly, requirePermission };
+module.exports = { protect, admin, staff, staffOnly, requirePermission, requireSuperAdmin };

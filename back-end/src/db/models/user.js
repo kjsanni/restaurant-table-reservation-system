@@ -26,6 +26,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      locationId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       username: {
         type: DataTypes.STRING(50),
         allowNull: false,
@@ -72,6 +76,16 @@ module.exports = (sequelize, DataTypes) => {
           manage_stations: false,
           manage_services: false,
         },
+      },
+      locale: {
+        type: DataTypes.STRING(10),
+        allowNull: true,
+        defaultValue: "en",
+      },
+      isSuperAdmin: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
     },
     {

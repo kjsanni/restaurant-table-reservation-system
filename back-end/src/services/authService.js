@@ -234,6 +234,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
       email: user.email,
       role: user.role,
       permissions,
+      isSuperAdmin: !!user.isSuperAdmin,
     },
   };
 };
