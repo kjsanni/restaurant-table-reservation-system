@@ -126,6 +126,42 @@
           {{ actionLoading.email ? "Sending..." : "Send Email" }}
         </button>
       </div>
+
+      <div class="action-card">
+        <h3>Bulk Enable</h3>
+        <p class="action-desc">Re-enable suspended tenants.</p>
+        <button
+          :disabled="!selectedTenants.length || actionLoading.enable"
+          class="btn-primary"
+          @click="handleBulkEnable"
+        >
+          {{ actionLoading.enable ? "Enabling..." : "Bulk Enable" }}
+        </button>
+      </div>
+
+      <div class="action-card">
+        <h3>Bulk Export</h3>
+        <p class="action-desc">Export selected tenant data (JSON).</p>
+        <button
+          :disabled="!selectedTenants.length || actionLoading.export"
+          class="btn-primary"
+          @click="handleBulkExport"
+        >
+          {{ actionLoading.export ? "Exporting..." : "Export Tenants" }}
+        </button>
+      </div>
+
+      <div class="action-card">
+        <h3>Bulk Delete</h3>
+        <p class="action-desc">Cancel selected tenants (soft delete).</p>
+        <button
+          :disabled="!selectedTenants.length || actionLoading.delete"
+          class="btn-danger"
+          @click="handleBulkDelete"
+        >
+          {{ actionLoading.delete ? "Deleting..." : "Bulk Delete" }}
+        </button>
+      </div>
     </div>
 
     <div v-if="resultMessage" :class="['result-banner', resultType]">
@@ -147,7 +183,14 @@ const selectedTenants = ref([]);
 const bulkPlan = ref("");
 const emailSubject = ref("");
 const emailBody = ref("");
-const actionLoading = ref({ suspend: false, plan: false, email: false });
+const actionLoading = ref({
+  suspend: false,
+  plan: false,
+  email: false,
+  enable: false,
+  export: false,
+  delete: false,
+});
 const resultMessage = ref("");
 const resultType = ref("");
 
@@ -266,6 +309,80 @@ const handleBulkSendEmail = async () => {
     setResult(err.response?.data?.message || "Failed to send email.", "error");
   } finally {
     actionLoading.value.email = false;
+  }
+};
+
+const handleBulkEnable = async () => {
+  if (!confirm(`Re-enable ${selectedTenants.value.length} selected tenant(s)?`))
+    return;
+  actionLoading.value.enable = true;
+  resultMessage.value = "";
+  try {
+    await bulkAPI.bulkEnable(selectedTenants.value);
+    setResult(
+      `Successfully re-enabled ${selectedTenants.value.length} tenant(s).`
+    );
+    selectedTenants.value = [];
+    await loadTenants();
+  } catch (err) {
+    setResult(
+      err.response?.data?.message || "Failed to enable tenants.",
+      "error"
+    );
+  } finally {
+    actionLoading.value.enable = false;
+  }
+};
+
+const handleBulkExport = async () => {
+  actionLoading.value.export = true;
+  resultMessage.value = "";
+  try {
+    const response = await bulkAPI.bulkExport(selectedTenants.value);
+    const data = response.data?.collection || [];
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tenants-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setResult(`Exported ${data.length} tenant(s).`);
+  } catch (err) {
+    setResult(
+      err.response?.data?.message || "Failed to export tenants.",
+      "error"
+    );
+  } finally {
+    actionLoading.value.export = false;
+  }
+};
+
+const handleBulkDelete = async () => {
+  if (
+    !confirm(
+      `Cancel (soft delete) ${selectedTenants.value.length} selected tenant(s)? This cannot be undone.`
+    )
+  )
+    return;
+  actionLoading.value.delete = true;
+  resultMessage.value = "";
+  try {
+    await bulkAPI.bulkDelete(selectedTenants.value);
+    setResult(
+      `Successfully cancelled ${selectedTenants.value.length} tenant(s).`
+    );
+    selectedTenants.value = [];
+    await loadTenants();
+  } catch (err) {
+    setResult(
+      err.response?.data?.message || "Failed to delete tenants.",
+      "error"
+    );
+  } finally {
+    actionLoading.value.delete = false;
   }
 };
 

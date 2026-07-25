@@ -25,4 +25,24 @@ router
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(bulkController.bulkChangeVerticalHandler))
   .all(httpMethodError);
 
+router
+  .route("/enable")
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(bulkController.bulkEnableHandler))
+  .all(httpMethodError);
+
+router
+  .route("/export")
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(bulkController.bulkExportHandler))
+  .all(httpMethodError);
+
+router
+  .route("/feature-flags")
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(bulkController.bulkAssignFeatureFlagsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/delete")
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(bulkController.bulkDeleteHandler))
+  .all(httpMethodError);
+
 module.exports = router;

@@ -143,6 +143,9 @@ if (TENANT_MODE) {
   securityRoutes = require("../tenant-platform/routes/security.router");
   complianceRoutes = require("../tenant-platform/routes/compliance.router");
   supportChatRoutes = require("../tenant-platform/routes/supportChat.router");
+  featureFlagRoutes = require("../tenant-platform/routes/featureFlag.router");
+  financialManagementRoutes = require("../tenant-platform/routes/financialManagement.router");
+  integrationAnalyticsRoutes = require("../tenant-platform/routes/integrationAnalytics.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -313,6 +316,9 @@ const createServer = () => {
     app.use("/api/v1/admin/security", logAction, validateCsrfToken, adminMiddleware, securityRoutes);
     app.use("/api/v1/admin/compliance", logAction, validateCsrfToken, adminMiddleware, complianceRoutes);
     app.use("/api/v1/admin/support-chat", logAction, validateCsrfToken, adminMiddleware, supportChatRoutes);
+    app.use("/api/v1/admin/feature-flags", logAction, validateCsrfToken, adminMiddleware, featureFlagRoutes);
+    app.use("/api/v1/admin/financial", logAction, validateCsrfToken, adminMiddleware, financialManagementRoutes);
+    app.use("/api/v1/admin/integrations", logAction, validateCsrfToken, adminMiddleware, integrationAnalyticsRoutes);
     app.use("/api/v1/billing", logAction, validateCsrfToken, billingRoutes);
     app.use("/api/v1/salon/appointments", logAction, validateCsrfToken, salonAppointmentRoutes);
     app.use("/api/v1/salon/stations", logAction, validateCsrfToken, salonStationRoutes);

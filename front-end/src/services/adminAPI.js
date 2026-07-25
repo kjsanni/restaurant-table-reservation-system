@@ -96,6 +96,90 @@ const sendSupportMessage = (conversationId, body) => {
   );
 };
 
+const bulkEnableTenants = (tenantIds) => {
+  return API.post("/admin/bulk/enable", { tenantIds });
+};
+
+const bulkExportTenants = (tenantIds) => {
+  return API.post("/admin/bulk/export", { tenantIds });
+};
+
+const bulkAssignFeatureFlags = (tenantIds, featureFlags) => {
+  return API.post("/admin/bulk/feature-flags", { tenantIds, featureFlags });
+};
+
+const bulkDeleteTenants = (tenantIds) => {
+  return API.post("/admin/bulk/delete", { tenantIds });
+};
+
+const listFeatureFlags = () => {
+  return API.get("/admin/feature-flags");
+};
+
+const getTenantFeatureFlags = (id) => {
+  return API.get(`/admin/feature-flags/tenants/${id}`);
+};
+
+const updateTenantFeatureFlags = (id, featureFlags) => {
+  return API.patch(`/admin/feature-flags/tenants/${id}`, { featureFlags });
+};
+
+const getGlobalFeatureFlags = () => {
+  return API.get("/admin/feature-flags/global");
+};
+
+const updateGlobalFeatureFlags = (flags) => {
+  return API.put("/admin/feature-flags/global", { flags });
+};
+
+const toggleSalonModule = (id, enabled) => {
+  return API.post(`/admin/feature-flags/tenants/${id}/salon-module`, {
+    enabled,
+  });
+};
+
+const listPlatformRefunds = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.status) query.set("status", params.status);
+  if (params.tenantId) query.set("tenantId", params.tenantId);
+  if (params.from) query.set("from", params.from);
+  if (params.to) query.set("to", params.to);
+  const qs = query.toString();
+  return API.get(`/admin/financial/refunds${qs ? `?${qs}` : ""}`);
+};
+
+const updateRefundStatus = (id, status) => {
+  return API.patch(`/admin/financial/refunds/${id}/status`, { status });
+};
+
+const getSubscriptionHealth = () => {
+  return API.get("/admin/financial/subscription-health");
+};
+
+const getFinancialAnomalies = () => {
+  return API.get("/admin/financial/anomalies");
+};
+
+const getPaystackTransactions = (tenantId) => {
+  return API.get(
+    `/admin/integrations/paystack/transactions?tenantId=${tenantId}`
+  );
+};
+
+const getPaystackSettlements = (tenantId) => {
+  return API.get(
+    `/admin/integrations/paystack/settlements?tenantId=${tenantId}`
+  );
+};
+
+const getWebhookStatus = () => {
+  return API.get("/admin/integrations/webhooks/status");
+};
+
+const getThirdPartyStatus = () => {
+  return API.get("/admin/integrations/third-party");
+};
+
 export default {
   emailLogs,
   getRecentActivity,
@@ -115,4 +199,22 @@ export default {
   updateSupportConversation,
   listSupportMessages,
   sendSupportMessage,
+  bulkEnableTenants,
+  bulkExportTenants,
+  bulkAssignFeatureFlags,
+  bulkDeleteTenants,
+  listFeatureFlags,
+  getTenantFeatureFlags,
+  updateTenantFeatureFlags,
+  getGlobalFeatureFlags,
+  updateGlobalFeatureFlags,
+  toggleSalonModule,
+  listPlatformRefunds,
+  updateRefundStatus,
+  getSubscriptionHealth,
+  getFinancialAnomalies,
+  getPaystackTransactions,
+  getPaystackSettlements,
+  getWebhookStatus,
+  getThirdPartyStatus,
 };

@@ -483,6 +483,24 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/financial",
+    name: "platform-financial",
+    component: () => import("../views/admin/FinancialManagementView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/feature-flags",
+    name: "platform-feature-flags",
+    component: () => import("../views/admin/FeatureFlagsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/integrations",
+    name: "platform-integrations",
+    component: () => import("../views/admin/IntegrationAnalyticsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/billing-emails",
     name: "billing-email-templates",
     component: () => import("../views/admin/BillingEmailTemplatesView.vue"),
