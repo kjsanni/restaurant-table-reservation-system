@@ -47,7 +47,13 @@ export const useAuthStore = defineStore("auth", () => {
     const response = await authAPI.login(email, password);
     user.value = response.data.user;
     entryPoint.value = entryPointContext || null;
-    return response;
+    return response.data;
+  };
+
+  const loginWithTOTP = async (tempToken: string, token: string) => {
+    const response = await authAPI.loginWithTOTP(tempToken, token);
+    user.value = response.data.user;
+    return response.data;
   };
 
   const register = async (username: string, email: string, password: string) => {
@@ -178,6 +184,7 @@ export const useAuthStore = defineStore("auth", () => {
     entryPoint,
     isSuperAdmin,
     login,
+    loginWithTOTP,
     register,
     logout,
     getMe,

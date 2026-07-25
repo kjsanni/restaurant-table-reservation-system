@@ -42,18 +42,22 @@ const loginHandler = async (req, res) => {
   const ipAddress = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;
   const result = await authService.loginUser(authDAO, payload, req.tenant?.id, authDAO, ipAddress);
 
+  if (result.pendingTOTP) {
+    return res.status(200).json({
+      success: true,
+      pendingTOTP: true,
+      message: "TOTP verification required",
+      user: result.user,
+    });
+  }
+
   const isSecure = req.secure || false;
   const cookieBase = {
     httpOnly: true,
     secure: isSecure,
-    sameSite: isSecure ? "lax" : false, // dev-only HTTP: false; production HTTP: "lax" via isSecure check
+    sameSite: isSecure ? "lax" : false,
     path: "/",
   };
-
-  // Runtime guard: warn if sameSite is false in production
-  if (!isSecure && process.env.NODE_ENV === "production") {
-    console.warn("[AUTH] Cookie sameSite=false requested in production - forcing lax");
-  }
 
   res.cookie("token", result.token, {
     ...cookieBase,
@@ -72,6 +76,66 @@ const loginHandler = async (req, res) => {
     message: "Login successful!",
     user: result.user,
   });
+};
+
+const loginTOTPHandler = async (req, res) => {
+  const { tempToken, token } = req.body;
+  if (!tempToken || !token) {
+    return res.status(400).json({ success: false, message: "Temporary token and TOTP code are required" });
+  }
+
+  try {
+    const decoded = authService.verifyToken(tempToken);
+    const user = await authDAO.findUserById(decoded.userId, req.tenant?.id);
+    if (!user || !user.totpSecret || !user.totpEnabled) {
+      return res.status(400).json({ success: false, message: "Invalid TOTP session" });
+    }
+
+    const totpService = require("../../services/totp.service");
+    const isValid = totpService.verifyTOTP(user.totpSecret, String(token).trim());
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: "Invalid TOTP token" });
+    }
+
+    const newToken = authService.generateToken(user.id, user.role);
+    const newRefreshToken = authService.generateRefreshToken();
+
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await authDAO.createRefreshToken(user.id, newRefreshToken, expiresAt, req.tenant?.id);
+
+    const isSecure = req.secure || false;
+    const cookieBase = {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: isSecure ? "lax" : false,
+      path: "/",
+    };
+
+    res.cookie("token", newToken, {
+      ...cookieBase,
+      maxAge: 30 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", newRefreshToken, {
+      ...cookieBase,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful!",
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions || {},
+        isSuperAdmin: !!user.isSuperAdmin,
+      },
+    });
+  } catch (err) {
+    return res.status(400).json({ success: false, message: "Invalid or expired temporary token" });
+  }
 };
 
 const getMeHandler = async (req, res) => {
@@ -466,6 +530,7 @@ module.exports = {
   registerStatusHandler,
   registerHandler,
   loginHandler,
+  loginTOTPHandler,
   getMeHandler,
   getTenantCapabilitiesHandler,
   setupTenantHandler,

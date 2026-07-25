@@ -53,10 +53,12 @@
     "mysql2": "^3.11.0",
     "nodemailer": "^9.0.3",
     "pdfkit": "^0.19.1",
+    "qrcode": "^1.5.4",
     "rate-limit-redis": "^6.0.0",
     "redis": "^5.12.1",
     "sequelize": "^6.25.4",
     "socket.io": "^4.8.3",
+    "speakeasy": "^2.0.0",
     "winston": "^3.8.2"
   },
   "overrides": {

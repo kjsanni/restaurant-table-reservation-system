@@ -12,6 +12,10 @@ const login = async (email, password) => {
   return await API.post("/auth/login", { email, password });
 };
 
+const loginWithTOTP = async (tempToken, token) => {
+  return await API.post("/auth/login-totp", { tempToken, token });
+};
+
 const getMe = async () => {
   return await API.get("/auth/me");
 };
@@ -60,6 +64,7 @@ export default {
   getRegistrationStatus,
   register,
   login,
+  loginWithTOTP,
   getMe,
   getTenantCapabilities,
   logout,

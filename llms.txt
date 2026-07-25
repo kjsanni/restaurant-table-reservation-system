@@ -33,6 +33,15 @@
 - [DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md): Production deployment guide for Apache/Nginx + PM2.
 - [legal/README.md](legal/README.md): Ghana-localized legal documents and tamper-evident acceptance workflow.
 
+## Obsidian Integration
+
+- **Vault path**: `/Users/kjsanni/Developments/macho/Restaurant Reservation System`
+- **Plugin**: [obsidian-with-kilocode](https://github.com/realhenrylan/obsidian-with-kilocode) bridges the vault with KiloCode CLI.
+- **Skills**: `.kilo/skills/` inside the vault — AI skill definitions as markdown files, auto-loaded by the plugin.
+- **Sessions**: `.kilocode/sessions/` inside the vault — conversation history persisted with the vault.
+- **MCP config**: `.kilocode/mcp.json` inside the vault — MCP server definitions for the plugin.
+- **Plugin settings**: Managed in Obsidian Settings → KiloCode; CLI config is read from `~/.config/kilo/kilo.jsonc`.
+
 ## Configuration
 
 - [package.json](package.json): Root package manifest and npm scripts.
