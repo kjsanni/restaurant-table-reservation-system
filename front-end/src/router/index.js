@@ -549,6 +549,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/vertical-analytics",
+    name: "platform-vertical-analytics",
+    component: () => import("../views/admin/VerticalAnalyticsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/audit",
     name: "platform-audit-log",
     component: () => import("../views/admin/PlatformAuditLogView.vue"),

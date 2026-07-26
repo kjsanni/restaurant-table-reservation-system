@@ -257,6 +257,10 @@ const getMonitoringLatency = () => {
   return API.get("/admin/monitoring/integrations/latency");
 };
 
+const getVerticalAnalytics = () => {
+  return API.get("/admin/vertical-analytics");
+};
+
 const getBackupRecord = (id) => {
   return API.get(`/admin/backups/${id}`);
 };
@@ -340,4 +344,5 @@ export default {
   getMonitoringDatabase,
   getMonitoringErrors,
   getMonitoringLatency,
+  getVerticalAnalytics,
 };
