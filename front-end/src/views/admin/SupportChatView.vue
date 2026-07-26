@@ -52,6 +52,13 @@
                 formatDate(conv.lastMessageAt || conv.createdAt)
               }}</span>
             </div>
+            <button
+              v-if="!conv.assignedTo"
+              class="btn-auto-assign"
+              @click.stop="autoAssign(conv)"
+            >
+              Auto-assign
+            </button>
           </div>
         </div>
       </div>
@@ -69,6 +76,14 @@
               </p>
             </div>
             <div class="thread-actions">
+              <button
+                v-if="!selectedConversation.assignedTo"
+                class="btn-primary"
+                @click="autoAssign(selectedConversation)"
+                :disabled="assigning"
+              >
+                {{ assigning ? "Assigning..." : "Auto-assign" }}
+              </button>
               <select v-model="replyStatus" class="filter-select">
                 <option value="open">Open</option>
                 <option value="in_progress">In Progress</option>
@@ -214,6 +229,7 @@ const selectedTemplateId = ref("");
 const sending = ref(false);
 const updating = ref(false);
 const deleting = ref(false);
+const assigning = ref(false);
 const replyStatus = ref("open");
 const showCreate = ref(false);
 const creating = ref(false);
@@ -306,6 +322,25 @@ const updateStatus = async () => {
     selectedConversation.value = res.data?.item || selectedConversation.value;
   } finally {
     updating.value = false;
+  }
+};
+
+const autoAssign = async (conv) => {
+  assigning.value = true;
+  try {
+    const res = await adminAPI.autoAssignConversation(conv.id);
+    const updated = res.data?.item;
+    if (updated) {
+      if (selectedConversation.value?.id === conv.id) {
+        selectedConversation.value = updated;
+      }
+      const idx = conversations.value.findIndex((c) => c.id === conv.id);
+      if (idx !== -1) {
+        conversations.value[idx] = updated;
+      }
+    }
+  } finally {
+    assigning.value = false;
   }
 };
 
@@ -429,6 +464,21 @@ onMounted(() => {
 .conversation-item.active {
   background: var(--surface-sunken);
   border-left: 3px solid var(--accent);
+}
+.btn-auto-assign {
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--brand-600);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.btn-auto-assign:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .conv-header {
   display: flex;

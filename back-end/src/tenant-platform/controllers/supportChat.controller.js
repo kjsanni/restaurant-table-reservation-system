@@ -138,12 +138,70 @@ const sendMessageHandler = async (req, res) => {
     "support.message_sent",
     "support_message",
     message.id,
-    req.tenant?.id || null,
+    req.user?.isSuperAdmin ? null : req.tenant?.id,
     { conversationId: conversation.id },
     req.ip
   );
 
   res.status(201).json({ success: true, item: message });
+};
+
+const autoAssignConversationHandler = async (req, res) => {
+  const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
+  if (!conversation) {
+    return res.status(404).json({ success: false, message: "Conversation not found" });
+  }
+
+  if (conversation.assignedTo) {
+    return res.status(200).json({ success: true, item: conversation, message: "Already assigned" });
+  }
+
+  const agentWorkload = await db.supportConversation.findAll({
+    where: {
+      status: ["open", "in_progress"],
+      assignedTo: { [db.Sequelize.Op.ne]: null },
+    },
+    attributes: [
+      "assignedTo",
+      [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "openCount"],
+    ],
+    group: ["assignedTo"],
+    order: [[db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "ASC"]],
+    raw: true,
+  });
+
+  let bestAgentId = null;
+  if (agentWorkload.length > 0) {
+    bestAgentId = agentWorkload[0].assignedTo;
+  }
+
+  if (bestAgentId) {
+    await supportConversationDAO.update(req.params.id, { assignedTo: bestAgentId }, req.user?.isSuperAdmin ? null : req.tenant?.id);
+    await platformAuditDAO.log(
+      req.user.id,
+      "support.conversation_auto_assigned",
+      "support_conversation",
+      conversation.id,
+      req.user?.isSuperAdmin ? null : req.tenant?.id,
+      { assignedTo: bestAgentId },
+      req.ip
+    );
+    const updated = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
+    return res.status(200).json({ success: true, item: updated });
+  }
+
+  res.status(200).json({ success: true, item: conversation, message: "No agents available" });
+};
+
+module.exports = {
+  listConversationsHandler,
+  getConversationHandler,
+  createConversationHandler,
+  updateConversationHandler,
+  deleteConversationHandler,
+  listMessagesHandler,
+  sendMessageHandler,
+  autoAssignConversationHandler,
 };
 
 module.exports = {

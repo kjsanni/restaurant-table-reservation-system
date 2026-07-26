@@ -24,4 +24,9 @@ router
   .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(supportChatController.sendMessageHandler))
   .all(httpMethodError);
 
+router
+  .route("/conversations/:id/auto-assign")
+  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(supportChatController.autoAssignConversationHandler))
+  .all(httpMethodError);
+
 module.exports = router;

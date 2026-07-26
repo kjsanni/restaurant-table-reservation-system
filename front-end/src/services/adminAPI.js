@@ -112,6 +112,10 @@ const deleteSupportConversation = (id) => {
   return API.delete(`/admin/support-chat/conversations/${id}`);
 };
 
+const autoAssignConversation = (id) => {
+  return API.post(`/admin/support-chat/conversations/${id}/auto-assign`);
+};
+
 const deleteSupportTicket = (id) => {
   return API.delete(`/admin/support-tickets/${id}`);
 };
@@ -440,6 +444,7 @@ export default {
   listSupportMessages,
   sendSupportMessage,
   deleteSupportConversation,
+  autoAssignConversation,
   deleteSupportTicket,
   updateSupportTicket,
   getSupportTicket,
