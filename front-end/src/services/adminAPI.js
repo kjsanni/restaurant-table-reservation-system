@@ -200,6 +200,34 @@ const getThirdPartyStatus = () => {
   return API.get("/admin/integrations/third-party");
 };
 
+const getPaystackDisputes = (tenantId) => {
+  return API.get(`/admin/integrations/paystack/disputes?tenantId=${tenantId}`);
+};
+
+const getPaystackFeeAnalysis = (tenantId) => {
+  return API.get(`/admin/integrations/paystack/fees?tenantId=${tenantId}`);
+};
+
+const getWebhookRetries = () => {
+  return API.get("/admin/integrations/webhooks/retries");
+};
+
+const getWhatsAppAnalytics = () => {
+  return API.get("/admin/integrations/whatsapp/analytics");
+};
+
+const getWhatsAppCampaigns = () => {
+  return API.get("/admin/integrations/whatsapp/campaigns");
+};
+
+const getShaqExpressAnalytics = () => {
+  return API.get("/admin/integrations/shaqexpress/analytics");
+};
+
+const getUnifiedIntegrationEvents = () => {
+  return API.get("/admin/integrations/events/unified");
+};
+
 const startImpersonation = (data) => {
   return API.post("/admin/impersonation", data);
 };
@@ -440,4 +468,11 @@ export default {
   getMigrationStatus,
   listPostmortems,
   createPostmortem,
+  getPaystackDisputes,
+  getPaystackFeeAnalysis,
+  getWebhookRetries,
+  getWhatsAppAnalytics,
+  getWhatsAppCampaigns,
+  getShaqExpressAnalytics,
+  getUnifiedIntegrationEvents,
 };

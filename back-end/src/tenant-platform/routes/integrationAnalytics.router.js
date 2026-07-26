@@ -16,6 +16,41 @@ router
   .all(httpMethodError);
 
 router
+  .route("/paystack/disputes")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(integrationController.getPaystackDisputesHandler))
+  .all(httpMethodError);
+
+router
+  .route("/paystack/fees")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(integrationController.getPaystackFeeAnalysisHandler))
+  .all(httpMethodError);
+
+router
+  .route("/webhooks/retries")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(integrationController.getWebhookRetryHandler))
+  .all(httpMethodError);
+
+router
+  .route("/whatsapp/analytics")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(integrationController.getWhatsAppAnalyticsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/whatsapp/campaigns")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(integrationController.getWhatsAppCampaignAnalyticsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/shaqexpress/analytics")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(integrationController.getShaqExpressAnalyticsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/events/unified")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(integrationController.getUnifiedIntegrationEventLogHandler))
+  .all(httpMethodError);
+
+router
   .route("/webhooks/status")
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(integrationController.getWebhookStatusHandler))
   .all(httpMethodError);
