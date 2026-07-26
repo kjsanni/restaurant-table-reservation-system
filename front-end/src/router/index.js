@@ -764,6 +764,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     component: () => import("../views/salon/SalonDashboardView.vue"),
     meta: { requiresAuth: true, requiresPermission: "view_appointments" },
   });
+  router.addRoute({
+    path: "/salon/staff",
+    name: "salon-staff",
+    component: () => import("../views/salon/SalonStaffView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_staff" },
+  });
 }
 
 router.beforeEach((to, from, next) => {

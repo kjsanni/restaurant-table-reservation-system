@@ -174,6 +174,7 @@ if (TENANT_MODE) {
   salonReportsRoutes = require("../routes/salon-reports.router");
   salonRecurringAppointmentRoutes = require("../verticals/salon/routes/recurring-appointment.router");
   salonClientSegmentationRoutes = require("../verticals/salon/routes/client-segmentation.router");
+  salonStaffRoutes = require("../verticals/salon/routes/staff.router");
   salonMarketingCampaignRoutes = require("../verticals/salon/routes/marketing-campaign.router");
   salonGalleryRoutes = require("../verticals/salon/routes/gallery.router");
   salonDashboardRoutes = require("../routes/salon-dashboard.router");
@@ -363,6 +364,7 @@ const createServer = () => {
     app.use("/api/v1/salon/marketing-campaigns", logAction, validateCsrfToken, salonMarketingCampaignRoutes);
     app.use("/api/v1/salon/gallery", logAction, validateCsrfToken, salonGalleryRoutes);
     app.use("/api/v1/salon/dashboard", logAction, validateCsrfToken, salonDashboardRoutes);
+    app.use("/api/v1/salon/staff", logAction, validateCsrfToken, salonStaffRoutes);
   }
   app.use("/api/v1/customer-portal", logAction, validateCsrfToken, customerPortalRouter);
   app.use("/api/v1/notifications", logAction, validateCsrfToken, notificationRouter);
