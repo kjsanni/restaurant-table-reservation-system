@@ -317,6 +317,14 @@ const deleteSubProcessor = (id) => {
   return API.delete(`/admin/sub-processors/${id}`);
 };
 
+const getTenantDebug = (tenantId) => {
+  return API.get(`/admin/debug/tenant/${tenantId}`);
+};
+
+const getPlatformDebug = () => {
+  return API.get("/admin/debug/platform");
+};
+
 const getBackupRecord = (id) => {
   return API.get(`/admin/backups/${id}`);
 };
@@ -415,4 +423,6 @@ export default {
   createSubProcessor,
   updateSubProcessor,
   deleteSubProcessor,
+  getTenantDebug,
+  getPlatformDebug,
 };

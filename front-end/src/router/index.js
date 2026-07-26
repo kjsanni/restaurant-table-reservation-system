@@ -585,6 +585,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/debug",
+    name: "platform-debug",
+    component: () => import("../views/admin/DebugToolsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/notifications",
     name: "platform-notifications",
     component: () => import("../views/admin/NotificationCenterView.vue"),
