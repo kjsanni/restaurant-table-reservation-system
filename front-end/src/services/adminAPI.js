@@ -329,6 +329,22 @@ const resetCacheStats = () => {
   return API.post("/admin/monitoring/cache/clear");
 };
 
+const listVerticalTemplates = () => {
+  return API.get("/admin/vertical-templates");
+};
+
+const createVerticalTemplate = (data) => {
+  return API.post("/admin/vertical-templates", data);
+};
+
+const updateVerticalTemplate = (id, data) => {
+  return API.patch(`/admin/vertical-templates/${id}`, data);
+};
+
+const deleteVerticalTemplate = (id) => {
+  return API.delete(`/admin/vertical-templates/${id}`);
+};
+
 const getVerticalAnalytics = () => {
   return API.get("/admin/vertical-analytics");
 };
@@ -503,6 +519,10 @@ export default {
   clearApiLatency,
   getCacheStats,
   resetCacheStats,
+  listVerticalTemplates,
+  createVerticalTemplate,
+  updateVerticalTemplate,
+  deleteVerticalTemplate,
   getVerticalAnalytics,
   listDataRetentionPolicies,
   createDataRetentionPolicy,
