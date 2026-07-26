@@ -80,6 +80,8 @@ const getSubscriptionHealthHandler = async (req, res) => {
 };
 
 const detectFinancialAnomaliesHandler = async (req, res) => {
+  const anomalies = [];
+
   const largeRefunds = await db.refund.findAll({
     where: { status: "succeeded" },
     include: [
@@ -89,7 +91,6 @@ const detectFinancialAnomaliesHandler = async (req, res) => {
     limit: 50,
   });
 
-  const anomalies = [];
   for (const refund of largeRefunds) {
     const paymentAmount = parseFloat(refund.payment?.amount || 0);
     const refundAmount = parseFloat(refund.amount || 0);
@@ -105,7 +106,56 @@ const detectFinancialAnomaliesHandler = async (req, res) => {
     }
   }
 
-  res.status(200).json({ success: true, collection: anomalies.slice(0, 20) });
+  const highDiscountOrders = await db.order.findAll({
+    where: {
+      discountType: "percentage",
+      discountValue: { [db.Sequelize.Op.gte]: 50 },
+    },
+    include: [
+      { model: db.tenant, as: "tenant", attributes: ["id", "name"] },
+    ],
+    order: [["createdAt", "DESC"]],
+    limit: 20,
+  });
+
+  for (const order of highDiscountOrders) {
+    anomalies.push({
+      type: "high_discount",
+      orderId: order.id,
+      tenantId: order.tenantId,
+      tenantName: order.tenant?.name,
+      discountValue: order.discountValue,
+      total: order.total,
+    });
+  }
+
+  const frequentCancellers = await db.reservation.findAll({
+    where: {
+      resStatus: "cancelled",
+      createdAt: { [db.Sequelize.Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+    },
+    include: [
+      { model: db.customer, as: "customer", attributes: ["id", "firstName", "lastName", "email", "phone"] },
+    ],
+    group: ["customerId"],
+    attributes: ["customerId", [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "cancellationCount"]],
+    having: db.Sequelize.literal("COUNT(id) >= 3"),
+    order: [[db.Sequelize.literal("cancellationCount"), "DESC"]],
+    limit: 20,
+  });
+
+  for (const row of frequentCancellers) {
+    anomalies.push({
+      type: "frequent_canceller",
+      customerId: row.customerId,
+      customerName: row.customer ? `${row.customer.firstName} ${row.customer.lastName}` : "Unknown",
+      customerEmail: row.customer?.email,
+      customerPhone: row.customer?.phone,
+      cancellationCount: parseInt(row.cancellationCount, 10),
+    });
+  }
+
+  res.status(200).json({ success: true, collection: anomalies.slice(0, 50) });
 };
 
 module.exports = {

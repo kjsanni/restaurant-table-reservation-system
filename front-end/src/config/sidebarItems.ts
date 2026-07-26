@@ -89,6 +89,7 @@ export const adminNavItems: NavItem[] = [
   { routeName: 'platform-migration', text: 'Migrations', icon: 'mdi:database-sync', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-change-management', text: 'Change Management', icon: 'mdi:clipboard-text-clock', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-postmortems', text: 'Postmortems', icon: 'mdi:post-outline', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-fraud', text: 'Fraud Prevention', icon: 'mdi:shield-alert', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-notifications', text: 'Notifications', icon: 'mdi:bell', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-benchmarks', text: 'Benchmarks', icon: 'mdi:chart-box', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'tenant-dsar', text: 'DSAR', icon: 'mdi:shield-account', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
