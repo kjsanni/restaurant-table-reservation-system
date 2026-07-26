@@ -93,7 +93,7 @@ describe("appointment.controller", () => {
     var ref = makeRes();
     var req = {
       tenant: { id: 1 },
-      body: { serviceId: 2, start: "2026-07-22T10:00:00.000Z", source: "walkin", status: "pending" },
+      body: { customerId: 1, serviceId: 2, start: "2026-07-22T10:00:00.000Z", source: "walkin", status: "pending" },
     };
 
     await appointmentController.createAppointment(req, ref.res);

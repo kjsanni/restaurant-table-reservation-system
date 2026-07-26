@@ -125,22 +125,61 @@ const appointmentSchedulingService = {
     const isHolidy = await isHoliday(tenantId, date);
     if (isHolidy) return [];
 
+    const appointmentWhere = {
+      tenantId,
+      status: { [Op.notIn]: ["cancelled", "no_show"] },
+      start: { [Op.gte]: startOfWork, [Op.lt]: endOfWork },
+    };
+
+    const includeClause = [
+      {
+        model: salonModels.sequelize.models.service,
+        as: "service",
+        required: true,
+      },
+      {
+        model: salonModels.sequelize.models.station,
+        as: "station",
+        required: false,
+        where: stationId ? { id: stationId } : undefined,
+      },
+      {
+        model: salonModels.sequelize.models.user,
+        as: "stylist",
+        required: false,
+        where: stylistId ? { id: stylistId } : undefined,
+      },
+    ];
+
+    const apts = await salonModels.sequelize.models.appointment.findAll({
+      where: appointmentWhere,
+      include: includeClause,
+    });
+
+    const occupiedRanges = apts.map((apt) => {
+      const aptStart = new Date(apt.start);
+      const aptEnd = buildExtendedEnd(apt.start, apt.durationMinutes, apt.bufferMinutes || 0);
+      const ranges = [];
+      if (!stationId || apt.stationId === stationId) {
+        ranges.push({ type: "station", start: aptStart, end: aptEnd });
+      }
+      if (!stylistId || apt.stylistId === stylistId) {
+        ranges.push({ type: "stylist", start: aptStart, end: aptEnd });
+      }
+      return ranges;
+    }).flat();
+
     const slots = [];
     const slotInterval = 30;
     const current = new Date(startOfWork);
 
     while (current.getTime() + duration * 60000 <= endOfWork.getTime()) {
       const slotEnd = buildExtendedEnd(current, duration, bufferMinutes);
-      const conflict = await this.checkConflicts(
-        tenantId,
-        stationId,
-        stylistId,
-        current,
-        duration,
-        bufferMinutes
+      const hasConflict = occupiedRanges.some(
+        (range) => current < range.end && slotEnd > range.start
       );
 
-      if (!conflict.hasConflict) {
+      if (!hasConflict) {
         slots.push({
           start: new Date(current).toISOString(),
           end: slotEnd.toISOString(),

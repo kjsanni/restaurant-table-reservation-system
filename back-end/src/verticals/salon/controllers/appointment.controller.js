@@ -5,6 +5,38 @@ const staffServiceSkillDao = require("../DAOs/staffServiceSkill.dao");
 const { logAction } = require("../../../middleware/auditLog");
 const { enqueueSalonAppointmentReminders, sendSalonConfirmation, sendSalonCancellation } = require("../../../services/notification.service");
 
+const validateAppointment = (data) => {
+  const errors = [];
+  if (!data.customerId || !Number.isInteger(data.customerId) || data.customerId <= 0) {
+    errors.push("customerId must be a positive integer");
+  }
+  if (!data.serviceId || !Number.isInteger(data.serviceId) || data.serviceId <= 0) {
+    errors.push("serviceId must be a positive integer");
+  }
+  if (!data.start) {
+    errors.push("start is required");
+  }
+  if (data.durationMinutes !== undefined && (!Number.isInteger(data.durationMinutes) || data.durationMinutes < 5)) {
+    errors.push("durationMinutes must be an integer >= 5");
+  }
+  if (data.bufferMinutes !== undefined && (!Number.isInteger(data.bufferMinutes) || data.bufferMinutes < 0)) {
+    errors.push("bufferMinutes must be a non-negative integer");
+  }
+  if (data.status && !["pending", "confirmed", "in_progress", "completed", "cancelled", "no_show"].includes(data.status)) {
+    errors.push("status must be one of pending, confirmed, in_progress, completed, cancelled, no_show");
+  }
+  if (data.paymentStatus && !["deposit", "partial", "paid", "unpaid"].includes(data.paymentStatus)) {
+    errors.push("paymentStatus must be one of deposit, partial, paid, unpaid");
+  }
+  if (data.depositAmount !== undefined && (typeof data.depositAmount !== "number" || data.depositAmount < 0)) {
+    errors.push("depositAmount must be a non-negative number");
+  }
+  if (data.source && !["web", "whatsapp", "phone", "walkin"].includes(data.source)) {
+    errors.push("source must be one of web, whatsapp, phone, walkin");
+  }
+  return errors;
+};
+
 const emitSalonAppointmentEvent = (req, event, payload) => {
   try {
     const io = req.app?.get("io");
@@ -43,6 +75,10 @@ const appointmentController = {
   async createAppointment(req, res) {
     try {
       const tenantId = req.tenant?.id;
+      const validationErrors = validateAppointment(req.body);
+      if (validationErrors.length > 0) {
+        return res.status(422).json({ success: false, message: "Validation failed", errors: validationErrors });
+      }
       const data = { ...req.body, tenantId };
       const appointment = await appointmentDao.create(data);
 
@@ -69,6 +105,10 @@ const appointmentController = {
   async updateAppointment(req, res) {
     try {
       const tenantId = req.tenant?.id;
+      const validationErrors = validateAppointment(req.body);
+      if (validationErrors.length > 0) {
+        return res.status(422).json({ success: false, message: "Validation failed", errors: validationErrors });
+      }
       const allowed = ["status", "start", "durationMinutes", "end", "bufferMinutes", "notes", "paymentStatus", "depositAmount", "serviceId", "stylistId", "stationId"];
       const updates = {};
       for (const key of allowed) {

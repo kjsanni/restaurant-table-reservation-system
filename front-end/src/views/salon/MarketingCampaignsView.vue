@@ -3,9 +3,11 @@ import { ref, onMounted } from "vue";
 import marketingCampaignsAPI from "@/services/marketingCampaignsAPI";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
+import { useToastStore } from "@/stores/toast";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 
 const { t, locale, setLocale, availableLocales } = useI18n();
+const toastStore = useToastStore();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -119,10 +121,11 @@ const sendCampaign = async (campaign: any) => {
   sending.value = true;
   try {
     const res = await marketingCampaignsAPI.send(campaign.id);
-    alert(
+    toastStore.add(
       t("salon.campaignSent", `Sent to {sent} of {total} recipients`)
         .replace("{sent}", res.data.sentCount)
-        .replace("{total}", res.data.total)
+        .replace("{total}", res.data.total),
+      "success"
     );
     loadCampaigns();
   } catch (err) {
