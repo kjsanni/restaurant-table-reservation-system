@@ -281,6 +281,42 @@ const executeDataRetention = () => {
   return API.post("/admin/data-retention/execute");
 };
 
+const listIncidents = () => {
+  return API.get("/admin/incidents");
+};
+
+const createIncident = (data) => {
+  return API.post("/admin/incidents", data);
+};
+
+const updateIncident = (id, data) => {
+  return API.patch(`/admin/incidents/${id}`, data);
+};
+
+const deleteIncident = (id) => {
+  return API.delete(`/admin/incidents/${id}`);
+};
+
+const getSuspiciousActivity = () => {
+  return API.get("/admin/suspicious-activity");
+};
+
+const listSubProcessors = () => {
+  return API.get("/admin/sub-processors");
+};
+
+const createSubProcessor = (data) => {
+  return API.post("/admin/sub-processors", data);
+};
+
+const updateSubProcessor = (id, data) => {
+  return API.patch(`/admin/sub-processors/${id}`, data);
+};
+
+const deleteSubProcessor = (id) => {
+  return API.delete(`/admin/sub-processors/${id}`);
+};
+
 const getBackupRecord = (id) => {
   return API.get(`/admin/backups/${id}`);
 };
@@ -370,4 +406,13 @@ export default {
   updateDataRetentionPolicy,
   deleteDataRetentionPolicy,
   executeDataRetention,
+  listIncidents,
+  createIncident,
+  updateIncident,
+  deleteIncident,
+  getSuspiciousActivity,
+  listSubProcessors,
+  createSubProcessor,
+  updateSubProcessor,
+  deleteSubProcessor,
 };

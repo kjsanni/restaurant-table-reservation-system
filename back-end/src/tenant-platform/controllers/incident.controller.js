@@ -1,90 +1,113 @@
 const db = require("../../db/models");
-const authDAO = require("../../DAOs/auth.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
-const lockTenantHandler = async (req, res) => {
-  const tenant = await db.tenant.findByPk(req.params.tenantId);
-  if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
-  }
+const listIncidentsHandler = async (req, res) => {
+  const where = {};
+  if (req.query.status) where.status = req.query.status;
+  if (req.query.severity) where.severity = req.query.severity;
+  if (req.query.tenantId) where.tenantId = req.query.tenantId;
 
-  await tenant.update({
-    status: "suspended",
-    suspendedAt: new Date(),
-    suspendedReason: req.body.reason || "Security incident",
+  const { count, rows } = await db.incident.findAndCountAll({
+    where,
+    include: [
+      { model: db.tenant, as: "tenant", attributes: ["id", "name", "slug"] },
+      { model: db.user, as: "resolver", attributes: ["id", "name", "email"] },
+    ],
+    order: [["createdAt", "DESC"]],
+    limit: parseInt(req.query.limit) || 50,
+    offset: parseInt(req.query.offset) || 0,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "incident.tenant_locked",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { reason: req.body.reason || "Security incident" },
-    req.ip
-  );
-
-  res.status(200).json({ success: true, item: tenant });
+  res.status(200).json({ success: true, total: count, collection: rows });
 };
 
-const resetTenantTokensHandler = async (req, res) => {
-  const tenant = await db.tenant.findByPk(req.params.tenantId);
-  if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+const createIncidentHandler = async (req, res) => {
+  const { title, description, severity, tenantId, affectedTenantIds, metadata } = req.body;
+  if (!title) {
+    return res.status(400).json({ success: false, message: "title is required" });
   }
 
-  const users = await db.user.findAll({
-    where: { tenantId: tenant.id },
-    attributes: ["id"],
+  const incident = await db.incident.create({
+    title,
+    description,
+    severity: severity || "medium",
+    tenantId: tenantId || null,
+    affectedTenantIds: affectedTenantIds || null,
+    metadata: metadata || null,
+    status: "open",
   });
-
-  for (const user of users) {
-    await authDAO.revokeAllUserTokens(user.id, tenant.id);
-  }
 
   await platformAuditDAO.log(
     req.user.id,
-    "incident.tokens_reset",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { affectedUsers: users.length },
+    "incident.created",
+    "incident",
+    incident.id,
+    tenantId || null,
+    { title, severity: incident.severity },
     req.ip
   );
 
-  res.status(200).json({ success: true, affectedUsers: users.length });
+  res.status(201).json({ success: true, item: incident });
 };
 
-const forceLogoutTenantHandler = async (req, res) => {
-  const tenant = await db.tenant.findByPk(req.params.tenantId);
-  if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+const updateIncidentHandler = async (req, res) => {
+  const incident = await db.incident.findByPk(req.params.id);
+  if (!incident) {
+    return res.status(404).json({ success: false, message: "Incident not found" });
   }
 
-  const users = await db.user.findAll({
-    where: { tenantId: tenant.id },
-    attributes: ["id"],
-  });
-
-  for (const user of users) {
-    await authDAO.revokeAllUserTokens(user.id, tenant.id);
+  const allowed = ["status", "severity", "title", "description", "affectedTenantIds", "metadata"];
+  const updates = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      updates[key] = req.body[key];
+    }
   }
+
+  if (updates.status === "resolved" || updates.status === "closed") {
+    updates.resolvedAt = new Date();
+    updates.resolvedBy = req.user.id;
+  }
+
+  await incident.update(updates);
 
   await platformAuditDAO.log(
     req.user.id,
-    "incident.force_logout",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { affectedUsers: users.length },
+    `incident.${updates.status ? "updated" : "updated"}`,
+    "incident",
+    incident.id,
+    incident.tenantId,
+    { updates },
     req.ip
   );
 
-  res.status(200).json({ success: true, affectedUsers: users.length });
+  res.status(200).json({ success: true, item: incident });
+};
+
+const deleteIncidentHandler = async (req, res) => {
+  const incident = await db.incident.findByPk(req.params.id);
+  if (!incident) {
+    return res.status(404).json({ success: false, message: "Incident not found" });
+  }
+
+  await incident.destroy();
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "incident.deleted",
+    "incident",
+    incident.id,
+    incident.tenantId,
+    { title: incident.title },
+    req.ip
+  );
+
+  res.status(200).json({ success: true });
 };
 
 module.exports = {
-  lockTenantHandler,
-  resetTenantTokensHandler,
-  forceLogoutTenantHandler,
+  listIncidentsHandler,
+  createIncidentHandler,
+  updateIncidentHandler,
+  deleteIncidentHandler,
 };

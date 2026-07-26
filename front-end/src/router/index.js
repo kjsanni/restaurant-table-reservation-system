@@ -567,6 +567,24 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/incidents",
+    name: "platform-incidents",
+    component: () => import("../views/admin/IncidentManagementView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/suspicious-activity",
+    name: "platform-suspicious-activity",
+    component: () => import("../views/admin/SuspiciousActivityView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/sub-processors",
+    name: "platform-sub-processors",
+    component: () => import("../views/admin/SubProcessorsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/notifications",
     name: "platform-notifications",
     component: () => import("../views/admin/NotificationCenterView.vue"),
