@@ -276,6 +276,132 @@ const detectFinancialAnomaliesHandler = async (req, res) => {
     });
   }
 
+  const longDurationReservations = await db.reservation.findAll({
+    where: {
+      resStatus: { [db.Sequelize.Op.in]: ["completed", "cancelled"] },
+      createdAt: { [db.Sequelize.Op.lte]: new Date(Date.now() - 3 * 60 * 60 * 1000) },
+    },
+    include: [
+      { model: db.customer, as: "customer", attributes: ["id", "firstName", "lastName", "email"] },
+      { model: db.tenant, as: "tenant", attributes: ["id", "name"] },
+    ],
+    order: [["createdAt", "ASC"]],
+    limit: 20,
+  });
+
+  for (const reservation of longDurationReservations) {
+    const durationHours = (new Date(reservation.updatedAt) - new Date(reservation.createdAt)) / (1000 * 60 * 60);
+    if (durationHours > 3) {
+      anomalies.push({
+        type: "long_table_duration",
+        reservationId: reservation.id,
+        tenantId: reservation.tenantId,
+        tenantName: reservation.tenant?.name,
+        customerName: reservation.customer ? `${reservation.customer.firstName} ${reservation.customer.lastName}` : "Unknown",
+        durationHours: Math.round(durationHours * 100) / 100,
+        resStatus: reservation.resStatus,
+      });
+    }
+  }
+
+  const cashConcentration = await db.payment.findAll({
+    where: { method: "cash" },
+    attributes: [
+      "tenantId",
+      [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "cashCount"],
+      [db.Sequelize.fn("SUM", db.Sequelize.col("amount")), "cashTotal"],
+    ],
+    group: ["tenantId"],
+    having: db.Sequelize.literal("SUM(amount) > 0"),
+    order: [[db.Sequelize.literal("cashTotal"), "DESC"]],
+    limit: 20,
+    raw: true,
+  });
+
+  const totalPayments = await db.payment.findAll({
+    attributes: [
+      "tenantId",
+      [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "totalCount"],
+      [db.Sequelize.fn("SUM", db.Sequelize.col("amount")), "totalAmount"],
+    ],
+    group: ["tenantId"],
+    having: db.Sequelize.literal("SUM(amount) > 0"),
+    raw: true,
+  });
+
+  const totalMap = new Map(totalPayments.map((p) => [p.tenantId, { count: parseInt(p.totalCount, 10), total: parseFloat(p.totalAmount || 0) }]));
+
+  for (const cc of cashConcentration) {
+    const totals = totalMap.get(cc.tenantId) || { count: 0, total: 0 };
+    const cashRatio = totals.total > 0 ? parseFloat(cc.cashTotal || 0) / totals.total : 0;
+    if (cashRatio > 0.8) {
+      anomalies.push({
+        type: "cash_concentration",
+        tenantId: cc.tenantId,
+        cashCount: parseInt(cc.cashCount, 10),
+        cashTotal: parseFloat(cc.cashTotal || 0),
+        totalPayments: totals.count,
+        totalAmount: totals.total,
+        cashRatio: Math.round(cashRatio * 100) / 100,
+      });
+    }
+  }
+
+  if (db.giftCard) {
+    const suspiciousGiftCards = await db.giftCard.findAll({
+      where: {
+        status: "redeemed",
+        redeemedAt: { [db.Sequelize.Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+      },
+      include: [
+        { model: db.customer, as: "purchasedBy", attributes: ["id", "firstName", "lastName", "email", "phone"] },
+        { model: db.customer, as: "redeemedBy", attributes: ["id", "firstName", "lastName", "email", "phone"] },
+      ],
+      order: [["redeemedAt", "DESC"]],
+      limit: 30,
+    });
+
+    for (const card of suspiciousGiftCards) {
+      const purchasedAt = new Date(card.createdAt);
+      const redeemedAt = new Date(card.redeemedAt);
+      const hoursToRedeem = (redeemedAt - purchasedAt) / (1000 * 60 * 60);
+      const differentRedeemer = card.purchasedBy && card.redeemedBy && card.purchasedBy.id !== card.redeemedBy.id;
+
+      if (hoursToRedeem < 1 || differentRedeemer) {
+        anomalies.push({
+          type: "gift_card_fraud",
+          giftCardId: card.id,
+          tenantId: card.tenantId,
+          code: card.code,
+          amount: card.amount,
+          purchasedBy: card.purchasedBy ? `${card.purchasedBy.firstName} ${card.purchasedBy.lastName}` : "Unknown",
+          redeemedBy: card.redeemedBy ? `${card.redeemedBy.firstName} ${card.redeemedBy.lastName}` : "Unknown",
+          hoursToRedeem: Math.round(hoursToRedeem * 100) / 100,
+          differentRedeemer,
+        });
+      }
+    }
+  }
+
+  const tenantAnomalyCounts = new Map();
+  for (const anomaly of anomalies) {
+    const tid = anomaly.tenantId;
+    if (!tid) continue;
+    tenantAnomalyCounts.set(tid, (tenantAnomalyCounts.get(tid) || 0) + 1);
+  }
+
+  for (const [tenantId, count] of tenantAnomalyCounts.entries()) {
+    if (count >= 3) {
+      const tenant = await db.tenant.findByPk(tenantId);
+      anomalies.push({
+        type: "cross_tenant_fraud_pattern",
+        tenantId,
+        tenantName: tenant?.name || `Tenant #${tenantId}`,
+        anomalyCount: count,
+      });
+    }
+  }
+
   res.status(200).json({ success: true, collection: anomalies.slice(0, 50) });
 };
 

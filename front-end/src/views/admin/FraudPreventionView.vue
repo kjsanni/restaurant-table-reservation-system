@@ -5,7 +5,8 @@
         <h1>Fraud & Integrity</h1>
         <p class="subtitle">
           Refund anomalies, discount abuse, voids, cash gaps, inventory
-          shrinkage, and staff behavior patterns
+          shrinkage, staff behavior, table duration, gift card fraud, and
+          cross-tenant patterns
         </p>
       </div>
       <button class="btn-primary" @click="load" :disabled="loading">
@@ -25,6 +26,12 @@
         </option>
         <option value="inventory_shrinkage">Inventory Shrinkage</option>
         <option value="staff_behavior_score">Staff Behavior Scores</option>
+        <option value="long_table_duration">Long Table Duration</option>
+        <option value="cash_concentration">Cash Concentration</option>
+        <option value="gift_card_fraud">Gift Card Fraud</option>
+        <option value="cross_tenant_fraud_pattern">
+          Cross-Tenant Fraud Patterns
+        </option>
       </select>
     </div>
 
@@ -89,6 +96,22 @@
                   >{{ item.actionCount }} actions, score
                   {{ item.score }}/100</span
                 >
+                <span v-else-if="item.type === 'long_table_duration'"
+                  >{{ item.durationHours }}h duration, status
+                  {{ item.resStatus }}</span
+                >
+                <span v-else-if="item.type === 'cash_concentration'"
+                  >Cash ratio: {{ item.cashRatio * 100 }}% (
+                  {{ item.cashCount }} payments)</span
+                >
+                <span v-else-if="item.type === 'gift_card_fraud'"
+                  >Redeemed {{ item.hoursToRedeem }}h after purchase by
+                  {{ item.redeemedBy }} (purchaser:
+                  {{ item.purchasedBy }})</span
+                >
+                <span v-else-if="item.type === 'cross_tenant_fraud_pattern'"
+                  >{{ item.anomalyCount }} anomalies detected</span
+                >
                 <span v-else>—</span>
               </td>
               <td>
@@ -104,6 +127,15 @@
                 <span v-else-if="item.score !== undefined"
                   >{{ item.score }}/100</span
                 >
+                <span v-else-if="item.durationHours"
+                  >{{ item.durationHours }}h</span
+                >
+                <span v-else-if="item.cashRatio !== undefined"
+                  >{{ (item.cashRatio * 100).toFixed(0) }}%</span
+                >
+                <span v-else-if="item.anomalyCount"
+                  >{{ item.anomalyCount }} signals</span
+                >
                 <span v-else>—</span>
               </td>
               <td>
@@ -117,6 +149,10 @@
                 }}</span>
                 <span v-else-if="item.username">{{ item.username }}</span>
                 <span v-else-if="item.name">{{ item.name }}</span>
+                <span v-else-if="item.code">Gift Card {{ item.code }}</span>
+                <span v-else-if="item.reservationId"
+                  >Reservation #{{ item.reservationId }}</span
+                >
                 <span v-else>—</span>
               </td>
             </tr>
@@ -156,6 +192,10 @@ const typeClass = (type) => {
     cash_reconciliation_gap: "status-warning",
     inventory_shrinkage: "status-healthy",
     staff_behavior_score: "status-warning",
+    long_table_duration: "status-warning",
+    cash_concentration: "status-warning",
+    gift_card_fraud: "status-failed",
+    cross_tenant_fraud_pattern: "status-warning",
   };
   return map[type] || "status-healthy";
 };
