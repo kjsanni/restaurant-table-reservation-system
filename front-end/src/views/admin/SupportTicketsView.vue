@@ -6,9 +6,7 @@
         <p class="subtitle">Manage and triage tenant support requests</p>
       </div>
       <div class="header-actions">
-        <button class="btn-secondary" @click="exportCSV">
-          Export CSV
-        </button>
+        <button class="btn-secondary" @click="exportCSV">Export CSV</button>
         <button class="btn-primary" @click="showCreate = true">
           New Ticket
         </button>
@@ -134,10 +132,7 @@
                 </select>
               </td>
               <td>
-                <span
-                  class="sla-badge"
-                  :class="slaClass(ticket)"
-                >
+                <span class="sla-badge" :class="slaClass(ticket)">
                   {{ slaLabel(ticket) }}
                 </span>
               </td>
@@ -183,7 +178,9 @@
           <p><b>Subject:</b> {{ selectedTicket.subject }}</p>
           <p><b>Status:</b> {{ selectedTicket.status }}</p>
           <p><b>Priority:</b> {{ selectedTicket.priority }}</p>
-          <p><b>Assigned To:</b> {{ selectedTicket.assignedTo || "Unassigned" }}</p>
+          <p>
+            <b>Assigned To:</b> {{ selectedTicket.assignedTo || "Unassigned" }}
+          </p>
           <p><b>Created:</b> {{ formatDateTime(selectedTicket.createdAt) }}</p>
           <p v-if="selectedTicket.resolvedAt">
             <b>Resolved:</b> {{ formatDateTime(selectedTicket.resolvedAt) }}
@@ -248,17 +245,31 @@ const analytics = computed(() => {
     avgResolutionTime = formatDuration(totalMs / resolvedTickets.length);
   }
 
-  const openTickets = items.value.filter((t) => t.status !== "resolved" && t.status !== "closed");
+  const openTickets = items.value.filter(
+    (t) => t.status !== "resolved" && t.status !== "closed"
+  );
   const overdueCount = openTickets.filter((t) => isOverdue(t)).length;
   const onTrackCount = openTickets.length - overdueCount;
   const totalOpen = openTickets.length || 1;
   const compliancePct = Math.round((onTrackCount / totalOpen) * 100);
   const slaCompliance = compliancePct + "%";
-  const slaComplianceClass = compliancePct >= 80 ? "success" : compliancePct >= 50 ? "warn" : "danger";
+  const slaComplianceClass =
+    compliancePct >= 80 ? "success" : compliancePct >= 50 ? "warn" : "danger";
 
-  const escalated = items.value.filter((t) => t.priority === "critical" && t.status !== "resolved" && t.status !== "closed").length;
+  const escalated = items.value.filter(
+    (t) =>
+      t.priority === "critical" &&
+      t.status !== "resolved" &&
+      t.status !== "closed"
+  ).length;
 
-  return { avgResolutionTime, avgFirstResponse, slaCompliance, slaComplianceClass, escalated };
+  return {
+    avgResolutionTime,
+    avgFirstResponse,
+    slaCompliance,
+    slaComplianceClass,
+    escalated,
+  };
 });
 
 const isOverdue = (ticket) => {
@@ -271,7 +282,8 @@ const isOverdue = (ticket) => {
 };
 
 const slaClass = (ticket) => {
-  if (ticket.status === "resolved" || ticket.status === "closed") return "sla-resolved";
+  if (ticket.status === "resolved" || ticket.status === "closed")
+    return "sla-resolved";
   if (isOverdue(ticket)) return "sla-overdue";
   return "sla-ok";
 };
@@ -354,7 +366,16 @@ const viewTicket = async (id) => {
 };
 
 const exportCSV = () => {
-  const headers = ["ID", "Subject", "Status", "Priority", "SLA", "Assigned To", "Created", "Resolved"];
+  const headers = [
+    "ID",
+    "Subject",
+    "Status",
+    "Priority",
+    "SLA",
+    "Assigned To",
+    "Created",
+    "Resolved",
+  ];
   const rows = items.value.map((t) => [
     t.id,
     t.subject,
@@ -365,7 +386,9 @@ const exportCSV = () => {
     t.createdAt || "",
     t.resolvedAt || "",
   ]);
-  const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+  const csv = [headers, ...rows]
+    .map((r) => r.map((c) => `"${c}"`).join(","))
+    .join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

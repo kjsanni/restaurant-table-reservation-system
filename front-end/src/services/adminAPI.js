@@ -116,6 +116,14 @@ const deleteSupportTicket = (id) => {
   return API.delete(`/admin/support-tickets/${id}`);
 };
 
+const updateSupportTicket = (id, data) => {
+  return API.patch(`/admin/support-tickets/${id}`, data);
+};
+
+const getSupportTicket = (id) => {
+  return API.get(`/admin/support-tickets/${id}`);
+};
+
 const bulkEnableTenants = (tenantIds) => {
   return API.post("/admin/bulk/enable", { tenantIds });
 };
@@ -417,6 +425,8 @@ export default {
   sendSupportMessage,
   deleteSupportConversation,
   deleteSupportTicket,
+  updateSupportTicket,
+  getSupportTicket,
   bulkEnableTenants,
   bulkExportTenants,
   bulkAssignFeatureFlags,

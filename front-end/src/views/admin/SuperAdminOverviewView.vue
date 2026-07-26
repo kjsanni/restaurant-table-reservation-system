@@ -156,7 +156,7 @@
         <!-- Support ticket inbox -->
         <div class="section-head">
           <h2>Support Tickets</h2>
-          <a href="#" @click.prevent="goTo('/admin/notifications')"
+          <a href="#" @click.prevent="goTo('/admin/support-tickets')"
             >Open all →</a
           >
         </div>
