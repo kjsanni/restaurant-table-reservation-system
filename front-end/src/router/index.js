@@ -603,6 +603,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/change-management",
+    name: "platform-change-management",
+    component: () => import("../views/admin/ChangeManagementView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/notifications",
     name: "platform-notifications",
     component: () => import("../views/admin/NotificationCenterView.vue"),
