@@ -567,6 +567,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/monitoring/cache",
+    name: "platform-cache-stats",
+    component: () => import("../views/admin/CacheStatsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/vertical-analytics",
     name: "platform-vertical-analytics",
     component: () => import("../views/admin/VerticalAnalyticsView.vue"),

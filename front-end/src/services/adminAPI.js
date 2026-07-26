@@ -321,6 +321,14 @@ const clearApiLatency = () => {
   return API.post("/admin/monitoring/api-latency/clear");
 };
 
+const getCacheStats = () => {
+  return API.get("/admin/monitoring/cache");
+};
+
+const resetCacheStats = () => {
+  return API.post("/admin/monitoring/cache/clear");
+};
+
 const getVerticalAnalytics = () => {
   return API.get("/admin/vertical-analytics");
 };
@@ -493,6 +501,8 @@ export default {
   getMonitoringLatency,
   getApiLatency,
   clearApiLatency,
+  getCacheStats,
+  resetCacheStats,
   getVerticalAnalytics,
   listDataRetentionPolicies,
   createDataRetentionPolicy,

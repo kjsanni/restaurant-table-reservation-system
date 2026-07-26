@@ -108,6 +108,7 @@ let dsarRequestRoutes = null;
   let salonExpensesRoutes = null;
   let salonPricingRulesRoutes = null;
   let apiLatencyRoutes = null;
+  let cacheStatsRoutes = null;
   let salonCustomerPortalRoutes = null;
   let salonDashboardRoutes = null;
 
@@ -167,6 +168,7 @@ if (TENANT_MODE) {
   migrationRoutes = require("../tenant-platform/routes/migration.router");
   postmortemRoutes = require("../tenant-platform/routes/postmortem.router");
   apiLatencyRoutes = require("../tenant-platform/routes/apiLatency.router");
+  cacheStatsRoutes = require("../tenant-platform/routes/cacheStats.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -350,6 +352,7 @@ const createServer = () => {
     app.use("/api/v1/admin/trust-safety", logAction, validateCsrfToken, adminMiddleware, trustSafetyRoutes);
     app.use("/api/v1/admin/monitoring", logAction, validateCsrfToken, adminMiddleware, monitoringRoutes);
     app.use("/api/v1/admin/monitoring/api-latency", logAction, validateCsrfToken, adminMiddleware, apiLatencyRoutes);
+    app.use("/api/v1/admin/monitoring/cache", logAction, validateCsrfToken, adminMiddleware, cacheStatsRoutes);
     app.use("/api/v1/admin/vertical-analytics", logAction, validateCsrfToken, adminMiddleware, verticalAnalyticsRoutes);
     app.use("/api/v1/admin/data-retention", logAction, validateCsrfToken, adminMiddleware, dataRetentionRoutes);
     app.use("/api/v1/admin/incidents", logAction, validateCsrfToken, adminMiddleware, incidentRoutes);

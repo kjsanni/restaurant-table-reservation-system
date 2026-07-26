@@ -84,6 +84,7 @@ export const adminNavItems: NavItem[] = [
   { routeName: 'platform-support-chat', text: 'Support Chat', icon: 'mdi:chat', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-monitoring', text: 'Monitoring', icon: 'mdi:chart-line', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-api-latency', text: 'API Latency', icon: 'mdi:speedometer', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-cache-stats', text: 'Cache Stats', icon: 'mdi:memory', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-vertical-analytics', text: 'Verticals', icon: 'mdi:view-grid', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-data-retention', text: 'Data Retention', icon: 'mdi:database-clock', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-audit-log', text: 'Audit Log', icon: 'mdi:clipboard-list', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
