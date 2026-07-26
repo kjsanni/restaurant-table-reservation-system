@@ -45,7 +45,16 @@ const appointmentDao = {
   },
 
   async create(data) {
-    return salonModels.sequelize.models.appointment.create(data);
+    const start = data.start ? new Date(data.start) : new Date();
+    const durationMinutes = data.durationMinutes || 30;
+    const bufferMinutes = data.bufferMinutes || 0;
+    const end = new Date(start.getTime() + (durationMinutes + bufferMinutes) * 60000);
+    return salonModels.sequelize.models.appointment.create({
+      ...data,
+      start,
+      end,
+      bufferMinutes,
+    });
   },
 
   async update(id, tenantId, data) {
@@ -66,8 +75,8 @@ const appointmentDao = {
     return true;
   },
 
-  async findConflicts(tenantId, stationId, stylistId, start, durationMinutes, excludeId = null) {
-    const end = new Date(new Date(start).getTime() + durationMinutes * 60000);
+  async findConflicts(tenantId, stationId, stylistId, start, durationMinutes, excludeId = null, bufferMinutes = 0) {
+    const end = new Date(new Date(start).getTime() + (durationMinutes + bufferMinutes) * 60000);
     const where = {
       tenantId,
       status: { [Op.notIn]: ["cancelled", "no_show"] },
@@ -108,7 +117,8 @@ const appointmentDao = {
 
     return existing.filter((apt) => {
       if (excludeId && apt.id === excludeId) return false;
-      const aptEnd = new Date(new Date(apt.start).getTime() + apt.durationMinutes * 60000);
+      const aptBuffer = apt.bufferMinutes || 0;
+      const aptEnd = new Date(new Date(apt.start).getTime() + (apt.durationMinutes + aptBuffer) * 60000);
       const aptStart = apt.start;
       return new Date(start) < aptEnd && end > new Date(aptStart);
     });

@@ -91,6 +91,15 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      end: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      bufferMinutes: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
     },
     {
       sequelize,

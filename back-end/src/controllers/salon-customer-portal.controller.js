@@ -67,6 +67,17 @@ const cancelSalonAppointmentHandler = async (req, res) => {
     if (appointment.status === "cancelled" || appointment.status === "completed") {
       return res.status(400).json({ success: false, message: "Appointment cannot be cancelled" });
     }
+
+    const customer = await reservationDAO.findOrCreateCustomer(
+      buildCustomerDetails(req.user),
+      null,
+      req.tenant?.id
+    );
+
+    if (appointment.customerId !== customer.id && req.user?.role !== "admin" && req.user?.role !== "staff") {
+      return res.status(403).json({ success: false, message: "You do not have permission to cancel this appointment" });
+    }
+
     const updated = await appointmentDao.update(appointmentId, req.tenant?.id, { status: "cancelled" });
     return res.status(200).json({ success: true, appointment: updated });
   } catch (err) {
@@ -92,9 +103,15 @@ const rebookSalonAppointmentHandler = async (req, res) => {
       req.tenant?.id
     );
 
+    if (appointment.customerId !== customer.id && req.user?.role !== "admin" && req.user?.role !== "staff") {
+      return res.status(403).json({ success: false, message: "You do not have permission to rebook this appointment" });
+    }
+
     const now = new Date();
     const start = new Date(now.getTime() + 60 * 60 * 1000);
-    const end = new Date(start.getTime() + (appointment.durationMinutes || 30) * 60000);
+    const durationMinutes = appointment.durationMinutes || 30;
+    const bufferMinutes = appointment.bufferMinutes || 0;
+    const end = new Date(start.getTime() + (durationMinutes + bufferMinutes) * 60000);
 
     const newAppointment = await appointmentDao.create({
       tenantId: req.tenant?.id,
@@ -104,7 +121,8 @@ const rebookSalonAppointmentHandler = async (req, res) => {
       stationId: appointment.stationId,
       start: start.toISOString(),
       end: end.toISOString(),
-      durationMinutes: appointment.durationMinutes || 30,
+      durationMinutes,
+      bufferMinutes,
       status: "confirmed",
       paymentStatus: "unpaid",
       depositAmount: 0,

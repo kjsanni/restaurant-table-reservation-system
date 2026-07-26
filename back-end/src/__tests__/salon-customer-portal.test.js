@@ -68,7 +68,8 @@ describe("salon-customer-portal.controller", () => {
 
   describe("cancelSalonAppointmentHandler", () => {
     it("cancels appointment successfully", async () => {
-      appointmentDao.findById.mockResolvedValue({ id: 1, status: "confirmed" });
+      reservationDAO.findOrCreateCustomer.mockResolvedValue({ id: 1, email: "test@example.com" });
+      appointmentDao.findById.mockResolvedValue({ id: 1, status: "confirmed", customerId: 1 });
       appointmentDao.update.mockResolvedValue({ id: 1, status: "cancelled" });
       const req = buildReq({ params: { appointmentId: "1" } });
       const res = { status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() };

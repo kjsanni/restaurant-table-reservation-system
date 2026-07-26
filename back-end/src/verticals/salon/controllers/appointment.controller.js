@@ -69,14 +69,21 @@ const appointmentController = {
   async updateAppointment(req, res) {
     try {
       const tenantId = req.tenant?.id;
-      const appointment = await appointmentDao.update(req.params.id, tenantId, req.body);
+      const allowed = ["status", "start", "durationMinutes", "end", "bufferMinutes", "notes", "paymentStatus", "depositAmount", "serviceId", "stylistId", "stationId"];
+      const updates = {};
+      for (const key of allowed) {
+        if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+          updates[key] = req.body[key];
+        }
+      }
+      const appointment = await appointmentDao.update(req.params.id, tenantId, updates);
       if (!appointment) {
         return res.status(404).json({ success: false, message: "Appointment not found" });
       }
 
       await logAction(req, "appointment_updated", {
         appointmentId: appointment.id,
-        changes: req.body,
+        changes: updates,
       });
 
       emitSalonAppointmentEvent(req, "salon-appointment-updated", appointment);
