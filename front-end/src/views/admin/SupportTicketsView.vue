@@ -249,6 +249,44 @@
         </div>
       </div>
     </div>
+
+    <div v-if="selectedTicket" class="notes-panel">
+      <div class="notes-header">
+        <h3>Internal Notes</h3>
+      </div>
+      <div class="notes-list">
+        <div v-if="notes.length === 0" class="notes-empty">
+          No internal notes yet.
+        </div>
+        <div v-for="note in notes" :key="note.id" class="note-item">
+          <div class="note-body">
+            <p class="note-text">{{ note.body }}</p>
+            <span class="note-meta"
+              >#{{ note.id }} by {{ note.author?.username || "system" }} •
+              {{ formatDate(note.createdAt) }}</span
+            >
+          </div>
+          <button class="btn-sm btn-danger" @click="removeNote(note.id)">
+            Delete
+          </button>
+        </div>
+      </div>
+      <div class="note-form">
+        <textarea
+          v-model="newNote"
+          rows="2"
+          placeholder="Add an internal note..."
+          class="note-input"
+        ></textarea>
+        <button
+          class="btn-primary"
+          @click="addNote"
+          :disabled="addingNote || !newNote.trim()"
+        >
+          Add
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -268,6 +306,9 @@ const filterSla = ref("");
 const searchQuery = ref("");
 const csatTicket = ref(null);
 const csatForm = ref({ rating: 0, feedback: "" });
+const notes = ref([]);
+const newNote = ref("");
+const addingNote = ref(false);
 
 const SLA_THRESHOLDS = {
   critical: 60 * 60 * 1000,
@@ -441,6 +482,41 @@ const submitCsat = async () => {
 const viewTicket = async (id) => {
   const res = await adminAPI.getSupportTicket(id);
   selectedTicket.value = res.data?.item || null;
+  if (selectedTicket.value) {
+    loadNotes(selectedTicket.value.id);
+  }
+};
+
+const loadNotes = async (ticketId) => {
+  try {
+    const res = await adminAPI.listSupportNotes(null, ticketId);
+    notes.value = res.data?.collection || [];
+  } catch {
+    notes.value = [];
+  }
+};
+
+const addNote = async () => {
+  if (!newNote.value.trim() || !selectedTicket.value) return;
+  addingNote.value = true;
+  try {
+    await adminAPI.createSupportNote({
+      ticketId: selectedTicket.value.id,
+      conversationId: selectedTicket.value.conversationId || null,
+      body: newNote.value.trim(),
+    });
+    newNote.value = "";
+    await loadNotes(selectedTicket.value.id);
+  } finally {
+    addingNote.value = false;
+  }
+};
+
+const removeNote = async (id) => {
+  await adminAPI.deleteSupportNote(id);
+  if (selectedTicket.value) {
+    await loadNotes(selectedTicket.value.id);
+  }
 };
 
 const exportCSV = () => {
@@ -761,5 +837,66 @@ onMounted(() => {
 }
 .star-btn.active {
   color: var(--amber-500);
+}
+.notes-panel {
+  margin-top: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+}
+.notes-header {
+  margin-bottom: var(--space-3);
+}
+.notes-header h3 {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.notes-empty {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+.note-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.note-body {
+  flex: 1;
+}
+.note-text {
+  margin: 0 0 var(--space-1) 0;
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+.note-meta {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+.note-form {
+  display: flex;
+  gap: var(--space-3);
+}
+.note-input {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  background: var(--surface);
+  color: var(--ink);
+  resize: vertical;
 }
 </style>

@@ -110,6 +110,7 @@ let dsarRequestRoutes = null;
   let apiLatencyRoutes = null;
   let cacheStatsRoutes = null;
   let verticalTemplateRoutes = null;
+  let supportNoteRoutes = null;
   let salonCustomerPortalRoutes = null;
   let salonDashboardRoutes = null;
 
@@ -171,6 +172,7 @@ if (TENANT_MODE) {
   apiLatencyRoutes = require("../tenant-platform/routes/apiLatency.router");
   cacheStatsRoutes = require("../tenant-platform/routes/cacheStats.router");
   verticalTemplateRoutes = require("../tenant-platform/routes/verticalTemplate.router");
+  supportNoteRoutes = require("../tenant-platform/routes/supportNote.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -343,6 +345,7 @@ const createServer = () => {
     app.use("/api/v1/admin/security", logAction, validateCsrfToken, adminMiddleware, securityRoutes);
     app.use("/api/v1/admin/compliance", logAction, validateCsrfToken, adminMiddleware, complianceRoutes);
     app.use("/api/v1/admin/support-chat", logAction, validateCsrfToken, adminMiddleware, supportChatRoutes);
+    app.use("/api/v1/admin/support-notes", logAction, validateCsrfToken, adminMiddleware, supportNoteRoutes);
     app.use("/api/v1/admin/support-templates", logAction, validateCsrfToken, adminMiddleware, supportTemplateRoutes);
     app.use("/api/v1/admin/feature-flags", logAction, validateCsrfToken, adminMiddleware, featureFlagRoutes);
     app.use("/api/v1/admin/financial", logAction, validateCsrfToken, adminMiddleware, financialManagementRoutes);

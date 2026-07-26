@@ -120,6 +120,21 @@ const submitCsat = (id, data) => {
   return API.post(`/admin/support-chat/conversations/${id}/csat`, data);
 };
 
+const listSupportNotes = (conversationId, ticketId) => {
+  const qs = [];
+  if (conversationId) qs.push(`conversationId=${conversationId}`);
+  if (ticketId) qs.push(`ticketId=${ticketId}`);
+  return API.get(`/admin/support-notes${qs.length ? `?${qs.join("&")}` : ""}`);
+};
+
+const createSupportNote = (data) => {
+  return API.post("/admin/support-notes", data);
+};
+
+const deleteSupportNote = (id) => {
+  return API.delete(`/admin/support-notes/${id}`);
+};
+
 const deleteSupportTicket = (id) => {
   return API.delete(`/admin/support-tickets/${id}`);
 };
@@ -482,6 +497,9 @@ export default {
   deleteSupportConversation,
   autoAssignConversation,
   submitCsat,
+  listSupportNotes,
+  createSupportNote,
+  deleteSupportNote,
   deleteSupportTicket,
   updateSupportTicket,
   getSupportTicket,
