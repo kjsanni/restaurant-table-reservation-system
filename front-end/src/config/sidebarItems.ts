@@ -54,6 +54,9 @@ export const authenticatedNavItems: NavItem[] = [
   { routeName: 'salon-clients', text: 'Clients', icon: 'mdi:account-group', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-dashboard', text: 'Dashboard', icon: 'mdi:view-dashboard', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-staff', text: 'Staff', icon: 'mdi:account-star', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-unified-schedule', text: 'Unified Schedule', icon: 'mdi:calendar-week', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-whatsapp-bookings', text: 'WhatsApp Bookings', icon: 'mdi:whatsapp', requiresAuth: true, requiresVertical: 'salon' },
+  { routeName: 'salon-whatsapp-payments', text: 'WhatsApp Payments', icon: 'mdi:currency-usd', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-marketing', text: 'Marketing', icon: 'mdi:bullhorn', requiresAuth: true, requiresVertical: 'salon' },
   { routeName: 'salon-gallery', text: 'Gallery', icon: 'mdi:image-multiple', requiresAuth: true, requiresVertical: 'salon' },
 ]

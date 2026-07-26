@@ -771,6 +771,24 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_services" },
   });
   router.addRoute({
+    path: "/salon/unified-schedule",
+    name: "salon-unified-schedule",
+    component: () => import("../views/salon/SalonUnifiedScheduleView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_schedule" },
+  });
+  router.addRoute({
+    path: "/salon/whatsapp-bookings",
+    name: "salon-whatsapp-bookings",
+    component: () => import("../views/salon/SalonWhatsAppBookingsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "view_appointments" },
+  });
+  router.addRoute({
+    path: "/salon/whatsapp-payments",
+    name: "salon-whatsapp-payments",
+    component: () => import("../views/salon/SalonWhatsAPPaymentsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "view_appointments" },
+  });
+  router.addRoute({
     path: "/salon/dashboard",
     name: "salon-dashboard",
     component: () => import("../views/salon/SalonDashboardView.vue"),
