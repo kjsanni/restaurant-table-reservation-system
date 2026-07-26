@@ -543,6 +543,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/support-templates",
+    name: "platform-support-templates",
+    component: () => import("../views/admin/SupportTemplatesView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/support-chat",
     name: "platform-support-chat",
     component: () => import("../views/admin/SupportChatView.vue"),

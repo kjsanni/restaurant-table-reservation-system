@@ -124,6 +124,22 @@ const getSupportTicket = (id) => {
   return API.get(`/admin/support-tickets/${id}`);
 };
 
+const listSupportTemplates = () => {
+  return API.get("/admin/support-templates");
+};
+
+const createSupportTemplate = (data) => {
+  return API.post("/admin/support-templates", data);
+};
+
+const updateSupportTemplate = (id, data) => {
+  return API.patch(`/admin/support-templates/${id}`, data);
+};
+
+const deleteSupportTemplate = (id) => {
+  return API.delete(`/admin/support-templates/${id}`);
+};
+
 const bulkEnableTenants = (tenantIds) => {
   return API.post("/admin/bulk/enable", { tenantIds });
 };
@@ -427,6 +443,10 @@ export default {
   deleteSupportTicket,
   updateSupportTicket,
   getSupportTicket,
+  listSupportTemplates,
+  createSupportTemplate,
+  updateSupportTemplate,
+  deleteSupportTemplate,
   bulkEnableTenants,
   bulkExportTenants,
   bulkAssignFeatureFlags,

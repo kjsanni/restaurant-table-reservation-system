@@ -116,6 +116,20 @@
           </div>
 
           <div class="reply-box">
+            <select
+              v-model="selectedTemplateId"
+              class="template-select"
+              @change="applyTemplate"
+            >
+              <option value="">— Insert template —</option>
+              <option
+                v-for="template in templates"
+                :key="template.id"
+                :value="template.id"
+              >
+                {{ template.title }} ({{ template.category }})
+              </option>
+            </select>
             <textarea
               v-model="replyBody"
               rows="2"
@@ -195,6 +209,8 @@ const messages = ref([]);
 const messagesLoading = ref(false);
 const filterStatus = ref("");
 const replyBody = ref("");
+const templates = ref([]);
+const selectedTemplateId = ref("");
 const sending = ref(false);
 const updating = ref(false);
 const deleting = ref(false);
@@ -214,6 +230,24 @@ const loadConversations = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const loadTemplates = async () => {
+  try {
+    const res = await adminAPI.listSupportTemplates();
+    templates.value = res.data?.collection || [];
+  } catch {
+    templates.value = [];
+  }
+};
+
+const applyTemplate = () => {
+  const id = parseInt(selectedTemplateId.value, 10);
+  const template = templates.value.find((t) => t.id === id);
+  if (template && template.body) {
+    replyBody.value = template.body;
+  }
+  selectedTemplateId.value = "";
 };
 
 const selectConversation = async (conv) => {
@@ -322,6 +356,7 @@ const statusClass = (status) => {
 
 onMounted(() => {
   loadConversations();
+  loadTemplates();
 });
 </script>
 
@@ -503,9 +538,18 @@ onMounted(() => {
 }
 .reply-box {
   display: flex;
+  flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
   border-top: 1px solid var(--border-subtle);
+}
+.template-select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  background: var(--surface);
+  color: var(--ink);
 }
 .reply-input {
   flex: 1;
