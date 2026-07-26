@@ -15,6 +15,7 @@ router
   .route("/conversations/:id")
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(supportChatController.getConversationHandler))
   .patch(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(supportChatController.updateConversationHandler))
+  .delete(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(supportChatController.deleteConversationHandler))
   .all(httpMethodError);
 
 router

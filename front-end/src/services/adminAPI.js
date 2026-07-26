@@ -108,6 +108,14 @@ const sendSupportMessage = (conversationId, body) => {
   );
 };
 
+const deleteSupportConversation = (id) => {
+  return API.delete(`/admin/support-chat/conversations/${id}`);
+};
+
+const deleteSupportTicket = (id) => {
+  return API.delete(`/admin/support-tickets/${id}`);
+};
+
 const bulkEnableTenants = (tenantIds) => {
   return API.post("/admin/bulk/enable", { tenantIds });
 };
@@ -283,6 +291,8 @@ export default {
   updateSupportConversation,
   listSupportMessages,
   sendSupportMessage,
+  deleteSupportConversation,
+  deleteSupportTicket,
   bulkEnableTenants,
   bulkExportTenants,
   bulkAssignFeatureFlags,

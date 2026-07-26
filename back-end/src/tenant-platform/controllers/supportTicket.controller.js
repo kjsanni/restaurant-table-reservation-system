@@ -1,4 +1,5 @@
 const supportTicketDAO = require("../DAOs/supportTicket.dao");
+const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const listSupportTicketsHandler = async (req, res) => {
   const { status, priority, limit } = req.query;
@@ -32,6 +33,17 @@ const createSupportTicketHandler = async (req, res) => {
     message,
     priority: priority || "medium",
   });
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "support.ticket_created",
+    "support_ticket",
+    ticket.id,
+    req.tenant?.id || null,
+    { subject, priority },
+    req.ip
+  );
+
   res.status(201).json({ success: true, item: ticket });
 };
 
@@ -47,7 +59,37 @@ const updateSupportTicketHandler = async (req, res) => {
   if (!ticket) {
     return res.status(404).json({ success: false, message: "Ticket not found" });
   }
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "support.ticket_updated",
+    "support_ticket",
+    ticket.id,
+    req.tenant?.id || null,
+    { updates },
+    req.ip
+  );
+
   res.status(200).json({ success: true, item: ticket });
+};
+
+const deleteSupportTicketHandler = async (req, res) => {
+  const ticket = await supportTicketDAO.remove(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
+  if (!ticket) {
+    return res.status(404).json({ success: false, message: "Ticket not found" });
+  }
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "support.ticket_deleted",
+    "support_ticket",
+    ticket.id,
+    req.tenant?.id || null,
+    {},
+    req.ip
+  );
+
+  res.status(200).json({ success: true });
 };
 
 module.exports = {
@@ -55,4 +97,5 @@ module.exports = {
   getSupportTicketHandler,
   createSupportTicketHandler,
   updateSupportTicketHandler,
+  deleteSupportTicketHandler,
 };

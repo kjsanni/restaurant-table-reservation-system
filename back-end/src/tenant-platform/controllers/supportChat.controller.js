@@ -44,6 +44,16 @@ const createConversationHandler = async (req, res) => {
     body: message,
   });
 
+  await platformAuditDAO.log(
+    req.user.id,
+    "support.conversation_created",
+    "support_conversation",
+    conversation.id,
+    req.tenant?.id || null,
+    { subject, priority },
+    req.ip
+  );
+
   res.status(201).json({ success: true, item: conversation });
 };
 
@@ -72,6 +82,25 @@ const updateConversationHandler = async (req, res) => {
   );
 
   res.status(200).json({ success: true, item: conversation });
+};
+
+const deleteConversationHandler = async (req, res) => {
+  const conversation = await supportConversationDAO.remove(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
+  if (!conversation) {
+    return res.status(404).json({ success: false, message: "Conversation not found" });
+  }
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "support.conversation_deleted",
+    "support_conversation",
+    conversation.id,
+    req.tenant?.id || null,
+    {},
+    req.ip
+  );
+
+  res.status(200).json({ success: true });
 };
 
 const listMessagesHandler = async (req, res) => {
@@ -104,6 +133,16 @@ const sendMessageHandler = async (req, res) => {
 
   await supportConversationDAO.update(conversation.id, { lastMessageAt: new Date() }, req.user?.isSuperAdmin ? null : req.tenant?.id);
 
+  await platformAuditDAO.log(
+    req.user.id,
+    "support.message_sent",
+    "support_message",
+    message.id,
+    req.tenant?.id || null,
+    { conversationId: conversation.id },
+    req.ip
+  );
+
   res.status(201).json({ success: true, item: message });
 };
 
@@ -112,6 +151,7 @@ module.exports = {
   getConversationHandler,
   createConversationHandler,
   updateConversationHandler,
+  deleteConversationHandler,
   listMessagesHandler,
   sendMessageHandler,
 };

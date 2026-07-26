@@ -15,6 +15,7 @@ router
   .route("/:id")
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(supportTicketController.getSupportTicketHandler))
   .patch(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(supportTicketController.updateSupportTicketHandler))
+  .delete(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(supportTicketController.deleteSupportTicketHandler))
   .all(httpMethodError);
 
 module.exports = router;
