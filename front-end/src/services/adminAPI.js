@@ -8,6 +8,18 @@ const getRecentActivity = (limit = 20) => {
   return API.get(`/admin/audit/recent?limit=${limit}`);
 };
 
+const exportAuditLog = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.action) query.set("action", params.action);
+  if (params.tenantId) query.set("tenantId", params.tenantId);
+  if (params.actorUserId) query.set("actorUserId", params.actorUserId);
+  if (params.format) query.set("format", params.format);
+  const qs = query.toString();
+  return API.get(`/admin/audit/export${qs ? `?${qs}` : ""}`, {
+    responseType: "blob",
+  });
+};
+
 const listSupportTickets = (params = {}) => {
   const query = new URLSearchParams();
   if (params.status) query.set("status", params.status);
@@ -180,14 +192,86 @@ const getThirdPartyStatus = () => {
   return API.get("/admin/integrations/third-party");
 };
 
+const startImpersonation = (data) => {
+  return API.post("/admin/impersonation", data);
+};
+
+const endImpersonation = (id) => {
+  return API.post(`/admin/impersonation/${id}/end`);
+};
+
+const listImpersonation = () => {
+  return API.get("/admin/impersonation");
+};
+
+const getTenantGrowth = () => {
+  return API.get("/admin/analytics/growth");
+};
+
+const getChurnAnalysis = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.plan) query.set("plan", params.plan);
+  if (params.from) query.set("from", params.from);
+  if (params.to) query.set("to", params.to);
+  const qs = query.toString();
+  return API.get(`/admin/analytics/churn${qs ? `?${qs}` : ""}`);
+};
+
+const getLtvCac = () => {
+  return API.get("/admin/analytics/ltv-cac");
+};
+
+const getMaintenanceMode = () => {
+  return API.get("/admin/maintenance");
+};
+
+const setMaintenanceMode = (data) => {
+  return API.post("/admin/maintenance", data);
+};
+
+const getTenantHealthScores = () => {
+  return API.get("/admin/trust-safety/health-scores");
+};
+
+const getBackupRecord = (id) => {
+  return API.get(`/admin/backups/${id}`);
+};
+
+const createBackup = (data) => {
+  return API.post("/admin/backups", data);
+};
+
+const updateBackup = (id, data) => {
+  return API.patch(`/admin/backups/${id}`, data);
+};
+
+const executeBackup = (id) => {
+  return API.post(`/admin/backups/${id}/execute`);
+};
+
+const restoreBackup = (id, dryRun) => {
+  return API.post(`/admin/backups/${id}/restore`, { dryRun });
+};
+
+const downloadBackup = (id) => {
+  return API.get(`/admin/backups/${id}/download`, { responseType: "blob" });
+};
+
 export default {
   emailLogs,
+  exportAuditLog,
   getRecentActivity,
   listSupportTickets,
   listFailedPaymentAlerts,
   retryFailedPayment,
   resolveFailedPayment,
   listBackupRecords,
+  getBackupRecord,
+  createBackup,
+  updateBackup,
+  executeBackup,
+  restoreBackup,
+  downloadBackup,
   getBackupStatus,
   getDeploymentStatus,
   getDeploymentHealth,
@@ -217,4 +301,13 @@ export default {
   getPaystackSettlements,
   getWebhookStatus,
   getThirdPartyStatus,
+  startImpersonation,
+  endImpersonation,
+  listImpersonation,
+  getTenantGrowth,
+  getChurnAnalysis,
+  getLtvCac,
+  getMaintenanceMode,
+  setMaintenanceMode,
+  getTenantHealthScores,
 };

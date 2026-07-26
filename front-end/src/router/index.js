@@ -501,9 +501,39 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/impersonation",
+    name: "platform-impersonation",
+    component: () => import("../views/admin/ImpersonationView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/analytics",
+    name: "platform-analytics",
+    component: () => import("../views/admin/AdvancedAnalyticsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/billing-emails",
     name: "billing-email-templates",
     component: () => import("../views/admin/BillingEmailTemplatesView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/backups",
+    name: "platform-backups",
+    component: () => import("../views/admin/BackupManagementView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/maintenance",
+    name: "platform-maintenance",
+    component: () => import("../views/admin/MaintenanceModeView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/trust-safety",
+    name: "platform-trust-safety",
+    component: () => import("../views/admin/TrustSafetyView.vue"),
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({

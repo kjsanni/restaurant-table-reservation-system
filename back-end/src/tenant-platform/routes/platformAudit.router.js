@@ -15,4 +15,9 @@ router
   .get(tryCatchHandler(protect), tryCatchHandler(platformAuditController.recentActivityHandler))
   .all(httpMethodError);
 
+router
+  .route("/export")
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(platformAuditController.exportAuditLogHandler))
+  .all(httpMethodError);
+
 module.exports = router;
