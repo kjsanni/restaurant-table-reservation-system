@@ -65,41 +65,57 @@
       </div>
 
       <div class="section">
-        <h2>Paystack (Bring Your Own Keys)</h2>
+        <h2>WhatsApp Configuration</h2>
         <p class="section-hint">
-          Override the platform Paystack account per tenant. Leave blank to use
-          the platform default. Secret key is write-only.
+          Configure WhatsApp Business API for this tenant. Managed by platform
+          admin only.
         </p>
         <div class="field">
-          <label>Subaccount Code</label>
+          <label>Phone Number ID</label>
           <input
-            v-model="paystackForm.paystackSubaccountCode"
-            placeholder="ACCT_..."
+            v-model="whatsappForm.phoneNumberId"
+            placeholder="1234567890"
           />
         </div>
         <div class="field">
-          <label>Public Key</label>
+          <label>WhatsApp Token</label>
           <input
-            v-model="paystackForm.paystackPublicKey"
-            placeholder="pk_..."
-          />
-        </div>
-        <div class="field">
-          <label>Secret Key</label>
-          <input
-            v-model="paystackForm.paystackSecretKey"
+            v-model="whatsappForm.token"
             type="password"
-            placeholder="sk_..."
+            placeholder="EAAG..."
           />
         </div>
         <button
           class="btn success"
-          @click="savePaystack"
-          :disabled="savingPaystack"
+          @click="saveWhatsApp"
+          :disabled="savingWhatsApp"
         >
-          {{ savingPaystack ? "Saving..." : "Save Paystack Keys" }}
+          {{ savingWhatsApp ? "Saving..." : "Save WhatsApp Settings" }}
         </button>
-        <span v-if="paystackSaved" class="saved-tag">Saved</span>
+        <span v-if="whatsappSaved" class="saved-tag">Saved</span>
+      </div>
+
+      <div class="section">
+        <h2>Payout Configuration</h2>
+        <p class="section-hint">
+          Configure Paystack subaccount for automatic settlement splits. Funds
+          are routed directly to this subaccount when customers pay.
+        </p>
+        <div class="field">
+          <label>Paystack Subaccount Code</label>
+          <input
+            v-model="payoutForm.paystackSubaccountCode"
+            placeholder="ACCT_..."
+          />
+        </div>
+        <button
+          class="btn success"
+          @click="savePayout"
+          :disabled="savingPayout"
+        >
+          {{ savingPayout ? "Saving..." : "Save Payout Settings" }}
+        </button>
+        <span v-if="payoutSaved" class="saved-tag">Saved</span>
       </div>
     </div>
 
@@ -234,25 +250,32 @@ const tenant = ref({ users: [] });
 const notes = ref([]);
 const newNote = ref("");
 const addingNote = ref(false);
-const savingPaystack = ref(false);
-const paystackSaved = ref(false);
+const savingWhatsApp = ref(false);
+const whatsappSaved = ref(false);
+const savingPayout = ref(false);
+const payoutSaved = ref(false);
 const businessVertical = ref("restaurant");
 const savingVertical = ref(false);
 const verticalSaved = ref(false);
-const paystackForm = ref({
+const whatsappForm = ref({
+  phoneNumberId: "",
+  token: "",
+});
+const payoutForm = ref({
   paystackSubaccountCode: "",
-  paystackPublicKey: "",
-  paystackSecretKey: "",
 });
 
 const loadTenant = async () => {
   const response = await tenantAdminAPI.getById(route.params.id);
   tenant.value = response.data.item;
   businessVertical.value = tenant.value.businessVertical || "restaurant";
-  paystackForm.value = {
+  const wa = tenant.value.whatsappConfig || {};
+  whatsappForm.value = {
+    phoneNumberId: wa.phoneNumberId || "",
+    token: wa.token || "",
+  };
+  payoutForm.value = {
     paystackSubaccountCode: tenant.value.paystackSubaccountCode || "",
-    paystackPublicKey: tenant.value.paystackPublicKey || "",
-    paystackSecretKey: "",
   };
   await loadNotes();
 };
@@ -306,18 +329,33 @@ const disableTenant = async () => {
   await loadTenant();
 };
 
-const savePaystack = async () => {
-  savingPaystack.value = true;
-  paystackSaved.value = false;
+const saveWhatsApp = async () => {
+  savingWhatsApp.value = true;
+  whatsappSaved.value = false;
   try {
-    const payload = { ...paystackForm.value };
-    if (!payload.paystackSecretKey) delete payload.paystackSecretKey;
-    await tenantAdminAPI.update(route.params.id, payload);
-    paystackSaved.value = true;
-    setTimeout(() => (paystackSaved.value = false), 2000);
+    await tenantAdminAPI.update(route.params.id, {
+      whatsappConfig: whatsappForm.value,
+    });
+    whatsappSaved.value = true;
+    setTimeout(() => (whatsappSaved.value = false), 2000);
     await loadTenant();
   } finally {
-    savingPaystack.value = false;
+    savingWhatsApp.value = false;
+  }
+};
+
+const savePayout = async () => {
+  savingPayout.value = true;
+  payoutSaved.value = false;
+  try {
+    await tenantAdminAPI.update(route.params.id, {
+      paystackSubaccountCode: payoutForm.value.paystackSubaccountCode,
+    });
+    payoutSaved.value = true;
+    setTimeout(() => (payoutSaved.value = false), 2000);
+    await loadTenant();
+  } finally {
+    savingPayout.value = false;
   }
 };
 

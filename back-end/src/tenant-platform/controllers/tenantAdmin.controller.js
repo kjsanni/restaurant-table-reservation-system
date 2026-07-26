@@ -109,7 +109,7 @@ const updateTenantHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
 
-  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "paystackSubaccountCode", "paystackPublicKey", "paystackSecretKey", "restaurantType", "serviceModes", "businessVertical"];
+  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "restaurantType", "serviceModes", "businessVertical", "whatsappConfig"];
   const updates = {};
   const changes = {};
 

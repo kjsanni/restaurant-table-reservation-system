@@ -6,12 +6,6 @@ import logger from "@/utils/logger";
 const loading = ref(true);
 const saving = ref(false);
 
-const salonWhatsAppConfig = ref({
-  enabled: false,
-  phoneNumberId: "",
-  token: "",
-});
-
 const salonPaymentConfig = ref({
   currency: "GHS",
   depositRequired: false,
@@ -31,20 +25,6 @@ const loadSettings = async () => {
       data.map((s: any) => [s.key, String(s.value ?? "")])
     );
 
-    const waRaw = map.get("salon_whatsapp_config");
-    if (waRaw) {
-      try {
-        const parsed = JSON.parse(waRaw);
-        salonWhatsAppConfig.value = {
-          enabled: parsed.enabled ?? false,
-          phoneNumberId: parsed.phoneNumberId || "",
-          token: parsed.token || "",
-        };
-      } catch {
-        salonWhatsAppConfig.value.enabled = waRaw === "true";
-      }
-    }
-
     const paymentRaw = map.get("salon_payment_config");
     if (paymentRaw) {
       try {
@@ -61,20 +41,6 @@ const loadSettings = async () => {
     logger.error("Failed to load salon settings", { error: err });
   } finally {
     loading.value = false;
-  }
-};
-
-const saveWhatsApp = async () => {
-  saving.value = true;
-  try {
-    await authAPI.updateSettings(
-      "salon_whatsapp_config",
-      salonWhatsAppConfig.value
-    );
-  } catch (err) {
-    logger.error("Failed to save WhatsApp settings", { error: err });
-  } finally {
-    saving.value = false;
   }
 };
 
@@ -124,8 +90,8 @@ onBeforeUnmount(() => {
       <div class="topbar-left">
         <h1>Salon Settings</h1>
         <p>
-          Manage WhatsApp, payment, and notification behavior for salon
-          appointments
+          Manage payment and notification behavior for salon appointments.
+          WhatsApp is configured by platform admin.
         </p>
       </div>
     </div>
@@ -137,41 +103,6 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-else class="settings-stack">
-        <div class="settings-card">
-          <h3>WhatsApp Booking</h3>
-          <div class="field">
-            <label>Enable WhatsApp booking</label>
-            <select v-model="salonWhatsAppConfig.enabled" class="field-input">
-              <option :value="true">Enabled</option>
-              <option :value="false">Disabled</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Phone Number ID</label>
-            <input
-              v-model="salonWhatsAppConfig.phoneNumberId"
-              class="field-input"
-            />
-          </div>
-          <div class="field">
-            <label>WhatsApp Token</label>
-            <input
-              v-model="salonWhatsAppConfig.token"
-              class="field-input"
-              type="password"
-            />
-          </div>
-          <div class="form-actions">
-            <button
-              class="btn-primary"
-              :disabled="saving"
-              @click="saveWhatsApp"
-            >
-              {{ saving ? "Saving..." : "Save WhatsApp Settings" }}
-            </button>
-          </div>
-        </div>
-
         <div class="settings-card">
           <h3>Payments</h3>
           <div class="field">

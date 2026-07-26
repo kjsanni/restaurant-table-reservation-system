@@ -4,6 +4,7 @@ jest.mock("../tenant-platform/services/paystack.service", () => ({
   initializeCharge: jest.fn().mockResolvedValue({ authorization_url: "https://paystack.co/pay/123", access_code: "abc", reference: "ref" }),
   verifyWebhookSignature: jest.fn().mockResolvedValue(true),
   verifyPayment: jest.fn().mockResolvedValue({ status: true }),
+  buildSplitConfig: jest.fn().mockReturnValue(null),
 }));
 
 const orderDAO = require("../DAOs/order.dao");

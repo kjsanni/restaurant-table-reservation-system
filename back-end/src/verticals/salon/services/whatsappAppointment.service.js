@@ -231,10 +231,11 @@ const handleSalonAppointmentState = async (phone, normalized, rawMessage, sessio
         const amount = (service?.price || 50) * 100;
         const payment = await withRetry(
           () =>
-            initializeCharge(
-              { email: customer.email || `wa_${phone}@salon.local`, amount, metadata: { appointmentId: appointment.id, service: service?.name } },
-              { paystackSecretKey: process.env.PAYSTACK_SECRET_KEY }
-            ),
+            initializeCharge({
+              email: customer.email || `wa_${phone}@salon.local`,
+              amount,
+              metadata: { appointmentId: appointment.id, service: service?.name },
+            }),
           2,
           1500
         );

@@ -3,11 +3,7 @@ const paystackService = require("../services/paystack.service");
 
 const getPaystackTransactionsHandler = async (req, res) => {
   try {
-    const tenant = await db.tenant.findByPk(req.query.tenantId);
-    if (!tenant) {
-      return res.status(404).json({ success: false, message: "Tenant not found" });
-    }
-    const client = await paystackService.createTenantClient(tenant);
+    const client = await paystackService.buildPlatformClient();
     const response = await client.get("/transaction", {
       params: { perPage: 20, page: 1 },
     });
@@ -19,11 +15,7 @@ const getPaystackTransactionsHandler = async (req, res) => {
 
 const getPaystackSettlementsHandler = async (req, res) => {
   try {
-    const tenant = await db.tenant.findByPk(req.query.tenantId);
-    if (!tenant) {
-      return res.status(404).json({ success: false, message: "Tenant not found" });
-    }
-    const client = await paystackService.createTenantClient(tenant);
+    const client = await paystackService.buildPlatformClient();
     const response = await client.get("/settlement", {
       params: { perPage: 20, page: 1 },
     });
@@ -35,11 +27,7 @@ const getPaystackSettlementsHandler = async (req, res) => {
 
 const getPaystackDisputesHandler = async (req, res) => {
   try {
-    const tenant = await db.tenant.findByPk(req.query.tenantId);
-    if (!tenant) {
-      return res.status(404).json({ success: false, message: "Tenant not found" });
-    }
-    const client = await paystackService.createTenantClient(tenant);
+    const client = await paystackService.buildPlatformClient();
     const response = await client.get("/dispute", {
       params: { perPage: 20, page: 1 },
     });
@@ -51,11 +39,7 @@ const getPaystackDisputesHandler = async (req, res) => {
 
 const getPaystackFeeAnalysisHandler = async (req, res) => {
   try {
-    const tenant = await db.tenant.findByPk(req.query.tenantId);
-    if (!tenant) {
-      return res.status(404).json({ success: false, message: "Tenant not found" });
-    }
-    const client = await paystackService.createTenantClient(tenant);
+    const client = await paystackService.buildPlatformClient();
     const response = await client.get("/transaction", {
       params: { perPage: 100, page: 1 },
     });
