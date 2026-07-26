@@ -218,7 +218,9 @@
         <!-- Failed payment alerts -->
         <div class="section-head">
           <h2>Failed Payment Alerts</h2>
-          <a href="#" @click.prevent="goTo('/admin/payments')">View all →</a>
+          <a href="#" @click.prevent="goTo('/admin/at-risk-tenants')"
+            >View all →</a
+          >
         </div>
 
         <section class="panel activity-feed">
@@ -320,6 +322,9 @@
         <!-- Brute-force aggregation -->
         <div class="section-head">
           <h2>Security: Brute-Force Aggregation</h2>
+          <a href="#" @click.prevent="goTo('/admin/at-risk-tenants')"
+            >View all →</a
+          >
         </div>
 
         <section class="panel activity-feed">

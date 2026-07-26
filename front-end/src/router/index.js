@@ -621,6 +621,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/at-risk-tenants",
+    name: "platform-at-risk-tenants",
+    component: () => import("../views/admin/AtRiskTenantsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/notifications",
     name: "platform-notifications",
     component: () => import("../views/admin/NotificationCenterView.vue"),
