@@ -135,6 +135,23 @@ const deleteSupportNote = (id) => {
   return API.delete(`/admin/support-notes/${id}`);
 };
 
+const listSupportAttachments = (conversationId, ticketId) => {
+  const qs = [];
+  if (conversationId) qs.push(`conversationId=${conversationId}`);
+  if (ticketId) qs.push(`ticketId=${ticketId}`);
+  return API.get(
+    `/admin/support-attachments${qs.length ? `?${qs.join("&")}` : ""}`
+  );
+};
+
+const createSupportAttachment = (data) => {
+  return API.post("/admin/support-attachments", data);
+};
+
+const deleteSupportAttachment = (id) => {
+  return API.delete(`/admin/support-attachments/${id}`);
+};
+
 const deleteSupportTicket = (id) => {
   return API.delete(`/admin/support-tickets/${id}`);
 };
@@ -500,6 +517,9 @@ export default {
   listSupportNotes,
   createSupportNote,
   deleteSupportNote,
+  listSupportAttachments,
+  createSupportAttachment,
+  deleteSupportAttachment,
   deleteSupportTicket,
   updateSupportTicket,
   getSupportTicket,

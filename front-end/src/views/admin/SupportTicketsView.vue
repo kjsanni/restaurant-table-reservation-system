@@ -199,6 +199,38 @@
           </p>
           <p><b>Message:</b></p>
           <p class="ticket-message">{{ selectedTicket.message }}</p>
+          <div class="attachments-section">
+            <h4>Attachments</h4>
+            <div v-if="attachments.length === 0" class="attachments-empty">
+              No attachments yet.
+            </div>
+            <div v-else class="attachments-list">
+              <div
+                v-for="file in attachments"
+                :key="file.id"
+                class="attachment-item"
+              >
+                <span class="attachment-name">{{ file.originalName }}</span>
+                <span class="attachment-meta">{{ formatSize(file.size) }}</span>
+                <button
+                  class="btn-sm btn-danger"
+                  @click="removeAttachment(file.id)"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+            <div class="attachment-upload">
+              <input type="file" @change="onFileSelected" class="file-input" />
+              <button
+                class="btn-primary"
+                @click="uploadAttachment"
+                :disabled="!selectedFile || uploading"
+              >
+                Upload
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -309,6 +341,9 @@ const csatForm = ref({ rating: 0, feedback: "" });
 const notes = ref([]);
 const newNote = ref("");
 const addingNote = ref(false);
+const attachments = ref([]);
+const selectedFile = ref(null);
+const uploading = ref(false);
 
 const SLA_THRESHOLDS = {
   critical: 60 * 60 * 1000,
@@ -517,6 +552,58 @@ const removeNote = async (id) => {
   if (selectedTicket.value) {
     await loadNotes(selectedTicket.value.id);
   }
+};
+
+const loadAttachments = async (ticketId) => {
+  try {
+    const res = await adminAPI.listSupportAttachments(null, ticketId);
+    attachments.value = res.data?.collection || [];
+  } catch {
+    attachments.value = [];
+  }
+};
+
+const onFileSelected = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    selectedFile.value = file;
+  }
+};
+
+const uploadAttachment = async () => {
+  if (!selectedFile.value || !selectedTicket.value) return;
+  uploading.value = true;
+  try {
+    const form = new FormData();
+    form.append("file", selectedFile.value);
+    await adminAPI.createSupportAttachment({
+      ticketId: selectedTicket.value.id,
+      conversationId: selectedTicket.value.conversationId || null,
+      filename: selectedFile.value.name,
+      originalName: selectedFile.value.name,
+      mimeType: selectedFile.value.type,
+      size: selectedFile.value.size,
+    });
+    selectedFile.value = null;
+    await loadAttachments(selectedTicket.value.id);
+  } finally {
+    uploading.value = false;
+  }
+};
+
+const removeAttachment = async (id) => {
+  await adminAPI.deleteSupportAttachment(id);
+  if (selectedTicket.value) {
+    await loadAttachments(selectedTicket.value.id);
+  }
+};
+
+const formatSize = (bytes) => {
+  if (!bytes) return "—";
+  const mb = bytes / (1024 * 1024);
+  if (mb >= 1) return `${mb.toFixed(1)} MB`;
+  const kb = bytes / 1024;
+  return `${kb.toFixed(1)} KB`;
 };
 
 const exportCSV = () => {
@@ -898,5 +985,55 @@ onMounted(() => {
   background: var(--surface);
   color: var(--ink);
   resize: vertical;
+}
+.attachments-section {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+.attachments-section h4 {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--ink-muted);
+}
+.attachments-empty {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.attachment-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.attachment-name {
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+.attachment-meta {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+.attachment-upload {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.file-input {
+  flex: 1;
+  font-size: var(--text-sm);
 }
 </style>
