@@ -329,6 +329,14 @@ const getMigrationStatus = () => {
   return API.get("/admin/migration/status");
 };
 
+const listPostmortems = () => {
+  return API.get("/admin/postmortems");
+};
+
+const createPostmortem = (data) => {
+  return API.post("/admin/postmortems", data);
+};
+
 const getBackupRecord = (id) => {
   return API.get(`/admin/backups/${id}`);
 };
@@ -430,4 +438,6 @@ export default {
   getTenantDebug,
   getPlatformDebug,
   getMigrationStatus,
+  listPostmortems,
+  createPostmortem,
 };
