@@ -261,6 +261,26 @@ const getVerticalAnalytics = () => {
   return API.get("/admin/vertical-analytics");
 };
 
+const listDataRetentionPolicies = () => {
+  return API.get("/admin/data-retention");
+};
+
+const createDataRetentionPolicy = (data) => {
+  return API.post("/admin/data-retention", data);
+};
+
+const updateDataRetentionPolicy = (id, data) => {
+  return API.patch(`/admin/data-retention/${id}`, data);
+};
+
+const deleteDataRetentionPolicy = (id) => {
+  return API.delete(`/admin/data-retention/${id}`);
+};
+
+const executeDataRetention = () => {
+  return API.post("/admin/data-retention/execute");
+};
+
 const getBackupRecord = (id) => {
   return API.get(`/admin/backups/${id}`);
 };
@@ -345,4 +365,9 @@ export default {
   getMonitoringErrors,
   getMonitoringLatency,
   getVerticalAnalytics,
+  listDataRetentionPolicies,
+  createDataRetentionPolicy,
+  updateDataRetentionPolicy,
+  deleteDataRetentionPolicy,
+  executeDataRetention,
 };
