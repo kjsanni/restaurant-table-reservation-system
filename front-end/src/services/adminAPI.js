@@ -241,6 +241,22 @@ const getTenantHealthScores = () => {
   return API.get("/admin/trust-safety/health-scores");
 };
 
+const getMonitoringQueues = () => {
+  return API.get("/admin/monitoring/queues");
+};
+
+const getMonitoringDatabase = () => {
+  return API.get("/admin/monitoring/database");
+};
+
+const getMonitoringErrors = () => {
+  return API.get("/admin/monitoring/errors");
+};
+
+const getMonitoringLatency = () => {
+  return API.get("/admin/monitoring/integrations/latency");
+};
+
 const getBackupRecord = (id) => {
   return API.get(`/admin/backups/${id}`);
 };
@@ -320,4 +336,8 @@ export default {
   getMaintenanceMode,
   setMaintenanceMode,
   getTenantHealthScores,
+  getMonitoringQueues,
+  getMonitoringDatabase,
+  getMonitoringErrors,
+  getMonitoringLatency,
 };

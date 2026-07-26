@@ -150,6 +150,7 @@ if (TENANT_MODE) {
   advancedAnalyticsRoutes = require("../tenant-platform/routes/advancedAnalytics.router");
   maintenanceRoutes = require("../tenant-platform/routes/maintenance.router");
   trustSafetyRoutes = require("../tenant-platform/routes/trustSafety.router");
+  monitoringRoutes = require("../tenant-platform/routes/monitoring.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -327,6 +328,7 @@ const createServer = () => {
     app.use("/api/v1/admin/analytics", logAction, validateCsrfToken, adminMiddleware, advancedAnalyticsRoutes);
     app.use("/api/v1/admin/maintenance", logAction, validateCsrfToken, adminMiddleware, maintenanceRoutes);
     app.use("/api/v1/admin/trust-safety", logAction, validateCsrfToken, adminMiddleware, trustSafetyRoutes);
+    app.use("/api/v1/admin/monitoring", logAction, validateCsrfToken, adminMiddleware, monitoringRoutes);
     app.use("/api/v1/billing", logAction, validateCsrfToken, billingRoutes);
     app.use("/api/v1/salon/appointments", logAction, validateCsrfToken, salonAppointmentRoutes);
     app.use("/api/v1/salon/stations", logAction, validateCsrfToken, salonStationRoutes);
