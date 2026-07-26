@@ -107,6 +107,7 @@ let dsarRequestRoutes = null;
   let salonInventoryRoutes = null;
   let salonExpensesRoutes = null;
   let salonPricingRulesRoutes = null;
+  let apiLatencyRoutes = null;
   let salonCustomerPortalRoutes = null;
   let salonDashboardRoutes = null;
 
@@ -165,6 +166,7 @@ if (TENANT_MODE) {
   debugRoutes = require("../tenant-platform/routes/debug.router");
   migrationRoutes = require("../tenant-platform/routes/migration.router");
   postmortemRoutes = require("../tenant-platform/routes/postmortem.router");
+  apiLatencyRoutes = require("../tenant-platform/routes/apiLatency.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -263,6 +265,7 @@ const createServer = () => {
   app.use(helmet({ crossOriginResourcePolicy: false, hsts: process.env.NODE_ENV === "production" ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false }));
   app.use(cspHeaders);
   app.use(require("../middleware/sanitize").sanitize);
+  app.use(require("../middleware/apiLatency"));
 
   app.get("/api/v1/csrf-token", (req, res) => {
     const token = req.cookies?.[CSRF_COOKIE_NAME] || generateCsrfToken();
@@ -346,6 +349,7 @@ const createServer = () => {
     app.use("/api/v1/admin/maintenance", logAction, validateCsrfToken, adminMiddleware, maintenanceRoutes);
     app.use("/api/v1/admin/trust-safety", logAction, validateCsrfToken, adminMiddleware, trustSafetyRoutes);
     app.use("/api/v1/admin/monitoring", logAction, validateCsrfToken, adminMiddleware, monitoringRoutes);
+    app.use("/api/v1/admin/monitoring/api-latency", logAction, validateCsrfToken, adminMiddleware, apiLatencyRoutes);
     app.use("/api/v1/admin/vertical-analytics", logAction, validateCsrfToken, adminMiddleware, verticalAnalyticsRoutes);
     app.use("/api/v1/admin/data-retention", logAction, validateCsrfToken, adminMiddleware, dataRetentionRoutes);
     app.use("/api/v1/admin/incidents", logAction, validateCsrfToken, adminMiddleware, incidentRoutes);

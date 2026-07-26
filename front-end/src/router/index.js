@@ -561,6 +561,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/monitoring/api-latency",
+    name: "platform-api-latency",
+    component: () => import("../views/admin/ApiLatencyView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/vertical-analytics",
     name: "platform-vertical-analytics",
     component: () => import("../views/admin/VerticalAnalyticsView.vue"),

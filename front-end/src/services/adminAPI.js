@@ -313,6 +313,14 @@ const getMonitoringLatency = () => {
   return API.get("/admin/monitoring/integrations/latency");
 };
 
+const getApiLatency = () => {
+  return API.get("/admin/monitoring/api-latency");
+};
+
+const clearApiLatency = () => {
+  return API.post("/admin/monitoring/api-latency/clear");
+};
+
 const getVerticalAnalytics = () => {
   return API.get("/admin/vertical-analytics");
 };
@@ -483,6 +491,8 @@ export default {
   getMonitoringDatabase,
   getMonitoringErrors,
   getMonitoringLatency,
+  getApiLatency,
+  clearApiLatency,
   getVerticalAnalytics,
   listDataRetentionPolicies,
   createDataRetentionPolicy,
