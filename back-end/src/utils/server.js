@@ -91,8 +91,11 @@ let dsarRequestRoutes = null;
   let securityRoutes = null;
   let complianceRoutes = null;
   let supportChatRoutes = null;
-
-  let requireVertical = null;
+  let featureFlagRoutes = null;
+  let financialManagementRoutes = null;
+  let whistleblowerTipRoutes = null;
+  let integrationAnalyticsRoutes = null;
+  let impersonationRoutes = null;
   let salonAppointmentRoutes = null;
   let salonStationRoutes = null;
   let salonServiceRoutes = null;
@@ -145,6 +148,7 @@ if (TENANT_MODE) {
   supportChatRoutes = require("../tenant-platform/routes/supportChat.router");
   featureFlagRoutes = require("../tenant-platform/routes/featureFlag.router");
   financialManagementRoutes = require("../tenant-platform/routes/financialManagement.router");
+  whistleblowerTipRoutes = require("../tenant-platform/routes/whistleblowerTip.router");
   integrationAnalyticsRoutes = require("../tenant-platform/routes/integrationAnalytics.router");
   impersonationRoutes = require("../tenant-platform/routes/impersonation.router");
   advancedAnalyticsRoutes = require("../tenant-platform/routes/advancedAnalytics.router");
@@ -332,6 +336,7 @@ const createServer = () => {
     app.use("/api/v1/admin/support-chat", logAction, validateCsrfToken, adminMiddleware, supportChatRoutes);
     app.use("/api/v1/admin/feature-flags", logAction, validateCsrfToken, adminMiddleware, featureFlagRoutes);
     app.use("/api/v1/admin/financial", logAction, validateCsrfToken, adminMiddleware, financialManagementRoutes);
+    app.use("/api/v1/admin/whistleblower", logAction, validateCsrfToken, adminMiddleware, whistleblowerTipRoutes);
     app.use("/api/v1/admin/integrations", logAction, validateCsrfToken, adminMiddleware, integrationAnalyticsRoutes);
     app.use("/api/v1/admin/impersonation", logAction, validateCsrfToken, adminMiddleware, impersonationRoutes);
     app.use("/api/v1/admin/analytics", logAction, validateCsrfToken, adminMiddleware, advancedAnalyticsRoutes);

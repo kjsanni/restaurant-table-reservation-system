@@ -155,6 +155,127 @@ const detectFinancialAnomaliesHandler = async (req, res) => {
     });
   }
 
+  const staffVoids = await db.order.findAll({
+    where: {
+      status: "cancelled",
+      createdBy: { [db.Sequelize.Op.ne]: "customer" },
+    },
+    include: [
+      { model: db.tenant, as: "tenant", attributes: ["id", "name"] },
+    ],
+    order: [["createdAt", "DESC"]],
+    limit: 30,
+  });
+
+  for (const order of staffVoids) {
+    anomalies.push({
+      type: "staff_void",
+      orderId: order.id,
+      tenantId: order.tenantId,
+      tenantName: order.tenant?.name,
+      createdBy: order.createdBy,
+      total: order.total,
+      cancelledAt: order.updatedAt,
+    });
+  }
+
+  const cashPayments = await db.payment.findAll({
+    where: { method: "cash" },
+    attributes: [
+      "tenantId",
+      [db.Sequelize.fn("SUM", db.Sequelize.col("amount")), "cashTotal"],
+    ],
+    group: ["tenantId"],
+    raw: true,
+  });
+
+  const orderTotals = await db.order.findAll({
+    where: { paymentStatus: { [db.Sequelize.Op.ne]: "unpaid" } },
+    attributes: [
+      "tenantId",
+      [db.Sequelize.fn("SUM", db.Sequelize.col("total")), "orderTotal"],
+    ],
+    group: ["tenantId"],
+    raw: true,
+  });
+
+  const orderTotalMap = new Map(orderTotals.map((o) => [o.tenantId, parseFloat(o.orderTotal || 0)]));
+
+  for (const cp of cashPayments) {
+    const expected = orderTotalMap.get(cp.tenantId) || 0;
+    const actual = parseFloat(cp.cashTotal || 0);
+    const gap = Math.abs(expected - actual);
+    if (expected > 0 && gap / expected > 0.1) {
+      anomalies.push({
+        type: "cash_reconciliation_gap",
+        tenantId: cp.tenantId,
+        expected,
+        actual,
+        gap,
+        ratio: Math.round((gap / expected) * 100) / 100,
+      });
+    }
+  }
+
+  const lowStockItems = await db.inventoryItem.findAll({
+    where: {
+      isActive: true,
+      quantity: { [db.Sequelize.Op.lte]: db.Sequelize.col("reorderLevel") },
+    },
+    include: [
+      { model: db.tenant, as: "tenant", attributes: ["id", "name"] },
+    ],
+    order: [["quantity", "ASC"]],
+    limit: 30,
+  });
+
+  for (const item of lowStockItems) {
+    anomalies.push({
+      type: "inventory_shrinkage",
+      itemId: item.id,
+      tenantId: item.tenantId,
+      tenantName: item.tenant?.name,
+      name: item.name,
+      sku: item.sku,
+      quantity: item.quantity,
+      reorderLevel: item.reorderLevel,
+    });
+  }
+
+  const staffActions = await db.auditLog.findAll({
+    where: {
+      entityType: "order",
+      action: { [db.Sequelize.Op.in]: ["void", "comp", "cancel"] },
+      createdAt: { [db.Sequelize.Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+    },
+    include: [
+      { model: db.user, as: "user", attributes: ["id", "username", "role"] },
+    ],
+    group: ["userId"],
+    attributes: [
+      "userId",
+      [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "actionCount"],
+      [db.Sequelize.fn("SUM", db.Sequelize.literal("CAST(changes->>'$.amount' AS DECIMAL(10,2))")), "totalAmount"],
+    ],
+    having: db.Sequelize.literal("COUNT(id) >= 2"),
+    order: [[db.Sequelize.literal("actionCount"), "DESC"]],
+    limit: 20,
+    raw: true,
+  });
+
+  for (const row of staffActions) {
+    const score = Math.min(100, parseInt(row.actionCount, 10) * 10 + (parseFloat(row.totalAmount || 0) > 500 ? 20 : 0));
+    anomalies.push({
+      type: "staff_behavior_score",
+      userId: row.userId,
+      username: row.user?.username || "Unknown",
+      role: row.user?.role,
+      actionCount: parseInt(row.actionCount, 10),
+      totalAmount: parseFloat(row.totalAmount || 0),
+      score,
+    });
+  }
+
   res.status(200).json({ success: true, collection: anomalies.slice(0, 50) });
 };
 

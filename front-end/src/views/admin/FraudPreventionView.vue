@@ -4,7 +4,8 @@
       <div>
         <h1>Fraud & Integrity</h1>
         <p class="subtitle">
-          Refund anomalies, discount abuse, and suspicious patterns
+          Refund anomalies, discount abuse, voids, cash gaps, inventory
+          shrinkage, and staff behavior patterns
         </p>
       </div>
       <button class="btn-primary" @click="load" :disabled="loading">
@@ -18,6 +19,12 @@
         <option value="large_refund">Large Refunds</option>
         <option value="high_discount">High Discounts</option>
         <option value="frequent_canceller">Frequent Cancellers</option>
+        <option value="staff_void">Staff Voids</option>
+        <option value="cash_reconciliation_gap">
+          Cash Reconciliation Gaps
+        </option>
+        <option value="inventory_shrinkage">Inventory Shrinkage</option>
+        <option value="staff_behavior_score">Staff Behavior Scores</option>
       </select>
     </div>
 
@@ -41,7 +48,13 @@
           <tbody>
             <tr
               v-for="item in items"
-              :key="item.refundId || item.orderId || item.customerId"
+              :key="
+                item.refundId ||
+                item.orderId ||
+                item.customerId ||
+                item.itemId ||
+                item.userId
+              "
             >
               <td>
                 <span class="badge" :class="typeClass(item.type)">
@@ -58,6 +71,24 @@
                 <span v-else-if="item.type === 'frequent_canceller'"
                   >{{ item.cancellationCount }} cancellations in 30d</span
                 >
+                <span v-else-if="item.type === 'staff_void'"
+                  >Voided by {{ item.createdBy }} on order #{{
+                    item.orderId
+                  }}</span
+                >
+                <span v-else-if="item.type === 'cash_reconciliation_gap'"
+                  >Cash gap: GHS {{ item.gap?.toFixed(2) }} ({{
+                    item.ratio * 100
+                  }}%)</span
+                >
+                <span v-else-if="item.type === 'inventory_shrinkage'"
+                  >{{ item.name }} (SKU: {{ item.sku || "N/A" }}) qty
+                  {{ item.quantity }} ≤ reorder {{ item.reorderLevel }}</span
+                >
+                <span v-else-if="item.type === 'staff_behavior_score'"
+                  >{{ item.actionCount }} actions, score
+                  {{ item.score }}/100</span
+                >
                 <span v-else>—</span>
               </td>
               <td>
@@ -67,6 +98,11 @@
                 >
                 <span v-else-if="item.cancellationCount"
                   >{{ item.cancellationCount }}x</span
+                >
+                <span v-else-if="item.total">GHS {{ item.total }}</span>
+                <span v-else-if="item.gap">GHS {{ item.gap.toFixed(2) }}</span>
+                <span v-else-if="item.score !== undefined"
+                  >{{ item.score }}/100</span
                 >
                 <span v-else>—</span>
               </td>
@@ -79,6 +115,8 @@
                 <span v-else-if="item.customerEmail">{{
                   item.customerEmail
                 }}</span>
+                <span v-else-if="item.username">{{ item.username }}</span>
+                <span v-else-if="item.name">{{ item.name }}</span>
                 <span v-else>—</span>
               </td>
             </tr>
@@ -114,6 +152,10 @@ const typeClass = (type) => {
     large_refund: "status-failed",
     high_discount: "status-warning",
     frequent_canceller: "status-warning",
+    staff_void: "status-failed",
+    cash_reconciliation_gap: "status-warning",
+    inventory_shrinkage: "status-healthy",
+    staff_behavior_score: "status-warning",
   };
   return map[type] || "status-healthy";
 };

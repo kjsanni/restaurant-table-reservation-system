@@ -176,8 +176,8 @@ const getSubscriptionHealth = () => {
   return API.get("/admin/financial/subscription-health");
 };
 
-const getFinancialAnomalies = () => {
-  return API.get("/admin/financial/anomalies");
+const getFinancialAnomalies = (params = {}) => {
+  return API.get("/admin/financial/anomalies", { params });
 };
 
 const getPaystackTransactions = (tenantId) => {
