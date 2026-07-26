@@ -325,6 +325,10 @@ const getPlatformDebug = () => {
   return API.get("/admin/debug/platform");
 };
 
+const getMigrationStatus = () => {
+  return API.get("/admin/migration/status");
+};
+
 const getBackupRecord = (id) => {
   return API.get(`/admin/backups/${id}`);
 };
@@ -425,4 +429,5 @@ export default {
   deleteSubProcessor,
   getTenantDebug,
   getPlatformDebug,
+  getMigrationStatus,
 };

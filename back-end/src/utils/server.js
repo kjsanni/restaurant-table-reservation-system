@@ -157,6 +157,7 @@ if (TENANT_MODE) {
   suspiciousActivityRoutes = require("../tenant-platform/routes/suspiciousActivity.router");
   subProcessorRoutes = require("../tenant-platform/routes/subProcessor.router");
   debugRoutes = require("../tenant-platform/routes/debug.router");
+  migrationRoutes = require("../tenant-platform/routes/migration.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -341,6 +342,7 @@ const createServer = () => {
     app.use("/api/v1/admin/suspicious-activity", logAction, validateCsrfToken, adminMiddleware, suspiciousActivityRoutes);
     app.use("/api/v1/admin/sub-processors", logAction, validateCsrfToken, adminMiddleware, subProcessorRoutes);
     app.use("/api/v1/admin/debug", logAction, validateCsrfToken, adminMiddleware, debugRoutes);
+    app.use("/api/v1/admin/migration", logAction, validateCsrfToken, adminMiddleware, migrationRoutes);
     app.use("/api/v1/billing", logAction, validateCsrfToken, billingRoutes);
     app.use("/api/v1/salon/appointments", logAction, validateCsrfToken, salonAppointmentRoutes);
     app.use("/api/v1/salon/stations", logAction, validateCsrfToken, salonStationRoutes);
