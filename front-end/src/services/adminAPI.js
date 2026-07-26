@@ -116,6 +116,10 @@ const autoAssignConversation = (id) => {
   return API.post(`/admin/support-chat/conversations/${id}/auto-assign`);
 };
 
+const submitCsat = (id, data) => {
+  return API.post(`/admin/support-chat/conversations/${id}/csat`, data);
+};
+
 const deleteSupportTicket = (id) => {
   return API.delete(`/admin/support-tickets/${id}`);
 };
@@ -477,6 +481,7 @@ export default {
   sendSupportMessage,
   deleteSupportConversation,
   autoAssignConversation,
+  submitCsat,
   deleteSupportTicket,
   updateSupportTicket,
   getSupportTicket,

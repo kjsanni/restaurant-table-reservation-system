@@ -193,6 +193,33 @@ const autoAssignConversationHandler = async (req, res) => {
   res.status(200).json({ success: true, item: conversation, message: "No agents available" });
 };
 
+const submitCsatHandler = async (req, res) => {
+  const { rating, feedback } = req.body;
+  if (!rating || rating < 1 || rating > 5) {
+    return res.status(400).json({ success: false, message: "Rating must be between 1 and 5" });
+  }
+
+  const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
+  if (!conversation) {
+    return res.status(404).json({ success: false, message: "Conversation not found" });
+  }
+
+  await supportConversationDAO.update(req.params.id, { csatRating: rating, csatFeedback: feedback || null }, req.user?.isSuperAdmin ? null : req.tenant?.id);
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "support.csat_submitted",
+    "support_conversation",
+    conversation.id,
+    req.user?.isSuperAdmin ? null : req.tenant?.id,
+    { rating },
+    req.ip
+  );
+
+  const updated = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
+  res.status(200).json({ success: true, item: updated });
+};
+
 module.exports = {
   listConversationsHandler,
   getConversationHandler,
@@ -202,6 +229,7 @@ module.exports = {
   listMessagesHandler,
   sendMessageHandler,
   autoAssignConversationHandler,
+  submitCsatHandler,
 };
 
 module.exports = {

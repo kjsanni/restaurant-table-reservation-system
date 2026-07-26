@@ -98,6 +98,7 @@
               <th>Status</th>
               <th>Priority</th>
               <th>SLA</th>
+              <th>CSAT</th>
               <th>Assigned To</th>
               <th>Created</th>
               <th>Actions</th>
@@ -135,6 +136,17 @@
                 <span class="sla-badge" :class="slaClass(ticket)">
                   {{ slaLabel(ticket) }}
                 </span>
+              </td>
+              <td>
+                <div v-if="ticket.csatRating" class="csat-display">
+                  <span class="csat-stars">{{ stars(ticket.csatRating) }}</span>
+                  <span class="csat-feedback" v-if="ticket.csatFeedback"
+                    >"{{ ticket.csatFeedback }}"</span
+                  >
+                </div>
+                <button v-else class="btn-sm" @click="openCsat(ticket)">
+                  Rate
+                </button>
               </td>
               <td>
                 <input
@@ -190,6 +202,53 @@
         </div>
       </div>
     </div>
+
+    <div
+      v-if="csatTicket"
+      class="modal-overlay"
+      @click.self="csatTicket = null"
+    >
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Rate Support #{{ csatTicket.id }}</h3>
+          <button class="btn-close" @click="csatTicket = null">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="csat-rating">
+            <button
+              v-for="star in 5"
+              :key="star"
+              class="star-btn"
+              :class="{ active: star <= csatForm.rating }"
+              @click="csatForm.rating = star"
+            >
+              ★
+            </button>
+          </div>
+          <div class="field">
+            <label>Feedback (optional)</label>
+            <textarea
+              v-model="csatForm.feedback"
+              rows="3"
+              class="field-input"
+              placeholder="Tell us how we did..."
+            ></textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-secondary" @click="csatTicket = null">
+              Cancel
+            </button>
+            <button
+              class="btn-primary"
+              @click="submitCsat"
+              :disabled="!csatForm.rating"
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -207,6 +266,8 @@ const filterStatus = ref("");
 const filterPriority = ref("");
 const filterSla = ref("");
 const searchQuery = ref("");
+const csatTicket = ref(null);
+const csatForm = ref({ rating: 0, feedback: "" });
 
 const SLA_THRESHOLDS = {
   critical: 60 * 60 * 1000,
@@ -311,6 +372,8 @@ const formatDateTime = (date) => {
   return new Date(date).toLocaleString();
 };
 
+const stars = (rating) => "★".repeat(rating) + "☆".repeat(5 - rating);
+
 const load = async () => {
   loading.value = true;
   try {
@@ -357,6 +420,21 @@ const escalateTicket = async (id) => {
   if (currentIndex < 0 || currentIndex >= priorityOrder.length - 1) return;
   const nextPriority = priorityOrder[currentIndex + 1];
   await adminAPI.updateSupportTicket(id, { priority: nextPriority });
+  await load();
+};
+
+const openCsat = (ticket) => {
+  csatTicket.value = ticket;
+  csatForm.value = { rating: 0, feedback: "" };
+};
+
+const submitCsat = async () => {
+  if (!csatForm.value.rating) return;
+  await adminAPI.submitCsat(csatTicket.value.id, {
+    rating: csatForm.value.rating,
+    feedback: csatForm.value.feedback || null,
+  });
+  csatTicket.value = null;
   await load();
 };
 
@@ -652,5 +730,36 @@ onMounted(() => {
   white-space: pre-wrap;
   color: var(--ink-muted);
   font-size: var(--text-sm);
+}
+.csat-display {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.csat-stars {
+  color: var(--amber-500);
+  font-size: var(--text-sm);
+  letter-spacing: 0.05em;
+}
+.csat-feedback {
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+  font-style: italic;
+}
+.csat-rating {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+.star-btn {
+  background: none;
+  border: none;
+  font-size: var(--text-2xl);
+  color: var(--border);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.star-btn.active {
+  color: var(--amber-500);
 }
 </style>

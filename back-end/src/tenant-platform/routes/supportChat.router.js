@@ -29,4 +29,9 @@ router
   .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(supportChatController.autoAssignConversationHandler))
   .all(httpMethodError);
 
+router
+  .route("/conversations/:id/csat")
+  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(supportChatController.submitCsatHandler))
+  .all(httpMethodError);
+
 module.exports = router;

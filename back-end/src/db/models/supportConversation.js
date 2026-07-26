@@ -36,6 +36,8 @@ module.exports = (sequelize, DataTypes) => {
       lastMessageAt: { type: DataTypes.DATE, allowNull: true },
       slaDeadline: { type: DataTypes.DATE, allowNull: true },
       resolvedAt: { type: DataTypes.DATE, allowNull: true },
+      csatRating: { type: DataTypes.INTEGER, allowNull: true },
+      csatFeedback: { type: DataTypes.TEXT, allowNull: true },
     },
     {
       sequelize,
