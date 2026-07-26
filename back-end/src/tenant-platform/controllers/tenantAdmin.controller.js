@@ -70,6 +70,7 @@ const getTenantsHandler = async (req, res) => {
       "suspendedReason",
       "currency",
       "restaurantType",
+      "restaurantSubtype",
       "serviceModes",
       "createdAt",
       "updatedAt",
@@ -109,7 +110,7 @@ const updateTenantHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
 
-  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "restaurantType", "serviceModes", "businessVertical", "whatsappConfig"];
+  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "restaurantType", "restaurantSubtype", "serviceModes", "businessVertical", "whatsappConfig"];
   const updates = {};
   const changes = {};
 

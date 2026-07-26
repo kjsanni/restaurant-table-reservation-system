@@ -159,6 +159,36 @@
       <span v-if="verticalSaved" class="saved-tag">Saved</span>
     </div>
 
+    <div class="section">
+      <h2>Restaurant Subtype</h2>
+      <p class="section-hint">
+        Fine-tune the restaurant type for this tenant. This affects default
+        features and pricing recommendations.
+      </p>
+      <div class="field">
+        <label>Subtype</label>
+        <select v-model="restaurantSubtype" :disabled="savingSubtype">
+          <option value="">—</option>
+          <option value="fine_dining">Fine Dining</option>
+          <option value="fast_food">Fast Food</option>
+          <option value="cafe">Cafe</option>
+          <option value="casual_dining">Casual Dining</option>
+          <option value="bar_pub">Bar / Pub</option>
+          <option value="food_truck">Food Truck</option>
+          <option value="buffet">Buffet</option>
+          <option value="cloud_kitchen">Cloud Kitchen</option>
+        </select>
+      </div>
+      <button
+        class="btn primary"
+        @click="saveSubtype"
+        :disabled="savingSubtype"
+      >
+        {{ savingSubtype ? "Saving..." : "Save Subtype" }}
+      </button>
+      <span v-if="subtypeSaved" class="saved-tag">Saved</span>
+    </div>
+
     <div class="section notes-section">
       <h2>Notes</h2>
       <div class="note-form">
@@ -257,6 +287,9 @@ const payoutSaved = ref(false);
 const businessVertical = ref("restaurant");
 const savingVertical = ref(false);
 const verticalSaved = ref(false);
+const restaurantSubtype = ref("");
+const savingSubtype = ref(false);
+const subtypeSaved = ref(false);
 const whatsappForm = ref({
   phoneNumberId: "",
   token: "",
@@ -269,6 +302,7 @@ const loadTenant = async () => {
   const response = await tenantAdminAPI.getById(route.params.id);
   tenant.value = response.data.item;
   businessVertical.value = tenant.value.businessVertical || "restaurant";
+  restaurantSubtype.value = tenant.value.restaurantSubtype || "";
   const wa = tenant.value.whatsappConfig || {};
   whatsappForm.value = {
     phoneNumberId: wa.phoneNumberId || "",
@@ -378,6 +412,21 @@ const saveVertical = async () => {
     }
   } finally {
     savingVertical.value = false;
+  }
+};
+
+const saveSubtype = async () => {
+  savingSubtype.value = true;
+  subtypeSaved.value = false;
+  try {
+    await tenantAdminAPI.update(route.params.id, {
+      restaurantSubtype: restaurantSubtype.value || null,
+    });
+    subtypeSaved.value = true;
+    setTimeout(() => (subtypeSaved.value = false), 2000);
+    await loadTenant();
+  } finally {
+    savingSubtype.value = false;
   }
 };
 

@@ -121,6 +121,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "full_service",
       },
+      restaurantSubtype: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+      },
       serviceModes: {
         type: DataTypes.JSON,
         allowNull: false,

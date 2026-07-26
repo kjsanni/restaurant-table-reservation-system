@@ -102,6 +102,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "restaurant",
       },
+      restaurantSubtype: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+      },
     },
     {
       sequelize,
