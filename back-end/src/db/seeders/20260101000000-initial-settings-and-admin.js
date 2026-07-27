@@ -66,7 +66,7 @@ module.exports = {
         throw new Error("ADMIN_INITIAL_PASSWORD must be set in production");
       }
       const randomPassword = `tmp-${require("crypto").randomBytes(16).toString("hex")}`;
-      console.log(`[Seeder] Generated temporary admin password: ${randomPassword}`);
+      console.log("[Seeder] Generated temporary admin password. Store it securely and change it after first login.");
       await queryInterface.bulkInsert("users", [
         {
           username: "admin",

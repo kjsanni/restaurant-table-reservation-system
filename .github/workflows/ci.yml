@@ -46,8 +46,10 @@ jobs:
           cache: "npm"
           cache-dependency-path: back-end/package-lock.json
       - run: cd back-end && npm ci
+      - run: cd back-end && npm run lint
       - run: cd back-end && npx jest --silent
       - run: cd back-end && npx sequelize db:migrate
+      - run: cd back-end && npm audit --audit-level=high
 
   frontend:
     runs-on: ubuntu-latest
@@ -61,5 +63,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: front-end/package-lock.json
       - run: cd front-end && npm ci
+      - run: cd front-end && npm run lint
       - run: cd front-end && npx vue-tsc --noEmit
       - run: cd front-end && npm run build
+      - run: cd front-end && npm audit --audit-level=high

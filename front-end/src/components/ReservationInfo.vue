@@ -27,14 +27,15 @@ const tableNames = computed(() => {
 const highlightedNotes = computed(() => {
   if (!props.reservation?.notes) return "";
   const notes = props.reservation.notes;
-  if (!props.searchQuery) return notes;
-  const escaped = notes.replace(
-    /[&<>"']/g,
-    (m) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[
-        m
-      ])
-  );
+  const escaped = notes
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+  if (!props.searchQuery) {
+    return escaped;
+  }
   const queryEscaped = props.searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const regex = new RegExp(`(${queryEscaped})`, "gi");
   return escaped.replace(regex, "<mark>$1</mark>");

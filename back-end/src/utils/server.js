@@ -340,7 +340,7 @@ const createServer = () => {
   app.use("/api/v1", generalLimiter, require("../routes"));
   app.use("/api/v1/tables", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("table_management")] : []), tableRouter);
   app.use("/api/v1/reservations", logAction, validateCsrfToken, ...(TENANT_MODE ? [requiresServiceMode("dine_in")] : []), reservationRouter);
-  app.use("/api/v1/auth", validateCsrfToken, authRouter);
+  app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
   app.use("/api/v1/schedule", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), scheduleRouter);
   app.use("/api/v1/shifts", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), shiftRouter);
   app.use("/api/v1/time-offs", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), timeOffRouter);

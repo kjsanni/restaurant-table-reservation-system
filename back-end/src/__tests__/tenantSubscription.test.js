@@ -28,20 +28,26 @@ describe("tenantSubscription.getTenantDashboard", () => {
   });
 
   it("calculates MRR by normalizing plan strings to numeric prices", async () => {
-    mockTenantCount.mockResolvedValue(3);
-    mockSequelizeQuery.mockResolvedValue([{ mrr: 108 }]);
-    mockTenantFindAll.mockResolvedValue([]);
+    mockPlanFindAll.mockResolvedValue([
+      { slug: "starter", price: 29 },
+      { slug: "growth", price: 79 },
+    ]);
+    mockTenantFindAll.mockResolvedValue([
+      { plan: "starter" },
+      { plan: "growth" },
+      { plan: "growth" },
+    ]);
 
     const { getTenantDashboard } = require("../tenant-platform/services/tenantSubscription.service");
     const dashboard = await getTenantDashboard();
 
-    expect(dashboard.mrr).toBe(108);
-    expect(mockSequelizeQuery).toHaveBeenCalledTimes(1);
+    expect(dashboard.mrr).toBe(187);
   });
 
   it("returns 0 MRR when no active tenants exist", async () => {
-    mockTenantCount.mockResolvedValue(0);
-    mockSequelizeQuery.mockResolvedValue([]);
+    mockPlanFindAll.mockResolvedValue([
+      { slug: "starter", price: 29 },
+    ]);
     mockTenantFindAll.mockResolvedValue([]);
 
     const { getTenantDashboard } = require("../tenant-platform/services/tenantSubscription.service");

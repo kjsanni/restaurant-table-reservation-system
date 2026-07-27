@@ -443,7 +443,7 @@
               <span v-html="item.icon"></span>
             </div>
             <div class="feed-text">
-              <b v-html="item.title"></b>
+              <b>{{ item.title }}</b>
               <p>{{ item.detail }}</p>
             </div>
             <div class="feed-time">{{ item.time }}</div>

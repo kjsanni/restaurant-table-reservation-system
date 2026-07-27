@@ -3,6 +3,17 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 
+const escapeShellArg = (value) => {
+  if (value == null) {
+    return '""';
+  }
+  const str = String(value);
+  if (str.length === 0) {
+    return '""';
+  }
+  return `'${str.replace(/'/g, "'\\''")}'`;
+};
+
 const runBackup = async (options = {}) => {
   const {
     type = "full",
@@ -26,7 +37,7 @@ const runBackup = async (options = {}) => {
   const env = { ...process.env };
   if (dbPass) env.MYSQL_PWD = dbPass;
 
-  const command = `mysqldump -h ${dbHost} -P ${dbPort} -u ${dbUser} ${dbName} > "${outputPath}"`;
+  const command = `mysqldump -h ${escapeShellArg(dbHost)} -P ${escapeShellArg(dbPort)} -u ${escapeShellArg(dbUser)} ${escapeShellArg(dbName)} > ${escapeShellArg(outputPath)}`;
 
   return new Promise((resolve, reject) => {
     exec(command, { env }, (error, stdout, stderr) => {
@@ -47,17 +58,26 @@ const runBackup = async (options = {}) => {
 const runRestore = async (options = {}) => {
   const { filePath, dryRun = false } = options;
 
-  if (!fs.existsSync(filePath)) {
+  if (!filePath || typeof filePath !== "string" || !filePath.trim()) {
+    throw { status: 400, message: "Backup file path is required" };
+  }
+
+  const resolvedPath = path.resolve(filePath);
+  if (!resolvedPath.startsWith(path.resolve(os.tmpdir())) && !resolvedPath.startsWith("/var/backups")) {
+    throw { status: 403, message: "Backup file path is not allowed" };
+  }
+
+  if (!fs.existsSync(resolvedPath)) {
     throw { status: 404, message: "Backup file not found" };
   }
 
   if (dryRun) {
-    const content = fs.readFileSync(filePath, "utf8");
+    const content = fs.readFileSync(resolvedPath, "utf8");
     const statements = content.split(";").filter((s) => s.trim().length > 0);
     return {
       dryRun: true,
       statementCount: statements.length,
-      sizeBytes: fs.statSync(filePath).size,
+      sizeBytes: fs.statSync(resolvedPath).size,
     };
   }
 
@@ -70,14 +90,14 @@ const runRestore = async (options = {}) => {
   const env = { ...process.env };
   if (dbPass) env.MYSQL_PWD = dbPass;
 
-  const command = `mysql -h ${dbHost} -P ${dbPort} -u ${dbUser} ${dbName} < "${filePath}"`;
+  const command = `mysql -h ${escapeShellArg(dbHost)} -P ${escapeShellArg(dbPort)} -u ${escapeShellArg(dbUser)} ${escapeShellArg(dbName)} < ${escapeShellArg(resolvedPath)}`;
 
   return new Promise((resolve, reject) => {
     exec(command, { env }, (error, stdout, stderr) => {
       if (error) {
         return reject({ status: 500, message: `Restore failed: ${error.message}` });
       }
-      resolve({ success: true, restoredAt: new Date() });
+      resolve({ success: true, restoredAt: new Date().toISOString() });
     });
   });
 };
