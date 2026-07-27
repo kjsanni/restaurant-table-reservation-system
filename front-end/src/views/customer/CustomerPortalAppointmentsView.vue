@@ -119,22 +119,29 @@ const statusClass = (status: string) => {
   return "t-past";
 };
 
+const cancelId = ref<number | null>(null);
+const rebookId = ref<number | null>(null);
+const cancelError = ref("");
+const rebookError = ref("");
+
 const cancelAppointment = async (apt: SalonAppointment) => {
-  if (!confirm("Cancel this appointment?")) return;
-  cancellingId.value = apt.id;
+  cancelId.value = apt.id;
+  cancelError.value = "";
   try {
     await salonCustomerPortalAPI.cancelAppointment(apt.id);
     apt.status = "cancelled";
   } catch (err) {
+    cancelError.value =
+      err instanceof Error ? err.message : "Failed to cancel appointment";
     logger.error("Failed to cancel appointment", { error: err });
   } finally {
-    cancellingId.value = null;
+    cancelId.value = null;
   }
 };
 
 const rebookAppointment = async (apt: SalonAppointment) => {
-  if (!confirm("Rebook this appointment?")) return;
-  rebookingId.value = apt.id;
+  rebookId.value = apt.id;
+  rebookError.value = "";
   try {
     const res = await salonCustomerPortalAPI.rebookAppointment(apt.id);
     const newApt = res.data?.appointment;
@@ -143,9 +150,11 @@ const rebookAppointment = async (apt: SalonAppointment) => {
       apt.status = "cancelled";
     }
   } catch (err) {
+    rebookError.value =
+      err instanceof Error ? err.message : "Failed to rebook appointment";
     logger.error("Failed to rebook appointment", { error: err });
   } finally {
-    rebookingId.value = null;
+    rebookId.value = null;
   }
 };
 
@@ -173,6 +182,7 @@ onMounted(loadData);
             v-model="searchQuery"
             type="text"
             placeholder="Find a booking by service, stylist, station, or status"
+            aria-label="Search appointments by service, stylist, station, or status"
           />
         </div>
       </div>
@@ -207,19 +217,21 @@ onMounted(loadData);
             <button
               v-if="['pending', 'confirmed'].includes(apt.status)"
               class="btn-danger-sm"
-              :disabled="cancellingId === apt.id"
+              :disabled="cancelId === apt.id"
               @click="cancelAppointment(apt)"
             >
-              {{ cancellingId === apt.id ? "Cancelling…" : "Cancel" }}
+              {{ cancelId === apt.id ? "Cancelling…" : "Cancel" }}
             </button>
+            <p v-if="cancelError" class="error-text">{{ cancelError }}</p>
             <button
               v-if="['completed', 'cancelled'].includes(apt.status)"
               class="btn-primary-sm"
-              :disabled="rebookingId === apt.id"
+              :disabled="rebookId === apt.id"
               @click="rebookAppointment(apt)"
             >
-              {{ rebookingId === apt.id ? "Rebooking…" : "Rebook" }}
+              {{ rebookId === apt.id ? "Rebooking…" : "Rebook" }}
             </button>
+            <p v-if="rebookError" class="error-text">{{ rebookError }}</p>
           </div>
         </template>
       </div>
@@ -386,24 +398,24 @@ onMounted(loadData);
 }
 
 .t-upcoming {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--sky-100);
+  color: var(--sky-600);
 }
 
 .t-past {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--earth-100);
+  color: var(--earth-600);
 }
 
 .t-cancelled {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--rose-100);
+  color: var(--rose-600);
 }
 
 .btn-danger-sm {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fca5a5;
+  background: var(--rose-100);
+  color: var(--rose-600);
+  border: 1px solid var(--rose-300);
   border-radius: var(--radius-md);
   padding: 8px 12px;
   font-size: 12px;

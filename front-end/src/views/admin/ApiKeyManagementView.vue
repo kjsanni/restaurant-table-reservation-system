@@ -5,7 +5,7 @@
         <button @click="$router.back()" class="back-btn">← Back</button>
         <h1>API Keys</h1>
         <p class="subtitle">
-          Manage API keys for {{ tenant.name || "this tenant" }}
+          Manage API keys for {{ tenant.name || "this venue" }}
         </p>
       </div>
       <button @click="openCreateModal" class="btn-primary">
@@ -121,6 +121,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useToastStore } from "@/stores/toast";
+import logger from "@/utils/logger";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import apiKeyAPI from "@/services/apiKeyAPI";
 
@@ -151,7 +152,7 @@ const loadKeys = async () => {
     tenant.value = tenantRes.data.item || {};
     keys.value = keysRes.data.collection || keysRes.data.items || [];
   } catch (err) {
-    console.error("Failed to load API keys", err);
+    logger.error("Failed to load API keys", err);
   } finally {
     loading.value = false;
   }

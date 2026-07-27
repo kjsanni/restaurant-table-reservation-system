@@ -45,4 +45,14 @@ router
   )
   .all(httpMethodError);
 
+router
+  .route("/alerts/low-stock")
+  .get(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("view_reports")),
+    tryCatchHandler(inventoryItemController.getLowStockHandler)
+  )
+  .all(httpMethodError);
+
 module.exports = router;

@@ -3,15 +3,13 @@
     <div class="page-header">
       <div>
         <h1>Platform Usage</h1>
-        <p class="subtitle">
-          Monitor tenant resource usage against plan limits
-        </p>
+        <p class="subtitle">Monitor venue resource usage against plan limits</p>
       </div>
     </div>
 
     <div class="summary-cards">
       <div class="card">
-        <div class="card-label">Total Tenants</div>
+        <div class="card-label">Total Venues</div>
         <div class="card-value">{{ summary.totalTenants }}</div>
       </div>
       <div class="card">
@@ -31,7 +29,7 @@
     <div class="filters">
       <input
         v-model="searchQuery"
-        placeholder="Search tenants..."
+        placeholder="Search venues..."
         class="search-input"
       />
       <select v-model="filterPlan" class="filter-select">
@@ -59,7 +57,7 @@
       <table class="usage-table">
         <thead>
           <tr>
-            <th>Tenant</th>
+            <th>Venue</th>
             <th>Plan</th>
             <th>Status</th>
             <th>Tables Used</th>

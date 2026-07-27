@@ -4,7 +4,7 @@
       <div>
         <h1>Revenue Reports</h1>
         <p class="subtitle">
-          MRR trends, revenue by plan, tenant LTV, and cohort analysis
+          Venue revenue trends, revenue by plan, LTV, and cohort analysis
         </p>
       </div>
     </div>
@@ -14,7 +14,7 @@
         :class="['tab', { active: activeTab === 'mrr' }]"
         @click="activeTab = 'mrr'"
       >
-        MRR Trends
+        Revenue Trends
       </button>
       <button
         :class="['tab', { active: activeTab === 'plan' }]"
@@ -26,7 +26,7 @@
         :class="['tab', { active: activeTab === 'ltv' }]"
         @click="activeTab = 'ltv'"
       >
-        LTV by Tenant
+        LTV by Venue
       </button>
       <button
         :class="['tab', { active: activeTab === 'cohorts' }]"
@@ -49,7 +49,7 @@
     <div v-else-if="activeTab === 'mrr'" class="tab-panel">
       <div class="summary-cards">
         <div class="card">
-          <div class="card-label">Current MRR</div>
+          <div class="card-label">Current Revenue</div>
           <div class="card-value">{{ formatCurrency(mrrData.currentMrr) }}</div>
         </div>
         <div class="card">
@@ -79,8 +79,8 @@
           <tbody>
             <tr v-for="row in mrrData.rows" :key="row.month">
               <td>{{ row.month }}</td>
-              <td>{{ formatCurrency(row.mrr) }}</td>
-              <td>{{ row.newTenants }}</td>
+              <td>{{ formatCurrency(row.revenue) }}</td>
+              <td>{{ row.newVenues }}</td>
               <td>{{ row.cancelled }}</td>
               <td>
                 <span
@@ -104,9 +104,9 @@
           <thead>
             <tr>
               <th>Plan</th>
-              <th>Tenant Count</th>
+              <th>Venue Count</th>
               <th>MRR</th>
-              <th>% of Total MRR</th>
+              <th>% of Total Revenue</th>
             </tr>
           </thead>
           <tbody>
@@ -126,7 +126,7 @@
         <table class="revenue-table">
           <thead>
             <tr>
-              <th>Tenant</th>
+              <th>Venue</th>
               <th>Plan</th>
               <th>Months Active</th>
               <th>LTV</th>
@@ -155,16 +155,16 @@
             <tr>
               <th>Cohort</th>
               <th>Signups</th>
-              <th>Cohort MRR</th>
-              <th>Avg Revenue / Tenant</th>
+              <th>Cohort Revenue</th>
+              <th>Avg Revenue / Venue</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="row in cohortData.rows" :key="row.cohort">
               <td>{{ row.cohort }}</td>
               <td>{{ row.signups }}</td>
-              <td>{{ formatCurrency(row.mrr) }}</td>
-              <td>{{ formatCurrency(row.avgRevenuePerTenant) }}</td>
+              <td>{{ formatCurrency(row.cohortRevenue) }}</td>
+              <td>{{ formatCurrency(row.avgRevenuePerVenue) }}</td>
             </tr>
           </tbody>
         </table>

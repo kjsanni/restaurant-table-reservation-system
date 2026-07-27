@@ -19,7 +19,7 @@
       <div class="search-row">
         <input
           v-model="searchQuery"
-          placeholder="Search tenants..."
+          placeholder="Search venues..."
           class="search-input"
         />
       </div>

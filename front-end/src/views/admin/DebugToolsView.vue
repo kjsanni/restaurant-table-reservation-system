@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1>Debug Tools</h1>
-        <p class="subtitle">Tenant and platform diagnostic information</p>
+        <p class="subtitle">Venue and platform diagnostic information</p>
       </div>
     </div>
 
@@ -44,13 +44,13 @@
     </div>
 
     <div class="card">
-      <h3>Tenant Inspection</h3>
-      <div class="tenant-select">
+      <h3>Venue Inspection</h3>
+      <div class="venue-select">
         <input
           v-model="tenantId"
           type="number"
           class="filter-select"
-          placeholder="Enter tenant ID"
+          placeholder="Enter venue ID"
         />
         <button
           class="btn-primary"
@@ -63,8 +63,8 @@
       <div v-if="tenantLoading" class="loading-state-inline">
         <div class="spinner-sm"></div>
       </div>
-      <div v-else-if="tenantData" class="tenant-result">
-        <div class="tenant-header">
+      <div v-else-if="venueData" class="venue-result">
+        <div class="venue-header">
           <div>
             <h4>{{ tenantData.tenant.name }}</h4>
             <p class="text-muted">
@@ -237,7 +237,7 @@ onMounted(() => {
 .status-failed {
   color: var(--rose-600);
 }
-.tenant-select {
+.venue-select {
   display: flex;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
@@ -282,10 +282,10 @@ onMounted(() => {
     transform: rotate(360deg);
   }
 }
-.tenant-header {
+.venue-header {
   margin-bottom: var(--space-3);
 }
-.tenant-header h4 {
+.venue-header h4 {
   margin: 0;
   font-family: var(--font-sans);
   font-size: var(--text-lg);

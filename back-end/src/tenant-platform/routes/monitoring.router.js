@@ -25,4 +25,9 @@ router
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(monitoringController.getIntegrationLatencyHandler))
   .all(httpMethodError);
 
+router
+  .route("/health")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(monitoringController.getHealthHandler))
+  .all(httpMethodError);
+
 module.exports = router;

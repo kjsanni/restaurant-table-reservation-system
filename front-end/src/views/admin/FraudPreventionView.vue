@@ -6,7 +6,7 @@
         <p class="subtitle">
           Refund anomalies, discount abuse, voids, cash gaps, inventory
           shrinkage, staff behavior, table duration, gift card fraud, and
-          cross-tenant patterns
+          cross-venue patterns
         </p>
       </div>
       <button class="btn-primary" @click="load" :disabled="loading">
@@ -30,7 +30,7 @@
         <option value="cash_concentration">Cash Concentration</option>
         <option value="gift_card_fraud">Gift Card Fraud</option>
         <option value="cross_tenant_fraud_pattern">
-          Cross-Tenant Fraud Patterns
+          Cross-Venue Fraud Patterns
         </option>
       </select>
     </div>
@@ -139,7 +139,7 @@
                 <span v-else>—</span>
               </td>
               <td>
-                <span v-if="item.tenantId">Tenant #{{ item.tenantId }}</span>
+                <span v-if="item.tenantId">Venue #{{ item.tenantId }}</span>
                 <span v-else-if="item.tenantName">{{ item.tenantName }}</span>
                 <span v-else-if="item.customerName">{{
                   item.customerName

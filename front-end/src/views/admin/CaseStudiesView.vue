@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1>Case Studies</h1>
-        <p class="subtitle">Tenant success stories and case studies</p>
+        <p class="subtitle">Venue success stories and case studies</p>
       </div>
       <button class="btn-primary" @click="openCreate">Add Case Study</button>
     </div>
@@ -20,7 +20,7 @@
           <thead>
             <tr>
               <th>Title</th>
-              <th>Tenant</th>
+              <th>Venue</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>

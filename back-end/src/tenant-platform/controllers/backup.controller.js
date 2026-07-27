@@ -150,6 +150,30 @@ const downloadBackupHandler = async (req, res) => {
   res.download(record.storagePath, record.fileName || path.basename(record.storagePath));
 };
 
+const scheduleBackupHandler = async (req, res) => {
+  const record = await backupRecordDAO.findById(req.params.id);
+  if (!record) {
+    return res.status(404).json({ success: false, message: "Backup record not found" });
+  }
+
+  const { frequency, nextRunAt } = req.body;
+  const allowed = ["frequency", "nextRunAt", "lastRunAt"];
+  const updates = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      updates[key] = req.body[key];
+    }
+  }
+
+  const updated = await backupRecordDAO.updateScheduling(record.id, updates);
+  res.status(200).json({ success: true, item: updated });
+};
+
+const getScheduledBackupsHandler = async (req, res) => {
+  const records = await backupRecordDAO.findScheduled();
+  res.status(200).json({ success: true, collection: records });
+};
+
 module.exports = {
   listBackupRecordsHandler,
   getBackupRecordHandler,
@@ -159,4 +183,6 @@ module.exports = {
   executeBackupHandler,
   restoreBackupHandler,
   downloadBackupHandler,
+  scheduleBackupHandler,
+  getScheduledBackupsHandler,
 };

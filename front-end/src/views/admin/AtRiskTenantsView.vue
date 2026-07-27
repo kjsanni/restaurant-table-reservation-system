@@ -46,7 +46,7 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Tenant</th>
+                <th>Venue</th>
                 <th>Amount</th>
                 <th>Reason</th>
                 <th>Status</th>

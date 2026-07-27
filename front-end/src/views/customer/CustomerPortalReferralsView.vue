@@ -239,8 +239,8 @@ onMounted(loadReferrals);
   margin-top: 6px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--sky-100);
+  color: var(--sky-600);
   font-size: 11px;
   font-weight: 700;
 }
@@ -262,16 +262,16 @@ onMounted(loadReferrals);
   margin-top: 6px;
 }
 .t-pending {
-  background: #fff7ed;
-  color: #c2410c;
+  background: var(--amber-100);
+  color: var(--amber-600);
 }
 .t-completed {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--earth-100);
+  color: var(--earth-600);
 }
 .t-cancelled {
-  background: #fef2f2;
-  color: #b91c1c;
+  background: var(--rose-100);
+  color: var(--rose-600);
 }
 .t-expired {
   background: var(--neutral-100);

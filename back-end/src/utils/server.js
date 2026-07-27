@@ -27,7 +27,7 @@ const whatsappRouter = require("../routes/whatsapp.router");
 const deliveryRouter = require("../routes/delivery.router");
 const shaqexpressRouter = require("../routes/shaqexpress.router");
 const legalRouter = require("../routes/legal.router");
-const { setCsrfCookie, generateCsrfToken, CSRF_HEADER_NAME, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
+const { setCsrfCookie, generateCsrfToken, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
 const { requestLogger } = require("../middleware/requestLogger");
 const { logAction } = require("../middleware/auditLog");
@@ -53,6 +53,7 @@ const adminMiddleware = (req, res, next) => {
 const { authLimiter, generalLimiter, bulkOperationLimiter, adminActionLimiter, syncLimiter, webhookLimiter } = require("../middleware/rateLimit");
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
+const { startBackupWorker } = require("../queues/backup.queue");
 
 const TENANT_MODE = process.env.TENANT_MODE === "enabled";
 let resolveTenant = null;
@@ -102,6 +103,7 @@ let dsarRequestRoutes = null;
   let salonServiceRoutes = null;
   let salonServicePackageRoutes = null;
   let salonGiftCardRoutes = null;
+  let alertRuleRoutes = null;
   let salonReferralRoutes = null;
   let salonLocationRoutes = null;
   let salonInventoryRoutes = null;
@@ -118,6 +120,12 @@ let dsarRequestRoutes = null;
   let dataRetentionPolicyRoutes = null;
   let salonCustomerPortalRoutes = null;
   let salonDashboardRoutes = null;
+  let penetrationTestReportRoutes = null;
+  let insuranceDocumentRoutes = null;
+  let tenantMigrationRoutes = null;
+  let encryptionKeyRoutes = null;
+  let autoScalingTriggerRoutes = null;
+  let complianceEvidenceRoutes = null;
 
 if (TENANT_MODE) {
   ({ resolveTenant } = require("../tenant-platform/middleware/resolveTenant"));
@@ -185,6 +193,7 @@ if (TENANT_MODE) {
   dataRetentionPolicyRoutes = require("../tenant-platform/routes/dataRetentionPolicy.router");
   subProcessorRoutes = require("../tenant-platform/routes/subProcessor.router");
   platformReportRoutes = require("../tenant-platform/routes/platformReport.router");
+  alertRuleRoutes = require("../tenant-platform/routes/alertRule.router");
   reconciliationRoutes = require("../tenant-platform/routes/reconciliation.router");
   paystackConfigRoutes = require("../tenant-platform/routes/paystackConfig.router");
   shaqExpressConversionRoutes = require("../tenant-platform/routes/shaqExpressConversion.router");
@@ -193,6 +202,12 @@ if (TENANT_MODE) {
   caseStudyRoutes = require("../tenant-platform/routes/caseStudy.router");
   platformReferralRoutes = require("../tenant-platform/routes/platformReferral.router");
   crossTenantSearchRoutes = require("../tenant-platform/routes/crossTenantSearch.router");
+  penetrationTestReportRoutes = require("../tenant-platform/routes/penetrationTestReport.router");
+  insuranceDocumentRoutes = require("../tenant-platform/routes/insuranceDocument.router");
+  tenantMigrationRoutes = require("../tenant-platform/routes/tenantMigration.router");
+  encryptionKeyRoutes = require("../tenant-platform/routes/encryptionKey.router");
+  autoScalingTriggerRoutes = require("../tenant-platform/routes/autoScalingTrigger.router");
+  complianceEvidenceRoutes = require("../tenant-platform/routes/complianceEvidence.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -259,14 +274,20 @@ const createServer = () => {
     const { runSalonCron } = require("../verticals/salon/utils/salonCron");
     runSalonCron().catch((err) => console.error("[SalonCron] startup error:", err.message));
     setInterval(() => runSalonCron().catch((err) => console.error("[SalonCron] error:", err.message)), 60 * 60 * 1000);
+
+    const { runBackupCron } = require("../tenant-platform/utils/backupCron");
+    runBackupCron();
+    setInterval(runBackupCron, 60 * 60 * 1000);
   }
 
   const workers = [];
   try {
     const nw = startNotificationWorker();
     const rw = startReportWorker();
+    const bw = startBackupWorker();
     if (nw) workers.push(nw);
     if (rw) workers.push(rw);
+    if (bw) workers.push(bw);
   } catch (err) {
     console.warn("BullMQ workers not started:", err.message);
   }
@@ -317,16 +338,16 @@ const createServer = () => {
   }
 
   app.use("/api/v1", generalLimiter, require("../routes"));
-  app.use("/api/v1/tables", logAction, validateCsrfToken, TENANT_MODE ? requireFeature("table_management") : null, tableRouter);
-  app.use("/api/v1/reservations", logAction, validateCsrfToken, TENANT_MODE ? requiresServiceMode("dine_in") : null, reservationRouter);
+  app.use("/api/v1/tables", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("table_management")] : []), tableRouter);
+  app.use("/api/v1/reservations", logAction, validateCsrfToken, ...(TENANT_MODE ? [requiresServiceMode("dine_in")] : []), reservationRouter);
   app.use("/api/v1/auth", validateCsrfToken, authRouter);
-  app.use("/api/v1/schedule", logAction, validateCsrfToken, TENANT_MODE ? requireFeature("staff_scheduling") : null, scheduleRouter);
-  app.use("/api/v1/shifts", logAction, validateCsrfToken, TENANT_MODE ? requireFeature("staff_scheduling") : null, shiftRouter);
-  app.use("/api/v1/time-offs", logAction, validateCsrfToken, TENANT_MODE ? requireFeature("staff_scheduling") : null, timeOffRouter);
-  app.use("/api/v1/floor-plans", logAction, validateCsrfToken, TENANT_MODE ? requireFeature("table_management") : null, floorPlanRouter);
+  app.use("/api/v1/schedule", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), scheduleRouter);
+  app.use("/api/v1/shifts", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), shiftRouter);
+  app.use("/api/v1/time-offs", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), timeOffRouter);
+  app.use("/api/v1/floor-plans", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("table_management")] : []), floorPlanRouter);
   app.use("/api/v1/audit-logs", auditLogRouter);
   app.use("/api/v1/rbac", logAction, validateCsrfToken, rbacRouter);
-  app.use("/api/v1/waitlist", logAction, validateCsrfToken, bulkOperationLimiter, TENANT_MODE ? [requireFeature("waitlist"), requiresServiceMode("dine_in")] : null, waitlistRouter);
+  app.use("/api/v1/waitlist", logAction, validateCsrfToken, bulkOperationLimiter, ...(TENANT_MODE ? [requireFeature("waitlist"), requiresServiceMode("dine_in")] : []), waitlistRouter);
   app.use("/api/v1/payments", logAction, validateCsrfToken, paymentRouter);
   app.use("/api/v1/reports", logAction, validateCsrfToken, reportRouter);
   app.use("/api/v1/menu", logAction, validateCsrfToken, require("../routes/menu.router"));
@@ -386,10 +407,10 @@ const createServer = () => {
     app.use("/api/v1/admin/vertical-analytics", logAction, validateCsrfToken, adminMiddleware, verticalAnalyticsRoutes);
     app.use("/api/v1/admin/vertical-templates", logAction, validateCsrfToken, adminMiddleware, verticalTemplateRoutes);
     app.use("/api/v1/admin/data-retention", logAction, validateCsrfToken, adminMiddleware, dataRetentionRoutes);
-    app.use("/api/v1/admin/incidents", logAction, validateCsrfToken, adminMiddleware, incidentRoutes);
     app.use("/api/v1/admin/suspicious-activity", logAction, validateCsrfToken, adminMiddleware, suspiciousActivityRoutes);
     app.use("/api/v1/admin/sub-processors", logAction, validateCsrfToken, adminMiddleware, subProcessorRoutes);
     app.use("/api/v1/admin/platform-reports", logAction, validateCsrfToken, adminMiddleware, platformReportRoutes);
+    app.use("/api/v1/admin/alert-rules", logAction, validateCsrfToken, adminMiddleware, alertRuleRoutes);
     app.use("/api/v1/admin/reconciliation", logAction, validateCsrfToken, adminMiddleware, reconciliationRoutes);
     app.use("/api/v1/admin/paystack", logAction, validateCsrfToken, adminMiddleware, paystackConfigRoutes);
     app.use("/api/v1/admin/shaqexpress", logAction, validateCsrfToken, adminMiddleware, shaqExpressConversionRoutes);
@@ -398,6 +419,13 @@ const createServer = () => {
     app.use("/api/v1/admin/case-studies", logAction, validateCsrfToken, adminMiddleware, caseStudyRoutes);
     app.use("/api/v1/admin/referrals", logAction, validateCsrfToken, adminMiddleware, platformReferralRoutes);
     app.use("/api/v1/admin/search", logAction, validateCsrfToken, adminMiddleware, crossTenantSearchRoutes);
+    app.use("/api/v1/admin/penetration-tests", logAction, validateCsrfToken, adminMiddleware, penetrationTestReportRoutes);
+    app.use("/api/v1/admin/insurance-documents", logAction, validateCsrfToken, adminMiddleware, insuranceDocumentRoutes);
+    app.use("/api/v1/admin/encryption-keys", logAction, validateCsrfToken, adminMiddleware, encryptionKeyRoutes);
+    app.use("/api/v1/admin/auto-scaling", logAction, validateCsrfToken, adminMiddleware, autoScalingTriggerRoutes);
+    app.use("/api/v1/admin/compliance", logAction, validateCsrfToken, adminMiddleware, complianceEvidenceRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, tenantAdminRoutes);
+    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, tenantMigrationRoutes);
     app.use("/api/v1/admin/debug", logAction, validateCsrfToken, adminMiddleware, debugRoutes);
     app.use("/api/v1/admin/migration", logAction, validateCsrfToken, adminMiddleware, migrationRoutes);
     app.use("/api/v1/admin/postmortems", logAction, validateCsrfToken, adminMiddleware, postmortemRoutes);
@@ -426,7 +454,7 @@ const createServer = () => {
   app.use("/api/v1/email-templates", logAction, validateCsrfToken, emailTemplateRouter);
   app.use("/api/v1/webhooks", logAction, webhookLimiter, webhookRouter);
   app.use("/api/v1/whatsapp", logAction, generalLimiter, whatsappRouter);
-  app.use("/api/v1/deliveries", logAction, validateCsrfToken, TENANT_MODE ? requiresServiceMode("delivery") : null, deliveryRouter);
+  app.use("/api/v1/deliveries", logAction, validateCsrfToken, ...(TENANT_MODE ? [requiresServiceMode("delivery")] : []), deliveryRouter);
   app.use("/api/v1/webhooks/shaqexpress", logAction, webhookLimiter, shaqexpressRouter);
   app.use("/api/v1/sync", logAction, syncLimiter, require("../routes/sync.router"));
   app.use("/api/v1/legal", legalRouter);

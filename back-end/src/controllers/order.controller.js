@@ -1,6 +1,5 @@
 const orderService = require("../services/order.service");
 const orderDAO = require("../DAOs/order.dao");
-const { initializeCharge, verifyPayment, buildSplitConfig } = require("../tenant-platform/services/paystack.service");
 
 const createOrderHandler = async (req, res) => {
   try {

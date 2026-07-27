@@ -13,7 +13,7 @@
       <div class="card">
         <h3>Start Impersonation</h3>
         <div class="form-group">
-          <label>Tenant User ID</label>
+          <label>Venue User ID</label>
           <input
             v-model="targetUserId"
             type="number"

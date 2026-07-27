@@ -4,7 +4,7 @@
       <div>
         <h1>Subscription Plans</h1>
         <p class="subtitle">
-          Define pricing, limits, and features for tenant plans
+          Define pricing, limits, and features for venue plans
         </p>
       </div>
       <button @click="openCreateModal" class="btn-primary">+ New Plan</button>

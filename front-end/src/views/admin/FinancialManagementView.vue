@@ -17,7 +17,7 @@
         </div>
         <div v-else-if="subscriptionHealth" class="health-grid">
           <div class="health-item">
-            <span>Total Tenants</span>
+            <span>Total Venues</span>
             <b>{{ subscriptionHealth.summary.total }}</b>
           </div>
           <div class="health-item">
@@ -57,7 +57,7 @@
           >
             <b>Large refund ({{ item.ratio }}x)</b>
             <span
-              >Tenant #{{ item.tenantId }} · GHS
+              >Venue #{{ item.tenantId }} · GHS
               {{ item.amount.toFixed(2) }}</span
             >
           </div>
@@ -92,7 +92,7 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Tenant</th>
+            <th>Venue</th>
             <th>Amount</th>
             <th>Status</th>
             <th>Created</th>

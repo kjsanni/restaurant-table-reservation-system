@@ -73,6 +73,17 @@ const user = computed(() => authStore.user);
 const isPlatformEntry = computed(() => authStore.entryPoint === "platform");
 const isTenantEntry = computed(() => authStore.entryPoint === "tenant");
 
+const topbarTitle = computed(() => {
+  if (route.path.startsWith("/admin")) return "Platform Administration";
+  if (route.path.startsWith("/portal"))
+    return authStore.currentTenant?.name
+      ? `${authStore.currentTenant.name} Portal`
+      : "Customer Portal";
+  if (isTenantEntry.value && authStore.currentTenant?.name)
+    return authStore.currentTenant.name;
+  return "Restaurant Reservations";
+});
+
 const currentYear = new Date().getFullYear();
 
 const checkWindowWidth = () => {
@@ -323,9 +334,13 @@ onUnmounted(() => {
           <aside
             v-if="
               route.meta.standalone &&
-              route.name !== 'login' &&
-              route.name !== 'register' &&
-              route.name !== 'home' &&
+              ![
+                'super-admin-login',
+                'login',
+                'tenant-login',
+                'register',
+                'home',
+              ].includes(route.name) &&
               isAuthenticated
             "
             class="standalone-sidebar"
@@ -452,7 +467,7 @@ onUnmounted(() => {
               </VaButton>
             </div>
             <div class="topbar-center">
-              <span class="topbar-title">Restaurant Reservations</span>
+              <span class="topbar-title">{{ topbarTitle }}</span>
             </div>
             <div class="topbar-right">
               <template v-if="isAuthenticated">

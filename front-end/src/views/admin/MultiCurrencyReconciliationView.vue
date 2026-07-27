@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1>Multi-Currency Reconciliation</h1>
-        <p class="subtitle">Payment totals by currency and tenant breakdown</p>
+        <p class="subtitle">Payment totals by currency and venue breakdown</p>
       </div>
       <div class="filters">
         <input v-model="from" type="date" class="field-input" />
@@ -43,18 +43,18 @@
     </div>
 
     <div class="card">
-      <h2>Tenant Currency Breakdown</h2>
+      <h2>Venue Currency Breakdown</h2>
       <div v-if="loading" class="loading-state-inline">
         <div class="spinner-sm"></div>
       </div>
       <div v-else-if="tenantRows.length === 0" class="empty-state">
-        No tenant data
+        No venue data
       </div>
       <div v-else class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Tenant</th>
+              <th>Venue</th>
               <th>Currency</th>
               <th>Plan</th>
               <th>Payments</th>

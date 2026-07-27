@@ -16,6 +16,9 @@ class InventoryAPI {
   deleteItem(id) {
     return API.delete(`/salon/inventory/${id}`);
   }
+  getLowStock() {
+    return API.get("/salon/inventory/alerts/low-stock");
+  }
 }
 
 export default new InventoryAPI();

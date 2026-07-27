@@ -5,7 +5,7 @@
         <button @click="$router.back()" class="back-btn">← Back</button>
         <h1>Grace Period Settings</h1>
         <p class="subtitle">
-          Configure payment grace period for {{ tenant.name || "this tenant" }}
+          Configure payment grace period for {{ tenant.name || "this venue" }}
         </p>
       </div>
     </div>
@@ -14,7 +14,7 @@
       <div class="card">
         <h2>Current Grace Period</h2>
         <div class="info-row">
-          <span class="label">Tenant Override</span>
+          <span class="label">Venue Override</span>
           <span class="value"
             >{{ grace.tenantDays !== null ? grace.tenantDays : "—" }} days</span
           >
@@ -35,10 +35,10 @@
       </div>
 
       <div class="card">
-        <h2>Override Per Tenant</h2>
+        <h2>Override Per Venue</h2>
         <p class="section-hint">
-          Set a custom grace period (in days) for this tenant. Leave blank to
-          use the plan or global default.
+          Set a custom grace period (in days) for this venue. Leave blank to use
+          the plan or global default.
         </p>
         <div class="field">
           <label>Grace Period (days)</label>
@@ -65,6 +65,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useToastStore } from "@/stores/toast";
+import logger from "@/utils/logger";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import gracePeriodAPI from "@/services/gracePeriodAPI";
 
@@ -91,7 +92,7 @@ const loadData = async () => {
     grace.value = graceRes.data || grace.value;
     form.value.days = grace.value.tenantDays;
   } catch (err) {
-    console.error("Failed to load grace period", err);
+    logger.error("Failed to load grace period", err);
   }
 };
 

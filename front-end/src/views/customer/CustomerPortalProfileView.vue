@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
+import { useCapabilities } from "@/composables/useCapabilities";
 import customerPortalAPI from "@/services/customerPortalAPI";
 import logger from "@/utils/logger";
 
 const authStore = useAuthStore();
+const { businessVertical } = useCapabilities();
+const isSalon = computed(() => businessVertical.value === "salon");
+
 const profile = ref({
   firstName: "",
   lastName: "",
@@ -13,8 +17,36 @@ const profile = ref({
 });
 const saving = ref(false);
 const saved = ref(false);
+const loading = ref(true);
+const errorMsg = ref("");
+const fieldErrors = ref<Record<string, string>>({});
+
+let savedTimer: ReturnType<typeof setTimeout> | null = null;
+
+const clearSavedTimer = () => {
+  if (savedTimer) {
+    clearTimeout(savedTimer);
+    savedTimer = null;
+  }
+};
+
+const validate = () => {
+  const errors: Record<string, string> = {};
+  if (!profile.value.firstName.trim())
+    errors.firstName = "First name is required";
+  if (!profile.value.lastName.trim()) errors.lastName = "Last name is required";
+  if (!profile.value.email.trim()) {
+    errors.email = "Email is required";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.value.email)) {
+    errors.email = "Enter a valid email";
+  }
+  fieldErrors.value = errors;
+  return Object.keys(errors).length === 0;
+};
 
 const loadProfile = async () => {
+  loading.value = true;
+  errorMsg.value = "";
   try {
     const res = await customerPortalAPI.getProfile();
     if (res.data.success && res.data.customer) {
@@ -28,6 +60,7 @@ const loadProfile = async () => {
       };
     }
   } catch (err) {
+    errorMsg.value = "Failed to load profile. Please try again.";
     logger.error("Failed to load profile", { error: err });
     profile.value = {
       firstName: authStore.user?.username || "",
@@ -35,16 +68,20 @@ const loadProfile = async () => {
       phone: "",
       email: authStore.user?.email || "",
     };
+  } finally {
+    loading.value = false;
   }
 };
 
 const saveProfile = async () => {
+  if (!validate()) return;
   saving.value = true;
   saved.value = false;
+  clearSavedTimer();
   try {
     await customerPortalAPI.updateProfile(profile.value);
     saved.value = true;
-    setTimeout(() => (saved.value = false), 2000);
+    savedTimer = setTimeout(() => (saved.value = false), 2000);
   } catch (err) {
     logger.error("Failed to save profile", { error: err });
   } finally {
@@ -53,6 +90,7 @@ const saveProfile = async () => {
 };
 
 onMounted(loadProfile);
+onUnmounted(clearSavedTimer);
 </script>
 
 <template>
@@ -65,27 +103,68 @@ onMounted(loadProfile);
     </div>
 
     <div class="content-wrapper">
-      <div class="settings-stack">
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading profile...</p>
+      </div>
+      <div v-else class="settings-stack">
+        <div v-if="errorMsg" class="error-banner">{{ errorMsg }}</div>
         <div class="settings-card">
           <h3>Profile</h3>
           <div class="form-row">
             <div class="field">
-              <label>First Name</label>
-              <input v-model="profile.firstName" class="field-input" />
+              <label for="profile-firstName">First Name</label>
+              <input
+                id="profile-firstName"
+                v-model="profile.firstName"
+                class="field-input"
+                :class="{ 'input-error': fieldErrors.firstName }"
+                :aria-invalid="!!fieldErrors.firstName"
+                aria-required="true"
+              />
+              <span v-if="fieldErrors.firstName" class="field-error">{{
+                fieldErrors.firstName
+              }}</span>
             </div>
             <div class="field">
-              <label>Last Name</label>
-              <input v-model="profile.lastName" class="field-input" />
+              <label for="profile-lastName">Last Name</label>
+              <input
+                id="profile-lastName"
+                v-model="profile.lastName"
+                class="field-input"
+                :class="{ 'input-error': fieldErrors.lastName }"
+                :aria-invalid="!!fieldErrors.lastName"
+                aria-required="true"
+              />
+              <span v-if="fieldErrors.lastName" class="field-error">{{
+                fieldErrors.lastName
+              }}</span>
             </div>
           </div>
           <div class="form-row">
             <div class="field">
-              <label>Email</label>
-              <input v-model="profile.email" class="field-input" type="email" />
+              <label for="profile-email">Email</label>
+              <input
+                id="profile-email"
+                v-model="profile.email"
+                class="field-input"
+                type="email"
+                :class="{ 'input-error': fieldErrors.email }"
+                :aria-invalid="!!fieldErrors.email"
+                aria-required="true"
+              />
+              <span v-if="fieldErrors.email" class="field-error">{{
+                fieldErrors.email
+              }}</span>
             </div>
             <div class="field">
-              <label>Phone</label>
-              <input v-model="profile.phone" class="field-input" />
+              <label for="profile-phone">Phone</label>
+              <input
+                id="profile-phone"
+                v-model="profile.phone"
+                class="field-input"
+                type="tel"
+              />
             </div>
           </div>
           <div class="form-actions">
@@ -105,6 +184,40 @@ onMounted(loadProfile);
   background: var(--background-warm);
   display: flex;
   flex-direction: column;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 12px;
+  color: var(--neutral-600);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--neutral-200);
+  border-top-color: var(--brand-600);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-banner {
+  background: var(--rose-50);
+  color: var(--rose-700);
+  border: 1px solid var(--rose-200);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 14px;
 }
 
 .content-wrapper {
@@ -175,48 +288,66 @@ onMounted(loadProfile);
 }
 
 .field-input {
-  padding: 12px 14px;
-  border: 1px solid var(--neutral-300);
+  padding: 10px 12px;
   border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-  font-size: 14px;
+  border: 1px solid var(--neutral-300);
+  background: var(--white);
   color: var(--neutral-900);
-  background: var(--neutral-50);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-size: 14px;
+  outline: none;
 }
 
 .field-input:focus {
-  outline: none;
-  border-color: var(--accent-500);
+  border-color: var(--brand-500);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
 }
 
+.input-error {
+  border-color: var(--rose-500);
+}
+
+.field-error {
+  font-size: 12px;
+  color: var(--rose-600);
+}
+
 .form-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .btn-primary {
-  padding: 11px 18px;
+  padding: 10px 18px;
   border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
   border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+  background: var(--brand-600);
   color: var(--white);
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(74, 53, 43, 0.22);
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: 0.7;
   cursor: not-allowed;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--neutral-200);
+  background: var(--white);
+}
+
+.topbar-left h1 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  margin: 0;
+}
+
+.topbar-left p {
+  margin: 4px 0 0;
+  color: var(--neutral-600);
+  font-size: 14px;
 }
 </style>

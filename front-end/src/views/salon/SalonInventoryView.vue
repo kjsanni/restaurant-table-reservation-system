@@ -3,9 +3,11 @@ import { ref, onMounted } from "vue";
 import inventoryItemAPI from "@/services/inventoryItemAPI";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
+import { useToastStore } from "@/stores/toast";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 
 const { t } = useI18n();
+const toastStore = useToastStore();
 
 interface InventoryItem {
   id: number;
@@ -24,6 +26,7 @@ interface InventoryItem {
 }
 
 const items = ref<InventoryItem[]>([]);
+const alerts = ref<InventoryItem[]>([]);
 const loading = ref(true);
 const showForm = ref(false);
 const editingId = ref<number | null>(null);
@@ -51,6 +54,15 @@ const loadItems = async () => {
     logger.error("Failed to load inventory items", { error: err });
   } finally {
     loading.value = false;
+  }
+};
+
+const loadAlerts = async () => {
+  try {
+    const res = await inventoryItemAPI.getLowStock();
+    alerts.value = res.data.data || [];
+  } catch (err) {
+    logger.error("Failed to load low stock alerts", { error: err });
   }
 };
 
@@ -110,12 +122,13 @@ const editItem = (item: InventoryItem) => {
 };
 
 const deleteItem = async (id: number) => {
-  if (!confirm(t("salon.confirmDelete", "Delete this item?"))) return;
   try {
     await inventoryItemAPI.deleteItem(id);
     items.value = items.value.filter((it) => it.id !== id);
+    toastStore.add(t("salon.itemDeleted", "Item deleted"), "success");
   } catch (err) {
     logger.error("Failed to delete inventory item", { error: err });
+    toastStore.add(t("salon.deleteFailed", "Failed to delete item"), "error");
   }
 };
 
@@ -123,7 +136,10 @@ const formatCurrency = (value: number, currency = "GHS") => {
   return `${currency} ${Number(value).toFixed(2)}`;
 };
 
-onMounted(loadItems);
+onMounted(() => {
+  loadItems();
+  loadAlerts();
+});
 </script>
 
 <template>
@@ -152,6 +168,23 @@ onMounted(loadItems);
       </div>
 
       <div v-else class="stack">
+        <div v-if="alerts.length" class="settings-card alert-card">
+          <h3>{{ t("salon.lowStockAlerts", "Low Stock Alerts") }}</h3>
+          <div class="alert-list">
+            <div v-for="item in alerts" :key="item.id" class="alert-item">
+              <span class="alert-icon">⚠️</span>
+              <div>
+                <strong>{{ item.name }}</strong>
+                <span
+                  >{{ t("salon.quantityLabel", "Qty") }}: {{ item.quantity }} /
+                  {{ t("salon.reorderLevel", "Reorder") }}:
+                  {{ item.reorderLevel }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="settings-card">
           <h3>
             {{
@@ -282,7 +315,15 @@ onMounted(loadItems);
                 </td>
                 <td>{{ item.sku || "—" }}</td>
                 <td>{{ item.category || "—" }}</td>
-                <td>{{ item.quantity }}</td>
+                <td>
+                  <span
+                    :class="{
+                      'text-danger': alerts.some((a) => a.id === item.id),
+                    }"
+                  >
+                    {{ item.quantity }}
+                  </span>
+                </td>
                 <td>
                   {{
                     formatCurrency(Number(item.costPrice || 0), item.currency)
@@ -530,5 +571,40 @@ textarea.field-input {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+}
+.alert-card {
+  border-left: 4px solid #f59e0b;
+}
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: #fffbeb;
+  border-radius: var(--radius-md);
+}
+.alert-icon {
+  font-size: 18px;
+}
+.alert-item div {
+  display: flex;
+  flex-direction: column;
+}
+.alert-item strong {
+  font-size: 14px;
+  color: var(--neutral-900);
+}
+.alert-item span {
+  font-size: 12px;
+  color: var(--neutral-600);
+}
+.text-danger {
+  color: #dc2626;
+  font-weight: 700;
 }
 </style>

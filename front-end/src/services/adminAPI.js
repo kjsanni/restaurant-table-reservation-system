@@ -263,6 +263,36 @@ const bulkDeleteTenants = (tenantIds) => {
   return API.post("/admin/bulk/delete", { tenantIds });
 };
 
+const listEncryptionKeys = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.type) query.set("type", params.type);
+  if (params.status) query.set("status", params.status);
+  if (params.limit) query.set("limit", params.limit);
+  return API.get(
+    `/admin/encryption-keys${query.toString() ? `?${query}` : ""}`
+  );
+};
+
+const getEncryptionKey = (id) => {
+  return API.get(`/admin/encryption-keys/${id}`);
+};
+
+const createEncryptionKey = (data) => {
+  return API.post("/admin/encryption-keys", data);
+};
+
+const rotateEncryptionKey = (id, data) => {
+  return API.post(`/admin/encryption-keys/${id}/rotate`, data);
+};
+
+const retireEncryptionKey = (id) => {
+  return API.post(`/admin/encryption-keys/${id}/retire`);
+};
+
+const deleteEncryptionKey = (id) => {
+  return API.delete(`/admin/encryption-keys/${id}`);
+};
+
 const listFeatureFlags = () => {
   return API.get("/admin/feature-flags");
 };
@@ -570,6 +600,18 @@ const deleteIncident = (id) => {
   return API.delete(`/admin/incidents/${id}`);
 };
 
+const lockTenant = (tenantId) => {
+  return API.post(`/admin/incidents/${tenantId}/lock-tenant`);
+};
+
+const resetTenantTokens = (tenantId) => {
+  return API.post(`/admin/incidents/${tenantId}/reset-tokens`);
+};
+
+const forceLogoutTenant = (tenantId) => {
+  return API.post(`/admin/incidents/${tenantId}/force-logout`);
+};
+
 const getSuspiciousActivity = () => {
   return API.get("/admin/suspicious-activity");
 };
@@ -634,6 +676,146 @@ const downloadBackup = (id) => {
   return API.get(`/admin/backups/${id}/download`, { responseType: "blob" });
 };
 
+const scheduleBackup = (id, data) => {
+  return API.patch(`/admin/backups/${id}/schedule`, data);
+};
+
+const getScheduledBackups = () => {
+  return API.get("/admin/backups/scheduled");
+};
+
+const listAlertRules = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.isActive !== undefined) query.set("isActive", params.isActive);
+  if (params.metric) query.set("metric", params.metric);
+  if (params.limit) query.set("limit", params.limit);
+  return API.get(`/admin/alert-rules${query.toString() ? `?${query}` : ""}`);
+};
+
+const getAlertRule = (id) => {
+  return API.get(`/admin/alert-rules/${id}`);
+};
+
+const createAlertRule = (data) => {
+  return API.post("/admin/alert-rules", data);
+};
+
+const updateAlertRule = (id, data) => {
+  return API.patch(`/admin/alert-rules/${id}`, data);
+};
+
+const deleteAlertRule = (id) => {
+  return API.delete(`/admin/alert-rules/${id}`);
+};
+
+const listPenetrationTestReports = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.status) query.set("status", params.status);
+  if (params.limit) query.set("limit", params.limit);
+  return API.get(
+    `/admin/penetration-tests${query.toString() ? `?${query}` : ""}`
+  );
+};
+
+const getPenetrationTestReport = (id) => {
+  return API.get(`/admin/penetration-tests/${id}`);
+};
+
+const createPenetrationTestReport = (data) => {
+  return API.post("/admin/penetration-tests", data);
+};
+
+const updatePenetrationTestReport = (id, data) => {
+  return API.patch(`/admin/penetration-tests/${id}`, data);
+};
+
+const deletePenetrationTestReport = (id) => {
+  return API.delete(`/admin/penetration-tests/${id}`);
+};
+
+const listInsuranceDocuments = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.status) query.set("status", params.status);
+  if (params.limit) query.set("limit", params.limit);
+  return API.get(
+    `/admin/insurance-documents${query.toString() ? `?${query}` : ""}`
+  );
+};
+
+const getInsuranceDocument = (id) => {
+  return API.get(`/admin/insurance-documents/${id}`);
+};
+
+const createInsuranceDocument = (data) => {
+  return API.post("/admin/insurance-documents", data);
+};
+
+const updateInsuranceDocument = (id, data) => {
+  return API.patch(`/admin/insurance-documents/${id}`, data);
+};
+
+const deleteInsuranceDocument = (id) => {
+  return API.delete(`/admin/insurance-documents/${id}`);
+};
+
+const exportTenantMigration = (tenantId) => {
+  return API.get(`/admin/tenants/${tenantId}/migration/export`);
+};
+
+const importTenantMigration = (payload) => {
+  return API.post("/admin/tenants/migration/import", payload);
+};
+
+const listAutoScalingTriggers = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.metric) query.set("metric", params.metric);
+  if (params.isActive !== undefined)
+    query.set("isActive", String(params.isActive));
+  if (params.limit) query.set("limit", params.limit);
+  return API.get(`/admin/auto-scaling${query.toString() ? `?${query}` : ""}`);
+};
+
+const getAutoScalingTrigger = (id) => {
+  return API.get(`/admin/auto-scaling/${id}`);
+};
+
+const createAutoScalingTrigger = (data) => {
+  return API.post("/admin/auto-scaling", data);
+};
+
+const updateAutoScalingTrigger = (id, data) => {
+  return API.patch(`/admin/auto-scaling/${id}`, data);
+};
+
+const deleteAutoScalingTrigger = (id) => {
+  return API.delete(`/admin/auto-scaling/${id}`);
+};
+
+const listComplianceEvidence = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.framework) query.set("framework", params.framework);
+  if (params.status) query.set("status", params.status);
+  if (params.controlId) query.set("controlId", params.controlId);
+  if (params.limit) query.set("limit", params.limit);
+  return API.get(`/admin/compliance${query.toString() ? `?${query}` : ""}`);
+};
+
+const getComplianceEvidence = (id) => {
+  return API.get(`/admin/compliance/${id}`);
+};
+
+const createComplianceEvidence = (data) => {
+  return API.post("/admin/compliance", data);
+};
+
+const updateComplianceEvidence = (id, data) => {
+  return API.patch(`/admin/compliance/${id}`, data);
+};
+
+const deleteComplianceEvidence = (id) => {
+  return API.delete(`/admin/compliance/${id}`);
+};
+
 export default {
   emailLogs,
   exportAuditLog,
@@ -649,7 +831,14 @@ export default {
   executeBackup,
   restoreBackup,
   downloadBackup,
+  scheduleBackup,
+  getScheduledBackups,
   getBackupStatus,
+  listAlertRules,
+  getAlertRule,
+  createAlertRule,
+  updateAlertRule,
+  deleteAlertRule,
   getDeploymentStatus,
   getDeploymentHealth,
   getBruteForceAggregation,
@@ -741,6 +930,9 @@ export default {
   createIncident,
   updateIncident,
   deleteIncident,
+  lockTenant,
+  resetTenantTokens,
+  forceLogoutTenant,
   getSuspiciousActivity,
   getTenantDebug,
   getPlatformDebug,
@@ -778,4 +970,32 @@ export default {
   createPlatformReferral,
   updatePlatformReferral,
   crossTenantSearch,
+  listPenetrationTestReports,
+  getPenetrationTestReport,
+  createPenetrationTestReport,
+  updatePenetrationTestReport,
+  deletePenetrationTestReport,
+  listInsuranceDocuments,
+  getInsuranceDocument,
+  createInsuranceDocument,
+  updateInsuranceDocument,
+  deleteInsuranceDocument,
+  exportTenantMigration,
+  importTenantMigration,
+  listEncryptionKeys,
+  getEncryptionKey,
+  createEncryptionKey,
+  rotateEncryptionKey,
+  retireEncryptionKey,
+  deleteEncryptionKey,
+  listAutoScalingTriggers,
+  getAutoScalingTrigger,
+  createAutoScalingTrigger,
+  updateAutoScalingTrigger,
+  deleteAutoScalingTrigger,
+  listComplianceEvidence,
+  getComplianceEvidence,
+  createComplianceEvidence,
+  updateComplianceEvidence,
+  deleteComplianceEvidence,
 };

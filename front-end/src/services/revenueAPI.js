@@ -28,6 +28,7 @@ export const getLtv = () => client.get("/ltv");
 export const getCohortAnalysis = (months = 12) =>
   client.get("/cohorts", { params: { months } });
 export const getFeatureAdoption = () => client.get("/feature-adoption");
+export const getGeographicDistribution = () => client.get("/geographic");
 
 export default {
   getMrrTrends,
@@ -35,4 +36,5 @@ export default {
   getLtv,
   getCohortAnalysis,
   getFeatureAdoption,
+  getGeographicDistribution,
 };

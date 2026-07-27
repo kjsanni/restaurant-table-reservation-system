@@ -1,9 +1,23 @@
 const db = require("../db/models");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
+const tenantAdminDAO = require("../tenant-platform/DAOs/tenantAdmin.dao");
 const tenantAdminController = require("../tenant-platform/controllers/tenantAdmin.controller");
 
 jest.mock("../db/models");
-jest.mock("../tenant-platform/DAOs/platformAudit.dao");
+jest.mock("../tenant-platform/DAOs/platformAudit.dao", () => ({
+  log: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock("../tenant-platform/DAOs/tenantAdmin.dao", () => ({
+  findBySlug: jest.fn(),
+  create: jest.fn(),
+  list: jest.fn(),
+  findById: jest.fn(),
+  update: jest.fn(),
+  setStatus: jest.fn(),
+  softDelete: jest.fn(),
+  export: jest.fn(),
+  log: jest.fn(),
+}));
 
 describe("tenantAdminController.deleteTenantHandler", () => {
   let req;
@@ -22,6 +36,7 @@ describe("tenantAdminController.deleteTenantHandler", () => {
     };
     db.tenant = {
       findByPk: jest.fn(),
+      findAndCountAll: jest.fn(),
     };
     db.setting = {
       findAll: jest.fn().mockResolvedValue([]),
@@ -33,10 +48,12 @@ describe("tenantAdminController.deleteTenantHandler", () => {
       findAll: jest.fn().mockResolvedValue([]),
     };
     platformAuditDAO.log = jest.fn().mockResolvedValue(undefined);
+    tenantAdminDAO.softDelete = jest.fn();
+    tenantAdminDAO.log = jest.fn();
   });
 
   it("returns 404 when tenant does not exist", async () => {
-    db.tenant.findByPk.mockResolvedValue(null);
+    tenantAdminDAO.softDelete.mockResolvedValue(null);
 
     await tenantAdminController.deleteTenantHandler(req, res);
 
@@ -45,7 +62,10 @@ describe("tenantAdminController.deleteTenantHandler", () => {
   });
 
   it("returns 400 when tenant is already cancelled", async () => {
-    db.tenant.findByPk.mockResolvedValue({ id: 1, status: "cancelled", update: jest.fn() });
+    const err = new Error("Tenant is already deleted");
+    err.status = 400;
+    err.isAlreadyDeleted = true;
+    tenantAdminDAO.softDelete.mockRejectedValue(err);
 
     await tenantAdminController.deleteTenantHandler(req, res);
 
@@ -54,17 +74,13 @@ describe("tenantAdminController.deleteTenantHandler", () => {
   });
 
   it("soft-deletes an active tenant and logs audit", async () => {
-    const mockUpdate = jest.fn(function() { 
-      this.status = "cancelled"; 
-      return this; 
-    });
-    const tenant = { id: 1, name: "Acme", slug: "acme", status: "active", update: mockUpdate };
-    db.tenant.findByPk.mockResolvedValue(tenant);
+    const tenant = { id: 1, name: "Acme", slug: "acme", status: "cancelled" };
+    tenantAdminDAO.softDelete.mockResolvedValue(tenant);
 
     await tenantAdminController.deleteTenantHandler(req, res);
 
-    expect(mockUpdate).toHaveBeenCalledWith({ status: "cancelled" });
-    expect(platformAuditDAO.log).toHaveBeenCalledWith(
+    expect(tenantAdminDAO.softDelete).toHaveBeenCalledWith("1");
+    expect(tenantAdminDAO.log).toHaveBeenCalledWith(
       99,
       "tenant.deleted",
       "tenant",
@@ -90,7 +106,7 @@ describe("tenantAdminController.deleteTenantHandler", () => {
 
   describe("exportTenantDataHandler", () => {
     it("returns 404 when tenant does not exist", async () => {
-      db.tenant.findByPk.mockResolvedValue(null);
+      tenantAdminDAO.export.mockResolvedValue(null);
 
       await tenantAdminController.exportTenantDataHandler(req, res);
 
@@ -105,10 +121,12 @@ describe("tenantAdminController.deleteTenantHandler", () => {
         slug: "acme",
         toJSON: jest.fn().mockReturnValue({ id: 1, name: "Acme", slug: "acme" }),
       };
-      db.tenant.findByPk.mockResolvedValue(tenant);
-      db.setting.findAll.mockResolvedValue([{ key: "theme", value: "dark", updatedAt: "2026-01-01" }]);
-      db.note.findAll.mockResolvedValue([{ id: 1, note: "test", createdAt: "2026-01-01", updatedAt: "2026-01-01" }]);
-      db.legalAcceptance.findAll.mockResolvedValue([{ id: 1, documentVersion: "1.0", acceptedAt: "2026-01-01", ipAddress: "1.2.3.4", userAgent: "test" }]);
+      tenantAdminDAO.export.mockResolvedValue({
+        tenant,
+        settings: [{ key: "theme", value: "dark", updatedAt: "2026-01-01" }],
+        notes: [{ id: 1, note: "test", createdAt: "2026-01-01", updatedAt: "2026-01-01" }],
+        legalAcceptances: [{ id: 1, documentVersion: "1.0", acceptedAt: "2026-01-01", ipAddress: "1.2.3.4", userAgent: "test" }],
+      });
 
       await tenantAdminController.exportTenantDataHandler(req, res);
 

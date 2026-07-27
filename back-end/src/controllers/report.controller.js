@@ -1,7 +1,6 @@
 const reportService = require("../services/reportService");
 const { reportQueue, safeAdd } = require("../queues/queue");
 const PDFDocument = require("pdfkit");
-const { Op } = require("../db/models");
 
 const getReservationReportHandler = async (req, res) => {
   const filters = {

@@ -75,7 +75,7 @@ onMounted(loadPackages);
               {{ pkg.durationMinutes }} mins
             </span>
           </div>
-          <div class="package items" v-if="pkg.items && pkg.items.length">
+          <div class="package-items" v-if="pkg.items && pkg.items.length">
             <small>Includes {{ pkg.items.length }} service item(s)</small>
           </div>
           <span :class="['pill', pkg.isActive ? 't-active' : 't-inactive']">
@@ -148,7 +148,7 @@ onMounted(loadPackages);
   }
 }
 .error-state {
-  color: #b91c1c;
+  color: var(--rose-600);
   padding: 18px;
 }
 .empty-state {
@@ -208,8 +208,8 @@ onMounted(loadPackages);
   align-self: flex-start;
 }
 .t-active {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--earth-100);
+  color: var(--earth-600);
 }
 .t-inactive {
   background: var(--neutral-100);

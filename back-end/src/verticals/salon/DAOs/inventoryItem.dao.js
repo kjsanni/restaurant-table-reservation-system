@@ -44,6 +44,17 @@ const inventoryItemDAO = {
     await item.destroy();
     return true;
   },
+
+  async findLowStock(tenantId) {
+    return db.inventoryItem.findAll({
+      where: {
+        tenantId,
+        isActive: true,
+        quantity: { [Op.lte]: db.sequelize.col("reorderLevel") },
+      },
+      order: [["quantity", "ASC"]],
+    });
+  },
 };
 
 module.exports = inventoryItemDAO;

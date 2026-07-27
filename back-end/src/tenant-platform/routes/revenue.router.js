@@ -30,4 +30,9 @@ router
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(revenueController.getFeatureAdoptionHandler))
   .all(httpMethodError);
 
+router
+  .route("/geographic")
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(revenueController.getGeographicDistributionHandler))
+  .all(httpMethodError);
+
 module.exports = router;

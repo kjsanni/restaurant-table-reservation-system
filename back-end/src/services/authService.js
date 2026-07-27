@@ -4,8 +4,6 @@ const { verifyTokenWithFallback, getCurrentSecret } = require("../utils/jwtRotat
 
 const JWT_SECRET = getCurrentSecret();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30m";
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || JWT_SECRET;
-const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "30d";
 
 const generateToken = (userId, role) => {
   return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });

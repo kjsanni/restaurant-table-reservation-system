@@ -33,6 +33,18 @@
             <span>Created</span>
             <b>{{ formatDate(latest.createdAt) }}</b>
           </div>
+          <div class="backup-item" v-if="latest.frequency">
+            <span>Frequency</span>
+            <b>{{ latest.frequency }}</b>
+          </div>
+          <div class="backup-item" v-if="latest.nextRunAt">
+            <span>Next Run</span>
+            <b>{{ formatDate(latest.nextRunAt) }}</b>
+          </div>
+          <div class="backup-item" v-if="latest.lastRunAt">
+            <span>Last Run</span>
+            <b>{{ formatDate(latest.lastRunAt) }}</b>
+          </div>
           <div class="backup-actions">
             <button
               class="btn-secondary"
@@ -56,64 +68,58 @@
               {{ restoringId === latest.id ? "Restoring..." : "Restore" }}
             </button>
           </div>
+          <div class="schedule-form" v-if="latest">
+            <h4>Schedule Backup</h4>
+            <div class="form-row">
+              <select v-model="scheduleForm.frequency" class="input">
+                <option value="">No schedule</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+              <input
+                type="datetime-local"
+                v-model="scheduleForm.nextRunAt"
+                class="input"
+                :disabled="!scheduleForm.frequency"
+              />
+              <button
+                class="btn-primary"
+                @click="updateSchedule(latest.id)"
+                :disabled="schedulingId === latest.id"
+              >
+                {{ schedulingId === latest.id ? "Saving..." : "Save Schedule" }}
+              </button>
+            </div>
+          </div>
         </div>
         <div v-else class="empty-state">No backups yet</div>
       </div>
 
       <div class="card">
-        <h3>All Backups</h3>
-        <div v-if="loading" class="loading-state-inline">
+        <h3>Scheduled Backups</h3>
+        <div v-if="scheduledLoading" class="loading-state-inline">
           <div class="spinner-sm"></div>
         </div>
-        <div v-else-if="records.length === 0" class="empty-state">
-          No backup records
+        <div v-else-if="scheduled.length === 0" class="empty-state">
+          No scheduled backups
         </div>
         <div v-else class="table-wrap">
           <table class="data-table">
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Size</th>
-                <th>Created</th>
-                <th>Actions</th>
+                <th>Frequency</th>
+                <th>Next Run</th>
+                <th>Last Run</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="record in records" :key="record.id">
+              <tr v-for="record in scheduled" :key="record.id">
                 <td>#{{ record.id }}</td>
-                <td>{{ record.type }}</td>
-                <td>
-                  <span class="badge" :class="statusClass(record.status)">{{
-                    record.status
-                  }}</span>
-                </td>
-                <td>{{ formatBytes(record.sizeBytes) }}</td>
-                <td>{{ formatDate(record.createdAt) }}</td>
-                <td>
-                  <button
-                    class="btn-xs"
-                    @click="download(record.id)"
-                    :disabled="downloadingId === record.id"
-                  >
-                    DL
-                  </button>
-                  <button
-                    class="btn-xs btn-primary"
-                    @click="execute(record.id)"
-                    :disabled="executingId === record.id"
-                  >
-                    Run
-                  </button>
-                  <button
-                    class="btn-xs btn-danger"
-                    @click="confirmRestore(record.id)"
-                    :disabled="restoringId === record.id"
-                  >
-                    Restore
-                  </button>
-                </td>
+                <td>{{ record.frequency }}</td>
+                <td>{{ formatDate(record.nextRunAt) }}</td>
+                <td>{{ formatDate(record.lastRunAt) }}</td>
               </tr>
             </tbody>
           </table>
@@ -130,25 +136,39 @@ import adminAPI from "@/services/adminAPI";
 const creating = ref(false);
 const loading = ref(false);
 const latestLoading = ref(false);
+const scheduledLoading = ref(false);
 const records = ref([]);
 const latest = ref(null);
+const scheduled = ref([]);
 const downloadingId = ref(null);
 const executingId = ref(null);
 const restoringId = ref(null);
+const schedulingId = ref(null);
+const scheduleForm = ref({ frequency: "", nextRunAt: "" });
 
 const load = async () => {
   loading.value = true;
   latestLoading.value = true;
+  scheduledLoading.value = true;
   try {
-    const [listRes, statusRes] = await Promise.all([
+    const [listRes, statusRes, scheduledRes] = await Promise.all([
       adminAPI.listBackupRecords(),
       adminAPI.getBackupStatus(),
+      adminAPI.getScheduledBackups(),
     ]);
     records.value = listRes.data?.collection || [];
     latest.value = statusRes.data?.latestBackup || null;
+    scheduled.value = scheduledRes.data?.collection || [];
+    if (latest.value && latest.value.frequency) {
+      scheduleForm.value.frequency = latest.value.frequency || "";
+      scheduleForm.value.nextRunAt = latest.value.nextRunAt
+        ? new Date(latest.value.nextRunAt).toISOString().slice(0, 16)
+        : "";
+    }
   } finally {
     loading.value = false;
     latestLoading.value = false;
+    scheduledLoading.value = false;
   }
 };
 
@@ -159,6 +179,20 @@ const createBackup = async () => {
     await load();
   } finally {
     creating.value = false;
+  }
+};
+
+const updateSchedule = async (id) => {
+  schedulingId.value = id;
+  try {
+    const data = {
+      frequency: scheduleForm.value.frequency || undefined,
+      nextRunAt: scheduleForm.value.nextRunAt || undefined,
+    };
+    await adminAPI.scheduleBackup(id, data);
+    await load();
+  } finally {
+    schedulingId.value = null;
   }
 };
 
@@ -408,5 +442,34 @@ onMounted(() => {
   text-align: center;
   padding: var(--space-6);
   color: var(--ink-muted);
+}
+.schedule-form {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+.schedule-form h4 {
+  margin: 0 0 var(--space-3) 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+.form-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.input {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-sm);
+}
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

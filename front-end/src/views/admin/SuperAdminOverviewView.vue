@@ -2,9 +2,10 @@
   <div class="super-overview">
     <div class="topbar">
       <div class="topbar-inner">
-        <h1 class="topbar-title">Platform Overview</h1>
+        <h1 class="topbar-title">Venue Platform Overview</h1>
         <p class="topbar-subtitle">
-          Cross-tenant health, revenue, and operations
+          Multi-tenant restaurant &amp; salon operations, revenue &amp;
+          compliance
         </p>
       </div>
     </div>
@@ -21,24 +22,7 @@
           <article v-for="kpi in kpis" :key="kpi.label" class="kpi-card">
             <div class="kpi-label">{{ kpi.label }}</div>
             <div class="kpi-value">{{ kpi.value }}</div>
-            <span class="kpi-delta" :class="kpi.delta >= 0 ? 'up' : 'down'">
-              {{ kpi.delta >= 0 ? "▲" : "▼" }} {{ Math.abs(kpi.delta)
-              }}{{ kpi.suffix }}
-            </span>
-            <svg
-              class="kpi-spark"
-              viewBox="0 0 74 30"
-              preserveAspectRatio="none"
-            >
-              <polyline
-                :points="kpi.spark"
-                :stroke="
-                  kpi.delta >= 0 ? 'var(--earth-500)' : 'var(--rose-500)'
-                "
-                stroke-width="2"
-                fill="none"
-              />
-            </svg>
+            <span class="kpi-suffix">{{ kpi.suffix }}</span>
           </article>
         </section>
 
@@ -68,9 +52,9 @@
 
         <!-- Tenant workspace grid -->
         <div class="section-head">
-          <h2>Tenant Workspaces</h2>
+          <h2>Venue Workspaces</h2>
           <a href="#" @click.prevent="goTo('/admin/tenants')"
-            >View all tenants →</a
+            >View all venues →</a
           >
         </div>
 
@@ -98,16 +82,16 @@
 
             <div class="tenant-stats">
               <div>
-                <span>MRR</span>
-                <b>{{ formatMoney(tenant.mrr) }}</b>
+                <span>Revenue</span>
+                <b>{{ formatMoney(tenant.revenue) }}</b>
               </div>
               <div>
-                <span>Seats</span>
+                <span>Bookings</span>
+                <b>{{ tenant.bookings }}</b>
+              </div>
+              <div>
+                <span>Covers</span>
                 <b>{{ tenant.seats }}</b>
-              </div>
-              <div>
-                <span>Res/today</span>
-                <b>{{ tenant.reservationsToday }}</b>
               </div>
             </div>
 
@@ -116,7 +100,7 @@
             </div>
 
             <button class="access-btn" @click="accessTenant(tenant)">
-              Access Tenant →
+              Open Venue →
             </button>
           </article>
         </section>
@@ -124,8 +108,8 @@
         <!-- Lower grid: revenue chart + plan distribution -->
         <section class="lower-grid">
           <div class="panel chart-panel">
-            <h3>Revenue &amp; Tenant Growth</h3>
-            <p class="panel-sub">Last 12 months · platform aggregate</p>
+            <h3>Booking Revenue &amp; Growth</h3>
+            <p class="panel-sub">Last 12 months · platform-wide reservations</p>
             <RevenueTrendChart
               :labels="revenueLabels"
               :mrr-series="revenueMrr"
@@ -137,7 +121,10 @@
 
           <div class="panel">
             <h3>Plan Distribution</h3>
-            <p class="panel-sub">Across {{ dashboard.total }} tenants</p>
+            <p class="panel-sub">Across {{ dashboard.total }} venues</p>
+            <div v-if="planDistribution.length === 0" class="empty-state">
+              No plans configured
+            </div>
             <div
               v-for="plan in planDistribution"
               :key="plan.label"
@@ -155,7 +142,7 @@
 
         <!-- Support ticket inbox -->
         <div class="section-head">
-          <h2>Support Tickets</h2>
+          <h2>Venue Support Tickets</h2>
           <a href="#" @click.prevent="goTo('/admin/support-tickets')"
             >Open all →</a
           >
@@ -217,7 +204,7 @@
 
         <!-- Failed payment alerts -->
         <div class="section-head">
-          <h2>Failed Payment Alerts</h2>
+          <h2>Payment &amp; Reservation Failures</h2>
           <a href="#" @click.prevent="goTo('/admin/at-risk-tenants')"
             >View all →</a
           >
@@ -264,7 +251,7 @@
         <!-- Backup & Deployment -->
         <section class="lower-grid">
           <div class="panel">
-            <h3>Backup Status</h3>
+            <h3>Data Backup Status</h3>
             <p class="panel-sub">Latest backup</p>
             <div v-if="backupLoading" class="loading-state-inline">
               <div class="spinner-sm"></div>
@@ -295,7 +282,7 @@
           </div>
 
           <div class="panel">
-            <h3>Deployment</h3>
+            <h3>Platform Deployment</h3>
             <p class="panel-sub">{{ deploymentStatus.environment }}</p>
             <div v-if="deploymentLoading" class="loading-state-inline">
               <div class="spinner-sm"></div>
@@ -321,7 +308,7 @@
 
         <!-- Brute-force aggregation -->
         <div class="section-head">
-          <h2>Security: Brute-Force Aggregation</h2>
+          <h2>Security: Suspicious Activity</h2>
           <a href="#" @click.prevent="goTo('/admin/at-risk-tenants')"
             >View all →</a
           >
@@ -332,7 +319,7 @@
             <div class="spinner-sm"></div>
           </div>
           <div v-else-if="bruteForceData.length === 0" class="empty-state">
-            No suspicious IP/email patterns detected
+            No suspicious booking or login patterns detected
           </div>
           <div
             v-for="(item, idx) in bruteForceData"
@@ -364,13 +351,13 @@
 
         <!-- Compliance scorecard -->
         <div class="section-head">
-          <h2>Compliance Scorecard</h2>
+          <h2>Compliance &amp; Legal</h2>
         </div>
 
         <section class="panel activity-feed" v-if="complianceScorecard">
           <div class="compliance-grid">
             <div class="compliance-item">
-              <span>Total Tenants</span>
+              <span>Total Venues</span>
               <b>{{ complianceScorecard.totalTenants }}</b>
             </div>
             <div class="compliance-item">
@@ -390,7 +377,7 @@
 
         <!-- Support chat queue -->
         <div class="section-head">
-          <h2>Support Chat Queue</h2>
+          <h2>Venue Support Chat</h2>
         </div>
 
         <section class="panel activity-feed">
@@ -446,7 +433,7 @@
 
         <!-- Recent activity feed -->
         <div class="section-head">
-          <h2>Recent Platform Activity</h2>
+          <h2>Recent Venue Activity</h2>
           <a href="#" @click.prevent="goTo('/admin/audit')">Open audit log →</a>
         </div>
 
@@ -539,9 +526,9 @@ const featuredTenants = computed(() =>
       location: t.location || t.domain || "—",
       statusLabel: s.label,
       statusClass: s.cls,
-      mrr: Number(t.mrr || t.monthlyRevenue || 0),
+      revenue: Number(t.mrr || t.monthlyRevenue || 0),
       seats: Number(t.seats || t.userCount || 0),
-      reservationsToday: Number(t.reservationsToday || 0),
+      bookings: Number(t.reservationsToday || 0),
       health: Number(t.health || 70),
       initial: (t.name || "T").charAt(0).toUpperCase(),
       logoGradient: LOGO_GRADIENTS[i % LOGO_GRADIENTS.length],
@@ -559,80 +546,44 @@ const inactiveCount = computed(
 
 const kpis = computed(() => [
   {
-    label: "Total Tenants",
+    label: "Total Venues",
     value: dashboard.value.total,
-    delta: 6,
-    suffix: " this wk",
-    spark: "0,22 12,18 24,20 36,12 48,14 60,7 74,5",
+    suffix: " tenants",
   },
   {
-    label: "Active Tenants",
+    label: "Active Venues",
     value: dashboard.value.active,
-    delta: Math.round(
-      (dashboard.value.active / Math.max(1, dashboard.value.total)) * 100
-    ),
-    suffix: "% active",
-    spark: "0,14 12,16 24,11 36,13 48,8 60,10 74,6",
+    suffix: " online",
   },
   {
-    label: "Platform MRR",
+    label: "Platform Revenue",
     value: formatMoney(dashboard.value.mrr),
-    delta: 12.4,
-    suffix: "%",
-    spark: "0,24 12,20 24,21 36,14 48,15 60,9 74,4",
+    suffix: " MRR",
   },
   {
-    label: "At-Risk / Past Due",
+    label: "At-Risk Venues",
     value: dashboard.value.pastDue,
-    delta: -2,
-    suffix: " churned",
-    spark: "0,8 12,10 24,7 36,12 48,11 60,16 74,18",
+    suffix: " past due",
   },
 ]);
 
 const planDistribution = computed(() => {
   const list = plans.value || [];
-  return list.length
-    ? list.map((p) => ({
-        label: p.name,
-        note: p.description || `${p.currency} ${p.price} / mo`,
-        count: Number(p.tenantCount || 0),
-        color: LOGO_GRADIENTS[list.indexOf(p) % LOGO_GRADIENTS.length].match(
-          /var\(([^)]+)\)/
-        )?.[1]
-          ? `var(${
-              LOGO_GRADIENTS[list.indexOf(p) % LOGO_GRADIENTS.length].match(
-                /var\(([^)]+)\)/
-              )[1]
-            })`
-          : "var(--brand-500)",
-      }))
-    : [
-        {
-          label: "Enterprise",
-          note: "Dedicated support, SSO",
-          count: 18,
-          color: "var(--earth-600)",
-        },
-        {
-          label: "Growth",
-          note: "Multi-location",
-          count: 54,
-          color: "var(--accent-500)",
-        },
-        {
-          label: "Starter",
-          note: "Single location",
-          count: 41,
-          color: "var(--brand-500)",
-        },
-        {
-          label: "Trial / Free",
-          note: "14-day window",
-          count: 15,
-          color: "var(--neutral-500)",
-        },
-      ];
+  if (!list.length) return [];
+  return list.map((p) => ({
+    label: p.name,
+    note: p.description || `${p.currency} ${p.price} / mo`,
+    count: Number(p.tenantCount || 0),
+    color: LOGO_GRADIENTS[list.indexOf(p) % LOGO_GRADIENTS.length].match(
+      /var\(([^)]+)\)/
+    )?.[1]
+      ? `var(${
+          LOGO_GRADIENTS[list.indexOf(p) % LOGO_GRADIENTS.length].match(
+            /var\(([^)]+)\)/
+          )[1]
+        })`
+      : "var(--brand-500)",
+  }));
 });
 
 // Revenue trend (wired to revenueAPI.getMrrTrends)
@@ -1021,7 +972,7 @@ onMounted(async () => {
   line-height: 1;
   letter-spacing: var(--tracking-tight);
 }
-.kpi-delta {
+.kpi-suffix {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
@@ -1029,21 +980,8 @@ onMounted(async () => {
   font-weight: 700;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-full);
-}
-.kpi-delta.up {
-  background: var(--earth-100);
-  color: var(--earth-600);
-}
-.kpi-delta.down {
-  background: var(--rose-100);
-  color: var(--rose-600);
-}
-.kpi-spark {
-  position: absolute;
-  right: var(--space-4);
-  bottom: var(--space-3);
-  width: 74px;
-  height: 30px;
+  background: var(--neutral-100);
+  color: var(--ink-muted);
 }
 
 /* Section heading */

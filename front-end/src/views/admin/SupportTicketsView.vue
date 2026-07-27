@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1>Support Tickets</h1>
-        <p class="subtitle">Manage and triage tenant support requests</p>
+        <p class="subtitle">Manage and triage venue support requests</p>
       </div>
       <div class="header-actions">
         <button class="btn-secondary" @click="exportCSV">Export CSV</button>

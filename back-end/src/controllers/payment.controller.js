@@ -22,7 +22,7 @@ const addPaymentHandler = async (req, res) => {
 
 const initializePaymentHandler = async (req, res) => {
   const { reservationId } = req.params;
-  const { email, amount, firstName, lastName, phone } = req.body;
+  const { email, amount } = req.body;
 
   if (!email || !amount) {
     return res.status(400).json({ success: false, message: "Email and amount are required" });

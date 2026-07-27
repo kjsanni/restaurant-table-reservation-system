@@ -106,7 +106,7 @@ async function saveEdit() {
 
       <template v-else>
         <div v-if="items.length === 0" class="empty-state">
-          <p>No DSAR requests for this tenant yet.</p>
+          <p>No DSAR requests for this venue yet.</p>
         </div>
 
         <div v-else class="table-wrap">

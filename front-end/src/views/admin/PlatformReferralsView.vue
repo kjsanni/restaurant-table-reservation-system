@@ -52,7 +52,7 @@
         <h2>{{ editing?.id ? "Edit" : "New" }} Referral</h2>
         <form @submit.prevent="save">
           <div class="field">
-            <label>Referrer Tenant ID</label>
+            <label>Referrer Venue ID</label>
             <input
               v-model="form.referrerTenantId"
               type="number"
@@ -61,7 +61,7 @@
             />
           </div>
           <div class="field">
-            <label>Referred Tenant ID</label>
+            <label>Referred Venue ID</label>
             <input
               v-model="form.referredTenantId"
               type="number"

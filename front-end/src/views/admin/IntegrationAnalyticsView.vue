@@ -55,7 +55,7 @@
         <input
           v-model="paystackTenantId"
           type="number"
-          placeholder="Tenant ID"
+          placeholder="Venue ID"
           class="filter-select"
         />
         <button
@@ -101,7 +101,7 @@
           <input
             v-model="settlementTenantId"
             type="number"
-            placeholder="Tenant ID"
+            placeholder="Venue ID"
             class="filter-select"
           />
           <button
@@ -144,7 +144,7 @@
           <input
             v-model="disputeTenantId"
             type="number"
-            placeholder="Tenant ID"
+            placeholder="Venue ID"
             class="filter-select"
           />
           <button
@@ -188,7 +188,7 @@
         <input
           v-model="feeTenantId"
           type="number"
-          placeholder="Tenant ID"
+          placeholder="Venue ID"
           class="filter-select"
         />
         <button
@@ -403,7 +403,7 @@
         <table v-else class="data-table">
           <thead>
             <tr>
-              <th>Tenant ID</th>
+              <th>Venue ID</th>
               <th>Total</th>
               <th>Delivered</th>
               <th>Failed</th>

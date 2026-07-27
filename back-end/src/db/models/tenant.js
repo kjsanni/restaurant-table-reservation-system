@@ -138,6 +138,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      dataRegion: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      residencyNotes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
     },
     {
       sequelize,

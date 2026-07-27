@@ -10,6 +10,25 @@
       </button>
     </div>
 
+    <div class="dashboard-summary">
+      <div class="summary-card">
+        <div class="summary-label">Active</div>
+        <div class="summary-value">{{ activeCount }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Critical</div>
+        <div class="summary-value">{{ criticalCount }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Resolved</div>
+        <div class="summary-value">{{ resolvedCount }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Closed</div>
+        <div class="summary-value">{{ closedCount }}</div>
+      </div>
+    </div>
+
     <div class="filters">
       <select v-model="filters.status" class="filter-select" @change="load">
         <option value="">All Statuses</option>
@@ -154,6 +173,11 @@ const form = ref({
   status: "open",
 });
 
+const activeCount = ref(0);
+const criticalCount = ref(0);
+const resolvedCount = ref(0);
+const closedCount = ref(0);
+
 const load = async () => {
   loading.value = true;
   try {
@@ -161,7 +185,18 @@ const load = async () => {
     if (filters.value.status) params.status = filters.value.status;
     if (filters.value.severity) params.severity = filters.value.severity;
     const res = await adminAPI.listIncidents(params);
-    incidents.value = res.data?.collection || [];
+    const collection = res.data?.collection || [];
+    incidents.value = collection;
+    activeCount.value = collection.filter(
+      (i) => i.status !== "resolved" && i.status !== "closed"
+    ).length;
+    criticalCount.value = collection.filter(
+      (i) => i.severity === "critical"
+    ).length;
+    resolvedCount.value = collection.filter(
+      (i) => i.status === "resolved"
+    ).length;
+    closedCount.value = collection.filter((i) => i.status === "closed").length;
   } finally {
     loading.value = false;
   }
@@ -314,6 +349,30 @@ onMounted(() => {
 }
 .status-failed {
   color: var(--rose-600);
+}
+.dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+.summary-label {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.summary-value {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--ink);
 }
 .btn-primary {
   padding: var(--space-2) var(--space-4);

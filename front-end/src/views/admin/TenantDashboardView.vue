@@ -1,15 +1,15 @@
 <template>
   <div class="tenant-dashboard">
     <div class="dashboard-header">
-      <h1>Platform Admin</h1>
+      <h1>Venue Platform Admin</h1>
       <p class="subtitle">
-        Manage tenants, plans, and billing across the platform
+        Manage venues, plans, and billing across the platform
       </p>
     </div>
 
     <div class="summary-cards">
       <div class="card">
-        <div class="card-label">Total Tenants</div>
+        <div class="card-label">Total Venues</div>
         <div class="card-value">{{ dashboard.total }}</div>
       </div>
       <div class="card">
@@ -34,7 +34,7 @@
         <div class="card-value danger">{{ dashboard.suspended }}</div>
       </div>
       <div class="card">
-        <div class="card-label">MRR (GHS)</div>
+        <div class="card-label">Venue Revenue (GHS)</div>
         <div class="card-value">{{ formatMrr(dashboard.mrr) }}</div>
       </div>
     </div>
@@ -57,7 +57,7 @@
     <div class="filters">
       <input
         v-model="searchQuery"
-        placeholder="Search tenants..."
+        placeholder="Search venues..."
         class="search-input"
       />
       <select v-model="filterStatus" class="filter-select">
@@ -68,7 +68,7 @@
         <option value="cancelled">Cancelled</option>
         <option value="trialing">Trialing</option>
       </select>
-      <button @click="openCreateModal" class="btn-primary">+ Add Tenant</button>
+      <button @click="openCreateModal" class="btn-primary">+ Add Venue</button>
     </div>
 
     <div v-if="selectedTenants.length > 0" class="bulk-actions">
@@ -85,7 +85,7 @@
       @click.self="closeCreateModal"
     >
       <div class="modal">
-        <h2>Create New Tenant</h2>
+        <h2>Create New Venue</h2>
         <form @submit.prevent="createTenant">
           <div class="form-group">
             <label>Name *</label>
@@ -142,7 +142,7 @@
             >
               Cancel
             </button>
-            <button type="submit" class="btn-primary">Create Tenant</button>
+            <button type="submit" class="btn-primary">Create Venue</button>
           </div>
         </form>
       </div>
@@ -156,7 +156,7 @@
       <div class="modal">
         <h2>Change Business Vertical</h2>
         <p class="modal-hint">
-          Update {{ selectedTenants.length }} tenant(s) to a new business
+          Update {{ selectedTenants.length }} venue(s) to a new business
           vertical.
         </p>
         <form @submit.prevent="changeVertical">

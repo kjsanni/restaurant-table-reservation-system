@@ -99,25 +99,20 @@ const updateCampaign = async () => {
 };
 
 const deleteCampaign = async (id: number) => {
-  if (!confirm(t("salon.confirmDelete", "Delete this campaign?"))) return;
   try {
     await marketingCampaignsAPI.delete(id);
     loadCampaigns();
+    toastStore.add(t("salon.campaignDeleted", "Campaign deleted"), "success");
   } catch (err) {
     logger.error("Failed to delete campaign", { error: err });
+    toastStore.add(
+      t("salon.deleteFailed", "Failed to delete campaign"),
+      "error"
+    );
   }
 };
 
 const sendCampaign = async (campaign: any) => {
-  if (
-    !confirm(
-      t("salon.confirmSend", `Send campaign "{name}" now?`).replace(
-        "{name}",
-        campaign.name
-      )
-    )
-  )
-    return;
   sending.value = true;
   try {
     const res = await marketingCampaignsAPI.send(campaign.id);
@@ -130,6 +125,7 @@ const sendCampaign = async (campaign: any) => {
     loadCampaigns();
   } catch (err) {
     logger.error("Failed to send campaign", { error: err });
+    toastStore.add(t("salon.sendFailed", "Failed to send campaign"), "error");
   } finally {
     sending.value = false;
   }

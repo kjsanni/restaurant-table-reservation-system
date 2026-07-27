@@ -213,7 +213,7 @@ const chooseTable = async (
     reservation.resStatus !== "missed" &&
     reservation.resStatus !== "cancelled"
   ) {
-    reservation = await reservationDAO.setReservationStatus(reservation, "missed", tenantId);
+    await reservationDAO.setReservationStatus(reservation, "missed", tenantId);
     throw {
       status: 400,
       message: "Cannot seat a past reservation.",
@@ -229,7 +229,7 @@ const chooseTable = async (
       reservation.resStatus !== "seated" &&
       reservation.resStatus !== "cancelled"
     ) {
-      reservation = await reservationDAO.setReservationStatus(reservation, "missed", tenantId);
+      await reservationDAO.setReservationStatus(reservation, "missed", tenantId);
       throw {
         status: 400,
         message: "Reservation is past the grace period and has been marked as missed.",

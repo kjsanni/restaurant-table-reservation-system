@@ -5,7 +5,7 @@
         <button @click="$router.back()" class="back-btn">← Back</button>
         <h1>White-label Branding</h1>
         <p class="subtitle">
-          Customize the look and feel for {{ tenant.name || "this tenant" }}
+          Customize the look and feel for {{ tenant.name || "this venue" }}
         </p>
       </div>
     </div>
@@ -14,8 +14,8 @@
       <div class="card">
         <h2>Branding Settings</h2>
         <p class="section-hint">
-          Update the tenant's public-facing branding. Changes apply immediately
-          to the tenant's portal and customer-facing pages.
+          Update this venue's public-facing branding. Changes apply immediately
+          to the venue's portal and customer-facing pages.
         </p>
         <div class="field">
           <label>Logo URL</label>
@@ -122,6 +122,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useToastStore } from "@/stores/toast";
 import { useAuthStore } from "@/stores/auth";
+import logger from "@/utils/logger";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import whiteLabelAPI from "@/services/whiteLabelAPI";
 
@@ -172,7 +173,7 @@ const loadData = async () => {
       customDomain: branding.value.customDomain || "",
     };
   } catch (err) {
-    console.error("Failed to load branding", err);
+    logger.error("Failed to load branding", err);
   }
 };
 

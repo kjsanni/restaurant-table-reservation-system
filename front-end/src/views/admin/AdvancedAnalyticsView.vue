@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1>Advanced Analytics</h1>
-        <p class="subtitle">Tenant growth, churn, and LTV/CAC metrics</p>
+        <p class="subtitle">Venue growth, churn, and LTV/CAC metrics</p>
       </div>
       <button class="btn-primary" @click="loadAll" :disabled="loading">
         {{ loading ? "Refreshing..." : "Refresh All" }}
@@ -18,12 +18,12 @@
         </div>
         <div v-else-if="growth" class="growth-grid">
           <div class="growth-item">
-            <span>Total Tenants</span>
+            <span>Total Venues</span>
             <b>{{ growth.summary.total }}</b>
           </div>
           <div class="growth-item">
             <span>New (30d)</span>
-            <b class="status-healthy">{{ growth.summary.newTenants }}</b>
+            <b class="status-healthy">{{ growth.summary.newVenues }}</b>
           </div>
           <div class="growth-item">
             <span>Churned (30d)</span>
@@ -43,7 +43,7 @@
         </div>
         <div v-else-if="ltv" class="growth-grid">
           <div class="growth-item">
-            <span>Active Tenants</span>
+            <span>Active Venues</span>
             <b>{{ ltv.summary.totalActive }}</b>
           </div>
           <div class="growth-item">

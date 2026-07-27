@@ -18,7 +18,7 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Tenant</th>
+              <th>Venue</th>
               <th>Plan</th>
               <th>Status</th>
               <th>Action</th>
@@ -61,7 +61,7 @@ const load = async () => {
 
 const anonymize = async (id) => {
   if (
-    !confirm("This will anonymize all customer PII for this tenant. Continue?")
+    !confirm("This will anonymize all customer PII for this venue. Continue?")
   )
     return;
   await tenantAdminAPI.anonymizeData(id);

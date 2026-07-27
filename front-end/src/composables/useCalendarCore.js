@@ -2,10 +2,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { io } from "socket.io-client";
 import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
-import tableAPI from "@/services/tableAPI";
-import groupAPI from "@/services/groupAPI";
 import dateNavigator from "@/utils/dateNavigator";
-import { statusColor, shortName } from "@/utils/reservationDisplay";
 
 export function useCalendarCore(extraDeps = {}) {
   const schedules = ref([]);

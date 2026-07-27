@@ -34,7 +34,7 @@
           ></textarea>
         </div>
         <div class="field">
-          <label>Tenant ID (optional)</label>
+          <label>Venue ID (optional)</label>
           <input
             v-model="form.tenantId"
             placeholder="Leave blank for all tenants"
@@ -62,7 +62,7 @@
                 <th>Type</th>
                 <th>Title</th>
                 <th>Message</th>
-                <th>Tenant</th>
+                <th>Venue</th>
                 <th>Date</th>
                 <th></th>
               </tr>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
+import { useCapabilities } from "@/composables/useCapabilities";
 import customerPortalAPI from "@/services/customerPortalAPI";
 import logger from "@/utils/logger";
 
@@ -20,9 +21,11 @@ interface Profile {
 }
 
 const authStore = useAuthStore();
+const { businessVertical } = useCapabilities();
+const isSalon = computed(() => businessVertical.value === "salon");
 const reservations = ref<Reservation[]>([]);
 const profile = ref<Profile | null>(null);
-const loading = ref(false);
+const loading = ref(true);
 const searchQuery = ref("");
 
 const loadProfile = async () => {
@@ -80,9 +83,9 @@ const filteredReservations = computed(() => {
 });
 
 const dateParts = (d: string) => {
-  if (!d) return { mon: "—", day: "" };
+  if (!d) return { mon: "—", day: "—" };
   const dt = new Date(d);
-  if (isNaN(dt.getTime())) return { mon: "—", day: d };
+  if (isNaN(dt.getTime())) return { mon: "—", day: "—" };
   return {
     mon: dt.toLocaleDateString(undefined, { month: "short" }).toUpperCase(),
     day: dt.getDate(),
@@ -130,13 +133,17 @@ onUnmounted(() => {
         <h2>Welcome back, {{ firstName }}</h2>
         <p>
           Manage your reservations at
-          {{ authStore.currentTenant?.name || "your restaurant" }}
+          {{
+            authStore.currentTenant?.name ||
+            (isSalon ? "your salon" : "your restaurant")
+          }}
         </p>
         <div class="portal-search">
           <input
             v-model="searchQuery"
             type="text"
             placeholder="Find a booking by name, date, or confirmation #"
+            aria-label="Search reservations by name, date, or confirmation number"
           />
         </div>
       </div>

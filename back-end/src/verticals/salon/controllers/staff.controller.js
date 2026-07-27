@@ -1,4 +1,4 @@
-const db = require("../../db/models");
+const db = require("../../../db/models");
 
 const getSalonStaffHandler = async (req, res) => {
   const tenantId = req.tenant?.id;

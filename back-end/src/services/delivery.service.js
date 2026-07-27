@@ -1,7 +1,6 @@
 const shaqExpressService = require("./shaqexpress.service");
 const deliveryDAO = require("../DAOs/delivery.dao");
 const orderDAO = require("../DAOs/order.dao");
-const { cache } = require("../utils/cache");
 
 const createDelivery = async (tenantId, orderId, deliveryAddress) => {
   const order = await orderDAO.getOrderById(orderId, tenantId);

@@ -158,9 +158,49 @@ const getIntegrationLatencyHandler = async (req, res) => {
   res.status(200).json({ success: true, integrations });
 };
 
+const getHealthHandler = async (req, res) => {
+  try {
+    const [queueStats, dbStats, integrationLatency] = await Promise.all([
+      Promise.resolve(getQueueStatsHandler(req, res)),
+      Promise.resolve(getDatabaseStatsHandler(req, res)),
+      Promise.resolve(getIntegrationLatencyHandler(req, res)),
+    ]);
+
+    const checks = {
+      database: dbStats?.success ? "healthy" : "unhealthy",
+      redis: queueStats?.redisAvailable ? "healthy" : "unhealthy",
+      queues: queueStats?.queues?.some((q) => q.failed > 0) ? "degraded" : "healthy",
+      integrations: integrationLatency?.integrations?.every((i) => i.status === "healthy")
+        ? "healthy"
+        : integrationLatency?.integrations?.some((i) => i.status === "degraded")
+        ? "degraded"
+        : "unhealthy",
+    };
+
+    const overall =
+      checks.database === "healthy" &&
+      checks.redis === "healthy" &&
+      checks.integrations !== "unhealthy"
+        ? "healthy"
+        : "degraded";
+
+    res.status(200).json({
+      success: true,
+      status: overall,
+      checks,
+      memory: process.memoryUsage(),
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, status: "unhealthy", error: err.message });
+  }
+};
+
 module.exports = {
   getQueueStatsHandler,
   getDatabaseStatsHandler,
   getErrorRateHandler,
   getIntegrationLatencyHandler,
+  getHealthHandler,
 };

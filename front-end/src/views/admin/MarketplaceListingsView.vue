@@ -21,7 +21,7 @@
             <tr>
               <th>Position</th>
               <th>Title</th>
-              <th>Tenant</th>
+              <th>Venue</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>

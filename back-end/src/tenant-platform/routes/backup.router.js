@@ -33,6 +33,16 @@ router
   .all(httpMethodError);
 
 router
+  .route("/:id/schedule")
+  .patch(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(backupController.scheduleBackupHandler))
+  .all(httpMethodError);
+
+router
+  .route("/scheduled")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(backupController.getScheduledBackupsHandler))
+  .all(httpMethodError);
+
+router
   .route("/status/latest")
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(backupController.getBackupStatusHandler))
   .all(httpMethodError);

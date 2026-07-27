@@ -1,5 +1,4 @@
 const refundDAO = require("../DAOs/refund.dao");
-const paymentDAO = require("../DAOs/payment.dao");
 
 const createRefund = async (paymentId, data, tenantId) => {
   const existing = await refundDAO.findByIdempotencyKey(data.idempotencyKey, tenantId);

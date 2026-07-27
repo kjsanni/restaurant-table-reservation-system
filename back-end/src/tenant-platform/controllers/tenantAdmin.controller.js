@@ -1,11 +1,11 @@
-const db = require("../../db/models");
+const tenantAdminDAO = require("../DAOs/tenantAdmin.dao");
+const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const {
   enableTenant,
   disableTenant,
   getTenantDashboard,
 } = require("../services/tenantSubscription.service");
 const { applyTypeDefaults } = require("../services/tenantTypeDefaults.service");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const createTenantHandler = async (req, res) => {
   const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType } = req.body;
@@ -19,12 +19,12 @@ const createTenantHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "Slug must contain only lowercase letters, numbers, and hyphens" });
   }
 
-  const existing = await db.tenant.findOne({ where: { slug: normalizedSlug } });
+  const existing = await tenantAdminDAO.findBySlug(normalizedSlug);
   if (existing) {
     return res.status(409).json({ success: false, message: `Slug "${normalizedSlug}" is already in use` });
   }
 
-  const tenant = await db.tenant.create({
+  const tenant = await tenantAdminDAO.create({
     name,
     slug: normalizedSlug,
     domain,
@@ -50,31 +50,11 @@ const getTenantsHandler = async (req, res) => {
   if (plan) where.plan = plan;
 
   const offset = (parseInt(page, 10) - 1) * parseInt(pageSize, 10);
-  const { rows, count } = await db.tenant.findAndCountAll({
-    where,
-    order: [["createdAt", "DESC"]],
-    limit: parseInt(pageSize, 10),
-    offset,
-    attributes: [
-      "id",
-      "name",
-      "slug",
-      "domain",
-      "settings",
-      "plan",
-      "status",
-      "subscriptionStatus",
-      "currentPeriodEnd",
-      "graceEndsAt",
-      "suspendedAt",
-      "suspendedReason",
-      "currency",
-      "restaurantType",
-      "restaurantSubtype",
-      "serviceModes",
-      "createdAt",
-      "updatedAt",
-    ],
+  const { rows, count } = await tenantAdminDAO.list({
+    status,
+    plan,
+    page,
+    pageSize,
   });
 
   res.status(200).json({
@@ -105,12 +85,12 @@ const getTenantHandler = async (req, res) => {
 };
 
 const updateTenantHandler = async (req, res) => {
-  const tenant = await db.tenant.findByPk(req.params.id);
+  const tenant = await tenantAdminDAO.findById(req.params.id);
   if (!tenant) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
 
-  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "restaurantType", "restaurantSubtype", "serviceModes", "businessVertical", "whatsappConfig"];
+  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "restaurantType", "restaurantSubtype", "serviceModes", "businessVertical", "whatsappConfig", "dataRegion", "residencyNotes"];
   const updates = {};
   const changes = {};
 
@@ -149,28 +129,29 @@ const updateTenantHandler = async (req, res) => {
 };
 
 const deleteTenantHandler = async (req, res) => {
-  const tenant = await db.tenant.findByPk(req.params.id);
-  if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+  try {
+    const tenant = await tenantAdminDAO.softDelete(req.params.id);
+    if (!tenant) {
+      return res.status(404).json({ success: false, message: "Tenant not found" });
+    }
+
+    await tenantAdminDAO.log(
+      req.user?.id || null,
+      "tenant.deleted",
+      "tenant",
+      tenant.id,
+      tenant.id,
+      { tenantId: tenant.id, tenantName: tenant.name, tenantSlug: tenant.slug },
+      req.ip
+    );
+
+    res.status(200).json({ success: true, message: "Tenant deleted successfully", item: tenant });
+  } catch (err) {
+    if (err.isAlreadyDeleted) {
+      return res.status(400).json({ success: false, message: "Tenant is already deleted" });
+    }
+    throw err;
   }
-
-  if (tenant.status === "cancelled") {
-    return res.status(400).json({ success: false, message: "Tenant is already deleted" });
-  }
-
-  await tenant.update({ status: "cancelled" });
-
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "tenant.deleted",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { tenantId: tenant.id, tenantName: tenant.name, tenantSlug: tenant.slug },
-    req.ip
-  );
-
-  res.status(200).json({ success: true, message: "Tenant deleted successfully", item: tenant });
 };
 
 const enableTenantHandler = async (req, res) => {
@@ -193,53 +174,17 @@ const disableTenantHandler = async (req, res) => {
 };
 
 const exportTenantDataHandler = async (req, res) => {
-  const tenant = await db.tenant.findByPk(req.params.id, {
-    include: [
-      {
-        model: db.user,
-        as: "users",
-        attributes: { exclude: ["password"] },
-      },
-      {
-        model: db.reservation,
-        as: "reservations",
-        include: [
-          { model: db.payment, as: "payments" },
-          { model: db.order, as: "orders" },
-        ],
-      },
-      {
-        model: db.customer,
-        as: "customers",
-      },
-    ],
-  });
-
-  if (!tenant) {
+  const exported = await tenantAdminDAO.export(req.params.id);
+  if (!exported) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
 
-  const settings = await db.setting.findAll({
-    where: { tenantId: tenant.id },
-    attributes: ["key", "value", "updatedAt"],
-  });
-
-  const notes = await db.note.findAll({
-    where: { tenantId: tenant.id },
-    attributes: ["id", "note", "createdAt", "updatedAt"],
-  });
-
-  const legalAcceptances = await db.legalAcceptance.findAll({
-    where: { tenantId: tenant.id },
-    attributes: ["id", "documentVersion", "acceptedAt", "ipAddress", "userAgent"],
-  });
-
   const payload = {
     exportedAt: new Date().toISOString(),
-    tenant: tenant.toJSON(),
-    settings: settings.map((s) => ({ key: s.key, value: s.value, updatedAt: s.updatedAt })),
-    notes,
-    legalAcceptances,
+    tenant: exported.tenant.toJSON(),
+    settings: exported.settings.map((s) => ({ key: s.key, value: s.value, updatedAt: s.updatedAt })),
+    notes: exported.notes,
+    legalAcceptances: exported.legalAcceptances,
   };
 
   res.status(200).json({ success: true, data: payload });

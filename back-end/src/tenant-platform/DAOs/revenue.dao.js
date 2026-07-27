@@ -212,4 +212,15 @@ revenueDAO.getFeatureAdoption = async () => {
     .sort((a, b) => b.count - a.count);
 };
 
+revenueDAO.getGeographicDistribution = async () => {
+  const rows = await db.sequelize.query(
+    `SELECT COALESCE(dataRegion, 'Unspecified') AS region, COUNT(id) AS count FROM tenants GROUP BY COALESCE(dataRegion, 'Unspecified') ORDER BY count DESC`,
+    { type: db.Sequelize.QueryTypes.SELECT }
+  );
+  return rows.map((r) => ({
+    region: r.region,
+    count: parseInt(r.count, 10),
+  }));
+};
+
 module.exports = revenueDAO;

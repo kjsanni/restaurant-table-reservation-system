@@ -2,8 +2,8 @@
   <div class="tenant-export-view">
     <div class="page-header">
       <div>
-        <h1>Tenant Data Export</h1>
-        <p class="subtitle">Full tenant data export for GDPR compliance</p>
+        <h1>Venue Data Export</h1>
+        <p class="subtitle">Full venue data export for GDPR compliance</p>
       </div>
     </div>
 
@@ -18,7 +18,7 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Tenant</th>
+              <th>Venue</th>
               <th>Plan</th>
               <th>Status</th>
               <th>Action</th>

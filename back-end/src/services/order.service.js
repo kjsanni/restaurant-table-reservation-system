@@ -1,6 +1,5 @@
 const orderDAO = require("../DAOs/order.dao");
 const menuDAO = require("../DAOs/menu.dao");
-const paymentDAO = require("../DAOs/payment.dao");
 
 const createOrder = async (tenantId, payload) => {
   const { items = [], reservationId } = payload;

@@ -335,15 +335,9 @@ const router = createRouter({
       meta: { standalone: true },
     },
     {
-      path: "/dsar",
-      name: "dsar-submit",
-      component: () => import("../views/DsarSubmissionView.vue"),
-      meta: { standalone: true },
-    },
-    {
-      path: "/:pathMatch(.*)*",
-      name: "notFound",
-      component: () => import("../views/NotFoundView.vue"),
+      path: "/legal/:slug",
+      name: "legal-document",
+      component: () => import("../views/legal/LegalDocumentView.vue"),
       meta: { standalone: true },
     },
   ],
@@ -357,6 +351,22 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { standalone: true },
   });
   router.addRoute({
+    path: "/super-admin",
+    redirect: "/admin/overview",
+  });
+  router.addRoute({
+    path: "/super-admin/",
+    redirect: "/admin/overview",
+  });
+  router.addRoute({
+    path: "/admin",
+    redirect: "/admin/overview",
+  });
+  router.addRoute({
+    path: "/admin/",
+    redirect: "/admin/overview",
+  });
+  router.addRoute({
     path: "/t/:tenantSlug/login",
     name: "tenant-login",
     component: () => import("../views/tenant/TenantLoginView.vue"),
@@ -366,7 +376,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     path: "/t/:tenantSlug/portal",
     name: "customer-portal",
     component: () => import("../views/customer/CustomerPortalView.vue"),
-    meta: { tenantScoped: true },
+    meta: { tenantScoped: true, standalone: true },
   });
   router.addRoute({
     path: "/admin/tenants",
@@ -411,15 +421,9 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
-    path: "/admin/tenants/:id/timeline",
-    name: "tenant-timeline",
-    component: () => import("../views/admin/TenantStatusTimelineView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
     path: "/admin/tenants/:id/notes",
     name: "tenant-notes",
-    component: () => import("../views/admin/TenantDetailView.vue"),
+    component: () => import("../views/admin/TenantNotesView.vue"),
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
@@ -477,6 +481,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/geographic",
+    name: "platform-geographic",
+    component: () => import("../views/admin/GeographicDistributionView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/bulk",
     name: "platform-bulk-actions",
     component: () => import("../views/admin/BulkActionsView.vue"),
@@ -522,6 +532,48 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     path: "/admin/backups",
     name: "platform-backups",
     component: () => import("../views/admin/BackupManagementView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/alert-rules",
+    name: "platform-alert-rules",
+    component: () => import("../views/admin/AlertRulesView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/penetration-tests",
+    name: "platform-penetration-tests",
+    component: () => import("../views/admin/PenetrationTestsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/insurance-documents",
+    name: "platform-insurance-documents",
+    component: () => import("../views/admin/InsuranceDocumentsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/encryption-keys",
+    name: "platform-encryption-keys",
+    component: () => import("../views/admin/EncryptionKeysView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/auto-scaling",
+    name: "platform-auto-scaling",
+    component: () => import("../views/admin/AutoScalingTriggersView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/compliance",
+    name: "platform-compliance",
+    component: () => import("../views/admin/ComplianceEvidenceView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
+    path: "/admin/failover",
+    name: "platform-failover",
+    component: () => import("../views/admin/FailoverView.vue"),
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
@@ -1006,56 +1058,63 @@ const customerPortalRoutes = [
     path: "/portal",
     name: "customer-portal-home",
     component: () => import("../views/customer/CustomerPortalHomeView.vue"),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, standalone: true },
   },
   {
     path: "/portal/profile",
     name: "customer-profile",
     component: () => import("../views/customer/CustomerPortalProfileView.vue"),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, standalone: true },
   },
   {
     path: "/portal/reservations",
     name: "customer-reservations",
     component: () =>
       import("../views/customer/CustomerPortalReservationsView.vue"),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, standalone: true },
   },
   {
     path: "/portal/orders",
     name: "customer-orders",
     component: () => import("../views/customer/CustomerPortalOrdersView.vue"),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, standalone: true },
   },
   {
     path: "/portal/appointments",
     name: "customer-appointments",
     component: () =>
       import("../views/customer/CustomerPortalAppointmentsView.vue"),
-    meta: { requiresAuth: true, requiresVertical: "salon" },
+    meta: { requiresAuth: true, requiresVertical: "salon", standalone: true },
   },
   {
     path: "/portal/gift-cards",
     name: "customer-gift-cards",
     component: () =>
       import("../views/customer/CustomerPortalGiftCardsView.vue"),
-    meta: { requiresAuth: true, requiresVertical: "salon" },
+    meta: { requiresAuth: true, requiresVertical: "salon", standalone: true },
   },
   {
     path: "/portal/referrals",
     name: "customer-referrals",
     component: () =>
       import("../views/customer/CustomerPortalReferralsView.vue"),
-    meta: { requiresAuth: true, requiresVertical: "salon" },
+    meta: { requiresAuth: true, requiresVertical: "salon", standalone: true },
   },
   {
     path: "/portal/packages",
     name: "customer-packages",
     component: () => import("../views/customer/CustomerPortalPackagesView.vue"),
-    meta: { requiresAuth: true, requiresVertical: "salon" },
+    meta: { requiresAuth: true, requiresVertical: "salon", standalone: true },
   },
 ];
 
 customerPortalRoutes.forEach((route) => router.addRoute(route));
+
+router.addRoute({
+  path: "/:pathMatch(.*)*",
+  name: "notFound",
+  component: () => import("../views/NotFoundView.vue"),
+  meta: { standalone: true },
+});
 
 export default router;

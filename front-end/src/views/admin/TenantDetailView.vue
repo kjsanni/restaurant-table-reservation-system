@@ -4,12 +4,12 @@
       <button @click="$router.back()" class="back-btn">← Back</button>
       <h1>{{ tenant.name }}</h1>
       <span :class="['status-badge', tenant.status]">{{ tenant.status }}</span>
-      <button @click="accessTenant" class="btn-access">Access Tenant</button>
+      <button @click="accessTenant" class="btn-access">Access Venue</button>
     </div>
 
     <div class="grid">
       <div class="section">
-        <h2>Tenant Information</h2>
+        <h2>Venue Information</h2>
         <div class="info-row">
           <span class="label">Slug</span>
           <span class="value">{{ tenant.slug }}</span>
@@ -67,7 +67,7 @@
       <div class="section">
         <h2>WhatsApp Configuration</h2>
         <p class="section-hint">
-          Configure WhatsApp Business API for this tenant. Managed by platform
+          Configure WhatsApp Business API for this venue. Managed by platform
           admin only.
         </p>
         <div class="field">
@@ -125,14 +125,14 @@
         @click="enableTenant"
         class="btn success"
       >
-        Enable Tenant
+        Enable Venue
       </button>
       <button
         v-if="tenant.status === 'active' || tenant.status === 'past_due'"
         @click="disableTenant"
         class="btn danger"
       >
-        Disable Tenant
+        Disable Venue
       </button>
       <button
         v-if="tenant.status !== 'cancelled'"
@@ -140,7 +140,7 @@
         class="btn danger"
         :disabled="deleting"
       >
-        {{ deleting ? "Deleting..." : "Delete Tenant" }}
+        {{ deleting ? "Deleting..." : "Delete Venue" }}
       </button>
       <button class="btn" @click="exportTenantData" :disabled="exporting">
         {{ exporting ? "Exporting..." : "Export Data" }}
@@ -152,7 +152,7 @@
     <div class="section">
       <h2>Module Configuration</h2>
       <p class="section-hint">
-        Switch the tenant's business vertical. This enables the corresponding
+        Switch this venue's business vertical. This enables the corresponding
         module (restaurant or salon) and branding.
       </p>
       <div class="field">
@@ -175,7 +175,7 @@
     <div class="section">
       <h2>Restaurant Subtype</h2>
       <p class="section-hint">
-        Fine-tune the restaurant type for this tenant. This affects default
+        Fine-tune the restaurant type for this venue. This affects default
         features and pricing recommendations.
       </p>
       <div class="field">
@@ -202,13 +202,47 @@
       <span v-if="subtypeSaved" class="saved-tag">Saved</span>
     </div>
 
+    <div class="section">
+      <h2>Data Residency</h2>
+      <p class="section-hint">
+        Track where this venue's data is stored and any residency requirements.
+      </p>
+      <div class="field">
+        <label>Data Region</label>
+        <select v-model="dataRegion" :disabled="savingResidency">
+          <option value="">—</option>
+          <option value="gh">Ghana</option>
+          <option value="eu">EU</option>
+          <option value="us">US</option>
+          <option value="uk">UK</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Residency Notes</label>
+        <textarea
+          v-model="residencyNotes"
+          rows="3"
+          placeholder="Any special data residency requirements or notes..."
+        ></textarea>
+      </div>
+      <button
+        class="btn primary"
+        @click="saveResidency"
+        :disabled="savingResidency"
+      >
+        {{ savingResidency ? "Saving..." : "Save Residency" }}
+      </button>
+      <span v-if="residencySaved" class="saved-tag">Saved</span>
+    </div>
+
     <div class="section notes-section">
       <h2>Notes</h2>
       <div class="note-form">
         <textarea
           v-model="newNote"
           rows="2"
-          placeholder="Add a support note for this tenant..."
+          placeholder="Add a support note for this venue..."
         ></textarea>
         <button
           class="btn"
@@ -307,6 +341,10 @@ const verticalSaved = ref(false);
 const restaurantSubtype = ref("");
 const savingSubtype = ref(false);
 const subtypeSaved = ref(false);
+const dataRegion = ref("");
+const residencyNotes = ref("");
+const savingResidency = ref(false);
+const residencySaved = ref(false);
 const whatsappForm = ref({
   phoneNumberId: "",
   token: "",
@@ -328,6 +366,8 @@ const loadTenant = async () => {
   payoutForm.value = {
     paystackSubaccountCode: tenant.value.paystackSubaccountCode || "",
   };
+  dataRegion.value = tenant.value.dataRegion || "";
+  residencyNotes.value = tenant.value.residencyNotes || "";
   await loadNotes();
 };
 
@@ -371,11 +411,11 @@ const enableTenant = async () => {
 const disableTenant = async () => {
   if (
     !confirm(
-      "Are you sure you want to disable this tenant? This will prevent them from accessing the platform."
+      "Are you sure you want to disable this venue? This will prevent them from accessing the platform."
     )
   )
     return;
-  const reason = prompt("Reason for disabling tenant (optional):") || "";
+  const reason = prompt("Reason for disabling venue (optional):") || "";
   await tenantAdminAPI.disable(route.params.id, { reason });
   await loadTenant();
 };
@@ -384,7 +424,7 @@ const deleteTenant = async () => {
   deleteError.value = "";
   if (
     !confirm(
-      `Permanently delete "${tenant.value.name}"? This will soft-delete the tenant and cannot be undone.`
+      `Permanently delete "${tenant.value.name}"? This will soft-delete this venue and cannot be undone.`
     )
   )
     return;
@@ -399,7 +439,7 @@ const deleteTenant = async () => {
     router.push("/admin/tenants");
   } catch (err) {
     deleteError.value =
-      err?.response?.data?.message || "Failed to delete tenant.";
+      err?.response?.data?.message || "Failed to delete venue.";
   } finally {
     deleting.value = false;
   }
@@ -493,6 +533,22 @@ const saveSubtype = async () => {
     await loadTenant();
   } finally {
     savingSubtype.value = false;
+  }
+};
+
+const saveResidency = async () => {
+  savingResidency.value = true;
+  residencySaved.value = false;
+  try {
+    await tenantAdminAPI.update(route.params.id, {
+      dataRegion: dataRegion.value || null,
+      residencyNotes: residencyNotes.value || null,
+    });
+    residencySaved.value = true;
+    setTimeout(() => (residencySaved.value = false), 2000);
+    await loadTenant();
+  } finally {
+    savingResidency.value = false;
   }
 };
 

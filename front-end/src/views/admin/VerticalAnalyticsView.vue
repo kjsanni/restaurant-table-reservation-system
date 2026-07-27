@@ -18,7 +18,7 @@
         </div>
         <div v-else-if="summary" class="summary-grid">
           <div class="summary-item">
-            <span>Total Tenants</span>
+            <span>Total Venues</span>
             <b>{{ summary.totalTenants }}</b>
           </div>
           <div class="summary-item">
@@ -45,7 +45,7 @@
         </div>
         <div v-else class="vertical-grid">
           <div class="vertical-item">
-            <span>Tenants</span>
+            <span>Venues</span>
             <b>{{ item.totalTenants }}</b>
           </div>
           <div class="vertical-item">
@@ -57,7 +57,7 @@
             <b>{{ formatMoney(item.avgRevenue) }}</b>
           </div>
           <div class="vertical-item">
-            <span>New (30d)</span>
+            <span>New Venues (30d)</span>
             <b class="status-healthy">{{ item.newTenantsLast30Days }}</b>
           </div>
           <div class="vertical-item">

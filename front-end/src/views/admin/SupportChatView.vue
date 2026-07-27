@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1>Support Chat</h1>
-        <p class="subtitle">Manage tenant conversations and messages</p>
+        <p class="subtitle">Manage venue conversations and messages</p>
       </div>
       <div class="header-actions">
         <select
@@ -47,7 +47,7 @@
             </div>
             <div class="conv-subject">{{ conv.subject || "No subject" }}</div>
             <div class="conv-meta">
-              <span>Tenant #{{ conv.tenantId }}</span>
+              <span>Venue #{{ conv.tenantId }}</span>
               <span>{{
                 formatDate(conv.lastMessageAt || conv.createdAt)
               }}</span>

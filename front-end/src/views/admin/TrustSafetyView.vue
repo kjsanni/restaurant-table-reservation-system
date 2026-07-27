@@ -3,7 +3,7 @@
     <div class="page-header">
       <div>
         <h1>Trust & Safety</h1>
-        <p class="subtitle">Tenant health and risk scoring</p>
+        <p class="subtitle">Venue health and risk scoring</p>
       </div>
       <button class="btn-primary" @click="load" :disabled="loading">
         {{ loading ? "Refreshing..." : "Refresh" }}
@@ -38,7 +38,7 @@
     </div>
 
     <div class="card" style="margin-top: var(--space-5)">
-      <h3>Tenant Scores</h3>
+      <h3>Venue Scores</h3>
       <div v-if="loading" class="loading-state-inline">
         <div class="spinner-sm"></div>
       </div>

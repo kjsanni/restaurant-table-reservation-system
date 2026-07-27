@@ -50,6 +50,75 @@
         </div>
       </div>
     </div>
+
+    <div class="card" style="margin-top: var(--space-6)">
+      <h3>Tenant Data Migration</h3>
+      <p class="subtitle">Export or import tenant data between environments</p>
+
+      <div class="migration-grid">
+        <div class="migration-section">
+          <h4>Export Tenant</h4>
+          <label>
+            <span>Tenant ID</span>
+            <input
+              v-model="exportTenantId"
+              type="number"
+              class="input"
+              placeholder="e.g. 1"
+            />
+          </label>
+          <button
+            class="btn-primary"
+            @click="exportTenant"
+            :disabled="exporting"
+          >
+            {{ exporting ? "Exporting..." : "Export" }}
+          </button>
+          <pre v-if="exportResult" class="result-preview">{{
+            exportResult
+          }}</pre>
+        </div>
+
+        <div class="migration-section">
+          <h4>Import Tenant</h4>
+          <label>
+            <span>Mode</span>
+            <select v-model="importMode" class="input">
+              <option value="create">Create new tenant</option>
+              <option value="merge">Merge into existing tenant</option>
+            </select>
+          </label>
+          <label>
+            <span>Target Tenant ID (for merge)</span>
+            <input
+              v-model="importTargetId"
+              type="number"
+              class="input"
+              placeholder="Optional for merge"
+            />
+          </label>
+          <label>
+            <span>JSON Payload</span>
+            <textarea
+              v-model="importPayload"
+              rows="6"
+              class="input"
+              placeholder='{"tenant":{...},"settings":[...]}'
+            ></textarea>
+          </label>
+          <button
+            class="btn-primary"
+            @click="importTenant"
+            :disabled="importing"
+          >
+            {{ importing ? "Importing..." : "Import" }}
+          </button>
+          <pre v-if="importResult" class="result-preview">{{
+            importResult
+          }}</pre>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -67,6 +136,58 @@ const load = async () => {
     status.value = res.data || null;
   } finally {
     loading.value = false;
+  }
+};
+
+const exportTenantId = ref("");
+const exporting = ref(false);
+const exportResult = ref("");
+
+const exportTenant = async () => {
+  exporting.value = true;
+  exportResult.value = "";
+  try {
+    const res = await adminAPI.exportTenantMigration(exportTenantId.value);
+    exportResult.value = JSON.stringify(res.data, null, 2);
+  } catch (err) {
+    exportResult.value =
+      "Error: " + (err.response?.data?.message || err.message);
+  } finally {
+    exporting.value = false;
+  }
+};
+
+const importMode = ref("create");
+const importTargetId = ref("");
+const importPayload = ref("");
+const importing = ref(false);
+const importResult = ref("");
+
+const importTenant = async () => {
+  importing.value = true;
+  importResult.value = "";
+  try {
+    let payload = importPayload.value;
+    if (payload && typeof payload === "string") {
+      try {
+        payload = JSON.parse(payload);
+      } catch {
+        importResult.value = "Error: Invalid JSON payload";
+        importing.value = false;
+        return;
+      }
+    }
+    const res = await adminAPI.importTenantMigration({
+      mode: importMode.value,
+      targetTenantId: importTargetId.value || undefined,
+      payload,
+    });
+    importResult.value = JSON.stringify(res.data, null, 2);
+  } catch (err) {
+    importResult.value =
+      "Error: " + (err.response?.data?.message || err.message);
+  } finally {
+    importing.value = false;
   }
 };
 
@@ -195,5 +316,51 @@ onMounted(() => {
   to {
     transform: rotate(360deg);
   }
+}
+.migration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-4);
+}
+.migration-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.migration-section h4 {
+  margin: 0;
+  font-size: var(--text-lg);
+  color: var(--ink);
+}
+.migration-section label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+.migration-section label span {
+  font-weight: 600;
+  color: var(--ink);
+}
+.input {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-sm);
+}
+.result-preview {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  font-size: var(--text-xs);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 240px;
+  overflow: auto;
 }
 </style>

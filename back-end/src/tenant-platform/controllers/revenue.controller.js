@@ -27,10 +27,16 @@ const getFeatureAdoptionHandler = async (req, res) => {
   res.status(200).json({ success: true, collection: data });
 };
 
+const getGeographicDistributionHandler = async (req, res) => {
+  const data = await revenueDAO.getGeographicDistribution();
+  res.status(200).json({ success: true, collection: data });
+};
+
 module.exports = {
   getMrrTrendsHandler,
   getRevenueByPlanHandler,
   getLtvHandler,
   getCohortAnalysisHandler,
   getFeatureAdoptionHandler,
+  getGeographicDistributionHandler,
 };

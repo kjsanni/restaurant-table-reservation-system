@@ -2,7 +2,7 @@
   <div class="onboarding-checklist">
     <div class="page-header">
       <h1>Onboarding Checklist</h1>
-      <p class="subtitle">Track tenant setup progress</p>
+      <p class="subtitle">Track venue setup progress</p>
     </div>
     <div class="checklist">
       <div
@@ -81,6 +81,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useToastStore } from "@/stores/toast";
+import logger from "@/utils/logger";
 import onboardingAPI from "@/services/onboardingAPI";
 import legalAcceptanceAPI, {
   LEGAL_DOCUMENT_VERSIONS,
@@ -183,7 +184,7 @@ const loadAcceptances = async () => {
     });
     acceptances.value = map;
   } catch (err) {
-    console.warn("Failed to load legal acceptances", err);
+    logger.warn("Failed to load legal acceptances", err);
   }
 };
 

@@ -149,7 +149,6 @@ const exportPDF = async (filters = {}, tenantId) => {
   lines.push(`Total Reservations: ${report.totalReservations}`);
   lines.push("");
   lines.push("PAYMENT BREAKDOWN");
-  const currency = await formatMoney(0, tenantId).then((s) => s.split(" ")[0] || "GHS");
   for (const m of report.paymentBreakdown.byMethod || []) {
     const formatted = await formatMoney(Number(m.total || 0), tenantId);
     lines.push(`  ${m.method}: ${formatted} (${m.count} payments)`);

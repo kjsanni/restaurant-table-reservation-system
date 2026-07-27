@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const tipController = require("../controllers/whistleblowerTip.controller");
-const { protect, requireSuperAdmin } = require("../middleware/auth.middleware");
-const { tryCatchHandler } = require("../../utils/server");
+const { protect, requireSuperAdmin } = require("../../middleware/auth");
+const tryCatchHandler = require("../../middleware/tryCatch");
 
 router.use(protect, requireSuperAdmin);
 

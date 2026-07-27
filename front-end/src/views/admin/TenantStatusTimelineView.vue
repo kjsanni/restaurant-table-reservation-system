@@ -13,7 +13,7 @@
     </div>
 
     <div v-else-if="items.length === 0" class="empty-state">
-      <p>No timeline events found for this tenant.</p>
+      <p>No timeline events found for this venue.</p>
     </div>
 
     <div v-else class="timeline">
@@ -46,6 +46,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import logger from "@/utils/logger";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import statusTimelineAPI from "@/services/statusTimelineAPI";
 
@@ -64,7 +65,7 @@ const loadData = async () => {
     tenant.value = tenantRes.data.item || {};
     items.value = timelineRes.data.collection || timelineRes.data.items || [];
   } catch (err) {
-    console.error("Failed to load timeline", err);
+    logger.error("Failed to load timeline", err);
   } finally {
     loading.value = false;
   }

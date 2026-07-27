@@ -36,4 +36,22 @@ backupRecordDAO.getLatest = (status = "completed") => {
   });
 };
 
+backupRecordDAO.findScheduled = () => {
+  return db.backupRecord.findAll({
+    where: {
+      frequency: { [db.Sequelize.Op.ne]: null },
+      nextRunAt: { [db.Sequelize.Op.lte]: new Date() },
+    },
+    order: [["nextRunAt", "ASC"]],
+    limit: 10,
+  });
+};
+
+backupRecordDAO.updateScheduling = async (id, updates) => {
+  const record = await backupRecordDAO.findById(id);
+  if (!record) return null;
+  await record.update(updates);
+  return record;
+};
+
 module.exports = backupRecordDAO;

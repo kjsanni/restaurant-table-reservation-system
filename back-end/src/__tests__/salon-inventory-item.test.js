@@ -97,4 +97,21 @@ describe("inventoryItem.controller", () => {
     expect(ref.res.status).toHaveBeenCalledWith(404);
     ref.expectJson({ success: false, message: "Inventory item not found" });
   });
+
+  it("getLowStock returns items below reorder level", async () => {
+    require("../verticals/salon/DAOs/inventoryItem.dao").findLowStock.mockResolvedValue([
+      { id: 1, name: "Shampoo", quantity: 2, reorderLevel: 5 },
+    ]);
+
+    const ref = makeRes();
+    const req = { tenant: { id: 1 } };
+
+    await inventoryItemController.getLowStockHandler(req, ref.res);
+
+    expect(require("../verticals/salon/DAOs/inventoryItem.dao").findLowStock).toHaveBeenCalledWith(1);
+    ref.expectJson({
+      success: true,
+      data: [{ id: 1, name: "Shampoo", quantity: 2, reorderLevel: 5 }],
+    });
+  });
 });

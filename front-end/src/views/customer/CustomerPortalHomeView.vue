@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useCapabilities } from "@/composables/useCapabilities";
 import { useTenantBranding } from "@/composables/useTenantBranding";
+import logger from "@/utils/logger";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -11,7 +12,9 @@ const { businessVertical } = useCapabilities();
 const { apply: applyBranding } = useTenantBranding();
 
 const tenantName = computed(
-  () => authStore.currentTenant?.name || "Your Portal"
+  () =>
+    authStore.currentTenant?.name ||
+    (isSalon.value ? "Salon Portal" : "Restaurant Portal")
 );
 const isSalon = computed(() => businessVertical.value === "salon");
 
@@ -26,7 +29,9 @@ const portalLinks = computed(() => {
     { name: "Orders", path: "/portal/orders", icon: "mdi:food" },
   ];
   if (isSalon.value) {
-    links.push(
+    links.splice(
+      1,
+      0,
       {
         name: "Appointments",
         path: "/portal/appointments",
@@ -48,8 +53,12 @@ const portalLinks = computed(() => {
   return links;
 });
 
-onMounted(() => {
-  applyBranding();
+onMounted(async () => {
+  try {
+    await applyBranding();
+  } catch (err) {
+    logger.error("Failed to apply customer portal branding", err);
+  }
 });
 </script>
 
@@ -57,7 +66,7 @@ onMounted(() => {
   <div class="portal-home">
     <div class="portal-header">
       <h1>{{ tenantName }} Portal</h1>
-      <p>Welcome back! What would you like to do today?</p>
+      <p>Welcome back! Ready for today's bookings?</p>
     </div>
     <div class="portal-links">
       <button
@@ -65,6 +74,7 @@ onMounted(() => {
         :key="link.path"
         class="portal-link"
         @click="router.push(link.path)"
+        :aria-label="link.name"
       >
         <span class="portal-link-icon">
           <span class="mdi" :class="link.icon"></span>

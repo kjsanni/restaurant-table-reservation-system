@@ -1,5 +1,6 @@
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const authDAO = require("../../DAOs/auth.dao");
 
 const listIncidentsHandler = async (req, res) => {
   const where = {};
@@ -105,9 +106,83 @@ const deleteIncidentHandler = async (req, res) => {
   res.status(200).json({ success: true });
 };
 
+const lockTenantHandler = async (req, res) => {
+  const tenant = await db.tenant.findByPk(req.params.tenantId);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  await tenant.update({ status: "suspended", suspendedReason: "Locked by platform admin via incident response" });
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "incident.tenant_locked",
+    "tenant",
+    tenant.id,
+    tenant.id,
+    { tenantName: tenant.name, tenantSlug: tenant.slug },
+    req.ip
+  );
+
+  res.status(200).json({ success: true, message: "Tenant locked", item: tenant });
+};
+
+const resetTenantTokensHandler = async (req, res) => {
+  const tenant = await db.tenant.findByPk(req.params.tenantId);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  const users = await authDAO.getAllUsers(tenant.id);
+  const userIds = users.map((u) => u.id);
+  for (const userId of userIds) {
+    await authDAO.revokeAllUserTokens(userId, tenant.id);
+  }
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "incident.tokens_reset",
+    "tenant",
+    tenant.id,
+    tenant.id,
+    { tenantName: tenant.name, tenantSlug: tenant.slug, usersReset: userIds.length },
+    req.ip
+  );
+
+  res.status(200).json({ success: true, message: "All tenant tokens reset", usersReset: userIds.length });
+};
+
+const forceLogoutTenantHandler = async (req, res) => {
+  const tenant = await db.tenant.findByPk(req.params.tenantId);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  const users = await authDAO.getAllUsers(tenant.id);
+  const userIds = users.map((u) => u.id);
+  for (const userId of userIds) {
+    await authDAO.revokeAllUserTokens(userId, tenant.id);
+  }
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "incident.force_logout",
+    "tenant",
+    tenant.id,
+    tenant.id,
+    { tenantName: tenant.name, tenantSlug: tenant.slug, usersLoggedOut: userIds.length },
+    req.ip
+  );
+
+  res.status(200).json({ success: true, message: "All tenant sessions terminated", usersLoggedOut: userIds.length });
+};
+
 module.exports = {
   listIncidentsHandler,
   createIncidentHandler,
   updateIncidentHandler,
   deleteIncidentHandler,
+  lockTenantHandler,
+  resetTenantTokensHandler,
+  forceLogoutTenantHandler,
 };

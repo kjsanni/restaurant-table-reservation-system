@@ -22,6 +22,12 @@ module.exports = (sequelize, DataTypes) => {
       completedAt: { type: DataTypes.DATE, allowNull: true },
       error: { type: DataTypes.TEXT, allowNull: true },
       metadata: { type: DataTypes.JSON, allowNull: true, defaultValue: {} },
+      frequency: {
+        type: DataTypes.ENUM("daily", "weekly", "monthly"),
+        allowNull: true,
+      },
+      nextRunAt: { type: DataTypes.DATE, allowNull: true },
+      lastRunAt: { type: DataTypes.DATE, allowNull: true },
     },
     {
       sequelize,

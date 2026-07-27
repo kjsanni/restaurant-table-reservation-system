@@ -3,7 +3,8 @@ const router = express.Router();
 const tryCatchHandler = require("../../../middleware/tryCatch");
 const httpMethodError = require("../../../middleware/httpMethodError");
 const staffController = require("../controllers/staff.controller");
-const { protect, requireVertical, requirePermission } = require("../../../middleware/auth");
+const { protect, requirePermission } = require("../../../middleware/auth");
+const { requireVertical } = require("../../../middleware/requireVertical");
 
 router
   .route("/")
