@@ -1,36 +1,37 @@
-const db = require("../../db/models");
+const subProcessorDAO = require("../DAOs/subProcessor.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const listSubProcessorsHandler = async (req, res) => {
-  const processors = await db.subProcessor.findAll({
-    order: [["name", "ASC"]],
+  const { category, isActive } = req.query;
+  const data = await subProcessorDAO.list({
+    category: category || undefined,
+    isActive: isActive !== undefined ? isActive === "true" : undefined,
   });
-  res.status(200).json({ success: true, collection: processors });
+  res.status(200).json({ success: true, collection: data });
 };
 
 const createSubProcessorHandler = async (req, res) => {
-  const { name, purpose, dataTypes, location, status, dpaUrl, privacyPolicyUrl } = req.body;
-  if (!name || !purpose) {
-    return res.status(400).json({ success: false, message: "name and purpose are required" });
+  const { name, category, country, dataTypes, purpose, isActive } = req.body;
+  if (!name) {
+    return res.status(400).json({ success: false, message: "name is required" });
   }
 
-  const processor = await db.subProcessor.create({
+  const processor = await subProcessorDAO.create({
     name,
-    purpose,
-    dataTypes: dataTypes || [],
-    location: location || null,
-    status: status || "active",
-    dpaUrl: dpaUrl || null,
-    privacyPolicyUrl: privacyPolicyUrl || null,
+    category: category || null,
+    country: country || null,
+    dataTypes: dataTypes || null,
+    purpose: purpose || null,
+    isActive: isActive ?? true,
   });
 
   await platformAuditDAO.log(
-    req.user.id,
-    "subprocessor.created",
+    req.user?.id || null,
+    "platform.sub_processor_created",
     "sub_processor",
     processor.id,
     null,
-    { name, purpose, status: processor.status },
+    { name, category },
     req.ip
   );
 
@@ -38,28 +39,27 @@ const createSubProcessorHandler = async (req, res) => {
 };
 
 const updateSubProcessorHandler = async (req, res) => {
-  const processor = await db.subProcessor.findByPk(req.params.id);
+  const { name, category, country, dataTypes, purpose, isActive } = req.body;
+  const processor = await subProcessorDAO.update(req.params.id, {
+    name: name ?? undefined,
+    category: category ?? undefined,
+    country: country ?? undefined,
+    dataTypes: dataTypes ?? undefined,
+    purpose: purpose ?? undefined,
+    isActive: isActive ?? undefined,
+  });
+
   if (!processor) {
     return res.status(404).json({ success: false, message: "Sub-processor not found" });
   }
 
-  const allowed = ["name", "purpose", "dataTypes", "location", "status", "dpaUrl", "privacyPolicyUrl"];
-  const updates = {};
-  for (const key of allowed) {
-    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
-      updates[key] = req.body[key];
-    }
-  }
-
-  await processor.update(updates);
-
   await platformAuditDAO.log(
-    req.user.id,
-    "subprocessor.updated",
+    req.user?.id || null,
+    "platform.sub_processor_updated",
     "sub_processor",
     processor.id,
     null,
-    { updates },
+    { name: processor.name },
     req.ip
   );
 
@@ -67,16 +67,14 @@ const updateSubProcessorHandler = async (req, res) => {
 };
 
 const deleteSubProcessorHandler = async (req, res) => {
-  const processor = await db.subProcessor.findByPk(req.params.id);
+  const processor = await subProcessorDAO.remove(req.params.id);
   if (!processor) {
     return res.status(404).json({ success: false, message: "Sub-processor not found" });
   }
 
-  await processor.destroy();
-
   await platformAuditDAO.log(
-    req.user.id,
-    "subprocessor.deleted",
+    req.user?.id || null,
+    "platform.sub_processor_deleted",
     "sub_processor",
     processor.id,
     null,

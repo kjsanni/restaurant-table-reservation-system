@@ -7,22 +7,20 @@ module.exports = (sequelize, DataTypes) => {
   SubProcessor.init(
     {
       name: { type: DataTypes.STRING(255), allowNull: false },
-      purpose: { type: DataTypes.TEXT, allowNull: false },
+      category: { type: DataTypes.STRING(100), allowNull: true },
+      country: { type: DataTypes.STRING(100), allowNull: true },
       dataTypes: { type: DataTypes.JSON, allowNull: true },
-      location: { type: DataTypes.STRING(255), allowNull: true },
-      status: {
-        type: DataTypes.ENUM("active", "inactive", "under_review"),
-        allowNull: false,
-        defaultValue: "active",
-      },
-      dpaUrl: { type: DataTypes.STRING(500), allowNull: true },
-      privacyPolicyUrl: { type: DataTypes.STRING(500), allowNull: true },
+      purpose: { type: DataTypes.TEXT, allowNull: true },
+      isActive: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
     },
     {
       sequelize,
       modelName: "subProcessor",
       tableName: "sub_processors",
-      indexes: [{ fields: ["status"] }],
+      indexes: [
+        { fields: ["category"] },
+        { fields: ["isActive"] },
+      ],
     }
   );
   return SubProcessor;

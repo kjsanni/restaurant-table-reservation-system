@@ -183,6 +183,7 @@ if (TENANT_MODE) {
   notificationTemplateRoutes = require("../tenant-platform/routes/notificationTemplate.router");
   announcementRoutes = require("../tenant-platform/routes/announcement.router");
   dataRetentionPolicyRoutes = require("../tenant-platform/routes/dataRetentionPolicy.router");
+  subProcessorRoutes = require("../tenant-platform/routes/subProcessor.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
