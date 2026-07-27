@@ -114,6 +114,7 @@ let dsarRequestRoutes = null;
   let supportAttachmentRoutes = null;
   let complianceRuleRoutes = null;
   let notificationTemplateRoutes = null;
+  let announcementRoutes = null;
   let salonCustomerPortalRoutes = null;
   let salonDashboardRoutes = null;
 
@@ -179,6 +180,7 @@ if (TENANT_MODE) {
   supportAttachmentRoutes = require("../tenant-platform/routes/supportAttachment.router");
   complianceRuleRoutes = require("../tenant-platform/routes/complianceRule.router");
   notificationTemplateRoutes = require("../tenant-platform/routes/notificationTemplate.router");
+  announcementRoutes = require("../tenant-platform/routes/announcement.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -355,6 +357,7 @@ const createServer = () => {
     app.use("/api/v1/admin/support-attachments", logAction, validateCsrfToken, adminMiddleware, supportAttachmentRoutes);
     app.use("/api/v1/admin/compliance-rules", logAction, validateCsrfToken, adminMiddleware, complianceRuleRoutes);
     app.use("/api/v1/admin/notification-templates", logAction, validateCsrfToken, adminMiddleware, notificationTemplateRoutes);
+    app.use("/api/v1/admin/announcements", logAction, validateCsrfToken, adminMiddleware, announcementRoutes);
     app.use("/api/v1/admin/support-templates", logAction, validateCsrfToken, adminMiddleware, supportTemplateRoutes);
     app.use("/api/v1/admin/feature-flags", logAction, validateCsrfToken, adminMiddleware, featureFlagRoutes);
     app.use("/api/v1/admin/financial", logAction, validateCsrfToken, adminMiddleware, financialManagementRoutes);

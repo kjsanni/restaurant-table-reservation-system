@@ -186,6 +186,23 @@ const deleteNotificationTemplate = (id) => {
   return API.delete(`/admin/notification-templates/${id}`);
 };
 
+const listAnnouncements = (channel) => {
+  const qs = channel ? `?channel=${channel}` : "";
+  return API.get(`/admin/announcements${qs}`);
+};
+
+const createAnnouncement = (data) => {
+  return API.post("/admin/announcements", data);
+};
+
+const updateAnnouncement = (id, data) => {
+  return API.patch(`/admin/announcements/${id}`, data);
+};
+
+const deleteAnnouncement = (id) => {
+  return API.delete(`/admin/announcements/${id}`);
+};
+
 const deleteSupportTicket = (id) => {
   return API.delete(`/admin/support-tickets/${id}`);
 };
@@ -562,6 +579,10 @@ export default {
   createNotificationTemplate,
   updateNotificationTemplate,
   deleteNotificationTemplate,
+  listAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
   deleteSupportTicket,
   updateSupportTicket,
   getSupportTicket,
