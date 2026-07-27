@@ -371,6 +371,50 @@ const getWhatsAppSupportTicketAnalytics = (params = {}) => {
   return API.get("/admin/support-tickets/whatsapp/analytics", { params });
 };
 
+const listMarketplaceListings = () => {
+  return API.get("/admin/marketplace/listings");
+};
+
+const createMarketplaceListing = (data) => {
+  return API.post("/admin/marketplace/listings", data);
+};
+
+const updateMarketplaceListing = (id, data) => {
+  return API.patch(`/admin/marketplace/listings/${id}`, data);
+};
+
+const removeMarketplaceListing = (id) => {
+  return API.delete(`/admin/marketplace/listings/${id}`);
+};
+
+const listCaseStudies = () => {
+  return API.get("/admin/case-studies");
+};
+
+const createCaseStudy = (data) => {
+  return API.post("/admin/case-studies", data);
+};
+
+const updateCaseStudy = (id, data) => {
+  return API.patch(`/admin/case-studies/${id}`, data);
+};
+
+const removeCaseStudy = (id) => {
+  return API.delete(`/admin/case-studies/${id}`);
+};
+
+const listPlatformReferrals = () => {
+  return API.get("/admin/referrals");
+};
+
+const createPlatformReferral = (data) => {
+  return API.post("/admin/referrals", data);
+};
+
+const updatePlatformReferral = (id, data) => {
+  return API.patch(`/admin/referrals/${id}`, data);
+};
+
 const listPlatformReports = () => {
   return API.get("/admin/platform-reports");
 };
@@ -718,4 +762,15 @@ export default {
   getWhatsAppDeliveryFailures,
   getShaqExpressOrderConversion,
   getWhatsAppSupportTicketAnalytics,
+  listMarketplaceListings,
+  createMarketplaceListing,
+  updateMarketplaceListing,
+  removeMarketplaceListing,
+  listCaseStudies,
+  createCaseStudy,
+  updateCaseStudy,
+  removeCaseStudy,
+  listPlatformReferrals,
+  createPlatformReferral,
+  updatePlatformReferral,
 };

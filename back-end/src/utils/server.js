@@ -189,6 +189,9 @@ if (TENANT_MODE) {
   paystackConfigRoutes = require("../tenant-platform/routes/paystackConfig.router");
   shaqExpressConversionRoutes = require("../tenant-platform/routes/shaqExpressConversion.router");
   supportTicketAnalyticsRoutes = require("../tenant-platform/routes/supportTicketAnalytics.router");
+  marketplaceRoutes = require("../tenant-platform/routes/marketplace.router");
+  caseStudyRoutes = require("../tenant-platform/routes/caseStudy.router");
+  platformReferralRoutes = require("../tenant-platform/routes/platformReferral.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -390,6 +393,9 @@ const createServer = () => {
     app.use("/api/v1/admin/paystack", logAction, validateCsrfToken, adminMiddleware, paystackConfigRoutes);
     app.use("/api/v1/admin/shaqexpress", logAction, validateCsrfToken, adminMiddleware, shaqExpressConversionRoutes);
     app.use("/api/v1/admin/support-tickets", logAction, validateCsrfToken, adminMiddleware, supportTicketAnalyticsRoutes);
+    app.use("/api/v1/admin/marketplace", logAction, validateCsrfToken, adminMiddleware, marketplaceRoutes);
+    app.use("/api/v1/admin/case-studies", logAction, validateCsrfToken, adminMiddleware, caseStudyRoutes);
+    app.use("/api/v1/admin/referrals", logAction, validateCsrfToken, adminMiddleware, platformReferralRoutes);
     app.use("/api/v1/admin/debug", logAction, validateCsrfToken, adminMiddleware, debugRoutes);
     app.use("/api/v1/admin/migration", logAction, validateCsrfToken, adminMiddleware, migrationRoutes);
     app.use("/api/v1/admin/postmortems", logAction, validateCsrfToken, adminMiddleware, postmortemRoutes);
