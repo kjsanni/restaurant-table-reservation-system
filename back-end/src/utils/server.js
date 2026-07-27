@@ -187,6 +187,7 @@ if (TENANT_MODE) {
   platformReportRoutes = require("../tenant-platform/routes/platformReport.router");
   reconciliationRoutes = require("../tenant-platform/routes/reconciliation.router");
   paystackConfigRoutes = require("../tenant-platform/routes/paystackConfig.router");
+  shaqExpressConversionRoutes = require("../tenant-platform/routes/shaqExpressConversion.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -386,6 +387,7 @@ const createServer = () => {
     app.use("/api/v1/admin/platform-reports", logAction, validateCsrfToken, adminMiddleware, platformReportRoutes);
     app.use("/api/v1/admin/reconciliation", logAction, validateCsrfToken, adminMiddleware, reconciliationRoutes);
     app.use("/api/v1/admin/paystack", logAction, validateCsrfToken, adminMiddleware, paystackConfigRoutes);
+    app.use("/api/v1/admin/shaqexpress", logAction, validateCsrfToken, adminMiddleware, shaqExpressConversionRoutes);
     app.use("/api/v1/admin/debug", logAction, validateCsrfToken, adminMiddleware, debugRoutes);
     app.use("/api/v1/admin/migration", logAction, validateCsrfToken, adminMiddleware, migrationRoutes);
     app.use("/api/v1/admin/postmortems", logAction, validateCsrfToken, adminMiddleware, postmortemRoutes);

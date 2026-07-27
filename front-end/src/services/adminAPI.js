@@ -363,6 +363,10 @@ const getWhatsAppDeliveryFailures = (params = {}) => {
   return API.get("/admin/integrations/whatsapp/delivery-failures", { params });
 };
 
+const getShaqExpressOrderConversion = (params = {}) => {
+  return API.get("/admin/shaqexpress/order-conversion", { params });
+};
+
 const listPlatformReports = () => {
   return API.get("/admin/platform-reports");
 };
@@ -708,4 +712,5 @@ export default {
   getPaystackConfig,
   rotatePaystackKey,
   getWhatsAppDeliveryFailures,
+  getShaqExpressOrderConversion,
 };
