@@ -25,4 +25,9 @@ router
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(revenueController.getCohortAnalysisHandler))
   .all(httpMethodError);
 
+router
+  .route("/feature-adoption")
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(revenueController.getFeatureAdoptionHandler))
+  .all(httpMethodError);
+
 module.exports = router;

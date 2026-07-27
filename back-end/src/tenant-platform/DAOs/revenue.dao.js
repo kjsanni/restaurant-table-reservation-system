@@ -152,4 +152,64 @@ revenueDAO.getCohortAnalysis = async (months = 12) => {
   return cohorts;
 };
 
+revenueDAO.getFeatureAdoption = async () => {
+  const [
+    reservations,
+    menuItems,
+    orders,
+    deliveries,
+    giftCards,
+    referrals,
+    campaigns,
+    supportTickets,
+    floorPlans,
+    appointments,
+    waitlist,
+    payments,
+    invoices,
+    promotions,
+  ] = await Promise.all([
+    db.reservation.count({ col: "tenantId", distinct: true }),
+    db.menuItem.count({ col: "tenantId", distinct: true }),
+    db.order.count({ col: "tenantId", distinct: true }),
+    db.delivery.count({ col: "tenantId", distinct: true }),
+    db.giftCard.count({ col: "tenantId", distinct: true }),
+    db.referral.count({ col: "tenantId", distinct: true }),
+    db.marketingCampaign.count({ col: "tenantId", distinct: true }),
+    db.supportTicket.count({ col: "tenantId", distinct: true }),
+    db.floorPlan.count({ col: "tenantId", distinct: true }),
+    db.appointment.count({ col: "tenantId", distinct: true }),
+    db.waitlist.count({ col: "tenantId", distinct: true }),
+    db.payment.count({ col: "tenantId", distinct: true }),
+    db.invoice.count({ col: "tenantId", distinct: true }),
+    db.promotion.count({ col: "tenantId", distinct: true }),
+  ]);
+
+  const totalTenants = await db.tenant.count();
+
+  const features = [
+    { name: "Reservations", count: reservations },
+    { name: "Menu Items", count: menuItems },
+    { name: "Orders", count: orders },
+    { name: "Deliveries", count: deliveries },
+    { name: "Gift Cards", count: giftCards },
+    { name: "Referrals", count: referrals },
+    { name: "Marketing Campaigns", count: campaigns },
+    { name: "Support Tickets", count: supportTickets },
+    { name: "Floor Plans", count: floorPlans },
+    { name: "Appointments", count: appointments },
+    { name: "Waitlist", count: waitlist },
+    { name: "Payments", count: payments },
+    { name: "Invoices", count: invoices },
+    { name: "Promotions", count: promotions },
+  ];
+
+  return features
+    .map((f) => ({
+      ...f,
+      adoptionRate: totalTenants > 0 ? Math.round((f.count / totalTenants) * 100) : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+};
+
 module.exports = revenueDAO;

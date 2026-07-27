@@ -22,9 +22,15 @@ const getCohortAnalysisHandler = async (req, res) => {
   res.status(200).json({ success: true, collection: data });
 };
 
+const getFeatureAdoptionHandler = async (req, res) => {
+  const data = await revenueDAO.getFeatureAdoption();
+  res.status(200).json({ success: true, collection: data });
+};
+
 module.exports = {
   getMrrTrendsHandler,
   getRevenueByPlanHandler,
   getLtvHandler,
   getCohortAnalysisHandler,
+  getFeatureAdoptionHandler,
 };

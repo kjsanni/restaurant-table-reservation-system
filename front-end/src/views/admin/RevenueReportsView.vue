@@ -34,6 +34,12 @@
       >
         Cohorts
       </button>
+      <button
+        :class="['tab', { active: activeTab === 'adoption' }]"
+        @click="activeTab = 'adoption'"
+      >
+        Feature Adoption
+      </button>
     </div>
 
     <div v-if="loading" class="loading-state">
@@ -164,6 +170,35 @@
         </table>
       </div>
     </div>
+
+    <div v-else-if="activeTab === 'adoption'" class="tab-panel">
+      <div class="table-wrapper">
+        <table class="revenue-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Tenants Using</th>
+              <th>Adoption Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in adoptionData.rows" :key="row.name">
+              <td>{{ row.name }}</td>
+              <td>{{ row.count }}</td>
+              <td>
+                <div class="adoption-bar">
+                  <div
+                    class="adoption-fill"
+                    :style="{ width: row.adoptionRate + '%' }"
+                  ></div>
+                  <span class="adoption-text">{{ row.adoptionRate }}%</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -185,6 +220,7 @@ const mrrData = ref({
 const revenueByPlanData = ref({ rows: [] });
 const ltvData = ref({ rows: [] });
 const cohortData = ref({ rows: [] });
+const adoptionData = ref({ rows: [] });
 
 const loadMrrTrends = async () => {
   loading.value = true;
@@ -243,6 +279,17 @@ const loadCohorts = async () => {
   }
 };
 
+const loadFeatureAdoption = async () => {
+  try {
+    const response = await revenueAPI.getFeatureAdoption();
+    adoptionData.value = {
+      rows: response.data?.collection || response.data || [],
+    };
+  } catch {
+    adoptionData.value = { rows: [] };
+  }
+};
+
 const viewTenant = (id) => {
   router.push(`/admin/tenants/${id}`);
 };
@@ -260,6 +307,7 @@ onMounted(() => {
   loadRevenueByPlan();
   loadLtv();
   loadCohorts();
+  loadFeatureAdoption();
 });
 </script>
 
@@ -408,6 +456,29 @@ onMounted(() => {
 .danger {
   color: var(--rose-600);
   font-weight: 600;
+}
+.adoption-bar {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.adoption-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, var(--brand-600), var(--accent));
+  border-radius: var(--radius-full);
+}
+.adoption-text {
+  position: relative;
+  display: block;
+  text-align: center;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 20px;
 }
 .loading-state,
 .empty-state {
