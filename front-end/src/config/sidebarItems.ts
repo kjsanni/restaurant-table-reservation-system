@@ -90,6 +90,7 @@ export const adminNavItems: NavItem[] = [
   { routeName: 'platform-compliance-rules', text: 'Compliance Rules', icon: 'mdi:shield-check-outline', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-notification-templates', text: 'Notification Templates', icon: 'mdi:email-outline', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-announcements', text: 'Announcements', icon: 'mdi:bullhorn-outline', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-data-retention-policies', text: 'Retention Policies', icon: 'mdi:calendar-clock', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-data-retention', text: 'Data Retention', icon: 'mdi:database-clock', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-audit-log', text: 'Audit Log', icon: 'mdi:clipboard-list', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-incidents', text: 'Incidents', icon: 'mdi:alert-circle', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },

@@ -203,6 +203,22 @@ const deleteAnnouncement = (id) => {
   return API.delete(`/admin/announcements/${id}`);
 };
 
+const listDataRetentionPolicies = () => {
+  return API.get("/admin/data-retention/policies");
+};
+
+const createDataRetentionPolicy = (data) => {
+  return API.post("/admin/data-retention/policies", data);
+};
+
+const updateDataRetentionPolicy = (id, data) => {
+  return API.patch(`/admin/data-retention/policies/${id}`, data);
+};
+
+const deleteDataRetentionPolicy = (id) => {
+  return API.delete(`/admin/data-retention/policies/${id}`);
+};
+
 const deleteSupportTicket = (id) => {
   return API.delete(`/admin/support-tickets/${id}`);
 };
@@ -436,22 +452,6 @@ const getVerticalAnalytics = () => {
   return API.get("/admin/vertical-analytics");
 };
 
-const listDataRetentionPolicies = () => {
-  return API.get("/admin/data-retention");
-};
-
-const createDataRetentionPolicy = (data) => {
-  return API.post("/admin/data-retention", data);
-};
-
-const updateDataRetentionPolicy = (id, data) => {
-  return API.patch(`/admin/data-retention/${id}`, data);
-};
-
-const deleteDataRetentionPolicy = (id) => {
-  return API.delete(`/admin/data-retention/${id}`);
-};
-
 const executeDataRetention = () => {
   return API.post("/admin/data-retention/execute");
 };
@@ -583,6 +583,10 @@ export default {
   createAnnouncement,
   updateAnnouncement,
   deleteAnnouncement,
+  listDataRetentionPolicies,
+  createDataRetentionPolicy,
+  updateDataRetentionPolicy,
+  deleteDataRetentionPolicy,
   deleteSupportTicket,
   updateSupportTicket,
   getSupportTicket,
@@ -630,10 +634,6 @@ export default {
   updateVerticalTemplate,
   deleteVerticalTemplate,
   getVerticalAnalytics,
-  listDataRetentionPolicies,
-  createDataRetentionPolicy,
-  updateDataRetentionPolicy,
-  deleteDataRetentionPolicy,
   executeDataRetention,
   listIncidents,
   createIncident,
