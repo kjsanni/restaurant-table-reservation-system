@@ -54,6 +54,37 @@ const buildPlatformClient = async () => {
   return buildClient(config.secretKey);
 };
 
+const validateSecretKey = async (secretKey) => {
+  const client = buildClient(secretKey);
+  try {
+    await client.get("/transaction/verify/fake-reference-for-validation");
+    return true;
+  } catch (err) {
+    if (err.response?.status === 404) return true;
+    if (err.response?.status === 401) return false;
+    return false;
+  }
+};
+
+const updatePlatformPaystackConfig = async ({ secretKey, webhookSecret, mode }) => {
+  const existing = await loadPaystackConfig();
+  const payload = {
+    secretKey: secretKey || existing.secretKey,
+    webhookSecret: webhookSecret || existing.webhookSecret,
+    mode: mode || existing.mode,
+  };
+
+  await db.setting.upsert({
+    key: "paystack_config",
+    value: payload,
+    updatedAt: new Date(),
+  });
+
+  cachedConfig = null;
+  configLoadedAt = 0;
+  return payload;
+};
+
 const verifyWebhookSignature = async (payload, signature) => {
   const config = await loadPaystackConfig();
   if (!config.webhookSecret) return false;
@@ -148,4 +179,7 @@ module.exports = {
   verifyPayment,
   fetchCustomer,
   buildSplitConfig,
+  buildPlatformClient,
+  validateSecretKey,
+  updatePlatformPaystackConfig,
 };

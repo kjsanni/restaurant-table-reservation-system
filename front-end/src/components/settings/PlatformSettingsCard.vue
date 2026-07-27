@@ -4,6 +4,7 @@ import { VaSwitch } from "vuestic-ui";
 import { useAuthStore } from "@/stores/auth";
 import { useToastStore } from "@/stores/toast";
 import notificationAPI from "@/services/notificationAPI";
+import adminAPI from "@/services/adminAPI";
 import logger from "@/utils/logger";
 
 const props = defineProps<{
@@ -34,6 +35,19 @@ const sendingWhatsApp = ref(false);
 
 const paystackWebhook = ref({ webhookUrl: "", lastEvent: null as any });
 const loadingWebhook = ref(false);
+
+const paystackKeyStatus = ref({
+  hasSecretKey: false,
+  hasWebhookSecret: false,
+  mode: "test",
+});
+const loadingKeyStatus = ref(false);
+const rotatingKey = ref(false);
+const rotateError = ref("");
+const rotateSuccess = ref(false);
+const newSecretKey = ref("");
+const newWebhookSecret = ref("");
+const selectedMode = ref<"test" | "live">("test");
 
 const load = () => {
   const get = (key: string, fallback: any) => {
@@ -72,6 +86,46 @@ const loadPaystackWebhook = async () => {
     logger.error("Failed to load webhook info", { error: e?.message });
   } finally {
     loadingWebhook.value = false;
+  }
+};
+
+const loadPaystackKeyStatus = async () => {
+  loadingKeyStatus.value = true;
+  try {
+    const res = await adminAPI.getPaystackConfig();
+    paystackKeyStatus.value = res.data.config;
+    selectedMode.value = res.data.config.mode === "live" ? "live" : "test";
+  } catch (e: any) {
+    logger.error("Failed to load Paystack config", { error: e?.message });
+  } finally {
+    loadingKeyStatus.value = false;
+  }
+};
+
+const rotatePaystackKey = async () => {
+  rotateError.value = "";
+  rotateSuccess.value = false;
+  if (!newSecretKey.value.trim()) {
+    rotateError.value = "New secret key is required.";
+    return;
+  }
+  rotatingKey.value = true;
+  try {
+    await adminAPI.rotatePaystackKey({
+      secretKey: newSecretKey.value.trim(),
+      webhookSecret: newWebhookSecret.value.trim() || undefined,
+      mode: selectedMode.value,
+    });
+    rotateSuccess.value = true;
+    newSecretKey.value = "";
+    newWebhookSecret.value = "";
+    await loadPaystackKeyStatus();
+    setTimeout(() => (rotateSuccess.value = false), 3000);
+  } catch (e: any) {
+    rotateError.value =
+      e?.response?.data?.message || "Failed to rotate Paystack keys.";
+  } finally {
+    rotatingKey.value = false;
   }
 };
 
@@ -142,7 +196,10 @@ const onCopy = (text: string) => {
 };
 
 load();
-onMounted(loadPaystackWebhook);
+onMounted(() => {
+  loadPaystackWebhook();
+  loadPaystackKeyStatus();
+});
 </script>
 
 <template>
@@ -341,6 +398,54 @@ onMounted(loadPaystackWebhook);
       <p class="setting-description" v-else>No webhook events received yet.</p>
     </section>
 
+    <section class="integration-section">
+      <h3 class="integration-title">Paystack API Key Rotation</h3>
+      <p class="setting-description">
+        Rotate the platform Paystack secret key. The new key is validated before
+        saving. Rotation is logged in the audit trail.
+      </p>
+      <div class="email-grid">
+        <div class="email-field">
+          <label>Environment</label>
+          <select v-model="selectedMode" class="field-input">
+            <option value="test">Test</option>
+            <option value="live">Live</option>
+          </select>
+        </div>
+        <div class="email-field full-width">
+          <label>New Secret Key</label>
+          <input
+            v-model="newSecretKey"
+            class="field-input"
+            type="password"
+            placeholder="sk_test_... or sk_live_..."
+          />
+        </div>
+        <div class="email-field full-width">
+          <label>New Webhook Secret (optional)</label>
+          <input
+            v-model="newWebhookSecret"
+            class="field-input"
+            type="password"
+            placeholder="whsec_..."
+          />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button
+          class="btn btn-primary"
+          @click="rotatePaystackKey"
+          :disabled="rotatingKey"
+        >
+          {{ rotatingKey ? "Rotating..." : "Rotate Keys" }}
+        </button>
+      </div>
+      <p v-if="rotateError" class="error-text">{{ rotateError }}</p>
+      <p v-if="rotateSuccess" class="status-text saved">
+        Keys rotated successfully
+      </p>
+    </section>
+
     <div class="email-actions">
       <button
         class="btn btn-primary"
@@ -353,3 +458,25 @@ onMounted(loadPaystackWebhook);
     </div>
   </div>
 </template>
+
+<style scoped>
+.error-text {
+  color: var(--rose-600);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin-top: var(--space-2);
+}
+.status-text {
+  margin-left: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.status-text.saved {
+  color: var(--earth-600);
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+}
+</style>
