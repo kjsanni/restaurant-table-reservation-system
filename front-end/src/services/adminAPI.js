@@ -359,6 +359,28 @@ const getUnifiedIntegrationEvents = () => {
   return API.get("/admin/integrations/events/unified");
 };
 
+const listPlatformReports = () => {
+  return API.get("/admin/platform-reports");
+};
+
+const createPlatformReport = (data) => {
+  return API.post("/admin/platform-reports", data);
+};
+
+const getPlatformReport = (id) => {
+  return API.get(`/admin/platform-reports/${id}`);
+};
+
+const downloadPlatformReport = (id) => {
+  return API.get(`/admin/platform-reports/${id}/download`, {
+    responseType: "blob",
+  });
+};
+
+const deletePlatformReport = (id) => {
+  return API.delete(`/admin/platform-reports/${id}`);
+};
+
 const startImpersonation = (data) => {
   return API.post("/admin/impersonation", data);
 };
@@ -656,4 +678,9 @@ export default {
   getWhatsAppCampaigns,
   getShaqExpressAnalytics,
   getUnifiedIntegrationEvents,
+  listPlatformReports,
+  createPlatformReport,
+  getPlatformReport,
+  downloadPlatformReport,
+  deletePlatformReport,
 };
