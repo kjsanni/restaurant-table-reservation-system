@@ -106,6 +106,7 @@ export const adminNavItems: NavItem[] = [
   { routeName: 'platform-case-studies', text: 'Case Studies', icon: 'mdi:book-open-variant', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-referrals', text: 'Referrals', icon: 'mdi:account-group', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-tenant-data-export', text: 'Tenant Data Export', icon: 'mdi:export', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-cross-tenant-search', text: 'Cross-Tenant Search', icon: 'mdi:magnify', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-debug', text: 'Debug Tools', icon: 'mdi:bug', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-status', text: 'System Status', icon: 'mdi:heart-pulse', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-migration', text: 'Migrations', icon: 'mdi:database-sync', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },

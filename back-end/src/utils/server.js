@@ -192,6 +192,7 @@ if (TENANT_MODE) {
   marketplaceRoutes = require("../tenant-platform/routes/marketplace.router");
   caseStudyRoutes = require("../tenant-platform/routes/caseStudy.router");
   platformReferralRoutes = require("../tenant-platform/routes/platformReferral.router");
+  crossTenantSearchRoutes = require("../tenant-platform/routes/crossTenantSearch.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -396,6 +397,7 @@ const createServer = () => {
     app.use("/api/v1/admin/marketplace", logAction, validateCsrfToken, adminMiddleware, marketplaceRoutes);
     app.use("/api/v1/admin/case-studies", logAction, validateCsrfToken, adminMiddleware, caseStudyRoutes);
     app.use("/api/v1/admin/referrals", logAction, validateCsrfToken, adminMiddleware, platformReferralRoutes);
+    app.use("/api/v1/admin/search", logAction, validateCsrfToken, adminMiddleware, crossTenantSearchRoutes);
     app.use("/api/v1/admin/debug", logAction, validateCsrfToken, adminMiddleware, debugRoutes);
     app.use("/api/v1/admin/migration", logAction, validateCsrfToken, adminMiddleware, migrationRoutes);
     app.use("/api/v1/admin/postmortems", logAction, validateCsrfToken, adminMiddleware, postmortemRoutes);

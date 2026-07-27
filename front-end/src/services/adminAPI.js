@@ -415,6 +415,10 @@ const updatePlatformReferral = (id, data) => {
   return API.patch(`/admin/referrals/${id}`, data);
 };
 
+const crossTenantSearch = (params = {}) => {
+  return API.get("/admin/search", { params });
+};
+
 const listPlatformReports = () => {
   return API.get("/admin/platform-reports");
 };
@@ -773,4 +777,5 @@ export default {
   listPlatformReferrals,
   createPlatformReferral,
   updatePlatformReferral,
+  crossTenantSearch,
 };
