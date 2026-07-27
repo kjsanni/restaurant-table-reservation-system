@@ -44,7 +44,7 @@
     "@rushstack/eslint-patch": "^1.1.4",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
-    "@vitejs/plugin-vue": "^5.2.4",
+    "@vitejs/plugin-vue": "^6.0.8",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/test-utils": "^2.1.0",
     "eslint": "^10.8.0",
@@ -56,8 +56,8 @@
     "rollup-plugin-visualizer": "^7.0.1",
     "rollup-plugin-vue": "^6.0.0",
     "typescript": "^5.9.3",
-    "vite": "^6.4.3",
-    "vitest": "^3.2.7",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10",
     "vue-eslint-parser": "^10.4.1",
     "vue-tsc": "^3.3.8"
   }

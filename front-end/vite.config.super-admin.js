@@ -31,8 +31,8 @@ export default defineConfig({
         ),
       },
       output: {
-        manualChunks: {
-          "vuestic-ui": ["vuestic-ui"],
+        manualChunks: (id) => {
+          if (id.includes("vuestic-ui")) return "vuestic-ui";
         },
       },
     },

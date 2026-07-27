@@ -26,8 +26,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vuestic-ui": ["vuestic-ui"],
+        manualChunks: (id) => {
+          if (id.includes("vuestic-ui")) return "vuestic-ui";
         },
       },
     },

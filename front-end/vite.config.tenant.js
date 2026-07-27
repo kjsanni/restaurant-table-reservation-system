@@ -29,8 +29,8 @@ export default defineConfig({
         main: fileURLToPath(new URL("./index.tenant.html", import.meta.url)),
       },
       output: {
-        manualChunks: {
-          "vuestic-ui": ["vuestic-ui"],
+        manualChunks: (id) => {
+          if (id.includes("vuestic-ui")) return "vuestic-ui";
         },
       },
     },
