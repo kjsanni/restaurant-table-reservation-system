@@ -152,6 +152,23 @@ const deleteSupportAttachment = (id) => {
   return API.delete(`/admin/support-attachments/${id}`);
 };
 
+const listComplianceRules = (vertical) => {
+  const qs = vertical ? `?vertical=${vertical}` : "";
+  return API.get(`/admin/compliance-rules${qs}`);
+};
+
+const createComplianceRule = (data) => {
+  return API.post("/admin/compliance-rules", data);
+};
+
+const updateComplianceRule = (id, data) => {
+  return API.patch(`/admin/compliance-rules/${id}`, data);
+};
+
+const deleteComplianceRule = (id) => {
+  return API.delete(`/admin/compliance-rules/${id}`);
+};
+
 const deleteSupportTicket = (id) => {
   return API.delete(`/admin/support-tickets/${id}`);
 };
@@ -520,6 +537,10 @@ export default {
   listSupportAttachments,
   createSupportAttachment,
   deleteSupportAttachment,
+  listComplianceRules,
+  createComplianceRule,
+  updateComplianceRule,
+  deleteComplianceRule,
   deleteSupportTicket,
   updateSupportTicket,
   getSupportTicket,

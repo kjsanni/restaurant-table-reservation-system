@@ -585,6 +585,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/compliance-rules",
+    name: "platform-compliance-rules",
+    component: () => import("../views/admin/ComplianceRulesView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/data-retention",
     name: "platform-data-retention",
     component: () => import("../views/admin/DataRetentionView.vue"),
