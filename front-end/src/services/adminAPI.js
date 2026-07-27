@@ -381,6 +381,14 @@ const deletePlatformReport = (id) => {
   return API.delete(`/admin/platform-reports/${id}`);
 };
 
+const getMultiCurrencyTotals = (params = {}) => {
+  return API.get("/admin/reconciliation/multi-currency/totals", { params });
+};
+
+const getTenantCurrencyBreakdown = (params = {}) => {
+  return API.get("/admin/reconciliation/multi-currency/tenants", { params });
+};
+
 const startImpersonation = (data) => {
   return API.post("/admin/impersonation", data);
 };
@@ -683,4 +691,6 @@ export default {
   getPlatformReport,
   downloadPlatformReport,
   deletePlatformReport,
+  getMultiCurrencyTotals,
+  getTenantCurrencyBreakdown,
 };

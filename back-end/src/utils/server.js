@@ -185,6 +185,7 @@ if (TENANT_MODE) {
   dataRetentionPolicyRoutes = require("../tenant-platform/routes/dataRetentionPolicy.router");
   subProcessorRoutes = require("../tenant-platform/routes/subProcessor.router");
   platformReportRoutes = require("../tenant-platform/routes/platformReport.router");
+  reconciliationRoutes = require("../tenant-platform/routes/reconciliation.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -382,6 +383,7 @@ const createServer = () => {
     app.use("/api/v1/admin/suspicious-activity", logAction, validateCsrfToken, adminMiddleware, suspiciousActivityRoutes);
     app.use("/api/v1/admin/sub-processors", logAction, validateCsrfToken, adminMiddleware, subProcessorRoutes);
     app.use("/api/v1/admin/platform-reports", logAction, validateCsrfToken, adminMiddleware, platformReportRoutes);
+    app.use("/api/v1/admin/reconciliation", logAction, validateCsrfToken, adminMiddleware, reconciliationRoutes);
     app.use("/api/v1/admin/debug", logAction, validateCsrfToken, adminMiddleware, debugRoutes);
     app.use("/api/v1/admin/migration", logAction, validateCsrfToken, adminMiddleware, migrationRoutes);
     app.use("/api/v1/admin/postmortems", logAction, validateCsrfToken, adminMiddleware, postmortemRoutes);

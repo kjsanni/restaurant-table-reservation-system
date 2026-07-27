@@ -50,10 +50,26 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.JSON,
         allowNull: true,
       },
+      currency: {
+        type: DataTypes.STRING(3),
+        allowNull: false,
+        defaultValue: "GHS",
+      },
+      exchangeRate: {
+        type: DataTypes.DECIMAL(10, 4),
+        allowNull: true,
+      },
+      baseAmount: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
     },
     {
       sequelize,
       modelName: "payment",
+      indexes: [
+        { fields: ["currency"] },
+      ],
     }
   );
 

@@ -645,6 +645,13 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/reconciliation",
+    name: "platform-reconciliation",
+    component: () =>
+      import("../views/admin/MultiCurrencyReconciliationView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/debug",
     name: "platform-debug",
     component: () => import("../views/admin/DebugToolsView.vue"),
