@@ -134,6 +134,15 @@
       >
         Disable Tenant
       </button>
+      <button
+        v-if="tenant.status !== 'cancelled'"
+        @click="deleteTenant"
+        class="btn danger"
+        :disabled="deleting"
+      >
+        {{ deleting ? "Deleting..." : "Delete Tenant" }}
+      </button>
+      <p v-if="deleteError" class="error-text">{{ deleteError }}</p>
     </div>
 
     <div class="section">
@@ -284,6 +293,8 @@ const savingWhatsApp = ref(false);
 const whatsappSaved = ref(false);
 const savingPayout = ref(false);
 const payoutSaved = ref(false);
+const deleting = ref(false);
+const deleteError = ref("");
 const businessVertical = ref("restaurant");
 const savingVertical = ref(false);
 const verticalSaved = ref(false);
@@ -361,6 +372,31 @@ const disableTenant = async () => {
   const reason = prompt("Reason for disabling tenant (optional):") || "";
   await tenantAdminAPI.disable(route.params.id, { reason });
   await loadTenant();
+};
+
+const deleteTenant = async () => {
+  deleteError.value = "";
+  if (
+    !confirm(
+      `Permanently delete "${tenant.value.name}"? This will soft-delete the tenant and cannot be undone.`
+    )
+  )
+    return;
+  const confirmation = prompt("Type the tenant slug to confirm deletion:");
+  if (confirmation !== tenant.value.slug) {
+    deleteError.value = "Slug confirmation did not match.";
+    return;
+  }
+  deleting.value = true;
+  try {
+    await tenantAdminAPI.deleteTenant(route.params.id);
+    router.push("/admin/tenants");
+  } catch (err) {
+    deleteError.value =
+      err?.response?.data?.message || "Failed to delete tenant.";
+  } finally {
+    deleting.value = false;
+  }
 };
 
 const saveWhatsApp = async () => {

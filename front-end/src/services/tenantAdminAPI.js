@@ -69,6 +69,11 @@ export const disable = async (id, data = {}) => {
   return response;
 };
 
+export const deleteTenant = async (id) => {
+  const response = await client.delete(`/${id}`);
+  return response;
+};
+
 export const bulkChangeVertical = async (tenantIds, businessVertical) => {
   const response = await client.post("/bulk/change-vertical", {
     tenantIds,
@@ -85,4 +90,5 @@ export default {
   update,
   enable,
   disable,
+  deleteTenant,
 };

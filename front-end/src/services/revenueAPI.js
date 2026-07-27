@@ -25,5 +25,7 @@ export const getMrrTrends = (months = 12) =>
   client.get("/mrr-trends", { params: { months } });
 export const getRevenueByPlan = () => client.get("/by-plan");
 export const getLtv = () => client.get("/ltv");
+export const getCohortAnalysis = (months = 12) =>
+  client.get("/cohorts", { params: { months } });
 
-export default { getMrrTrends, getRevenueByPlan, getLtv };
+export default { getMrrTrends, getRevenueByPlan, getLtv, getCohortAnalysis };

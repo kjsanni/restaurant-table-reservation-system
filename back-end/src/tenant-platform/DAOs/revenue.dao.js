@@ -114,4 +114,42 @@ revenueDAO.getLtvByTenant = async () => {
   });
 };
 
+revenueDAO.getCohortAnalysis = async (months = 12) => {
+  const plans = await db.subscriptionPlan.findAll({
+    where: { isActive: true },
+    raw: true,
+  });
+  const planPriceMap = {};
+  for (const plan of plans) {
+    planPriceMap[plan.slug] = parseFloat(plan.price || 0);
+  }
+
+  const now = new Date();
+  const cohorts = [];
+  for (let i = months - 1; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+    const cohortLabel = start.toISOString().slice(0, 7);
+
+    const tenants = await db.tenant.findAll({
+      where: {
+        status: { [db.Sequelize.Op.in]: ["active", "past_due", "trialing"] },
+        createdAt: { [db.Sequelize.Op.gte]: start, [db.Sequelize.Op.lt]: end },
+      },
+      raw: true,
+    });
+
+    const count = tenants.length;
+    const mrr = tenants.reduce((sum, t) => sum + (planPriceMap[t.plan] || 0), 0);
+
+    cohorts.push({
+      cohort: cohortLabel,
+      signups: count,
+      mrr,
+      avgRevenuePerTenant: count > 0 ? Math.round(mrr / count) : 0,
+    });
+  }
+  return cohorts;
+};
+
 module.exports = revenueDAO;

@@ -3,7 +3,9 @@
     <div class="page-header">
       <div>
         <h1>Revenue Reports</h1>
-        <p class="subtitle">MRR trends, revenue by plan, and tenant LTV</p>
+        <p class="subtitle">
+          MRR trends, revenue by plan, tenant LTV, and cohort analysis
+        </p>
       </div>
     </div>
 
@@ -25,6 +27,12 @@
         @click="activeTab = 'ltv'"
       >
         LTV by Tenant
+      </button>
+      <button
+        :class="['tab', { active: activeTab === 'cohorts' }]"
+        @click="activeTab = 'cohorts'"
+      >
+        Cohorts
       </button>
     </div>
 
@@ -133,6 +141,29 @@
         </table>
       </div>
     </div>
+
+    <div v-else-if="activeTab === 'cohorts'" class="tab-panel">
+      <div class="table-wrapper">
+        <table class="revenue-table">
+          <thead>
+            <tr>
+              <th>Cohort</th>
+              <th>Signups</th>
+              <th>Cohort MRR</th>
+              <th>Avg Revenue / Tenant</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in cohortData.rows" :key="row.cohort">
+              <td>{{ row.cohort }}</td>
+              <td>{{ row.signups }}</td>
+              <td>{{ formatCurrency(row.mrr) }}</td>
+              <td>{{ formatCurrency(row.avgRevenuePerTenant) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -153,6 +184,7 @@ const mrrData = ref({
 });
 const revenueByPlanData = ref({ rows: [] });
 const ltvData = ref({ rows: [] });
+const cohortData = ref({ rows: [] });
 
 const loadMrrTrends = async () => {
   loading.value = true;
@@ -200,6 +232,17 @@ const loadLtv = async () => {
   }
 };
 
+const loadCohorts = async () => {
+  try {
+    const response = await revenueAPI.getCohortAnalysis();
+    cohortData.value = {
+      rows: response.data?.collection || response.data || [],
+    };
+  } catch {
+    cohortData.value = { rows: [] };
+  }
+};
+
 const viewTenant = (id) => {
   router.push(`/admin/tenants/${id}`);
 };
@@ -216,6 +259,7 @@ onMounted(() => {
   loadMrrTrends();
   loadRevenueByPlan();
   loadLtv();
+  loadCohorts();
 });
 </script>
 

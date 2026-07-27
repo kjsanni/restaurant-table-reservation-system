@@ -20,6 +20,7 @@ router
   .route("/:id")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.getTenantHandler))
   .patch(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.updateTenantHandler))
+  .delete(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.deleteTenantHandler))
   .all(httpMethodError);
 
 router

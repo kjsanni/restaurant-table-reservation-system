@@ -148,6 +148,31 @@ const updateTenantHandler = async (req, res) => {
   res.status(200).json({ success: true, item: tenant });
 };
 
+const deleteTenantHandler = async (req, res) => {
+  const tenant = await db.tenant.findByPk(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  if (tenant.status === "cancelled") {
+    return res.status(400).json({ success: false, message: "Tenant is already deleted" });
+  }
+
+  await tenant.update({ status: "cancelled" });
+
+  await platformAuditDAO.log(
+    req.user?.id || null,
+    "tenant.deleted",
+    "tenant",
+    tenant.id,
+    tenant.id,
+    { tenantId: tenant.id, tenantName: tenant.name, tenantSlug: tenant.slug },
+    req.ip
+  );
+
+  res.status(200).json({ success: true, message: "Tenant deleted successfully", item: tenant });
+};
+
 const enableTenantHandler = async (req, res) => {
   try {
     const tenant = await enableTenant(req.params.id);
@@ -177,6 +202,7 @@ module.exports = {
   getTenantsHandler,
   getTenantHandler,
   updateTenantHandler,
+  deleteTenantHandler,
   enableTenantHandler,
   disableTenantHandler,
   getDashboardHandler,

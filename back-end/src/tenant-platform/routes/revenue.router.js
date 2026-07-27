@@ -20,4 +20,9 @@ router
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(revenueController.getLtvHandler))
   .all(httpMethodError);
 
+router
+  .route("/cohorts")
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(revenueController.getCohortAnalysisHandler))
+  .all(httpMethodError);
+
 module.exports = router;
