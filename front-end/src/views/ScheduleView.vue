@@ -326,7 +326,9 @@ onMounted(loadSchedules);
   border: none;
   background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
   color: var(--white);
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
 }
 
 .btn-primary:hover {

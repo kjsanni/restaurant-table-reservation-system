@@ -1063,7 +1063,10 @@ onUnmounted(() => {
   font-weight: 500;
   color: rgba(255, 255, 255, 0.78);
   text-decoration: none;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
   cursor: pointer;
 }
 .standalone-nav-item:hover {

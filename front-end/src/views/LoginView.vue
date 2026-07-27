@@ -264,7 +264,8 @@ const handleTOTPLogin = async () => {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       420px 220px at 0% 0%,
       rgba(251, 191, 36, 0.18),
       transparent 60%
@@ -342,7 +343,8 @@ const handleTOTPLogin = async () => {
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-xl);
   padding: 40px;
-  box-shadow: 0 20px 60px rgba(26, 20, 16, 0.08),
+  box-shadow:
+    0 20px 60px rgba(26, 20, 16, 0.08),
     0 1px 2px rgba(26, 20, 16, 0.04);
 }
 .form-card h2 {
@@ -378,7 +380,9 @@ const handleTOTPLogin = async () => {
   font-size: 14px;
   color: var(--neutral-900);
   background: var(--neutral-50);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .field input:focus {
   outline: none;

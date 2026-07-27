@@ -222,7 +222,9 @@ onMounted(loadReservations);
   background: var(--white);
   color: var(--neutral-800);
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
   font-family: var(--font-sans);
 }
 
@@ -386,7 +388,9 @@ tr:hover td {
   border: none;
   background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
   color: var(--white);
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
 }
 
 .btn-primary:hover {

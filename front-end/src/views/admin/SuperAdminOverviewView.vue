@@ -34,8 +34,8 @@
               health.status === "healthy"
                 ? "All systems healthy"
                 : health.status === "degraded"
-                ? "System degraded"
-                : "Health check unavailable"
+                  ? "System degraded"
+                  : "Health check unavailable"
             }}</b>
           </div>
           <div class="health-checks">
@@ -167,8 +167,8 @@
                   ticket.priority === 'critical'
                     ? 'var(--rose-100)'
                     : ticket.priority === 'high'
-                    ? 'var(--accent-100)'
-                    : 'var(--sky-100)',
+                      ? 'var(--accent-100)'
+                      : 'var(--sky-100)',
               }"
             >
               <svg
@@ -180,8 +180,8 @@
                   ticket.priority === 'critical'
                     ? 'var(--rose-600)'
                     : ticket.priority === 'high'
-                    ? 'var(--accent-600)'
-                    : 'var(--sky-600)'
+                      ? 'var(--accent-600)'
+                      : 'var(--sky-600)'
                 "
                 stroke-width="2"
               >
@@ -396,8 +396,8 @@
                   conv.priority === 'critical'
                     ? 'var(--rose-100)'
                     : conv.priority === 'high'
-                    ? 'var(--accent-100)'
-                    : 'var(--sky-100)',
+                      ? 'var(--accent-100)'
+                      : 'var(--sky-100)',
               }"
             >
               <svg
@@ -409,8 +409,8 @@
                   conv.priority === 'critical'
                     ? 'var(--rose-600)'
                     : conv.priority === 'high'
-                    ? 'var(--accent-600)'
-                    : 'var(--sky-600)'
+                      ? 'var(--accent-600)'
+                      : 'var(--sky-600)'
                 "
                 stroke-width="2"
               >
@@ -681,12 +681,12 @@ const loadActivity = async () => {
         item.entityType === "tenant"
           ? "tenant"
           : item.action?.startsWith("payment")
-          ? "payment"
-          : item.action?.startsWith("super_admin")
-          ? "audit"
-          : item.entityType === "user"
-          ? "user"
-          : "default";
+            ? "payment"
+            : item.action?.startsWith("super_admin")
+              ? "audit"
+              : item.entityType === "user"
+                ? "user"
+                : "default";
       const style = ACTION_ICON_MAP[category] || ACTION_ICON_MAP.default;
       const timeAgo = formatTimeAgo(new Date(item.createdAt));
       let title = item.title || item.action;
@@ -1018,7 +1018,8 @@ onMounted(async () => {
   border-radius: var(--radius-xl);
   padding: var(--space-5);
   box-shadow: var(--shadow-sm);
-  transition: transform var(--duration-200) var(--ease-out),
+  transition:
+    transform var(--duration-200) var(--ease-out),
     box-shadow var(--duration-200) var(--ease-out),
     border-color var(--duration-200) var(--ease-out);
 }

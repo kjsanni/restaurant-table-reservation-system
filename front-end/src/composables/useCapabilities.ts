@@ -4,8 +4,12 @@ import { useAuthStore } from "@/stores/auth";
 export function useCapabilities() {
   const authStore = useAuthStore();
   const capabilities = computed(() => authStore.capabilities);
-  const businessVertical = computed(() => capabilities.value?.businessVertical || "restaurant");
-  const restaurantType = computed(() => capabilities.value?.restaurantType || "full_service");
+  const businessVertical = computed(
+    () => capabilities.value?.businessVertical || "restaurant"
+  );
+  const restaurantType = computed(
+    () => capabilities.value?.restaurantType || "full_service"
+  );
   const serviceModes = computed(() => capabilities.value?.serviceModes || []);
   const featureFlags = computed(() => capabilities.value?.featureFlags || {});
 

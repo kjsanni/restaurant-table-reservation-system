@@ -1400,7 +1400,8 @@ const today = () => {
   color: var(--ink);
   background: var(--surface);
   box-shadow: var(--shadow-xs);
-  transition: border-color var(--duration-200) var(--ease-in-out),
+  transition:
+    border-color var(--duration-200) var(--ease-in-out),
     box-shadow var(--duration-200) var(--ease-in-out);
 }
 

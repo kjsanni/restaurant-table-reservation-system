@@ -1251,7 +1251,9 @@ onMounted(() => {
   border: 1px solid var(--border);
   overflow: hidden;
   box-shadow: var(--card-shadow);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .menu-card:hover {
@@ -1397,7 +1399,9 @@ onMounted(() => {
   border: 1px solid var(--border);
   overflow: hidden;
   box-shadow: var(--card-shadow);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .table-card:hover {
@@ -1740,7 +1744,9 @@ onMounted(() => {
 .reveal-section {
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
 }
 
 .reveal-section.is-revealed {

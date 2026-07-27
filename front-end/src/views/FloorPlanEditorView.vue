@@ -437,7 +437,8 @@ onUnmounted(() => {
   cursor: grab;
   user-select: none;
   touch-action: none;
-  transition: box-shadow var(--duration-150) var(--ease-in-out),
+  transition:
+    box-shadow var(--duration-150) var(--ease-in-out),
     transform var(--duration-150) var(--ease-in-out);
 }
 .table-card:hover {

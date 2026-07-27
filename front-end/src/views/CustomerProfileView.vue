@@ -787,7 +787,8 @@ const savePreferences = async () => {
   font-size: var(--text-sm);
   background: var(--surface);
   color: var(--ink);
-  transition: border-color var(--duration-150) var(--ease-in-out),
+  transition:
+    border-color var(--duration-150) var(--ease-in-out),
     box-shadow var(--duration-150) var(--ease-in-out);
 }
 
@@ -1048,7 +1049,8 @@ const savePreferences = async () => {
   width: 180px;
   background: var(--surface);
   color: var(--ink);
-  transition: border-color var(--duration-150) var(--ease-in-out),
+  transition:
+    border-color var(--duration-150) var(--ease-in-out),
     box-shadow var(--duration-150) var(--ease-in-out);
 }
 

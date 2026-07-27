@@ -249,8 +249,8 @@ onMounted(loadCampaigns);
                 saving
                   ? t("salon.saving", "Saving...")
                   : editing
-                  ? t("salon.updateCampaign", "Update Campaign")
-                  : t("salon.createCampaign", "Create Campaign")
+                    ? t("salon.updateCampaign", "Update Campaign")
+                    : t("salon.createCampaign", "Create Campaign")
               }}
             </button>
           </div>

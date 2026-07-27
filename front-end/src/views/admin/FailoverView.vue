@@ -103,8 +103,8 @@ const load = async () => {
         item.status === "completed"
           ? "active"
           : item.status === "failed"
-          ? "failed"
-          : "standby";
+            ? "failed"
+            : "standby";
       lastTestedAt.value = item.dueDate ? item.dueDate.split("T")[0] : "";
     }
   } finally {
@@ -124,8 +124,8 @@ const save = async () => {
         status.value === "active"
           ? "completed"
           : status.value === "failed"
-          ? "failed"
-          : "in_progress",
+            ? "failed"
+            : "in_progress",
       owner: primaryRegion.value,
       dueDate: lastTestedAt.value
         ? new Date(lastTestedAt.value).toISOString()

@@ -509,7 +509,9 @@ onMounted(async () => {
   border-radius: var(--radius-xl);
   padding: 22px 24px;
   box-shadow: 0 10px 30px rgba(26, 20, 16, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .kpi-card:hover {
@@ -760,7 +762,10 @@ onMounted(async () => {
   gap: 6px;
   cursor: pointer;
   text-align: left;
-  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
   font-family: var(--font-sans);
 }
 

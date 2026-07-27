@@ -23,9 +23,19 @@ export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
   const isAuthenticated = computed(() => !!user.value);
   const isLoading = ref(true);
-  const currentTenant = ref<{ id: number; name: string; slug?: string; businessVertical?: string } | null>(null);
+  const currentTenant = ref<{
+    id: number;
+    name: string;
+    slug?: string;
+    businessVertical?: string;
+  } | null>(null);
   const tenantModeEnabled = ref(false);
-  const branding = ref({ brandName: "", logoUrl: "", primaryColor: "", secondaryColor: "" });
+  const branding = ref({
+    brandName: "",
+    logoUrl: "",
+    primaryColor: "",
+    secondaryColor: "",
+  });
   const currencyLocale = ref({ currency: "GHS", locale: "en-GH" });
   const authError = ref<string | null>(null);
   const capabilities = ref<TenantCapabilities | null>(null);
@@ -43,7 +53,11 @@ export const useAuthStore = defineStore("auth", () => {
     if (v && typeof v === "object") Object.assign(target, v);
   };
 
-  const login = async (email: string, password: string, entryPointContext?: "platform" | "tenant") => {
+  const login = async (
+    email: string,
+    password: string,
+    entryPointContext?: "platform" | "tenant"
+  ) => {
     const response = await authAPI.login(email, password);
     user.value = response.data.user;
     entryPoint.value = entryPointContext || null;
@@ -56,7 +70,11 @@ export const useAuthStore = defineStore("auth", () => {
     return response.data;
   };
 
-  const register = async (username: string, email: string, password: string) => {
+  const register = async (
+    username: string,
+    email: string,
+    password: string
+  ) => {
     const response = await authAPI.register(username, email, password);
     return response;
   };
@@ -132,7 +150,14 @@ export const useAuthStore = defineStore("auth", () => {
     return response.data.setting;
   };
 
-  const setTenant = (tenant: { id: number; name: string; slug?: string; businessVertical?: string } | null) => {
+  const setTenant = (
+    tenant: {
+      id: number;
+      name: string;
+      slug?: string;
+      businessVertical?: string;
+    } | null
+  ) => {
     currentTenant.value = tenant;
   };
 

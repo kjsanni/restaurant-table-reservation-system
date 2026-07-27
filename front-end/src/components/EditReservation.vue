@@ -630,7 +630,8 @@ const editReservation = async () => {
   width: 100%;
   box-sizing: border-box;
   background: var(--surface);
-  transition: border-color var(--duration-fast) var(--ease-in-out),
+  transition:
+    border-color var(--duration-fast) var(--ease-in-out),
     box-shadow var(--duration-fast) var(--ease-in-out);
 }
 .form-select:focus {

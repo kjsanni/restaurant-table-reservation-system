@@ -490,7 +490,10 @@ const handleServiceChange = async () => {
                 <select
                   :value="apt.status"
                   :class="['status-select', statusClass(apt.status)]"
-                  @change="(e) => updateStatus(apt, (e.target as HTMLSelectElement).value)"
+                  @change="
+                    (e) =>
+                      updateStatus(apt, (e.target as HTMLSelectElement).value)
+                  "
                 >
                   <option v-for="s in statusOptions" :key="s" :value="s">
                     {{ s.replace("_", " ") }}

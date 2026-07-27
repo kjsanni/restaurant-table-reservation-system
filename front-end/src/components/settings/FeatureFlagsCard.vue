@@ -87,8 +87,8 @@ onMounted(loadFlags);
           flagsSaving
             ? "Saving..."
             : flagsSaved
-            ? "Saved"
-            : "Save Feature Flags"
+              ? "Saved"
+              : "Save Feature Flags"
         }}
       </button>
     </div>

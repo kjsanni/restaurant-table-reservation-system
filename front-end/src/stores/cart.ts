@@ -15,7 +15,10 @@ export const useCartStore = defineStore("cart", () => {
 
   const total = computed(() =>
     items.value.reduce((sum, item) => {
-      const optionsTotal = item.selectedOptions.reduce((s, o) => s + o.priceAdjustment, 0);
+      const optionsTotal = item.selectedOptions.reduce(
+        (s, o) => s + o.priceAdjustment,
+        0
+      );
       return sum + (item.price + optionsTotal) * item.quantity;
     }, 0)
   );
@@ -25,7 +28,9 @@ export const useCartStore = defineStore("cart", () => {
   );
 
   const addItem = (item: Omit<CartItem, "quantity">, quantity = 1) => {
-    const existing = items.value.find((i) => i.menuItemId === item.menuItemId && i.itemNotes === item.itemNotes);
+    const existing = items.value.find(
+      (i) => i.menuItemId === item.menuItemId && i.itemNotes === item.itemNotes
+    );
     if (existing) {
       existing.quantity += quantity;
     } else {
@@ -39,7 +44,11 @@ export const useCartStore = defineStore("cart", () => {
     );
   };
 
-  const updateQuantity = (menuItemId: number, quantity: number, itemNotes?: string | null) => {
+  const updateQuantity = (
+    menuItemId: number,
+    quantity: number,
+    itemNotes?: string | null
+  ) => {
     const item = items.value.find(
       (i) => i.menuItemId === menuItemId && i.itemNotes === itemNotes
     );

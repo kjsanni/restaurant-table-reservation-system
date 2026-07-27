@@ -40,7 +40,8 @@ export function useTenantResolver() {
 
   const resolveFromHost = async (host: string) => {
     const slug = host.split(".")[0];
-    if (!slug || slug === "www" || slug === "localhost" || slug === "127") return null;
+    if (!slug || slug === "www" || slug === "localhost" || slug === "127")
+      return null;
     return resolveFromPath(slug);
   };
 

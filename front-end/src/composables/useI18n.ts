@@ -53,7 +53,10 @@ export const useI18n = () => {
     if (supportedLocales.includes(next)) {
       currentLocale.value = next;
       localStorage.setItem(STORAGE_KEY, next);
-      document.documentElement.setAttribute("lang", next === "tw" ? "tw" : next === "gaa" ? "gaa" : "en");
+      document.documentElement.setAttribute(
+        "lang",
+        next === "tw" ? "tw" : next === "gaa" ? "gaa" : "en"
+      );
       try {
         await localeAPI.updateLocale(next);
       } catch {

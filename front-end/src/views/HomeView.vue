@@ -708,7 +708,8 @@ watch(
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  transition: transform var(--duration-normal) var(--ease-out),
+  transition:
+    transform var(--duration-normal) var(--ease-out),
     box-shadow var(--duration-normal) var(--ease-out);
 }
 .stat-card:hover {
@@ -813,7 +814,8 @@ watch(
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: transform var(--duration-normal) var(--ease-out),
+  transition:
+    transform var(--duration-normal) var(--ease-out),
     box-shadow var(--duration-normal) var(--ease-out);
 }
 .action-card:hover {
@@ -1069,7 +1071,8 @@ watch(
   background: var(--surface);
   border: 1px solid var(--border);
   text-align: left;
-  transition: transform var(--duration-normal) var(--ease-out),
+  transition:
+    transform var(--duration-normal) var(--ease-out),
     box-shadow var(--duration-normal) var(--ease-out);
 }
 .step-card:hover {
@@ -1132,7 +1135,8 @@ watch(
 }
 .feature-card {
   text-align: left;
-  transition: transform var(--duration-normal) var(--ease-out),
+  transition:
+    transform var(--duration-normal) var(--ease-out),
     box-shadow var(--duration-normal) var(--ease-out);
 }
 .feature-card:hover {
@@ -1192,7 +1196,8 @@ watch(
 }
 .testimonial-card {
   text-align: left;
-  transition: transform var(--duration-normal) var(--ease-out),
+  transition:
+    transform var(--duration-normal) var(--ease-out),
     box-shadow var(--duration-normal) var(--ease-out);
 }
 .testimonial-card:hover {
@@ -1328,7 +1333,9 @@ watch(
 .reveal-section {
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  transition:
+    opacity 0.8s ease-out,
+    transform 0.8s ease-out;
 }
 .reveal-section.is-revealed {
   opacity: 1;

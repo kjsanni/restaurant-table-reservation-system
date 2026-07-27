@@ -522,7 +522,8 @@ onMounted(loadTemplates);
   box-sizing: border-box;
   background: var(--surface);
   color: var(--ink);
-  transition: border-color var(--duration-150) var(--ease-in-out),
+  transition:
+    border-color var(--duration-150) var(--ease-in-out),
     box-shadow var(--duration-150) var(--ease-in-out);
 }
 .field-input:focus {

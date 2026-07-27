@@ -407,7 +407,8 @@ const submitOrder = async () => {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   outline: none;
-  transition: border-color var(--duration-150) var(--ease-in-out),
+  transition:
+    border-color var(--duration-150) var(--ease-in-out),
     box-shadow var(--duration-150) var(--ease-in-out);
 }
 

@@ -121,7 +121,9 @@ onMounted(async () => {
   border-radius: var(--radius-xl);
   background: var(--white);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .portal-link:hover {
   transform: translateY(-2px);

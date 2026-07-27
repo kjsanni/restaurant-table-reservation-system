@@ -79,7 +79,8 @@ const breadcrumbs = computed(() => {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       ellipse at 0% 0%,
       rgba(217, 119, 6, 0.12) 0%,
       transparent 55%

@@ -137,7 +137,8 @@ const updateTablePosition = async (tableId, positionX, positionY) => {
 .grid-background {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+  background-image:
+    linear-gradient(to right, #e2e8f0 1px, transparent 1px),
     linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
   background-size: 20px 20px;
 }

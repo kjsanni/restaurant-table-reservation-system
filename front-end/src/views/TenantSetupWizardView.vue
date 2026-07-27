@@ -8,11 +8,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 type RestaurantType =
-  | "full_service"
-  | "quick_service"
-  | "cloud_kitchen"
-  | "cafe"
-  | "bar";
+  "full_service" | "quick_service" | "cloud_kitchen" | "cafe" | "bar";
 
 const RESTAURANT_TYPES: {
   value: RestaurantType;

@@ -221,7 +221,9 @@ onMounted(loadReservations);
   align-items: center;
   justify-content: center;
   gap: 4px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   font-family: var(--font-sans);
 }
 
@@ -287,7 +289,9 @@ onMounted(loadReservations);
   border: 1px solid var(--neutral-300);
   background: var(--white);
   color: var(--neutral-800);
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
 }
 
 .btn-secondary:hover {

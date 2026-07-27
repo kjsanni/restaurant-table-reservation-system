@@ -109,8 +109,8 @@ onUnmounted(() => {
                 station.isBlocked
                   ? 'blocked'
                   : station.isOccupied
-                  ? 'occupied'
-                  : 'free',
+                    ? 'occupied'
+                    : 'free',
               ]"
             >
               {{ station.name }}

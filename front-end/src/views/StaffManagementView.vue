@@ -153,7 +153,9 @@ onMounted(loadStaff);
   display: flex;
   align-items: center;
   gap: 14px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   cursor: pointer;
 }
 
@@ -273,7 +275,9 @@ onMounted(loadStaff);
   border: none;
   background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
   color: var(--white);
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
 }
 
 .btn-primary:hover {
