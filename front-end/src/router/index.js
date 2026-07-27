@@ -707,6 +707,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/data-anonymization",
+    name: "platform-data-anonymization",
+    component: () => import("../views/admin/DataAnonymizationView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/debug",
     name: "platform-debug",
     component: () => import("../views/admin/DebugToolsView.vue"),

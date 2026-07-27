@@ -79,6 +79,11 @@ export const exportData = async (id) => {
   return response;
 };
 
+export const anonymizeData = async (id) => {
+  const response = await client.post(`/${id}/anonymize`);
+  return response;
+};
+
 export const bulkChangeVertical = async (tenantIds, businessVertical) => {
   const response = await client.post("/bulk/change-vertical", {
     tenantIds,
@@ -97,4 +102,5 @@ export default {
   disable,
   deleteTenant,
   exportData,
+  anonymizeData,
 };
