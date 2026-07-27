@@ -359,6 +359,10 @@ const getUnifiedIntegrationEvents = () => {
   return API.get("/admin/integrations/events/unified");
 };
 
+const getWhatsAppDeliveryFailures = (params = {}) => {
+  return API.get("/admin/integrations/whatsapp/delivery-failures", { params });
+};
+
 const listPlatformReports = () => {
   return API.get("/admin/platform-reports");
 };
@@ -703,4 +707,5 @@ export default {
   getTenantCurrencyBreakdown,
   getPaystackConfig,
   rotatePaystackKey,
+  getWhatsAppDeliveryFailures,
 };

@@ -658,6 +658,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/whatsapp-delivery-failures",
+    name: "platform-whatsapp-delivery-failures",
+    component: () => import("../views/admin/WhatsAppDeliveryFailuresView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/debug",
     name: "platform-debug",
     component: () => import("../views/admin/DebugToolsView.vue"),

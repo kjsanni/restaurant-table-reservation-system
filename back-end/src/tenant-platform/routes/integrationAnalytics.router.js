@@ -51,6 +51,11 @@ router
   .all(httpMethodError);
 
 router
+  .route("/whatsapp/delivery-failures")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(integrationController.getWhatsAppDeliveryFailuresHandler))
+  .all(httpMethodError);
+
+router
   .route("/webhooks/status")
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(integrationController.getWebhookStatusHandler))
   .all(httpMethodError);

@@ -1,5 +1,6 @@
 const db = require("../../db/models");
 const paystackService = require("../services/paystack.service");
+const deliveryAnalyticsDAO = require("../DAOs/deliveryAnalytics.dao");
 
 const getPaystackTransactionsHandler = async (req, res) => {
   try {
@@ -281,6 +282,52 @@ const getThirdPartyStatusHandler = async (req, res) => {
   res.status(200).json({ success: true, integrations });
 };
 
+const getUnifiedIntegrationEventLogHandler = async (req, res) => {
+  const paystackEvents = await db.paystackEvent.findAll({
+    attributes: [
+      "id",
+      "tenantId",
+      "event",
+      "createdAt",
+      [db.sequelize.literal("'paystack'"), "source"],
+    ],
+    order: [["createdAt", "DESC"]],
+    limit: 50,
+  });
+
+  const platformEvents = await db.platformAuditLog.findAll({
+    where: {
+      action: { [db.Sequelize.Op.like]: "webhook%" },
+    },
+    attributes: [
+      "id",
+      "action",
+      "entityType",
+      "entityId",
+      "tenantId",
+      "actorUserId",
+      "ipAddress",
+      "createdAt",
+      [db.sequelize.literal("'platform'"), "source"],
+    ],
+    order: [["createdAt", "DESC"]],
+    limit: 50,
+  });
+
+  const events = [...paystackEvents, ...platformEvents].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  res.status(200).json({ success: true, collection: events });
+};
+
+const getWhatsAppDeliveryFailuresHandler = async (req, res) => {
+  const { tenantId, from, to } = req.query;
+  const data = await deliveryAnalyticsDAO.getWhatsAppDeliveryFailures({
+    tenantId: tenantId ? parseInt(tenantId, 10) : undefined,
+    from,
+    to,
+  });
+  res.status(200).json({ success: true, ...data });
+};
+
 module.exports = {
   getPaystackTransactionsHandler,
   getPaystackSettlementsHandler,
@@ -293,4 +340,5 @@ module.exports = {
   getWhatsAppCampaignAnalyticsHandler,
   getShaqExpressAnalyticsHandler,
   getUnifiedIntegrationEventLogHandler,
+  getWhatsAppDeliveryFailuresHandler,
 };
