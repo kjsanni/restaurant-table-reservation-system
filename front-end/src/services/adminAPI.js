@@ -381,6 +381,14 @@ const deletePlatformReport = (id) => {
   return API.delete(`/admin/platform-reports/${id}`);
 };
 
+const getPaystackConfig = () => {
+  return API.get("/admin/paystack/config");
+};
+
+const rotatePaystackKey = (data) => {
+  return API.post("/admin/paystack/config/rotate", data);
+};
+
 const getMultiCurrencyTotals = (params = {}) => {
   return API.get("/admin/reconciliation/multi-currency/totals", { params });
 };
@@ -693,4 +701,6 @@ export default {
   deletePlatformReport,
   getMultiCurrencyTotals,
   getTenantCurrencyBreakdown,
+  getPaystackConfig,
+  rotatePaystackKey,
 };

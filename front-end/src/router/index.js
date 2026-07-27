@@ -652,6 +652,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/paystack",
+    name: "platform-paystack",
+    component: () => import("../views/admin/PaystackConfigView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/debug",
     name: "platform-debug",
     component: () => import("../views/admin/DebugToolsView.vue"),
