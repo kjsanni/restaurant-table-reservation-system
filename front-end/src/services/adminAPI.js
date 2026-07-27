@@ -169,6 +169,23 @@ const deleteComplianceRule = (id) => {
   return API.delete(`/admin/compliance-rules/${id}`);
 };
 
+const listNotificationTemplates = (channel) => {
+  const qs = channel ? `?channel=${channel}` : "";
+  return API.get(`/admin/notification-templates${qs}`);
+};
+
+const createNotificationTemplate = (data) => {
+  return API.post("/admin/notification-templates", data);
+};
+
+const updateNotificationTemplate = (id, data) => {
+  return API.patch(`/admin/notification-templates/${id}`, data);
+};
+
+const deleteNotificationTemplate = (id) => {
+  return API.delete(`/admin/notification-templates/${id}`);
+};
+
 const deleteSupportTicket = (id) => {
   return API.delete(`/admin/support-tickets/${id}`);
 };
@@ -541,6 +558,10 @@ export default {
   createComplianceRule,
   updateComplianceRule,
   deleteComplianceRule,
+  listNotificationTemplates,
+  createNotificationTemplate,
+  updateNotificationTemplate,
+  deleteNotificationTemplate,
   deleteSupportTicket,
   updateSupportTicket,
   getSupportTicket,
