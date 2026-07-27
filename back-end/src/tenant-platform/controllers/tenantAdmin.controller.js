@@ -192,6 +192,59 @@ const disableTenantHandler = async (req, res) => {
   }
 };
 
+const exportTenantDataHandler = async (req, res) => {
+  const tenant = await db.tenant.findByPk(req.params.id, {
+    include: [
+      {
+        model: db.user,
+        as: "users",
+        attributes: { exclude: ["password"] },
+      },
+      {
+        model: db.reservation,
+        as: "reservations",
+        include: [
+          { model: db.payment, as: "payments" },
+          { model: db.order, as: "orders" },
+        ],
+      },
+      {
+        model: db.customer,
+        as: "customers",
+      },
+    ],
+  });
+
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  const settings = await db.setting.findAll({
+    where: { tenantId: tenant.id },
+    attributes: ["key", "value", "updatedAt"],
+  });
+
+  const notes = await db.note.findAll({
+    where: { tenantId: tenant.id },
+    attributes: ["id", "note", "createdAt", "updatedAt"],
+  });
+
+  const legalAcceptances = await db.legalAcceptance.findAll({
+    where: { tenantId: tenant.id },
+    attributes: ["id", "documentVersion", "acceptedAt", "ipAddress", "userAgent"],
+  });
+
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    tenant: tenant.toJSON(),
+    settings: settings.map((s) => ({ key: s.key, value: s.value, updatedAt: s.updatedAt })),
+    notes,
+    legalAcceptances,
+  };
+
+  res.status(200).json({ success: true, data: payload });
+};
+
 const getDashboardHandler = async (req, res) => {
   const dashboard = await getTenantDashboard();
   res.status(200).json({ success: true, ...dashboard });
@@ -203,6 +256,7 @@ module.exports = {
   getTenantHandler,
   updateTenantHandler,
   deleteTenantHandler,
+  exportTenantDataHandler,
   enableTenantHandler,
   disableTenantHandler,
   getDashboardHandler,

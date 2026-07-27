@@ -142,7 +142,11 @@
       >
         {{ deleting ? "Deleting..." : "Delete Tenant" }}
       </button>
+      <button class="btn" @click="exportTenantData" :disabled="exporting">
+        {{ exporting ? "Exporting..." : "Export Data" }}
+      </button>
       <p v-if="deleteError" class="error-text">{{ deleteError }}</p>
+      <p v-if="exportError" class="error-text">{{ exportError }}</p>
     </div>
 
     <div class="section">
@@ -295,6 +299,8 @@ const savingPayout = ref(false);
 const payoutSaved = ref(false);
 const deleting = ref(false);
 const deleteError = ref("");
+const exporting = ref(false);
+const exportError = ref("");
 const businessVertical = ref("restaurant");
 const savingVertical = ref(false);
 const verticalSaved = ref(false);
@@ -396,6 +402,30 @@ const deleteTenant = async () => {
       err?.response?.data?.message || "Failed to delete tenant.";
   } finally {
     deleting.value = false;
+  }
+};
+
+const exportTenantData = async () => {
+  exportError.value = "";
+  exporting.value = true;
+  try {
+    const response = await tenantAdminAPI.exportData(route.params.id);
+    const blob = new Blob([JSON.stringify(response.data.data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tenant-${tenant.value.slug}-export.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    exportError.value =
+      err?.response?.data?.message || "Failed to export tenant data.";
+  } finally {
+    exporting.value = false;
   }
 };
 
@@ -654,6 +684,12 @@ onMounted(() => {
 .saved-tag {
   margin-left: var(--space-3);
   color: var(--earth-600);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.error-text {
+  margin-left: var(--space-3);
+  color: var(--rose-600);
   font-size: var(--text-sm);
   font-weight: 600;
 }

@@ -24,6 +24,11 @@ router
   .all(httpMethodError);
 
 router
+  .route("/:id/export")
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.exportTenantDataHandler))
+  .all(httpMethodError);
+
+router
   .route("/:id/enable")
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.enableTenantHandler))
   .all(httpMethodError);
