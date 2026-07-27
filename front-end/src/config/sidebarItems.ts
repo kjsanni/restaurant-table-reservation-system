@@ -101,6 +101,7 @@ export const adminNavItems: NavItem[] = [
   { routeName: 'platform-paystack', text: 'Paystack Config', icon: 'mdi:credit-card-outline', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-whatsapp-delivery-failures', text: 'WhatsApp Delivery Failures', icon: 'mdi:whatsapp', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-shaqexpress-order-conversion', text: 'Shaq Express Conversion', icon: 'mdi:truck-delivery', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
+  { routeName: 'platform-whatsapp-support-ticket-analytics', text: 'WhatsApp Support Analytics', icon: 'mdi:chat-processing', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-debug', text: 'Debug Tools', icon: 'mdi:bug', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-status', text: 'System Status', icon: 'mdi:heart-pulse', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },
   { routeName: 'platform-migration', text: 'Migrations', icon: 'mdi:database-sync', requiresAuth: true, requiresPermission: 'manage_tenants', tenantOnly: true, platformOnly: true },

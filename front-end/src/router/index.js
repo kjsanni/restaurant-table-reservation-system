@@ -670,6 +670,13 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
+    path: "/admin/whatsapp-support-ticket-analytics",
+    name: "platform-whatsapp-support-ticket-analytics",
+    component: () =>
+      import("../views/admin/WhatsAppSupportTicketAnalyticsView.vue"),
+    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+  });
+  router.addRoute({
     path: "/admin/debug",
     name: "platform-debug",
     component: () => import("../views/admin/DebugToolsView.vue"),

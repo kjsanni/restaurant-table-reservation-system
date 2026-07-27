@@ -31,6 +31,13 @@ module.exports = (sequelize, DataTypes) => {
       message: { type: DataTypes.TEXT, allowNull: false },
       assignedTo: { type: DataTypes.INTEGER, allowNull: true },
       resolvedAt: { type: DataTypes.DATE, allowNull: true },
+      source: {
+        type: DataTypes.ENUM("web", "whatsapp", "email", "phone"),
+        allowNull: false,
+        defaultValue: "web",
+      },
+      csat: { type: DataTypes.INTEGER, allowNull: true },
+      firstResponseAt: { type: DataTypes.DATE, allowNull: true },
     },
     {
       sequelize,
@@ -41,6 +48,8 @@ module.exports = (sequelize, DataTypes) => {
         { fields: ["status"] },
         { fields: ["priority"] },
         { fields: ["createdAt"] },
+        { fields: ["source"] },
+        { fields: ["resolvedAt"] },
       ],
     }
   );
