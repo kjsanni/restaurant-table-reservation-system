@@ -1,5 +1,5 @@
 import { ref, computed } from "vue";
-import { messages, type Locale, type Messages } from "@/locales";
+import { messages, type Locale } from "@/locales";
 import localeAPI from "@/services/localeAPI";
 
 type KeyPath = string;
@@ -13,7 +13,7 @@ const localeNames: Record<Locale, string> = {
   gaa: "Ga",
 };
 
-const currentLocale = ref<Locale>(() => {
+const initLocale = (): Locale => {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem(STORAGE_KEY) as Locale | null;
     if (stored && supportedLocales.includes(stored)) return stored;
@@ -21,7 +21,9 @@ const currentLocale = ref<Locale>(() => {
     if (supportedLocales.includes(browser)) return browser;
   }
   return "en";
-});
+};
+
+const currentLocale = ref<Locale>(initLocale());
 
 export const useI18n = () => {
   const t = (key: KeyPath, fallback = "") => {

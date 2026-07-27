@@ -8,7 +8,7 @@ const { locale, setLocale, availableLocales } = useI18n();
   <select
     class="locale-select"
     :value="locale"
-    @change="(e) => setLocale(e.target.value as any)"
+    @change="(e) => setLocale((e.target as HTMLSelectElement).value as any)"
     aria-label="Select language"
   >
     <option

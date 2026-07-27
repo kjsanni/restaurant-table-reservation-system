@@ -37,7 +37,11 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 useTenantBranding();
-const { locale, setLocale, availableLocales } = useI18n();
+const {
+  locale: _locale,
+  setLocale,
+  availableLocales: _availableLocales,
+} = useI18n();
 
 const sidebarVisible = ref(true);
 const collapsed = ref(false);
@@ -340,7 +344,7 @@ onUnmounted(() => {
                 'tenant-login',
                 'register',
                 'home',
-              ].includes(route.name) &&
+              ].includes(route.name as string) &&
               isAuthenticated
             "
             class="standalone-sidebar"

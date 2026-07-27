@@ -31,8 +31,6 @@ const loading = ref(false);
 const appointments = ref<SalonAppointment[]>([]);
 const profile = ref<CustomerProfile | null>(null);
 const searchQuery = ref("");
-const cancellingId = ref<number | null>(null);
-const rebookingId = ref<number | null>(null);
 
 const loadData = async () => {
   loading.value = true;

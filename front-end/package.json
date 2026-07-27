@@ -55,10 +55,10 @@
     "rollup": "^4.62.3",
     "rollup-plugin-visualizer": "^7.0.1",
     "rollup-plugin-vue": "^6.0.0",
-    "typescript": "^5.4.5",
+    "typescript": "^5.9.3",
     "vite": "^6.4.3",
     "vitest": "^3.2.7",
     "vue-eslint-parser": "^10.4.1",
-    "vue-tsc": "^2.2.12"
+    "vue-tsc": "^3.3.8"
   }
 }

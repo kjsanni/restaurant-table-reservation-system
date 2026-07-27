@@ -109,7 +109,7 @@ const adjustNumber = (setting: any, delta: number) => {
             v-if="setting.type === 'boolean'"
             :model-value="setting.value as boolean"
             @update:model-value="
-              (val) => updateValue({ ...setting, value: val })
+              (val: boolean) => updateValue({ ...setting, value: val })
             "
           />
 

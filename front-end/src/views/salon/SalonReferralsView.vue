@@ -17,8 +17,18 @@ interface Referral {
   expiresAt?: string;
   completedAt?: string;
   note?: string;
-  referrer?: { firstName?: string; lastName?: string; email?: string };
-  referee?: { firstName?: string; lastName?: string; email?: string };
+  referrer?: {
+    id?: number;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
+  referee?: {
+    id?: number;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
   appointment?: { id?: number; start?: string; status?: string };
 }
 

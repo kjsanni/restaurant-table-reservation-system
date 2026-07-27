@@ -219,7 +219,7 @@ onMounted(() => {
         <VaSwitch
           :model-value="enhanceConfig.maintenance.enabled"
           @update:model-value="
-            (val) => (enhanceConfig.maintenance.enabled = val)
+            (val: boolean) => (enhanceConfig.maintenance.enabled = val)
           "
         />
       </div>

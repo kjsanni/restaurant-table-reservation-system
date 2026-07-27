@@ -57,7 +57,10 @@ onMounted(async () => {
   try {
     await applyBranding();
   } catch (err) {
-    logger.error("Failed to apply customer portal branding", err);
+    logger.error(
+      "Failed to apply customer portal branding",
+      err instanceof Error ? err : new Error(String(err))
+    );
   }
 });
 </script>

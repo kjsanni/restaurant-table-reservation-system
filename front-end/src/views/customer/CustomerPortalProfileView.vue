@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
-import { useCapabilities } from "@/composables/useCapabilities";
 import customerPortalAPI from "@/services/customerPortalAPI";
 import logger from "@/utils/logger";
 
 const authStore = useAuthStore();
-const { businessVertical } = useCapabilities();
-const isSalon = computed(() => businessVertical.value === "salon");
 
 const profile = ref({
   firstName: "",

@@ -106,7 +106,7 @@ load();
         <VaSwitch
           :model-value="integrationConfig.tenantMode"
           @update:model-value="
-            (val) => {
+            (val: boolean) => {
               integrationConfig.tenantMode = val;
               saveIntegration('tenant_mode_enabled', val);
             }

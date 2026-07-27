@@ -6,7 +6,12 @@ import { useI18n } from "@/composables/useI18n";
 import { useToastStore } from "@/stores/toast";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 
-const { t, locale, setLocale, availableLocales } = useI18n();
+const {
+  t,
+  locale: _locale,
+  setLocale: _setLocale,
+  availableLocales: _availableLocales,
+} = useI18n();
 const toastStore = useToastStore();
 
 const loading = ref(true);

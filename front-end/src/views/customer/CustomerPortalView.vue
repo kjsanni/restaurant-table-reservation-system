@@ -12,7 +12,10 @@ onMounted(async () => {
   try {
     await resolveFromPath(route.params.tenantSlug as string);
   } catch (err) {
-    logger.error("Customer portal tenant resolution failed", err);
+    logger.error(
+      "Customer portal tenant resolution failed",
+      err instanceof Error ? err : new Error(String(err))
+    );
   }
 });
 </script>

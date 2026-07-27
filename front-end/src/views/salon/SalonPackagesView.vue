@@ -105,15 +105,6 @@ const deletePackage = async (id: number) => {
   }
 };
 
-const toggleAvailability = async (pkg: ServicePackage) => {
-  try {
-    await packageAPI.updatePackage(pkg.id, { isAvailable: !pkg.isAvailable });
-    pkg.isAvailable = !pkg.isAvailable;
-  } catch (err) {
-    logger.error("Failed to toggle package availability", { error: err });
-  }
-};
-
 const serviceSummary = (pkg: ServicePackage) => {
   if (!pkg.services || !pkg.services.length) return "No services";
   const names = pkg.services.map((s) => s.name).filter(Boolean);

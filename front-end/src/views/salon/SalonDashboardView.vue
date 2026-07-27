@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
 import salonDashboardAPI from "@/services/salonDashboardAPI";
 import logger from "@/utils/logger";
 import { io, Socket } from "socket.io-client";
 
 const router = useRouter();
-const authStore = useAuthStore();
 const loading = ref(true);
 const kpis = ref({
   appointmentsToday: 0,

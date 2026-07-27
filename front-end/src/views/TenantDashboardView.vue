@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
-import stationAPI from "@/services/stationAPI";
 import appointmentAPI from "@/services/appointmentAPI";
 import salonDashboardAPI from "@/services/salonDashboardAPI";
 import logger from "@/utils/logger";
