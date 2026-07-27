@@ -3,7 +3,9 @@
     <div class="page-header">
       <div>
         <h1>Revenue Reports</h1>
-        <p class="subtitle">MRR trends, revenue by plan, and tenant LTV</p>
+        <p class="subtitle">
+          Venue revenue trends, revenue by plan, LTV, and cohort analysis
+        </p>
       </div>
     </div>
 
@@ -12,7 +14,7 @@
         :class="['tab', { active: activeTab === 'mrr' }]"
         @click="activeTab = 'mrr'"
       >
-        MRR Trends
+        Revenue Trends
       </button>
       <button
         :class="['tab', { active: activeTab === 'plan' }]"
@@ -24,7 +26,19 @@
         :class="['tab', { active: activeTab === 'ltv' }]"
         @click="activeTab = 'ltv'"
       >
-        LTV by Tenant
+        LTV by Venue
+      </button>
+      <button
+        :class="['tab', { active: activeTab === 'cohorts' }]"
+        @click="activeTab = 'cohorts'"
+      >
+        Cohorts
+      </button>
+      <button
+        :class="['tab', { active: activeTab === 'adoption' }]"
+        @click="activeTab = 'adoption'"
+      >
+        Feature Adoption
       </button>
     </div>
 
@@ -35,7 +49,7 @@
     <div v-else-if="activeTab === 'mrr'" class="tab-panel">
       <div class="summary-cards">
         <div class="card">
-          <div class="card-label">Current MRR</div>
+          <div class="card-label">Current Revenue</div>
           <div class="card-value">{{ formatCurrency(mrrData.currentMrr) }}</div>
         </div>
         <div class="card">
@@ -65,8 +79,8 @@
           <tbody>
             <tr v-for="row in mrrData.rows" :key="row.month">
               <td>{{ row.month }}</td>
-              <td>{{ formatCurrency(row.mrr) }}</td>
-              <td>{{ row.newTenants }}</td>
+              <td>{{ formatCurrency(row.revenue) }}</td>
+              <td>{{ row.newVenues }}</td>
               <td>{{ row.cancelled }}</td>
               <td>
                 <span
@@ -90,9 +104,9 @@
           <thead>
             <tr>
               <th>Plan</th>
-              <th>Tenant Count</th>
+              <th>Venue Count</th>
               <th>MRR</th>
-              <th>% of Total MRR</th>
+              <th>% of Total Revenue</th>
             </tr>
           </thead>
           <tbody>
@@ -112,7 +126,7 @@
         <table class="revenue-table">
           <thead>
             <tr>
-              <th>Tenant</th>
+              <th>Venue</th>
               <th>Plan</th>
               <th>Months Active</th>
               <th>LTV</th>
@@ -128,6 +142,58 @@
               <td>{{ row.plan }}</td>
               <td>{{ row.monthsActive }}</td>
               <td>{{ formatCurrency(row.ltv) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div v-else-if="activeTab === 'cohorts'" class="tab-panel">
+      <div class="table-wrapper">
+        <table class="revenue-table">
+          <thead>
+            <tr>
+              <th>Cohort</th>
+              <th>Signups</th>
+              <th>Cohort Revenue</th>
+              <th>Avg Revenue / Venue</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in cohortData.rows" :key="row.cohort">
+              <td>{{ row.cohort }}</td>
+              <td>{{ row.signups }}</td>
+              <td>{{ formatCurrency(row.cohortRevenue) }}</td>
+              <td>{{ formatCurrency(row.avgRevenuePerVenue) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div v-else-if="activeTab === 'adoption'" class="tab-panel">
+      <div class="table-wrapper">
+        <table class="revenue-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Tenants Using</th>
+              <th>Adoption Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in adoptionData.rows" :key="row.name">
+              <td>{{ row.name }}</td>
+              <td>{{ row.count }}</td>
+              <td>
+                <div class="adoption-bar">
+                  <div
+                    class="adoption-fill"
+                    :style="{ width: row.adoptionRate + '%' }"
+                  ></div>
+                  <span class="adoption-text">{{ row.adoptionRate }}%</span>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -153,6 +219,8 @@ const mrrData = ref({
 });
 const revenueByPlanData = ref({ rows: [] });
 const ltvData = ref({ rows: [] });
+const cohortData = ref({ rows: [] });
+const adoptionData = ref({ rows: [] });
 
 const loadMrrTrends = async () => {
   loading.value = true;
@@ -200,6 +268,28 @@ const loadLtv = async () => {
   }
 };
 
+const loadCohorts = async () => {
+  try {
+    const response = await revenueAPI.getCohortAnalysis();
+    cohortData.value = {
+      rows: response.data?.collection || response.data || [],
+    };
+  } catch {
+    cohortData.value = { rows: [] };
+  }
+};
+
+const loadFeatureAdoption = async () => {
+  try {
+    const response = await revenueAPI.getFeatureAdoption();
+    adoptionData.value = {
+      rows: response.data?.collection || response.data || [],
+    };
+  } catch {
+    adoptionData.value = { rows: [] };
+  }
+};
+
 const viewTenant = (id) => {
   router.push(`/admin/tenants/${id}`);
 };
@@ -216,6 +306,8 @@ onMounted(() => {
   loadMrrTrends();
   loadRevenueByPlan();
   loadLtv();
+  loadCohorts();
+  loadFeatureAdoption();
 });
 </script>
 
@@ -364,6 +456,29 @@ onMounted(() => {
 .danger {
   color: var(--rose-600);
   font-weight: 600;
+}
+.adoption-bar {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.adoption-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, var(--brand-600), var(--accent));
+  border-radius: var(--radius-full);
+}
+.adoption-text {
+  position: relative;
+  display: block;
+  text-align: center;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 20px;
 }
 .loading-state,
 .empty-state {

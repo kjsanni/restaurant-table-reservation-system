@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [Unreleased] — 2026-07-27
+
+### Added
+- **Super-admin: tenant soft-delete** — `DELETE /api/v1/admin/tenants/:id` sets status=cancelled with slug confirmation and audit logging
+- **Super-admin: tenant GDPR export** — `GET /api/v1/admin/tenants/:id/export` returns tenant data as JSON download
+- **Super-admin: Paystack key rotation** — `POST /api/v1/admin/paystack/keys/rotate` validates new secret key, saves config, and logs audit event; UI in `PlatformSettingsCard.vue`
+
+---
+
 ## [Unreleased] — 2026-07-01
 
 ### Added

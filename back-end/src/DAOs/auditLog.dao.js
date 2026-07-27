@@ -236,21 +236,6 @@ const formatValue = (value) => {
   return String(value);
 };
 
-const formatFieldChanges = (body) => {
-  const entries = Object.entries(body).filter(([, v]) => v !== null && v !== undefined && v !== "");
-  if (!entries.length) return null;
-
-  const parts = entries.map(([key, value]) => {
-    const label = FIELD_LABELS[key] || key.replace(/([A-Z])/g, " $1").toLowerCase().trim();
-    return `${label} to ${formatValue(value)}`;
-  });
-
-  if (parts.length === 1) return parts[0];
-  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
-  const last = parts.pop();
-  return `${parts.join(", ")}, and ${last}`;
-};
-
 const formatChanges = (changes) => {
   if (!changes) return null;
   if (typeof changes === "string") {

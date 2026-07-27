@@ -3,7 +3,6 @@ const authDAO = require("../DAOs/auth.dao");
 const reservationDAO = require("../DAOs/reservation.dao");
 const tableDAO = require("../DAOs/table.dao");
 const db = require("../db/models");
-const syncService = require("../services/sync.service");
 
 const validateSyncApiKey = async (req) => {
   const apiKey = req.headers["x-api-key"];
@@ -75,7 +74,7 @@ const paymentSettledHandler = async (req, res) => {
     return res.status(validation.error.status).json({ success: false, message: validation.error.message });
   }
 
-  const { reservationId, amount, method, currency, paymentId } = req.body;
+  const { reservationId, amount, method, currency } = req.body;
 
   const reservation = await reservationDAO.findReservationById(reservationId, validation.tenantId);
   if (!reservation) {

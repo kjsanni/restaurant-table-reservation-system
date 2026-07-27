@@ -7,6 +7,7 @@ const { protect, admin, requirePermission } = require("../middleware/auth");
 const { authLimiter, generalLimiter } = require("../middleware/rateLimit");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 const { validateCsrfToken } = require("../middleware/csrf");
+const enforcePasswordPolicy = require("../middleware/passwordPolicy");
 
 router
   .route("/register/status")
@@ -18,11 +19,17 @@ router
   .post(
     authLimiter,
     validateCsrfToken,
+    enforcePasswordPolicy,
     tryCatchHandler(authController.registerHandler)
   )
   .all(httpMethodError);
 
 router.route("/login").post(authLimiter, tryCatchHandler(authController.loginHandler));
+
+router
+  .route("/login-totp")
+  .post(authLimiter, tryCatchHandler(authController.loginTOTPHandler))
+  .all(httpMethodError);
 
 router.route("/logout").post(...protectedRoute("", authController.logoutHandler));
 
@@ -51,8 +58,13 @@ router
 
 router
   .route("/staff/:id")
-  .patch(...writeRoute("manage_staff", authController.updateStaffHandler))
-  .delete(...writeRoute("manage_staff", authController.deleteStaffHandler))
+  .patch(
+    tryCatchHandler(protect),
+    tryCatchHandler(requirePermission("manage_staff")),
+    validateCsrfToken,
+    tryCatchHandler(enforcePasswordPolicy),
+    tryCatchHandler(authController.updateStaffHandler)
+  )
   .all(httpMethodError);
 
 router
@@ -68,6 +80,12 @@ router
 router
   .route("/revoke-token")
   .post(...protectedRoute("", authController.revokeTokenHandler))
+  .all(httpMethodError);
+
+router
+  .route("/locale")
+  .get(generalLimiter, tryCatchHandler(protect), tryCatchHandler(authController.getLocaleHandler))
+  .put(generalLimiter, tryCatchHandler(protect), tryCatchHandler(authController.updateLocaleHandler))
   .all(httpMethodError);
 
 module.exports = router;

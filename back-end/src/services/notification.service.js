@@ -1,9 +1,12 @@
 const mailService = require("./mail.service");
 const whatsappService = require("./whatsapp.service");
 const reservationDAO = require("../DAOs/reservation.dao");
+const salonAppointmentDao = require("../verticals/salon/DAOs/appointment.dao");
 const settingDAO = require("../DAOs/auth.dao");
 const dateTimeValidator = require("../utils/dateAndTimeValidator");
 const { notificationQueue, safeAdd } = require("../queues/queue");
+const { client } = require("../utils/cache");
+const smsService = require("./sms.service");
 
 const resolveChannels = async (tenantId, requested) => {
   if (Array.isArray(requested) && requested.length > 0) return requested;
@@ -247,6 +250,213 @@ const enqueueReminders = async (tenantId, channels = null) => {
   return { enqueued: result.enqueued, count: result.enqueued ? items.length : 0 };
 };
 
+const enqueueSalonAppointmentReminders = async (tenantId, channels = null) => {
+  const resolved = await resolveChannels(tenantId, channels);
+  const now = new Date();
+  const windowEnd = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+  const result = await salonAppointmentDao.findAllForTenant(tenantId, {
+    status: "confirmed",
+    from: now.toISOString(),
+    to: windowEnd.toISOString(),
+    limit: 100,
+  });
+
+  const appointments = result.data || [];
+  const items = [];
+  for (const appointment of appointments) {
+    const customer = appointment.customer || {};
+    const service = appointment.service || {};
+    const templateData = {
+      __template: "salon_appointment_reminder",
+      name: customer.firstName || customer.lastName || "Guest",
+      service: service.name || "Appointment",
+      date: appointment.start ? new Date(appointment.start).toISOString().slice(0, 10) : "",
+      time: appointment.start ? new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+      duration: appointment.durationMinutes || 30,
+      salonName: process.env.APP_NAME || "Salon",
+    };
+    items.push({
+      type: "whatsapp",
+      tenantId,
+      to: customer.phone,
+      payload: { text: buildWhatsAppText(templateData), templateData },
+    });
+  }
+
+  if (items.length === 0) {
+    return { enqueued: true, count: 0 };
+  }
+
+  const enqueueResult = await safeAdd(notificationQueue, "salon_appointment_reminders", {
+    type: "batch",
+    tenantId,
+    items,
+  });
+  return { enqueued: enqueueResult.enqueued, count: enqueueResult.enqueued ? items.length : 0 };
+};
+
+const sendSalonConfirmation = async (appointment, tenantId) => {
+  const customer = appointment.customer || {};
+  const service = appointment.service || {};
+  const templateData = {
+    __template: "salon_appointment_confirmation",
+    appointmentId: appointment.id,
+    name: customer.firstName || customer.lastName || "Guest",
+    date: appointment.start ? new Date(appointment.start).toISOString().slice(0, 10) : "",
+    time: appointment.start ? new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+    duration: appointment.durationMinutes || 30,
+    service: service.name || "Appointment",
+    stylist: appointment.stylist?.name || "Any",
+    salonName: process.env.APP_NAME || "Salon",
+    paymentUrl: "",
+    reference: "",
+  };
+  const text = buildWhatsAppText(templateData);
+  try {
+    await sendWithSmsFallback(customer.phone, text, tenantId);
+  } catch (err) {
+    console.error("Failed to send salon confirmation:", err.message);
+  }
+};
+
+const sendSalonCancellation = async (appointment, tenantId) => {
+  const customer = appointment.customer || {};
+  const service = appointment.service || {};
+  const templateData = {
+    __template: "salon_appointment_cancellation",
+    appointmentId: appointment.id,
+    name: customer.firstName || customer.lastName || "Guest",
+    date: appointment.start ? new Date(appointment.start).toISOString().slice(0, 10) : "",
+    time: appointment.start ? new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+    salonName: process.env.APP_NAME || "Salon",
+  };
+  const text = buildWhatsAppText(templateData);
+  try {
+    await sendWithSmsFallback(customer.phone, text, tenantId);
+  } catch (err) {
+    console.error("Failed to send salon cancellation:", err.message);
+  }
+};
+
+const enqueueSalonConfirmation = async (appointment, tenantId) => {
+  const customer = appointment.customer || {};
+  const service = appointment.service || {};
+  const templateData = {
+    __template: "salon_appointment_confirmation",
+    appointmentId: appointment.id,
+    name: customer.firstName || customer.lastName || "Guest",
+    date: appointment.start ? new Date(appointment.start).toISOString().slice(0, 10) : "",
+    time: appointment.start ? new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+    duration: appointment.durationMinutes || 30,
+    service: service.name || "Appointment",
+    stylist: appointment.stylist?.name || "Any",
+    salonName: process.env.APP_NAME || "Salon",
+    paymentUrl: "",
+    reference: "",
+  };
+  const payloads = [
+    {
+      type: "whatsapp",
+      tenantId,
+      payload: {
+        to: customer.phone,
+        text: buildWhatsAppText(templateData),
+        templateData,
+      },
+    },
+  ];
+  const result = await safeAdd(notificationQueue, "salon_appointment_confirmation", {
+    type: "batch",
+    tenantId,
+    items: payloads,
+  });
+  return result.enqueued;
+};
+
+const enqueueSalonCancellation = async (appointment, tenantId) => {
+  const customer = appointment.customer || {};
+  const service = appointment.service || {};
+  const templateData = {
+    __template: "salon_appointment_cancellation",
+    appointmentId: appointment.id,
+    name: customer.firstName || customer.lastName || "Guest",
+    date: appointment.start ? new Date(appointment.start).toISOString().slice(0, 10) : "",
+    time: appointment.start ? new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+    salonName: process.env.APP_NAME || "Salon",
+  };
+  const payloads = [
+    {
+      type: "whatsapp",
+      tenantId,
+      payload: {
+        to: customer.phone,
+        text: buildWhatsAppText(templateData),
+        templateData,
+      },
+    },
+  ];
+  const result = await safeAdd(notificationQueue, "salon_appointment_cancellation", {
+    type: "batch",
+    tenantId,
+    items: payloads,
+  });
+  return result.enqueued;
+};
+
+const FALLBACK_FAILURE_THRESHOLD = 2;
+const FALLBACK_TTL_SECONDS = 60 * 60;
+
+const getFailureKey = (tenantId, phone, channel = "whatsapp") =>
+  `notification:fallback:${tenantId}:${phone}:${channel}`;
+
+const getSmsFallbackEnabled = async (tenantId) => {
+  try {
+    const setting = await settingDAO.getSettingValue(
+      "salon_sms_fallback_enabled",
+      false,
+      tenantId
+    );
+    return !!setting;
+  } catch {
+    return false;
+  }
+};
+
+const incrementFailureCount = async (tenantId, phone) => {
+  if (!client || !client.isReady) return 0;
+  const key = getFailureKey(tenantId, phone);
+  const count = await client.incr(key);
+  await client.expire(key, FALLBACK_TTL_SECONDS);
+  return count;
+};
+
+const resetFailureCount = async (tenantId, phone) => {
+  if (!client || !client.isReady) return;
+  const key = getFailureKey(tenantId, phone);
+  await client.del(key);
+};
+
+const sendWithSmsFallback = async (phone, text, tenantId) => {
+  try {
+    await whatsappService.sendWhatsAppText(phone, text, tenantId);
+    await resetFailureCount(tenantId, phone);
+    return { channel: "whatsapp", success: true };
+  } catch (err) {
+    const failures = await incrementFailureCount(tenantId, phone);
+    if (failures >= FALLBACK_FAILURE_THRESHOLD && (await getSmsFallbackEnabled(tenantId))) {
+      try {
+        await smsService.sendSMS({ to: phone, message: text }, tenantId);
+        await resetFailureCount(tenantId, phone);
+        return { channel: "sms", success: true, fallback: true };
+      } catch (smsErr) {
+        return { channel: "whatsapp", success: false, error: err.message, smsError: smsErr.message };
+      }
+    }
+    return { channel: "whatsapp", success: false, error: err.message, failures };
+  }
+};
+
 module.exports = {
   scheduleReminders,
   sendConfirmation,
@@ -254,8 +464,15 @@ module.exports = {
   enqueueConfirmation,
   enqueueCancellation,
   enqueueReminders,
+  enqueueSalonAppointmentReminders,
+  sendSalonConfirmation,
+  sendSalonCancellation,
+  enqueueSalonConfirmation,
+  enqueueSalonCancellation,
   sendViaChannels,
   buildWhatsAppText,
   renderTemplate,
   getWhatsAppReminderTemplate,
+  sendWithSmsFallback,
+  getSmsFallbackEnabled,
 };

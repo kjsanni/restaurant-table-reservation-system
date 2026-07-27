@@ -1,4 +1,6 @@
 const webhookService = require("../services/webhook.service");
+const failedPaymentAlertDAO = require("../tenant-platform/DAOs/failedPaymentAlert.dao");
+const db = require("../db/models");
 
 const listSubscriptionsHandler = async (req, res) => {
   const config = await require("../DAOs/auth.dao").getSettingValue(
@@ -31,8 +33,39 @@ const testHandler = async (req, res) => {
   return res.status(200).json({ success: true, message: "Test webhook dispatched" });
 };
 
+const paystackEventHandler = async (req, res) => {
+  const event = req.body?.event;
+  const data = req.body?.data || {};
+
+  if (event === "charge.failed") {
+    let tenantId = null;
+    if (data.metadata?.tenantId) {
+      const tenant = await db.tenant.findByPk(data.metadata.tenantId);
+      if (tenant) tenantId = tenant.id;
+    }
+
+    await failedPaymentAlertDAO.create({
+      tenantId,
+      reservationId: data.metadata?.reservationId || null,
+      reference: data.reference || data.id,
+      amount: parseFloat(data.amount || 0) / 100,
+      currency: data.currency || "GHS",
+      reason: data.gateway_response || data.failure_reason || "Payment failed",
+      gateway: "paystack",
+      metadata: {
+        customerEmail: data.customer?.email,
+        authorization: data.authorization,
+        ipAddress: data.ip_address,
+      },
+    });
+  }
+
+  return res.status(200).json({ success: true });
+};
+
 module.exports = {
   listSubscriptionsHandler,
   updateSubscriptionsHandler,
   testHandler,
+  paystackEventHandler,
 };

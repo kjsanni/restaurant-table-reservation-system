@@ -1,6 +1,9 @@
 const whatsappOrderService = require("../services/whatsapp-order.service");
 const { verifyWebhookSignature } = require("../services/whatsapp.service");
+const whatsappAppointmentService = require("../verticals/salon/services/whatsappAppointment.service");
 const logger = require("../utils/logger");
+const { Op } = require("sequelize");
+const db = require("../db/models");
 
 const inboundHandler = async (req, res) => {
   try {
@@ -13,16 +16,12 @@ const inboundHandler = async (req, res) => {
       return res.status(503).json({ success: false, message: "Webhook not configured" });
     }
 
-    // codeql[js/user-controlled-bypass]: False positive. The else branch
-    // explicitly rejects requests with a missing signature (401), so there
-    // is no bypass path — the signature is mandatory.
-    if (signature) {
-      const isValid = verifyWebhookSignature(payload, signature, appSecret);
-      if (!isValid) {
-        return res.status(401).json({ success: false, message: "Invalid signature" });
-      }
-    } else {
+    if (!signature) {
       return res.status(401).json({ success: false, message: "Missing signature" });
+    }
+    const isValid = verifyWebhookSignature(payload, signature, appSecret);
+    if (!isValid) {
+      return res.status(401).json({ success: false, message: "Invalid signature" });
     }
 
     const entry = payload.entry && payload.entry[0];
@@ -38,19 +37,48 @@ const inboundHandler = async (req, res) => {
     const phone = message.from;
     const tenantId = await resolveTenantId(value.metadata || {});
 
-    if (message.type === "text" && message.text && message.text.body) {
-      await whatsappOrderService.processMessage(phone, message.text.body, tenantId);
-    } else if (message.type === "location" && message.location) {
-      const { latitude, longitude, address } = message.location;
-      await whatsappOrderService.processLocationMessage(
-        phone,
-        { latitude, longitude, address },
-        tenantId
-      );
-    } else if (message.type === "interactive" && message.interactive) {
-      const reply = message.interactive.button_reply || message.interactive.list_reply;
-      if (reply && reply.id) {
-        await whatsappOrderService.processMessage(phone, reply.id, tenantId);
+    let isSalon = false;
+    let salonBookingEnabled = false;
+    if (tenantId) {
+      const tenant = await db.tenant.findByPk(tenantId);
+      isSalon = tenant?.businessVertical === "salon";
+      if (isSalon) {
+        const flags = tenant?.settings?.featureFlags || {};
+        salonBookingEnabled = flags.salon_whatsapp_booking !== false;
+      }
+    }
+
+    const isSalonBookingMessage =
+      isSalon &&
+      salonBookingEnabled &&
+      message.type === "text" &&
+      message.text &&
+      message.text.body;
+
+    if (!isSalonBookingMessage) {
+      if (message.type === "text" && message.text && message.text.body) {
+        await whatsappOrderService.processMessage(phone, message.text.body, tenantId);
+      } else if (message.type === "location" && message.location) {
+        const { latitude, longitude, address } = message.location;
+        await whatsappOrderService.processLocationMessage(
+          phone,
+          { latitude, longitude, address },
+          tenantId
+        );
+      } else if (message.type === "interactive" && message.interactive) {
+        const reply = message.interactive.button_reply || message.interactive.list_reply;
+        if (reply && reply.id) {
+          await whatsappOrderService.processMessage(phone, reply.id, tenantId);
+        }
+      }
+    }
+
+    if (tenantId && isSalon && salonBookingEnabled && message.type === "text" && message.text && message.text.body) {
+      const session = await whatsappAppointmentService.getSession(phone);
+      if (session.state === "idle") {
+        await whatsappAppointmentService.startSalonAppointmentFlow(phone, tenantId);
+      } else {
+        await whatsappAppointmentService.handleSalonAppointmentState(phone, message.text.body.toLowerCase(), message.text.body, session, tenantId);
       }
     }
 

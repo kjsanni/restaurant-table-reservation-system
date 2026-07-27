@@ -20,4 +20,19 @@ router
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(revenueController.getLtvHandler))
   .all(httpMethodError);
 
+router
+  .route("/cohorts")
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(revenueController.getCohortAnalysisHandler))
+  .all(httpMethodError);
+
+router
+  .route("/feature-adoption")
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(revenueController.getFeatureAdoptionHandler))
+  .all(httpMethodError);
+
+router
+  .route("/geographic")
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(revenueController.getGeographicDistributionHandler))
+  .all(httpMethodError);
+
 module.exports = router;

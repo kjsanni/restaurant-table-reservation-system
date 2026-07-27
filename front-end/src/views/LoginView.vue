@@ -1,19 +1,53 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { RouterLink } from "vue-router";
 
 import { useAuthStore } from "@/stores/auth";
 import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
 
+const props = defineProps<{ mode?: string }>();
+
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
+
+const resolvedMode = computed(
+  () => props.mode || (route.query.mode as string) || "tenant"
+);
+
+const brandName = computed(() =>
+  resolvedMode.value === "super-admin"
+    ? "Platform Admin"
+    : "Restaurant Reservations"
+);
+const brandHeading = computed(() =>
+  resolvedMode.value === "super-admin"
+    ? "Platform administration."
+    : "Run your floor with clarity."
+);
+const brandSubtitle = computed(() =>
+  resolvedMode.value === "super-admin"
+    ? "Manage tenants, billing, and platform health."
+    : "Reservations, tables, schedule, and guest history — one calm, fast workspace for your team."
+);
+const formTitle = computed(() =>
+  resolvedMode.value === "super-admin" ? "Platform sign in" : "Welcome back"
+);
+const formSubtitle = computed(() =>
+  resolvedMode.value === "super-admin"
+    ? "Super admin access only."
+    : "Sign in to your restaurant dashboard"
+);
 
 const credentials = ref({
   email: "",
   password: "",
 });
+const totpToken = ref("");
 const submitting = ref(false);
+const pendingTOTP = ref(false);
+const tempToken = ref("");
 
 const validationErrors = ref<Record<string, string[]> | null>(null);
 const generalError = ref<string | null>(null);
@@ -48,8 +82,26 @@ const handleLogin = async () => {
   validationErrors.value = null;
   generalError.value = null;
   try {
-    await authStore.login(credentials.value.email, credentials.value.password);
-    router.push("/dashboard");
+    const response = await authStore.login(
+      credentials.value.email,
+      credentials.value.password,
+      resolvedMode.value === "super-admin" ? "platform" : "tenant"
+    );
+
+    if (response?.pendingTOTP) {
+      pendingTOTP.value = true;
+      tempToken.value = response.tempToken || "";
+      submitting.value = false;
+      return;
+    }
+
+    if (resolvedMode.value === "super-admin") {
+      router.push("/admin/overview");
+    } else if (resolvedMode.value === "tenant") {
+      router.push("/dashboard");
+    } else {
+      router.push("/dashboard");
+    }
   } catch (err) {
     generalError.value = getApiErrorMessage(err);
     validationErrors.value = getApiErrors(err);
@@ -63,6 +115,26 @@ const handleLogin = async () => {
     submitting.value = false;
   }
 };
+
+const handleTOTPLogin = async () => {
+  if (submitting.value) return;
+  submitting.value = true;
+  validationErrors.value = null;
+  generalError.value = null;
+  try {
+    await authStore.loginWithTOTP(tempToken.value, totpToken.value);
+    if (resolvedMode.value === "super-admin") {
+      router.push("/admin/overview");
+    } else {
+      router.push("/dashboard");
+    }
+  } catch (err) {
+    generalError.value = getApiErrorMessage(err);
+    validationErrors.value = getApiErrors(err);
+  } finally {
+    submitting.value = false;
+  }
+};
 </script>
 
 <template>
@@ -70,23 +142,20 @@ const handleLogin = async () => {
     <aside class="brand-side">
       <div class="brand-top">
         <div class="brand-mark">R</div>
-        <div class="brand-name">Restaurant Reservations</div>
+        <div class="brand-name">{{ brandName }}</div>
       </div>
       <div class="brand-center">
-        <h1>Run your floor<br />with clarity.</h1>
-        <p>
-          Reservations, tables, schedule, and guest history — one calm, fast
-          workspace for your team.
-        </p>
+        <h1>{{ brandHeading }}</h1>
+        <p>{{ brandSubtitle }}</p>
       </div>
       <div class="brand-bottom">© 2026 Vibespot Technologies Ltd</div>
     </aside>
 
     <main class="form-side">
       <div class="form-card">
-        <h2>Welcome back</h2>
-        <p class="subtitle">Sign in to your restaurant dashboard</p>
-        <form @submit.prevent="handleLogin">
+        <h2>{{ formTitle }}</h2>
+        <p class="subtitle">{{ formSubtitle }}</p>
+        <form v-if="!pendingTOTP" @submit.prevent="handleLogin">
           <div class="field">
             <label for="email">Email</label>
             <input
@@ -122,6 +191,45 @@ const handleLogin = async () => {
               {{ submitting ? "Signing in..." : "Sign In" }}
             </button>
             <RouterLink to="/register" class="link">Create account</RouterLink>
+          </div>
+        </form>
+
+        <form v-else @submit.prevent="handleTOTPLogin">
+          <div class="field">
+            <label for="totp">Authenticator code</label>
+            <input
+              id="totp"
+              v-model="totpToken"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              placeholder="123456"
+              maxlength="6"
+            />
+          </div>
+
+          <div v-if="generalError" class="alert alert-danger">
+            {{ generalError }}
+          </div>
+
+          <div class="actions">
+            <button
+              type="submit"
+              class="btn-primary"
+              :disabled="submitting || !totpToken"
+            >
+              {{ submitting ? "Verifying..." : "Verify" }}
+            </button>
+            <button
+              type="button"
+              class="link"
+              @click="
+                pendingTOTP = false;
+                tempToken = '';
+              "
+            >
+              Cancel
+            </button>
           </div>
         </form>
         <div class="footer-note">Restaurant Reservations — vibespotgh.com</div>

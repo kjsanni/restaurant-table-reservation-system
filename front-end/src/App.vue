@@ -20,6 +20,9 @@ import PageHeader from "@/components/PageHeader.vue";
 import TenantSwitcher from "@/components/TenantSwitcher.vue";
 import { useTenantBranding } from "@/composables/useTenantBranding";
 import { getCurrentInstance } from "vue";
+import { useI18n } from "@/composables/useI18n";
+import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
+import localeAPI from "@/services/localeAPI";
 
 const app = getCurrentInstance()?.appContext?.app;
 if (app) {
@@ -34,6 +37,7 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 useTenantBranding();
+const { locale, setLocale, availableLocales } = useI18n();
 
 const sidebarVisible = ref(true);
 const collapsed = ref(false);
@@ -66,6 +70,19 @@ const resetError = () => {
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 const isAdmin = computed(() => authStore.user?.role === "admin");
 const user = computed(() => authStore.user);
+const isPlatformEntry = computed(() => authStore.entryPoint === "platform");
+const isTenantEntry = computed(() => authStore.entryPoint === "tenant");
+
+const topbarTitle = computed(() => {
+  if (route.path.startsWith("/admin")) return "Platform Administration";
+  if (route.path.startsWith("/portal"))
+    return authStore.currentTenant?.name
+      ? `${authStore.currentTenant.name} Portal`
+      : "Customer Portal";
+  if (isTenantEntry.value && authStore.currentTenant?.name)
+    return authStore.currentTenant.name;
+  return "Restaurant Reservations";
+});
 
 const currentYear = new Date().getFullYear();
 
@@ -102,12 +119,16 @@ const isActive = (name: string) => route.name === name;
 
 const shouldShow = (item: {
   tenantOnly?: boolean;
+  platformOnly?: boolean;
   requiresAuth?: boolean;
   requiresAdmin?: boolean;
   requiresPermission?: string;
   requiresFeature?: string;
+  requiresVertical?: string;
 }) => {
-  if (item.tenantOnly && !authStore.tenantModeEnabled) return false;
+  if (item.platformOnly && !isPlatformEntry.value) return false;
+  if (item.tenantOnly && !isTenantEntry.value && !authStore.tenantModeEnabled)
+    return false;
   if (item.requiresAuth && !isAuthenticated.value) return false;
   if (item.requiresAdmin && !isAdmin.value) return false;
   if (
@@ -121,15 +142,25 @@ const shouldShow = (item: {
   ) {
     return false;
   }
+  if (
+    item.requiresVertical &&
+    authStore.currentTenant?.businessVertical !== item.requiresVertical
+  ) {
+    return false;
+  }
   return true;
 };
 
 const allNavItems = computed(() => {
   const items = [...guestNavItems];
   if (isAuthenticated.value) {
-    items.push(...authenticatedNavItems.filter(shouldShow));
-    if (isAdmin.value) {
+    if (isPlatformEntry.value && isAdmin.value) {
       items.push(...adminNavItems.filter(shouldShow));
+    } else {
+      items.push(...authenticatedNavItems.filter(shouldShow));
+      if (isAdmin.value && !isPlatformEntry.value) {
+        items.push(...adminNavItems.filter(shouldShow));
+      }
     }
   }
   return items;
@@ -186,6 +217,17 @@ onMounted(() => {
   checkWindowWidth();
   window.addEventListener("resize", checkWindowWidth);
   window.addEventListener("keydown", handleKeydown);
+  localeAPI
+    .getLocale()
+    .then((res) => {
+      const serverLocale = res.data?.locale;
+      if (serverLocale && ["en", "tw", "gaa"].includes(serverLocale)) {
+        setLocale(serverLocale);
+      }
+    })
+    .catch(() => {
+      // ignore
+    });
 });
 
 onUnmounted(() => {
@@ -292,9 +334,13 @@ onUnmounted(() => {
           <aside
             v-if="
               route.meta.standalone &&
-              route.name !== 'login' &&
-              route.name !== 'register' &&
-              route.name !== 'home' &&
+              ![
+                'super-admin-login',
+                'login',
+                'tenant-login',
+                'register',
+                'home',
+              ].includes(route.name) &&
               isAuthenticated
             "
             class="standalone-sidebar"
@@ -421,10 +467,11 @@ onUnmounted(() => {
               </VaButton>
             </div>
             <div class="topbar-center">
-              <span class="topbar-title">Restaurant Reservations</span>
+              <span class="topbar-title">{{ topbarTitle }}</span>
             </div>
             <div class="topbar-right">
               <template v-if="isAuthenticated">
+                <LocaleSwitcher />
                 <TenantSwitcher
                   v-if="
                     user?.permissions?.manage_tenants &&
@@ -841,6 +888,16 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+.locale-select {
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--neutral-200);
+  background: var(--white);
+  color: var(--neutral-900);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .main-content {

@@ -26,13 +26,29 @@ if (shouldConnect) {
   });
 }
 
+const cacheStats = {
+  hits: 0,
+  misses: 0,
+  gets: 0,
+};
+
 const cache = {
   get: async (key) => {
-    if (!isConnected || !client) return null;
+    cacheStats.gets += 1;
+    if (!isConnected || !client) {
+      cacheStats.misses += 1;
+      return null;
+    }
     try {
       const data = await client.get(key);
-      return data ? JSON.parse(data) : null;
+      if (data) {
+        cacheStats.hits += 1;
+        return JSON.parse(data);
+      }
+      cacheStats.misses += 1;
+      return null;
     } catch (err) {
+      cacheStats.misses += 1;
       console.error("Cache get error:", err);
       return null;
     }
@@ -55,6 +71,14 @@ const cache = {
   },
 };
 
+const getCacheStats = () => ({ ...cacheStats });
+
+const resetCacheStats = () => {
+  cacheStats.hits = 0;
+  cacheStats.misses = 0;
+  cacheStats.gets = 0;
+};
+
 const closeClient = async () => {
   if (client && !client.isOpen) {
     return;
@@ -70,4 +94,4 @@ const closeClient = async () => {
   }
 };
 
-module.exports = { cache, client, closeClient };
+module.exports = { cache, client, closeClient, getCacheStats, resetCacheStats };

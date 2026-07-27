@@ -60,7 +60,7 @@ onMounted(load);
     <div class="content-wrapper">
       <header class="topbar">
         <h1 class="page-title">Benchmarks</h1>
-        <p class="page-desc">Cross-tenant anonymized operational benchmarks</p>
+        <p class="page-desc">Cross-venue anonymized operational benchmarks</p>
       </header>
 
       <div class="filters">
@@ -112,7 +112,7 @@ onMounted(load);
             <p class="card-value">{{ data.overall.avgPartySize }}</p>
           </div>
           <div class="card">
-            <p class="card-label">Avg Reservations / Tenant</p>
+            <p class="card-label">Avg Reservations / Venue</p>
             <p class="card-value">
               {{ fmtNum(data.overall.avgReservationsPerTenant) }}
             </p>

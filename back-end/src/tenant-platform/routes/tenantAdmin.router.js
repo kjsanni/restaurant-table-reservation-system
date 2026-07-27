@@ -3,7 +3,8 @@ const router = express.Router();
 const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const tenantAdminController = require("../controllers/tenantAdmin.controller");
-const { protect, requirePermission } = require("../../middleware/auth");
+const dataAnonymizationController = require("../controllers/dataAnonymization.controller");
+const { protect, requirePermission, requireSuperAdmin } = require("../../middleware/auth");
 
 router
   .route("/dashboard")
@@ -20,6 +21,12 @@ router
   .route("/:id")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.getTenantHandler))
   .patch(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.updateTenantHandler))
+  .delete(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.deleteTenantHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:id/export")
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.exportTenantDataHandler))
   .all(httpMethodError);
 
 router
@@ -30,6 +37,11 @@ router
 router
   .route("/:id/disable")
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.disableTenantHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:id/anonymize")
+  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(dataAnonymizationController.anonymizeTenantHandler))
   .all(httpMethodError);
 
 module.exports = router;

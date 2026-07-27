@@ -4,6 +4,9 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
+import stationAPI from "@/services/stationAPI";
+import appointmentAPI from "@/services/appointmentAPI";
+import salonDashboardAPI from "@/services/salonDashboardAPI";
 import logger from "@/utils/logger";
 
 interface Booking {
@@ -39,6 +42,17 @@ const authStore = useAuthStore();
 const bookings = ref<Booking[]>([]);
 const tables = ref<Table[]>([]);
 const loading = ref(true);
+const isSalon = computed(
+  () => authStore.currentTenant?.businessVertical === "salon"
+);
+const salonDashboard = ref<{
+  appointmentsToday: number;
+  revenueToday: number;
+  clientsToday: number;
+  chairUtilization: { percent: number; occupied: number; total: number };
+} | null>(null);
+const salonLoading = ref(false);
+const salonAppointments = ref<any[]>([]);
 
 const quickLinks = computed<QuickLink[]>(() => [
   {
@@ -73,34 +87,47 @@ const floor = computed(() => {
   };
 });
 
-const kpis = computed(() => [
-  {
-    label: "Bookings Today",
-    value: bookings.value.length,
-    delta: "▲ 3 vs yesterday",
-  },
-  {
-    label: "Covers",
-    value: bookings.value.reduce((sum, b) => sum + (b.people || 0), 0),
-    delta: "Avg party 3.2",
-  },
-  {
-    label: "Revenue",
-    value: `GHS ${(
-      bookings.value.reduce((sum, b) => sum + (b.expectedTotal || 0), 0) / 1000
-    ).toFixed(1)}k`,
-    delta: "Today",
-  },
-  {
-    label: "Occupancy",
-    value: `${
-      tables.value.length
-        ? Math.round((floor.value.occupied / tables.value.length) * 100)
-        : 0
-    }%`,
-    delta: `${floor.value.occupied} of ${tables.value.length} tables`,
-  },
-]);
+const kpis = computed(() => {
+  const base = [
+    {
+      label: "Bookings Today",
+      value: bookings.value.length,
+      delta: "▲ 3 vs yesterday",
+    },
+    {
+      label: "Covers",
+      value: bookings.value.reduce((sum, b) => sum + (b.people || 0), 0),
+      delta: "Avg party 3.2",
+    },
+    {
+      label: "Revenue",
+      value: `GHS ${(
+        bookings.value.reduce((sum, b) => sum + (b.expectedTotal || 0), 0) /
+        1000
+      ).toFixed(1)}k`,
+      delta: "Today",
+    },
+    {
+      label: "Occupancy",
+      value: `${
+        tables.value.length
+          ? Math.round((floor.value.occupied / tables.value.length) * 100)
+          : 0
+      }%`,
+      delta: `${floor.value.occupied} of ${tables.value.length} tables`,
+    },
+  ];
+
+  if (isSalon.value && salonDashboard.value) {
+    base.push({
+      label: "Station Utilisation",
+      value: `${salonDashboard.value.chairUtilization.percent}%`,
+      delta: `${salonDashboard.value.chairUtilization.occupied} of ${salonDashboard.value.chairUtilization.total} stations`,
+    });
+  }
+
+  return base;
+});
 
 const detail = (b: any) => {
   const who = b.Customer?.name || b.name || "Guest";
@@ -137,6 +164,32 @@ const loadDashboard = async () => {
   if (tRes.status === "fulfilled") {
     const data = tRes.value?.data;
     tables.value = data?.collection || data?.tables || data || [];
+  }
+
+  if (isSalon.value) {
+    salonLoading.value = true;
+    try {
+      const [dashRes, apptRes] = await Promise.allSettled([
+        salonDashboardAPI.getDashboard(),
+        appointmentAPI.getAppointments({
+          date: new Date().toISOString().slice(0, 10),
+          limit: 10,
+        }),
+      ]);
+      if (dashRes.status === "fulfilled") {
+        salonDashboard.value = dashRes.value?.data?.kpis || null;
+      }
+      if (apptRes.status === "fulfilled") {
+        const data = apptRes.value?.data;
+        salonAppointments.value = data?.data || data || [];
+      }
+    } catch (e: unknown) {
+      logger.warn("Failed to load salon dashboard data", {
+        error: e instanceof Error ? e.message : "",
+      });
+    } finally {
+      salonLoading.value = false;
+    }
   }
 };
 
@@ -190,55 +243,140 @@ onMounted(async () => {
         </div>
 
         <div class="lower-grid">
-          <div class="panel bookings-panel">
-            <div class="panel-head">
-              <h3>Today's Bookings</h3>
-              <button class="panel-link" @click="router.push('/reservations')">
-                View all
-              </button>
-            </div>
-            <div v-if="!bookings.length" class="empty">
-              No bookings yet today.
-            </div>
-            <div v-else class="booking-list">
-              <div v-for="b in bookings" :key="b.id" class="booking">
-                <div class="booking-time">{{ formatTime(b.resTime) }}</div>
-                <div class="booking-party">{{ b.people }}</div>
-                <div class="booking-who">
-                  <div>{{ b.Customer?.name || b.name || "Guest" }}</div>
-                  <div class="booking-meta">{{ detail(b) }}</div>
-                </div>
-                <span
-                  class="booking-tag"
-                  :class="statusClass(b.resStatus || b.status || 'pending')"
+          <template v-if="!isSalon">
+            <div class="panel bookings-panel">
+              <div class="panel-head">
+                <h3>Today's Bookings</h3>
+                <button
+                  class="panel-link"
+                  @click="router.push('/reservations')"
                 >
-                  {{ statusLabel(b.resStatus || b.status || "pending") }}
-                </span>
+                  View all
+                </button>
+              </div>
+              <div v-if="!bookings.length" class="empty">
+                No bookings yet today.
+              </div>
+              <div v-else class="booking-list">
+                <div v-for="b in bookings" :key="b.id" class="booking">
+                  <div class="booking-time">{{ formatTime(b.resTime) }}</div>
+                  <div class="booking-party">{{ b.people }}</div>
+                  <div class="booking-who">
+                    <div>{{ b.Customer?.name || b.name || "Guest" }}</div>
+                    <div class="booking-meta">{{ detail(b) }}</div>
+                  </div>
+                  <span
+                    class="booking-tag"
+                    :class="statusClass(b.resStatus || b.status || 'pending')"
+                  >
+                    {{ statusLabel(b.resStatus || b.status || "pending") }}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="panel floor-panel">
-            <h3>Live Floor</h3>
-            <div class="floor-grid">
-              <div class="floor-stat occupied">
-                <div class="floor-num">{{ floor.occupied }}</div>
-                <div class="floor-label">Occupied</div>
-              </div>
-              <div class="floor-stat free">
-                <div class="floor-num">{{ floor.free }}</div>
-                <div class="floor-label">Free</div>
-              </div>
-              <div class="floor-stat reserved">
-                <div class="floor-num">{{ floor.reserved }}</div>
-                <div class="floor-label">Reserved</div>
-              </div>
-              <div class="floor-stat blocked">
-                <div class="floor-num">{{ floor.blocked }}</div>
-                <div class="floor-label">Blocked</div>
+            <div class="panel floor-panel">
+              <h3>Live Floor</h3>
+              <div class="floor-grid">
+                <div class="floor-stat occupied">
+                  <div class="floor-num">{{ floor.occupied }}</div>
+                  <div class="floor-label">Occupied</div>
+                </div>
+                <div class="floor-stat free">
+                  <div class="floor-num">{{ floor.free }}</div>
+                  <div class="floor-label">Free</div>
+                </div>
+                <div class="floor-stat reserved">
+                  <div class="floor-num">{{ floor.reserved }}</div>
+                  <div class="floor-label">Reserved</div>
+                </div>
+                <div class="floor-stat blocked">
+                  <div class="floor-num">{{ floor.blocked }}</div>
+                  <div class="floor-label">Blocked</div>
+                </div>
               </div>
             </div>
-          </div>
+          </template>
+
+          <template v-else>
+            <div class="panel bookings-panel">
+              <div class="panel-head">
+                <h3>Today's Appointments</h3>
+                <button
+                  class="panel-link"
+                  @click="router.push('/salon/appointments')"
+                >
+                  View all
+                </button>
+              </div>
+              <div v-if="!salonAppointments.length" class="empty">
+                No appointments yet today.
+              </div>
+              <div v-else class="booking-list">
+                <div
+                  v-for="appt in salonAppointments"
+                  :key="appt.id"
+                  class="booking"
+                >
+                  <div class="booking-time">{{ formatTime(appt.start) }}</div>
+                  <div class="booking-party">{{ appt.durationMinutes }}m</div>
+                  <div class="booking-who">
+                    <div>
+                      {{ appt.customer?.firstName }}
+                      {{
+                        appt.customer?.lastName ||
+                        appt.service?.name ||
+                        "Service"
+                      }}
+                    </div>
+                    <div class="booking-meta">
+                      {{ appt.service?.name }} ·
+                      {{ appt.station?.name || "Unassigned" }}
+                    </div>
+                  </div>
+                  <span
+                    class="booking-tag"
+                    :class="statusClass(appt.status || 'pending')"
+                  >
+                    {{ statusLabel(appt.status || "pending") }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel floor-panel">
+              <h3>Stations</h3>
+              <div class="floor-grid">
+                <div class="floor-stat occupied">
+                  <div class="floor-num">
+                    {{ salonDashboard?.chairUtilization.occupied ?? 0 }}
+                  </div>
+                  <div class="floor-label">Busy</div>
+                </div>
+                <div class="floor-stat free">
+                  <div class="floor-num">
+                    {{
+                      (salonDashboard?.chairUtilization.total ?? 0) -
+                      (salonDashboard?.chairUtilization.occupied ?? 0)
+                    }}
+                  </div>
+                  <div class="floor-label">Available</div>
+                </div>
+                <div class="floor-stat reserved">
+                  <div class="floor-num">
+                    {{ salonDashboard?.chairUtilization.percent ?? 0 }}%
+                  </div>
+                  <div class="floor-label">Utilisation</div>
+                </div>
+                <div class="floor-stat blocked">
+                  <div class="floor-num">
+                    {{ salonDashboard?.chairUtilization.total ?? 0 }}
+                  </div>
+                  <div class="floor-label">Total</div>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
 
         <div class="quick-grid">

@@ -3,7 +3,6 @@ const router = express.Router();
 const httpMethodError = require("../middleware/httpMethodError");
 const menuController = require("../controllers/menu.controller");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
-const { validateCsrfToken } = require("../middleware/csrf");
 
 router
   .route("/categories")

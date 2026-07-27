@@ -1,15 +1,16 @@
 const emailTemplateService = require("../services/emailTemplate.service");
 const emailService = require("../services/emailService");
 
-// codeql[js/polynomial-redos]: False positive. EMAIL_RE is a simple anchored
-// email pattern (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`) with no nested quantifiers,
-// alternation, or ambiguous subpatterns — it cannot exhibit polynomial
-// backtracking regardless of input.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isValidEmail = (to) => {
+  if (!to || typeof to !== "string") return false;
+  const at = to.indexOf("@");
+  const dot = to.lastIndexOf(".");
+  return at > 0 && dot > at && dot < to.length - 1;
+};
 
 const sendTestEmailHandler = async (req, res) => {
   const { to } = req.body || {};
-  if (!to || !EMAIL_RE.test(to)) {
+  if (!to || !isValidEmail(to)) {
     return res.status(400).json({ success: false, message: "Valid recipient email is required" });
   }
   await emailService.sendEmail({
@@ -23,7 +24,7 @@ const sendTestEmailHandler = async (req, res) => {
 
 const sendTemplateTestHandler = async (req, res) => {
   const { templateType, to, data } = req.body || {};
-  if (!to || !EMAIL_RE.test(to)) {
+  if (!to || !isValidEmail(to)) {
     return res.status(400).json({ success: false, message: "Valid recipient email is required" });
   }
   if (!templateType) {

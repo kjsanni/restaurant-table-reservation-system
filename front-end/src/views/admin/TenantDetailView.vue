@@ -4,12 +4,12 @@
       <button @click="$router.back()" class="back-btn">← Back</button>
       <h1>{{ tenant.name }}</h1>
       <span :class="['status-badge', tenant.status]">{{ tenant.status }}</span>
-      <button @click="accessTenant" class="btn-access">Access Tenant</button>
+      <button @click="accessTenant" class="btn-access">Access Venue</button>
     </div>
 
     <div class="grid">
       <div class="section">
-        <h2>Tenant Information</h2>
+        <h2>Venue Information</h2>
         <div class="info-row">
           <span class="label">Slug</span>
           <span class="value">{{ tenant.slug }}</span>
@@ -29,6 +29,12 @@
         <div class="info-row">
           <span class="label">Billing Email</span>
           <span class="value">{{ tenant.billingEmail || "—" }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Module</span>
+          <span class="value">{{
+            tenant.businessVertical || "restaurant"
+          }}</span>
         </div>
       </div>
 
@@ -59,41 +65,57 @@
       </div>
 
       <div class="section">
-        <h2>Paystack (Bring Your Own Keys)</h2>
+        <h2>WhatsApp Configuration</h2>
         <p class="section-hint">
-          Override the platform Paystack account per tenant. Leave blank to use
-          the platform default. Secret key is write-only.
+          Configure WhatsApp Business API for this venue. Managed by platform
+          admin only.
         </p>
         <div class="field">
-          <label>Subaccount Code</label>
+          <label>Phone Number ID</label>
           <input
-            v-model="paystackForm.paystackSubaccountCode"
-            placeholder="ACCT_..."
+            v-model="whatsappForm.phoneNumberId"
+            placeholder="1234567890"
           />
         </div>
         <div class="field">
-          <label>Public Key</label>
+          <label>WhatsApp Token</label>
           <input
-            v-model="paystackForm.paystackPublicKey"
-            placeholder="pk_..."
-          />
-        </div>
-        <div class="field">
-          <label>Secret Key</label>
-          <input
-            v-model="paystackForm.paystackSecretKey"
+            v-model="whatsappForm.token"
             type="password"
-            placeholder="sk_..."
+            placeholder="EAAG..."
           />
         </div>
         <button
           class="btn success"
-          @click="savePaystack"
-          :disabled="savingPaystack"
+          @click="saveWhatsApp"
+          :disabled="savingWhatsApp"
         >
-          {{ savingPaystack ? "Saving..." : "Save Paystack Keys" }}
+          {{ savingWhatsApp ? "Saving..." : "Save WhatsApp Settings" }}
         </button>
-        <span v-if="paystackSaved" class="saved-tag">Saved</span>
+        <span v-if="whatsappSaved" class="saved-tag">Saved</span>
+      </div>
+
+      <div class="section">
+        <h2>Payout Configuration</h2>
+        <p class="section-hint">
+          Configure Paystack subaccount for automatic settlement splits. Funds
+          are routed directly to this subaccount when customers pay.
+        </p>
+        <div class="field">
+          <label>Paystack Subaccount Code</label>
+          <input
+            v-model="payoutForm.paystackSubaccountCode"
+            placeholder="ACCT_..."
+          />
+        </div>
+        <button
+          class="btn success"
+          @click="savePayout"
+          :disabled="savingPayout"
+        >
+          {{ savingPayout ? "Saving..." : "Save Payout Settings" }}
+        </button>
+        <span v-if="payoutSaved" class="saved-tag">Saved</span>
       </div>
     </div>
 
@@ -103,15 +125,115 @@
         @click="enableTenant"
         class="btn success"
       >
-        Enable Tenant
+        Enable Venue
       </button>
       <button
         v-if="tenant.status === 'active' || tenant.status === 'past_due'"
         @click="disableTenant"
         class="btn danger"
       >
-        Disable Tenant
+        Disable Venue
       </button>
+      <button
+        v-if="tenant.status !== 'cancelled'"
+        @click="deleteTenant"
+        class="btn danger"
+        :disabled="deleting"
+      >
+        {{ deleting ? "Deleting..." : "Delete Venue" }}
+      </button>
+      <button class="btn" @click="exportTenantData" :disabled="exporting">
+        {{ exporting ? "Exporting..." : "Export Data" }}
+      </button>
+      <p v-if="deleteError" class="error-text">{{ deleteError }}</p>
+      <p v-if="exportError" class="error-text">{{ exportError }}</p>
+    </div>
+
+    <div class="section">
+      <h2>Module Configuration</h2>
+      <p class="section-hint">
+        Switch this venue's business vertical. This enables the corresponding
+        module (restaurant or salon) and branding.
+      </p>
+      <div class="field">
+        <label>Business Vertical</label>
+        <select v-model="businessVertical" :disabled="savingVertical">
+          <option value="restaurant">Restaurant</option>
+          <option value="salon">Salon</option>
+        </select>
+      </div>
+      <button
+        class="btn primary"
+        @click="saveVertical"
+        :disabled="savingVertical"
+      >
+        {{ savingVertical ? "Saving..." : "Save Module" }}
+      </button>
+      <span v-if="verticalSaved" class="saved-tag">Saved</span>
+    </div>
+
+    <div class="section">
+      <h2>Restaurant Subtype</h2>
+      <p class="section-hint">
+        Fine-tune the restaurant type for this venue. This affects default
+        features and pricing recommendations.
+      </p>
+      <div class="field">
+        <label>Subtype</label>
+        <select v-model="restaurantSubtype" :disabled="savingSubtype">
+          <option value="">—</option>
+          <option value="fine_dining">Fine Dining</option>
+          <option value="fast_food">Fast Food</option>
+          <option value="cafe">Cafe</option>
+          <option value="casual_dining">Casual Dining</option>
+          <option value="bar_pub">Bar / Pub</option>
+          <option value="food_truck">Food Truck</option>
+          <option value="buffet">Buffet</option>
+          <option value="cloud_kitchen">Cloud Kitchen</option>
+        </select>
+      </div>
+      <button
+        class="btn primary"
+        @click="saveSubtype"
+        :disabled="savingSubtype"
+      >
+        {{ savingSubtype ? "Saving..." : "Save Subtype" }}
+      </button>
+      <span v-if="subtypeSaved" class="saved-tag">Saved</span>
+    </div>
+
+    <div class="section">
+      <h2>Data Residency</h2>
+      <p class="section-hint">
+        Track where this venue's data is stored and any residency requirements.
+      </p>
+      <div class="field">
+        <label>Data Region</label>
+        <select v-model="dataRegion" :disabled="savingResidency">
+          <option value="">—</option>
+          <option value="gh">Ghana</option>
+          <option value="eu">EU</option>
+          <option value="us">US</option>
+          <option value="uk">UK</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Residency Notes</label>
+        <textarea
+          v-model="residencyNotes"
+          rows="3"
+          placeholder="Any special data residency requirements or notes..."
+        ></textarea>
+      </div>
+      <button
+        class="btn primary"
+        @click="saveResidency"
+        :disabled="savingResidency"
+      >
+        {{ savingResidency ? "Saving..." : "Save Residency" }}
+      </button>
+      <span v-if="residencySaved" class="saved-tag">Saved</span>
     </div>
 
     <div class="section notes-section">
@@ -120,7 +242,7 @@
         <textarea
           v-model="newNote"
           rows="2"
-          placeholder="Add a support note for this tenant..."
+          placeholder="Add a support note for this venue..."
         ></textarea>
         <button
           class="btn"
@@ -205,22 +327,47 @@ const tenant = ref({ users: [] });
 const notes = ref([]);
 const newNote = ref("");
 const addingNote = ref(false);
-const savingPaystack = ref(false);
-const paystackSaved = ref(false);
-const paystackForm = ref({
+const savingWhatsApp = ref(false);
+const whatsappSaved = ref(false);
+const savingPayout = ref(false);
+const payoutSaved = ref(false);
+const deleting = ref(false);
+const deleteError = ref("");
+const exporting = ref(false);
+const exportError = ref("");
+const businessVertical = ref("restaurant");
+const savingVertical = ref(false);
+const verticalSaved = ref(false);
+const restaurantSubtype = ref("");
+const savingSubtype = ref(false);
+const subtypeSaved = ref(false);
+const dataRegion = ref("");
+const residencyNotes = ref("");
+const savingResidency = ref(false);
+const residencySaved = ref(false);
+const whatsappForm = ref({
+  phoneNumberId: "",
+  token: "",
+});
+const payoutForm = ref({
   paystackSubaccountCode: "",
-  paystackPublicKey: "",
-  paystackSecretKey: "",
 });
 
 const loadTenant = async () => {
   const response = await tenantAdminAPI.getById(route.params.id);
   tenant.value = response.data.item;
-  paystackForm.value = {
-    paystackSubaccountCode: tenant.value.paystackSubaccountCode || "",
-    paystackPublicKey: tenant.value.paystackPublicKey || "",
-    paystackSecretKey: "",
+  businessVertical.value = tenant.value.businessVertical || "restaurant";
+  restaurantSubtype.value = tenant.value.restaurantSubtype || "";
+  const wa = tenant.value.whatsappConfig || {};
+  whatsappForm.value = {
+    phoneNumberId: wa.phoneNumberId || "",
+    token: wa.token || "",
   };
+  payoutForm.value = {
+    paystackSubaccountCode: tenant.value.paystackSubaccountCode || "",
+  };
+  dataRegion.value = tenant.value.dataRegion || "";
+  residencyNotes.value = tenant.value.residencyNotes || "";
   await loadNotes();
 };
 
@@ -264,27 +411,144 @@ const enableTenant = async () => {
 const disableTenant = async () => {
   if (
     !confirm(
-      "Are you sure you want to disable this tenant? This will prevent them from accessing the platform."
+      "Are you sure you want to disable this venue? This will prevent them from accessing the platform."
     )
   )
     return;
-  const reason = prompt("Reason for disabling tenant (optional):") || "";
+  const reason = prompt("Reason for disabling venue (optional):") || "";
   await tenantAdminAPI.disable(route.params.id, { reason });
   await loadTenant();
 };
 
-const savePaystack = async () => {
-  savingPaystack.value = true;
-  paystackSaved.value = false;
+const deleteTenant = async () => {
+  deleteError.value = "";
+  if (
+    !confirm(
+      `Permanently delete "${tenant.value.name}"? This will soft-delete this venue and cannot be undone.`
+    )
+  )
+    return;
+  const confirmation = prompt("Type the tenant slug to confirm deletion:");
+  if (confirmation !== tenant.value.slug) {
+    deleteError.value = "Slug confirmation did not match.";
+    return;
+  }
+  deleting.value = true;
   try {
-    const payload = { ...paystackForm.value };
-    if (!payload.paystackSecretKey) delete payload.paystackSecretKey;
-    await tenantAdminAPI.update(route.params.id, payload);
-    paystackSaved.value = true;
-    setTimeout(() => (paystackSaved.value = false), 2000);
+    await tenantAdminAPI.deleteTenant(route.params.id);
+    router.push("/admin/tenants");
+  } catch (err) {
+    deleteError.value =
+      err?.response?.data?.message || "Failed to delete venue.";
+  } finally {
+    deleting.value = false;
+  }
+};
+
+const exportTenantData = async () => {
+  exportError.value = "";
+  exporting.value = true;
+  try {
+    const response = await tenantAdminAPI.exportData(route.params.id);
+    const blob = new Blob([JSON.stringify(response.data.data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tenant-${tenant.value.slug}-export.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    exportError.value =
+      err?.response?.data?.message || "Failed to export tenant data.";
+  } finally {
+    exporting.value = false;
+  }
+};
+
+const saveWhatsApp = async () => {
+  savingWhatsApp.value = true;
+  whatsappSaved.value = false;
+  try {
+    await tenantAdminAPI.update(route.params.id, {
+      whatsappConfig: whatsappForm.value,
+    });
+    whatsappSaved.value = true;
+    setTimeout(() => (whatsappSaved.value = false), 2000);
     await loadTenant();
   } finally {
-    savingPaystack.value = false;
+    savingWhatsApp.value = false;
+  }
+};
+
+const savePayout = async () => {
+  savingPayout.value = true;
+  payoutSaved.value = false;
+  try {
+    await tenantAdminAPI.update(route.params.id, {
+      paystackSubaccountCode: payoutForm.value.paystackSubaccountCode,
+    });
+    payoutSaved.value = true;
+    setTimeout(() => (payoutSaved.value = false), 2000);
+    await loadTenant();
+  } finally {
+    savingPayout.value = false;
+  }
+};
+
+const saveVertical = async () => {
+  savingVertical.value = true;
+  verticalSaved.value = false;
+  try {
+    await tenantAdminAPI.update(route.params.id, {
+      businessVertical: businessVertical.value,
+    });
+    verticalSaved.value = true;
+    setTimeout(() => (verticalSaved.value = false), 2000);
+    await loadTenant();
+    if (authStore.currentTenant?.id === tenant.value.id) {
+      authStore.setTenant({
+        ...authStore.currentTenant,
+        businessVertical: businessVertical.value,
+      });
+      await authStore.fetchCapabilities();
+    }
+  } finally {
+    savingVertical.value = false;
+  }
+};
+
+const saveSubtype = async () => {
+  savingSubtype.value = true;
+  subtypeSaved.value = false;
+  try {
+    await tenantAdminAPI.update(route.params.id, {
+      restaurantSubtype: restaurantSubtype.value || null,
+    });
+    subtypeSaved.value = true;
+    setTimeout(() => (subtypeSaved.value = false), 2000);
+    await loadTenant();
+  } finally {
+    savingSubtype.value = false;
+  }
+};
+
+const saveResidency = async () => {
+  savingResidency.value = true;
+  residencySaved.value = false;
+  try {
+    await tenantAdminAPI.update(route.params.id, {
+      dataRegion: dataRegion.value || null,
+      residencyNotes: residencyNotes.value || null,
+    });
+    residencySaved.value = true;
+    setTimeout(() => (residencySaved.value = false), 2000);
+    await loadTenant();
+  } finally {
+    savingResidency.value = false;
   }
 };
 
@@ -476,6 +740,12 @@ onMounted(() => {
 .saved-tag {
   margin-left: var(--space-3);
   color: var(--earth-600);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.error-text {
+  margin-left: var(--space-3);
+  color: var(--rose-600);
   font-size: var(--text-sm);
   font-weight: 600;
 }

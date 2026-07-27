@@ -1,7 +1,5 @@
 const db = require("../db/models");
 const Refund = db.refund;
-const Payment = db.payment;
-const { Op } = db.Sequelize;
 
 const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 

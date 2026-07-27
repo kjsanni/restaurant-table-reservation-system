@@ -40,10 +40,6 @@ const loadPaystackConfig = async () => {
   return cachedConfig;
 };
 
-if (!envSecretKey) {
-  console.warn("PAYSTACK_SECRET_KEY is not set. Billing features will fail.");
-}
-
 const buildClient = (secretKey) =>
   axios.create({
     baseURL: PAYSTACK_BASE,
@@ -53,12 +49,40 @@ const buildClient = (secretKey) =>
     },
   });
 
-const createTenantClient = async (tenant) => {
+const buildPlatformClient = async () => {
   const config = await loadPaystackConfig();
-  const secretKey = tenant?.paystackSecretKey || config.secretKey;
-  if (!secretKey) return buildClient(config.secretKey);
+  return buildClient(config.secretKey);
+};
 
-  return buildClient(secretKey);
+const validateSecretKey = async (secretKey) => {
+  const client = buildClient(secretKey);
+  try {
+    await client.get("/transaction/verify/fake-reference-for-validation");
+    return true;
+  } catch (err) {
+    if (err.response?.status === 404) return true;
+    if (err.response?.status === 401) return false;
+    return false;
+  }
+};
+
+const updatePlatformPaystackConfig = async ({ secretKey, webhookSecret, mode }) => {
+  const existing = await loadPaystackConfig();
+  const payload = {
+    secretKey: secretKey || existing.secretKey,
+    webhookSecret: webhookSecret || existing.webhookSecret,
+    mode: mode || existing.mode,
+  };
+
+  await db.setting.upsert({
+    key: "paystack_config",
+    value: payload,
+    updatedAt: new Date(),
+  });
+
+  cachedConfig = null;
+  configLoadedAt = 0;
+  return payload;
 };
 
 const verifyWebhookSignature = async (payload, signature) => {
@@ -69,8 +93,8 @@ const verifyWebhookSignature = async (payload, signature) => {
   return hash === signature;
 };
 
-const createCustomer = async ({ email, firstName, lastName, phone }, tenant) => {
-  const client = await createTenantClient(tenant);
+const createCustomer = async ({ email, firstName, lastName, phone }) => {
+  const client = await buildPlatformClient();
   const response = await client.post("/customer", {
     email,
     first_name: firstName,
@@ -80,8 +104,8 @@ const createCustomer = async ({ email, firstName, lastName, phone }, tenant) => 
   return response.data.data;
 };
 
-const createSubscription = async ({ customerCode, planCode, authorization }, tenant) => {
-  const client = await createTenantClient(tenant);
+const createSubscription = async ({ customerCode, planCode, authorization }) => {
+  const client = await buildPlatformClient();
   const response = await client.post("/subscription", {
     customer: customerCode,
     plan: planCode,
@@ -90,8 +114,8 @@ const createSubscription = async ({ customerCode, planCode, authorization }, ten
   return response.data.data;
 };
 
-const createPlan = async ({ name, amount, interval = "monthly", currency = "GHS" }, tenant) => {
-  const client = await createTenantClient(tenant);
+const createPlan = async ({ name, amount, interval = "monthly", currency = "GHS" }) => {
+  const client = await buildPlatformClient();
   const response = await client.post("/plan", {
     name,
     amount: amount * 100,
@@ -101,8 +125,8 @@ const createPlan = async ({ name, amount, interval = "monthly", currency = "GHS"
   return response.data.data;
 };
 
-const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = null }, tenant) => {
-  const client = await createTenantClient(tenant);
+const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = null }) => {
+  const client = await buildPlatformClient();
   const payload = {
     email,
     amount: amount * 100,
@@ -119,14 +143,14 @@ const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = nu
   return response.data.data;
 };
 
-const verifyPayment = async (reference, tenant) => {
-  const client = await createTenantClient(tenant);
+const verifyPayment = async (reference) => {
+  const client = await buildPlatformClient();
   const response = await client.get(`/transaction/verify/${reference}`);
   return response.data.data;
 };
 
-const fetchCustomer = async (customerCode, tenant) => {
-  const client = await createTenantClient(tenant);
+const fetchCustomer = async (customerCode) => {
+  const client = await buildPlatformClient();
   const response = await client.get(`/customer/${customerCode}`);
   return response.data.data;
 };
@@ -155,4 +179,7 @@ module.exports = {
   verifyPayment,
   fetchCustomer,
   buildSplitConfig,
+  buildPlatformClient,
+  validateSecretKey,
+  updatePlatformPaystackConfig,
 };

@@ -1,15 +1,15 @@
 <template>
   <div class="tenant-dashboard">
     <div class="dashboard-header">
-      <h1>Platform Admin</h1>
+      <h1>Venue Platform Admin</h1>
       <p class="subtitle">
-        Manage tenants, plans, and billing across the platform
+        Manage venues, plans, and billing across the platform
       </p>
     </div>
 
     <div class="summary-cards">
       <div class="card">
-        <div class="card-label">Total Tenants</div>
+        <div class="card-label">Total Venues</div>
         <div class="card-value">{{ dashboard.total }}</div>
       </div>
       <div class="card">
@@ -34,7 +34,7 @@
         <div class="card-value danger">{{ dashboard.suspended }}</div>
       </div>
       <div class="card">
-        <div class="card-label">MRR (GHS)</div>
+        <div class="card-label">Venue Revenue (GHS)</div>
         <div class="card-value">{{ formatMrr(dashboard.mrr) }}</div>
       </div>
     </div>
@@ -57,7 +57,7 @@
     <div class="filters">
       <input
         v-model="searchQuery"
-        placeholder="Search tenants..."
+        placeholder="Search venues..."
         class="search-input"
       />
       <select v-model="filterStatus" class="filter-select">
@@ -68,7 +68,15 @@
         <option value="cancelled">Cancelled</option>
         <option value="trialing">Trialing</option>
       </select>
-      <button @click="openCreateModal" class="btn-primary">+ Add Tenant</button>
+      <button @click="openCreateModal" class="btn-primary">+ Add Venue</button>
+    </div>
+
+    <div v-if="selectedTenants.length > 0" class="bulk-actions">
+      <span class="bulk-count">{{ selectedTenants.length }} selected</span>
+      <button @click="openVerticalModal" class="btn-secondary">
+        Change Vertical
+      </button>
+      <button @click="clearSelection" class="btn-secondary">Clear</button>
     </div>
 
     <div
@@ -77,7 +85,7 @@
       @click.self="closeCreateModal"
     >
       <div class="modal">
-        <h2>Create New Tenant</h2>
+        <h2>Create New Venue</h2>
         <form @submit.prevent="createTenant">
           <div class="form-group">
             <label>Name *</label>
@@ -85,7 +93,17 @@
           </div>
           <div class="form-group">
             <label>Slug *</label>
-            <input v-model="form.slug" required />
+            <div class="slug-row">
+              <input v-model="form.slug" required />
+              <button
+                type="button"
+                class="btn-secondary"
+                @click="form.slug = generateSlug(form.name)"
+                :disabled="!form.name"
+              >
+                Generate
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>Domain</label>
@@ -124,7 +142,40 @@
             >
               Cancel
             </button>
-            <button type="submit" class="btn-primary">Create Tenant</button>
+            <button type="submit" class="btn-primary">Create Venue</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div
+      v-if="showVerticalModal"
+      class="modal-overlay"
+      @click.self="closeVerticalModal"
+    >
+      <div class="modal">
+        <h2>Change Business Vertical</h2>
+        <p class="modal-hint">
+          Update {{ selectedTenants.length }} venue(s) to a new business
+          vertical.
+        </p>
+        <form @submit.prevent="changeVertical">
+          <div class="form-group">
+            <label>Business Vertical *</label>
+            <select v-model="verticalForm.businessVertical" required>
+              <option value="restaurant">Restaurant</option>
+              <option value="salon">Salon</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button
+              type="button"
+              @click="closeVerticalModal"
+              class="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">Update Vertical</button>
           </div>
         </form>
       </div>
@@ -134,9 +185,17 @@
       <table class="tenant-table">
         <thead>
           <tr>
+            <th>
+              <input
+                type="checkbox"
+                :checked="allSelected"
+                @change="toggleSelectAll"
+              />
+            </th>
             <th>Name</th>
             <th>Slug</th>
             <th>Plan</th>
+            <th>Vertical</th>
             <th>Status</th>
             <th>Subscription</th>
             <th>Next Billing</th>
@@ -145,9 +204,17 @@
         </thead>
         <tbody>
           <tr v-for="tenant in filteredTenants" :key="tenant.id">
+            <td>
+              <input
+                type="checkbox"
+                :value="tenant.id"
+                v-model="selectedTenants"
+              />
+            </td>
             <td>{{ tenant.name }}</td>
             <td>{{ tenant.slug }}</td>
             <td>{{ tenant.plan }}</td>
+            <td>{{ tenant.businessVertical || "—" }}</td>
             <td>
               <span :class="['status-badge', tenant.status]">{{
                 tenant.status
@@ -195,6 +262,7 @@ import { useToastStore } from "@/stores/toast";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import planAPI from "@/services/planAPI";
 import { useAuthStore } from "@/stores/auth";
+import { generateSlug } from "@/utils/slug";
 
 const toastStore = useToastStore();
 
@@ -214,6 +282,11 @@ const tenants = ref([]);
 const plans = ref([]);
 const searchQuery = ref("");
 const filterStatus = ref("");
+const selectedTenants = ref([]);
+const showVerticalModal = ref(false);
+const verticalForm = ref({
+  businessVertical: "restaurant",
+});
 const showCreateModal = ref(false);
 const form = ref({
   name: "",
@@ -287,6 +360,52 @@ const openCreateModal = () => {
 
 const closeCreateModal = () => {
   showCreateModal.value = false;
+};
+
+const allSelected = computed({
+  get: () =>
+    filteredTenants.value.length > 0 &&
+    selectedTenants.value.length === filteredTenants.value.length,
+  set: () => {},
+});
+
+const toggleSelectAll = () => {
+  if (allSelected.value) {
+    selectedTenants.value = [];
+  } else {
+    selectedTenants.value = filteredTenants.value.map((t) => t.id);
+  }
+};
+
+const clearSelection = () => {
+  selectedTenants.value = [];
+};
+
+const openVerticalModal = () => {
+  showVerticalModal.value = true;
+};
+
+const closeVerticalModal = () => {
+  showVerticalModal.value = false;
+};
+
+const changeVertical = async () => {
+  try {
+    await tenantAdminAPI.bulkChangeVertical(
+      selectedTenants.value,
+      verticalForm.value.businessVertical
+    );
+    await loadTenants();
+    await loadDashboard();
+    closeVerticalModal();
+    selectedTenants.value = [];
+    toastStore.add("Vertical updated successfully", "success");
+  } catch (err) {
+    toastStore.add(
+      err.response?.data?.message || "Failed to update vertical",
+      "error"
+    );
+  }
 };
 
 const createTenant = async () => {
@@ -642,5 +761,32 @@ onMounted(async () => {
   justify-content: flex-end;
   gap: var(--space-3);
   margin-top: var(--space-6);
+}
+.slug-row {
+  display: flex;
+  gap: var(--space-2);
+}
+.slug-row input {
+  flex: 1;
+}
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-200);
+  border-radius: var(--radius-lg);
+}
+.bulk-count {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+.modal-hint {
+  margin: 0 0 var(--space-4) 0;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
 }
 </style>

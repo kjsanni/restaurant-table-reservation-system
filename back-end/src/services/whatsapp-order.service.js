@@ -406,7 +406,6 @@ const processMessage = async (phone, message, tenantId) => {
     const discountMsg = cart.discountCode ? `\nDiscount: ${cart.discountCode}` : "";
     if (session.flow === "delivery") {
       const menuItems = await menuService.getMenuItems(tenantId, { isAvailable: true });
-      const menuMap = Object.fromEntries((menuItems || []).map((i) => [i.id, i]));
       const cartSummary = cart.items.map((i) => `• ${i.name} x${i.quantity} = GHS ${(i.price * i.quantity).toFixed(2)}`).join("\n");
       await setSession(phone, { ...session, state: "delivery_confirm_items" });
       await sendText(phone, `Your cart:\n${cartSummary}\nTotal: GHS ${total.toFixed(2)}${discountMsg}\nDelivery fee: calculated after location.\n\nConfirm order? (yes/no)`, tenantId);

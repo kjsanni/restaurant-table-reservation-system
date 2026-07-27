@@ -71,6 +71,7 @@ const selectedType = ref<RestaurantType | null>(null);
 const selectedModes = ref<string[]>(["dine_in", "takeaway", "delivery"]);
 const submitting = ref(false);
 const errorMsg = ref("");
+const businessVertical = ref<"restaurant" | "salon">("restaurant");
 
 const typeDefaults: Record<RestaurantType, string[]> = {
   full_service: ["dine_in", "takeaway", "delivery"],
@@ -108,6 +109,7 @@ const submitSetup = async () => {
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({
+        businessVertical: businessVertical.value,
         restaurantType: selectedType.value,
         serviceModes: selectedModes.value,
       }),
@@ -128,6 +130,12 @@ const submitSetup = async () => {
 
 onMounted(() => {
   if (
+    authStore.capabilities?.businessVertical === "salon" ||
+    authStore.capabilities?.restaurantType === "salon"
+  ) {
+    businessVertical.value = "salon";
+    step.value = 2;
+  } else if (
     authStore.capabilities?.restaurantType &&
     authStore.capabilities.restaurantType !== "full_service"
   ) {
@@ -165,7 +173,30 @@ onMounted(() => {
       </div>
 
       <div v-if="step === 1" class="step-content">
-        <div class="type-grid">
+        <div class="vertical-toggle">
+          <button
+            :class="[
+              'vertical-option',
+              businessVertical === 'restaurant' && 'selected',
+            ]"
+            @click="businessVertical = 'restaurant'"
+          >
+            <Icon icon="mdi:silverware-fork-knife" width="28" height="28" />
+            <span class="vertical-label">Restaurant</span>
+          </button>
+          <button
+            :class="[
+              'vertical-option',
+              businessVertical === 'salon' && 'selected',
+            ]"
+            @click="businessVertical = 'salon'"
+          >
+            <Icon icon="mdi:content-cut" width="28" height="28" />
+            <span class="vertical-label">Salon</span>
+          </button>
+        </div>
+
+        <div v-if="businessVertical === 'restaurant'" class="type-grid">
           <button
             v-for="t in RESTAURANT_TYPES"
             :key="t.value"
@@ -177,10 +208,16 @@ onMounted(() => {
             <span class="type-desc">{{ t.description }}</span>
           </button>
         </div>
+        <div v-else class="salon-step-1">
+          <p class="salon-hint">
+            You're setting up a <strong>salon</strong> business. Continue to
+            configure services and staff availability.
+          </p>
+        </div>
         <div class="wizard-actions">
           <button
             class="btn-primary"
-            :disabled="!isTypeComplete"
+            :disabled="businessVertical === 'restaurant' && !isTypeComplete"
             @click="step = 2"
           >
             Continue
@@ -228,18 +265,30 @@ onMounted(() => {
       <div v-if="step === 3" class="step-content">
         <div class="summary">
           <div class="summary-row">
+            <span class="summary-label">Business type</span>
+            <span class="summary-value">{{
+              businessVertical === "salon" ? "Salon" : "Restaurant"
+            }}</span>
+          </div>
+          <div v-if="businessVertical === 'restaurant'" class="summary-row">
             <span class="summary-label">Restaurant type</span>
             <span class="summary-value">{{
               RESTAURANT_TYPES.find((t) => t.value === selectedType)?.label
             }}</span>
           </div>
-          <div class="summary-row">
+          <div v-if="businessVertical === 'restaurant'" class="summary-row">
             <span class="summary-label">Service modes</span>
             <span class="summary-value">{{
               selectedModes
                 .map((m) => SERVICE_MODES.find((s) => s.value === m)?.label)
                 .join(", ")
             }}</span>
+          </div>
+          <div v-else class="summary-row">
+            <span class="summary-label">Salon setup</span>
+            <span class="summary-value"
+              >Configure services and stations after setup</span
+            >
           </div>
         </div>
         <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
@@ -367,6 +416,42 @@ onMounted(() => {
 .type-desc {
   font-size: 12px;
   color: #666;
+}
+.vertical-toggle {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.vertical-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+.vertical-option.selected {
+  border-color: #111;
+  background: #fafafa;
+}
+.vertical-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+.salon-step-1 {
+  text-align: center;
+  padding: 24px;
+  color: #666;
+}
+.salon-hint {
+  font-size: 14px;
+  line-height: 1.6;
 }
 .modes-list {
   display: flex;

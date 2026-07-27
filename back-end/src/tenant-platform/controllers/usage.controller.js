@@ -1,5 +1,4 @@
 const usageDAO = require("../DAOs/usage.dao");
-const { requirePermission } = require("../../middleware/auth");
 
 const listTenantUsageHandler = async (req, res) => {
   const { plan, status } = req.query;

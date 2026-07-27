@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Drink — Fresh Sip</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+    <button class="mobile-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Menu">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+    </button>
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Fresh Sip</h2>
+            <span>Drinks Vendor Admin</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-section">Operations</div>
+            <a href="03-dashboard.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6z"/></svg>Dashboard</a>
+            <a href="04-orders.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75"/></svg>Orders</a>
+            <a href="12-queue.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21"/></svg>Queue</a>
+            <a href="09-delivery-tracking.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0"/></svg>Delivery Tracking</a>
+            <div class="sidebar-section">Menu & Customers</div>
+            <a href="06-menu.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75"/></svg>Menu</a>
+            <a href="08-customers.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-3.475-3.475 9.337 9.337 0 00-.952 4.121 9.37 9.37 0 00-1.622 2.229zM12 15a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z"/></svg>Customers</a>
+            <div class="sidebar-section">Insights</div>
+            <a href="13-reports.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>Reports</a>
+            <div class="sidebar-section">WhatsApp</div>
+            <a href="16-whatsapp-orders.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0"/></svg>WhatsApp Orders</a>
+            <a href="17-whatsapp-payment.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5"/></svg>WhatsApp Payment</a>
+            <div class="sidebar-section">Admin</div>
+            <a href="14-staff.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-3.475-3.475 9.337 9.337 0 00-.952 4.121 9.37 9.37 0 00-1.622 2.229zM12 15a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z"/></svg>Staff</a>
+            <a href="18-settings.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94"/></svg>Settings</a>
+            <a href="01-login.html"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5"/></svg>Logout</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:36px;height:36px;background:linear-gradient(135deg, var(--terracotta-600), var(--terracotta-700));color:var(--white);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">KM</div>
+                <div><div style="font-size:13px;font-weight:600;">Kofi Mensah</div><div style="font-size:11px;color:var(--brown-700);opacity:0.7;">Store Owner</div></div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Add New Drink</h1>
+            <p>Create a new drink for your family-friendly menu.</p>
+        </div>
+        <div class="page-body">
+            <form onsubmit="event.preventDefault(); alert('Drink added! (mockup)'); window.location.href='06-menu.html';">
+                <div class="card reveal" style="padding: 28px; margin-bottom: 24px;">
+                    <h3 style="font-size: 18px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(62,39,35,0.06);">Drink Details</h3>
+                    <div class="grid-2">
+                        <div class="form-group"><label>Drink Name</label><input type="text" placeholder="e.g. Mango Tango Smoothie" required></div>
+                        <div class="form-group"><label>Category</label><select><option>Smoothie</option><option>Juice</option><option>Coffee</option><option>Tea</option><option>Specialty</option></select></div>
+                        <div class="form-group"><label>Price (GHS)</label><input type="number" placeholder="0.00" step="0.01" required></div>
+                        <div class="form-group"><label>Prep Time (minutes)</label><input type="number" placeholder="5" required></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>Description</label><textarea placeholder="Describe the drink, ingredients, flavors..."></textarea></div>
+                    </div>
+                </div>
+
+                <div class="card reveal" style="padding: 28px; margin-bottom: 24px;">
+                    <h3 style="font-size: 18px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(62,39,35,0.06);">Settings</h3>
+                    <div class="grid-2">
+                        <div class="form-group"><label>Assigned Barista</label><select><option>Kofi Mensah</option><option>Ama Serwaa</option><option>Kwame Asante</option></select></div>
+                        <div class="form-group">
+                            <label>WhatsApp Ordering</label>
+                            <div class="toggle-row" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
+                                <span class="toggle-label" style="font-size: 14px; font-weight: 500;">Enable WhatsApp ordering</span>
+                                <div class="toggle on" onclick="this.classList.toggle('on')" style="width: 44px; height: 24px; background: var(--green-500); border-radius: 999px; position: relative; cursor: pointer; transition: background 0.2s;"><div style="width: 20px; height: 20px; background: var(--white); border-radius: 50%; position: absolute; top: 2px; left: 22px; box-shadow: var(--shadow-sm);"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card reveal" style="padding: 28px; margin-bottom: 24px;">
+                    <h3 style="font-size: 18px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(62,39,35,0.06);">Live Preview</h3>
+                    <div class="preview-card" style="background: linear-gradient(135deg, var(--terracotta-50), var(--golden-50)); border-radius: var(--radius-lg); padding: 32px; text-align: center; border: 2px dashed rgba(62,39,35,0.15);">
+                        <div style="font-size: 64px; margin-bottom: 12px;">🍹</div>
+                        <h3 style="font-size: 20px; margin-bottom: 4px;">New Drink</h3>
+                        <p style="color: var(--brown-700); opacity: 0.7;">Smoothie</p>
+                        <div style="font-size: 24px; font-weight: 700; color: var(--terracotta-700); font-family: var(--font-serif);">GHS 0</div>
+                        <p style="font-size: 12px; opacity: 0.5; margin-top: 8px;">This is how customers will see your drink</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <a href="06-menu.html" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary btn-lg">Add Drink</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => entry.target.classList.add('in'), index * 120);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>

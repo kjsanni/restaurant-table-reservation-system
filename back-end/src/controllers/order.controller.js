@@ -1,6 +1,5 @@
 const orderService = require("../services/order.service");
 const orderDAO = require("../DAOs/order.dao");
-const { initializeCharge, verifyPayment } = require("../tenant-platform/services/paystack.service");
 
 const createOrderHandler = async (req, res) => {
   try {
@@ -90,6 +89,8 @@ const initializeOrderPaymentHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Order not found" });
   }
 
+  const { buildSplitConfig, initializeCharge } = require("../tenant-platform/services/paystack.service");
+
   try {
     const result = await initializeCharge({
       email,
@@ -99,6 +100,7 @@ const initializeOrderPaymentHandler = async (req, res) => {
         orderId,
         tenantSlug: tenant.slug,
       },
+      splitConfig: buildSplitConfig(tenant),
     });
 
     return res.status(200).json({

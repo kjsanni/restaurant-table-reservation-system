@@ -2,9 +2,10 @@
   <div class="super-overview">
     <div class="topbar">
       <div class="topbar-inner">
-        <h1 class="topbar-title">Platform Overview</h1>
+        <h1 class="topbar-title">Venue Platform Overview</h1>
         <p class="topbar-subtitle">
-          Cross-tenant health, revenue, and operations
+          Multi-tenant restaurant &amp; salon operations, revenue &amp;
+          compliance
         </p>
       </div>
     </div>
@@ -21,32 +22,39 @@
           <article v-for="kpi in kpis" :key="kpi.label" class="kpi-card">
             <div class="kpi-label">{{ kpi.label }}</div>
             <div class="kpi-value">{{ kpi.value }}</div>
-            <span class="kpi-delta" :class="kpi.delta >= 0 ? 'up' : 'down'">
-              {{ kpi.delta >= 0 ? "▲" : "▼" }} {{ Math.abs(kpi.delta)
-              }}{{ kpi.suffix }}
-            </span>
-            <svg
-              class="kpi-spark"
-              viewBox="0 0 74 30"
-              preserveAspectRatio="none"
-            >
-              <polyline
-                :points="kpi.spark"
-                :stroke="
-                  kpi.delta >= 0 ? 'var(--earth-500)' : 'var(--rose-500)'
-                "
-                stroke-width="2"
-                fill="none"
-              />
-            </svg>
+            <span class="kpi-suffix">{{ kpi.suffix }}</span>
           </article>
+        </section>
+
+        <!-- Platform health -->
+        <section class="health-widget" v-if="health.status">
+          <div class="health-status" :class="'hs-' + health.status">
+            <span class="health-dot"></span>
+            <b>{{
+              health.status === "healthy"
+                ? "All systems healthy"
+                : health.status === "degraded"
+                ? "System degraded"
+                : "Health check unavailable"
+            }}</b>
+          </div>
+          <div class="health-checks">
+            <span
+              v-for="(val, key) in health.checks"
+              :key="key"
+              class="health-check"
+              :class="'hc-' + val"
+            >
+              {{ key }}: {{ val }}
+            </span>
+          </div>
         </section>
 
         <!-- Tenant workspace grid -->
         <div class="section-head">
-          <h2>Tenant Workspaces</h2>
+          <h2>Venue Workspaces</h2>
           <a href="#" @click.prevent="goTo('/admin/tenants')"
-            >View all tenants →</a
+            >View all venues →</a
           >
         </div>
 
@@ -74,16 +82,16 @@
 
             <div class="tenant-stats">
               <div>
-                <span>MRR</span>
-                <b>{{ formatMoney(tenant.mrr) }}</b>
+                <span>Revenue</span>
+                <b>{{ formatMoney(tenant.revenue) }}</b>
               </div>
               <div>
-                <span>Seats</span>
+                <span>Bookings</span>
+                <b>{{ tenant.bookings }}</b>
+              </div>
+              <div>
+                <span>Covers</span>
                 <b>{{ tenant.seats }}</b>
-              </div>
-              <div>
-                <span>Res/today</span>
-                <b>{{ tenant.reservationsToday }}</b>
               </div>
             </div>
 
@@ -92,7 +100,7 @@
             </div>
 
             <button class="access-btn" @click="accessTenant(tenant)">
-              Access Tenant →
+              Open Venue →
             </button>
           </article>
         </section>
@@ -100,8 +108,8 @@
         <!-- Lower grid: revenue chart + plan distribution -->
         <section class="lower-grid">
           <div class="panel chart-panel">
-            <h3>Revenue &amp; Tenant Growth</h3>
-            <p class="panel-sub">Last 12 months · platform aggregate</p>
+            <h3>Booking Revenue &amp; Growth</h3>
+            <p class="panel-sub">Last 12 months · platform-wide reservations</p>
             <RevenueTrendChart
               :labels="revenueLabels"
               :mrr-series="revenueMrr"
@@ -113,7 +121,10 @@
 
           <div class="panel">
             <h3>Plan Distribution</h3>
-            <p class="panel-sub">Across {{ dashboard.total }} tenants</p>
+            <p class="panel-sub">Across {{ dashboard.total }} venues</p>
+            <div v-if="planDistribution.length === 0" class="empty-state">
+              No plans configured
+            </div>
             <div
               v-for="plan in planDistribution"
               :key="plan.label"
@@ -129,9 +140,300 @@
           </div>
         </section>
 
+        <!-- Support ticket inbox -->
+        <div class="section-head">
+          <h2>Venue Support Tickets</h2>
+          <a href="#" @click.prevent="goTo('/admin/support-tickets')"
+            >Open all →</a
+          >
+        </div>
+
+        <section class="panel activity-feed">
+          <div v-if="ticketsLoading" class="loading-state-inline">
+            <div class="spinner-sm"></div>
+          </div>
+          <div v-else-if="tickets.length === 0" class="empty-state">
+            No open support tickets
+          </div>
+          <div
+            v-for="(ticket, idx) in tickets"
+            :key="ticket.id || idx"
+            class="feed-item"
+          >
+            <div
+              class="feed-icon"
+              :style="{
+                background:
+                  ticket.priority === 'critical'
+                    ? 'var(--rose-100)'
+                    : ticket.priority === 'high'
+                    ? 'var(--accent-100)'
+                    : 'var(--sky-100)',
+              }"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                :stroke="
+                  ticket.priority === 'critical'
+                    ? 'var(--rose-600)'
+                    : ticket.priority === 'high'
+                    ? 'var(--accent-600)'
+                    : 'var(--sky-600)'
+                "
+                stroke-width="2"
+              >
+                <path
+                  d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+                />
+              </svg>
+            </div>
+            <div class="feed-text">
+              <b>{{ ticket.subject }}</b>
+              <p>{{ ticket.message }}</p>
+            </div>
+            <span
+              class="ticket-badge"
+              :class="'tb-' + (ticket.status || 'open')"
+              >{{ ticket.status }}</span
+            >
+          </div>
+        </section>
+
+        <!-- Failed payment alerts -->
+        <div class="section-head">
+          <h2>Payment &amp; Reservation Failures</h2>
+          <a href="#" @click.prevent="goTo('/admin/at-risk-tenants')"
+            >View all →</a
+          >
+        </div>
+
+        <section class="panel activity-feed">
+          <div v-if="paymentAlertsLoading" class="loading-state-inline">
+            <div class="spinner-sm"></div>
+          </div>
+          <div v-else-if="paymentAlerts.length === 0" class="empty-state">
+            No failed payment alerts
+          </div>
+          <div
+            v-for="(alert, idx) in paymentAlerts"
+            :key="alert.id || idx"
+            class="feed-item"
+          >
+            <div class="feed-icon" style="background: var(--rose-100)">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--rose-600)"
+                stroke-width="2"
+              >
+                <path
+                  d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"
+                />
+              </svg>
+            </div>
+            <div class="feed-text">
+              <b>Payment failed · {{ formatMoney(alert.amount) }}</b>
+              <p>{{ alert.reason || "Unknown failure" }}</p>
+            </div>
+            <span
+              class="ticket-badge"
+              :class="'tb-' + (alert.status || 'open')"
+              >{{ alert.status }}</span
+            >
+          </div>
+        </section>
+
+        <!-- Backup & Deployment -->
+        <section class="lower-grid">
+          <div class="panel">
+            <h3>Data Backup Status</h3>
+            <p class="panel-sub">Latest backup</p>
+            <div v-if="backupLoading" class="loading-state-inline">
+              <div class="spinner-sm"></div>
+            </div>
+            <div v-else-if="backupStatus" class="backup-status">
+              <div class="backup-row">
+                <span>Last backup</span>
+                <b>{{
+                  formatTimeAgo(
+                    new Date(
+                      backupStatus.latestBackup?.createdAt ||
+                        backupStatus.lastBackupAt
+                    )
+                  )
+                }}</b>
+              </div>
+              <div class="backup-row">
+                <span>Status</span>
+                <b
+                  :class="
+                    'status-' + (backupStatus.latestBackup?.status || 'unknown')
+                  "
+                  >{{ backupStatus.latestBackup?.status || "none" }}</b
+                >
+              </div>
+            </div>
+            <div v-else class="empty-state">No backups found</div>
+          </div>
+
+          <div class="panel">
+            <h3>Platform Deployment</h3>
+            <p class="panel-sub">{{ deploymentStatus.environment }}</p>
+            <div v-if="deploymentLoading" class="loading-state-inline">
+              <div class="spinner-sm"></div>
+            </div>
+            <div v-else class="deployment-status">
+              <div class="backup-row">
+                <span>Version</span>
+                <b>{{ deploymentStatus.version }}</b>
+              </div>
+              <div class="backup-row">
+                <span>Uptime</span>
+                <b>{{ formatUptime(deploymentStatus.uptime) }}</b>
+              </div>
+              <div class="backup-row">
+                <span>Health</span>
+                <b :class="'status-' + deploymentHealth.status">{{
+                  deploymentHealth.status
+                }}</b>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Brute-force aggregation -->
+        <div class="section-head">
+          <h2>Security: Suspicious Activity</h2>
+          <a href="#" @click.prevent="goTo('/admin/at-risk-tenants')"
+            >View all →</a
+          >
+        </div>
+
+        <section class="panel activity-feed">
+          <div v-if="bruteForceLoading" class="loading-state-inline">
+            <div class="spinner-sm"></div>
+          </div>
+          <div v-else-if="bruteForceData.length === 0" class="empty-state">
+            No suspicious booking or login patterns detected
+          </div>
+          <div
+            v-for="(item, idx) in bruteForceData"
+            :key="idx"
+            class="feed-item"
+          >
+            <div class="feed-icon" style="background: var(--accent-100)">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--accent-600)"
+                stroke-width="2"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <div class="feed-text">
+              <b>{{ item.email || item.ipAddress }}</b>
+              <p>
+                {{ item.attemptCount }} attempts · last:
+                {{ formatTimeAgo(new Date(item.lastAttempt)) }}
+              </p>
+            </div>
+            <span class="ticket-badge tb-high">{{ item.attemptCount }}</span>
+          </div>
+        </section>
+
+        <!-- Compliance scorecard -->
+        <div class="section-head">
+          <h2>Compliance &amp; Legal</h2>
+        </div>
+
+        <section class="panel activity-feed" v-if="complianceScorecard">
+          <div class="compliance-grid">
+            <div class="compliance-item">
+              <span>Total Venues</span>
+              <b>{{ complianceScorecard.totalTenants }}</b>
+            </div>
+            <div class="compliance-item">
+              <span>Accepted</span>
+              <b>{{ complianceScorecard.acceptedCount }}</b>
+            </div>
+            <div class="compliance-item">
+              <span>Pending</span>
+              <b>{{ complianceScorecard.pendingCount }}</b>
+            </div>
+            <div class="compliance-item">
+              <span>Acceptance Rate</span>
+              <b>{{ complianceScorecard.acceptanceRate }}%</b>
+            </div>
+          </div>
+        </section>
+
+        <!-- Support chat queue -->
+        <div class="section-head">
+          <h2>Venue Support Chat</h2>
+        </div>
+
+        <section class="panel activity-feed">
+          <div v-if="supportConversations.length === 0" class="empty-state">
+            No open support conversations
+          </div>
+          <div
+            v-for="(conv, idx) in supportConversations"
+            :key="conv.id || idx"
+            class="feed-item"
+          >
+            <div
+              class="feed-icon"
+              :style="{
+                background:
+                  conv.priority === 'critical'
+                    ? 'var(--rose-100)'
+                    : conv.priority === 'high'
+                    ? 'var(--accent-100)'
+                    : 'var(--sky-100)',
+              }"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                :stroke="
+                  conv.priority === 'critical'
+                    ? 'var(--rose-600)'
+                    : conv.priority === 'high'
+                    ? 'var(--accent-600)'
+                    : 'var(--sky-600)'
+                "
+                stroke-width="2"
+              >
+                <path
+                  d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+                />
+              </svg>
+            </div>
+            <div class="feed-text">
+              <b>{{ conv.subject || "Support request" }}</b>
+              <p>Status: {{ conv.status }} · Priority: {{ conv.priority }}</p>
+            </div>
+            <span
+              class="ticket-badge"
+              :class="'tb-' + (conv.status || 'open')"
+              >{{ conv.status }}</span
+            >
+          </div>
+        </section>
+
         <!-- Recent activity feed -->
         <div class="section-head">
-          <h2>Recent Platform Activity</h2>
+          <h2>Recent Venue Activity</h2>
           <a href="#" @click.prevent="goTo('/admin/audit')">Open audit log →</a>
         </div>
 
@@ -157,6 +459,8 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import planAPI from "@/services/planAPI";
+import adminAPI from "@/services/adminAPI";
+import API from "@/services/API";
 import { useAuthStore } from "@/stores/auth";
 import formatMoney from "@/utils/formatMoney";
 import logger from "@/utils/logger";
@@ -180,6 +484,12 @@ const dashboard = ref({
 const tenants = ref([]);
 const plans = ref([]);
 const lastUpdated = ref(new Date());
+const health = ref({
+  status: "loading",
+  checks: {},
+  memory: {},
+});
+const healthLoading = ref(false);
 
 const STATUS_MAP = {
   active: { label: "Active", cls: "st-active" },
@@ -216,9 +526,9 @@ const featuredTenants = computed(() =>
       location: t.location || t.domain || "—",
       statusLabel: s.label,
       statusClass: s.cls,
-      mrr: Number(t.mrr || t.monthlyRevenue || 0),
+      revenue: Number(t.mrr || t.monthlyRevenue || 0),
       seats: Number(t.seats || t.userCount || 0),
-      reservationsToday: Number(t.reservationsToday || 0),
+      bookings: Number(t.reservationsToday || 0),
       health: Number(t.health || 70),
       initial: (t.name || "T").charAt(0).toUpperCase(),
       logoGradient: LOGO_GRADIENTS[i % LOGO_GRADIENTS.length],
@@ -236,80 +546,44 @@ const inactiveCount = computed(
 
 const kpis = computed(() => [
   {
-    label: "Total Tenants",
+    label: "Total Venues",
     value: dashboard.value.total,
-    delta: 6,
-    suffix: " this wk",
-    spark: "0,22 12,18 24,20 36,12 48,14 60,7 74,5",
+    suffix: " tenants",
   },
   {
-    label: "Active Tenants",
+    label: "Active Venues",
     value: dashboard.value.active,
-    delta: Math.round(
-      (dashboard.value.active / Math.max(1, dashboard.value.total)) * 100
-    ),
-    suffix: "% active",
-    spark: "0,14 12,16 24,11 36,13 48,8 60,10 74,6",
+    suffix: " online",
   },
   {
-    label: "Platform MRR",
+    label: "Platform Revenue",
     value: formatMoney(dashboard.value.mrr),
-    delta: 12.4,
-    suffix: "%",
-    spark: "0,24 12,20 24,21 36,14 48,15 60,9 74,4",
+    suffix: " MRR",
   },
   {
-    label: "At-Risk / Past Due",
+    label: "At-Risk Venues",
     value: dashboard.value.pastDue,
-    delta: -2,
-    suffix: " churned",
-    spark: "0,8 12,10 24,7 36,12 48,11 60,16 74,18",
+    suffix: " past due",
   },
 ]);
 
 const planDistribution = computed(() => {
   const list = plans.value || [];
-  return list.length
-    ? list.map((p) => ({
-        label: p.name,
-        note: p.description || `${p.currency} ${p.price} / mo`,
-        count: Number(p.tenantCount || 0),
-        color: LOGO_GRADIENTS[list.indexOf(p) % LOGO_GRADIENTS.length].match(
-          /var\(([^)]+)\)/
-        )?.[1]
-          ? `var(${
-              LOGO_GRADIENTS[list.indexOf(p) % LOGO_GRADIENTS.length].match(
-                /var\(([^)]+)\)/
-              )[1]
-            })`
-          : "var(--brand-500)",
-      }))
-    : [
-        {
-          label: "Enterprise",
-          note: "Dedicated support, SSO",
-          count: 18,
-          color: "var(--earth-600)",
-        },
-        {
-          label: "Growth",
-          note: "Multi-location",
-          count: 54,
-          color: "var(--accent-500)",
-        },
-        {
-          label: "Starter",
-          note: "Single location",
-          count: 41,
-          color: "var(--brand-500)",
-        },
-        {
-          label: "Trial / Free",
-          note: "14-day window",
-          count: 15,
-          color: "var(--neutral-500)",
-        },
-      ];
+  if (!list.length) return [];
+  return list.map((p) => ({
+    label: p.name,
+    note: p.description || `${p.currency} ${p.price} / mo`,
+    count: Number(p.tenantCount || 0),
+    color: LOGO_GRADIENTS[list.indexOf(p) % LOGO_GRADIENTS.length].match(
+      /var\(([^)]+)\)/
+    )?.[1]
+      ? `var(${
+          LOGO_GRADIENTS[list.indexOf(p) % LOGO_GRADIENTS.length].match(
+            /var\(([^)]+)\)/
+          )[1]
+        })`
+      : "var(--brand-500)",
+  }));
 });
 
 // Revenue trend (wired to revenueAPI.getMrrTrends)
@@ -341,36 +615,205 @@ const loadRevenueTrends = async () => {
   }
 };
 
-const activity = ref([
-  {
-    title: "<b>Lumiere Dining</b> upgraded to Enterprise plan",
-    detail: "Triggered by in-app checkout",
-    time: "12 min ago",
-    iconBg: "var(--earth-100)",
-    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--earth-600)" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+const loadHealth = async () => {
+  healthLoading.value = true;
+  try {
+    const res = await API.get("/admin/health");
+    health.value = res.data || { status: "unknown" };
+  } catch (e) {
+    health.value = { status: "unreachable" };
+  } finally {
+    healthLoading.value = false;
+  }
+};
+
+const activity = ref([]);
+const activityLoading = ref(false);
+const tickets = ref([]);
+const ticketsLoading = ref(false);
+const paymentAlerts = ref([]);
+const paymentAlertsLoading = ref(false);
+const backupStatus = ref(null);
+const backupLoading = ref(false);
+const deploymentStatus = ref({});
+const deploymentLoading = ref(false);
+const deploymentHealth = ref({ status: "unknown" });
+const bruteForceData = ref([]);
+const bruteForceLoading = ref(false);
+const complianceScorecard = ref(null);
+const supportConversations = ref([]);
+
+const ACTION_ICON_MAP = {
+  tenant: {
+    bg: "var(--earth-100)",
+    color: "var(--earth-600)",
+    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
   },
-  {
-    title: "<b>The Salt Cellar</b> payment failed — invoice past due",
-    detail: "Retry attempts scheduled via billing worker",
-    time: "47 min ago",
-    iconBg: "var(--rose-100)",
-    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--rose-600)" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>',
+  payment: {
+    bg: "var(--sky-100)",
+    color: "var(--sky-600)",
+    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>',
   },
-  {
-    title: "<b>Maples Bistro</b> started 14-day trial",
-    detail: "Provisioned tenant · 8 seats",
-    time: "2 hr ago",
-    iconBg: "var(--sky-100)",
-    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sky-600)" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+  audit: {
+    bg: "var(--accent-100)",
+    color: "var(--accent-600)",
+    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
   },
-  {
-    title: "Feature flag <code>server_overlay</code> enabled platform-wide",
-    detail: "Rolled out to active tenants",
-    time: "5 hr ago",
-    iconBg: "var(--accent-100)",
-    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-600)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>',
+  user: {
+    bg: "var(--brand-100)",
+    color: "var(--brand-700)",
+    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
   },
-]);
+  default: {
+    bg: "var(--neutral-100)",
+    color: "var(--neutral-600)",
+    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>',
+  },
+};
+
+const loadActivity = async () => {
+  activityLoading.value = true;
+  try {
+    const res = await adminAPI.getRecentActivity(20);
+    const collection = res.data?.collection || [];
+    activity.value = collection.map((item) => {
+      const category =
+        item.entityType === "tenant"
+          ? "tenant"
+          : item.action?.startsWith("payment")
+          ? "payment"
+          : item.action?.startsWith("super_admin")
+          ? "audit"
+          : item.entityType === "user"
+          ? "user"
+          : "default";
+      const style = ACTION_ICON_MAP[category] || ACTION_ICON_MAP.default;
+      const timeAgo = formatTimeAgo(new Date(item.createdAt));
+      let title = item.title || item.action;
+      let detail = item.detail || "";
+      if (item.tenantName && !detail.includes(item.tenantName)) {
+        detail = detail ? `${item.tenantName} · ${detail}` : item.tenantName;
+      }
+      return {
+        title,
+        detail,
+        time: timeAgo,
+        iconBg: style.bg,
+        icon: style.icon.replace("currentColor", style.color),
+      };
+    });
+  } catch (e) {
+    logger.error("Failed to load recent activity", { error: e?.message });
+    activity.value = [];
+  } finally {
+    activityLoading.value = false;
+  }
+};
+
+const loadTickets = async () => {
+  ticketsLoading.value = true;
+  try {
+    const res = await adminAPI.listSupportTickets();
+    const collection = res.data?.collection || [];
+    tickets.value = collection.slice(0, 5);
+  } catch (e) {
+    logger.error("Failed to load support tickets", { error: e?.message });
+    tickets.value = [];
+  } finally {
+    ticketsLoading.value = false;
+  }
+};
+
+const loadPaymentAlerts = async () => {
+  paymentAlertsLoading.value = true;
+  try {
+    const res = await adminAPI.listFailedPaymentAlerts({ limit: 5 });
+    paymentAlerts.value = (res.data?.collection || []).slice(0, 5);
+  } catch (e) {
+    logger.error("Failed to load payment alerts", { error: e?.message });
+    paymentAlerts.value = [];
+  } finally {
+    paymentAlertsLoading.value = false;
+  }
+};
+
+const loadBackupStatus = async () => {
+  backupLoading.value = true;
+  try {
+    const res = await adminAPI.getBackupStatus();
+    backupStatus.value = res.data || null;
+  } catch (e) {
+    backupStatus.value = null;
+  } finally {
+    backupLoading.value = false;
+  }
+};
+
+const loadDeploymentStatus = async () => {
+  deploymentLoading.value = true;
+  try {
+    const [statusRes, healthRes] = await Promise.all([
+      adminAPI.getDeploymentStatus(),
+      adminAPI.getDeploymentHealth(),
+    ]);
+    deploymentStatus.value = statusRes.data?.status || {};
+    deploymentHealth.value = healthRes.data || { status: "unknown" };
+  } catch (e) {
+    deploymentStatus.value = {};
+    deploymentHealth.value = { status: "unreachable" };
+  } finally {
+    deploymentLoading.value = false;
+  }
+};
+
+const loadBruteForceAggregation = async () => {
+  bruteForceLoading.value = true;
+  try {
+    const res = await adminAPI.getBruteForceAggregation();
+    bruteForceData.value = res.data?.collection || [];
+  } catch (e) {
+    bruteForceData.value = [];
+  } finally {
+    bruteForceLoading.value = false;
+  }
+};
+
+const loadComplianceScorecard = async () => {
+  try {
+    const res = await adminAPI.getComplianceScorecard();
+    complianceScorecard.value = res.data?.scorecard || null;
+  } catch (e) {
+    complianceScorecard.value = null;
+  }
+};
+
+const loadSupportConversations = async () => {
+  try {
+    const res = await adminAPI.listSupportConversations();
+    supportConversations.value = (res.data?.collection || []).slice(0, 5);
+  } catch (e) {
+    supportConversations.value = [];
+  }
+};
+
+const formatUptime = (seconds) => {
+  if (!seconds || isNaN(seconds)) return "—";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+};
+
+const formatTimeAgo = (date) => {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? "s" : ""} ago`;
+};
 
 const loadDashboard = async () => {
   const res = await tenantAdminAPI.getDashboard();
@@ -407,6 +850,15 @@ onMounted(async () => {
       loadTenants(),
       loadPlans(),
       loadRevenueTrends(),
+      loadActivity(),
+      loadTickets(),
+      loadHealth(),
+      loadPaymentAlerts(),
+      loadBackupStatus(),
+      loadDeploymentStatus(),
+      loadBruteForceAggregation(),
+      loadComplianceScorecard(),
+      loadSupportConversations(),
     ]);
     lastUpdated.value = new Date();
   } catch (e) {
@@ -520,7 +972,7 @@ onMounted(async () => {
   line-height: 1;
   letter-spacing: var(--tracking-tight);
 }
-.kpi-delta {
+.kpi-suffix {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
@@ -528,21 +980,8 @@ onMounted(async () => {
   font-weight: 700;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-full);
-}
-.kpi-delta.up {
-  background: var(--earth-100);
-  color: var(--earth-600);
-}
-.kpi-delta.down {
-  background: var(--rose-100);
-  color: var(--rose-600);
-}
-.kpi-spark {
-  position: absolute;
-  right: var(--space-4);
-  bottom: var(--space-3);
-  width: 74px;
-  height: 30px;
+  background: var(--neutral-100);
+  color: var(--ink-muted);
 }
 
 /* Section heading */
@@ -794,6 +1233,166 @@ onMounted(async () => {
   font-size: var(--text-xs);
   color: var(--ink-muted);
   white-space: nowrap;
+}
+
+.loading-state-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+.spinner-sm {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: var(--radius-full);
+  animation: spin 0.8s linear infinite;
+}
+.empty-state {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+.ticket-badge {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+.tb-open {
+  background: var(--sky-100);
+  color: var(--sky-600);
+}
+.tb-in_progress {
+  background: var(--accent-100);
+  color: var(--accent-600);
+}
+.tb-resolved {
+  background: var(--earth-100);
+  color: var(--earth-600);
+}
+.tb-closed {
+  background: var(--neutral-100);
+  color: var(--neutral-600);
+}
+
+.health-widget {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+.health-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.health-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+}
+.hs-healthy .health-dot {
+  background: var(--earth-500);
+}
+.hs-degraded .health-dot {
+  background: var(--accent-500);
+}
+.hs-unreachable .health-dot {
+  background: var(--rose-500);
+}
+.health-checks {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.health-check {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  text-transform: capitalize;
+}
+.hc-healthy {
+  color: var(--earth-600);
+}
+.hc-unavailable {
+  color: var(--accent-600);
+}
+.hc-warning {
+  color: var(--accent-600);
+}
+.hc-unhealthy {
+  color: var(--rose-600);
+}
+
+.backup-status,
+.deployment-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.backup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+.backup-row b {
+  color: var(--ink);
+  font-family: var(--font-serif);
+}
+.status-completed {
+  color: var(--earth-600);
+}
+.status-failed {
+  color: var(--rose-600);
+}
+.status-running {
+  color: var(--accent-600);
+}
+.status-pending {
+  color: var(--sky-600);
+}
+.status-healthy {
+  color: var(--earth-600);
+}
+.status-degraded {
+  color: var(--accent-600);
+}
+.status-unreachable {
+  color: var(--rose-600);
+}
+
+.compliance-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+.compliance-item {
+  text-align: center;
+}
+.compliance-item span {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  font-weight: 600;
+}
+.compliance-item b {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  color: var(--ink);
+  margin-top: var(--space-1);
 }
 
 @media (max-width: 1100px) {

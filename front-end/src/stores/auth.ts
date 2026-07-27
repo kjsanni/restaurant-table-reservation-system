@@ -9,9 +9,11 @@ export interface User {
   role: "admin" | "manager" | "staff";
   permissions?: Record<string, boolean>;
   tenantId?: number;
+  isSuperAdmin?: boolean;
 }
 
 export interface TenantCapabilities {
+  businessVertical?: string;
   restaurantType: string;
   serviceModes: string[];
   featureFlags: Record<string, boolean>;
@@ -21,12 +23,14 @@ export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
   const isAuthenticated = computed(() => !!user.value);
   const isLoading = ref(true);
-  const currentTenant = ref<{ id: number; name: string; slug?: string } | null>(null);
+  const currentTenant = ref<{ id: number; name: string; slug?: string; businessVertical?: string } | null>(null);
   const tenantModeEnabled = ref(false);
-  const branding = ref({ brandName: "", logoUrl: "", primaryColor: "" });
+  const branding = ref({ brandName: "", logoUrl: "", primaryColor: "", secondaryColor: "" });
   const currencyLocale = ref({ currency: "GHS", locale: "en-GH" });
   const authError = ref<string | null>(null);
   const capabilities = ref<TenantCapabilities | null>(null);
+  const entryPoint = ref<"platform" | "tenant" | null>(null);
+  const isSuperAdmin = computed(() => !!user.value?.isSuperAdmin);
 
   const applySetting = (
     settings: Array<{ key: string; value: unknown }>,
@@ -39,10 +43,17 @@ export const useAuthStore = defineStore("auth", () => {
     if (v && typeof v === "object") Object.assign(target, v);
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, entryPointContext?: "platform" | "tenant") => {
     const response = await authAPI.login(email, password);
     user.value = response.data.user;
-    return response;
+    entryPoint.value = entryPointContext || null;
+    return response.data;
+  };
+
+  const loginWithTOTP = async (tempToken: string, token: string) => {
+    const response = await authAPI.loginWithTOTP(tempToken, token);
+    user.value = response.data.user;
+    return response.data;
   };
 
   const register = async (username: string, email: string, password: string) => {
@@ -57,7 +68,7 @@ export const useAuthStore = defineStore("auth", () => {
       // ignore logout errors
     }
     user.value = null;
-    currentTenant.value = null;
+    entryPoint.value = null;
   };
 
   const getMe = async () => {
@@ -121,7 +132,7 @@ export const useAuthStore = defineStore("auth", () => {
     return response.data.setting;
   };
 
-  const setTenant = (tenant: { id: number; name: string; slug?: string } | null) => {
+  const setTenant = (tenant: { id: number; name: string; slug?: string; businessVertical?: string } | null) => {
     currentTenant.value = tenant;
   };
 
@@ -170,7 +181,10 @@ export const useAuthStore = defineStore("auth", () => {
     currencyLocale,
     authError,
     capabilities,
+    entryPoint,
+    isSuperAdmin,
     login,
+    loginWithTOTP,
     register,
     logout,
     getMe,

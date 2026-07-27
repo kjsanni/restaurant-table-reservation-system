@@ -1,72 +1,50 @@
-import axios from "axios";
-import { useAuthStore } from "@/stores/auth";
+import API from "./API";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
-
-const client = axios.create({
-  baseURL: `${API_BASE}/admin/tenants`,
-  withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "x-xsrf-token",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-client.interceptors.request.use((config) => {
-  const authStore = useAuthStore();
-  if (
-    authStore.currentTenant &&
-    import.meta.env.VITE_TENANT_MODE === "enabled"
-  ) {
-    config.headers["X-Tenant-Id"] = authStore.currentTenant.id;
-  }
-  return config;
-});
-
-client.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      window.location.href = "/login";
-    }
-    return Promise.reject(error);
-  }
-);
-
-export const create = async (data) => {
-  const response = await client.post("/", data);
-  return response;
+const getDashboard = () => {
+  return API.get("/admin/tenants/dashboard");
 };
 
-export const getDashboard = async () => {
-  const response = await client.get("/dashboard");
-  return response;
+const getAll = (params = {}) => {
+  return API.get("/admin/tenants", { params });
 };
 
-export const getAll = async (params = {}) => {
-  const response = await client.get("/", { params });
-  return response;
+const getById = (id) => {
+  return API.get(`/admin/tenants/${id}`);
 };
 
-export const getById = async (id) => {
-  const response = await client.get(`/${id}`);
-  return response;
+const create = (data) => {
+  return API.post("/admin/tenants", data);
 };
 
-export const update = async (id, data) => {
-  const response = await client.patch(`/${id}`, data);
-  return response;
+const update = (id, data) => {
+  return API.patch(`/admin/tenants/${id}`, data);
 };
 
-export const enable = async (id) => {
-  const response = await client.post(`/${id}/enable`);
-  return response;
+const enable = (id) => {
+  return API.post(`/admin/tenants/${id}/enable`);
 };
 
-export const disable = async (id, data = {}) => {
-  const response = await client.post(`/${id}/disable`, data);
-  return response;
+const disable = (id, data = {}) => {
+  return API.post(`/admin/tenants/${id}/disable`, data);
+};
+
+const deleteTenant = (id) => {
+  return API.delete(`/admin/tenants/${id}`);
+};
+
+const exportData = (id) => {
+  return API.get(`/admin/tenants/${id}/export`);
+};
+
+const anonymizeData = (id) => {
+  return API.post(`/admin/tenants/${id}/anonymize`);
+};
+
+const bulkChangeVertical = (tenantIds, businessVertical) => {
+  return API.post("/admin/tenants/bulk/change-vertical", {
+    tenantIds,
+    businessVertical,
+  });
 };
 
 export default {
@@ -77,4 +55,8 @@ export default {
   update,
   enable,
   disable,
+  deleteTenant,
+  exportData,
+  anonymizeData,
+  bulkChangeVertical,
 };

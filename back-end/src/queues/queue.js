@@ -69,6 +69,7 @@ const isRedisAvailable = async () => {
 
 const notificationQueue = createQueue("notifications");
 const reportQueue = createQueue("reports");
+const backupQueue = createQueue("backups");
 
 const registerQueue = (queue) => {
   if (queue && !queues.includes(queue)) {
@@ -91,6 +92,7 @@ module.exports = {
   connection,
   notificationQueue,
   reportQueue,
+  backupQueue,
   createQueue,
   registerQueue,
   closeAllQueues,

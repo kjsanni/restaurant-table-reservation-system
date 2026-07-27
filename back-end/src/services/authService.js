@@ -4,8 +4,6 @@ const { verifyTokenWithFallback, getCurrentSecret } = require("../utils/jwtRotat
 
 const JWT_SECRET = getCurrentSecret();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30m";
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || JWT_SECRET;
-const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "30d";
 
 const generateToken = (userId, role) => {
   return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
@@ -141,6 +139,26 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
     await userDAO.clearLoginAttempts(email, ipAddress, tenantId);
   }
 
+  if (user.isSuperAdmin && user.totpEnabled && !user.totpConfirmed) {
+    const tempToken = jwt.sign(
+      { userId: user.id, role: user.role, purpose: "totp_verification" },
+      JWT_SECRET,
+      { expiresIn: "5m" }
+    );
+    return {
+      pendingTOTP: true,
+      tempToken,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions || {},
+        isSuperAdmin: !!user.isSuperAdmin,
+      },
+    };
+  }
+
   const token = generateToken(user.id, user.role);
   const refreshToken = generateRefreshToken();
 
@@ -171,6 +189,10 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         manage_menu: true,
         view_orders: true,
         edit_orders: true,
+        view_appointments: true,
+        edit_appointments: true,
+        manage_stations: true,
+        manage_services: true,
       },
       manager: {
         view_reservations: true,
@@ -185,6 +207,10 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         manage_menu: true,
         view_orders: true,
         edit_orders: true,
+        view_appointments: true,
+        edit_appointments: true,
+        manage_stations: true,
+        manage_services: true,
       },
       staff: {
         view_reservations: true,
@@ -199,6 +225,10 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         manage_menu: true,
         view_orders: true,
         edit_orders: true,
+        view_appointments: true,
+        edit_appointments: true,
+        manage_stations: false,
+        manage_services: false,
       },
     };
     permissions = defaults[user.role] || defaults.staff;
@@ -222,6 +252,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
       email: user.email,
       role: user.role,
       permissions,
+      isSuperAdmin: !!user.isSuperAdmin,
     },
   };
 };

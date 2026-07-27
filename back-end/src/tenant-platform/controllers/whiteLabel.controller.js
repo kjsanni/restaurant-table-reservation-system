@@ -1,8 +1,41 @@
 const db = require("../../db/models");
 
+const syncBrandingToSettings = async (tenantId, updates) => {
+  try {
+    const brandingSetting = await db.setting.findOne({
+      where: { tenantId, key: "branding" },
+    });
+
+    if (!brandingSetting) return;
+
+    const branding = brandingSetting.value && typeof brandingSetting.value === "string"
+      ? JSON.parse(brandingSetting.value)
+      : brandingSetting.value || {};
+
+    const map = {
+      logoUrl: "logoUrl",
+      primaryColor: "primaryColor",
+      secondaryColor: "secondaryColor",
+      customDomain: "customDomain",
+      brandName: "brandName",
+    };
+
+    Object.entries(updates).forEach(([key, value]) => {
+      const settingKey = map[key];
+      if (settingKey && value !== undefined && value !== null && value !== "") {
+        branding[settingKey] = value;
+      }
+    });
+
+    await brandingSetting.update({ value: branding });
+  } catch (err) {
+    console.error("Failed to sync branding to settings:", err.message);
+  }
+};
+
 const getBrandingHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.tenantId, {
-    attributes: ["logoUrl", "primaryColor", "customDomain", "domain"],
+    attributes: ["logoUrl", "primaryColor", "secondaryColor", "customDomain", "domain"],
   });
   if (!tenant) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
@@ -15,7 +48,7 @@ const updateBrandingHandler = async (req, res) => {
   if (!tenant) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
-  const allowed = ["logoUrl", "primaryColor", "customDomain"];
+  const allowed = ["logoUrl", "primaryColor", "secondaryColor", "customDomain"];
   const updates = {};
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(req.body, key)) {
@@ -23,6 +56,7 @@ const updateBrandingHandler = async (req, res) => {
     }
   }
   await tenant.update(updates);
+  await syncBrandingToSettings(tenant.id, updates);
   res.status(200).json({ success: true, item: tenant });
 };
 

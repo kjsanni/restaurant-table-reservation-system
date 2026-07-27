@@ -1,0 +1,69 @@
+const supportNoteDAO = require("../DAOs/supportNote.dao");
+const platformAuditDAO = require("../DAOs/platformAudit.dao");
+
+const listNotesHandler = async (req, res) => {
+  const { conversationId, ticketId } = req.query;
+  const tenantId = req.user?.isSuperAdmin ? null : req.tenant?.id;
+  const data = await supportNoteDAO.list({
+    tenantId,
+    conversationId: conversationId ? parseInt(conversationId, 10) : undefined,
+    ticketId: ticketId ? parseInt(ticketId, 10) : undefined,
+    limit: 100,
+  });
+  res.status(200).json({ success: true, collection: data });
+};
+
+const createNoteHandler = async (req, res) => {
+  const { conversationId, ticketId, body } = req.body;
+  if (!body || !conversationId || !ticketId) {
+    return res.status(400).json({ success: false, message: "Body, conversationId, and ticketId are required" });
+  }
+
+  const mentions = (body.match(/@(\w+)/g) || []).map((m) => m.slice(1));
+
+  const note = await supportNoteDAO.create({
+    tenantId: req.tenant?.id || null,
+    conversationId: parseInt(conversationId, 10),
+    ticketId: parseInt(ticketId, 10),
+    userId: req.user.id,
+    body,
+    mentions,
+  });
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "support.note_created",
+    "support_note",
+    note.id,
+    req.tenant?.id || null,
+    { conversationId, ticketId, mentions },
+    req.ip
+  );
+
+  res.status(201).json({ success: true, item: note });
+};
+
+const deleteNoteHandler = async (req, res) => {
+  const note = await supportNoteDAO.remove(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
+  if (!note) {
+    return res.status(404).json({ success: false, message: "Note not found" });
+  }
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "support.note_deleted",
+    "support_note",
+    note.id,
+    req.user?.isSuperAdmin ? null : req.tenant?.id,
+    {},
+    req.ip
+  );
+
+  res.status(200).json({ success: true });
+};
+
+module.exports = {
+  listNotesHandler,
+  createNoteHandler,
+  deleteNoteHandler,
+};

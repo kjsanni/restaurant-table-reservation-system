@@ -1,5 +1,4 @@
 const db = require("../../db/models");
-const { Op } = require("sequelize");
 
 const extendTrialHandler = async (req, res) => {
   const { days } = req.body;

@@ -10,6 +10,22 @@ const routes = [
   { name: "Tables", path: "/tables" },
   { name: "Schedule", path: "/schedule" },
   { name: "Settings", path: "/settings" },
+  { name: "Salon Dashboard", path: "/salon/dashboard" },
+  { name: "Salon Appointments", path: "/appointments" },
+  { name: "Salon Stations", path: "/stations" },
+  { name: "Salon Services", path: "/services" },
+  { name: "Salon Station Map", path: "/station-map" },
+  { name: "Salon Calendar", path: "/salon/calendar" },
+  { name: "Salon Schedule", path: "/salon/schedule" },
+  { name: "Salon Holidays", path: "/salon/holidays" },
+  { name: "Salon Walk-ins", path: "/salon/walkins" },
+  { name: "Salon Staff Shifts", path: "/salon/shifts" },
+  { name: "Salon Reports", path: "/salon/reports" },
+  { name: "Salon Recurring", path: "/salon/recurring" },
+  { name: "Salon Clients", path: "/salon/clients" },
+  { name: "Salon Settings", path: "/salon/settings" },
+  { name: "Salon Marketing", path: "/salon/marketing" },
+  { name: "Salon Gallery", path: "/salon/gallery" },
 ];
 
 for (const route of routes) {

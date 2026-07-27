@@ -53,7 +53,7 @@
     <div class="filters">
       <input
         v-model="searchQuery"
-        placeholder="Search tenants..."
+        placeholder="Search venues..."
         class="search-input"
       />
       <select v-model="filterStatus" class="filter-select">
@@ -76,7 +76,7 @@
       <table class="payment-table">
         <thead>
           <tr>
-            <th>Tenant</th>
+            <th>Venue</th>
             <th>Plan</th>
             <th>Status</th>
             <th>Sub. Status</th>
@@ -135,7 +135,7 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Tenant</th>
+              <th>Venue</th>
               <th>Amount</th>
               <th>Method</th>
               <th>Reference</th>

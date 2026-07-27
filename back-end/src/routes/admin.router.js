@@ -11,4 +11,9 @@ router
   .post(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(admin), tryCatchHandler(adminController.emailLogsHandler))
   .all(httpMethodError);
 
+router
+  .route("/health")
+  .get(tryCatchHandler(protect), tryCatchHandler(admin), tryCatchHandler(adminController.healthCheckHandler))
+  .all(httpMethodError);
+
 module.exports = router;

@@ -15,4 +15,9 @@ router
   .post(...writeRoute("manage_settings", webhookController.testHandler))
   .all(httpMethodError);
 
+router
+  .route("/paystack")
+  .post(webhookController.paystackEventHandler)
+  .all(httpMethodError);
+
 module.exports = router;

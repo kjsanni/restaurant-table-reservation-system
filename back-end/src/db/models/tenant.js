@@ -103,36 +103,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(100),
         allowNull: true,
       },
-      paystackPublicKey: {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-      },
-      paystackSecretKey: {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-        get() {
-          const raw = this.getDataValue("paystackSecretKey");
-          if (!raw) return raw;
-          try {
-            const { decrypt } = require("../../utils/encryption");
-            return decrypt(raw);
-          } catch {
-            return raw;
-          }
-        },
-        set(value) {
-          if (!value) {
-            this.setDataValue("paystackSecretKey", value);
-            return;
-          }
-          try {
-            const { encrypt } = require("../../utils/encryption");
-            this.setDataValue("paystackSecretKey", encrypt(value));
-          } catch {
-            this.setDataValue("paystackSecretKey", value);
-          }
-        },
-      },
       billingEmail: {
         type: DataTypes.STRING(100),
         allowNull: true,
@@ -151,6 +121,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "full_service",
       },
+      restaurantSubtype: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+      },
       serviceModes: {
         type: DataTypes.JSON,
         allowNull: false,
@@ -162,6 +136,14 @@ module.exports = (sequelize, DataTypes) => {
       },
       convertedFromTrialAt: {
         type: DataTypes.DATE,
+        allowNull: true,
+      },
+      dataRegion: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      residencyNotes: {
+        type: DataTypes.TEXT,
         allowNull: true,
       },
     },

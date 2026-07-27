@@ -42,18 +42,22 @@ const loginHandler = async (req, res) => {
   const ipAddress = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;
   const result = await authService.loginUser(authDAO, payload, req.tenant?.id, authDAO, ipAddress);
 
+  if (result.pendingTOTP) {
+    return res.status(200).json({
+      success: true,
+      pendingTOTP: true,
+      message: "TOTP verification required",
+      user: result.user,
+    });
+  }
+
   const isSecure = req.secure || false;
   const cookieBase = {
     httpOnly: true,
     secure: isSecure,
-    sameSite: isSecure ? "lax" : false, // dev-only HTTP: false; production HTTP: "lax" via isSecure check
+    sameSite: isSecure ? "lax" : false,
     path: "/",
   };
-
-  // Runtime guard: warn if sameSite is false in production
-  if (!isSecure && process.env.NODE_ENV === "production") {
-    console.warn("[AUTH] Cookie sameSite=false requested in production - forcing lax");
-  }
 
   res.cookie("token", result.token, {
     ...cookieBase,
@@ -72,6 +76,66 @@ const loginHandler = async (req, res) => {
     message: "Login successful!",
     user: result.user,
   });
+};
+
+const loginTOTPHandler = async (req, res) => {
+  const { tempToken, token } = req.body;
+  if (!tempToken || !token) {
+    return res.status(400).json({ success: false, message: "Temporary token and TOTP code are required" });
+  }
+
+  try {
+    const decoded = authService.verifyToken(tempToken);
+    const user = await authDAO.findUserById(decoded.userId, req.tenant?.id);
+    if (!user || !user.totpSecret || !user.totpEnabled) {
+      return res.status(400).json({ success: false, message: "Invalid TOTP session" });
+    }
+
+    const totpService = require("../../services/totp.service");
+    const isValid = totpService.verifyTOTP(user.totpSecret, String(token).trim());
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: "Invalid TOTP token" });
+    }
+
+    const newToken = authService.generateToken(user.id, user.role);
+    const newRefreshToken = authService.generateRefreshToken();
+
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await authDAO.createRefreshToken(user.id, newRefreshToken, expiresAt, req.tenant?.id);
+
+    const isSecure = req.secure || false;
+    const cookieBase = {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: isSecure ? "lax" : false,
+      path: "/",
+    };
+
+    res.cookie("token", newToken, {
+      ...cookieBase,
+      maxAge: 30 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", newRefreshToken, {
+      ...cookieBase,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful!",
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions || {},
+        isSuperAdmin: !!user.isSuperAdmin,
+      },
+    });
+  } catch (err) {
+    return res.status(400).json({ success: false, message: "Invalid or expired temporary token" });
+  }
 };
 
 const getMeHandler = async (req, res) => {
@@ -98,6 +162,10 @@ const getMeHandler = async (req, res) => {
         manage_groups: true,
         view_audit_logs: true,
         manage_settings: true,
+        view_appointments: true,
+        edit_appointments: true,
+        manage_stations: true,
+        manage_services: true,
       },
       manager: {
         view_reservations: true,
@@ -108,6 +176,10 @@ const getMeHandler = async (req, res) => {
         manage_roles: false,
         manage_groups: false,
         view_audit_logs: true,
+        view_appointments: true,
+        edit_appointments: true,
+        manage_stations: true,
+        manage_services: true,
       },
       staff: {
         view_reservations: true,
@@ -118,6 +190,10 @@ const getMeHandler = async (req, res) => {
         manage_roles: false,
         manage_groups: false,
         view_audit_logs: false,
+        view_appointments: true,
+        edit_appointments: true,
+        manage_stations: false,
+        manage_services: false,
       },
     };
     effectivePermissions = defaults[user.role] || defaults.staff;
@@ -145,6 +221,7 @@ const getTenantCapabilitiesHandler = async (req, res) => {
   return res.status(200).json({
     success: true,
     capabilities: {
+      businessVertical: req.tenant.businessVertical || "restaurant",
       restaurantType: req.tenant.restaurantType || "full_service",
       serviceModes: Array.isArray(req.tenant.serviceModes) ? req.tenant.serviceModes : ["dine_in", "takeaway", "delivery"],
       featureFlags,
@@ -157,13 +234,25 @@ const setupTenantHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "Tenant context required" });
   }
 
-  const { restaurantType, serviceModes } = req.body;
+  const { businessVertical, restaurantType, serviceModes } = req.body;
   const tenant = req.tenant;
 
   const VALID_MODES = ["dine_in", "takeaway", "delivery"];
   const VALID_TYPES = Object.keys(TYPE_DEFAULTS);
 
-  if (restaurantType !== undefined) {
+  if (businessVertical) {
+    tenant.businessVertical = businessVertical;
+  }
+
+  if (businessVertical === "salon") {
+    if (!tenant.restaurantType || tenant.restaurantType !== "salon") {
+      applyTypeDefaults(tenant, "salon");
+    }
+    const { seedSalonSettings } = require("../tenant-platform/services/tenantTypeDefaults.service");
+    seedSalonSettings(tenant.id).catch((err) => {
+      console.error("Failed to seed salon settings:", err.message);
+    });
+  } else if (restaurantType !== undefined) {
     if (!VALID_TYPES.includes(restaurantType)) {
       return res.status(400).json({
         success: false,
@@ -175,7 +264,7 @@ const setupTenantHandler = async (req, res) => {
     }
   }
 
-  if (serviceModes !== undefined) {
+  if (businessVertical !== "salon" && serviceModes !== undefined) {
     if (!Array.isArray(serviceModes) || serviceModes.length === 0) {
       return res.status(400).json({ success: false, message: "serviceModes must be a non-empty array" });
     }
@@ -194,6 +283,7 @@ const setupTenantHandler = async (req, res) => {
   return res.status(200).json({
     success: true,
     item: {
+      businessVertical: tenant.businessVertical,
       restaurantType: tenant.restaurantType,
       serviceModes: tenant.serviceModes,
     },
@@ -272,6 +362,24 @@ const revokeTokenHandler = async (req, res) => {
   });
 };
 
+const getLocaleHandler = async (req, res) => {
+  const locale = req.user?.locale || "en";
+  return res.status(200).json({ success: true, locale });
+};
+
+const updateLocaleHandler = async (req, res) => {
+  const { locale } = req.body;
+  if (!locale || typeof locale !== "string") {
+    return res.status(400).json({ success: false, message: "Invalid locale" });
+  }
+  const user = await authDAO.findUserById(req.user.id, req.tenant?.id);
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+  await authDAO.updateUser(req.user.id, { locale });
+  return res.status(200).json({ success: true, locale });
+};
+
 const getSettingsHandler = async (req, res) => {
   const settings = await authDAO.getAllSettings(req.tenant?.id);
   return res.status(200).json({
@@ -302,6 +410,11 @@ const updateSettingsHandler = async (req, res) => {
     "branding",
     "message_templates",
     "email_server",
+    "salon_whatsapp_config",
+    "salon_payment_config",
+    "salon_message_templates",
+    "salon_sms_fallback_enabled",
+    "salon_feature_flags",
   ];
   if (!allowedKeys.includes(key)) {
     return res.status(400).json({ success: false, message: "Unknown or protected setting key." });
@@ -417,6 +530,7 @@ module.exports = {
   registerStatusHandler,
   registerHandler,
   loginHandler,
+  loginTOTPHandler,
   getMeHandler,
   getTenantCapabilitiesHandler,
   setupTenantHandler,
@@ -425,9 +539,10 @@ module.exports = {
   revokeTokenHandler,
   getSettingsHandler,
   updateSettingsHandler,
+  getLocaleHandler,
+  updateLocaleHandler,
   getAllStaffHandler,
   getAllUsersHandler,
-  createStaffHandler,
   updateStaffHandler,
   deleteStaffHandler,
 };

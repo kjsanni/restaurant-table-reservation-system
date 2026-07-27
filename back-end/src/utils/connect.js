@@ -12,14 +12,6 @@ const connectDatabase = async () => {
 };
 
 // Use syncModels() only when u don't use migrations.
-const syncModels = async () => {
-  try {
-    await db.sequelize.sync();
-  } catch (err) {
-    logger.error("Couldn't synchronize models: ", err.message);
-  }
-};
-
 const closeConnection = async () => {
   try {
     await db.sequelize.close();

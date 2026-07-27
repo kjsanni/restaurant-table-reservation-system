@@ -64,4 +64,9 @@ router
   .get(...protectedRoute("view_orders", reportController.exportOrderPDFHandler))
   .all(httpMethodError);
 
+router
+  .route("/gra-tax")
+  .get(...protectedRoute("view_reports", reportController.getGraTaxReportHandler))
+  .all(httpMethodError);
+
 module.exports = router;

@@ -1,4 +1,5 @@
-const db = require("../../db/models");
+const tenantAdminDAO = require("../DAOs/tenantAdmin.dao");
+const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const {
   enableTenant,
   disableTenant,
@@ -13,9 +14,19 @@ const createTenantHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "Name and slug are required" });
   }
 
-  const tenant = await db.tenant.create({
+  const normalizedSlug = String(slug).trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  if (!normalizedSlug) {
+    return res.status(400).json({ success: false, message: "Slug must contain only lowercase letters, numbers, and hyphens" });
+  }
+
+  const existing = await tenantAdminDAO.findBySlug(normalizedSlug);
+  if (existing) {
+    return res.status(409).json({ success: false, message: `Slug "${normalizedSlug}" is already in use` });
+  }
+
+  const tenant = await tenantAdminDAO.create({
     name,
-    slug,
+    slug: normalizedSlug,
     domain,
     plan: plan || "starter",
     status: status || "active",
@@ -39,30 +50,11 @@ const getTenantsHandler = async (req, res) => {
   if (plan) where.plan = plan;
 
   const offset = (parseInt(page, 10) - 1) * parseInt(pageSize, 10);
-  const { rows, count } = await db.tenant.findAndCountAll({
-    where,
-    order: [["createdAt", "DESC"]],
-    limit: parseInt(pageSize, 10),
-    offset,
-    attributes: [
-      "id",
-      "name",
-      "slug",
-      "domain",
-      "settings",
-      "plan",
-      "status",
-      "subscriptionStatus",
-      "currentPeriodEnd",
-      "graceEndsAt",
-      "suspendedAt",
-      "suspendedReason",
-      "currency",
-      "restaurantType",
-      "serviceModes",
-      "createdAt",
-      "updatedAt",
-    ],
+  const { rows, count } = await tenantAdminDAO.list({
+    status,
+    plan,
+    page,
+    pageSize,
   });
 
   res.status(200).json({
@@ -93,17 +85,23 @@ const getTenantHandler = async (req, res) => {
 };
 
 const updateTenantHandler = async (req, res) => {
-  const tenant = await db.tenant.findByPk(req.params.id);
+  const tenant = await tenantAdminDAO.findById(req.params.id);
   if (!tenant) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
 
-  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "paystackSubaccountCode", "paystackPublicKey", "paystackSecretKey", "restaurantType", "serviceModes"];
+  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "restaurantType", "restaurantSubtype", "serviceModes", "businessVertical", "whatsappConfig", "dataRegion", "residencyNotes"];
   const updates = {};
+  const changes = {};
 
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(req.body, key)) {
-      updates[key] = req.body[key];
+      const next = req.body[key];
+      const prev = tenant[key];
+      if (prev !== next) {
+        updates[key] = next;
+        changes[key] = { from: prev, to: next };
+      }
     }
   }
 
@@ -114,7 +112,46 @@ const updateTenantHandler = async (req, res) => {
   }
 
   await tenant.update(updates);
+
+  if (Object.keys(changes).length > 0) {
+    await platformAuditDAO.log(
+      req.user?.id || null,
+      "tenant.updated",
+      "tenant",
+      tenant.id,
+      tenant.id,
+      { changes },
+      req.ip
+    );
+  }
+
   res.status(200).json({ success: true, item: tenant });
+};
+
+const deleteTenantHandler = async (req, res) => {
+  try {
+    const tenant = await tenantAdminDAO.softDelete(req.params.id);
+    if (!tenant) {
+      return res.status(404).json({ success: false, message: "Tenant not found" });
+    }
+
+    await tenantAdminDAO.log(
+      req.user?.id || null,
+      "tenant.deleted",
+      "tenant",
+      tenant.id,
+      tenant.id,
+      { tenantId: tenant.id, tenantName: tenant.name, tenantSlug: tenant.slug },
+      req.ip
+    );
+
+    res.status(200).json({ success: true, message: "Tenant deleted successfully", item: tenant });
+  } catch (err) {
+    if (err.isAlreadyDeleted) {
+      return res.status(400).json({ success: false, message: "Tenant is already deleted" });
+    }
+    throw err;
+  }
 };
 
 const enableTenantHandler = async (req, res) => {
@@ -136,6 +173,23 @@ const disableTenantHandler = async (req, res) => {
   }
 };
 
+const exportTenantDataHandler = async (req, res) => {
+  const exported = await tenantAdminDAO.export(req.params.id);
+  if (!exported) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    tenant: exported.tenant.toJSON(),
+    settings: exported.settings.map((s) => ({ key: s.key, value: s.value, updatedAt: s.updatedAt })),
+    notes: exported.notes,
+    legalAcceptances: exported.legalAcceptances,
+  };
+
+  res.status(200).json({ success: true, data: payload });
+};
+
 const getDashboardHandler = async (req, res) => {
   const dashboard = await getTenantDashboard();
   res.status(200).json({ success: true, ...dashboard });
@@ -146,6 +200,8 @@ module.exports = {
   getTenantsHandler,
   getTenantHandler,
   updateTenantHandler,
+  deleteTenantHandler,
+  exportTenantDataHandler,
   enableTenantHandler,
   disableTenantHandler,
   getDashboardHandler,

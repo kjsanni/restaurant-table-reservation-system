@@ -390,10 +390,9 @@ const createReservation = async (resDetails, tenantId) => {
 const statusHistoryDAO = require("../DAOs/reservationStatusHistory.dao");
 
 const updateReservation = async (reservationId, resDetails, tenantId) => {
-  const [result, metadata] = await Reservation.update(resDetails, {
+  const [result] = await Reservation.update(resDetails, {
     where: withTenant({ id: reservationId }, tenantId),
   });
-
   return result;
 };
 
@@ -783,30 +782,6 @@ const unassignStaff = async (reservationId, userId, tenantId) => {
 
 const findAllReservationsRaw = async (where = {}, tenantId) => {
   return await Reservation.findAll({ where: withTenant(where, tenantId) });
-};
-
-const searchReservationsByNotes = async (query, tenantId) => {
-  const searchTerm = query.trim();
-  if (!searchTerm) return [];
-
-  const tenantFilter = tenantId ? `AND r.tenantId = :tenantId` : "";
-  const reservations = await db.sequelize.query(
-    `SELECT r.id, r.customerId, r.resDate, r.resTime, r.resStatus, r.people, r.paymentStatus, r.expectedTotal, r.notes, 
-     c.firstName, c.lastName, c.email, c.phone, c.tags,
-      MATCH(r.notes) AGAINST (:searchTerm IN NATURAL LANGUAGE MODE) as relevance
-      FROM Reservations r
-      JOIN customers c ON r.customerId = c.id
-     WHERE MATCH(r.notes) AGAINST (:searchTerm IN NATURAL LANGUAGE MODE)
-      ${tenantFilter}
-     ORDER BY relevance DESC
-     LIMIT 50`,
-    {
-      replacements: { searchTerm, ...(tenantId ? { tenantId } : {}) },
-      type: db.sequelize.QueryTypes.SELECT,
-    }
-  );
-
-  return flattenArrayObjects(reservations);
 };
 
 const getReservationStats = async (filters = {}, tenantId) => {

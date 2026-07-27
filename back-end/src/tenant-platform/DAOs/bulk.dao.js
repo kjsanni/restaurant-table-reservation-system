@@ -43,4 +43,46 @@ bulkDAO.sendEmail = async (tenantIds, subject, body) => {
   return results;
 };
 
+bulkDAO.changeVertical = async (tenantIds, vertical) => {
+  const tenants = await db.tenant.findAll({ where: { id: { [db.Sequelize.Op.in]: tenantIds } } });
+  for (const t of tenants) {
+    await t.update({ businessVertical: vertical });
+  }
+  return tenants.map((t) => ({ id: t.id, name: t.name, businessVertical: t.businessVertical }));
+};
+
+bulkDAO.enableTenants = async (tenantIds) => {
+  const tenants = await db.tenant.findAll({ where: { id: { [db.Sequelize.Op.in]: tenantIds }, status: "suspended" } });
+  for (const t of tenants) {
+    await t.update({ status: "active", suspendedAt: null, suspendedReason: null });
+  }
+  return tenants.length;
+};
+
+bulkDAO.exportTenants = async (tenantIds) => {
+  const tenants = await db.tenant.findAll({
+    where: { id: { [db.Sequelize.Op.in]: tenantIds } },
+    attributes: ["id", "name", "slug", "domain", "status", "plan", "businessVertical", "billingEmail", "currency", "createdAt", "updatedAt"],
+  });
+  return tenants.map((t) => t.toJSON());
+};
+
+bulkDAO.assignFeatureFlags = async (tenantIds, featureFlags) => {
+  const tenants = await db.tenant.findAll({ where: { id: { [db.Sequelize.Op.in]: tenantIds } } });
+  for (const t of tenants) {
+    const settings = t.settings || {};
+    settings.featureFlags = { ...(settings.featureFlags || {}), ...featureFlags };
+    await t.update({ settings });
+  }
+  return tenants.length;
+};
+
+bulkDAO.deleteTenants = async (tenantIds) => {
+  const tenants = await db.tenant.findAll({ where: { id: { [db.Sequelize.Op.in]: tenantIds } } });
+  for (const t of tenants) {
+    await t.update({ status: "cancelled" });
+  }
+  return tenants.length;
+};
+
 module.exports = bulkDAO;

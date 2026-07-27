@@ -84,36 +84,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(100),
         allowNull: true,
       },
-      paystackPublicKey: {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-      },
-      paystackSecretKey: {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-        get() {
-          const raw = this.getDataValue("paystackSecretKey");
-          if (!raw) return raw;
-          try {
-            const { decrypt } = require("../../../utils/encryption");
-            return decrypt(raw);
-          } catch {
-            return raw;
-          }
-        },
-        set(value) {
-          if (!value) {
-            this.setDataValue("paystackSecretKey", value);
-            return;
-          }
-          try {
-            const { encrypt } = require("../../../utils/encryption");
-            this.setDataValue("paystackSecretKey", encrypt(value));
-          } catch {
-            this.setDataValue("paystackSecretKey", value);
-          }
-        },
-      },
       billingEmail: {
         type: DataTypes.STRING(100),
         allowNull: true,
@@ -126,6 +96,15 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(3),
         allowNull: false,
         defaultValue: "GHS",
+      },
+      businessVertical: {
+        type: DataTypes.ENUM("restaurant", "salon"),
+        allowNull: false,
+        defaultValue: "restaurant",
+      },
+      restaurantSubtype: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
       },
     },
     {

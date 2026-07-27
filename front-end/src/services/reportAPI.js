@@ -58,6 +58,13 @@ class ReportAPI {
       params.append("paymentStatus", filters.paymentStatus);
     return API.get("/reports/orders/pdf?" + params.toString());
   }
+  getGraTaxReport(filters = {}) {
+    const params = new URLSearchParams();
+    if (filters.from) params.append("from", filters.from);
+    if (filters.to) params.append("to", filters.to);
+    if (filters.vatRate) params.append("vatRate", String(filters.vatRate));
+    return API.get("/reports/gra-tax?" + params.toString());
+  }
 }
 
 export default new ReportAPI();

@@ -114,4 +114,113 @@ revenueDAO.getLtvByTenant = async () => {
   });
 };
 
+revenueDAO.getCohortAnalysis = async (months = 12) => {
+  const plans = await db.subscriptionPlan.findAll({
+    where: { isActive: true },
+    raw: true,
+  });
+  const planPriceMap = {};
+  for (const plan of plans) {
+    planPriceMap[plan.slug] = parseFloat(plan.price || 0);
+  }
+
+  const now = new Date();
+  const cohorts = [];
+  for (let i = months - 1; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+    const cohortLabel = start.toISOString().slice(0, 7);
+
+    const tenants = await db.tenant.findAll({
+      where: {
+        status: { [db.Sequelize.Op.in]: ["active", "past_due", "trialing"] },
+        createdAt: { [db.Sequelize.Op.gte]: start, [db.Sequelize.Op.lt]: end },
+      },
+      raw: true,
+    });
+
+    const count = tenants.length;
+    const mrr = tenants.reduce((sum, t) => sum + (planPriceMap[t.plan] || 0), 0);
+
+    cohorts.push({
+      cohort: cohortLabel,
+      signups: count,
+      mrr,
+      avgRevenuePerTenant: count > 0 ? Math.round(mrr / count) : 0,
+    });
+  }
+  return cohorts;
+};
+
+revenueDAO.getFeatureAdoption = async () => {
+  const [
+    reservations,
+    menuItems,
+    orders,
+    deliveries,
+    giftCards,
+    referrals,
+    campaigns,
+    supportTickets,
+    floorPlans,
+    appointments,
+    waitlist,
+    payments,
+    invoices,
+    promotions,
+  ] = await Promise.all([
+    db.reservation.count({ col: "tenantId", distinct: true }),
+    db.menuItem.count({ col: "tenantId", distinct: true }),
+    db.order.count({ col: "tenantId", distinct: true }),
+    db.delivery.count({ col: "tenantId", distinct: true }),
+    db.giftCard.count({ col: "tenantId", distinct: true }),
+    db.referral.count({ col: "tenantId", distinct: true }),
+    db.marketingCampaign.count({ col: "tenantId", distinct: true }),
+    db.supportTicket.count({ col: "tenantId", distinct: true }),
+    db.floorPlan.count({ col: "tenantId", distinct: true }),
+    db.appointment.count({ col: "tenantId", distinct: true }),
+    db.waitlist.count({ col: "tenantId", distinct: true }),
+    db.payment.count({ col: "tenantId", distinct: true }),
+    db.invoice.count({ col: "tenantId", distinct: true }),
+    db.promotion.count({ col: "tenantId", distinct: true }),
+  ]);
+
+  const totalTenants = await db.tenant.count();
+
+  const features = [
+    { name: "Reservations", count: reservations },
+    { name: "Menu Items", count: menuItems },
+    { name: "Orders", count: orders },
+    { name: "Deliveries", count: deliveries },
+    { name: "Gift Cards", count: giftCards },
+    { name: "Referrals", count: referrals },
+    { name: "Marketing Campaigns", count: campaigns },
+    { name: "Support Tickets", count: supportTickets },
+    { name: "Floor Plans", count: floorPlans },
+    { name: "Appointments", count: appointments },
+    { name: "Waitlist", count: waitlist },
+    { name: "Payments", count: payments },
+    { name: "Invoices", count: invoices },
+    { name: "Promotions", count: promotions },
+  ];
+
+  return features
+    .map((f) => ({
+      ...f,
+      adoptionRate: totalTenants > 0 ? Math.round((f.count / totalTenants) * 100) : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+};
+
+revenueDAO.getGeographicDistribution = async () => {
+  const rows = await db.sequelize.query(
+    `SELECT COALESCE(dataRegion, 'Unspecified') AS region, COUNT(id) AS count FROM tenants GROUP BY COALESCE(dataRegion, 'Unspecified') ORDER BY count DESC`,
+    { type: db.Sequelize.QueryTypes.SELECT }
+  );
+  return rows.map((r) => ({
+    region: r.region,
+    count: parseInt(r.count, 10),
+  }));
+};
+
 module.exports = revenueDAO;

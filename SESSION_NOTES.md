@@ -425,3 +425,43 @@ Across all modernized pages:
 - `cd front-end && npm run lint` ✅ passes
 - `cd front-end && npm run test:unit` ✅ passes (20/20)
 - `cd back-end && npm test` ✅ passes (25 suites, 155 tests) with **0 Jest teardown warnings**
+
+---
+
+## 2026-07-24 Session — Phase 5 Combo/Packages & Extended Salon Module
+
+### Backend — Phase 5 combo/packages MVP
+- Added `service_packages` + `service_package_items` migrations
+- Added `ServicePackage` model and full DAO/controller/router stack under `back-end/src/verticals/salon/`
+- Wired `/api/v1/salon/packages` into `back-end/src/utils/server.js`
+- Added `findExistingInstance` to `appointment.dao.js` for recurring cron duplicate checks
+- Fixed `salonCron.js` date math to avoid advancing `startDate` when `lastGeneratedAt` is null
+- Fixed recurring cron + marketing cron paths in `back-end/src/__tests__/salon-cron.test.js`
+
+### Backend — Additional salon modules
+- Migrations: `gift_cards`, `referrals`, `locations`, `inventory_items`, `expenses`, `pricing_rules`
+- Models + DAOs + controllers + routers for each module
+- All routes registered in `back-end/src/utils/server.js`
+
+### Backend — Tests
+- Added controller-level Jest tests for new salon modules:
+  `salon-expense`, `salon-gallery`, `salon-gift-card`, `salon-inventory-item`, `salon-location`, `salon-marketing-campaign`, `salon-pricing-rule`, `salon-referral`, `salon-service-package`
+- Backend: **56 suites / 355 tests passing**
+
+### Frontend — New salon admin views
+- `SalonPackagesView.vue`, `SalonGiftCardsView.vue`, `SalonReferralsView.vue`
+- `SalonLocationsView.vue`, `SalonInventoryView.vue`, `SalonExpensesView.vue`
+- `SalonPricingRulesView.vue`
+- API services, router entries, and sidebar items added for each
+
+### Frontend — Customer portal integration
+- Added customer-facing endpoints to `salon-customer-portal.controller.js`:
+  `/gift-cards`, `/referrals`, `/packages`, `/pricing-rules`
+- New customer portal views:
+  `CustomerPortalGiftCardsView.vue`, `CustomerPortalReferralsView.vue`, `CustomerPortalPackagesView.vue`
+- Updated `salonCustomerPortalAPI.js` with new methods
+
+### Verification
+- `cd back-end && npm test` ✅ passes (56 suites, 355 tests)
+- `cd front-end && npm run build` ✅ passes
+- `cd front-end && npm run lint` ✅ passes

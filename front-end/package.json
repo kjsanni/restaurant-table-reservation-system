@@ -9,7 +9,13 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:super-admin": "vite --config vite.config.super-admin.js",
+    "dev:tenant": "vite --config vite.config.tenant.js",
+    "dev:customer": "vite --config vite.config.customer.js",
     "build": "vite build",
+    "build:super-admin": "vite build --config vite.config.super-admin.js",
+    "build:tenant": "vite build --config vite.config.tenant.js",
+    "build:customer": "vite build --config vite.config.customer.js",
     "preview": "vite preview",
     "test:unit": "vitest --environment jsdom --root src/",
     "test:a11y": "playwright test tests/accessibility.spec.ts",
@@ -34,6 +40,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
     "@rushstack/eslint-patch": "^1.1.4",
     "@typescript-eslint/parser": "^5.62.0",
     "@vitejs/plugin-vue": "^5.2.4",

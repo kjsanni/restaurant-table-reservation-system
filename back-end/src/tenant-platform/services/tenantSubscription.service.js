@@ -1,5 +1,4 @@
 const db = require("../../db/models");
-const { io } = require("../../utils/server");
 
 const DEFAULT_PLANS = {
   starter: { maxTables: 10, maxReservationsPerMonth: 500, price: 29 },
@@ -60,6 +59,7 @@ const checkPastDue = async () => {
       suspendedReason: "Payment overdue — grace period expired",
     });
 
+    const { io } = require("../../utils/server");
     const namespace = io.of(`/tenant-${tenant.id}`);
     if (namespace) {
       namespace.emit("tenant-suspended", {

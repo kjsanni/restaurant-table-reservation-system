@@ -171,6 +171,58 @@ const getRevenueTimeSeries = async (from, to, granularity = "day", tenantId) => 
   };
 };
 
+const getTaxReport = async (from, to, tenantId, vatRate = 0.15) => {
+  const where = withTenant({}, tenantId);
+  if (from) where.paidAt = { ...where.paidAt, [Op.gte]: from };
+  if (to) where.paidAt = { ...where.paidAt, [Op.lte]: to };
+
+  return readReplica.withReplicaFallback(async ({ useMaster }) => {
+    const result = await Payment.findOne({
+      attributes: [
+        [fn("SUM", col("amount")), "totalRevenue"],
+        [fn("SUM", col("discount")), "totalDiscount"],
+        [fn("COUNT", col("id")), "totalTransactions"],
+      ],
+      where,
+      raw: true,
+      ...(useMaster === null ? {} : { useMaster }),
+    });
+
+    const byMethod = await Payment.findAll({
+      attributes: [
+        "method",
+        [fn("SUM", col("amount")), "total"],
+        [fn("COUNT", col("id")), "count"],
+      ],
+      where,
+      group: ["method"],
+      raw: true,
+      ...(useMaster === null ? {} : { useMaster }),
+    });
+
+    const totalRevenue = parseFloat(result?.totalRevenue || 0);
+    const totalDiscount = parseFloat(result?.totalDiscount || 0);
+    const netRevenue = totalRevenue - totalDiscount;
+    const vatAmount = Math.max(netRevenue * vatRate, 0);
+
+    return {
+      period: { from, to },
+      currency: "GHS",
+      vatRate,
+      totalRevenue,
+      totalDiscount,
+      netRevenue,
+      vatAmount,
+      totalTransactions: parseInt(result?.totalTransactions || 0, 10),
+      byMethod: byMethod.map((m) => ({
+        method: m.method || "unknown",
+        total: parseFloat(m.total || 0),
+        count: parseInt(m.count || 0, 10),
+      })),
+    };
+  }, { label: "payment.getTaxReport" });
+};
+
 module.exports = {
   findByReservation,
   create,
@@ -180,4 +232,5 @@ module.exports = {
   getPaymentHistory,
   getRevenueStats,
   getRevenueTimeSeries,
+  getTaxReport,
 };

@@ -6,6 +6,7 @@ const paymentDAO = require("../../DAOs/payment.dao");
 const deliveryService = require("../../services/delivery.service");
 const whatsappService = require("../../services/whatsapp.service");
 const messageTemplates = require("../../services/messageTemplates.service");
+const salonAppointmentDao = require("../../verticals/salon/DAOs/appointment.dao");
 const db = require("../../db/models");
 
 const webhookHandler = async (req, res) => {
@@ -108,6 +109,20 @@ const webhookHandler = async (req, res) => {
                   console.error("Failed to create WhatsApp delivery after payment:", deliveryErr.message);
                 }
               }
+            }
+          }
+
+          const appointmentId = metadata.appointmentId;
+          if (appointmentId) {
+            try {
+              const appointment = await salonAppointmentDao.findById(appointmentId, resolvedTenantId);
+              if (appointment && appointment.paymentStatus !== "paid") {
+                await salonAppointmentDao.update(appointmentId, resolvedTenantId, {
+                  paymentStatus: "paid",
+                });
+              }
+            } catch (appointmentErr) {
+              console.error("Failed to update appointment payment status:", appointmentErr.message);
             }
           }
         }

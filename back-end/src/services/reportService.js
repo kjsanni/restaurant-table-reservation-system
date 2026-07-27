@@ -1,4 +1,5 @@
 const paymentService = require("../services/paymentService");
+const paymentDAO = require("../DAOs/payment.dao");
 const reservationDAO = require("../DAOs/reservation.dao");
 const db = require("../db/models");
 const { Op } = db.Sequelize;
@@ -148,7 +149,6 @@ const exportPDF = async (filters = {}, tenantId) => {
   lines.push(`Total Reservations: ${report.totalReservations}`);
   lines.push("");
   lines.push("PAYMENT BREAKDOWN");
-  const currency = await formatMoney(0, tenantId).then((s) => s.split(" ")[0] || "GHS");
   for (const m of report.paymentBreakdown.byMethod || []) {
     const formatted = await formatMoney(Number(m.total || 0), tenantId);
     lines.push(`  ${m.method}: ${formatted} (${m.count} payments)`);
@@ -391,6 +391,18 @@ const exportOrderPDF = async (filters = {}, tenantId) => {
   return generateTextPdf(lines);
 };
 
+const getGraTaxReport = async (filters = {}, tenantId) => {
+  const from = filters.from;
+  const to = filters.to;
+  const vatRate = filters.vatRate && Number(filters.vatRate) > 0 ? Number(filters.vatRate) : 0.15;
+  const report = await paymentDAO.getTaxReport(from, to, tenantId, vatRate);
+  return {
+    reportType: "gra_tax",
+    generatedAt: new Date().toISOString(),
+    ...report,
+  };
+};
+
 module.exports = {
   getReservationReport,
   getTurnTimeReport,
@@ -404,4 +416,5 @@ module.exports = {
   getTopSellingItems,
   exportOrderCSV,
   exportOrderPDF,
+  getGraTaxReport,
 };

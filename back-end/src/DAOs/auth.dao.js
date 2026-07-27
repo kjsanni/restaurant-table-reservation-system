@@ -42,7 +42,7 @@ const findUserByEmail = async (email, tenantId) => {
 const findUserById = async (id, tenantId) => {
   return await User.findOne({
     where: withTenant({ id }, tenantId),
-    attributes: ["id", "username", "email", "role", "permissions", "createdAt", "updatedAt"],
+    attributes: ["id", "username", "email", "role", "permissions", "locale", "isSuperAdmin", "createdAt", "updatedAt"],
   });
 };
 
@@ -108,6 +108,14 @@ const updateStaffUser = async (id, updates, tenantId) => {
       throw { status: 400, message: errors.join(". ") + "." };
     }
     updates.password = await hashPassword(updates.password);
+  }
+  return await user.update(updates);
+};
+
+const updateUser = async (id, updates) => {
+  const user = await User.findByPk(id);
+  if (!user) {
+    throw { status: 404, message: "User not found!" };
   }
   return await user.update(updates);
 };
@@ -318,6 +326,7 @@ module.exports = {
   findUserByEmail,
   findUserById,
   createUser,
+  updateUser,
   getAllStaff,
   getAllUsers,
   getAllAdmins,

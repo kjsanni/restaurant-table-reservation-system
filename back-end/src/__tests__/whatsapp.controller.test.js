@@ -13,6 +13,7 @@ describe("whatsapp.controller", () => {
     req = { headers: {}, body: {}, query: {} };
     res = {
       status: jest.fn().mockReturnThis(),
+      type: jest.fn().mockReturnThis(),
       send: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
     };

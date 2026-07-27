@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Portal — Fresh Sip</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+    <nav class="public-nav">
+        <div class="public-nav-inner">
+            <a href="index.html" class="logo"><h2>Fresh Sip</h2></a>
+            <div class="public-nav-links">
+                <a href="06-menu.html">Menu</a>
+                <a href="01-login.html">Sign In</a>
+                <a href="02-register.html" class="btn btn-primary btn-sm">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content" style="padding-top: 0;">
+        <div class="portal-hero" style="background: linear-gradient(135deg, var(--terracotta-50), var(--golden-50)); padding: 80px 24px; text-align: center; position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0; opacity: 0.15; background-image: url('assets/hero-family-beach.jpg'); background-size: cover; background-position: center;"></div>
+            <div style="position: relative; z-index: 1; max-width: 600px; margin: 0 auto;">
+                <h1 style="font-family: var(--font-serif); font-size: 42px; font-weight: 700; margin-bottom: 16px; color: var(--brown-900);">Your Fresh Sip Account</h1>
+                <p style="font-size: 18px; color: var(--brown-700); opacity: 0.8;">Track orders, manage preferences, and earn rewards.</p>
+            </div>
+        </div>
+        <div class="page-body" style="max-width: 1000px; margin: 0 auto; padding: 40px 24px;">
+            <div class="portal-tabs" style="display: flex; gap: 4px; border-bottom: 2px solid rgba(62,39,35,0.06); margin-bottom: 32px;">
+                <button class="tab active" style="padding: 12px 24px; background: none; border: none; border-bottom: 2px solid var(--terracotta-600); margin-bottom: -2px; font-weight: 600; font-size: 15px; cursor: pointer;">My Orders</button>
+                <button class="tab" style="padding: 12px 24px; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; font-weight: 500; font-size: 15px; cursor: pointer; color: var(--brown-700); opacity: 0.6;">Loyalty</button>
+                <button class="tab" style="padding: 12px 24px; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; font-weight: 500; font-size: 15px; cursor: pointer; color: var(--brown-700); opacity: 0.6;">Preferences</button>
+                <button class="tab" style="padding: 12px 24px; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; font-weight: 500; font-size: 15px; cursor: pointer; color: var(--brown-700); opacity: 0.6;">Account</button>
+            </div>
+
+            <div class="order-history">
+                <div class="order-card reveal" style="background: var(--white); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px; border: 1px solid rgba(62,39,35,0.06); box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <div><strong style="font-size: 16px;">Order #FS-1038</strong><div style="font-size: 13px; opacity: 0.6; margin-top: 2px;">20 Jul 2026 · 6:45 PM</div></div>
+                        <span class="pill pill-success">Delivered</span>
+                    </div>
+                    <div style="font-size: 14px; color: var(--brown-700); opacity: 0.8; margin-bottom: 8px;">2x Mango Smoothie, 1x Iced Coffee · GHS 85</div>
+                    <div style="display: flex; gap: 12px; margin-top: 12px;">
+                        <button class="btn btn-outline btn-sm">Reorder</button>
+                        <button class="btn btn-ghost btn-sm">View Receipt</button>
+                    </div>
+                </div>
+                <div class="order-card reveal" style="background: var(--white); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px; border: 1px solid rgba(62,39,35,0.06); box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <div><strong style="font-size: 16px;">Order #FS-1025</strong><div style="font-size: 13px; opacity: 0.6; margin-top: 2px;">18 Jul 2026 · 4:20 PM</div></div>
+                        <span class="pill pill-success">Delivered</span>
+                    </div>
+                    <div style="font-size: 14px; color: var(--brown-700); opacity: 0.8; margin-bottom: 8px;">3x Tropical Smoothie, 2x Fresh Juice · GHS 140</div>
+                    <div style="display: flex; gap: 12px; margin-top: 12px;">
+                        <button class="btn btn-outline btn-sm">Reorder</button>
+                        <button class="btn btn-ghost btn-sm">View Receipt</button>
+                    </div>
+                </div>
+                <div class="order-card reveal" style="background: var(--white); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px; border: 1px solid rgba(62,39,35,0.06); box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <div><strong style="font-size: 16px;">Order #FS-1012</strong><div style="font-size: 13px; opacity: 0.6; margin-top: 2px;">15 Jul 2026 · 7:10 PM</div></div>
+                        <span class="pill pill-success">Delivered</span>
+                    </div>
+                    <div style="font-size: 14px; color: var(--brown-700); opacity: 0.8; margin-bottom: 8px;">1x Caramel Macchiato, 1x Carrot Ginger · GHS 55</div>
+                    <div style="display: flex; gap: 12px; margin-top: 12px;">
+                        <button class="btn btn-outline btn-sm">Reorder</button>
+                        <button class="btn btn-ghost btn-sm">View Receipt</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => entry.target.classList.add('in'), index * 100);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
