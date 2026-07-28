@@ -2,6 +2,9 @@
 import { ref, onMounted } from "vue";
 import serviceAPI from "@/services/serviceAPI";
 import logger from "@/utils/logger";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 interface Service {
   id: number;
@@ -124,7 +127,7 @@ onMounted(loadServices);
     <div class="topbar">
       <div class="topbar-left">
         <h1>Services</h1>
-        <p>Manage salon service catalog and pricing</p>
+        <p>{{ t("salon.manageServiceCatalog") }}</p>
       </div>
       <div class="topbar-right">
         <button
@@ -134,7 +137,7 @@ onMounted(loadServices);
             resetForm();
           "
         >
-          + Add Service
+          {{ t("salon.addService") }}
         </button>
       </div>
     </div>
@@ -142,7 +145,7 @@ onMounted(loadServices);
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading services...</p>
+        <p>{{ t("salon.loadingServices") }}</p>
       </div>
 
       <div v-else class="services-grid">
@@ -155,12 +158,14 @@ onMounted(loadServices);
               </span>
             </div>
             <div class="service-actions">
-              <button class="btn-sm" @click="editService(svc)">Edit</button>
+              <button class="btn-sm" @click="editService(svc)">
+                {{ t("common.edit") }}
+              </button>
               <button
                 :class="['btn-toggle', svc.isAvailable ? 'active' : 'inactive']"
                 @click="toggleAvailability(svc)"
               >
-                {{ svc.isAvailable ? "Hide" : "Show" }}
+                {{ svc.isAvailable ? t("salon.hide") : t("salon.show") }}
               </button>
             </div>
           </div>
@@ -171,18 +176,18 @@ onMounted(loadServices);
             <span class="service-price">{{ svc.price }} GHS</span>
             <span class="service-duration">{{ svc.durationMinutes }} min</span>
             <span v-if="svc.depositAmount > 0" class="service-deposit">
-              Deposit: {{ svc.depositAmount }} GHS
+              {{ t("salon.deposit") }}: {{ svc.depositAmount }} GHS
             </span>
           </div>
           <div class="service-footer">
             <span v-if="svc.whatsappBookable" class="wa-badge">WhatsApp</span>
             <span v-if="svc.bufferMinutes > 0" class="buffer-badge">
-              +{{ svc.bufferMinutes }}m buffer
+              +{{ svc.bufferMinutes }}m {{ t("salon.buffer") }}
             </span>
           </div>
         </div>
         <div v-if="!services.length" class="empty-state">
-          No services found.
+          {{ t("salon.noServices") }}
         </div>
       </div>
 
