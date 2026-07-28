@@ -171,6 +171,30 @@ const updateSetting = async (key, value, tenantId) => {
   return await getSettingByKey(key, tenantId);
 };
 
+const getPlatformSettingByKey = async (key) => {
+  const setting = await Setting.findOne({ where: { key, tenantId: null } });
+  if (setting && setting.value !== undefined) {
+    setting.value = normalizeSettingValue(setting.value);
+  }
+  stripSensitiveSettingValue(setting);
+  return setting;
+};
+
+const updatePlatformSetting = async (key, value) => {
+  const [updatedRows] = await Setting.update(
+    { value: normalizeSettingValue(value) },
+    { where: { key, tenantId: null } }
+  );
+  if (updatedRows === 0) {
+    return await Setting.create({
+      key,
+      value: normalizeSettingValue(value),
+      tenantId: null,
+    });
+  }
+  return await getPlatformSettingByKey(key);
+};
+
 const stripSensitiveSettingValue = (setting) => {
   if (!setting) return setting;
   const key = setting.key || (setting.get && setting.get("key"));

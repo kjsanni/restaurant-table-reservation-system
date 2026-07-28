@@ -5,8 +5,8 @@ const {
 
 jest.mock("../DAOs/auth.dao", () => ({
   getAllSettings: jest.fn(),
-  getSettingByKey: jest.fn(),
-  updateSetting: jest.fn(),
+  getPlatformSettingByKey: jest.fn(),
+  updatePlatformSetting: jest.fn(),
 }));
 
 jest.mock("../tenant-platform/DAOs/platformAudit.dao", () => ({
@@ -35,9 +35,9 @@ describe("platformSettings.controller", () => {
   describe("listPlatformSettingsHandler", () => {
     it("returns platform settings grouped by domain", async () => {
       authDAO.getAllSettings.mockResolvedValue([
-        { key: "password_policy", value: { minLength: 12 }, updatedAt: "2026-01-01T00:00:00Z" },
-        { key: "maintenance_mode", value: false, updatedAt: "2026-01-02T00:00:00Z" },
-        { key: "feature_flags", value: { salon: true }, updatedAt: "2026-01-03T00:00:00Z" },
+        { key: "password_policy", value: { minLength: 12 }, tenantId: null, updatedAt: "2026-01-01T00:00:00Z" },
+        { key: "maintenance_mode", value: false, tenantId: null, updatedAt: "2026-01-02T00:00:00Z" },
+        { key: "feature_flags", value: { salon: true }, tenantId: null, updatedAt: "2026-01-03T00:00:00Z" },
       ]);
 
       const req = createReq();
@@ -59,6 +59,30 @@ describe("platformSettings.controller", () => {
       expect(authDAO.getAllSettings).toHaveBeenCalledWith(null);
     });
 
+    it("filters to platform-scoped settings only (tenantId === null)", async () => {
+      authDAO.getAllSettings.mockResolvedValue([
+        { key: "password_policy", value: { minLength: 12 }, tenantId: null, updatedAt: "2026-01-01T00:00:00Z" },
+        { key: "tenant_name", value: "Acme", tenantId: 5, updatedAt: "2026-01-02T00:00:00Z" },
+      ]);
+
+      const req = createReq();
+      const res = createRes();
+
+      await listPlatformSettingsHandler(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          domains: expect.objectContaining({
+            security: expect.arrayContaining([
+              expect.objectContaining({ key: "password_policy" }),
+            ]),
+          }),
+        })
+      );
+    });
+
     it("returns empty domains when no settings exist", async () => {
       authDAO.getAllSettings.mockResolvedValue([]);
 
@@ -74,8 +98,8 @@ describe("platformSettings.controller", () => {
 
   describe("updatePlatformSettingHandler", () => {
     it("updates allowed setting and logs audit", async () => {
-      authDAO.getSettingByKey.mockResolvedValue({ key: "maintenance_mode", value: false });
-      authDAO.updateSetting.mockResolvedValue({ key: "maintenance_mode", value: true });
+      authDAO.getPlatformSettingByKey.mockResolvedValue({ key: "maintenance_mode", value: false });
+      authDAO.updatePlatformSetting.mockResolvedValue({ key: "maintenance_mode", value: true });
 
       const req = createReq({ id: 1 }, { key: "maintenance_mode", value: true });
       const res = createRes();
@@ -83,7 +107,7 @@ describe("platformSettings.controller", () => {
       await updatePlatformSettingHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(authDAO.updateSetting).toHaveBeenCalledWith("maintenance_mode", true, null);
+      expect(authDAO.updatePlatformSetting).toHaveBeenCalledWith("maintenance_mode", true);
       expect(platformAuditDAO.log).toHaveBeenCalledWith(
         1,
         "platform_setting.updated",
@@ -109,12 +133,12 @@ describe("platformSettings.controller", () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({ success: false, message: "Unknown or protected setting key." })
       );
-      expect(authDAO.updateSetting).not.toHaveBeenCalled();
+      expect(authDAO.updatePlatformSetting).not.toHaveBeenCalled();
     });
 
     it("handles missing previous value when setting does not exist yet", async () => {
-      authDAO.getSettingByKey.mockResolvedValue(null);
-      authDAO.updateSetting.mockResolvedValue({ key: "brute_force_threshold", value: 5 });
+      authDAO.getPlatformSettingByKey.mockResolvedValue(null);
+      authDAO.updatePlatformSetting.mockResolvedValue({ key: "brute_force_threshold", value: 5 });
 
       const req = createReq({ id: 1 }, { key: "brute_force_threshold", value: 5 });
       const res = createRes();

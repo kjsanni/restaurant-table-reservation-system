@@ -48,8 +48,9 @@ const ALLOWLIST = Object.values(DOMAIN_ALLOWLISTS).flat();
 
 const listPlatformSettingsHandler = async (req, res) => {
   const settings = await authDAO.getAllSettings(null);
+  const platformSettings = settings.filter((s) => s.tenantId === null);
   const groups = {};
-  for (const setting of settings) {
+  for (const setting of platformSettings) {
     const key = setting.key;
     let domain = "other";
     for (const [name, keys] of Object.entries(DOMAIN_ALLOWLISTS)) {
@@ -74,8 +75,8 @@ const updatePlatformSettingHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "Unknown or protected setting key." });
   }
 
-  const previous = await authDAO.getSettingByKey(key, null);
-  const updated = await authDAO.updateSetting(key, value, null);
+  const previous = await authDAO.getPlatformSettingByKey(key);
+  const updated = await authDAO.updatePlatformSetting(key, value);
 
   await platformAuditDAO.log(
     req.user.id,
