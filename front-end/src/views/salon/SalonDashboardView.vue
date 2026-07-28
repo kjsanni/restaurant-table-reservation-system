@@ -4,6 +4,9 @@ import { useRouter } from "vue-router";
 import salonDashboardAPI from "@/services/salonDashboardAPI";
 import logger from "@/utils/logger";
 import { io, Socket } from "socket.io-client";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 const router = useRouter();
 const loading = ref(true);
@@ -64,36 +67,38 @@ onUnmounted(() => {
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Dashboard</h1>
-        <p>Today's overview for your salon</p>
+        <h1>{{ t("salon.dashboard") }}</h1>
+        <p>{{ t("salon.todaysOverview") }}</p>
       </div>
       <div class="topbar-actions">
         <button class="btn-primary" @click="router.push('/salon/appointments')">
-          New Appointment
+          {{ t("salon.newAppointment") }}
         </button>
       </div>
     </div>
 
-    <div v-if="loading" class="loading-state">Loading dashboard…</div>
+    <div v-if="loading" class="loading-state">
+      {{ t("salon.loadingDashboard") }}
+    </div>
 
     <template v-else>
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-label">Appointments Today</div>
+          <div class="kpi-label">{{ t("salon.appointmentsToday") }}</div>
           <div class="kpi-value">{{ kpis.appointmentsToday }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Revenue Today</div>
+          <div class="kpi-label">{{ t("salon.revenueToday") }}</div>
           <div class="kpi-value">
             GHS {{ kpis.revenueToday.toLocaleString() }}
           </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Clients Today</div>
+          <div class="kpi-label">{{ t("salon.clientsToday") }}</div>
           <div class="kpi-value">{{ kpis.clientsToday }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Chair Utilization</div>
+          <div class="kpi-label">{{ t("salon.chairUtilization") }}</div>
           <div class="kpi-value">{{ kpis.chairUtilization.percent }}%</div>
           <div class="kpi-delta">
             {{ kpis.chairUtilization.occupied }} of
@@ -103,7 +108,7 @@ onUnmounted(() => {
       </div>
 
       <div class="quick-links">
-        <h2>Quick Links</h2>
+        <h2>{{ t("salon.quickLinks") }}</h2>
         <div class="quick-link-grid">
           <button
             v-for="link in quickLinks"
