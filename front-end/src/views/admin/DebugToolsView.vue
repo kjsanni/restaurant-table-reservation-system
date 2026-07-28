@@ -63,7 +63,7 @@
       <div v-if="tenantLoading" class="loading-state-inline">
         <div class="spinner-sm"></div>
       </div>
-      <div v-else-if="venueData" class="venue-result">
+      <div v-else-if="tenantData" class="venue-result">
         <div class="venue-header">
           <div>
             <h4>{{ tenantData.tenant.name }}</h4>

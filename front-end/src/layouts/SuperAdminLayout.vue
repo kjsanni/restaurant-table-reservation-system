@@ -27,6 +27,7 @@ const shouldShow = (item: {
   requiresPermission?: string;
   requiresFeature?: string;
   requiresVertical?: string;
+  requiresId?: boolean;
 }) => {
   if (item.platformOnly && !isSuperAdmin.value) return false;
   if (item.tenantOnly && !authStore.tenantModeEnabled && !isSuperAdmin.value)
@@ -50,6 +51,7 @@ const shouldShow = (item: {
   ) {
     return false;
   }
+  if (item.requiresId) return false;
   return true;
 };
 
@@ -68,7 +70,7 @@ const isActive = (routeName: string) =>
 
 <template>
   <div class="sa-layout">
-    <aside class="sa-sidebar">
+    <aside class="sa-sidebar" :class="{ minimized: collapsed }">
       <div class="sa-sidebar-inner">
         <div class="sa-sidebar-top">
           <div class="sa-sidebar-header">
@@ -230,7 +232,7 @@ const isActive = (routeName: string) =>
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  color: rgba(255, 255, 255, 0.75);
+  color: #ffffff !important;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -243,17 +245,18 @@ const isActive = (routeName: string) =>
 
 .sa-nav-item:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--white);
+  color: #ffffff !important;
 }
 
 .sa-nav-item-active {
   background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
-  color: var(--white);
+  color: #ffffff !important;
   box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25);
 }
 
 .sa-nav-text {
   white-space: nowrap;
+  color: #ffffff !important;
 }
 
 .sa-sidebar-bottom {
