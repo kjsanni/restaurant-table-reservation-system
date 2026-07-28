@@ -2,6 +2,9 @@
 import { ref, onMounted } from "vue";
 import salonReportsAPI from "@/services/salonReportsAPI";
 import logger from "@/utils/logger";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -49,20 +52,20 @@ onMounted(loadReports);
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Reports</h1>
-        <p>Revenue, top stylists, and appointment source breakdown</p>
+        <h1>{{ t("salon.reports") }}</h1>
+        <p>{{ t("salon.reportsSubtitle") }}</p>
       </div>
       <div class="topbar-filters">
         <label>
-          From
+          {{ t("salon.from") }}
           <input v-model="from" type="date" />
         </label>
         <label>
-          To
+          {{ t("salon.to") }}
           <input v-model="to" type="date" />
         </label>
         <button class="btn-primary" :disabled="saving" @click="applyFilters">
-          Apply
+          {{ t("salon.apply") }}
         </button>
       </div>
     </div>
@@ -70,31 +73,33 @@ onMounted(loadReports);
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading reports...</p>
+        <p>{{ t("salon.loadingReports") }}</p>
       </div>
 
       <div v-else class="reports-stack">
         <div class="summary-grid">
           <div class="summary-card">
-            <span class="summary-label">Total Revenue</span>
+            <span class="summary-label">{{ t("salon.totalRevenue") }}</span>
             <span class="summary-value">{{
               summary.totalRevenue.toLocaleString()
             }}</span>
           </div>
           <div class="summary-card">
-            <span class="summary-label">Total Appointments</span>
+            <span class="summary-label">{{
+              t("salon.totalAppointments")
+            }}</span>
             <span class="summary-value">{{ summary.totalAppointments }}</span>
           </div>
         </div>
 
         <div class="report-section">
-          <h3>Revenue by Service</h3>
+          <h3>{{ t("salon.revenueByService") }}</h3>
           <table class="report-table">
             <thead>
               <tr>
-                <th>Service</th>
-                <th>Appointments</th>
-                <th>Revenue</th>
+                <th>{{ t("salon.service") }}</th>
+                <th>{{ t("salon.appointments") }}</th>
+                <th>{{ t("salon.revenue") }}</th>
               </tr>
             </thead>
             <tbody>

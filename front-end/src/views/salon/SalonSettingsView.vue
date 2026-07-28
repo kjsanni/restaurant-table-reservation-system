@@ -2,6 +2,9 @@
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import authAPI from "@/services/authAPI";
 import logger from "@/utils/logger";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -121,10 +124,9 @@ onBeforeUnmount(() => {
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Salon Settings</h1>
+        <h1>{{ t("salon.settings") }}</h1>
         <p>
-          Manage payment and notification behavior for salon appointments.
-          WhatsApp is configured by platform admin.
+          {{ t("salon.settingsSubtitle") }}
         </p>
       </div>
     </div>
@@ -132,14 +134,14 @@ onBeforeUnmount(() => {
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading settings...</p>
+        <p>{{ t("salon.loadingSettings") }}</p>
       </div>
 
       <div v-else class="settings-stack">
         <div class="settings-card">
-          <h3>Payments</h3>
+          <h3>{{ t("salon.payments") }}</h3>
           <div class="field">
-            <label>Currency</label>
+            <label>{{ t("salon.currency") }}</label>
             <select v-model="salonPaymentConfig.currency" class="field-input">
               <option value="GHS">GHS</option>
               <option value="NGN">NGN</option>
@@ -147,17 +149,17 @@ onBeforeUnmount(() => {
             </select>
           </div>
           <div class="field">
-            <label>Require deposit</label>
+            <label>{{ t("salon.requireDeposit") }}</label>
             <select
               v-model="salonPaymentConfig.depositRequired"
               class="field-input"
             >
-              <option :value="true">Yes</option>
-              <option :value="false">No</option>
+              <option :value="true">{{ t("salon.yes") }}</option>
+              <option :value="false">{{ t("salon.no") }}</option>
             </select>
           </div>
           <div class="field">
-            <label>Default deposit percent</label>
+            <label>{{ t("salon.defaultDepositPercent") }}</label>
             <input
               v-model.number="salonPaymentConfig.defaultDepositPercent"
               class="field-input"
@@ -172,22 +174,21 @@ onBeforeUnmount(() => {
               :disabled="saving"
               @click="savePayments"
             >
-              {{ saving ? "Saving..." : "Save Payment Settings" }}
+              {{ saving ? t("salon.saving") : t("salon.savePaymentSettings") }}
             </button>
           </div>
         </div>
 
         <div class="settings-card">
-          <h3>SMS Fallback</h3>
+          <h3>{{ t("salon.smsFallback") }}</h3>
           <div class="field">
-            <label>Enable SMS fallback after WhatsApp failures</label>
+            <label>{{ t("salon.enableSmsFallback") }}</label>
             <select v-model="salonSmsFallback.enabled" class="field-input">
-              <option :value="true">Enabled</option>
-              <option :value="false">Disabled</option>
+              <option :value="true">{{ t("salon.enabled") }}</option>
+              <option :value="false">{{ t("salon.disabled") }}</option>
             </select>
             <p class="field-hint">
-              Automatically send an SMS if WhatsApp delivery fails twice or
-              more.
+              {{ t("salon.smsFallbackHint") }}
             </p>
           </div>
           <div class="form-actions">
@@ -196,35 +197,35 @@ onBeforeUnmount(() => {
               :disabled="saving"
               @click="saveSmsFallback"
             >
-              {{ saving ? "Saving..." : "Save SMS Settings" }}
+              {{ saving ? t("salon.saving") : t("salon.saveSmsSettings") }}
             </button>
           </div>
         </div>
 
         <div class="settings-card">
-          <h3>Commissions</h3>
+          <h3>{{ t("salon.commissions") }}</h3>
           <div class="field">
-            <label>Enable commissions</label>
+            <label>{{ t("salon.enableCommissions") }}</label>
             <select v-model="salonCommissionConfig.enabled" class="field-input">
-              <option :value="true">Enabled</option>
-              <option :value="false">Disabled</option>
+              <option :value="true">{{ t("salon.enabled") }}</option>
+              <option :value="false">{{ t("salon.disabled") }}</option>
             </select>
             <p class="field-hint">
-              Track and pay stylist commissions per service or appointment.
+              {{ t("salon.commissionHint") }}
             </p>
           </div>
           <div class="field">
-            <label>Default rate type</label>
+            <label>{{ t("salon.defaultRateType") }}</label>
             <select
               v-model="salonCommissionConfig.defaultRateType"
               class="field-input"
             >
-              <option value="percentage">Percentage</option>
-              <option value="fixed">Fixed Amount</option>
+              <option value="percentage">{{ t("salon.percentage") }}</option>
+              <option value="fixed">{{ t("salon.fixedAmount") }}</option>
             </select>
           </div>
           <div class="field">
-            <label>Default rate value</label>
+            <label>{{ t("salon.defaultRateValue") }}</label>
             <input
               v-model.number="salonCommissionConfig.defaultRateValue"
               class="field-input"
@@ -238,7 +239,9 @@ onBeforeUnmount(() => {
               :disabled="saving"
               @click="saveCommissionSettings"
             >
-              {{ saving ? "Saving..." : "Save Commission Settings" }}
+              {{
+                saving ? t("salon.saving") : t("salon.saveCommissionSettings")
+              }}
             </button>
           </div>
         </div>

@@ -5,6 +5,9 @@ import serviceAPI from "@/services/serviceAPI";
 import stationAPI from "@/services/stationAPI";
 import customerAPI from "@/services/customerAPI";
 import logger from "@/utils/logger";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 interface Appointment {
   id: number;
@@ -283,31 +286,33 @@ onMounted(async () => {
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Walk-in Queue</h1>
-        <p>Manage salon walk-in appointments</p>
+        <h1>{{ t("salon.walkins") }}</h1>
+        <p>{{ t("salon.manageWalkins") }}</p>
       </div>
       <div class="topbar-right">
-        <button class="btn-primary" @click="openForm">+ Add Walk-in</button>
+        <button class="btn-primary" @click="openForm">
+          {{ t("salon.addWalkin") }}
+        </button>
       </div>
     </div>
 
     <div class="content-wrapper">
       <div v-if="showForm" class="form-panel">
-        <h3>New Walk-in</h3>
+        <h3>{{ t("salon.newWalkin") }}</h3>
         <div class="form-grid">
           <div class="field full">
-            <label for="customerSearch">Customer</label>
+            <label for="customerSearch">{{ t("salon.customer") }}</label>
             <input
               id="customerSearch"
               v-model="form.customerSearch"
-              placeholder="Search existing customers by name, phone, or email"
+              :placeholder="t('salon.searchCustomersPlaceholder')"
               autocomplete="off"
               @input="searchCustomers"
             />
             <div v-if="selectedCustomerName" class="field-hint">
-              Selected: {{ selectedCustomerName }}
+              {{ t("salon.selected") }}: {{ selectedCustomerName }}
               <button class="link-clear" type="button" @click="clearCustomer">
-                Clear
+                {{ t("salon.clear") }}
               </button>
             </div>
             <div v-if="customerResults.length" class="customer-results">
@@ -324,13 +329,13 @@ onMounted(async () => {
             </div>
           </div>
           <div class="field">
-            <label for="service">Service</label>
+            <label for="service">{{ t("salon.service") }}</label>
             <select
               id="service"
               v-model="form.serviceId"
               @change="handleServiceChange"
             >
-              <option value="">Select service</option>
+              <option value="">{{ t("salon.selectService") }}</option>
               <option
                 v-for="svc in services"
                 :key="svc.id"

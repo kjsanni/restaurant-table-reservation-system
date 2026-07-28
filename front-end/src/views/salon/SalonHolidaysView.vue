@@ -2,6 +2,9 @@
 import { ref, onMounted } from "vue";
 import scheduleAPI from "@/services/scheduleAPI";
 import logger from "@/utils/logger";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 interface Holiday {
   id: number;
@@ -62,31 +65,31 @@ onMounted(loadHolidays);
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Salon Holidays</h1>
-        <p>Days the salon is closed</p>
+        <h1>{{ t("salon.holidays") }}</h1>
+        <p>{{ t("salon.holidaysSubtitle") }}</p>
       </div>
     </div>
 
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading holidays...</p>
+        <p>{{ t("salon.loadingHolidays") }}</p>
       </div>
 
       <div v-else>
         <div class="form-card">
-          <h3>Add Holiday</h3>
+          <h3>{{ t("salon.addHoliday") }}</h3>
           <div class="form-row">
             <div class="field">
-              <label for="name">Name</label>
+              <label for="name">{{ t("salon.name") }}</label>
               <input
                 id="name"
                 v-model="name"
-                placeholder="e.g. Independence Day"
+                :placeholder="t('salon.holidayNamePlaceholder')"
               />
             </div>
             <div class="field">
-              <label for="date">Date</label>
+              <label for="date">{{ t("salon.date") }}</label>
               <input id="date" type="date" v-model="date" />
             </div>
             <div class="field-actions">
@@ -95,8 +98,8 @@ onMounted(loadHolidays);
                 :disabled="submitting || !name || !date"
                 @click="submitHoliday"
               >
-                <span v-if="!submitting">Add</span>
-                <span v-else>Saving...</span>
+                <span v-if="!submitting">{{ t("salon.add") }}</span>
+                <span v-else>{{ t("salon.saving") }}</span>
               </button>
             </div>
           </div>

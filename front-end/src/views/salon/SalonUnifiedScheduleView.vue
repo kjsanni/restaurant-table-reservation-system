@@ -2,24 +2,28 @@
   <div class="unified-schedule-view">
     <div class="page-header">
       <div>
-        <h1>Unified Schedule</h1>
+        <h1>{{ t("salon.unifiedSchedule") }}</h1>
         <p class="subtitle">
-          Staff shifts, holidays, and appointments in one place
+          {{ t("salon.unifiedScheduleSubtitle") }}
         </p>
       </div>
       <div class="header-actions">
         <button class="btn-secondary" @click="goBack" :disabled="loading">
-          ← Back
+          ← {{ t("salon.back") }}
         </button>
       </div>
     </div>
 
     <div class="controls">
-      <button class="btn-ghost" @click="prevWeek">← Prev</button>
+      <button class="btn-ghost" @click="prevWeek">
+        ← {{ t("salon.prev") }}
+      </button>
       <span class="week-label">{{ weekLabel }}</span>
-      <button class="btn-ghost" @click="nextWeek">Next →</button>
+      <button class="btn-ghost" @click="nextWeek">
+        {{ t("salon.next") }} →
+      </button>
       <button class="btn-primary" @click="refresh" :disabled="loading">
-        {{ loading ? "Loading..." : "Refresh" }}
+        {{ loading ? t("salon.loading") : t("salon.refresh") }}
       </button>
     </div>
 
@@ -79,6 +83,9 @@ import { useRouter } from "vue-router";
 import shiftAPI from "@/services/shiftAPI";
 import scheduleAPI from "@/services/scheduleAPI";
 import appointmentAPI from "@/services/appointmentAPI";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 const router = useRouter();
 const loading = ref(false);

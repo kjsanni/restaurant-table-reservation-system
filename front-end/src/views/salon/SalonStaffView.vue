@@ -2,8 +2,8 @@
   <div class="salon-staff-view">
     <div class="page-header">
       <div>
-        <h1>Staff</h1>
-        <p class="subtitle">Salon staff and service skills</p>
+        <h1>{{ t("salon.staff") }}</h1>
+        <p class="subtitle">{{ t("salon.staffSubtitle") }}</p>
       </div>
     </div>
 
@@ -12,15 +12,15 @@
         <div class="spinner-sm"></div>
       </div>
       <div v-else-if="staff.length === 0" class="empty-state">
-        No staff members found
+        {{ t("salon.noStaffFound") }}
       </div>
       <div v-else class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Services</th>
+              <th>{{ t("salon.name") }}</th>
+              <th>{{ t("salon.email") }}</th>
+              <th>{{ t("salon.services") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -47,6 +47,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import salonAPI from "@/services/salonAPI";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 const loading = ref(false);
 const staff = ref([]);

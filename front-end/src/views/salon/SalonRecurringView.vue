@@ -2,6 +2,9 @@
 import { ref, onMounted } from "vue";
 import recurringAppointmentsAPI from "@/services/recurringAppointmentsAPI";
 import logger from "@/utils/logger";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -71,40 +74,40 @@ onMounted(loadRecurring);
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Recurring Appointments</h1>
-        <p>Schedule repeating appointment patterns</p>
+        <h1>{{ t("salon.recurringAppointments") }}</h1>
+        <p>{{ t("salon.recurringAppointmentsSubtitle") }}</p>
       </div>
     </div>
 
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading recurring appointments...</p>
+        <p>{{ t("salon.loadingRecurringAppointments") }}</p>
       </div>
 
       <div v-else class="stack">
         <div class="settings-card">
-          <h3>New Recurring Appointment</h3>
+          <h3>{{ t("salon.newRecurringAppointment") }}</h3>
           <div class="grid">
             <label>
-              Customer ID
+              {{ t("salon.customerId") }}
               <input v-model="form.customerId" class="field-input" />
             </label>
             <label>
-              Service ID
+              {{ t("salon.serviceId") }}
               <input v-model="form.serviceId" class="field-input" />
             </label>
             <label>
-              Frequency
+              {{ t("salon.frequency") }}
               <select v-model="form.frequency" class="field-input">
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="biweekly">Biweekly</option>
-                <option value="monthly">Monthly</option>
+                <option value="daily">{{ t("salon.daily") }}</option>
+                <option value="weekly">{{ t("salon.weekly") }}</option>
+                <option value="biweekly">{{ t("salon.biweekly") }}</option>
+                <option value="monthly">{{ t("salon.monthly") }}</option>
               </select>
             </label>
             <label>
-              Interval
+              {{ t("salon.interval") }}
               <input
                 v-model.number="form.interval"
                 class="field-input"

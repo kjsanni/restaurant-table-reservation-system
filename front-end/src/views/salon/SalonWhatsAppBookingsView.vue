@@ -2,28 +2,28 @@
   <div class="whatsapp-bookings-view">
     <div class="page-header">
       <div>
-        <h1>WhatsApp Bookings</h1>
-        <p class="subtitle">Appointments created through WhatsApp</p>
+        <h1>{{ t("salon.whatsappBookings") }}</h1>
+        <p class="subtitle">{{ t("salon.whatsappBookingsSubtitle") }}</p>
       </div>
       <button class="btn-primary" @click="load" :disabled="loading">
-        {{ loading ? "Refreshing..." : "Refresh" }}
+        {{ loading ? t("salon.refreshing") : t("salon.refresh") }}
       </button>
     </div>
 
     <div class="filters">
       <select v-model="filterStatus" class="filter-select" @change="load">
-        <option value="">All Statuses</option>
-        <option value="pending">Pending</option>
-        <option value="confirmed">Confirmed</option>
-        <option value="in_progress">In Progress</option>
-        <option value="completed">Completed</option>
-        <option value="cancelled">Cancelled</option>
-        <option value="no_show">No Show</option>
+        <option value="">{{ t("salon.allStatuses") }}</option>
+        <option value="pending">{{ t("salon.pending") }}</option>
+        <option value="confirmed">{{ t("salon.confirmed") }}</option>
+        <option value="in_progress">{{ t("salon.inProgress") }}</option>
+        <option value="completed">{{ t("salon.completed") }}</option>
+        <option value="cancelled">{{ t("salon.cancelled") }}</option>
+        <option value="no_show">{{ t("salon.noShow") }}</option>
       </select>
       <input
         v-model="searchQuery"
         type="text"
-        placeholder="Search customer or service..."
+        :placeholder="t('salon.searchCustomerOrService')"
         class="filter-select"
         @input="load"
       />
@@ -77,6 +77,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import appointmentAPI from "@/services/appointmentAPI";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 const loading = ref(false);
 const items = ref([]);

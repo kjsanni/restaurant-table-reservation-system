@@ -2,6 +2,9 @@
 import { ref, onMounted } from "vue";
 import galleryAPI from "@/services/galleryAPI";
 import logger from "@/utils/logger";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -67,23 +70,23 @@ onMounted(loadImages);
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Photo Gallery</h1>
-        <p>Showcase salon work, before/after photos, and portfolio shots</p>
+        <h1>{{ t("salon.gallery") }}</h1>
+        <p>{{ t("salon.gallerySubtitle") }}</p>
       </div>
     </div>
 
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading gallery...</p>
+        <p>{{ t("salon.loadingGallery") }}</p>
       </div>
 
       <div v-else class="stack">
         <div class="settings-card">
-          <h3>Add Image</h3>
+          <h3>{{ t("salon.addImage") }}</h3>
           <div class="grid">
             <label class="full">
-              Image URL
+              {{ t("salon.imageUrl") }}
               <input
                 v-model="form.url"
                 class="field-input"
@@ -91,15 +94,15 @@ onMounted(loadImages);
               />
             </label>
             <label class="full">
-              Caption
+              {{ t("salon.caption") }}
               <input
                 v-model="form.caption"
                 class="field-input"
-                placeholder="Optional caption"
+                :placeholder="t('salon.captionPlaceholder')"
               />
             </label>
             <label>
-              Appointment ID (optional)
+              {{ t("salon.appointmentIdOptional") }}
               <input
                 v-model="form.appointmentId"
                 class="field-input"
