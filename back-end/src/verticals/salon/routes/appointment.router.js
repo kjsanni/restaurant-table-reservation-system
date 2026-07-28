@@ -43,6 +43,12 @@ router
     tryCatchHandler(requirePermission("edit_appointments")),
     tryCatchHandler(appointmentController.deleteAppointment)
   )
+  .post(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("edit_appointments")),
+    tryCatchHandler(appointmentController.refundAppointment)
+  )
   .all(httpMethodError);
 
 router

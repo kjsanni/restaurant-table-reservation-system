@@ -63,6 +63,13 @@
                 <span class="badge" :class="'badge-' + apt.paymentStatus">
                   {{ apt.paymentStatus }}
                 </span>
+                <button
+                  v-if="canRefund(apt)"
+                  class="btn-refund"
+                  @click="refundAppointment(apt)"
+                >
+                  Refund
+                </button>
               </td>
             </tr>
           </tbody>
@@ -108,6 +115,23 @@ const load = async () => {
     items.value = res.data?.data || [];
   } finally {
     loading.value = false;
+  }
+};
+
+const canRefund = (apt) => {
+  return (
+    ["paid", "deposit", "partial"].includes(apt.paymentStatus) &&
+    !apt.refundedAt
+  );
+};
+
+const refundAppointment = async (apt) => {
+  if (!confirm(`Refund appointment #${apt.id}? This cannot be undone.`)) return;
+  try {
+    await appointmentAPI.refundAppointment(apt.id);
+    await load();
+  } catch (e) {
+    alert(e?.response?.data?.message || "Refund failed");
   }
 };
 
@@ -249,5 +273,21 @@ onMounted(() => {
 .badge-partial {
   background: var(--amber-100);
   color: var(--amber-700);
+}
+.btn-refund {
+  margin-left: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-refund:hover {
+  background: var(--rose-50);
+  color: var(--rose-700);
+  border-color: var(--rose-200);
 }
 </style>

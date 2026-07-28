@@ -19,6 +19,9 @@ class AppointmentAPI {
   getStylistsForService(serviceId) {
     return API.get("/salon/appointments/services/" + serviceId + "/stylists");
   }
+  refundAppointment(id) {
+    return API.post("/salon/appointments/" + id + "/refund");
+  }
 }
 
 export default new AppointmentAPI();

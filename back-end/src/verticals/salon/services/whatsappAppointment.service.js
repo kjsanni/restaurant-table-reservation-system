@@ -9,9 +9,22 @@ const customerService = require("../../../services/customerService");
 const messageTemplates = require("../../../services/messageTemplates.service");
 const { withRetry } = require("../../../utils/retry");
 const whatsappService = require("../../../services/whatsapp.service");
+const db = require("../../../db/models");
 
 const SESSION_PREFIX = "whatsapp:salon:session:";
 const SESSION_TTL = 60 * 60 * 24;
+
+const getSalonPaymentConfig = async (tenantId) => {
+  try {
+    const setting = await db.setting.findOne({ where: { key: "salon_payment_config", tenantId } });
+    if (setting && setting.value) {
+      return typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return {};
+};
 
 const getSession = async (phone) => {
   const key = SESSION_PREFIX + phone;
@@ -228,17 +241,35 @@ const handleSalonAppointmentState = async (phone, normalized, rawMessage, sessio
         });
         session.appointmentId = appointment.id;
         await setSession(phone, { ...session, state: "salon_payment" });
-        const amount = (service?.price || 50) * 100;
+
+        const paymentConfig = await getSalonPaymentConfig(tenantId);
+        const servicePrice = service?.price || 50;
+        const depositRequired = paymentConfig?.depositRequired;
+        const depositPercent = paymentConfig?.defaultDepositPercent || 0;
+        const chargeAmount = (depositRequired && depositPercent > 0)
+          ? (servicePrice * depositPercent) / 100
+          : servicePrice;
+
+        const channels = paymentConfig?.enabledChannels && Array.isArray(paymentConfig.enabledChannels)
+          ? paymentConfig.enabledChannels
+          : null;
+
         const payment = await withRetry(
           () =>
             initializeCharge({
               email: customer.email || `wa_${phone}@salon.local`,
-              amount,
+              amount: chargeAmount,
               metadata: { appointmentId: appointment.id, service: service?.name },
+              channels,
             }),
           2,
           1500
         );
+
+        await appointmentDao.update(appointment.id, tenantId, {
+          paymentReference: payment.reference,
+        });
+
         session.paymentReference = payment.reference;
         await sendText(phone, `Booking confirmed! 🎉\nAppointment ID: #${appointment.id}\n\nPay now to secure your slot:\n${payment.authorization_url}\n\nReference: ${payment.reference}`, tenantId);
       } catch (err) {

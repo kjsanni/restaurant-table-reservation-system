@@ -100,6 +100,14 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
       },
+      paymentReference: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      refundedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
     {
       sequelize,

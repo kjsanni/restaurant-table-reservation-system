@@ -153,6 +153,14 @@ const verifyPayment = async (reference) => {
   return response.data.data;
 };
 
+const refundPayment = async (reference, amount = null) => {
+  const client = await buildPlatformClient();
+  const payload = { transaction: reference };
+  if (amount !== null) payload.amount = amount * 100;
+  const response = await client.post("/refund", payload);
+  return response.data.data;
+};
+
 const fetchCustomer = async (customerCode) => {
   const client = await buildPlatformClient();
   const response = await client.get(`/customer/${customerCode}`);
@@ -181,6 +189,7 @@ module.exports = {
   createPlan,
   initializeCharge,
   verifyPayment,
+  refundPayment,
   fetchCustomer,
   buildSplitConfig,
   buildPlatformClient,
