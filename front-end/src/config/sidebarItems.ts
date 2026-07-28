@@ -507,6 +507,15 @@ export const adminNavItems: NavItem[] = [
     platformOnly: true,
   },
   {
+    routeName: "platform-sessions",
+    text: "Sessions",
+    icon: "mdi:desktop-classic",
+    requiresAuth: true,
+    requiresPermission: "manage_tenants",
+    tenantOnly: true,
+    platformOnly: true,
+  },
+  {
     routeName: "platform-analytics",
     text: "Analytics",
     icon: "mdi:chart-box",
@@ -999,3 +1008,10 @@ export const adminNavItems: NavItem[] = [
 export const superAdminNavItems: NavItem[] = adminNavItems.filter(
   (item) => !item.tenantAdminOnly
 );
+
+export const tenantNavItems: NavItem[] = [
+  ...authenticatedNavItems,
+  ...adminNavItems.filter(
+    (item) => item.requiresPermission !== "manage_tenants"
+  ),
+];

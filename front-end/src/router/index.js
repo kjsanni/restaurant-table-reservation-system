@@ -50,171 +50,291 @@ const router = createRouter({
     },
     {
       path: "/reservations",
-      name: "reservations",
-      component: () => import("../views/ReservationsView.vue"),
-      meta: { standalone: true, requiresAuth: true },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "reservations",
+          component: () => import("../views/ReservationsView.vue"),
+          meta: { standalone: true, requiresAuth: true },
+        },
+      ],
     },
     {
       path: "/dashboard",
-      name: "tenant-landing",
-      component: () => import("../views/TenantDashboardView.vue"),
-      meta: { standalone: true, requiresAuth: true },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "tenant-landing",
+          component: () => import("../views/TenantDashboardView.vue"),
+          meta: { standalone: true, requiresAuth: true },
+        },
+      ],
     },
     {
       path: "/new-reservation",
-      name: "new-reservation",
-      component: () => import("../views/NewReservationView.vue"),
-      meta: { standalone: true, requiresAuth: true },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "new-reservation",
+          component: () => import("../views/NewReservationView.vue"),
+          meta: { standalone: true, requiresAuth: true },
+        },
+      ],
     },
     {
       path: "/admin/settings",
-      name: "admin-settings",
-      component: () => import("../views/AdminSettingsView.vue"),
-      meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "admin-settings",
+          component: () => import("../views/AdminSettingsView.vue"),
+          meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
+        },
+      ],
     },
     {
       path: "/admin/settings/whatsapp-ordering",
-      name: "whatsapp-ordering-settings",
-      component: () => import("../views/WhatsAppOrderingSettingsView.vue"),
-      meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "whatsapp-ordering-settings",
+          component: () => import("../views/WhatsAppOrderingSettingsView.vue"),
+          meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
+        },
+      ],
     },
     {
       path: "/admin/settings/whatsapp-preview",
-      name: "whatsapp-chat-preview",
-      component: () => import("../views/WhatsAppChatPreviewView.vue"),
-      meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "whatsapp-chat-preview",
+          component: () => import("../views/WhatsAppChatPreviewView.vue"),
+          meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
+        },
+      ],
     },
     {
       path: "/schedule",
-      name: "schedule",
-      component: () => import("../views/ScheduleView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "manage_schedule",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "schedule",
+          component: () => import("../views/ScheduleView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_schedule",
+          },
+        },
+      ],
     },
     {
       path: "/calendar",
-      name: "calendar",
-      component: () => import("../views/CalendarView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "manage_schedule",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "calendar",
+          component: () => import("../views/CalendarView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_schedule",
+          },
+        },
+      ],
     },
     {
       path: "/floor-plan",
-      name: "floor-plan",
-      component: () => import("../views/FloorPlanView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "manage_tables",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "floor-plan",
+          component: () => import("../views/FloorPlanView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_tables",
+          },
+        },
+      ],
     },
     {
       path: "/reports",
-      name: "reports",
-      component: () => import("../views/ReportView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "view_reservations",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "reports",
+          component: () => import("../views/ReportView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "view_reservations",
+          },
+        },
+      ],
     },
     {
       path: "/heatmap",
-      name: "heatmap",
-      component: () => import("../views/HeatmapView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "view_reservations",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "heatmap",
+          component: () => import("../views/HeatmapView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "view_reservations",
+          },
+        },
+      ],
     },
     {
       path: "/tables/manage",
-      name: "table-management",
-      component: () => import("../views/TableManagementView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "manage_tables",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "table-management",
+          component: () => import("../views/TableManagementView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_tables",
+          },
+        },
+      ],
     },
     {
       path: "/admin/floorplan",
-      name: "floorplan-editor",
-      component: () => import("../views/FloorPlanEditorView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "manage_tables",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "floorplan-editor",
+          component: () => import("../views/FloorPlanEditorView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_tables",
+          },
+        },
+      ],
     },
     {
       path: "/admin/email-templates",
-      name: "email-templates",
-      component: () => import("../views/EmailTemplatesView.vue"),
-      meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "email-templates",
+          component: () => import("../views/EmailTemplatesView.vue"),
+          meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
+        },
+      ],
     },
     {
       path: "/staff/manage",
-      name: "staff-management",
-      component: () => import("../views/StaffManagementView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "manage_staff",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "staff-management",
+          component: () => import("../views/StaffManagementView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_staff",
+          },
+        },
+      ],
     },
     {
       path: "/roles/manage",
-      name: "role-management",
-      component: () => import("../views/RoleManagementView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "manage_roles",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "role-management",
+          component: () => import("../views/RoleManagementView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_roles",
+          },
+        },
+      ],
     },
     {
       path: "/groups/manage",
-      name: "group-management",
-      component: () => import("../views/GroupManagementView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "manage_groups",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "group-management",
+          component: () => import("../views/GroupManagementView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_groups",
+          },
+        },
+      ],
     },
     {
       path: "/waitlist",
-      name: "waitlist",
-      component: () => import("../views/WaitlistView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "manage_tables",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "waitlist",
+          component: () => import("../views/WaitlistView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_tables",
+          },
+        },
+      ],
     },
     {
       path: "/audit-logs",
-      name: "audit-logs",
-      component: () => import("../views/AuditLogView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "view_audit_logs",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "audit-logs",
+          component: () => import("../views/AuditLogView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "view_audit_logs",
+          },
+        },
+      ],
     },
     {
       path: "/search",
-      name: "search",
-      component: () => import("../views/SearchView.vue"),
-      meta: { standalone: true, requiresAuth: true },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "search",
+          component: () => import("../views/SearchView.vue"),
+          meta: { standalone: true, requiresAuth: true },
+        },
+      ],
     },
     {
       path: "/menu",
@@ -224,13 +344,19 @@ const router = createRouter({
     },
     {
       path: "/menu/manage",
-      name: "menu-management",
-      component: () => import("../views/MenuManagementView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "manage_menu",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "menu-management",
+          component: () => import("../views/MenuManagementView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_menu",
+          },
+        },
+      ],
     },
     {
       path: "/checkout",
@@ -258,33 +384,51 @@ const router = createRouter({
     },
     {
       path: "/orders/manage",
-      name: "order-dashboard",
-      component: () => import("../views/OrderDashboardView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "view_orders",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "order-dashboard",
+          component: () => import("../views/OrderDashboardView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "view_orders",
+          },
+        },
+      ],
     },
     {
       path: "/deliveries",
-      name: "delivery-dashboard",
-      component: () => import("../views/DeliveryDashboardView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "view_orders",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "delivery-dashboard",
+          component: () => import("../views/DeliveryDashboardView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "view_orders",
+          },
+        },
+      ],
     },
     {
       path: "/promotions",
-      name: "promotions-management",
-      component: () => import("../views/PromotionsManagementView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "manage_settings",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "promotions-management",
+          component: () => import("../views/PromotionsManagementView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_settings",
+          },
+        },
+      ],
     },
     {
       path: "/about",
@@ -294,23 +438,35 @@ const router = createRouter({
     },
     {
       path: "/payments",
-      name: "payments",
-      component: () => import("../views/PaymentDashboardView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "view_reservations",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "payments",
+          component: () => import("../views/PaymentDashboardView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "view_reservations",
+          },
+        },
+      ],
     },
     {
       path: "/revenue",
-      name: "revenue-report",
-      component: () => import("../views/RevenueReportView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "view_reservations",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "revenue-report",
+          component: () => import("../views/RevenueReportView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "view_reservations",
+          },
+        },
+      ],
     },
     {
       path: "/super-admin/customers/:id",
@@ -324,13 +480,19 @@ const router = createRouter({
     },
     {
       path: "/no-shows",
-      name: "no-shows",
-      component: () => import("../views/NoShowView.vue"),
-      meta: {
-        standalone: true,
-        requiresAuth: true,
-        requiresPermission: "view_reservations",
-      },
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "no-shows",
+          component: () => import("../views/NoShowView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "view_reservations",
+          },
+        },
+      ],
     },
     {
       path: "/legal/:slug",
@@ -508,6 +670,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
         path: "impersonation",
         name: "platform-impersonation",
         component: () => import("../views/admin/ImpersonationView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "sessions",
+        name: "platform-sessions",
+        component: () => import("../views/admin/SessionManagementView.vue"),
         meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
       },
       {
@@ -817,275 +985,443 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
   });
   router.addRoute({
     path: "/onboarding/wizard",
-    name: "tenant-setup-wizard",
-    component: () => import("../views/TenantSetupWizardView.vue"),
-    meta: { standalone: true, requiresAuth: true },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "tenant-setup-wizard",
+        component: () => import("../views/TenantSetupWizardView.vue"),
+        meta: { standalone: true, requiresAuth: true },
+      },
+    ],
   });
   router.addRoute({
     path: "/appointments",
-    name: "appointments",
-    component: () => import("../views/salon/AppointmentsView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "view_appointments",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "appointments",
+        component: () => import("../views/salon/AppointmentsView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "view_appointments",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/stations",
-    name: "stations",
-    component: () => import("../views/salon/StationsView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_stations",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "stations",
+        component: () => import("../views/salon/StationsView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_stations",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/station-map",
-    name: "station-map",
-    component: () => import("../views/salon/StationMapView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "view_appointments",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "station-map",
+        component: () => import("../views/salon/StationMapView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "view_appointments",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/services",
-    name: "salon-services",
-    component: () => import("../views/salon/ServicesView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_services",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-services",
+        component: () => import("../views/salon/ServicesView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_services",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/packages",
-    name: "salon-packages",
-    component: () => import("../views/salon/SalonPackagesView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_services",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-packages",
+        component: () => import("../views/salon/SalonPackagesView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_services",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/gift-cards",
-    name: "salon-gift-cards",
-    component: () => import("../views/salon/SalonGiftCardsView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_settings",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-gift-cards",
+        component: () => import("../views/salon/SalonGiftCardsView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_settings",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/referrals",
-    name: "salon-referrals",
-    component: () => import("../views/salon/SalonReferralsView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_settings",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-referrals",
+        component: () => import("../views/salon/SalonReferralsView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_settings",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/locations",
-    name: "salon-locations",
-    component: () => import("../views/salon/SalonLocationsView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_tenants",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-locations",
+        component: () => import("../views/salon/SalonLocationsView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_tenants",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/inventory",
-    name: "salon-inventory",
-    component: () => import("../views/salon/SalonInventoryView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_settings",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-inventory",
+        component: () => import("../views/salon/SalonInventoryView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_settings",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/expenses",
-    name: "salon-expenses",
-    component: () => import("../views/salon/SalonExpensesView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_settings",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-expenses",
+        component: () => import("../views/salon/SalonExpensesView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_settings",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/pricing",
-    name: "salon-pricing",
-    component: () => import("../views/salon/SalonPricingRulesView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_settings",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-pricing",
+        component: () => import("../views/salon/SalonPricingRulesView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_settings",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/settings",
-    name: "salon-settings",
-    component: () => import("../views/salon/SalonSettingsView.vue"),
-    meta: { requiresAuth: true, requiresVertical: "salon" },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-settings",
+        component: () => import("../views/salon/SalonSettingsView.vue"),
+        meta: { requiresAuth: true, requiresVertical: "salon" },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/walkins",
-    name: "salon-walkins",
-    component: () => import("../views/salon/SalonWalkInQueueView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "view_appointments",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-walkins",
+        component: () => import("../views/salon/SalonWalkInQueueView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "view_appointments",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/calendar",
-    name: "salon-calendar",
-    component: () => import("../views/salon/SalonCalendarView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "view_appointments",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-calendar",
+        component: () => import("../views/salon/SalonCalendarView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "view_appointments",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/shifts",
-    name: "salon-shifts",
-    component: () => import("../views/salon/SalonStaffShiftsView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_schedule",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-shifts",
+        component: () => import("../views/salon/SalonStaffShiftsView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_schedule",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/schedule",
-    name: "salon-schedule",
-    component: () => import("../views/ScheduleView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_schedule",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-schedule",
+        component: () => import("../views/ScheduleView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_schedule",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/holidays",
-    name: "salon-holidays",
-    component: () => import("../views/salon/SalonHolidaysView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_schedule",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-holidays",
+        component: () => import("../views/salon/SalonHolidaysView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_schedule",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/reports",
-    name: "salon-reports",
-    component: () => import("../views/salon/SalonReportsView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "view_appointments",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-reports",
+        component: () => import("../views/salon/SalonReportsView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "view_appointments",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/recurring",
-    name: "salon-recurring",
-    component: () => import("../views/salon/SalonRecurringView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "view_appointments",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-recurring",
+        component: () => import("../views/salon/SalonRecurringView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "view_appointments",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/clients",
-    name: "salon-clients",
-    component: () => import("../views/salon/SalonClientsView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "view_appointments",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-clients",
+        component: () => import("../views/salon/SalonClientsView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "view_appointments",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/marketing",
-    name: "salon-marketing",
-    component: () => import("../views/salon/MarketingCampaignsView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_settings",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-marketing",
+        component: () => import("../views/salon/MarketingCampaignsView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_settings",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/gallery",
-    name: "salon-gallery",
-    component: () => import("../views/salon/SalonGalleryView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_services",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-gallery",
+        component: () => import("../views/salon/SalonGalleryView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_services",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/unified-schedule",
-    name: "salon-unified-schedule",
-    component: () => import("../views/salon/SalonUnifiedScheduleView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_schedule",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-unified-schedule",
+        component: () => import("../views/salon/SalonUnifiedScheduleView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_schedule",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/whatsapp-bookings",
-    name: "salon-whatsapp-bookings",
-    component: () => import("../views/salon/SalonWhatsAppBookingsView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "view_appointments",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-whatsapp-bookings",
+        component: () => import("../views/salon/SalonWhatsAppBookingsView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "view_appointments",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/whatsapp-payments",
-    name: "salon-whatsapp-payments",
-    component: () => import("../views/salon/SalonWhatsAPPaymentsView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "view_appointments",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-whatsapp-payments",
+        component: () => import("../views/salon/SalonWhatsAPPaymentsView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "view_appointments",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/dashboard",
-    name: "salon-dashboard",
-    component: () => import("../views/salon/SalonDashboardView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "view_appointments",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-dashboard",
+        component: () => import("../views/salon/SalonDashboardView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "view_appointments",
+        },
+      },
+    ],
   });
   router.addRoute({
     path: "/salon/staff",
-    name: "salon-staff",
-    component: () => import("../views/salon/SalonStaffView.vue"),
-    meta: {
-      requiresAuth: true,
-      requiresVertical: "salon",
-      requiresPermission: "manage_staff",
-    },
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-staff",
+        component: () => import("../views/salon/SalonStaffView.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "manage_staff",
+        },
+      },
+    ],
   });
 }
 

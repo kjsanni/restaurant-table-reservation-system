@@ -499,6 +499,18 @@ const listImpersonation = () => {
   return API.get("/admin/impersonation");
 };
 
+const listSessions = () => {
+  return API.get("/admin/sessions");
+};
+
+const revokeSession = (id) => {
+  return API.delete(`/admin/sessions/${id}`);
+};
+
+const revokeAllSessions = () => {
+  return API.post("/admin/sessions/revoke-all");
+};
+
 const getTenantGrowth = () => {
   return API.get("/admin/analytics/growth");
 };
@@ -906,6 +918,9 @@ export default {
   startImpersonation,
   endImpersonation,
   listImpersonation,
+  listSessions,
+  revokeSession,
+  revokeAllSessions,
   getTenantGrowth,
   getChurnAnalysis,
   getLtvCac,
