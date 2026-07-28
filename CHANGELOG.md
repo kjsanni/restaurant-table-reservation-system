@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [Unreleased] — 2026-07-28
+
+### Changed
+- **Frontend layout refactor** — Removed shared `App.vue` layout; each portal now owns its own layout (`SuperAdminLayout.vue`, `TenantLayout.vue`, customer portal standalone sidebar)
+- **Super-admin sidebar contrast fix** — White text now renders correctly on dark `brand-900` sidebar background
+- **Super-admin sidebar collapse binding** — Collapse/expand toggle now correctly applies the `minimized` class
+- **DebugToolsView template fix** — Fixed undefined `venueData` template ref causing Vue warnings
+
+### Security
+- **Mass-assignment hardening** — Added explicit field allowlists to `platformReferral`, `marketplace`, `caseStudy` (update), and `encryptionKey` (create) controllers
+- **SSRF protection** — `sync.service.js` `postToPos` validates POS API URLs against private/loopback/link-local hosts
+- **Error message hardening** — `monitoring.controller.js` no longer leaks `err.message` in 500 responses
+- **Route guard fix** — Added missing `requirePermission("manage_tenants")` to `platformAudit.router.js` `/recent`
+- **Dependency patch** — Merged postcss `8.5.16 → 8.5.23` security fix (source-map path-traversal)
+
+### Added
+- **Super-admin: password policy settings UI** — Platform settings page supports password policy configuration
+- **Super-admin: session management view** — Admins can view and manage active sessions
+- **Super-admin: incident response actions** — Lock tenant, reset tokens, force logout from incident detail view
+- **Super-admin: TOTP enforcement** — Mandatory TOTP for super-admin logins when `totpEnabled` is set
+- **TOTP fields on User model** — Added `totpSecret`, `totpEnabled`, `totpConfirmed` columns
+
+---
+
+## [1.1.0] — 2026-07-28
+
+### Added
+- **Super-admin: tenant soft-delete** — `DELETE /api/v1/admin/tenants/:id` sets status=cancelled with slug confirmation and audit logging
+- **Super-admin: tenant GDPR export** — `GET /api/v1/admin/tenants/:id/export` returns tenant data as JSON download
+- **Super-admin: Paystack key rotation** — `POST /api/v1/admin/paystack/keys/rotate` validates new secret key, saves config, and logs audit event; UI in `PlatformSettingsCard.vue`
+
+---
+
 ## [Unreleased] — 2026-07-27
 
 ### Added
