@@ -2,6 +2,9 @@
 import { ref, onMounted } from "vue";
 import clientSegmentationAPI from "@/services/clientSegmentationAPI";
 import logger from "@/utils/logger";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 const loading = ref(true);
 const segmentation = ref<any[]>([]);
@@ -25,15 +28,15 @@ onMounted(loadSegmentation);
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Client Segmentation</h1>
-        <p>VIP tiers, visit counts, and no-show analytics</p>
+        <h1>{{ t("salon.clientSegmentation") }}</h1>
+        <p>{{ t("salon.vipTiersAnalytics") }}</p>
       </div>
     </div>
 
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading client data...</p>
+        <p>{{ t("salon.loadingClientData") }}</p>
       </div>
 
       <div v-else class="stack">
@@ -46,20 +49,21 @@ onMounted(loadSegmentation);
             <span class="summary-label">{{ item.tier.toUpperCase() }}</span>
             <span class="summary-value">{{ item.count }}</span>
             <span class="summary-hint"
-              >Total spent: {{ item.totalSpent.toLocaleString() }}</span
+              >{{ t("salon.totalSpent") }}:
+              {{ item.totalSpent.toLocaleString() }}</span
             >
           </div>
           <div v-if="!segmentation.length" class="summary-card empty-card">
-            <span class="summary-label">No data</span>
+            <span class="summary-label">{{ t("salon.noData") }}</span>
           </div>
         </div>
 
         <div class="settings-card">
-          <h3>Tier Thresholds</h3>
+          <h3>{{ t("salon.tierThresholds") }}</h3>
           <p class="hint">
-            Bronze → Silver: 5 visits or GHS 500 spent.<br />
-            Silver → Gold: 10 visits or GHS 1,000 spent.<br />
-            Gold → Platinum: 20 visits or GHS 2,000 spent.
+            {{ t("salon.bronzeToSilver") }}<br />
+            {{ t("salon.silverToGold") }}<br />
+            {{ t("salon.goldToPlatinum") }}
           </p>
         </div>
       </div>
