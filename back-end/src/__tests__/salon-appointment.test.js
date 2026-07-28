@@ -163,12 +163,12 @@ describe("appointment.controller", () => {
     appointmentDao.update.mockResolvedValue({ id: 1, paymentStatus: "unpaid" });
 
     var ref = makeRes();
-    var req = { tenant: { id: 1 }, params: { id: 1 }, app: { get: () => null } };
+    var req = { tenant: { id: 1, locale: "en" }, params: { id: 1 }, app: { get: () => null } };
 
     await appointmentController.refundAppointment(req, ref.res);
 
     const { refundPayment } = require("../tenant-platform/services/paystack.service");
     expect(refundPayment).toHaveBeenCalledWith("ref-123");
-    ref.expectJson({ success: true, data: { id: 1, paymentStatus: "unpaid" } });
+    ref.expectJson({ success: true, message: "Refund processed successfully for appointment #1" });
   });
 });

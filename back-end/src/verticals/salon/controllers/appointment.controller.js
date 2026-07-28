@@ -3,6 +3,7 @@ const salonModels = require("../models");
 const appointmentDao = require("../DAOs/appointment.dao");
 const staffServiceSkillDao = require("../DAOs/staffServiceSkill.dao");
 const { logAction } = require("../../../middleware/auditLog");
+const { localizedResponse, localizedError } = require("../../../utils/localizedResponse");
 const { enqueueSalonAppointmentReminders, sendSalonConfirmation, sendSalonCancellation } = require("../../../services/notification.service");
 
 const validateAppointment = (data) => {
@@ -165,13 +166,13 @@ const appointmentController = {
       const tenantId = req.tenant?.id;
       const appointment = await appointmentDao.findById(req.params.id, tenantId);
       if (!appointment) {
-        return res.status(404).json({ success: false, message: "Appointment not found" });
+        return localizedError(req, res, 404, "salon.appointmentNotFound");
       }
       if (appointment.paymentStatus !== "paid" && appointment.paymentStatus !== "deposit" && appointment.paymentStatus !== "partial") {
-        return res.status(400).json({ success: false, message: "Only paid or partially paid appointments can be refunded" });
+        return localizedError(req, res, 400, "salon.onlyPaidAppointmentsCanBeRefunded");
       }
       if (appointment.refundedAt) {
-        return res.status(400).json({ success: false, message: "Appointment has already been refunded" });
+        return localizedError(req, res, 400, "salon.appointmentAlreadyRefunded");
       }
 
       let refundResult = null;
@@ -180,7 +181,7 @@ const appointmentController = {
           const { refundPayment } = require("../../../tenant-platform/services/paystack.service");
           refundResult = await refundPayment(appointment.paymentReference);
         } catch (refundErr) {
-          return res.status(502).json({ success: false, message: `Paystack refund failed: ${refundErr.message}` });
+          return localizedError(req, res, 502, "salon.paystackRefundFailed", { error: refundErr.message });
         }
       }
 
@@ -190,7 +191,7 @@ const appointmentController = {
         refundedAt: new Date(),
       });
       if (!updated) {
-        return res.status(404).json({ success: false, message: "Appointment not found" });
+        return localizedError(req, res, 404, "salon.appointmentNotFound");
       }
 
       await logAction(req, "appointment_refunded", {
@@ -201,9 +202,9 @@ const appointmentController = {
       });
 
       emitSalonAppointmentEvent(req, "salon-appointment-refunded", updated);
-      res.json({ success: true, data: updated });
+      return localizedResponse(req, res, 200, "salon.refundSuccess", { id: updated.id });
     } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      return localizedError(req, res, 500, "common.internalError");
     }
   },
 

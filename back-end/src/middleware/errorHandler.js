@@ -1,8 +1,11 @@
 const getErrorMessagesByColumn = require("../utils/getErrorMessages");
+const { t, getLocale } = require("../locales");
 
 const isClientError = (status) => status >= 400 && status < 500;
 
 const errorHandler = (err, req, res, next) => {
+  const locale = getLocale(req);
+
   if (err.name === "SequelizeValidationError") {
     return res.status(400).json({
       success: false,
@@ -13,7 +16,7 @@ const errorHandler = (err, req, res, next) => {
   if (err.name === "SequelizeUniqueConstraintError") {
     return res.status(409).json({
       success: false,
-      message: "A record with this value already exists.",
+      message: t("common.recordExists", locale),
       errors: getErrorMessagesByColumn(err.errors),
     });
   }
@@ -21,13 +24,11 @@ const errorHandler = (err, req, res, next) => {
   if (err.name === "SequelizeForeignKeyConstraintError") {
     return res.status(400).json({
       success: false,
-      message: "Referenced record not found.",
+      message: t("common.referencedRecordNotFound", locale),
     });
   }
 
   const status = err?.status || 500;
-  // Never leak internal error details (SQL, stack) on server errors.
-  // Log the full error server-side; return a safe message to the client.
   if (!isClientError(status)) {
     console.error("Unhandled server error:", {
       method: req.method,
@@ -37,13 +38,13 @@ const errorHandler = (err, req, res, next) => {
     });
     return res.status(status).json({
       success: false,
-      message: "Something went wrong. Please try again later.",
+      message: t("common.internalError", locale),
     });
   }
 
   return res.status(status).json({
     success: false,
-    message: err?.message || "Something went wrong. Please try again later.",
+    message: t(err?.message, locale) || err?.message || t("common.internalError", locale),
   });
 };
 

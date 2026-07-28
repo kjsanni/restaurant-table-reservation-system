@@ -42,8 +42,9 @@ describe("commission.controller", () => {
 
     var ref = makeRes();
     var req = {
-      tenant: { id: 1 },
+      tenant: { id: 1, locale: "en" },
       body: { userId: 5, amount: 50, rateType: "percentage", rateValue: 10 },
+      app: { get: () => null },
     };
 
     await commissionController.createCommission(req, ref.res);
@@ -51,7 +52,7 @@ describe("commission.controller", () => {
     expect(ref.res.status).toHaveBeenCalledWith(201);
     ref.expectJson({
       success: true,
-      data: { id: 1, userId: 5, amount: 50 },
+      message: "Commission created with ID #1",
     });
   });
 
@@ -59,7 +60,7 @@ describe("commission.controller", () => {
     require("../verticals/salon/DAOs/commission.dao").findById.mockResolvedValue(null);
 
     var ref = makeRes();
-    var req = { tenant: { id: 1 }, params: { id: 999 } };
+    var req = { tenant: { id: 1, locale: "en" }, params: { id: 999 } };
 
     await commissionController.getCommission(req, ref.res);
 
@@ -71,7 +72,7 @@ describe("commission.controller", () => {
     require("../verticals/salon/DAOs/commission.dao").markAsPaid.mockResolvedValue(null);
 
     var ref = makeRes();
-    var req = { tenant: { id: 1 }, params: { id: 999 } };
+    var req = { tenant: { id: 1, locale: "en" }, params: { id: 999 } };
 
     await commissionController.markCommissionPaid(req, ref.res);
 
@@ -87,26 +88,21 @@ describe("commission.controller", () => {
     });
 
     var ref = makeRes();
-    var req = { tenant: { id: 1 }, params: { id: 1 } };
+    var req = { tenant: { id: 1, locale: "en" }, params: { id: 1 } };
 
     await commissionController.markCommissionPaid(req, ref.res);
 
-    expect(ref.res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: true,
-        data: expect.objectContaining({
-          id: 1,
-          status: "paid",
-        }),
-      })
-    );
+    ref.expectJson({
+      success: true,
+      message: "Commission marked as paid with ID #1",
+    });
   });
 
   it("deleteCommission returns 404 when commission missing", async () => {
     require("../verticals/salon/DAOs/commission.dao").deleteCommission.mockResolvedValue(false);
 
     var ref = makeRes();
-    var req = { tenant: { id: 1 }, params: { id: 999 } };
+    var req = { tenant: { id: 1, locale: "en" }, params: { id: 999 } };
 
     await commissionController.deleteCommission(req, ref.res);
 

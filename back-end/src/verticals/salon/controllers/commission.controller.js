@@ -1,6 +1,7 @@
 "use strict";
 const commissionDao = require("../DAOs/commission.dao");
 const { logAction } = require("../../../middleware/auditLog");
+const { localizedResponse, localizedError } = require("../../../utils/localizedResponse");
 
 const validateCommission = (data) => {
   const errors = [];
@@ -49,7 +50,7 @@ const commissionController = {
       const tenantId = req.tenant?.id;
       const commission = await commissionDao.findById(req.params.id, tenantId);
       if (!commission) {
-        return res.status(404).json({ success: false, message: "Commission not found" });
+        return localizedError(req, res, 404, "salon.commissionNotFound");
       }
       res.json({ success: true, data: commission });
     } catch (error) {
@@ -74,7 +75,7 @@ const commissionController = {
       });
 
       emitSalonCommissionEvent(req, "salon-commission-created", commission);
-      res.status(201).json({ success: true, data: commission });
+      return localizedResponse(req, res, 201, "salon.commissionCreated", { id: commission.id });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -96,7 +97,7 @@ const commissionController = {
       }
       const commission = await commissionDao.updateCommission(req.params.id, tenantId, updates);
       if (!commission) {
-        return res.status(404).json({ success: false, message: "Commission not found" });
+        return localizedError(req, res, 404, "salon.commissionNotFound");
       }
 
       await logAction(req, "commission_updated", {
@@ -116,13 +117,13 @@ const commissionController = {
       const tenantId = req.tenant?.id;
       const deleted = await commissionDao.deleteCommission(req.params.id, tenantId);
       if (!deleted) {
-        return res.status(404).json({ success: false, message: "Commission not found" });
+        return localizedError(req, res, 404, "salon.commissionNotFound");
       }
       await logAction(req, "commission_deleted", {
         commissionId: req.params.id,
       });
       emitSalonCommissionEvent(req, "salon-commission-deleted", { id: req.params.id });
-      res.json({ success: true, message: "Commission deleted" });
+      return localizedResponse(req, res, 200, "salon.commissionDeleted");
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -133,7 +134,7 @@ const commissionController = {
       const tenantId = req.tenant?.id;
       const commission = await commissionDao.markAsPaid(req.params.id, tenantId);
       if (!commission) {
-        return res.status(404).json({ success: false, message: "Commission not found or already paid" });
+        return localizedError(req, res, 404, "salon.commissionNotFoundOrAlreadyPaid");
       }
       await logAction(req, "commission_paid", {
         commissionId: commission.id,
@@ -141,7 +142,7 @@ const commissionController = {
         amount: commission.amount,
       });
       emitSalonCommissionEvent(req, "salon-commission-paid", commission);
-      res.json({ success: true, data: commission });
+      return localizedResponse(req, res, 200, "salon.commissionMarkedPaid", { id: commission.id });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
