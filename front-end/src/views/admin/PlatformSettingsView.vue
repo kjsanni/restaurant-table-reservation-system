@@ -28,12 +28,60 @@
           <div v-for="item in items" :key="item.key" class="setting-row">
             <div class="setting-info">
               <span class="setting-key">{{ formatKey(item.key) }}</span>
-              <span class="setting-value">{{ formatValue(item.value) }}</span>
+              <span v-if="editingKey !== item.key" class="setting-value">{{
+                formatValue(item.value)
+              }}</span>
+              <div v-else class="setting-edit">
+                <input
+                  v-if="isBooleanSetting(item.key)"
+                  v-model="editValue"
+                  type="checkbox"
+                  class="toggle"
+                />
+                <input
+                  v-else
+                  v-model="editValue"
+                  type="text"
+                  class="filter-select"
+                />
+              </div>
             </div>
-            <div class="setting-meta">
+            <div class="setting-actions">
               <span v-if="item.updatedAt" class="setting-time">
-                Updated {{ formatDate(item.updatedAt) }}
+                {{ formatDate(item.updatedAt) }}
               </span>
+              <template v-if="isInlineEditable(item.key)">
+                <template v-if="editingKey === item.key">
+                  <button
+                    class="btn-xs btn-primary"
+                    :disabled="saving"
+                    @click="saveSetting(item.key)"
+                  >
+                    {{ saving ? "Saving..." : "Save" }}
+                  </button>
+                  <button
+                    class="btn-xs btn-secondary"
+                    :disabled="saving"
+                    @click="cancelEdit"
+                  >
+                    Cancel
+                  </button>
+                </template>
+                <button
+                  v-else
+                  class="btn-xs btn-secondary"
+                  @click="startEdit(item.key, item.value)"
+                >
+                  Edit
+                </button>
+              </template>
+              <a
+                v-else
+                :href="getConfigureLink(item.key)"
+                class="btn-xs btn-secondary"
+              >
+                Configure
+              </a>
             </div>
           </div>
         </div>
@@ -45,10 +93,15 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const domains = ref({});
 const loading = ref(false);
+const saving = ref(false);
 const error = ref(null);
+const editingKey = ref(null);
+const editValue = ref(null);
 
 const DOMAIN_LABELS = {
   security: "Security Posture",
@@ -59,6 +112,32 @@ const DOMAIN_LABELS = {
   integrations: "Integrations",
   branding: "Branding & White-label",
   other: "Other",
+};
+
+const INLINE_EDITABLE = new Set([
+  "maintenance_mode",
+  "tenant_mode_enabled",
+  "currency_locale",
+]);
+
+const CONFIGURE_LINKS = {
+  password_policy: "/super-admin/security/password-policy",
+  maintenance_mode: "/admin/settings",
+  feature_flags: "/super-admin/feature-flags",
+  paystack_config: "/super-admin/paystack",
+  data_retention_policy: "/super-admin/data-retention/policies",
+  legal_document_version: "/super-admin/legal-documents",
+  notification_channels: "/super-admin/notifications/templates",
+  salon_feature_flags: "/super-admin/vertical-templates",
+};
+
+const isInlineEditable = (key) => INLINE_EDITABLE.has(key);
+
+const isBooleanSetting = (key) => {
+  const setting = Object.values(domains.value)
+    .flat()
+    .find((s) => s.key === key);
+  return typeof setting?.value === "boolean";
 };
 
 const loadSettings = async () => {
@@ -72,6 +151,34 @@ const loadSettings = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const startEdit = (key, value) => {
+  editingKey.value = key;
+  editValue.value = isBooleanSetting(key) ? Boolean(value) : (value ?? "");
+};
+
+const cancelEdit = () => {
+  editingKey.value = null;
+  editValue.value = null;
+};
+
+const saveSetting = async (key) => {
+  saving.value = true;
+  try {
+    await adminAPI.updatePlatformSetting(key, editValue.value);
+    await loadSettings();
+    editingKey.value = null;
+    editValue.value = null;
+  } catch (e) {
+    error.value = "Failed to save setting.";
+  } finally {
+    saving.value = false;
+  }
+};
+
+const getConfigureLink = (key) => {
+  return CONFIGURE_LINKS[key] || "/super-admin/overview";
 };
 
 const formatDomain = (domain) => {
@@ -201,6 +308,7 @@ onMounted(() => {
   flex-direction: column;
   gap: var(--space-0-5);
   min-width: 0;
+  flex: 1;
 }
 .setting-key {
   font-size: var(--text-sm);
@@ -213,11 +321,16 @@ onMounted(() => {
   color: var(--ink-muted);
   word-break: break-word;
 }
-.setting-meta {
+.setting-edit {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.setting-actions {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: var(--space-0-5);
+  gap: var(--space-1);
   flex-shrink: 0;
 }
 .setting-time {
@@ -225,17 +338,46 @@ onMounted(() => {
   color: var(--ink-muted);
   white-space: nowrap;
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
+.filter-select {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+.toggle {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--brand-700);
+}
+.btn-xs {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
   border: none;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-primary {
   background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
   color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
 }
 .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+.btn-secondary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
