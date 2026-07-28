@@ -1404,6 +1404,22 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     ],
   });
   router.addRoute({
+    path: "/salon/commissions",
+    component: () => import("../layouts/TenantLayout.vue"),
+    children: [
+      {
+        path: "",
+        name: "salon-commissions",
+        component: () => import("../layouts/TenantLayout.vue"),
+        meta: {
+          requiresAuth: true,
+          requiresVertical: "salon",
+          requiresPermission: "view_commissions",
+        },
+      },
+    ],
+  });
+  router.addRoute({
     path: "/salon/dashboard",
     component: () => import("../layouts/TenantLayout.vue"),
     children: [

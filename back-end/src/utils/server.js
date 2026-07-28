@@ -109,6 +109,7 @@ let dsarRequestRoutes = null;
   let salonInventoryRoutes = null;
   let salonExpensesRoutes = null;
   let salonPricingRulesRoutes = null;
+  let salonCommissionRoutes = null;
   let apiLatencyRoutes = null;
   let cacheStatsRoutes = null;
   let verticalTemplateRoutes = null;
@@ -223,6 +224,7 @@ if (TENANT_MODE) {
   salonInventoryRoutes = require("../verticals/salon/routes/inventoryItem.router");
   salonExpensesRoutes = require("../verticals/salon/routes/expense.router");
   salonPricingRulesRoutes = require("../verticals/salon/routes/pricingRule.router");
+  salonCommissionRoutes = require("../verticals/salon/routes/commission.router");
   salonCustomerPortalRoutes = require("../routes/salon-customer-portal.router");
   salonReportsRoutes = require("../routes/salon-reports.router");
   salonRecurringAppointmentRoutes = require("../verticals/salon/routes/recurring-appointment.router");
@@ -446,6 +448,7 @@ const createServer = () => {
     app.use("/api/v1/salon/inventory", logAction, validateCsrfToken, salonInventoryRoutes);
     app.use("/api/v1/salon/expenses", logAction, validateCsrfToken, salonExpensesRoutes);
     app.use("/api/v1/salon/pricing", logAction, validateCsrfToken, salonPricingRulesRoutes);
+    app.use("/api/v1/salon/commissions", logAction, validateCsrfToken, salonCommissionRoutes);
     app.use("/api/v1/salon/customer-portal", logAction, validateCsrfToken, salonCustomerPortalRoutes);
     app.use("/api/v1/salon/reports", logAction, validateCsrfToken, salonReportsRoutes);
     app.use("/api/v1/salon/recurring-appointments", logAction, validateCsrfToken, salonRecurringAppointmentRoutes);

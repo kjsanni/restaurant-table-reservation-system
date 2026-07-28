@@ -293,6 +293,13 @@ export const authenticatedNavItems: NavItem[] = [
     requiresVertical: "salon",
   },
   {
+    routeName: "salon-commissions",
+    text: "Commissions",
+    icon: "mdi:cash-multiple",
+    requiresAuth: true,
+    requiresVertical: "salon",
+  },
+  {
     routeName: "salon-marketing",
     text: "Marketing",
     icon: "mdi:bullhorn",
