@@ -3,6 +3,9 @@ import { ref, onMounted, onUnmounted } from "vue";
 import stationAPI from "@/services/stationAPI";
 import logger from "@/utils/logger";
 import { io, Socket } from "socket.io-client";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 interface Station {
   id: number;
@@ -70,7 +73,7 @@ const submitForm = async () => {
 };
 
 const deleteStation = async (id: number) => {
-  if (!confirm("Delete this station?")) return;
+  if (!confirm(t("salon.confirmDeleteStation"))) return;
   try {
     await stationAPI.deleteStation(id);
     stations.value = stations.value.filter((s) => s.id !== id);
@@ -97,8 +100,8 @@ onUnmounted(() => {
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Stations</h1>
-        <p>Manage salon stations and zones</p>
+        <h1>{{ t("salon.stations") }}</h1>
+        <p>{{ t("salon.manageStationsAndZones") }}</p>
       </div>
       <div class="topbar-right">
         <button
@@ -108,7 +111,7 @@ onUnmounted(() => {
             resetForm();
           "
         >
-          + Add Station
+          {{ t("salon.addStation") }}
         </button>
       </div>
     </div>
@@ -116,7 +119,7 @@ onUnmounted(() => {
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading stations...</p>
+        <p>{{ t("salon.loadingStations") }}</p>
       </div>
 
       <div v-else class="stations-grid">
@@ -130,9 +133,11 @@ onUnmounted(() => {
               }}</span>
             </div>
             <div class="station-actions">
-              <button class="btn-sm" @click="editStation(station)">Edit</button>
+              <button class="btn-sm" @click="editStation(station)">
+                {{ t("common.edit") }}
+              </button>
               <button class="btn-danger-sm" @click="deleteStation(station.id)">
-                Delete
+                {{ t("common.delete") }}
               </button>
             </div>
           </div>
@@ -143,7 +148,7 @@ onUnmounted(() => {
                 station.isBlocked ? 'blocked' : 'active',
               ]"
             >
-              {{ station.isBlocked ? "Blocked" : "Active" }}
+              {{ station.isBlocked ? t("salon.blocked") : t("salon.active") }}
             </span>
             <span
               :class="[
@@ -151,7 +156,7 @@ onUnmounted(() => {
                 station.isOccupied ? 'occupied' : 'free',
               ]"
             >
-              {{ station.isOccupied ? "Occupied" : "Free" }}
+              {{ station.isOccupied ? t("salon.occupied") : t("salon.free") }}
             </span>
           </div>
           <p v-if="station.maintenanceNotes" class="station-notes">
@@ -159,19 +164,24 @@ onUnmounted(() => {
           </p>
         </div>
         <div v-if="!stations.length" class="empty-state">
-          No stations found.
+          {{ t("salon.noStations") }}
         </div>
       </div>
 
       <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
         <div class="modal">
-          <h2>{{ editingId ? "Edit Station" : "New Station" }}</h2>
+          <h2>
+            {{ editingId ? t("salon.editStation") : t("salon.newStation") }}
+          </h2>
           <div class="form-group">
-            <label>Name</label>
-            <input v-model="form.name" placeholder="e.g. Chair 1" />
+            <label>{{ t("salon.name") }}</label>
+            <input
+              v-model="form.name"
+              :placeholder="t('salon.stationNamePlaceholder')"
+            />
           </div>
           <div class="form-group">
-            <label>Type</label>
+            <label>{{ t("salon.type") }}</label>
             <select v-model="form.type">
               <option v-for="t in typeOptions" :key="t" :value="t">
                 {{ t }}
@@ -179,11 +189,14 @@ onUnmounted(() => {
             </select>
           </div>
           <div class="form-group">
-            <label>Zone (optional)</label>
-            <input v-model="form.zone" placeholder="e.g. Main Floor" />
+            <label>{{ t("salon.zone") }} ({{ t("salon.optional") }})</label>
+            <input
+              v-model="form.zone"
+              :placeholder="t('salon.zonePlaceholder')"
+            />
           </div>
           <div class="form-group">
-            <label>Maintenance Notes</label>
+            <label>{{ t("salon.maintenanceNotes") }}</label>
             <textarea
               v-model="form.maintenanceNotes"
               rows="3"
