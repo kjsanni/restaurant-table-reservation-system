@@ -25,8 +25,11 @@ Single-tenant by default; multi-tenant platform code lives under `back-end/src/t
   - Super-admin portal: `front-end/vite.config.super-admin.js` → port `8080`
   - Tenant portal: `front-end/vite.config.tenant.js` → port `8081`
   - Customer portal: `front-end/vite.config.customer.js` → port `8082`
-  All three load the same `front-end/src/main.ts` Vue app; tenant routes are injected at runtime when `VITE_TENANT_MODE=enabled`.
-- **Router**: `front-end/src/router/index.js` — standalone routes (landing, login, register, customer portal) plus conditionally added admin/tenant/salon routes.
+  All three load the same `front-end/src/main.ts` Vue app. `App.vue` is now a thin error-boundary wrapper; each portal uses its own layout:
+  - Super-admin: `SuperAdminLayout.vue` (`.sa-sidebar`)
+  - Tenant: `TenantLayout.vue` (`.tl-sidebar`)
+  - Customer/standalone: inline `standalone-sidebar` or `CustomerLandingView.vue`
+- **Router**: `front-end/src/router/index.js` — standalone routes (landing, login, register, customer portal) plus conditionally added admin/tenant/salon routes. Super-admin routes are nested under `/super-admin` with `SuperAdminLayout`; tenant routes under `/admin` with `TenantLayout`. Customer portal routes use `standalone: true`.
 - **Auth store**: `front-end/src/stores/auth.ts` — login, logout, getMe, settings, tenant mode, capabilities, refresh token, locale. `logout()` resets user, entryPoint, and currentTenant. `fetchTenantMode()` reuses `fetchSettings()`.
 - **API interceptor**: `front-end/src/services/API.js` — queues concurrent 401s so only one refresh-token request is in flight at a time; unauthenticated `/auth/locale` requests are no longer fired from `App.vue` to avoid 401 noise.
 - **Design system**: `front-end/src/assets/base.css` and `front-end/src/assets/design-system.css` define CSS custom properties for brand palette (warm browns + amber accent), typography (Fraunces + Public Sans), spacing, radius, shadows, and Vuestic overrides. JS mirror tokens in `front-end/src/theme/colors.js`. Tenant branding white-labels via CSS variables (`useTenantBranding.js`).
@@ -95,6 +98,8 @@ npm run test:e2e                      # Playwright E2E
 - **Backend**: `cd back-end && npm test` — 447 Jest tests; must stay green (catches cross-tenant leaks and RBAC regressions).
 - **Frontend**: `cd front-end && npm run lint && npm run build && npm run test:unit` — lint, build, and 22 unit tests must pass.
 - **Migrations**: `npm run migrate:up` — replays from earliest unapplied migration; keep `up()` idempotent.
+- **Dependency advisories**: Dependabot PRs are merged after review; recent example: postcss 8.5.23 security patch (source-map path-traversal fix).
+- **Versioning**: `VERSION` file at repo root tracks current release; git tags mark release boundaries (e.g., `v1.1.0`).
 
 ## Skills
 
