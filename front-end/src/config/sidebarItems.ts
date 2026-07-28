@@ -11,6 +11,7 @@ export interface NavItem {
   platformOnly?: boolean;
   tenantAdminOnly?: boolean;
   section?: string;
+  requiresId?: boolean;
 }
 
 export const guestNavItems: NavItem[] = [
@@ -343,6 +344,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    requiresId: true,
   },
   {
     routeName: "tenant-api-keys",
@@ -352,6 +354,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    requiresId: true,
   },
   {
     routeName: "tenant-branding",
@@ -361,6 +364,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    requiresId: true,
   },
   {
     routeName: "tenant-grace-period",
@@ -370,6 +374,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    requiresId: true,
   },
   {
     routeName: "tenant-notes",
@@ -379,6 +384,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    requiresId: true,
   },
   {
     routeName: "tenant-timeline",
@@ -388,6 +394,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    requiresId: true,
   },
   {
     routeName: "tenant-trial",
@@ -397,6 +404,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    requiresId: true,
   },
   {
     routeName: "tenant-invoices",
@@ -406,6 +414,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    requiresId: true,
   },
   {
     routeName: "tenant-onboarding",
@@ -415,6 +424,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    requiresId: true,
   },
   {
     routeName: "plans-management",
@@ -759,6 +769,15 @@ export const adminNavItems: NavItem[] = [
     platformOnly: true,
   },
   {
+    routeName: "platform-password-policy",
+    text: "Password Policy",
+    icon: "mdi:lock-check",
+    requiresAuth: true,
+    requiresPermission: "manage_tenants",
+    tenantOnly: true,
+    platformOnly: true,
+  },
+  {
     routeName: "platform-suspicious-activity",
     text: "Suspicious Activity",
     icon: "mdi:account-alert",
@@ -973,6 +992,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    requiresId: true,
   },
   {
     routeName: "role-management",
@@ -1006,7 +1026,7 @@ export const adminNavItems: NavItem[] = [
 ];
 
 export const superAdminNavItems: NavItem[] = adminNavItems.filter(
-  (item) => !item.tenantAdminOnly
+  (item) => !item.tenantAdminOnly && !item.requiresId
 );
 
 export const tenantNavItems: NavItem[] = [

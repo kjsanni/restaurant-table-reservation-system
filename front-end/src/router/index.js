@@ -55,7 +55,7 @@ const router = createRouter({
         {
           path: "",
           name: "reservations",
-          component: () => import("../views/ReservationsView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: { standalone: true, requiresAuth: true },
         },
       ],
@@ -67,7 +67,7 @@ const router = createRouter({
         {
           path: "",
           name: "tenant-landing",
-          component: () => import("../views/TenantDashboardView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: { standalone: true, requiresAuth: true },
         },
       ],
@@ -79,7 +79,7 @@ const router = createRouter({
         {
           path: "",
           name: "new-reservation",
-          component: () => import("../views/NewReservationView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: { standalone: true, requiresAuth: true },
         },
       ],
@@ -91,7 +91,7 @@ const router = createRouter({
         {
           path: "",
           name: "admin-settings",
-          component: () => import("../views/AdminSettingsView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
         },
       ],
@@ -103,7 +103,7 @@ const router = createRouter({
         {
           path: "",
           name: "whatsapp-ordering-settings",
-          component: () => import("../views/WhatsAppOrderingSettingsView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
         },
       ],
@@ -115,7 +115,7 @@ const router = createRouter({
         {
           path: "",
           name: "whatsapp-chat-preview",
-          component: () => import("../views/WhatsAppChatPreviewView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
         },
       ],
@@ -127,7 +127,7 @@ const router = createRouter({
         {
           path: "",
           name: "schedule",
-          component: () => import("../views/ScheduleView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -143,7 +143,7 @@ const router = createRouter({
         {
           path: "",
           name: "calendar",
-          component: () => import("../views/CalendarView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -159,7 +159,7 @@ const router = createRouter({
         {
           path: "",
           name: "floor-plan",
-          component: () => import("../views/FloorPlanView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -175,7 +175,7 @@ const router = createRouter({
         {
           path: "",
           name: "reports",
-          component: () => import("../views/ReportView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -191,7 +191,7 @@ const router = createRouter({
         {
           path: "",
           name: "heatmap",
-          component: () => import("../views/HeatmapView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -207,7 +207,7 @@ const router = createRouter({
         {
           path: "",
           name: "table-management",
-          component: () => import("../views/TableManagementView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -223,7 +223,7 @@ const router = createRouter({
         {
           path: "",
           name: "floorplan-editor",
-          component: () => import("../views/FloorPlanEditorView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -239,7 +239,7 @@ const router = createRouter({
         {
           path: "",
           name: "email-templates",
-          component: () => import("../views/EmailTemplatesView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
         },
       ],
@@ -251,7 +251,7 @@ const router = createRouter({
         {
           path: "",
           name: "staff-management",
-          component: () => import("../views/StaffManagementView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -267,7 +267,7 @@ const router = createRouter({
         {
           path: "",
           name: "role-management",
-          component: () => import("../views/RoleManagementView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -283,7 +283,7 @@ const router = createRouter({
         {
           path: "",
           name: "group-management",
-          component: () => import("../views/GroupManagementView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -299,7 +299,7 @@ const router = createRouter({
         {
           path: "",
           name: "waitlist",
-          component: () => import("../views/WaitlistView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -315,7 +315,7 @@ const router = createRouter({
         {
           path: "",
           name: "audit-logs",
-          component: () => import("../views/AuditLogView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -331,7 +331,7 @@ const router = createRouter({
         {
           path: "",
           name: "search",
-          component: () => import("../views/SearchView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: { standalone: true, requiresAuth: true },
         },
       ],
@@ -349,7 +349,7 @@ const router = createRouter({
         {
           path: "",
           name: "menu-management",
-          component: () => import("../views/MenuManagementView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -389,7 +389,7 @@ const router = createRouter({
         {
           path: "",
           name: "order-dashboard",
-          component: () => import("../views/OrderDashboardView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -405,7 +405,7 @@ const router = createRouter({
         {
           path: "",
           name: "delivery-dashboard",
-          component: () => import("../views/DeliveryDashboardView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -421,7 +421,7 @@ const router = createRouter({
         {
           path: "",
           name: "promotions-management",
-          component: () => import("../views/PromotionsManagementView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -443,7 +443,7 @@ const router = createRouter({
         {
           path: "",
           name: "payments",
-          component: () => import("../views/PaymentDashboardView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -459,7 +459,7 @@ const router = createRouter({
         {
           path: "",
           name: "revenue-report",
-          component: () => import("../views/RevenueReportView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -485,7 +485,7 @@ const router = createRouter({
         {
           path: "",
           name: "no-shows",
-          component: () => import("../views/NoShowView.vue"),
+          component: () => import("../layouts/TenantLayout.vue"),
           meta: {
             standalone: true,
             requiresAuth: true,
@@ -676,6 +676,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
         path: "sessions",
         name: "platform-sessions",
         component: () => import("../views/admin/SessionManagementView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "security/password-policy",
+        name: "platform-password-policy",
+        component: () => import("../views/admin/PasswordPolicyView.vue"),
         meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
       },
       {
@@ -990,7 +996,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "tenant-setup-wizard",
-        component: () => import("../views/TenantSetupWizardView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: { standalone: true, requiresAuth: true },
       },
     ],
@@ -1002,7 +1008,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "appointments",
-        component: () => import("../views/salon/AppointmentsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1018,7 +1024,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "stations",
-        component: () => import("../views/salon/StationsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1034,7 +1040,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "station-map",
-        component: () => import("../views/salon/StationMapView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1050,7 +1056,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-services",
-        component: () => import("../views/salon/ServicesView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1066,7 +1072,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-packages",
-        component: () => import("../views/salon/SalonPackagesView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1082,7 +1088,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-gift-cards",
-        component: () => import("../views/salon/SalonGiftCardsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1098,7 +1104,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-referrals",
-        component: () => import("../views/salon/SalonReferralsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1114,7 +1120,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-locations",
-        component: () => import("../views/salon/SalonLocationsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1130,7 +1136,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-inventory",
-        component: () => import("../views/salon/SalonInventoryView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1146,7 +1152,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-expenses",
-        component: () => import("../views/salon/SalonExpensesView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1162,7 +1168,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-pricing",
-        component: () => import("../views/salon/SalonPricingRulesView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1178,7 +1184,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-settings",
-        component: () => import("../views/salon/SalonSettingsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: { requiresAuth: true, requiresVertical: "salon" },
       },
     ],
@@ -1190,7 +1196,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-walkins",
-        component: () => import("../views/salon/SalonWalkInQueueView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1206,7 +1212,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-calendar",
-        component: () => import("../views/salon/SalonCalendarView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1222,7 +1228,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-shifts",
-        component: () => import("../views/salon/SalonStaffShiftsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1238,7 +1244,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-schedule",
-        component: () => import("../views/ScheduleView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1254,7 +1260,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-holidays",
-        component: () => import("../views/salon/SalonHolidaysView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1270,7 +1276,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-reports",
-        component: () => import("../views/salon/SalonReportsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1286,7 +1292,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-recurring",
-        component: () => import("../views/salon/SalonRecurringView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1302,7 +1308,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-clients",
-        component: () => import("../views/salon/SalonClientsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1318,7 +1324,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-marketing",
-        component: () => import("../views/salon/MarketingCampaignsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1334,7 +1340,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-gallery",
-        component: () => import("../views/salon/SalonGalleryView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1350,7 +1356,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-unified-schedule",
-        component: () => import("../views/salon/SalonUnifiedScheduleView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1366,7 +1372,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-whatsapp-bookings",
-        component: () => import("../views/salon/SalonWhatsAppBookingsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1382,7 +1388,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-whatsapp-payments",
-        component: () => import("../views/salon/SalonWhatsAPPaymentsView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1398,7 +1404,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-dashboard",
-        component: () => import("../views/salon/SalonDashboardView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
@@ -1414,7 +1420,7 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
       {
         path: "",
         name: "salon-staff",
-        component: () => import("../views/salon/SalonStaffView.vue"),
+        component: () => import("../layouts/TenantLayout.vue"),
         meta: {
           requiresAuth: true,
           requiresVertical: "salon",
