@@ -12,6 +12,9 @@ jest.mock("../db/models", () => ({
   tenant: {
     findByPk: jest.fn().mockResolvedValue({ id: 1 }),
   },
+  appointment: {
+    findByPk: jest.fn(),
+  },
 }));
 
 const { verifyWebhookSignature } = require("../tenant-platform/services/paystack.service");
@@ -37,6 +40,7 @@ function createRes() {
 describe("webhook.controller paystackEventHandler", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    db.appointment.findByPk.mockResolvedValue({ id: 1, paymentStatus: "unpaid", update: jest.fn().mockResolvedValue(true) });
   });
 
   it("rejects request with invalid signature", async () => {
@@ -97,5 +101,73 @@ describe("webhook.controller paystackEventHandler", () => {
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(failedPaymentAlertDAO.create).not.toHaveBeenCalled();
+  });
+
+  it("updates appointment paymentStatus on charge.success with appointmentId in metadata", async () => {
+    verifyWebhookSignature.mockResolvedValue(true);
+    const mockUpdate = jest.fn().mockResolvedValue(true);
+    db.appointment.findByPk.mockResolvedValue({ id: 1, paymentStatus: "unpaid", update: mockUpdate });
+
+    const req = createReq(
+      {
+        event: "charge.success",
+        data: {
+          metadata: { appointmentId: 1 },
+          amount: "5000",
+        },
+      },
+      { "x-paystack-signature": "valid-sig" }
+    );
+    const res = createRes();
+
+    await paystackEventHandler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(db.appointment.findByPk).toHaveBeenCalledWith(1);
+    expect(mockUpdate).toHaveBeenCalledWith({
+      paymentStatus: "paid",
+      depositAmount: 50,
+    });
+  });
+
+  it("ignores charge.success when appointment is already paid", async () => {
+    verifyWebhookSignature.mockResolvedValue(true);
+    const mockUpdate = jest.fn().mockResolvedValue(true);
+    db.appointment.findByPk.mockResolvedValue({ id: 1, paymentStatus: "paid", update: mockUpdate });
+
+    const req = createReq(
+      {
+        event: "charge.success",
+        data: {
+          metadata: { appointmentId: 1 },
+          amount: "5000",
+        },
+      },
+      { "x-paystack-signature": "valid-sig" }
+    );
+    const res = createRes();
+
+    await paystackEventHandler(req, res);
+
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("ignores charge.success when appointmentId is missing", async () => {
+    verifyWebhookSignature.mockResolvedValue(true);
+    const req = createReq(
+      {
+        event: "charge.success",
+        data: {
+          metadata: {},
+          amount: "5000",
+        },
+      },
+      { "x-paystack-signature": "valid-sig" }
+    );
+    const res = createRes();
+
+    await paystackEventHandler(req, res);
+
+    expect(db.appointment.findByPk).not.toHaveBeenCalled();
   });
 });

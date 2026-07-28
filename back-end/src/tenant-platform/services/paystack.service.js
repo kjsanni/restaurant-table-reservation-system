@@ -125,7 +125,7 @@ const createPlan = async ({ name, amount, interval = "monthly", currency = "GHS"
   return response.data.data;
 };
 
-const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = null }) => {
+const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = null, channels = null }) => {
   const client = await buildPlatformClient();
   const payload = {
     email,
@@ -137,6 +137,10 @@ const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = nu
     payload.subaccount = splitConfig.subaccountCode;
     payload.transaction_charge = splitConfig.transactionCharge || 0;
     payload.bearer = splitConfig.bearer || "subaccount";
+  }
+
+  if (channels && Array.isArray(channels) && channels.length) {
+    payload.channels = channels;
   }
 
   const response = await client.post("/transaction/initialize", payload);

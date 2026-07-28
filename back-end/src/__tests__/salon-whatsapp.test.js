@@ -13,6 +13,19 @@ jest.mock("../verticals/salon/models", () => ({
   },
 }));
 
+jest.mock("../db/models", () => ({
+  setting: {
+    findOne: jest.fn(),
+  },
+  sequelize: {
+    fn: jest.fn(),
+    col: jest.fn(),
+  },
+  Sequelize: {
+    Op: {},
+  },
+}));
+
 jest.mock("../verticals/salon/services/appointmentScheduling.service", () => ({
   findAvailableSlots: jest.fn(),
   checkConflicts: jest.fn(),
@@ -65,6 +78,7 @@ const appointmentDao = require("../verticals/salon/DAOs/appointment.dao");
 const salonModels = require("../verticals/salon/models");
 const customerService = require("../services/customerService");
 const { cache } = require("../utils/cache");
+const db = require("../db/models");
 
 describe("whatsappAppointment.service — salon booking flow", () => {
   beforeEach(() => {
@@ -84,6 +98,7 @@ describe("whatsappAppointment.service — salon booking flow", () => {
     appointmentDao.create.mockResolvedValue({ id: 10, status: "confirmed" });
     customerService.searchCustomers.mockResolvedValue([]);
     customerService.findOrCreateCustomer.mockResolvedValue({ id: 99, email: "wa_+233241234567@salon.local" });
+    db.setting.findOne.mockResolvedValue(null);
   });
 
   const setSessionState = (state, extra = {}) => {
@@ -177,6 +192,86 @@ describe("whatsappAppointment.service — salon booking flow", () => {
       "whatsapp:salon:session:+233241234567",
       expect.objectContaining({ state: "idle", tenantId: 1 }),
       86400
+    );
+  });
+
+  it("passes enabledChannels to initializeCharge when salon_payment_config exists", async () => {
+    db.setting.findOne.mockResolvedValue({
+      value: JSON.stringify({ enabledChannels: ["mobile_money", "card"] }),
+    });
+
+    const session = {
+      state: "salon_confirm",
+      flow: "salon_appointment",
+      tenantId: 1,
+      selectedServiceId: 1,
+      selectedSlot: { start: "2026-08-01T10:00:00.000Z", end: "2026-08-01T10:30:00.000Z" },
+      selectedStylistId: 2,
+      customerName: "John Doe",
+      customerPhone: "+233241234567",
+      services: [{ id: 1, name: "Haircut", durationMinutes: 30, price: 50 }],
+    };
+
+    await whatsappAppointmentService.handleSalonAppointmentState("+233241234567", "yes", "yes", session, 1);
+
+    const { initializeCharge } = require("../tenant-platform/services/paystack.service");
+    expect(initializeCharge).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channels: ["mobile_money", "card"],
+      })
+    );
+  });
+
+  it("charges deposit amount when depositRequired is true", async () => {
+    db.setting.findOne.mockResolvedValue({
+      value: JSON.stringify({ depositRequired: true, defaultDepositPercent: 30 }),
+    });
+
+    const session = {
+      state: "salon_confirm",
+      flow: "salon_appointment",
+      tenantId: 1,
+      selectedServiceId: 1,
+      selectedSlot: { start: "2026-08-01T10:00:00.000Z", end: "2026-08-01T10:30:00.000Z" },
+      selectedStylistId: 2,
+      customerName: "John Doe",
+      customerPhone: "+233241234567",
+      services: [{ id: 1, name: "Haircut", durationMinutes: 30, price: 100 }],
+    };
+
+    await whatsappAppointmentService.handleSalonAppointmentState("+233241234567", "yes", "yes", session, 1);
+
+    const { initializeCharge } = require("../tenant-platform/services/paystack.service");
+    expect(initializeCharge).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: 30,
+      })
+    );
+  });
+
+  it("falls back to full price when no salon_payment_config exists", async () => {
+    db.setting.findOne.mockResolvedValue(null);
+
+    const session = {
+      state: "salon_confirm",
+      flow: "salon_appointment",
+      tenantId: 1,
+      selectedServiceId: 1,
+      selectedSlot: { start: "2026-08-01T10:00:00.000Z", end: "2026-08-01T10:30:00.000Z" },
+      selectedStylistId: 2,
+      customerName: "John Doe",
+      customerPhone: "+233241234567",
+      services: [{ id: 1, name: "Haircut", durationMinutes: 30, price: 50 }],
+    };
+
+    await whatsappAppointmentService.handleSalonAppointmentState("+233241234567", "yes", "yes", session, 1);
+
+    const { initializeCharge } = require("../tenant-platform/services/paystack.service");
+    expect(initializeCharge).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: 50,
+        channels: null,
+      })
     );
   });
 });

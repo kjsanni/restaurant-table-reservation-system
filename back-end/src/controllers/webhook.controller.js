@@ -68,6 +68,19 @@ const paystackEventHandler = async (req, res) => {
     });
   }
 
+  if (event === "charge.success") {
+    const appointmentId = data.metadata?.appointmentId;
+    if (appointmentId) {
+      const appointment = await db.appointment.findByPk(appointmentId);
+      if (appointment && appointment.paymentStatus !== "paid") {
+        await appointment.update({
+          paymentStatus: "paid",
+          depositAmount: parseFloat(data.amount || 0) / 100,
+        });
+      }
+    }
+  }
+
   return res.status(200).json({ success: true });
 };
 
