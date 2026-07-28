@@ -16,6 +16,12 @@ const salonSmsFallback = ref({
   enabled: false,
 });
 
+const salonCommissionConfig = ref({
+  enabled: false,
+  defaultRateType: "percentage",
+  defaultRateValue: 10,
+});
+
 const loadSettings = async () => {
   loading.value = true;
   try {
@@ -37,6 +43,19 @@ const loadSettings = async () => {
 
     salonSmsFallback.value.enabled =
       map.get("salon_sms_fallback_enabled") === "true";
+
+    const commissionRaw = map.get("salon_commission_config");
+    if (commissionRaw) {
+      try {
+        salonCommissionConfig.value = JSON.parse(commissionRaw);
+      } catch {
+        salonCommissionConfig.value = {
+          enabled: false,
+          defaultRateType: "percentage",
+          defaultRateValue: 10,
+        };
+      }
+    }
   } catch (err) {
     logger.error("Failed to load salon settings", { error: err });
   } finally {
@@ -67,6 +86,20 @@ const saveSmsFallback = async () => {
     );
   } catch (err) {
     logger.error("Failed to save SMS fallback settings", { error: err });
+  } finally {
+    saving.value = false;
+  }
+};
+
+const saveCommissionSettings = async () => {
+  saving.value = true;
+  try {
+    await authAPI.updateSettings(
+      "salon_commission_config",
+      salonCommissionConfig.value
+    );
+  } catch (err) {
+    logger.error("Failed to save commission settings", { error: err });
   } finally {
     saving.value = false;
   }
@@ -164,6 +197,48 @@ onBeforeUnmount(() => {
               @click="saveSmsFallback"
             >
               {{ saving ? "Saving..." : "Save SMS Settings" }}
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Commissions</h3>
+          <div class="field">
+            <label>Enable commissions</label>
+            <select v-model="salonCommissionConfig.enabled" class="field-input">
+              <option :value="true">Enabled</option>
+              <option :value="false">Disabled</option>
+            </select>
+            <p class="field-hint">
+              Track and pay stylist commissions per service or appointment.
+            </p>
+          </div>
+          <div class="field">
+            <label>Default rate type</label>
+            <select
+              v-model="salonCommissionConfig.defaultRateType"
+              class="field-input"
+            >
+              <option value="percentage">Percentage</option>
+              <option value="fixed">Fixed Amount</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Default rate value</label>
+            <input
+              v-model.number="salonCommissionConfig.defaultRateValue"
+              class="field-input"
+              type="number"
+              min="0"
+            />
+          </div>
+          <div class="form-actions">
+            <button
+              class="btn-primary"
+              :disabled="saving"
+              @click="saveCommissionSettings"
+            >
+              {{ saving ? "Saving..." : "Save Commission Settings" }}
             </button>
           </div>
         </div>
