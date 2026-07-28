@@ -1,6 +1,7 @@
 const webhookService = require("../services/webhook.service");
 const failedPaymentAlertDAO = require("../tenant-platform/DAOs/failedPaymentAlert.dao");
 const db = require("../db/models");
+const { verifyWebhookSignature } = require("../tenant-platform/services/paystack.service");
 
 const listSubscriptionsHandler = async (req, res) => {
   const config = await require("../DAOs/auth.dao").getSettingValue(
@@ -34,6 +35,13 @@ const testHandler = async (req, res) => {
 };
 
 const paystackEventHandler = async (req, res) => {
+  const signature = req.headers["x-paystack-signature"];
+  const rawBody = JSON.stringify(req.body);
+
+  if (!(await verifyWebhookSignature(rawBody, signature))) {
+    return res.status(401).json({ success: false, message: "Invalid signature" });
+  }
+
   const event = req.body?.event;
   const data = req.body?.data || {};
 

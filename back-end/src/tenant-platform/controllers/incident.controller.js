@@ -23,7 +23,7 @@ const listIncidentsHandler = async (req, res) => {
 };
 
 const createIncidentHandler = async (req, res) => {
-  const { title, description, severity, tenantId, affectedTenantIds, metadata } = req.body;
+  const { title, description, severity, affectedTenantIds, metadata } = req.body;
   if (!title) {
     return res.status(400).json({ success: false, message: "title is required" });
   }
@@ -32,7 +32,7 @@ const createIncidentHandler = async (req, res) => {
     title,
     description,
     severity: severity || "medium",
-    tenantId: tenantId || null,
+    tenantId: null,
     affectedTenantIds: affectedTenantIds || null,
     metadata: metadata || null,
     status: "open",
@@ -43,7 +43,7 @@ const createIncidentHandler = async (req, res) => {
     "incident.created",
     "incident",
     incident.id,
-    tenantId || null,
+    null,
     { title, severity: incident.severity },
     req.ip
   );

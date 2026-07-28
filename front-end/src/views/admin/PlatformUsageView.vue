@@ -256,7 +256,7 @@ const loadPlans = async () => {
 };
 
 const viewTenant = (id) => {
-  router.push(`/admin/tenants/${id}`);
+  router.push(`/super-admin/tenants/${id}`);
 };
 
 const getUsagePercent = (used, limit) => {

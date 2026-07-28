@@ -21,6 +21,7 @@ const services = ref<any[]>([]);
 const activeTab = ref<"menu" | "tables" | "services">("menu");
 const addingToCart = ref<number | null>(null);
 const heroLoaded = ref(false);
+const apiError = ref(false);
 const businessVertical = computed(
   () =>
     authStore.currentTenant?.businessVertical ||
@@ -59,136 +60,13 @@ onUnmounted(() => {
   document.removeEventListener("mouseleave", onHeroMouseLeave);
 });
 
-const demoMenuItems = [
-  {
-    id: 1,
-    name: "Grilled Tilapia with Banku",
-    description:
-      "Fresh grilled tilapia served with fermented corn dough banku and spicy pepper sauce.",
-    price: 85.0,
-    image:
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80",
-    dietaryTags: ["High Protein", "Gluten Free"],
-    isAvailable: true,
-  },
-  {
-    id: 2,
-    name: "Jollof Rice Special",
-    description: "Smoky party jollof rice with fried chicken and coleslaw.",
-    price: 65.0,
-    image:
-      "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80",
-    dietaryTags: ["Spicy", "Popular"],
-    isAvailable: true,
-  },
-  {
-    id: 3,
-    name: "Waakye Delight",
-    description:
-      "Traditional Ghanaian waakye with boiled egg, avocado, and shito.",
-    price: 45.0,
-    image:
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80",
-    dietaryTags: ["Vegetarian Option", "Vegan"],
-    isAvailable: true,
-  },
-  {
-    id: 4,
-    name: "Suya Platter",
-    description:
-      "Spicy skewered beef suya with onions, tomatoes, and yam chips.",
-    price: 55.0,
-    image:
-      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80",
-    dietaryTags: ["Spicy", "High Protein"],
-    isAvailable: true,
-  },
-];
-
-const demoTables = [
-  {
-    id: 101,
-    name: "Table 1 - Window",
-    capacity: 2,
-    section: "Indoor",
-    status: "available",
-  },
-  {
-    id: 102,
-    name: "Table 5 - Garden",
-    capacity: 4,
-    section: "Outdoor",
-    status: "available",
-  },
-  {
-    id: 103,
-    name: "Table 8 - Corner",
-    capacity: 6,
-    section: "Indoor",
-    status: "available",
-  },
-  {
-    id: 104,
-    name: "Table 12 - VIP",
-    capacity: 8,
-    section: "Private",
-    status: "available",
-  },
-];
-
-const demoServices = [
-  {
-    id: 1,
-    name: "Classic Haircut",
-    description: "Precision cut tailored to your style.",
-    price: 50,
-    durationMinutes: 30,
-    depositAmount: 0,
-    category: { name: "Hair" },
-    isAvailable: true,
-    image: "",
-  },
-  {
-    id: 2,
-    name: "Deep Conditioning Treatment",
-    description: "Intensive moisture repair for all hair types.",
-    price: 80,
-    durationMinutes: 45,
-    depositAmount: 20,
-    category: { name: "Treatment" },
-    isAvailable: true,
-    image: "",
-  },
-  {
-    id: 3,
-    name: "Full Color",
-    description: "Full head color application with premium products.",
-    price: 150,
-    durationMinutes: 90,
-    depositAmount: 30,
-    category: { name: "Color" },
-    isAvailable: true,
-    image: "",
-  },
-  {
-    id: 4,
-    name: "Manicure",
-    description: "Classic nail care with polish.",
-    price: 45,
-    durationMinutes: 40,
-    depositAmount: 0,
-    category: { name: "Nails" },
-    isAvailable: true,
-    image: "",
-  },
-];
-
 const loadMenu = async () => {
   try {
     const res = await menuAPI.getAvailableMenu();
     menuItems.value = (res.data?.items || []).slice(0, 8);
   } catch (err) {
-    menuItems.value = demoMenuItems;
+    menuItems.value = [];
+    apiError.value = true;
     logger.error("Failed to load menu", { error: err });
   } finally {
     loading.value = false;
@@ -201,7 +79,8 @@ const loadTables = async () => {
     const all = res.data?.tables || res.data || [];
     tables.value = all.filter((t: any) => t.status === "available").slice(0, 6);
   } catch (err) {
-    tables.value = demoTables;
+    tables.value = [];
+    apiError.value = true;
     logger.error("Failed to load tables", { error: err });
   }
 };
@@ -209,9 +88,10 @@ const loadTables = async () => {
 const loadServices = async () => {
   try {
     await menuAPI.getAvailableMenu?.();
-    services.value = demoServices;
+    services.value = [];
   } catch (err) {
-    services.value = demoServices;
+    services.value = [];
+    apiError.value = true;
     logger.error("Failed to load services", { error: err });
   } finally {
     loading.value = false;
@@ -335,6 +215,9 @@ onMounted(() => {
             src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1600&q=80"
             alt="Restaurant interior"
             loading="eager"
+            fetchpriority="high"
+            width="1600"
+            height="900"
           />
         </div>
         <div class="hero-slide">
@@ -342,6 +225,8 @@ onMounted(() => {
             src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=80"
             alt="Plated dish"
             loading="eager"
+            width="1600"
+            height="900"
           />
         </div>
         <div class="hero-slide">
@@ -349,6 +234,8 @@ onMounted(() => {
             src="https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=1600&q=80"
             alt="Restaurant bar"
             loading="eager"
+            width="1600"
+            height="900"
           />
         </div>
         <div class="hero-slide">
@@ -356,6 +243,8 @@ onMounted(() => {
             src="https://images.unsplash.com/photo-1544148103-0773bf10d330?w=1600&q=80"
             alt="Fine dining"
             loading="eager"
+            width="1600"
+            height="900"
           />
         </div>
         <div class="hero-overlay"></div>
@@ -451,11 +340,24 @@ onMounted(() => {
         </button>
       </div>
 
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading…</p>
+      <div v-if="loading" class="preview-skeleton">
+        <div class="skeleton-grid">
+          <div v-for="n in 4" :key="n" class="skeleton-card">
+            <div class="skeleton-media"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line skeleton-title"></div>
+              <div class="skeleton-line skeleton-text"></div>
+              <div class="skeleton-line skeleton-text short"></div>
+            </div>
+          </div>
+        </div>
       </div>
-
+      <div v-else-if="apiError" class="empty-state">
+        <p>
+          We couldn't load the latest menu and table info. Please try again
+          later.
+        </p>
+      </div>
       <template v-else>
         <div v-if="!isSalon && activeTab === 'menu'" class="menu-grid">
           <div v-for="item in menuItems" :key="item.id" class="menu-card">
@@ -494,6 +396,7 @@ onMounted(() => {
                     item.isAvailable === false || addingToCart === item.id
                   "
                   @click="addToCart(item)"
+                  :aria-label="'Add ' + item.name + ' to cart'"
                 >
                   <Icon
                     :icon="
@@ -1738,6 +1641,71 @@ onMounted(() => {
   padding: 60px 20px;
   color: var(--ink-muted);
   font-size: 15px;
+}
+
+/* ─── Skeleton ─── */
+.preview-skeleton {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+.skeleton-card {
+  background: white;
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+.skeleton-media {
+  height: 200px;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-100) 25%,
+    var(--neutral-200) 50%,
+    var(--neutral-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+.skeleton-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.skeleton-line {
+  height: 14px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--neutral-100) 25%,
+    var(--neutral-200) 50%,
+    var(--neutral-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+.skeleton-title {
+  width: 70%;
+  height: 18px;
+}
+.skeleton-text {
+  width: 100%;
+}
+.skeleton-text.short {
+  width: 50%;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* ─── Animations ─── */

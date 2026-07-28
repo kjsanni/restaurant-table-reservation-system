@@ -40,15 +40,15 @@
     </div>
 
     <div class="quick-actions">
-      <button @click="goTo('/admin/tenants')" class="qa-card">
+      <button @click="goTo('/super-admin/tenants')" class="qa-card">
         <span class="qa-icon">🏢</span>
         <span class="qa-text">Tenants</span>
       </button>
-      <button @click="goTo('/admin/tenants?view=plans')" class="qa-card">
+      <button @click="goTo('/super-admin/tenants?view=plans')" class="qa-card">
         <span class="qa-icon">💰</span>
         <span class="qa-text">Pricing</span>
       </button>
-      <button @click="goTo('/admin/payments')" class="qa-card">
+      <button @click="goTo('/super-admin/payments')" class="qa-card">
         <span class="qa-icon">💳</span>
         <span class="qa-text">Payments</span>
       </button>
@@ -342,7 +342,7 @@ const goTo = (path) => {
 };
 
 const viewTenant = (id) => {
-  router.push(`/admin/tenants/${id}`);
+  router.push(`/super-admin/tenants/${id}`);
 };
 
 const openCreateModal = () => {

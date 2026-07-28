@@ -8,12 +8,26 @@ marketplaceController.listListingsHandler = async (req, res) => {
 };
 
 marketplaceController.createListingHandler = async (req, res) => {
-  const listing = await marketplaceDAO.createListing(req.body);
+  const allowed = ["tenantId", "title", "description", "position", "isActive"];
+  const data = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      data[key] = req.body[key];
+    }
+  }
+  const listing = await marketplaceDAO.createListing(data);
   res.status(201).json({ success: true, item: listing });
 };
 
 marketplaceController.updateListingHandler = async (req, res) => {
-  const listing = await marketplaceDAO.updateListing(req.params.id, req.body);
+  const allowed = ["tenantId", "title", "description", "position", "isActive"];
+  const updates = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      updates[key] = req.body[key];
+    }
+  }
+  const listing = await marketplaceDAO.updateListing(req.params.id, updates);
   if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
   res.status(200).json({ success: true, item: listing });
 };

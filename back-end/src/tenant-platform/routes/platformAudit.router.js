@@ -12,7 +12,7 @@ router
 
 router
   .route("/recent")
-  .get(tryCatchHandler(protect), tryCatchHandler(platformAuditController.recentActivityHandler))
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(platformAuditController.recentActivityHandler))
   .all(httpMethodError);
 
 router

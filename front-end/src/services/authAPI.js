@@ -37,7 +37,7 @@ const updateSettings = async (key, value) => {
 };
 
 const refreshToken = async () => {
-  return await API.post("/auth/refresh");
+  return await API.post("/auth/refresh-token");
 };
 
 const getStaff = async () => {

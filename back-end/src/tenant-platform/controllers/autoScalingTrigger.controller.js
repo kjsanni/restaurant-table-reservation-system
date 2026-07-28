@@ -20,7 +20,19 @@ const getAutoScalingTriggerHandler = async (req, res) => {
 };
 
 const createAutoScalingTriggerHandler = async (req, res) => {
-  const trigger = await autoScalingTriggerDAO.create(req.body);
+  const allowed = ["name", "metric", "operator", "threshold", "action", "minInstances", "maxInstances", "cooldownMinutes", "isActive"];
+  const data = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      data[key] = req.body[key];
+    }
+  }
+
+  if (!data.name || !data.metric || !data.action) {
+    return res.status(400).json({ success: false, message: "name, metric and action are required" });
+  }
+
+  const trigger = await autoScalingTriggerDAO.create(data);
   await platformAuditDAO.log(
     req.user.id,
     "auto_scaling_trigger.created",
@@ -34,20 +46,30 @@ const createAutoScalingTriggerHandler = async (req, res) => {
 };
 
 const updateAutoScalingTriggerHandler = async (req, res) => {
-  const trigger = await autoScalingTriggerDAO.update(req.params.id, req.body);
+  const trigger = await autoScalingTriggerDAO.findById(req.params.id);
   if (!trigger) {
     return res.status(404).json({ success: false, message: "Auto scaling trigger not found" });
   }
+
+  const allowed = ["name", "metric", "operator", "threshold", "action", "minInstances", "maxInstances", "cooldownMinutes", "isActive"];
+  const updates = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      updates[key] = req.body[key];
+    }
+  }
+
+  const updated = await autoScalingTriggerDAO.update(req.params.id, updates);
   await platformAuditDAO.log(
     req.user.id,
     "auto_scaling_trigger.updated",
     "auto_scaling_trigger",
     trigger.id,
     null,
-    { name: trigger.name },
+    { name: updated.name, metric: updated.metric },
     req.ip
   );
-  res.status(200).json({ success: true, item: trigger });
+  res.status(200).json({ success: true, item: updated });
 };
 
 const deleteAutoScalingTriggerHandler = async (req, res) => {

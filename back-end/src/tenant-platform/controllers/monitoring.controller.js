@@ -68,7 +68,7 @@ const getDatabaseStatsHandler = async (req, res) => {
       status: "healthy",
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to fetch database stats", error: err.message });
+    res.status(500).json({ success: false, message: "Failed to fetch database stats" });
   }
 };
 
@@ -193,7 +193,7 @@ const getHealthHandler = async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    res.status(500).json({ success: false, status: "unhealthy", error: err.message });
+    res.status(500).json({ success: false, status: "unhealthy", message: "Something went wrong. Please try again later." });
   }
 };
 

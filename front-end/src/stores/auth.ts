@@ -23,6 +23,7 @@ export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
   const isAuthenticated = computed(() => !!user.value);
   const isLoading = ref(true);
+  const sessionInitialized = ref(false);
   const currentTenant = ref<{
     id: number;
     name: string;
@@ -87,6 +88,7 @@ export const useAuthStore = defineStore("auth", () => {
     }
     user.value = null;
     entryPoint.value = null;
+    currentTenant.value = null;
   };
 
   const getMe = async () => {
@@ -105,8 +107,8 @@ export const useAuthStore = defineStore("auth", () => {
 
   const fetchTenantMode = async () => {
     try {
-      const settings = await authAPI.getSettings();
-      const setting = (settings.data.settings || []).find(
+      const settings = await fetchSettings();
+      const setting = (settings || []).find(
         (s: { key: string }) => s.key === "tenant_mode_enabled"
       );
       if (setting) {
@@ -116,12 +118,6 @@ export const useAuthStore = defineStore("auth", () => {
             : setting.value;
         tenantModeEnabled.value = Boolean(v);
       }
-      applySetting(settings.data.settings, "branding", branding.value);
-      applySetting(
-        settings.data.settings,
-        "currency_locale",
-        currencyLocale.value
-      );
     } catch {
       tenantModeEnabled.value = false;
     }
@@ -171,26 +167,21 @@ export const useAuthStore = defineStore("auth", () => {
   };
 
   onMounted(async () => {
+    if (sessionInitialized.value) return;
+    sessionInitialized.value = true;
     try {
       await getMe();
       await fetchTenantMode();
       await fetchCapabilities();
     } catch (err) {
       const error = err as { response?: { status?: number } };
-      if (error.response?.status !== 401) {
-        try {
-          await getMe();
-          await fetchTenantMode();
-          await fetchCapabilities();
-        } catch {
-          authError.value =
-            "Session expired or unreachable. Please log in again.";
-          user.value = null;
-        }
-      } else {
+      if (error.response?.status === 401) {
         authError.value = "Session expired. Please log in again.";
-        user.value = null;
+      } else {
+        authError.value =
+          "Session expired or unreachable. Please log in again.";
       }
+      user.value = null;
     } finally {
       isLoading.value = false;
     }

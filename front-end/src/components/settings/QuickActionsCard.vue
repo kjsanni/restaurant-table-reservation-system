@@ -61,7 +61,7 @@ const sendLogs = async () => {
         <span class="action-icon">🗺️</span>
         <span>Heatmap</span>
       </RouterLink>
-      <RouterLink to="/admin/payments" class="action-card">
+      <RouterLink to="/super-admin/payments" class="action-card">
         <span class="action-icon">💳</span>
         <span>Payments</span>
       </RouterLink>

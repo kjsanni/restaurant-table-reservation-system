@@ -16,7 +16,6 @@ const getBySlugHandler = async (req, res) => {
       "status",
       "plan",
       "currency",
-      "settings",
       "businessVertical",
       "restaurantType",
       "serviceModes",
@@ -29,7 +28,17 @@ const getBySlugHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
 
-  res.status(200).json({ success: true, item: tenant });
+  const json = tenant.toJSON();
+
+  if (json.settings && typeof json.settings === "object") {
+    json.settings = {
+      branding: json.settings.branding || null,
+    };
+  } else {
+    json.settings = null;
+  }
+
+  res.status(200).json({ success: true, item: json });
 };
 
 module.exports = { getBySlugHandler };

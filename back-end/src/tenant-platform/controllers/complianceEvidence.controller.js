@@ -21,7 +21,19 @@ const getComplianceEvidenceHandler = async (req, res) => {
 };
 
 const createComplianceEvidenceHandler = async (req, res) => {
-  const item = await complianceEvidenceDAO.create(req.body);
+  const allowed = ["framework", "controlId", "title", "description", "status", "owner", "dueDate", "evidenceUrl", "notes"];
+  const data = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      data[key] = req.body[key];
+    }
+  }
+
+  if (!data.framework || !data.controlId || !data.title) {
+    return res.status(400).json({ success: false, message: "framework, controlId and title are required" });
+  }
+
+  const item = await complianceEvidenceDAO.create(data);
   await platformAuditDAO.log(
     req.user.id,
     "compliance_evidence.created",
@@ -35,20 +47,30 @@ const createComplianceEvidenceHandler = async (req, res) => {
 };
 
 const updateComplianceEvidenceHandler = async (req, res) => {
-  const item = await complianceEvidenceDAO.update(req.params.id, req.body);
+  const item = await complianceEvidenceDAO.findById(req.params.id);
   if (!item) {
     return res.status(404).json({ success: false, message: "Compliance evidence not found" });
   }
+
+  const allowed = ["framework", "controlId", "title", "description", "status", "owner", "dueDate", "evidenceUrl", "notes"];
+  const updates = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      updates[key] = req.body[key];
+    }
+  }
+
+  const updated = await complianceEvidenceDAO.update(req.params.id, updates);
   await platformAuditDAO.log(
     req.user.id,
     "compliance_evidence.updated",
     "compliance_evidence",
     item.id,
     null,
-    { framework: item.framework, controlId: item.controlId },
+    { framework: updated.framework, controlId: updated.controlId },
     req.ip
   );
-  res.status(200).json({ success: true, item });
+  res.status(200).json({ success: true, item: updated });
 };
 
 const deleteComplianceEvidenceHandler = async (req, res) => {

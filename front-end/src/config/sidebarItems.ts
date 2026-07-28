@@ -9,6 +9,7 @@ export interface NavItem {
   requiresVertical?: string;
   tenantOnly?: boolean;
   platformOnly?: boolean;
+  tenantAdminOnly?: boolean;
   section?: string;
 }
 
@@ -323,6 +324,7 @@ export const adminNavItems: NavItem[] = [
     requiresAuth: true,
     requiresAdmin: true,
     platformOnly: true,
+    tenantAdminOnly: true,
   },
   {
     routeName: "tenant-dashboard",
@@ -968,18 +970,21 @@ export const adminNavItems: NavItem[] = [
     text: "Roles",
     icon: "mdi:key",
     requiresAuth: true,
+    tenantAdminOnly: true,
   },
   {
     routeName: "group-management",
     text: "Groups",
     icon: "mdi:account-multiple",
     requiresAuth: true,
+    tenantAdminOnly: true,
   },
   {
     routeName: "audit-logs",
     text: "Audit",
     icon: "mdi:file-document-text",
     requiresAuth: true,
+    tenantAdminOnly: true,
   },
   {
     routeName: "email-templates",
@@ -987,5 +992,10 @@ export const adminNavItems: NavItem[] = [
     icon: "mdi:email",
     requiresAuth: true,
     requiresAdmin: true,
+    tenantAdminOnly: true,
   },
 ];
+
+export const superAdminNavItems: NavItem[] = adminNavItems.filter(
+  (item) => !item.tenantAdminOnly
+);

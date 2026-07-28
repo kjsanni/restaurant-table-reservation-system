@@ -22,7 +22,6 @@ import { useTenantBranding } from "@/composables/useTenantBranding";
 import { getCurrentInstance } from "vue";
 import { useI18n } from "@/composables/useI18n";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
-import localeAPI from "@/services/localeAPI";
 
 const app = getCurrentInstance()?.appContext?.app;
 if (app) {
@@ -76,6 +75,9 @@ const isAdmin = computed(() => authStore.user?.role === "admin");
 const user = computed(() => authStore.user);
 const isPlatformEntry = computed(() => authStore.entryPoint === "platform");
 const isTenantEntry = computed(() => authStore.entryPoint === "tenant");
+const isSuperAdminRoute = computed(
+  () => route.path.startsWith("/super-admin") && !route.meta.standalone
+);
 
 const topbarTitle = computed(() => {
   if (route.path.startsWith("/admin")) return "Platform Administration";
@@ -130,7 +132,8 @@ const shouldShow = (item: {
   requiresFeature?: string;
   requiresVertical?: string;
 }) => {
-  if (item.platformOnly && !isPlatformEntry.value) return false;
+  if (item.platformOnly && (!isPlatformEntry.value || !authStore.isSuperAdmin))
+    return false;
   if (item.tenantOnly && !isTenantEntry.value && !authStore.tenantModeEnabled)
     return false;
   if (item.requiresAuth && !isAuthenticated.value) return false;
@@ -221,17 +224,6 @@ onMounted(() => {
   checkWindowWidth();
   window.addEventListener("resize", checkWindowWidth);
   window.addEventListener("keydown", handleKeydown);
-  localeAPI
-    .getLocale()
-    .then((res) => {
-      const serverLocale = res.data?.locale;
-      if (serverLocale && ["en", "tw", "gaa"].includes(serverLocale)) {
-        setLocale(serverLocale);
-      }
-    })
-    .catch(() => {
-      // ignore
-    });
 });
 
 onUnmounted(() => {
@@ -250,7 +242,7 @@ onUnmounted(() => {
       </div>
     </div>
     <VaLayout v-else>
-      <template #left v-if="!route.meta.standalone">
+      <template #left v-if="!route.meta.standalone && !isSuperAdminRoute">
         <VaSidebar
           v-model="sidebarVisible"
           width="260"
@@ -273,7 +265,6 @@ onUnmounted(() => {
                 />
                 <span v-if="!collapsed" class="brand">RTRS</span>
               </div>
-
               <div class="nav-section">
                 <div class="nav-label" v-if="!collapsed">Menu</div>
                 <VaSidebarItem
@@ -294,7 +285,6 @@ onUnmounted(() => {
                 </VaSidebarItem>
               </div>
             </div>
-
             <div class="sidebar-bottom" v-if="isAuthenticated">
               <div class="user-section" v-if="user">
                 <div class="user-avatar">
@@ -324,7 +314,10 @@ onUnmounted(() => {
         <div
           class="content-wrapper"
           :style="{
-            marginLeft: route.meta.standalone ? '0px' : desktopMargin,
+            marginLeft:
+              route.meta.standalone || isSuperAdminRoute.value
+                ? '0px'
+                : desktopMargin,
             display:
               route.meta.standalone && route.name !== 'home' && isAuthenticated
                 ? 'grid'
@@ -453,7 +446,10 @@ onUnmounted(() => {
             </nav>
           </aside>
 
-          <header v-if="!route.meta.standalone" class="app-topbar-integrated">
+          <header
+            v-if="!route.meta.standalone && !isSuperAdminRoute"
+            class="app-topbar-integrated"
+          >
             <div class="topbar-left">
               <VaButton
                 preset="secondary"
@@ -493,14 +489,19 @@ onUnmounted(() => {
 
           <div
             v-if="
-              !route.meta.standalone && sidebarVisible && windowWidth <= 768
+              !route.meta.standalone &&
+              !isSuperAdminRoute &&
+              sidebarVisible &&
+              windowWidth <= 768
             "
             class="sidebar-backdrop"
             @click="toggleSidebar"
           ></div>
           <main
             class="main-content"
-            :style="route.meta.standalone ? { padding: 0 } : {}"
+            :style="
+              route.meta.standalone || isSuperAdminRoute ? { padding: 0 } : {}
+            "
           >
             <RouterView v-slot="{ Component }">
               <component v-if="Component" :is="Component" :key="$route.name" />

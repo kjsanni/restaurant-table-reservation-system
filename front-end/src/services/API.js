@@ -8,6 +8,20 @@ const API = axios.create({
   xsrfHeaderName: "x-xsrf-token",
 });
 
+let refreshing = false;
+const refreshQueue = [];
+
+const processQueue = (error) => {
+  refreshQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
+    }
+  });
+  refreshQueue.length = 0;
+};
+
 API.interceptors.request.use((config) => {
   const authStore = useAuthStore();
   if (
@@ -27,17 +41,31 @@ API.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       const isLogout = originalRequest.url?.includes("/auth/logout");
-      if (isLogout) {
+      const isRefresh = originalRequest.url?.includes("/auth/refresh-token");
+      if (isLogout || isRefresh) {
         return Promise.reject(error);
       }
 
       originalRequest._retry = true;
+      if (refreshing) {
+        return new Promise((resolve, reject) => {
+          refreshQueue.push({ resolve, reject });
+        })
+          .then(() => API(originalRequest))
+          .catch((err) => Promise.reject(err));
+      }
+
+      refreshing = true;
       try {
         await authStore.refreshToken();
+        processQueue();
         return API(originalRequest);
-      } catch {
+      } catch (err) {
         authStore.logout();
+        processQueue(err);
         return Promise.reject(error);
+      } finally {
+        refreshing = false;
       }
     }
 

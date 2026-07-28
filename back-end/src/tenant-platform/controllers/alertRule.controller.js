@@ -20,7 +20,19 @@ const getAlertRuleHandler = async (req, res) => {
 };
 
 const createAlertRuleHandler = async (req, res) => {
-  const rule = await alertRuleDAO.create(req.body);
+  const allowed = ["name", "description", "metric", "condition", "threshold", "channels", "recipients", "isActive"];
+  const data = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      data[key] = req.body[key];
+    }
+  }
+
+  if (!data.name || !data.metric) {
+    return res.status(400).json({ success: false, message: "name and metric are required" });
+  }
+
+  const rule = await alertRuleDAO.create(data);
   await platformAuditDAO.log(
     req.user.id,
     "alert_rule.created",
@@ -34,20 +46,30 @@ const createAlertRuleHandler = async (req, res) => {
 };
 
 const updateAlertRuleHandler = async (req, res) => {
-  const rule = await alertRuleDAO.update(req.params.id, req.body);
+  const rule = await alertRuleDAO.findById(req.params.id);
   if (!rule) {
     return res.status(404).json({ success: false, message: "Alert rule not found" });
   }
+
+  const allowed = ["name", "description", "metric", "condition", "threshold", "channels", "recipients", "isActive"];
+  const updates = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      updates[key] = req.body[key];
+    }
+  }
+
+  const updated = await alertRuleDAO.update(req.params.id, updates);
   await platformAuditDAO.log(
     req.user.id,
     "alert_rule.updated",
     "alert_rule",
     rule.id,
     null,
-    { name: rule.name, metric: rule.metric },
+    { name: updated.name, metric: updated.metric },
     req.ip
   );
-  res.status(200).json({ success: true, item: rule });
+  res.status(200).json({ success: true, item: updated });
 };
 
 const deleteAlertRuleHandler = async (req, res) => {

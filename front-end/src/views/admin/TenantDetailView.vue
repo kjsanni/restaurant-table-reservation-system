@@ -436,7 +436,7 @@ const deleteTenant = async () => {
   deleting.value = true;
   try {
     await tenantAdminAPI.deleteTenant(route.params.id);
-    router.push("/admin/tenants");
+    router.push("/super-admin/tenants");
   } catch (err) {
     deleteError.value =
       err?.response?.data?.message || "Failed to delete venue.";

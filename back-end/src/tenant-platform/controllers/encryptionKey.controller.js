@@ -20,7 +20,17 @@ const getEncryptionKeyHandler = async (req, res) => {
 };
 
 const createEncryptionKeyHandler = async (req, res) => {
-  const key = await encryptionKeyDAO.create(req.body);
+  const allowed = ["name", "purpose", "algorithm", "metadata"];
+  const data = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+      data[key] = req.body[key];
+    }
+  }
+  if (!data.name) {
+    return res.status(400).json({ success: false, message: "name is required" });
+  }
+  const key = await encryptionKeyDAO.create(data);
   await platformAuditDAO.log(
     req.user.id,
     "encryption_key.created",

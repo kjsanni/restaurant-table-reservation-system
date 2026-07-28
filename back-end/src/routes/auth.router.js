@@ -31,7 +31,13 @@ router
   .post(authLimiter, tryCatchHandler(authController.loginTOTPHandler))
   .all(httpMethodError);
 
-router.route("/logout").post(...protectedRoute("", authController.logoutHandler));
+router
+  .route("/logout")
+  .post(
+    validateCsrfToken,
+    tryCatchHandler(authController.logoutHandler)
+  )
+  .all(httpMethodError);
 
 router
   .route("/me")

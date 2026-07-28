@@ -126,6 +126,7 @@ let dsarRequestRoutes = null;
   let encryptionKeyRoutes = null;
   let autoScalingTriggerRoutes = null;
   let complianceEvidenceRoutes = null;
+  let dataAnonymizationRoutes = null;
 
 if (TENANT_MODE) {
   ({ resolveTenant } = require("../tenant-platform/middleware/resolveTenant"));
@@ -208,6 +209,7 @@ if (TENANT_MODE) {
   encryptionKeyRoutes = require("../tenant-platform/routes/encryptionKey.router");
   autoScalingTriggerRoutes = require("../tenant-platform/routes/autoScalingTrigger.router");
   complianceEvidenceRoutes = require("../tenant-platform/routes/complianceEvidence.router");
+  dataAnonymizationRoutes = require("../tenant-platform/routes/dataAnonymization.router");
   ({ requireVertical } = require("../middleware/requireVertical"));
   salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
   salonStationRoutes = require("../verticals/salon/routes/station.router");
@@ -429,6 +431,7 @@ const createServer = () => {
     app.use("/api/v1/admin/debug", logAction, validateCsrfToken, adminMiddleware, debugRoutes);
     app.use("/api/v1/admin/migration", logAction, validateCsrfToken, adminMiddleware, migrationRoutes);
     app.use("/api/v1/admin/postmortems", logAction, validateCsrfToken, adminMiddleware, postmortemRoutes);
+    app.use("/api/v1/admin/data-anonymization", logAction, validateCsrfToken, adminMiddleware, dataAnonymizationRoutes);
     app.use("/api/v1/billing", logAction, validateCsrfToken, billingRoutes);
     app.use("/api/v1/salon/appointments", logAction, validateCsrfToken, salonAppointmentRoutes);
     app.use("/api/v1/salon/stations", logAction, validateCsrfToken, salonStationRoutes);
@@ -469,6 +472,10 @@ const createServer = () => {
   }
   app.get("/api/v1/stats", tryCatchHandler(protect), (req, res, next) => {
     res.json({ success: true, stats: getStats() });
+  });
+  app.get("/robots.txt", (req, res) => {
+    res.type("text/plain");
+    res.send("User-agent: *\nAllow: /\nSitemap: https://vibespotgh.com/sitemap.xml\n");
   });
   app.use(notFound);
   app.use(errorHandler);

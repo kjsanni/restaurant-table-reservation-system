@@ -53,7 +53,7 @@
         <!-- Tenant workspace grid -->
         <div class="section-head">
           <h2>Venue Workspaces</h2>
-          <a href="#" @click.prevent="goTo('/admin/tenants')"
+          <a href="#" @click.prevent="goTo('/super-admin/tenants')"
             >View all venues →</a
           >
         </div>
@@ -143,7 +143,7 @@
         <!-- Support ticket inbox -->
         <div class="section-head">
           <h2>Venue Support Tickets</h2>
-          <a href="#" @click.prevent="goTo('/admin/support-tickets')"
+          <a href="#" @click.prevent="goTo('/super-admin/support-tickets')"
             >Open all →</a
           >
         </div>
@@ -205,7 +205,7 @@
         <!-- Failed payment alerts -->
         <div class="section-head">
           <h2>Payment &amp; Reservation Failures</h2>
-          <a href="#" @click.prevent="goTo('/admin/at-risk-tenants')"
+          <a href="#" @click.prevent="goTo('/super-admin/at-risk-tenants')"
             >View all →</a
           >
         </div>
@@ -309,7 +309,7 @@
         <!-- Brute-force aggregation -->
         <div class="section-head">
           <h2>Security: Suspicious Activity</h2>
-          <a href="#" @click.prevent="goTo('/admin/at-risk-tenants')"
+          <a href="#" @click.prevent="goTo('/super-admin/at-risk-tenants')"
             >View all →</a
           >
         </div>
@@ -434,7 +434,9 @@
         <!-- Recent activity feed -->
         <div class="section-head">
           <h2>Recent Venue Activity</h2>
-          <a href="#" @click.prevent="goTo('/admin/audit')">Open audit log →</a>
+          <a href="#" @click.prevent="goTo('/super-admin/audit')"
+            >Open audit log →</a
+          >
         </div>
 
         <section class="panel activity-feed">
@@ -618,7 +620,7 @@ const loadRevenueTrends = async () => {
 const loadHealth = async () => {
   healthLoading.value = true;
   try {
-    const res = await API.get("/admin/health");
+    const res = await API.get("/admin/deployment/health");
     health.value = res.data || { status: "unknown" };
   } catch (e) {
     health.value = { status: "unreachable" };

@@ -7,7 +7,21 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: () => import("../views/CustomerLandingView.vue"),
+      component: () => {
+        const portalMode =
+          typeof __VITE_PORTAL_MODE__ !== "undefined"
+            ? __VITE_PORTAL_MODE__
+            : window.location.port === "8080"
+              ? "super-admin"
+              : window.location.port === "8081"
+                ? "tenant"
+                : "customer";
+
+        if (portalMode === "super-admin") {
+          return import("../views/admin/SuperAdminLandingView.vue");
+        }
+        return import("../views/CustomerLandingView.vue");
+      },
       meta: { standalone: true },
     },
     {
@@ -299,7 +313,7 @@ const router = createRouter({
       },
     },
     {
-      path: "/admin/customers/:id",
+      path: "/super-admin/customers/:id",
       name: "admin-customer-profile",
       component: () => import("../views/CustomerProfileView.vue"),
       meta: {
@@ -335,20 +349,16 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { standalone: true },
   });
   router.addRoute({
-    path: "/super-admin",
-    redirect: "/admin/overview",
-  });
-  router.addRoute({
-    path: "/super-admin/",
-    redirect: "/admin/overview",
-  });
-  router.addRoute({
     path: "/admin",
-    redirect: "/admin/overview",
+    redirect: "/super-admin/overview",
   });
   router.addRoute({
     path: "/admin/",
-    redirect: "/admin/overview",
+    redirect: "/super-admin/overview",
+  });
+  router.addRoute({
+    path: "/admin/:pathMatch(.*)*",
+    redirect: "/super-admin/:pathMatch(.*)*",
   });
   router.addRoute({
     path: "/t/:tenantSlug/login",
@@ -363,444 +373,453 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
     meta: { standalone: true },
   });
   router.addRoute({
-    path: "/admin/tenants",
-    name: "tenant-dashboard",
-    component: () => import("../views/admin/TenantDashboardView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/overview",
-    name: "super-admin-overview",
-    component: () => import("../views/admin/SuperAdminOverviewView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/tenants/:id",
-    name: "tenant-detail",
-    component: () => import("../views/admin/TenantDetailView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/tenants/:id/api-keys",
-    name: "tenant-api-keys",
-    component: () => import("../views/admin/ApiKeyManagementView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/tenants/:id/branding",
-    name: "tenant-branding",
-    component: () => import("../views/admin/WhiteLabelBrandingView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/tenants/:id/grace-period",
-    name: "tenant-grace-period",
-    component: () => import("../views/admin/GracePeriodSettingsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/tenants/:id/timeline",
-    name: "tenant-timeline",
-    component: () => import("../views/admin/TenantStatusTimelineView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/tenants/:id/notes",
-    name: "tenant-notes",
-    component: () => import("../views/admin/TenantNotesView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/tenants/:id/trial",
-    name: "tenant-trial",
-    component: () => import("../views/admin/TrialManagementView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/tenants/:id/invoices",
-    name: "tenant-invoices",
-    component: () => import("../views/admin/InvoiceManagementView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/tenants/:id/onboarding",
-    name: "tenant-onboarding",
-    component: () => import("../views/admin/OnboardingChecklistView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/tenants/:id/dsar",
-    name: "tenant-dsar",
-    component: () => import("../views/admin/DsarManagementView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+    path: "/super-admin",
+    component: () => import("../layouts/SuperAdminLayout.vue"),
+    children: [
+      { path: "", redirect: "overview" },
+      {
+        path: "overview",
+        name: "super-admin-overview",
+        component: () => import("../views/admin/SuperAdminOverviewView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenants",
+        name: "tenant-dashboard",
+        component: () => import("../views/admin/TenantDashboardView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenants/:id",
+        name: "tenant-detail",
+        component: () => import("../views/admin/TenantDetailView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenants/:id/api-keys",
+        name: "tenant-api-keys",
+        component: () => import("../views/admin/ApiKeyManagementView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenants/:id/branding",
+        name: "tenant-branding",
+        component: () => import("../views/admin/WhiteLabelBrandingView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenants/:id/grace-period",
+        name: "tenant-grace-period",
+        component: () => import("../views/admin/GracePeriodSettingsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenants/:id/timeline",
+        name: "tenant-timeline",
+        component: () => import("../views/admin/TenantStatusTimelineView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenants/:id/notes",
+        name: "tenant-notes",
+        component: () => import("../views/admin/TenantNotesView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenants/:id/trial",
+        name: "tenant-trial",
+        component: () => import("../views/admin/TrialManagementView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenants/:id/invoices",
+        name: "tenant-invoices",
+        component: () => import("../views/admin/InvoiceManagementView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenants/:id/onboarding",
+        name: "tenant-onboarding",
+        component: () => import("../views/admin/OnboardingChecklistView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenants/:id/dsar",
+        name: "tenant-dsar",
+        component: () => import("../views/admin/DsarManagementView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "plans",
+        name: "plans-management",
+        component: () => import("../views/admin/PlansManagementView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "payments",
+        name: "platform-payment-dashboard",
+        component: () => import("../views/admin/PlatformPaymentDashboard.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "usage",
+        name: "platform-usage",
+        component: () => import("../views/admin/PlatformUsageView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "revenue",
+        name: "platform-revenue",
+        component: () => import("../views/admin/RevenueReportsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "geographic",
+        name: "platform-geographic",
+        component: () =>
+          import("../views/admin/GeographicDistributionView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "bulk",
+        name: "platform-bulk-actions",
+        component: () => import("../views/admin/BulkActionsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "financial",
+        name: "platform-financial",
+        component: () => import("../views/admin/FinancialManagementView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "feature-flags",
+        name: "platform-feature-flags",
+        component: () => import("../views/admin/FeatureFlagsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "integrations",
+        name: "platform-integrations",
+        component: () => import("../views/admin/IntegrationAnalyticsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "impersonation",
+        name: "platform-impersonation",
+        component: () => import("../views/admin/ImpersonationView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "analytics",
+        name: "platform-analytics",
+        component: () => import("../views/admin/AdvancedAnalyticsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "billing-emails",
+        name: "billing-email-templates",
+        component: () => import("../views/admin/BillingEmailTemplatesView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "backups",
+        name: "platform-backups",
+        component: () => import("../views/admin/BackupManagementView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "alert-rules",
+        name: "platform-alert-rules",
+        component: () => import("../views/admin/AlertRulesView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "penetration-tests",
+        name: "platform-penetration-tests",
+        component: () => import("../views/admin/PenetrationTestsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "insurance-documents",
+        name: "platform-insurance-documents",
+        component: () => import("../views/admin/InsuranceDocumentsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "encryption-keys",
+        name: "platform-encryption-keys",
+        component: () => import("../views/admin/EncryptionKeysView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "auto-scaling",
+        name: "platform-auto-scaling",
+        component: () => import("../views/admin/AutoScalingTriggersView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "compliance",
+        name: "platform-compliance",
+        component: () => import("../views/admin/ComplianceEvidenceView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "failover",
+        name: "platform-failover",
+        component: () => import("../views/admin/FailoverView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "maintenance",
+        name: "platform-maintenance",
+        component: () => import("../views/admin/MaintenanceModeView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "trust-safety",
+        name: "platform-trust-safety",
+        component: () => import("../views/admin/TrustSafetyView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "support-tickets",
+        name: "platform-support-tickets",
+        component: () => import("../views/admin/SupportTicketsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "support-templates",
+        name: "platform-support-templates",
+        component: () => import("../views/admin/SupportTemplatesView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "support-chat",
+        name: "platform-support-chat",
+        component: () => import("../views/admin/SupportChatView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "monitoring",
+        name: "platform-monitoring",
+        component: () => import("../views/admin/PerformanceMonitoringView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "monitoring/api-latency",
+        name: "platform-api-latency",
+        component: () => import("../views/admin/ApiLatencyView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "monitoring/cache",
+        name: "platform-cache-stats",
+        component: () => import("../views/admin/CacheStatsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "vertical-analytics",
+        name: "platform-vertical-analytics",
+        component: () => import("../views/admin/VerticalAnalyticsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "vertical-templates",
+        name: "platform-vertical-templates",
+        component: () => import("../views/admin/VerticalTemplatesView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "compliance-rules",
+        name: "platform-compliance-rules",
+        component: () => import("../views/admin/ComplianceRulesView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "notification-templates",
+        name: "platform-notification-templates",
+        component: () => import("../views/admin/NotificationTemplatesView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "announcements",
+        name: "platform-announcements",
+        component: () => import("../views/admin/AnnouncementsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "data-retention/policies",
+        name: "platform-data-retention-policies",
+        component: () => import("../views/admin/DataRetentionPoliciesView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "data-retention",
+        name: "platform-data-retention",
+        component: () => import("../views/admin/DataRetentionView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "audit",
+        name: "platform-audit-log",
+        component: () => import("../views/admin/PlatformAuditLogView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "incidents",
+        name: "platform-incidents",
+        component: () => import("../views/admin/IncidentManagementView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "suspicious-activity",
+        name: "platform-suspicious-activity",
+        component: () => import("../views/admin/SuspiciousActivityView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "sub-processors",
+        name: "platform-sub-processors",
+        component: () => import("../views/admin/SubProcessorsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "platform-reports",
+        name: "platform-reports",
+        component: () => import("../views/admin/PlatformReportsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "reconciliation",
+        name: "platform-reconciliation",
+        component: () =>
+          import("../views/admin/MultiCurrencyReconciliationView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "paystack",
+        name: "platform-paystack",
+        component: () => import("../views/admin/PaystackConfigView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "whatsapp-delivery-failures",
+        name: "platform-whatsapp-delivery-failures",
+        component: () =>
+          import("../views/admin/WhatsAppDeliveryFailuresView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "shaqexpress-order-conversion",
+        name: "platform-shaqexpress-order-conversion",
+        component: () => import("../views/admin/ShaqExpressConversionView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "whatsapp-support-ticket-analytics",
+        name: "platform-whatsapp-support-ticket-analytics",
+        component: () =>
+          import("../views/admin/WhatsAppSupportTicketAnalyticsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "marketplace",
+        name: "platform-marketplace",
+        component: () => import("../views/admin/MarketplaceListingsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "case-studies",
+        name: "platform-case-studies",
+        component: () => import("../views/admin/CaseStudiesView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "referrals",
+        name: "platform-referrals",
+        component: () => import("../views/admin/PlatformReferralsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "tenant-data-export",
+        name: "platform-tenant-data-export",
+        component: () => import("../views/admin/TenantDataExportView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "cross-tenant-search",
+        name: "platform-cross-tenant-search",
+        component: () => import("../views/admin/CrossTenantSearchView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "data-anonymization",
+        name: "platform-data-anonymization",
+        component: () => import("../views/admin/DataAnonymizationView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "debug",
+        name: "platform-debug",
+        component: () => import("../views/admin/DebugToolsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "status",
+        name: "platform-status",
+        component: () => import("../views/admin/SystemStatusView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "migration",
+        name: "platform-migration",
+        component: () => import("../views/admin/MigrationToolsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "change-management",
+        name: "platform-change-management",
+        component: () => import("../views/admin/ChangeManagementView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "postmortems",
+        name: "platform-postmortems",
+        component: () => import("../views/admin/IncidentPostmortemView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "fraud",
+        name: "platform-fraud",
+        component: () => import("../views/admin/FraudPreventionView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "at-risk-tenants",
+        name: "platform-at-risk-tenants",
+        component: () => import("../views/admin/AtRiskTenantsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "notifications",
+        name: "platform-notifications",
+        component: () => import("../views/admin/NotificationCenterView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
+        path: "benchmarks",
+        name: "platform-benchmarks",
+        component: () => import("../views/admin/BenchmarkView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+    ],
   });
   router.addRoute({
     path: "/onboarding/wizard",
     name: "tenant-setup-wizard",
     component: () => import("../views/TenantSetupWizardView.vue"),
     meta: { standalone: true, requiresAuth: true },
-  });
-  router.addRoute({
-    path: "/admin/plans",
-    name: "plans-management",
-    component: () => import("../views/admin/PlansManagementView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/payments",
-    name: "platform-payment-dashboard",
-    component: () => import("../views/admin/PlatformPaymentDashboard.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/usage",
-    name: "platform-usage",
-    component: () => import("../views/admin/PlatformUsageView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/revenue",
-    name: "platform-revenue",
-    component: () => import("../views/admin/RevenueReportsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/geographic",
-    name: "platform-geographic",
-    component: () => import("../views/admin/GeographicDistributionView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/bulk",
-    name: "platform-bulk-actions",
-    component: () => import("../views/admin/BulkActionsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/financial",
-    name: "platform-financial",
-    component: () => import("../views/admin/FinancialManagementView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/feature-flags",
-    name: "platform-feature-flags",
-    component: () => import("../views/admin/FeatureFlagsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/integrations",
-    name: "platform-integrations",
-    component: () => import("../views/admin/IntegrationAnalyticsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/impersonation",
-    name: "platform-impersonation",
-    component: () => import("../views/admin/ImpersonationView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/analytics",
-    name: "platform-analytics",
-    component: () => import("../views/admin/AdvancedAnalyticsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/billing-emails",
-    name: "billing-email-templates",
-    component: () => import("../views/admin/BillingEmailTemplatesView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/backups",
-    name: "platform-backups",
-    component: () => import("../views/admin/BackupManagementView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/alert-rules",
-    name: "platform-alert-rules",
-    component: () => import("../views/admin/AlertRulesView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/penetration-tests",
-    name: "platform-penetration-tests",
-    component: () => import("../views/admin/PenetrationTestsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/insurance-documents",
-    name: "platform-insurance-documents",
-    component: () => import("../views/admin/InsuranceDocumentsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/encryption-keys",
-    name: "platform-encryption-keys",
-    component: () => import("../views/admin/EncryptionKeysView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/auto-scaling",
-    name: "platform-auto-scaling",
-    component: () => import("../views/admin/AutoScalingTriggersView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/compliance",
-    name: "platform-compliance",
-    component: () => import("../views/admin/ComplianceEvidenceView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/failover",
-    name: "platform-failover",
-    component: () => import("../views/admin/FailoverView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/maintenance",
-    name: "platform-maintenance",
-    component: () => import("../views/admin/MaintenanceModeView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/trust-safety",
-    name: "platform-trust-safety",
-    component: () => import("../views/admin/TrustSafetyView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/support-tickets",
-    name: "platform-support-tickets",
-    component: () => import("../views/admin/SupportTicketsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/support-templates",
-    name: "platform-support-templates",
-    component: () => import("../views/admin/SupportTemplatesView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/support-chat",
-    name: "platform-support-chat",
-    component: () => import("../views/admin/SupportChatView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/monitoring",
-    name: "platform-monitoring",
-    component: () => import("../views/admin/PerformanceMonitoringView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/monitoring/api-latency",
-    name: "platform-api-latency",
-    component: () => import("../views/admin/ApiLatencyView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/monitoring/cache",
-    name: "platform-cache-stats",
-    component: () => import("../views/admin/CacheStatsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/vertical-analytics",
-    name: "platform-vertical-analytics",
-    component: () => import("../views/admin/VerticalAnalyticsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/vertical-templates",
-    name: "platform-vertical-templates",
-    component: () => import("../views/admin/VerticalTemplatesView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/compliance-rules",
-    name: "platform-compliance-rules",
-    component: () => import("../views/admin/ComplianceRulesView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/notification-templates",
-    name: "platform-notification-templates",
-    component: () => import("../views/admin/NotificationTemplatesView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/announcements",
-    name: "platform-announcements",
-    component: () => import("../views/admin/AnnouncementsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/data-retention/policies",
-    name: "platform-data-retention-policies",
-    component: () => import("../views/admin/DataRetentionPoliciesView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/data-retention",
-    name: "platform-data-retention",
-    component: () => import("../views/admin/DataRetentionView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/audit",
-    name: "platform-audit-log",
-    component: () => import("../views/admin/PlatformAuditLogView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/incidents",
-    name: "platform-incidents",
-    component: () => import("../views/admin/IncidentManagementView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/suspicious-activity",
-    name: "platform-suspicious-activity",
-    component: () => import("../views/admin/SuspiciousActivityView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/sub-processors",
-    name: "platform-sub-processors",
-    component: () => import("../views/admin/SubProcessorsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/platform-reports",
-    name: "platform-reports",
-    component: () => import("../views/admin/PlatformReportsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/reconciliation",
-    name: "platform-reconciliation",
-    component: () =>
-      import("../views/admin/MultiCurrencyReconciliationView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/paystack",
-    name: "platform-paystack",
-    component: () => import("../views/admin/PaystackConfigView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/whatsapp-delivery-failures",
-    name: "platform-whatsapp-delivery-failures",
-    component: () => import("../views/admin/WhatsAppDeliveryFailuresView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/shaqexpress-order-conversion",
-    name: "platform-shaqexpress-order-conversion",
-    component: () => import("../views/admin/ShaqExpressConversionView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/whatsapp-support-ticket-analytics",
-    name: "platform-whatsapp-support-ticket-analytics",
-    component: () =>
-      import("../views/admin/WhatsAppSupportTicketAnalyticsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/marketplace",
-    name: "platform-marketplace",
-    component: () => import("../views/admin/MarketplaceListingsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/case-studies",
-    name: "platform-case-studies",
-    component: () => import("../views/admin/CaseStudiesView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/referrals",
-    name: "platform-referrals",
-    component: () => import("../views/admin/PlatformReferralsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/tenant-data-export",
-    name: "platform-tenant-data-export",
-    component: () => import("../views/admin/TenantDataExportView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/cross-tenant-search",
-    name: "platform-cross-tenant-search",
-    component: () => import("../views/admin/CrossTenantSearchView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/data-anonymization",
-    name: "platform-data-anonymization",
-    component: () => import("../views/admin/DataAnonymizationView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/debug",
-    name: "platform-debug",
-    component: () => import("../views/admin/DebugToolsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/status",
-    name: "platform-status",
-    component: () => import("../views/admin/SystemStatusView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/migration",
-    name: "platform-migration",
-    component: () => import("../views/admin/MigrationToolsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/change-management",
-    name: "platform-change-management",
-    component: () => import("../views/admin/ChangeManagementView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/postmortems",
-    name: "platform-postmortems",
-    component: () => import("../views/admin/IncidentPostmortemView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/fraud",
-    name: "platform-fraud",
-    component: () => import("../views/admin/FraudPreventionView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/at-risk-tenants",
-    name: "platform-at-risk-tenants",
-    component: () => import("../views/admin/AtRiskTenantsView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/notifications",
-    name: "platform-notifications",
-    component: () => import("../views/admin/NotificationCenterView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-  });
-  router.addRoute({
-    path: "/admin/benchmarks",
-    name: "platform-benchmarks",
-    component: () => import("../views/admin/BenchmarkView.vue"),
-    meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
   });
   router.addRoute({
     path: "/appointments",
@@ -1097,11 +1116,13 @@ router.beforeEach((to, from, next) => {
   ) {
     next({ name: "home" });
   } else if (
-    to.path.startsWith("/admin") &&
-    !authStore.isSuperAdmin &&
-    !["/admin/settings", "/admin/floorplan", "/admin/email-templates"].some(
-      (p) => to.path === p || to.path.startsWith(`${p}/`)
-    )
+    authStore.isAuthenticated &&
+    (to.path.startsWith("/super-admin") ||
+      (to.path.startsWith("/admin") &&
+        !["/admin/settings", "/admin/floorplan", "/admin/email-templates"].some(
+          (p) => to.path === p || to.path.startsWith(`${p}/`)
+        ))) &&
+    !authStore.isSuperAdmin
   ) {
     next({ name: "home" });
   } else if (

@@ -231,13 +231,3 @@ module.exports = {
   autoAssignConversationHandler,
   submitCsatHandler,
 };
-
-module.exports = {
-  listConversationsHandler,
-  getConversationHandler,
-  createConversationHandler,
-  updateConversationHandler,
-  deleteConversationHandler,
-  listMessagesHandler,
-  sendMessageHandler,
-};

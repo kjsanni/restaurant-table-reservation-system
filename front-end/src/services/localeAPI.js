@@ -2,10 +2,10 @@ import API from "./API";
 
 class LocaleAPI {
   getLocale() {
-    return API.get("/locale");
+    return API.get("/auth/locale");
   }
   updateLocale(locale) {
-    return API.put("/locale", { locale });
+    return API.put("/auth/locale", { locale });
   }
 }
 

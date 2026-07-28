@@ -96,7 +96,7 @@ const handleLogin = async () => {
     }
 
     if (resolvedMode.value === "super-admin") {
-      router.push("/admin/overview");
+      router.push("/super-admin/overview");
     } else if (resolvedMode.value === "tenant") {
       router.push("/dashboard");
     } else {
@@ -124,7 +124,7 @@ const handleTOTPLogin = async () => {
   try {
     await authStore.loginWithTOTP(tempToken.value, totpToken.value);
     if (resolvedMode.value === "super-admin") {
-      router.push("/admin/overview");
+      router.push("/super-admin/overview");
     } else {
       router.push("/dashboard");
     }

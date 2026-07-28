@@ -16,6 +16,7 @@ export default defineConfig({
   },
   define: {
     __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
+    __VITE_PORTAL_MODE__: JSON.stringify("customer"),
   },
   plugins: [Icons({ compiler: "vue3" }), vue()],
   resolve: {

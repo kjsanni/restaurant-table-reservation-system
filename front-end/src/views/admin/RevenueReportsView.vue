@@ -291,7 +291,7 @@ const loadFeatureAdoption = async () => {
 };
 
 const viewTenant = (id) => {
-  router.push(`/admin/tenants/${id}`);
+  router.push(`/super-admin/tenants/${id}`);
 };
 
 const formatCurrency = (val) => {
