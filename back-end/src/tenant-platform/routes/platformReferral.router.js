@@ -6,13 +6,13 @@ const platformReferralController = require("../controllers/platformReferral.cont
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
 
 router
-  .route("/referrals")
+  .route("/")
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(platformReferralController.listReferralsHandler))
   .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(platformReferralController.createReferralHandler))
   .all(httpMethodError);
 
 router
-  .route("/referrals/:id")
+  .route("/:id")
   .patch(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(platformReferralController.updateReferralHandler))
   .all(httpMethodError);
 

@@ -7,8 +7,8 @@ tenantAdminDAO.findBySlug = async (slug) => {
   return db.tenant.findOne({ where: { slug } });
 };
 
-tenantAdminDAO.create = async (data) => {
-  return db.tenant.create(data);
+tenantAdminDAO.create = async (data, options = {}) => {
+  return db.tenant.create(data, options);
 };
 
 tenantAdminDAO.list = async (filters = {}) => {

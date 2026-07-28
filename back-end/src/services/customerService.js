@@ -19,8 +19,8 @@ const updateCustomer = async (customerId, updates, tenantId) => {
   return await reservationDAO.updateCustomer(customerId, filteredUpdates, tenantId);
 };
 
-const findOrCreateCustomer = async (customerDetails, tenantId) => {
-  return await reservationDAO.findOrCreateCustomer(customerDetails, null, tenantId);
+const findOrCreateCustomer = async (customerDetails, tenantId, transaction = null) => {
+  return await reservationDAO.findOrCreateCustomer(customerDetails, transaction, tenantId);
 };
 
 const incrementVisit = async (customerId, tenantId) => {

@@ -6,7 +6,7 @@ const supportTicketAnalyticsController = require("../controllers/supportTicketAn
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
 
 router
-  .route("/support-tickets/whatsapp/analytics")
+  .route("/whatsapp/analytics")
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(supportTicketAnalyticsController.getWhatsAppAnalyticsHandler))
   .all(httpMethodError);
 

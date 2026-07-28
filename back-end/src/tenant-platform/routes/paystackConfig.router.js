@@ -6,12 +6,12 @@ const paystackConfigController = require("../controllers/paystackConfig.controll
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
 
 router
-  .route("/paystack/config")
+  .route("/config")
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(paystackConfigController.getConfigHandler))
   .all(httpMethodError);
 
 router
-  .route("/paystack/config/rotate")
+  .route("/config/rotate")
   .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(paystackConfigController.rotateKeyHandler))
   .all(httpMethodError);
 

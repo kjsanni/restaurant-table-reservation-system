@@ -2,8 +2,21 @@ const express = require("express");
 const router = express.Router();
 const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
-const { authLimiter } = require("../../middleware/rateLimit");
+const { authLimiter, generalLimiter } = require("../../middleware/rateLimit");
+const { validateCsrfToken } = require("../../middleware/csrf");
+const enforcePasswordPolicy = require("../../middleware/passwordPolicy");
 const publicTenantController = require("../controllers/publicTenant.controller");
+const tenantSignupController = require("../../controllers/tenant-signup.controller");
+
+router
+  .route("/signup")
+  .post(
+    generalLimiter,
+    validateCsrfToken,
+    enforcePasswordPolicy,
+    tryCatchHandler(tenantSignupController.signupTenantHandler)
+  )
+  .all(httpMethodError);
 
 router
   .route("/:slug")

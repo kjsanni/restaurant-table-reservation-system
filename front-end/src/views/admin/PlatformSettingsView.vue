@@ -17,6 +17,70 @@
       <button class="btn-primary" @click="loadSettings">Retry</button>
     </div>
     <div v-else class="settings-grid">
+      <div class="domain-card turnstile-card">
+        <div class="domain-header">
+          <h3>Cloudflare Turnstile</h3>
+          <span class="domain-count">Bot protection</span>
+        </div>
+        <div class="domain-items">
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-key">Enabled</span>
+              <span class="setting-description">
+                Protect public forms (login, register, DSAR) from bots
+              </span>
+            </div>
+            <div class="setting-actions">
+              <label class="toggle">
+                <input
+                  v-model="turnstileEnabled"
+                  type="checkbox"
+                  :disabled="saving"
+                  @change="saveTurnstileSettings"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-key">Site Key</span>
+              <span class="setting-description">
+                Public key for the Turnstile widget
+              </span>
+            </div>
+            <div class="setting-actions">
+              <input
+                v-model="turnstileSiteKey"
+                type="text"
+                class="filter-select"
+                placeholder="0x4AAAAAAA..."
+                :disabled="saving"
+                @blur="saveTurnstileSettings"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-key">Secret Key</span>
+              <span class="setting-description">
+                Server-side secret for token verification
+              </span>
+            </div>
+            <div class="setting-actions">
+              <input
+                v-model="turnstileSecretKey"
+                type="password"
+                class="filter-select"
+                placeholder="0x4AAAAAAA..."
+                :disabled="saving"
+                @blur="saveTurnstileSettings"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div v-for="(items, domain) in domains" :key="domain" class="domain-card">
         <div class="domain-header">
           <h3>{{ formatDomain(domain) }}</h3>
@@ -118,6 +182,10 @@ const editingKey = ref(null);
 const editValue = ref(null);
 const auditChanges = ref([]);
 
+const turnstileEnabled = ref(false);
+const turnstileSiteKey = ref("");
+const turnstileSecretKey = ref("");
+
 const DOMAIN_LABELS = {
   security: "Security Posture",
   payments: "Payment Infrastructure",
@@ -161,10 +229,25 @@ const loadSettings = async () => {
   try {
     const res = await adminAPI.listPlatformSettings();
     domains.value = res.data?.domains || {};
+    await loadTurnstileSettings();
   } catch (e) {
     error.value = "Failed to load platform settings.";
   } finally {
     loading.value = false;
+  }
+};
+
+const loadTurnstileSettings = async () => {
+  try {
+    const res = await adminAPI.get("/admin/platform-settings");
+    const settings = res.data?.domains?.security || [];
+    const findSetting = (key) => settings.find((s) => s.key === key)?.value;
+
+    turnstileEnabled.value = Boolean(findSetting("turnstile_enabled"));
+    turnstileSiteKey.value = findSetting("turnstile_site_key") || "";
+    turnstileSecretKey.value = findSetting("turnstile_secret_key") || "";
+  } catch {
+    // keep defaults
   }
 };
 
@@ -176,6 +259,31 @@ const startEdit = (key, value) => {
 const cancelEdit = () => {
   editingKey.value = null;
   editValue.value = null;
+};
+
+const saveTurnstileSettings = async () => {
+  saving.value = true;
+  try {
+    await adminAPI.updatePlatformSetting(
+      "turnstile_enabled",
+      turnstileEnabled.value
+    );
+    await adminAPI.updatePlatformSetting(
+      "turnstile_site_key",
+      turnstileSiteKey.value
+    );
+    if (turnstileSecretKey.value) {
+      await adminAPI.updatePlatformSetting(
+        "turnstile_secret_key",
+        turnstileSecretKey.value
+      );
+    }
+    await loadSettings();
+  } catch (e) {
+    error.value = "Failed to save Turnstile settings.";
+  } finally {
+    saving.value = false;
+  }
 };
 
 const saveSetting = async (key) => {
@@ -458,5 +566,22 @@ onMounted(() => {
   font-size: var(--text-xs);
   color: var(--ink-muted);
   white-space: nowrap;
+}
+
+.turnstile-card {
+  border-color: var(--accent-200);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--accent-50) 100%);
+}
+.turnstile-card .domain-header h3 {
+  color: var(--accent-900);
+}
+.setting-description {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  margin-top: var(--space-0-5);
+}
+.turnstile-card .filter-select {
+  width: 240px;
 }
 </style>

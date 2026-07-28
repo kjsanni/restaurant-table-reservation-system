@@ -57,6 +57,39 @@ const shouldShow = (item: {
 
 const visibleNavItems = computed(() => superAdminNavItems.filter(shouldShow));
 
+const groupedNavItems = computed(() => {
+  const groups: Record<string, NavItem[]> = {};
+  for (const item of visibleNavItems.value) {
+    const section = item.section || "Other";
+    if (!groups[section]) groups[section] = [];
+    groups[section].push(item);
+  }
+  return groups;
+});
+
+const SECTION_ORDER = [
+  "Dashboard",
+  "Tenants",
+  "Financial",
+  "Support",
+  "Integrations",
+  "Security & Compliance",
+  "Platform",
+  "Data & Tools",
+];
+
+const orderedSections = computed(() => {
+  const sections = Object.keys(groupedNavItems.value);
+  return sections.sort((a, b) => {
+    const aIdx = SECTION_ORDER.indexOf(a);
+    const bIdx = SECTION_ORDER.indexOf(b);
+    if (aIdx === -1 && bIdx === -1) return a.localeCompare(b);
+    if (aIdx === -1) return 1;
+    if (bIdx === -1) return -1;
+    return aIdx - bIdx;
+  });
+});
+
 const logout = async () => {
   if (!isAuthenticated.value) return;
   await authStore.logout();
@@ -95,20 +128,25 @@ const isActive = (routeName: string) =>
           </button>
 
           <nav class="sa-nav">
-            <VaSidebarItem
-              v-for="item in visibleNavItems"
-              :key="item.routeName"
-              :to="{ name: item.routeName }"
-              :class="[
-                'sa-nav-item',
-                { 'sa-nav-item-active': isActive(item.routeName) },
-              ]"
-            >
-              <template #icon>
-                <Icon :icon="item.icon" width="20" height="20" />
-              </template>
-              <span v-if="!collapsed" class="sa-nav-text">{{ item.text }}</span>
-            </VaSidebarItem>
+            <template v-for="section in orderedSections" :key="section">
+              <div class="sa-nav-section">{{ section }}</div>
+              <VaSidebarItem
+                v-for="item in groupedNavItems[section]"
+                :key="item.routeName"
+                :to="{ name: item.routeName }"
+                :class="[
+                  'sa-nav-item',
+                  { 'sa-nav-item-active': isActive(item.routeName) },
+                ]"
+              >
+                <template #icon>
+                  <Icon :icon="item.icon" width="20" height="20" />
+                </template>
+                <span v-if="!collapsed" class="sa-nav-text">{{
+                  item.text
+                }}</span>
+              </VaSidebarItem>
+            </template>
           </nav>
         </div>
 
@@ -224,6 +262,16 @@ const isActive = (routeName: string) =>
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.sa-nav-section {
+  padding: 12px 12px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.45);
+  user-select: none;
 }
 
 .sa-nav-item {

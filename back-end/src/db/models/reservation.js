@@ -12,6 +12,10 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: "cascade",
         hooks: true,
       });
+      Reservation.belongsTo(models.tenant, {
+        foreignKey: "tenantId",
+        onDelete: "SET NULL",
+      });
       Reservation.hasMany(models.table, {
         foreignKey: "reservationId",
         onUpdate: "cascade",

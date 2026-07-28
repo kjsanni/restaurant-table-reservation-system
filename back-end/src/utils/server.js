@@ -8,6 +8,7 @@ const { Sentry } = require("../middleware/monitoring");
 const tableRouter = require("../routes/table.router");
 const reservationRouter = require("../routes/reservation.router");
 const authRouter = require("../routes/auth.router");
+const passwordResetRouter = require("../routes/passwordReset.router");
 const scheduleRouter = require("../routes/schedule.router");
 const shiftRouter = require("../routes/shift.router");
 const timeOffRouter = require("../routes/timeOff.router");
@@ -27,6 +28,8 @@ const whatsappRouter = require("../routes/whatsapp.router");
 const deliveryRouter = require("../routes/delivery.router");
 const shaqexpressRouter = require("../routes/shaqexpress.router");
 const legalRouter = require("../routes/legal.router");
+const publicRouter = require("../routes/public.router");
+const tenantSignupRouter = require("../routes/tenant-signup.router");
 const { setCsrfCookie, generateCsrfToken, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
 const { requestLogger } = require("../middleware/requestLogger");
@@ -347,6 +350,7 @@ const createServer = () => {
   app.use("/api/v1/tables", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("table_management")] : []), tableRouter);
   app.use("/api/v1/reservations", logAction, validateCsrfToken, ...(TENANT_MODE ? [requiresServiceMode("dine_in")] : []), reservationRouter);
   app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
+  app.use("/api/v1/auth", validateCsrfToken, authLimiter, passwordResetRouter);
   app.use("/api/v1/schedule", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), scheduleRouter);
   app.use("/api/v1/shifts", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), shiftRouter);
   app.use("/api/v1/time-offs", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), timeOffRouter);
@@ -361,6 +365,7 @@ const createServer = () => {
   app.use("/api/v1/promotions", logAction, validateCsrfToken, require("../routes/promotion.router"));
   app.use("/api/v1/customers", logAction, validateCsrfToken, customerRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
+  app.use("/api/v1/public", publicRouter);
   if (TENANT_MODE) {
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, trialRoutes);
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, invoiceRoutes);
@@ -382,6 +387,7 @@ const createServer = () => {
     app.use("/api/v1/admin/billing-emails", logAction, validateCsrfToken, adminMiddleware, billingEmailRoutes);
     app.use("/api/v1/admin/audit", logAction, validateCsrfToken, adminMiddleware, platformAuditRoutes);
     app.use("/api/v1/admin/notifications", logAction, validateCsrfToken, adminMiddleware, notificationRoutes);
+    app.use("/api/v1/admin/support-tickets", logAction, validateCsrfToken, adminMiddleware, supportTicketAnalyticsRoutes);
     app.use("/api/v1/admin/support-tickets", logAction, validateCsrfToken, adminMiddleware, supportTicketRoutes);
     app.use("/api/v1/admin/totp", logAction, validateCsrfToken, adminMiddleware, totpRoutes);
     app.use("/api/v1/admin/sessions", logAction, validateCsrfToken, adminMiddleware, sessionRoutes);
@@ -420,7 +426,6 @@ const createServer = () => {
     app.use("/api/v1/admin/reconciliation", logAction, validateCsrfToken, adminMiddleware, reconciliationRoutes);
     app.use("/api/v1/admin/paystack", logAction, validateCsrfToken, adminMiddleware, paystackConfigRoutes);
     app.use("/api/v1/admin/shaqexpress", logAction, validateCsrfToken, adminMiddleware, shaqExpressConversionRoutes);
-    app.use("/api/v1/admin/support-tickets", logAction, validateCsrfToken, adminMiddleware, supportTicketAnalyticsRoutes);
     app.use("/api/v1/admin/marketplace", logAction, validateCsrfToken, adminMiddleware, marketplaceRoutes);
     app.use("/api/v1/admin/case-studies", logAction, validateCsrfToken, adminMiddleware, caseStudyRoutes);
     app.use("/api/v1/admin/referrals", logAction, validateCsrfToken, adminMiddleware, platformReferralRoutes);

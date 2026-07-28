@@ -125,10 +125,20 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(50),
         allowNull: true,
       },
+      businessVertical: {
+        type: DataTypes.ENUM("restaurant", "salon"),
+        allowNull: false,
+        defaultValue: "restaurant",
+      },
       serviceModes: {
         type: DataTypes.JSON,
         allowNull: false,
         defaultValue: ["dine_in", "takeaway", "delivery"],
+      },
+      monthlyRevenue: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: false,
+        defaultValue: 0,
       },
       trialExtendsTo: {
         type: DataTypes.DATE,

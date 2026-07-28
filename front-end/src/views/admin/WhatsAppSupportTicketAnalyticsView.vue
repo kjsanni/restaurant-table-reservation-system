@@ -68,7 +68,7 @@ const load = async () => {
   loading.value = true;
   try {
     const res = await adminAPI.getWhatsAppSupportTicketAnalytics({
-      from,
+      from: from.value,
       to: to.value || undefined,
     });
     analytics.value = res.data || {};

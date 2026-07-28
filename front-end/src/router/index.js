@@ -49,6 +49,24 @@ const router = createRouter({
       meta: { standalone: true },
     },
     {
+      path: "/forgot-password",
+      name: "forgot-password",
+      component: () => import("../views/ForgotPasswordView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/reset-password",
+      name: "reset-password",
+      component: () => import("../views/ResetPasswordView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/pricing",
+      name: "pricing",
+      component: () => import("../views/PricingView.vue"),
+      meta: { standalone: true },
+    },
+    {
       path: "/reservations",
       component: () => import("../layouts/TenantLayout.vue"),
       children: [
@@ -1492,7 +1510,9 @@ router.beforeEach((to, from, next) => {
   } else if (
     (to.name === "login" ||
       to.name === "super-admin-login" ||
-      to.name === "tenant-login") &&
+      to.name === "tenant-login" ||
+      to.name === "customer-login" ||
+      to.name === "customer-register") &&
     authStore.isAuthenticated &&
     !authStore.isLoading
   ) {
@@ -1504,7 +1524,7 @@ router.beforeEach((to, from, next) => {
     ) {
       next({ name: "tenant-landing" });
     } else {
-      next({ name: "tenant-landing" });
+      next({ name: "customer-portal-home" });
     }
   } else if (
     to.name === "home" &&
@@ -1582,6 +1602,20 @@ const customerPortalRoutes = [
 ];
 
 customerPortalRoutes.forEach((route) => router.addRoute(route));
+
+router.addRoute({
+  path: "/customer/login",
+  name: "customer-login",
+  component: () => import("../views/CustomerLoginView.vue"),
+  meta: { standalone: true },
+});
+
+router.addRoute({
+  path: "/customer/register",
+  name: "customer-register",
+  component: () => import("../views/CustomerRegisterView.vue"),
+  meta: { standalone: true },
+});
 
 router.addRoute({
   path: "/:pathMatch(.*)*",

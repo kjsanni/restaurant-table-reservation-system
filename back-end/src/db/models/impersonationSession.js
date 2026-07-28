@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: "impersonationSession",
       tableName: "impersonation_sessions",
+      timestamps: false,
       indexes: [
         { fields: ["superAdminId"] },
         { fields: ["tenantUserId"] },

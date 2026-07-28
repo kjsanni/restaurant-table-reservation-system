@@ -1,5 +1,4 @@
 const db = require("../../db/models");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const getSuspiciousActivityHandler = async (req, res) => {
   const suspicious = [];
@@ -8,12 +7,11 @@ const getSuspiciousActivityHandler = async (req, res) => {
 
   const failedLoginAggregation = await db.loginAttempt.findAll({
     where: {
-      success: false,
-      createdAt: { [db.Sequelize.Op.gte]: thirtyDaysAgo },
+      attemptedAt: { [db.Sequelize.Op.gte]: thirtyDaysAgo },
     },
     attributes: [
       [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "attempts"],
-      [db.Sequelize.fn("COUNT", db.Sequelize.fn("DISTINCT", db.Sequelize.col("ipAddress")), "distinctIps")],
+      [db.Sequelize.literal("COUNT(DISTINCT ipAddress)"), "distinctIps"],
       "email",
       "ipAddress",
     ],
@@ -31,34 +29,11 @@ const getSuspiciousActivityHandler = async (req, res) => {
       attempts: parseInt(row.attempts, 10),
       distinctIps: parseInt(row.distinctIps, 10),
       severity: parseInt(row.attempts, 10) > 20 ? "high" : "medium",
+      lastAttemptAt: row.attemptedAt || row.createdAt,
     });
   }
 
-  const recentLockouts = await db.loginAttempt.findAll({
-    where: {
-      lockedOut: true,
-      createdAt: { [db.Sequelize.Op.gte]: thirtyDaysAgo },
-    },
-    include: [
-      { model: db.user, as: "user", attributes: ["id", "email", "name", "tenantId"] },
-    ],
-    order: [["createdAt", "DESC"]],
-    limit: 50,
-  });
-
-  for (const lockout of recentLockouts) {
-    suspicious.push({
-      type: "account_lockout",
-      userId: lockout.user?.id,
-      email: lockout.user?.email,
-      tenantId: lockout.user?.tenantId,
-      ipAddress: lockout.ipAddress,
-      lockedAt: lockout.createdAt,
-      severity: "high",
-    });
-  }
-
-  suspicious.sort((a, b) => new Date(b.lockedAt || b.createdAt || 0) - new Date(a.lockedAt || a.createdAt || 0));
+  suspicious.sort((a, b) => new Date(b.lastAttemptAt || 0) - new Date(a.lastAttemptAt || 0));
 
   res.status(200).json({ success: true, suspicious, total: suspicious.length });
 };

@@ -6,7 +6,7 @@ const shaqExpressConversionController = require("../controllers/shaqExpressConve
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
 
 router
-  .route("/shaqexpress/order-conversion")
+  .route("/order-conversion")
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(shaqExpressConversionController.getOrderConversionFunnelHandler))
   .all(httpMethodError);
 

@@ -10,14 +10,14 @@ const listPoliciesHandler = async (req, res) => {
 };
 
 const createPolicyHandler = async (req, res) => {
-  const { name, tableName, retentionDays, action, isActive } = req.body;
-  if (!name || !tableName || !retentionDays) {
-    return res.status(400).json({ success: false, message: "name, tableName, and retentionDays are required" });
+  const { name, dataCategory, retentionDays, action, isActive } = req.body;
+  if (!name || !dataCategory || !retentionDays) {
+    return res.status(400).json({ success: false, message: "name, dataCategory, and retentionDays are required" });
   }
 
   const policy = await dataRetentionPolicyDAO.create({
     name,
-    tableName,
+    dataCategory,
     retentionDays,
     action: action || "delete",
     isActive: isActive ?? true,
@@ -29,7 +29,7 @@ const createPolicyHandler = async (req, res) => {
     "data_retention_policy",
     policy.id,
     null,
-    { name, tableName, retentionDays },
+    { name, dataCategory, retentionDays },
     req.ip
   );
 

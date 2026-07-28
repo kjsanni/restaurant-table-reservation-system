@@ -3,6 +3,10 @@ import { ref } from "vue";
 import { RouterLink } from "vue-router";
 import axios from "axios";
 import logger from "@/utils/logger";
+import TurnstileWidget from "@/components/TurnstileWidget.vue";
+import { useTurnstileConfig } from "@/composables/useTurnstileConfig";
+
+const { config: turnstileConfig } = useTurnstileConfig();
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 
@@ -26,6 +30,7 @@ const submitting = ref(false);
 const submitted = ref(false);
 const error = ref<string | null>(null);
 const confirmationId = ref<number | null>(null);
+const cfTurnstileToken = ref("");
 
 const requestTypes = [
   { value: "access", label: "Access my data" },
@@ -48,6 +53,7 @@ async function submit() {
         phone: form.value.phone || undefined,
         details: form.value.details || undefined,
       },
+      cfTurnstileToken: cfTurnstileToken.value || undefined,
     });
     confirmationId.value = res.data.item?.id || null;
     submitted.value = true;
@@ -160,6 +166,12 @@ function resetForm() {
             placeholder="Describe your request, including any relevant dates or booking references."
           />
         </div>
+
+        <TurnstileWidget
+          v-if="turnstileConfig.enabled && turnstileConfig.siteKey"
+          v-model="cfTurnstileToken"
+          :site-key="turnstileConfig.siteKey"
+        />
 
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" :disabled="submitting">

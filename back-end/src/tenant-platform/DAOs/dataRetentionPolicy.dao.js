@@ -12,7 +12,7 @@ dataRetentionPolicyDAO.list = (filters = {}) => {
 
   return db.dataRetentionPolicy.findAll({
     where,
-    order: [["tableName", "ASC"]],
+    order: [["dataCategory", "ASC"]],
     limit: filters.limit || 100,
   });
 };

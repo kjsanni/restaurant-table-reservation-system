@@ -21,7 +21,7 @@ const verifyRefreshToken = (token) => {
   return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET || getCurrentSecret());
 };
 
-const registerUser = async (userDAO, payload, tenantId) => {
+const registerUser = async (userDAO, payload, tenantId, role = "staff", options = {}) => {
   const { username, email, password } = payload;
 
   if (!username || !email || !password) {
@@ -45,8 +45,8 @@ const registerUser = async (userDAO, payload, tenantId) => {
     username,
     email,
     password: hashedPassword,
-    role: "staff",
-  }, tenantId);
+    role,
+  }, tenantId, options);
 };
 
 const refreshAccessToken = async (refreshTokenDAO, refreshToken, tenantId) => {

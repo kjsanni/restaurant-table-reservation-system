@@ -8,6 +8,7 @@ const { authLimiter, generalLimiter } = require("../middleware/rateLimit");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 const { validateCsrfToken } = require("../middleware/csrf");
 const enforcePasswordPolicy = require("../middleware/passwordPolicy");
+const validateTurnstile = require("../middleware/turnstile");
 
 router
   .route("/register/status")
@@ -15,16 +16,33 @@ router
   .all(httpMethodError);
 
 router
+  .route("/turnstile-config")
+  .get(tryCatchHandler(authController.getTurnstileConfigHandler))
+  .all(httpMethodError);
+
+router
   .route("/register")
   .post(
     authLimiter,
+    validateTurnstile,
     validateCsrfToken,
     enforcePasswordPolicy,
     tryCatchHandler(authController.registerHandler)
   )
   .all(httpMethodError);
 
-router.route("/login").post(authLimiter, tryCatchHandler(authController.loginHandler));
+router
+  .route("/register/customer")
+  .post(
+    authLimiter,
+    validateTurnstile,
+    validateCsrfToken,
+    enforcePasswordPolicy,
+    tryCatchHandler(authController.registerCustomerHandler)
+  )
+  .all(httpMethodError);
+
+router.route("/login").post(authLimiter, validateTurnstile, tryCatchHandler(authController.loginHandler));
 
 router
   .route("/login-totp")

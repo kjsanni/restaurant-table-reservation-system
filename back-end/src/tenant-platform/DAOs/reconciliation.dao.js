@@ -2,10 +2,17 @@ const db = require("../../db/models");
 
 const reconciliationDAO = {};
 
+const toValidDate = (value) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 reconciliationDAO.getMultiCurrencyTotals = async (filters = {}) => {
   const where = {};
-  if (filters.from) where.createdAt = { ...where.createdAt, [db.Sequelize.Op.gte]: new Date(filters.from) };
-  if (filters.to) where.createdAt = { ...where.createdAt, [db.Sequelize.Op.lte]: new Date(filters.to) };
+  const fromDate = toValidDate(filters.from);
+  const toDate = toValidDate(filters.to);
+  if (fromDate) where.createdAt = { ...where.createdAt, [db.Sequelize.Op.gte]: fromDate };
+  if (toDate) where.createdAt = { ...where.createdAt, [db.Sequelize.Op.lte]: toDate };
   if (filters.tenantId) where.tenantId = filters.tenantId;
 
   const rows = await db.payment.findAll({
@@ -44,8 +51,10 @@ reconciliationDAO.getTenantCurrencyBreakdown = async (filters = {}) => {
   if (tenantIds.length > 0) {
     paymentWhere.tenantId = { [db.Sequelize.Op.in]: tenantIds };
   }
-  if (filters.from) paymentWhere.createdAt = { ...paymentWhere.createdAt, [db.Sequelize.Op.gte]: new Date(filters.from) };
-  if (filters.to) paymentWhere.createdAt = { ...paymentWhere.createdAt, [db.Sequelize.Op.lte]: new Date(filters.to) };
+  const fromDate = toValidDate(filters.from);
+  const toDate = toValidDate(filters.to);
+  if (fromDate) paymentWhere.createdAt = { ...paymentWhere.createdAt, [db.Sequelize.Op.gte]: fromDate };
+  if (toDate) paymentWhere.createdAt = { ...paymentWhere.createdAt, [db.Sequelize.Op.lte]: toDate };
 
   const paymentStats = await db.payment.findAll({
     where: paymentWhere,

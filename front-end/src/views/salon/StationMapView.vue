@@ -4,6 +4,9 @@ import stationAPI from "@/services/stationAPI";
 import floorPlanAPI from "@/services/floorPlanAPI";
 import logger from "@/utils/logger";
 import { io, Socket } from "socket.io-client";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 interface Station {
   id: number;
@@ -86,15 +89,15 @@ onUnmounted(() => {
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Station Map</h1>
-        <p>Stations grouped by floor plan</p>
+        <h1>{{ t("salon.stationMap") }}</h1>
+        <p>{{ t("salon.stationsGroupedByFloorPlan") }}</p>
       </div>
     </div>
 
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading stations...</p>
+        <p>{{ t("salon.loadingStations") }}</p>
       </div>
 
       <div v-else class="zones-container">
@@ -118,7 +121,7 @@ onUnmounted(() => {
             </div>
           </div>
           <div v-if="!group.stations.length" class="no-stations">
-            No stations in this floor plan.
+            {{ t("salon.noStationsInFloorPlan") }}
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const platformSettingsController = require("../controllers/platformSettings.controller");
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
+const { validateCsrfToken } = require("../../middleware/csrf");
 
 router
   .route("/")

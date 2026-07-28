@@ -7,6 +7,9 @@ const DOMAIN_ALLOWLISTS = {
     "brute_force_threshold",
     "session_timeout_minutes",
     "ip_allowlist",
+    "turnstile_enabled",
+    "turnstile_site_key",
+    "turnstile_secret_key",
   ],
   payments: [
     "paystack_config",

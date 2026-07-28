@@ -6,13 +6,13 @@ const marketplaceController = require("../controllers/marketplace.controller");
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
 
 router
-  .route("/marketplace/listings")
+  .route("/listings")
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(marketplaceController.listListingsHandler))
   .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(marketplaceController.createListingHandler))
   .all(httpMethodError);
 
 router
-  .route("/marketplace/listings/:id")
+  .route("/listings/:id")
   .patch(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(marketplaceController.updateListingHandler))
   .delete(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(marketplaceController.removeListingHandler))
   .all(httpMethodError);

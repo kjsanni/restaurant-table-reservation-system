@@ -12,7 +12,7 @@ const listIncidentsHandler = async (req, res) => {
     where,
     include: [
       { model: db.tenant, as: "tenant", attributes: ["id", "name", "slug"] },
-      { model: db.user, as: "resolver", attributes: ["id", "name", "email"] },
+      { model: db.user, as: "resolver", attributes: ["id", "username", "email"] },
     ],
     order: [["createdAt", "DESC"]],
     limit: parseInt(req.query.limit) || 50,

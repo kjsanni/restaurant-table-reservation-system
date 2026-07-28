@@ -145,6 +145,17 @@ const staffOnly = (req, res, next) => {
   }
 };
 
+const customer = (req, res, next) => {
+  if (req.user && req.user.role === "customer") {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: "Customer access required!",
+    });
+  }
+};
+
 const requirePermission = (permission) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -165,4 +176,4 @@ const requirePermission = (permission) => {
   };
 };
 
-module.exports = { protect, admin, staff, staffOnly, requirePermission, requireSuperAdmin };
+module.exports = { protect, admin, staff, staffOnly, customer, requirePermission, requireSuperAdmin };

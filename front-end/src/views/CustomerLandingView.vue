@@ -195,6 +195,7 @@ onMounted(() => {
         <div class="nav-actions">
           <button class="nav-link" @click="goToMenu">Menu</button>
           <button class="nav-link" @click="goToReserve">Reserve</button>
+          <button class="nav-link" @click="router.push('/pricing')">Pricing</button>
           <template v-if="!isAuthenticated">
             <button class="nav-link" @click="goToLogin">Login</button>
             <button class="nav-btn" @click="goToRegister">Get Started</button>

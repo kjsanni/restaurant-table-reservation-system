@@ -86,7 +86,7 @@ const load = async () => {
   loading.value = true;
   try {
     const res = await adminAPI.getWhatsAppDeliveryFailures({
-      from,
+      from: from.value,
       to: to.value || undefined,
     });
     summary.value = res.data || {};

@@ -5,6 +5,10 @@ import { RouterLink } from "vue-router";
 
 import { useAuthStore } from "@/stores/auth";
 import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
+import TurnstileWidget from "@/components/TurnstileWidget.vue";
+import { useTurnstileConfig } from "@/composables/useTurnstileConfig";
+
+const { config: turnstileConfig } = useTurnstileConfig();
 
 const props = defineProps<{ mode?: string }>();
 
@@ -48,6 +52,7 @@ const totpToken = ref("");
 const submitting = ref(false);
 const pendingTOTP = ref(false);
 const tempToken = ref("");
+const cfTurnstileToken = ref("");
 
 const validationErrors = ref<Record<string, string[]> | null>(null);
 const generalError = ref<string | null>(null);
@@ -85,7 +90,8 @@ const handleLogin = async () => {
     const response = await authStore.login(
       credentials.value.email,
       credentials.value.password,
-      resolvedMode.value === "super-admin" ? "platform" : "tenant"
+      resolvedMode.value === "super-admin" ? "platform" : "tenant",
+      cfTurnstileToken.value || undefined
     );
 
     if (response?.pendingTOTP) {
@@ -185,6 +191,12 @@ const handleTOTPLogin = async () => {
           <div v-if="generalError" class="alert alert-danger">
             {{ generalError }}
           </div>
+
+          <TurnstileWidget
+            v-if="turnstileConfig.enabled && turnstileConfig.siteKey"
+            v-model="cfTurnstileToken"
+            :site-key="turnstileConfig.siteKey"
+          />
 
           <div class="actions">
             <button type="submit" class="btn-primary" :disabled="submitting">

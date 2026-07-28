@@ -4,9 +4,12 @@ import { useRouter } from "vue-router";
 import { RouterLink } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
+import TurnstileWidget from "@/components/TurnstileWidget.vue";
+import { useTurnstileConfig } from "@/composables/useTurnstileConfig";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { config: turnstileConfig } = useTurnstileConfig();
 
 const user = ref({
   firstName: "",
@@ -16,6 +19,7 @@ const user = ref({
   password: "",
 });
 const submitting = ref(false);
+const cfTurnstileToken = ref("");
 
 const validationErrors = ref<Record<string, string[]> | null>(null);
 const isSuccessful = ref(false);
@@ -55,7 +59,8 @@ const handleRegister = async () => {
     await authStore.register(
       user.value.firstName + " " + user.value.lastName,
       user.value.email,
-      user.value.password
+      user.value.password,
+      cfTurnstileToken.value || undefined
     );
     isSuccessful.value = true;
     setTimeout(() => router.push("/login"), 2000);
@@ -162,6 +167,12 @@ const handleRegister = async () => {
           <div v-if="generalError" class="alert alert-danger">
             {{ generalError }}
           </div>
+
+          <TurnstileWidget
+            v-if="turnstileConfig.enabled && turnstileConfig.siteKey"
+            v-model="cfTurnstileToken"
+            :site-key="turnstileConfig.siteKey"
+          />
 
           <div class="actions">
             <button

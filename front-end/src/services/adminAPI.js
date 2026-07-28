@@ -8,6 +8,22 @@ const getRecentActivity = (limit = 20) => {
   return API.get(`/admin/audit/recent?limit=${limit}`);
 };
 
+const getAuditLogs = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.action) query.set("action", params.action);
+  if (params.entityType) query.set("entityType", params.entityType);
+  if (params.userId) query.set("userId", params.userId);
+  if (params.search) query.set("search", params.search);
+  if (params.from) query.set("from", params.from);
+  if (params.to) query.set("to", params.to);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortOrder) query.set("sortOrder", params.sortOrder);
+  if (params.page) query.set("page", params.page);
+  if (params.pageSize) query.set("pageSize", params.pageSize);
+  if (params.limit) query.set("pageSize", params.limit);
+  return API.get(`/admin/audit?${query.toString()}`);
+};
+
 const exportAuditLog = (params = {}) => {
   const query = new URLSearchParams();
   if (params.action) query.set("action", params.action);
@@ -843,6 +859,7 @@ const deleteComplianceEvidence = (id) => {
 export default {
   emailLogs,
   exportAuditLog,
+  getAuditLogs,
   getRecentActivity,
   listSupportTickets,
   listFailedPaymentAlerts,

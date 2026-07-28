@@ -2,7 +2,9 @@
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class InventoryItem extends Model {
-    static associate(models) {}
+    static associate(models) {
+      InventoryItem.belongsTo(models.tenant, { foreignKey: "tenantId" });
+    }
   }
   InventoryItem.init(
     {

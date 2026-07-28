@@ -324,6 +324,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Dashboard",
   },
   {
     routeName: "admin-settings",
@@ -333,6 +334,7 @@ export const adminNavItems: NavItem[] = [
     requiresAdmin: true,
     platformOnly: true,
     tenantAdminOnly: true,
+    section: "Platform",
   },
   {
     routeName: "tenant-dashboard",
@@ -342,6 +344,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Tenants",
   },
   {
     routeName: "tenant-detail",
@@ -352,6 +355,7 @@ export const adminNavItems: NavItem[] = [
     tenantOnly: true,
     platformOnly: true,
     requiresId: true,
+    section: "Tenants",
   },
   {
     routeName: "tenant-api-keys",
@@ -362,6 +366,7 @@ export const adminNavItems: NavItem[] = [
     tenantOnly: true,
     platformOnly: true,
     requiresId: true,
+    section: "Tenants",
   },
   {
     routeName: "tenant-branding",
@@ -372,6 +377,7 @@ export const adminNavItems: NavItem[] = [
     tenantOnly: true,
     platformOnly: true,
     requiresId: true,
+    section: "Tenants",
   },
   {
     routeName: "tenant-grace-period",
@@ -382,6 +388,7 @@ export const adminNavItems: NavItem[] = [
     tenantOnly: true,
     platformOnly: true,
     requiresId: true,
+    section: "Tenants",
   },
   {
     routeName: "tenant-notes",
@@ -392,6 +399,7 @@ export const adminNavItems: NavItem[] = [
     tenantOnly: true,
     platformOnly: true,
     requiresId: true,
+    section: "Tenants",
   },
   {
     routeName: "tenant-timeline",
@@ -402,6 +410,7 @@ export const adminNavItems: NavItem[] = [
     tenantOnly: true,
     platformOnly: true,
     requiresId: true,
+    section: "Tenants",
   },
   {
     routeName: "tenant-trial",
@@ -412,6 +421,7 @@ export const adminNavItems: NavItem[] = [
     tenantOnly: true,
     platformOnly: true,
     requiresId: true,
+    section: "Tenants",
   },
   {
     routeName: "tenant-invoices",
@@ -422,6 +432,7 @@ export const adminNavItems: NavItem[] = [
     tenantOnly: true,
     platformOnly: true,
     requiresId: true,
+    section: "Financial",
   },
   {
     routeName: "tenant-onboarding",
@@ -432,6 +443,7 @@ export const adminNavItems: NavItem[] = [
     tenantOnly: true,
     platformOnly: true,
     requiresId: true,
+    section: "Tenants",
   },
   {
     routeName: "plans-management",
@@ -441,6 +453,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Financial",
   },
   {
     routeName: "platform-payment-dashboard",
@@ -450,6 +463,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Financial",
   },
   {
     routeName: "platform-usage",
@@ -459,6 +473,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Financial",
   },
   {
     routeName: "platform-revenue",
@@ -468,6 +483,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Financial",
   },
   {
     routeName: "platform-geographic",
@@ -477,6 +493,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Financial",
   },
   {
     routeName: "platform-bulk-actions",
@@ -486,6 +503,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Financial",
   },
   {
     routeName: "platform-financial",
@@ -495,6 +513,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Financial",
   },
   {
     routeName: "platform-feature-flags",
@@ -504,6 +523,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-integrations",
@@ -513,6 +533,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Integrations",
   },
   {
     routeName: "platform-impersonation",
@@ -522,6 +543,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-settings",
@@ -531,6 +553,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-sessions",
@@ -540,6 +563,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-analytics",
@@ -549,6 +573,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Dashboard",
   },
   {
     routeName: "billing-email-templates",
@@ -558,6 +583,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Financial",
   },
   {
     routeName: "platform-backups",
@@ -567,6 +593,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-alert-rules",
@@ -576,6 +603,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-maintenance",
@@ -585,6 +613,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-trust-safety",
@@ -594,6 +623,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-support-tickets",
@@ -603,6 +633,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Support",
   },
   {
     routeName: "platform-support-templates",
@@ -612,6 +643,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Support",
   },
   {
     routeName: "platform-support-chat",
@@ -621,6 +653,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Support",
   },
   {
     routeName: "platform-monitoring",
@@ -630,6 +663,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-api-latency",
@@ -639,6 +673,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-cache-stats",
@@ -648,6 +683,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-vertical-analytics",
@@ -657,6 +693,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Integrations",
   },
   {
     routeName: "platform-vertical-templates",
@@ -666,6 +703,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Integrations",
   },
   {
     routeName: "platform-compliance-rules",
@@ -675,6 +713,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-notification-templates",
@@ -684,6 +723,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Support",
   },
   {
     routeName: "platform-announcements",
@@ -693,6 +733,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Support",
   },
   {
     routeName: "platform-data-retention-policies",
@@ -702,6 +743,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-penetration-tests",
@@ -711,6 +753,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-insurance-documents",
@@ -720,6 +763,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-encryption-keys",
@@ -729,6 +773,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-auto-scaling",
@@ -738,6 +783,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-compliance",
@@ -747,6 +793,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-failover",
@@ -756,6 +803,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-data-retention",
@@ -765,6 +813,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-audit-log",
@@ -774,6 +823,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-incidents",
@@ -783,6 +833,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-password-policy",
@@ -792,6 +843,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-suspicious-activity",
@@ -801,6 +853,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-sub-processors",
@@ -810,6 +863,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-reports",
@@ -819,6 +873,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Data & Tools",
   },
   {
     routeName: "platform-reconciliation",
@@ -828,6 +883,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Financial",
   },
   {
     routeName: "platform-paystack",
@@ -837,6 +893,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Integrations",
   },
   {
     routeName: "platform-whatsapp-delivery-failures",
@@ -846,6 +903,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Integrations",
   },
   {
     routeName: "platform-shaqexpress-order-conversion",
@@ -855,6 +913,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Integrations",
   },
   {
     routeName: "platform-whatsapp-support-ticket-analytics",
@@ -864,6 +923,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Support",
   },
   {
     routeName: "platform-marketplace",
@@ -873,6 +933,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Integrations",
   },
   {
     routeName: "platform-case-studies",
@@ -882,6 +943,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Integrations",
   },
   {
     routeName: "platform-referrals",
@@ -891,6 +953,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Integrations",
   },
   {
     routeName: "platform-tenant-data-export",
@@ -900,6 +963,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Data & Tools",
   },
   {
     routeName: "platform-cross-tenant-search",
@@ -909,6 +973,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Data & Tools",
   },
   {
     routeName: "platform-data-anonymization",
@@ -918,6 +983,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-debug",
@@ -927,6 +993,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Data & Tools",
   },
   {
     routeName: "platform-status",
@@ -936,6 +1003,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Dashboard",
   },
   {
     routeName: "platform-migration",
@@ -945,6 +1013,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Platform",
   },
   {
     routeName: "platform-change-management",
@@ -954,6 +1023,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Data & Tools",
   },
   {
     routeName: "platform-postmortems",
@@ -963,6 +1033,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Data & Tools",
   },
   {
     routeName: "platform-fraud",
@@ -972,6 +1043,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "platform-at-risk-tenants",
@@ -981,6 +1053,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Tenants",
   },
   {
     routeName: "platform-notifications",
@@ -990,6 +1063,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Support",
   },
   {
     routeName: "platform-benchmarks",
@@ -999,6 +1073,7 @@ export const adminNavItems: NavItem[] = [
     requiresPermission: "manage_tenants",
     tenantOnly: true,
     platformOnly: true,
+    section: "Data & Tools",
   },
   {
     routeName: "tenant-dsar",
@@ -1009,6 +1084,7 @@ export const adminNavItems: NavItem[] = [
     tenantOnly: true,
     platformOnly: true,
     requiresId: true,
+    section: "Tenants",
   },
   {
     routeName: "role-management",
@@ -1016,6 +1092,7 @@ export const adminNavItems: NavItem[] = [
     icon: "mdi:key",
     requiresAuth: true,
     tenantAdminOnly: true,
+    section: "Platform",
   },
   {
     routeName: "group-management",
@@ -1023,6 +1100,7 @@ export const adminNavItems: NavItem[] = [
     icon: "mdi:account-multiple",
     requiresAuth: true,
     tenantAdminOnly: true,
+    section: "Platform",
   },
   {
     routeName: "audit-logs",
@@ -1030,6 +1108,7 @@ export const adminNavItems: NavItem[] = [
     icon: "mdi:file-document-text",
     requiresAuth: true,
     tenantAdminOnly: true,
+    section: "Security & Compliance",
   },
   {
     routeName: "email-templates",
@@ -1038,6 +1117,7 @@ export const adminNavItems: NavItem[] = [
     requiresAuth: true,
     requiresAdmin: true,
     tenantAdminOnly: true,
+    section: "Support",
   },
 ];
 

@@ -23,7 +23,7 @@ const appointmentDao = {
         { model: salonModels.sequelize.models.customer, as: "customer", attributes: ["id", "firstName", "lastName", "phone", "email"] },
         { model: salonModels.sequelize.models.service, as: "service", attributes: ["id", "name", "price", "durationMinutes"] },
         { model: salonModels.sequelize.models.station, as: "station", attributes: ["id", "name", "type", "zone"] },
-        { model: salonModels.sequelize.models.user, as: "stylist", attributes: ["id", "name", "email"] },
+        { model: salonModels.sequelize.models.user, as: "stylist", attributes: ["id", "username", "email"] },
       ],
       order: [["start", "DESC"]],
       limit: filters.limit || 50,
@@ -174,17 +174,17 @@ const appointmentDao = {
     const results = await salonModels.sequelize.models.appointment.findAll({
       where,
       include: [
-        { model: salonModels.sequelize.models.user, as: "stylist", attributes: ["id", "name", "email"] },
+        { model: salonModels.sequelize.models.user, as: "stylist", attributes: ["id", "username", "email"] },
         { model: salonModels.sequelize.models.service, as: "service", attributes: ["id", "name", "price"] },
       ],
       attributes: [
         [salonModels.sequelize.col("stylist.id"), "stylistId"],
-        [salonModels.sequelize.col("stylist.name"), "stylistName"],
+        [salonModels.sequelize.col("stylist.username"), "stylistName"],
         [salonModels.sequelize.col("stylist.email"), "stylistEmail"],
         [salonModels.sequelize.fn("COUNT", salonModels.sequelize.col("appointment.id")), "appointmentCount"],
         [salonModels.sequelize.fn("SUM", salonModels.sequelize.col("service.price")), "revenue"],
       ],
-      group: ["stylist.id", "stylist.name", "stylist.email"],
+      group: ["stylist.id", "stylist.username", "stylist.email"],
       order: [[salonModels.sequelize.fn("SUM", salonModels.sequelize.col("service.price")), "DESC"]],
       limit: 10,
     });

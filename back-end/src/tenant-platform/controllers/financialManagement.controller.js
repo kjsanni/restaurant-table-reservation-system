@@ -138,10 +138,11 @@ const detectFinancialAnomaliesHandler = async (req, res) => {
       { model: db.customer, as: "customer", attributes: ["id", "firstName", "lastName", "email", "phone"] },
     ],
     group: ["customerId"],
-    attributes: ["customerId", [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "cancellationCount"]],
-    having: db.Sequelize.literal("COUNT(id) >= 3"),
+    attributes: ["customerId", [db.Sequelize.fn("COUNT", db.Sequelize.col("reservation.id")), "cancellationCount"]],
+    having: db.Sequelize.literal("COUNT(reservation.id) >= 3"),
     order: [[db.Sequelize.literal("cancellationCount"), "DESC"]],
     limit: 20,
+    raw: true,
   });
 
   for (const row of frequentCancellers) {
@@ -251,13 +252,13 @@ const detectFinancialAnomaliesHandler = async (req, res) => {
     include: [
       { model: db.user, as: "user", attributes: ["id", "username", "role"] },
     ],
-    group: ["userId"],
+    group: ["userId", "user.id"],
     attributes: [
       "userId",
-      [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "actionCount"],
+      [db.Sequelize.fn("COUNT", db.Sequelize.col("auditLog.id")), "actionCount"],
       [db.Sequelize.fn("SUM", db.Sequelize.literal("CAST(changes->>'$.amount' AS DECIMAL(10,2))")), "totalAmount"],
     ],
-    having: db.Sequelize.literal("COUNT(id) >= 2"),
+    having: db.Sequelize.literal("COUNT(auditLog.id) >= 2"),
     order: [[db.Sequelize.literal("actionCount"), "DESC"]],
     limit: 20,
     raw: true,

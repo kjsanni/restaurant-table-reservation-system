@@ -26,7 +26,7 @@ const findAllForTenant = async (tenantId, filters = {}) => {
       {
         model: db.user,
         as: "stylist",
-        attributes: ["id", "name", "email"],
+        attributes: ["id", "username", "email"],
       },
       {
         model: db.service,

@@ -4,12 +4,20 @@ const getRegistrationStatus = async () => {
   return await API.get("/auth/register/status");
 };
 
-const register = async (username, email, password) => {
-  return await API.post("/auth/register", { username, email, password });
+const register = async (username, email, password, cfTurnstileToken) => {
+  const payload = { username, email, password };
+  if (cfTurnstileToken) {
+    payload.cfTurnstileToken = cfTurnstileToken;
+  }
+  return await API.post("/auth/register", payload);
 };
 
-const login = async (email, password) => {
-  return await API.post("/auth/login", { email, password });
+const login = async (email, password, cfTurnstileToken) => {
+  const payload = { email, password };
+  if (cfTurnstileToken) {
+    payload.cfTurnstileToken = cfTurnstileToken;
+  }
+  return await API.post("/auth/login", payload);
 };
 
 const loginWithTOTP = async (tempToken, token) => {
@@ -60,6 +68,22 @@ const getUsers = async () => {
   return await API.get("/auth/users");
 };
 
+const forgotPassword = async (email) => {
+  return await API.post("/auth/forgot-password", { email });
+};
+
+const resetPassword = async (token, password) => {
+  return await API.post("/auth/reset-password", { token, password });
+};
+
+const registerCustomer = async (email, password, firstName, lastName, phone, cfTurnstileToken) => {
+  const payload = { email, password, firstName, lastName, phone };
+  if (cfTurnstileToken) {
+    payload.cfTurnstileToken = cfTurnstileToken;
+  }
+  return await API.post("/auth/register/customer", payload);
+};
+
 export default {
   getRegistrationStatus,
   register,
@@ -76,4 +100,7 @@ export default {
   createStaff,
   updateStaff,
   deleteStaff,
+  forgotPassword,
+  resetPassword,
+  registerCustomer,
 };

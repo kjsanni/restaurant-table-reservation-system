@@ -3,7 +3,9 @@ const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
   class Refund extends Model {
-    static associate(models) {}
+    static associate(models) {
+      Refund.belongsTo(models.payment, { foreignKey: "paymentId", as: "payment" });
+    }
   }
 
   Refund.init(

@@ -57,9 +57,10 @@ export const useAuthStore = defineStore("auth", () => {
   const login = async (
     email: string,
     password: string,
-    entryPointContext?: "platform" | "tenant"
+    entryPointContext?: "platform" | "tenant",
+    cfTurnstileToken?: string
   ) => {
-    const response = await authAPI.login(email, password);
+    const response = await authAPI.login(email, password, cfTurnstileToken);
     user.value = response.data.user;
     entryPoint.value = entryPointContext || null;
     return response.data;
@@ -74,9 +75,37 @@ export const useAuthStore = defineStore("auth", () => {
   const register = async (
     username: string,
     email: string,
-    password: string
+    password: string,
+    cfTurnstileToken?: string
   ) => {
-    const response = await authAPI.register(username, email, password);
+    const response = await authAPI.register(
+      username,
+      email,
+      password,
+      cfTurnstileToken
+    );
+    return response;
+  };
+
+  const customerRegister = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    phone: string,
+    cfTurnstileToken?: string
+  ) => {
+    const response = await authAPI.registerCustomer(
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      cfTurnstileToken
+    );
+    if (response?.data?.user) {
+      user.value = response.data.user;
+    }
     return response;
   };
 
@@ -202,6 +231,7 @@ export const useAuthStore = defineStore("auth", () => {
     login,
     loginWithTOTP,
     register,
+    customerRegister,
     logout,
     getMe,
     fetchSettings,

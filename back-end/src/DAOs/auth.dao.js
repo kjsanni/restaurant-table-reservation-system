@@ -46,11 +46,11 @@ const findUserById = async (id, tenantId) => {
   });
 };
 
-const createUser = async (userData, tenantId) => {
+const createUser = async (userData, tenantId, options = {}) => {
   return await User.create({
     ...userData,
     ...withTenant({}, tenantId),
-  });
+  }, options);
 };
 
 const getAllStaff = async (tenantId) => {
@@ -201,6 +201,9 @@ const stripSensitiveSettingValue = (setting) => {
   if (key === "email_server" && setting.value && typeof setting.value === "object") {
     const { pass, ...rest } = setting.value;
     setting.value = rest;
+  }
+  if (key === "turnstile_secret_key" && setting.value) {
+    setting.value = "[REDACTED]";
   }
   return setting;
 };
@@ -362,6 +365,8 @@ module.exports = {
   getSettingValue,
   updateSetting,
   getAllSettings,
+  getPlatformSettingByKey,
+  updatePlatformSetting,
   createRefreshToken,
   findValidRefreshToken,
   revokeRefreshToken,

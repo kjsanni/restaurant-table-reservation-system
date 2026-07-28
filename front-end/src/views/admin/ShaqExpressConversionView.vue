@@ -106,7 +106,7 @@ const load = async () => {
   loading.value = true;
   try {
     const res = await adminAPI.getShaqExpressOrderConversion({
-      from,
+      from: from.value,
       to: to.value || undefined,
     });
     funnel.value = res.data?.funnel || {};

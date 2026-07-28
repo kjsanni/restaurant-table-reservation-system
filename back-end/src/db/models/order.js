@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: "CASCADE",
         hooks: true,
       });
+      Order.belongsTo(models.tenant, {
+        foreignKey: "tenantId",
+        onDelete: "SET NULL",
+      });
       Order.hasMany(models.orderItem, {
         foreignKey: "orderId",
         onDelete: "CASCADE",

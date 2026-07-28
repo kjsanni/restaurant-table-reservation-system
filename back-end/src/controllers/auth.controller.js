@@ -2,6 +2,76 @@ const authService = require("../services/authService");
 const authDAO = require("../DAOs/auth.dao");
 const roleDAO = require("../DAOs/role.dao");
 const { applyTypeDefaults, TYPE_DEFAULTS } = require("../tenant-platform/services/tenantTypeDefaults.service");
+const customerService = require("../services/customerService");
+
+const registerCustomerHandler = async (req, res) => {
+  try {
+    const { email, password, firstName, lastName, phone } = req.body;
+
+    if (!email || !password || !firstName || !lastName || !phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email, password, first name, last name, and phone.",
+      });
+    }
+
+    const existing = await authDAO.findUserByEmail(email, req.tenant?.id);
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: "An account with this email already exists.",
+      });
+    }
+
+    const username = `${firstName}${lastName}`.replace(/\s+/g, "").toLowerCase();
+
+    const user = await authService.registerUser(authDAO, {
+      username,
+      email,
+      password,
+    }, req.tenant?.id, "customer");
+
+    await customerService.findOrCreateCustomer(
+      { firstName, lastName, email, phone },
+      req.tenant?.id
+    );
+
+    const token = authService.generateToken(user.id, user.role);
+    const refreshToken = authService.generateRefreshToken();
+
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await authDAO.createRefreshToken(user.id, refreshToken, expiresAt, req.tenant?.id);
+
+    const isSecure = req.secure || false;
+    const cookieBase = {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: isSecure ? "lax" : false,
+      path: "/",
+    };
+
+    res.cookie("token", token, { ...cookieBase, maxAge: 30 * 60 * 1000 });
+    res.cookie("refreshToken", refreshToken, { ...cookieBase, maxAge: 30 * 24 * 60 * 60 * 1000 });
+
+    return res.status(201).json({
+      success: true,
+      message: "Customer account created successfully!",
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions || {},
+      },
+    });
+  } catch (err) {
+    console.error("registerCustomerHandler error:", err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create customer account.",
+    });
+  }
+};
 
 const registerStatusHandler = async (req, res) => {
   const { registrationEnabled } = await authService.checkRegistrationStatus(
@@ -12,6 +82,19 @@ const registerStatusHandler = async (req, res) => {
   return res.status(200).json({
     success: true,
     registrationEnabled,
+  });
+};
+
+const getTurnstileConfigHandler = async (req, res) => {
+  const enabledSetting = await authDAO.getPlatformSettingByKey("turnstile_enabled");
+  const siteKeySetting = await authDAO.getPlatformSettingByKey("turnstile_site_key");
+
+  return res.status(200).json({
+    success: true,
+    config: {
+      enabled: enabledSetting?.value === true,
+      siteKey: siteKeySetting?.value || null,
+    },
   });
 };
 
@@ -529,7 +612,9 @@ const deleteStaffHandler = async (req, res) => {
 
 module.exports = {
   registerStatusHandler,
+  getTurnstileConfigHandler,
   registerHandler,
+  registerCustomerHandler,
   loginHandler,
   loginTOTPHandler,
   getMeHandler,

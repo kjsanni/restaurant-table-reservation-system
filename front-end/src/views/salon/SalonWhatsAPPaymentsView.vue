@@ -2,29 +2,29 @@
   <div class="whatsapp-payments-view">
     <div class="page-header">
       <div>
-        <h1>WhatsApp Payments</h1>
-        <p class="subtitle">Payment status for WhatsApp bookings</p>
+        <h1>{{ t("salon.whatsappPayments") }}</h1>
+        <p class="subtitle">{{ t("salon.whatsappPaymentsSubtitle") }}</p>
       </div>
       <button class="btn-primary" @click="load" :disabled="loading">
-        {{ loading ? "Refreshing..." : "Refresh" }}
+        {{ loading ? t("salon.refreshing") : t("salon.refresh") }}
       </button>
     </div>
 
     <div class="summary-cards">
       <div class="card">
-        <div class="card-label">Total WhatsApp Bookings</div>
+        <div class="card-label">{{ t("salon.totalWhatsappBookings") }}</div>
         <div class="card-value">{{ summary.total }}</div>
       </div>
       <div class="card">
-        <div class="card-label">Paid</div>
+        <div class="card-label">{{ t("salon.paid") }}</div>
         <div class="card-value success">{{ summary.paid }}</div>
       </div>
       <div class="card">
-        <div class="card-label">Unpaid</div>
+        <div class="card-label">{{ t("salon.unpaid") }}</div>
         <div class="card-value danger">{{ summary.unpaid }}</div>
       </div>
       <div class="card">
-        <div class="card-label">Partial / Deposit</div>
+        <div class="card-label">{{ t("salon.partialDeposit") }}</div>
         <div class="card-value warning">
           {{ summary.partial + summary.deposit }}
         </div>
@@ -36,18 +36,18 @@
         <div class="spinner-sm"></div>
       </div>
       <div v-else-if="items.length === 0" class="empty-state">
-        No WhatsApp bookings found
+        {{ t("salon.noWhatsappBookings") }}
       </div>
       <div v-else class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Service</th>
-              <th>Amount</th>
-              <th>Deposit</th>
-              <th>Payment Status</th>
+              <th>{{ t("salon.date") }}</th>
+              <th>{{ t("salon.customer") }}</th>
+              <th>{{ t("salon.service") }}</th>
+              <th>{{ t("salon.amount") }}</th>
+              <th>{{ t("salon.deposit") }}</th>
+              <th>{{ t("salon.paymentStatus") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -80,8 +80,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import appointmentAPI from "@/services/appointmentAPI";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 import formatMoney from "@/utils/formatMoney";
 
 const loading = ref(false);

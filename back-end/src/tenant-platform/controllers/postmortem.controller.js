@@ -43,7 +43,7 @@ const listPostmortemsHandler = async (req, res) => {
     where,
     include: [
       { model: db.incident, as: "incident", attributes: ["id", "title", "severity", "status"] },
-      { model: db.user, as: "author", attributes: ["id", "name", "email"] },
+      { model: db.user, as: "author", attributes: ["id", "username", "email"] },
     ],
     order: [["createdAt", "DESC"]],
   });
