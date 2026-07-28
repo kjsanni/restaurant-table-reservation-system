@@ -87,6 +87,20 @@
         </div>
       </div>
     </div>
+
+    <div v-if="auditChanges.length" class="audit-section">
+      <h3>Recent Platform Setting Changes</h3>
+      <div class="audit-list">
+        <div v-for="change in auditChanges" :key="change.id" class="audit-item">
+          <div class="audit-info">
+            <span class="audit-action">{{
+              formatAction(change.metadata)
+            }}</span>
+            <span class="audit-time">{{ formatDate(change.createdAt) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -102,6 +116,7 @@ const saving = ref(false);
 const error = ref(null);
 const editingKey = ref(null);
 const editValue = ref(null);
+const auditChanges = ref([]);
 
 const DOMAIN_LABELS = {
   security: "Security Posture",
@@ -206,8 +221,27 @@ const formatDate = (date) => {
   return new Date(date).toLocaleString();
 };
 
+const loadAuditChanges = async () => {
+  try {
+    const res = await adminAPI.listPlatformSettingChanges();
+    auditChanges.value = res.data?.collection || [];
+  } catch {
+    auditChanges.value = [];
+  }
+};
+
+const formatAction = (metadata) => {
+  if (!metadata) return "Setting updated";
+  const { key, previousValue, newValue } = metadata;
+  if (!key) return "Setting updated";
+  const prev = formatValue(previousValue);
+  const next = formatValue(newValue);
+  return `${formatKey(key)}: ${prev} → ${next}`;
+};
+
 onMounted(() => {
   loadSettings();
+  loadAuditChanges();
 });
 </script>
 
@@ -380,5 +414,49 @@ onMounted(() => {
 .btn-secondary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+.audit-section {
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+}
+.audit-section h3 {
+  margin: 0 0 var(--space-3) 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--ink);
+}
+.audit-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.audit-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-sunken);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+}
+.audit-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5);
+}
+.audit-action {
+  font-size: var(--text-sm);
+  color: var(--ink);
+  word-break: break-word;
+}
+.audit-time {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  white-space: nowrap;
 }
 </style>

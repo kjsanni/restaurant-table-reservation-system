@@ -507,6 +507,10 @@ const updatePlatformSetting = (key, value) => {
   return API.put("/admin/platform-settings", { key, value });
 };
 
+const listPlatformSettingChanges = () => {
+  return API.get("/admin/platform-settings/audit");
+};
+
 const listSessions = () => {
   return API.get("/admin/sessions");
 };
@@ -928,6 +932,7 @@ export default {
   listImpersonation,
   listPlatformSettings,
   updatePlatformSetting,
+  listPlatformSettingChanges,
   listSessions,
   revokeSession,
   revokeAllSessions,

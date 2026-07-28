@@ -94,7 +94,23 @@ const updatePlatformSettingHandler = async (req, res) => {
   res.status(200).json({ success: true, setting: updated });
 };
 
+const listPlatformSettingChangesHandler = async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 5, 20);
+  const entries = await platformAuditDAO.findRecent("platform_setting.updated", limit);
+  const changes = entries.map((entry) => ({
+    id: entry.id,
+    action: entry.action,
+    entityType: entry.entityType,
+    entityId: entry.entityId,
+    metadata: entry.metadata,
+    createdAt: entry.createdAt,
+    userId: entry.userId,
+  }));
+  res.status(200).json({ success: true, collection: changes });
+};
+
 module.exports = {
   listPlatformSettingsHandler,
   updatePlatformSettingHandler,
+  listPlatformSettingChangesHandler,
 };

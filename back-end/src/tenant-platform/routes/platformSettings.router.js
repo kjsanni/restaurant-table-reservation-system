@@ -11,4 +11,9 @@ router
   .put(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(validateCsrfToken), tryCatchHandler(platformSettingsController.updatePlatformSettingHandler))
   .all(httpMethodError);
 
+router
+  .route("/audit")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(platformSettingsController.listPlatformSettingChangesHandler))
+  .all(httpMethodError);
+
 module.exports = router;

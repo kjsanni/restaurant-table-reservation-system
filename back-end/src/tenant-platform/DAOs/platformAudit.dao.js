@@ -20,4 +20,12 @@ platformAuditDAO.list = (filters = {}) => {
   });
 };
 
+platformAuditDAO.findRecent = (action, limit = 5) => {
+  return db.platformAuditLog.findAll({
+    where: { action },
+    order: [["createdAt", "DESC"]],
+    limit,
+  });
+};
+
 module.exports = platformAuditDAO;
