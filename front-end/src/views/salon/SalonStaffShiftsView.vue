@@ -2,6 +2,9 @@
 import { ref, computed, onMounted } from "vue";
 import shiftAPI from "@/services/shiftAPI";
 import logger from "@/utils/logger";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 interface StaffShift {
   id: number;
@@ -31,7 +34,7 @@ const weekDays = [
 
 const dayLabel = (day: string) => {
   const found = weekDays.find((d) => d.toLowerCase() === day.toLowerCase());
-  return found ? found.charAt(0).toUpperCase() + found.slice(1) : day;
+  return found ? t(`salon.days.${found}`) : day;
 };
 
 const formatTime = (time: string) => {
@@ -89,14 +92,14 @@ const submitShift = async () => {
     await loadData();
   } catch (err) {
     errorMsg.value =
-      err instanceof Error ? err.message : "Failed to create shift";
+      err instanceof Error ? err.message : t("salon.failedCreateShift");
   } finally {
     submitting.value = false;
   }
 };
 
 const removeShift = async (id: number) => {
-  if (!confirm("Remove this shift?")) return;
+  if (!confirm(t("salon.confirmRemoveShift"))) return;
   try {
     await shiftAPI.deleteShift(id);
     shifts.value = shifts.value.filter((s) => s.id !== id);
@@ -120,32 +123,32 @@ onMounted(loadData);
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Staff Shifts</h1>
-        <p>Weekly schedule for stylists and staff</p>
+        <h1>{{ t("salon.staffShifts") }}</h1>
+        <p>{{ t("salon.weeklySchedule") }}</p>
       </div>
     </div>
 
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading shifts...</p>
+        <p>{{ t("salon.loadingShifts") }}</p>
       </div>
 
       <div v-else>
         <div class="form-panel">
-          <h2>Add Shift</h2>
+          <h2>{{ t("salon.addShift") }}</h2>
           <div class="form-grid">
             <div class="field">
-              <label for="staff">Staff</label>
+              <label for="staff">{{ t("salon.staff") }}</label>
               <select id="staff" v-model="userId">
-                <option value="">Select staff</option>
+                <option value="">{{ t("salon.selectStaff") }}</option>
                 <option v-for="s in staff" :key="s.id" :value="String(s.id)">
                   {{ s.username }} ({{ s.role || "staff" }})
                 </option>
               </select>
             </div>
             <div class="field">
-              <label for="day">Day</label>
+              <label for="day">{{ t("salon.day") }}</label>
               <select id="day" v-model="dayOfWeek">
                 <option v-for="day in weekDays" :key="day" :value="day">
                   {{ dayLabel(day) }}
@@ -153,16 +156,20 @@ onMounted(loadData);
               </select>
             </div>
             <div class="field">
-              <label for="start">Start</label>
+              <label for="start">{{ t("salon.start") }}</label>
               <input id="start" type="time" v-model="startTime" />
             </div>
             <div class="field">
-              <label for="end">End</label>
+              <label for="end">{{ t("salon.end") }}</label>
               <input id="end" type="time" v-model="endTime" />
             </div>
             <div class="field">
-              <label for="role">Role</label>
-              <input id="role" v-model="role" placeholder="e.g. Stylist" />
+              <label for="role">{{ t("salon.role") }}</label>
+              <input
+                id="role"
+                v-model="role"
+                :placeholder="t('salon.rolePlaceholder')"
+              />
             </div>
             <div class="field-actions">
               <button
@@ -170,8 +177,8 @@ onMounted(loadData);
                 :disabled="submitting || !userId"
                 @click="submitShift"
               >
-                <span v-if="!submitting">Add Shift</span>
-                <span v-else>Saving...</span>
+                <span v-if="!submitting">{{ t("salon.addShift") }}</span>
+                <span v-else>{{ t("common.saving") }}</span>
               </button>
             </div>
           </div>
@@ -191,7 +198,7 @@ onMounted(loadData);
                 class="shift-card"
               >
                 <div class="shift-name">
-                  {{ shift.user?.username || "Staff" }}
+                  {{ shift.user?.username || t("salon.staff") }}
                 </div>
                 <div class="shift-time">
                   {{ formatTime(shift.startTime) }} —
@@ -199,11 +206,11 @@ onMounted(loadData);
                 </div>
                 <div v-if="shift.role" class="shift-role">{{ shift.role }}</div>
                 <button class="btn-danger-sm" @click="removeShift(shift.id)">
-                  Remove
+                  {{ t("salon.remove") }}
                 </button>
               </div>
               <div v-if="!groupedByDay[day].length" class="empty-cell">
-                No shifts
+                {{ t("salon.noShifts") }}
               </div>
             </div>
           </div>

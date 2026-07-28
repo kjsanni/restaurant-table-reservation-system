@@ -3,6 +3,9 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import appointmentAPI from "@/services/appointmentAPI";
 import logger from "@/utils/logger";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 interface Appointment {
   id: number;
@@ -151,19 +154,23 @@ onMounted(loadAppointments);
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Calendar</h1>
-        <p>Weekly appointment overview</p>
+        <h1>{{ t("salon.calendar") }}</h1>
+        <p>{{ t("salon.weeklyAppointmentOverview") }}</p>
       </div>
       <div class="topbar-right">
-        <button class="btn-secondary" @click="prevWeek">Previous</button>
-        <button class="btn-secondary" @click="nextWeek">Next</button>
+        <button class="btn-secondary" @click="prevWeek">
+          {{ t("salon.previous") }}
+        </button>
+        <button class="btn-secondary" @click="nextWeek">
+          {{ t("salon.next") }}
+        </button>
       </div>
     </div>
 
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading calendar...</p>
+        <p>{{ t("salon.loadingCalendar") }}</p>
       </div>
 
       <div v-else class="calendar">
@@ -207,7 +214,7 @@ onMounted(loadAppointments);
                 @click="router.push(`/appointments`)"
               >
                 <div class="block-title">
-                  {{ apt.service?.name || "Service" }}
+                  {{ apt.service?.name || t("salon.service") }}
                 </div>
                 <div class="block-time">{{ formatHour(apt.start) }}</div>
                 <div class="block-client">

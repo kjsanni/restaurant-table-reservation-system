@@ -5,6 +5,9 @@ import serviceAPI from "@/services/serviceAPI";
 import stationAPI from "@/services/stationAPI";
 import logger from "@/utils/logger";
 import { io, Socket } from "socket.io-client";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
 
 interface Appointment {
   id: number;
@@ -58,9 +61,9 @@ const statusOptions = [
 
 const skillLevelLabel = (level: string) => {
   const map: Record<string, string> = {
-    trainee: "Trainee",
-    proficient: "Proficient",
-    expert: "Expert",
+    trainee: t("salon.skillLevelTrainee"),
+    proficient: t("salon.skillLevelProficient"),
+    expert: t("salon.skillLevelExpert"),
   };
   return map[level] || level;
 };
@@ -183,7 +186,7 @@ const submitForm = async () => {
     await loadAppointments();
   } catch (err) {
     generalError.value =
-      err instanceof Error ? err.message : "Failed to create appointment";
+      err instanceof Error ? err.message : t("salon.failedCreateAppointment");
   } finally {
     submitting.value = false;
   }
@@ -212,7 +215,7 @@ const updateStatus = async (apt: Appointment, status: string) => {
 };
 
 const deleteAppointment = async (id: number) => {
-  if (!confirm("Cancel this appointment?")) return;
+  if (!confirm(t("salon.confirmCancelAppointment"))) return;
   try {
     await appointmentAPI.deleteAppointment(id);
     appointments.value = appointments.value.filter((a) => a.id !== id);
@@ -313,40 +316,42 @@ const handleServiceChange = async () => {
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Appointments</h1>
-        <p>Manage salon appointments and bookings</p>
+        <h1>{{ t("salon.appointments") }}</h1>
+        <p>{{ t("salon.manageAppointments") }}</p>
       </div>
     </div>
 
     <div class="content-wrapper">
       <div class="panel-head" style="margin-bottom: 16px">
-        <h2>Appointments</h2>
-        <button class="btn-primary" @click="openForm">New Appointment</button>
+        <h2>{{ t("salon.appointments") }}</h2>
+        <button class="btn-primary" @click="openForm">
+          {{ t("salon.newAppointment") }}
+        </button>
       </div>
 
       <div v-if="showForm" class="form-panel">
-        <h3>New Appointment</h3>
+        <h3>{{ t("salon.newAppointment") }}</h3>
         <div class="form-grid">
           <div class="field">
-            <label for="customerFirstName">First name</label>
+            <label for="customerFirstName">{{ t("salon.firstName") }}</label>
             <input id="customerFirstName" v-model="form.customerFirstName" />
           </div>
           <div class="field">
-            <label for="customerLastName">Last name</label>
+            <label for="customerLastName">{{ t("salon.lastName") }}</label>
             <input id="customerLastName" v-model="form.customerLastName" />
           </div>
           <div class="field">
-            <label for="customerPhone">Phone</label>
+            <label for="customerPhone">{{ t("salon.phone") }}</label>
             <input id="customerPhone" v-model="form.customerPhone" />
           </div>
           <div class="field">
-            <label for="service">Service</label>
+            <label for="service">{{ t("salon.service") }}</label>
             <select
               id="service"
               v-model="form.serviceId"
               @change="handleServiceChange"
             >
-              <option value="">Select service</option>
+              <option value="">{{ t("salon.selectService") }}</option>
               <option
                 v-for="svc in services"
                 :key="svc.id"
@@ -357,13 +362,13 @@ const handleServiceChange = async () => {
             </select>
           </div>
           <div class="field">
-            <label for="stylist">Stylist</label>
+            <label for="stylist">{{ t("salon.stylist") }}</label>
             <select
               id="stylist"
               v-model="form.stylistId"
               :disabled="!stylists.length"
             >
-              <option value="">Auto-assign</option>
+              <option value="">{{ t("salon.autoAssign") }}</option>
               <option
                 v-for="stylist in stylists"
                 :key="stylist.id"
@@ -374,13 +379,13 @@ const handleServiceChange = async () => {
               </option>
             </select>
             <div v-if="!stylists.length && form.serviceId" class="field-hint">
-              No stylists mapped for this service.
+              {{ t("salon.noStylistsMapped") }}
             </div>
           </div>
           <div class="field">
-            <label for="station">Station</label>
+            <label for="station">{{ t("salon.station") }}</label>
             <select id="station" v-model="form.stationId">
-              <option value="">Unassigned</option>
+              <option value="">{{ t("salon.unassigned") }}</option>
               <option
                 v-for="station in stations"
                 :key="station.id"
@@ -391,11 +396,11 @@ const handleServiceChange = async () => {
             </select>
           </div>
           <div class="field">
-            <label for="start">Start</label>
+            <label for="start">{{ t("salon.start") }}</label>
             <input id="start" type="datetime-local" v-model="form.start" />
           </div>
           <div class="field full">
-            <label for="notes">Notes</label>
+            <label for="notes">{{ t("salon.notes") }}</label>
             <textarea id="notes" v-model="form.notes" rows="3" />
           </div>
         </div>
@@ -406,23 +411,25 @@ const handleServiceChange = async () => {
             :disabled="submitting"
             @click="showForm = false"
           >
-            Cancel
+            {{ t("common.cancel") }}
           </button>
           <button
             class="btn-primary"
             :disabled="submitting"
             @click="submitForm"
           >
-            <span v-if="!submitting">Create</span>
-            <span v-else>Saving...</span>
+            <span v-if="!submitting">{{ t("salon.create") }}</span>
+            <span v-else>{{ t("common.saving") }}</span>
           </button>
         </div>
       </div>
 
       <div v-if="selectedIds.length" class="bulk-bar">
-        <span class="bulk-count">{{ selectedIds.length }} selected</span>
+        <span class="bulk-count"
+          >{{ selectedIds.length }} {{ t("salon.selected") }}</span
+        >
         <select v-model="bulkStatus" class="bulk-select">
-          <option value="">Update status...</option>
+          <option value="">{{ t("salon.updateStatus") }}</option>
           <option v-for="s in statusOptions" :key="s" :value="s">
             {{ s.replace("_", " ") }}
           </option>
@@ -432,17 +439,19 @@ const handleServiceChange = async () => {
           :disabled="!bulkStatus"
           @click="bulkUpdateStatus"
         >
-          Apply
+          {{ t("salon.apply") }}
         </button>
         <button class="btn-danger-sm" @click="bulkCancel">
-          Cancel selected
+          {{ t("salon.cancelSelected") }}
         </button>
-        <button class="btn-secondary" @click="selectedIds = []">Clear</button>
+        <button class="btn-secondary" @click="selectedIds = []">
+          {{ t("salon.clear") }}
+        </button>
       </div>
 
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading appointments...</p>
+        <p>{{ t("salon.loadingAppointments") }}</p>
       </div>
 
       <div v-else class="table-container">
@@ -459,14 +468,14 @@ const handleServiceChange = async () => {
                   @change="toggleSelectAll"
                 />
               </th>
-              <th>Client</th>
-              <th>Date / Time</th>
-              <th>Service</th>
-              <th>Stylist</th>
-              <th>Station</th>
-              <th>Status</th>
-              <th>Payment</th>
-              <th>Actions</th>
+              <th>{{ t("salon.client") }}</th>
+              <th>{{ t("salon.dateTime") }}</th>
+              <th>{{ t("salon.service") }}</th>
+              <th>{{ t("salon.stylist") }}</th>
+              <th>{{ t("salon.station") }}</th>
+              <th>{{ t("common.status") }}</th>
+              <th>{{ t("salon.payment") }}</th>
+              <th>{{ t("common.actions") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -475,7 +484,7 @@ const handleServiceChange = async () => {
                 <input
                   type="checkbox"
                   :checked="selectedIds.includes(apt.id)"
-                  @change="toggleSelect(apt.id)"
+                  @change="toggleSelect(apt)"
                 />
               </td>
               <td>
@@ -484,7 +493,7 @@ const handleServiceChange = async () => {
               </td>
               <td>{{ formatDate(apt.start) }}</td>
               <td>{{ apt.service?.name || "—" }}</td>
-              <td>{{ apt.stylist?.name || "Auto-assign" }}</td>
+              <td>{{ apt.stylist?.name || t("salon.autoAssign") }}</td>
               <td>{{ apt.station?.name || "—" }}</td>
               <td>
                 <select
@@ -512,14 +521,14 @@ const handleServiceChange = async () => {
                   class="btn-danger-sm"
                   @click="deleteAppointment(apt.id)"
                 >
-                  Cancel
+                  {{ t("common.cancel") }}
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
         <div v-if="!appointments.length" class="empty-state">
-          No appointments found.
+          {{ t("salon.noAppointments") }}
         </div>
       </div>
     </div>
