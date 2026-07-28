@@ -499,6 +499,14 @@ const listImpersonation = () => {
   return API.get("/admin/impersonation");
 };
 
+const listPlatformSettings = () => {
+  return API.get("/admin/platform-settings");
+};
+
+const updatePlatformSetting = (key, value) => {
+  return API.put("/admin/platform-settings", { key, value });
+};
+
 const listSessions = () => {
   return API.get("/admin/sessions");
 };
@@ -918,6 +926,8 @@ export default {
   startImpersonation,
   endImpersonation,
   listImpersonation,
+  listPlatformSettings,
+  updatePlatformSetting,
   listSessions,
   revokeSession,
   revokeAllSessions,

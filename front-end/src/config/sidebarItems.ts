@@ -517,6 +517,15 @@ export const adminNavItems: NavItem[] = [
     platformOnly: true,
   },
   {
+    routeName: "platform-settings",
+    text: "Platform Settings",
+    icon: "mdi:cog",
+    requiresAuth: true,
+    requiresPermission: "manage_tenants",
+    tenantOnly: true,
+    platformOnly: true,
+  },
+  {
     routeName: "platform-sessions",
     text: "Sessions",
     icon: "mdi:desktop-classic",

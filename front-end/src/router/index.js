@@ -679,6 +679,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
         meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
       },
       {
+        path: "settings",
+        name: "platform-settings",
+        component: () => import("../views/admin/PlatformSettingsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
         path: "security/password-policy",
         name: "platform-password-policy",
         component: () => import("../views/admin/PasswordPolicyView.vue"),
