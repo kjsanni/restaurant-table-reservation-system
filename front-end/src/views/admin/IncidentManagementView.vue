@@ -92,6 +92,41 @@
                 >
                   Delete
                 </button>
+                <template v-if="incident.tenantId">
+                  <button
+                    class="btn-xs"
+                    :disabled="actionLoading[incident.id]?.lock"
+                    @click="lockTenant(incident)"
+                  >
+                    {{
+                      actionLoading[incident.id]?.lock
+                        ? "Locking..."
+                        : "Lock Tenant"
+                    }}
+                  </button>
+                  <button
+                    class="btn-xs"
+                    :disabled="actionLoading[incident.id]?.reset"
+                    @click="resetTokens(incident)"
+                  >
+                    {{
+                      actionLoading[incident.id]?.reset
+                        ? "Resetting..."
+                        : "Reset Tokens"
+                    }}
+                  </button>
+                  <button
+                    class="btn-xs"
+                    :disabled="actionLoading[incident.id]?.logout"
+                    @click="forceLogout(incident)"
+                  >
+                    {{
+                      actionLoading[incident.id]?.logout
+                        ? "Logging out..."
+                        : "Force Logout"
+                    }}
+                  </button>
+                </template>
               </td>
             </tr>
           </tbody>
@@ -172,6 +207,7 @@ const form = ref({
   severity: "medium",
   status: "open",
 });
+const actionLoading = ref({});
 
 const activeCount = ref(0);
 const criticalCount = ref(0);
@@ -228,6 +264,66 @@ const deleteIncident = async (id) => {
   if (!confirmed) return;
   await adminAPI.deleteIncident(id);
   await load();
+};
+
+const lockTenant = async (incident) => {
+  const confirmed = window.confirm(
+    `Lock tenant "${incident.tenant?.name || incident.tenantId}"? This will suspend the tenant.`
+  );
+  if (!confirmed) return;
+  actionLoading.value[incident.id] = {
+    ...actionLoading.value[incident.id],
+    lock: true,
+  };
+  try {
+    await adminAPI.lockTenant(incident.tenantId);
+    await load();
+  } finally {
+    actionLoading.value[incident.id] = {
+      ...actionLoading.value[incident.id],
+      lock: false,
+    };
+  }
+};
+
+const resetTokens = async (incident) => {
+  const confirmed = window.confirm(
+    `Reset all tokens for tenant "${incident.tenant?.name || incident.tenantId}"? All users will be logged out.`
+  );
+  if (!confirmed) return;
+  actionLoading.value[incident.id] = {
+    ...actionLoading.value[incident.id],
+    reset: true,
+  };
+  try {
+    await adminAPI.resetTenantTokens(incident.tenantId);
+    await load();
+  } finally {
+    actionLoading.value[incident.id] = {
+      ...actionLoading.value[incident.id],
+      reset: false,
+    };
+  }
+};
+
+const forceLogout = async (incident) => {
+  const confirmed = window.confirm(
+    `Force logout all sessions for tenant "${incident.tenant?.name || incident.tenantId}"?`
+  );
+  if (!confirmed) return;
+  actionLoading.value[incident.id] = {
+    ...actionLoading.value[incident.id],
+    logout: true,
+  };
+  try {
+    await adminAPI.forceLogoutTenant(incident.tenantId);
+    await load();
+  } finally {
+    actionLoading.value[incident.id] = {
+      ...actionLoading.value[incident.id],
+      logout: false,
+    };
+  }
 };
 
 const closeModal = () => {

@@ -139,24 +139,32 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
     await userDAO.clearLoginAttempts(email, ipAddress, tenantId);
   }
 
-  if (user.isSuperAdmin && user.totpEnabled && !user.totpConfirmed) {
-    const tempToken = jwt.sign(
-      { userId: user.id, role: user.role, purpose: "totp_verification" },
-      JWT_SECRET,
-      { expiresIn: "5m" }
-    );
-    return {
-      pendingTOTP: true,
-      tempToken,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        permissions: user.permissions || {},
-        isSuperAdmin: !!user.isSuperAdmin,
-      },
-    };
+  if (user.isSuperAdmin) {
+    if (!user.totpEnabled) {
+      throw {
+        status: 403,
+        message: "Super admin accounts require two-factor authentication. Please contact another super admin to enable TOTP.",
+      };
+    }
+    if (!user.totpConfirmed) {
+      const tempToken = jwt.sign(
+        { userId: user.id, role: user.role, purpose: "totp_verification" },
+        JWT_SECRET,
+        { expiresIn: "5m" }
+      );
+      return {
+        pendingTOTP: true,
+        tempToken,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          permissions: user.permissions || {},
+          isSuperAdmin: !!user.isSuperAdmin,
+        },
+      };
+    }
   }
 
   const token = generateToken(user.id, user.role);

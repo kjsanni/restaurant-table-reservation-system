@@ -29,7 +29,8 @@ const shouldShow = (item: {
   requiresVertical?: string;
 }) => {
   if (item.platformOnly && !isSuperAdmin.value) return false;
-  if (item.tenantOnly && !authStore.tenantModeEnabled) return false;
+  if (item.tenantOnly && !authStore.tenantModeEnabled && !isSuperAdmin.value)
+    return false;
   if (item.requiresAuth && !isAuthenticated.value) return false;
   if (item.requiresAdmin && user.value?.role !== "admin") return false;
   if (
