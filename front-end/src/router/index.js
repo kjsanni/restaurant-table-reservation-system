@@ -141,6 +141,38 @@ const router = createRouter({
       ],
     },
     {
+      path: "/erpnext/employees",
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "erpnext-employees",
+          component: () => import("../views/ErpnextEmployeesView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresFeature: "erpnext_hr",
+          },
+        },
+      ],
+    },
+    {
+      path: "/erpnext/crm",
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "erpnext-crm",
+          component: () => import("../views/ErpnextCrmView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresFeature: "erpnext_crm",
+          },
+        },
+      ],
+    },
+    {
       path: "/new-reservation",
       component: () => import("../layouts/TenantLayout.vue"),
       children: [

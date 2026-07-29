@@ -6,6 +6,8 @@ const { syncInvoice, syncAllInvoices } = require("./sync/invoice.sync");
 const { syncPayment, syncAllPayments } = require("./sync/payment.sync");
 const { syncItem, syncAllItems } = require("./sync/item.sync");
 const { syncStockEntry, syncStockAdjustments } = require("./sync/stock-entry.sync");
+const { syncEmployee, syncAllEmployees } = require("./sync/employee.sync");
+const { syncCrmLead, syncAllCrmLeads, syncCrmCustomer, syncAllCrmCustomers } = require("./sync/crm.sync");
 
 const erpnextQueue = createQueue("erpnext-sync");
 
@@ -39,6 +41,21 @@ const enqueueFullSync = async (tenantId) => {
   return erpnextQueue.add("full-sync", { tenantId });
 };
 
+const enqueueEmployeeSync = async (tenantId, staffId = null) => {
+  if (!erpnextQueue) return { enqueued: false };
+  return erpnextQueue.add("sync-employee", { tenantId, staffId });
+};
+
+const enqueueCrmLeadSync = async (tenantId, customerId = null) => {
+  if (!erpnextQueue) return { enqueued: false };
+  return erpnextQueue.add("sync-crm-lead", { tenantId, customerId });
+};
+
+const enqueueCrmCustomerSync = async (tenantId, customerId = null) => {
+  if (!erpnextQueue) return { enqueued: false };
+  return erpnextQueue.add("sync-crm-customer", { tenantId, customerId });
+};
+
 const startErpnextWorker = () => {
   if (!erpnextQueue) return null;
 
@@ -70,12 +87,30 @@ const startErpnextWorker = () => {
           return syncAllItems(tenantId);
         case "sync-stock-entry":
           return syncStockAdjustments(tenantId);
+        case "sync-employee":
+          if (staffId) {
+            return syncEmployee(tenantId, staffId);
+          }
+          return syncAllEmployees(tenantId);
+        case "sync-crm-lead":
+          if (customerId) {
+            return syncCrmLead(tenantId, customerId);
+          }
+          return syncAllCrmLeads(tenantId);
+        case "sync-crm-customer":
+          if (customerId) {
+            return syncCrmCustomer(tenantId, customerId);
+          }
+          return syncAllCrmCustomers(tenantId);
         case "full-sync":
           await syncAllCustomers(tenantId);
           await syncAllInvoices(tenantId);
           await syncAllPayments(tenantId);
           await syncAllItems(tenantId);
           await syncStockAdjustments(tenantId);
+          await syncAllEmployees(tenantId);
+          await syncAllCrmLeads(tenantId);
+          await syncAllCrmCustomers(tenantId);
           return { status: "completed", tenantId };
         default:
           throw new Error(`Unknown ERPNext sync job: ${job.name}`);
@@ -101,6 +136,9 @@ module.exports = {
   enqueuePaymentSync,
   enqueueItemSync,
   enqueueStockEntrySync,
+  enqueueEmployeeSync,
+  enqueueCrmLeadSync,
+  enqueueCrmCustomerSync,
   enqueueFullSync,
   startErpnextWorker,
 };

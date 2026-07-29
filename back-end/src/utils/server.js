@@ -81,6 +81,8 @@ let platformAuditRoutes = null;
 let notificationRoutes = null;
 let erpnextProxyRoutes = null;
 let erpnextOnboardingRoutes = null;
+let erpnextHrRoutes = null;
+let erpnextCrmRoutes = null;
 let legalAcceptanceRoutes = null;
 let dsarRequestRoutes = null;
   let publicDsarRoutes = null;
@@ -158,6 +160,8 @@ if (TENANT_MODE) {
   notificationRoutes = require("../tenant-platform/routes/notification.router");
   erpnextProxyRoutes = require("../integrations/erpnext/proxies/accounting.proxy");
   erpnextOnboardingRoutes = require("../integrations/erpnext/onboarding/onboarding");
+  erpnextHrRoutes = require("../integrations/erpnext/proxies/hr.proxy");
+  erpnextCrmRoutes = require("../integrations/erpnext/proxies/crm.proxy");
   legalAcceptanceRoutes = require("../tenant-platform/routes/legalAcceptance.router");
   dsarRequestRoutes = require("../tenant-platform/routes/dsarRequest.router");
   publicDsarRoutes = require("../tenant-platform/routes/publicDsar.router");
@@ -386,6 +390,8 @@ const createServer = () => {
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, onboardingRoutes);
     app.use("/api/v1/erpnext", logAction, validateCsrfToken, erpnextProxyRoutes);
     app.use("/api/v1/erpnext/onboarding", logAction, validateCsrfToken, erpnextOnboardingRoutes);
+    app.use("/api/v1/erpnext/hr", logAction, validateCsrfToken, erpnextHrRoutes);
+    app.use("/api/v1/erpnext/crm", logAction, validateCsrfToken, erpnextCrmRoutes);
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, legalAcceptanceRoutes);
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, dsarRequestRoutes);
     app.use("/api/v1/admin/benchmarks", logAction, validateCsrfToken, adminMiddleware, benchmarkRoutes);

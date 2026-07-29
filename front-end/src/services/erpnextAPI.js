@@ -60,6 +60,24 @@ const erpnextAPI = {
   syncStockEntries: () =>
     apiClient.post("/inventory/sync/stock-entries"),
 
+  getHrEmployees: (params = {}) =>
+    apiClient.get("/hr/employees", { params }),
+
+  syncEmployees: (staffIds = null) =>
+    apiClient.post("/hr/sync/employees", { staffIds }),
+
+  getCrmLeads: (params = {}) =>
+    apiClient.get("/crm/leads", { params }),
+
+  getCrmCustomers: (params = {}) =>
+    apiClient.get("/crm/customers", { params }),
+
+  syncCrmLeads: (customerIds = null) =>
+    apiClient.post("/crm/sync/leads", { customerIds }),
+
+  syncCrmCustomers: (customerIds = null) =>
+    apiClient.post("/crm/sync/customers", { customerIds }),
+
   getOnboardingStatus: () => apiClient.get("/onboarding/status"),
 
   createCompany: (data) => apiClient.post("/onboarding/company", data),
