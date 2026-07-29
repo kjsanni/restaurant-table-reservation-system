@@ -614,6 +614,16 @@ export const adminNavItems: NavItem[] = [
     section: "Platform",
   },
   {
+    routeName: "platform-erpnext",
+    text: "ERPNext",
+    icon: "mdi:cloud",
+    requiresAuth: true,
+    requiresPermission: "manage_tenants",
+    tenantOnly: true,
+    platformOnly: true,
+    section: "Platform",
+  },
+  {
     routeName: "platform-sessions",
     text: "Sessions",
     icon: "mdi:desktop-classic",
