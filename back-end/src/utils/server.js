@@ -397,7 +397,7 @@ const createServer = () => {
     app.use("/api/v1/erpnext/hr", logAction, validateCsrfToken, erpnextHrRoutes);
     app.use("/api/v1/erpnext/crm", logAction, validateCsrfToken, erpnextCrmRoutes);
     app.use("/api/v1/erpnext/inventory", logAction, validateCsrfToken, erpnextInventoryRoutes);
-    app.use("/api/v1/admin/erpnext", logAction, validateCsrfToken, adminMiddleware, erpnextAdminRoutes);
+    app.use("/api/v1/admin/erpnext", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, erpnextAdminRoutes);
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, legalAcceptanceRoutes);
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, dsarRequestRoutes);
     app.use("/api/v1/admin/benchmarks", logAction, validateCsrfToken, adminMiddleware, benchmarkRoutes);

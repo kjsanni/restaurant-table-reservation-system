@@ -90,8 +90,9 @@ const deprovisionErpnextModuleHandler = async (req, res) => {
   const allFlags = { ...featureFlags };
   delete allFlags[moduleFlag];
 
-  for (const [flag, meta] of Object.entries(getModuleMetadata || {})) {
-    if (allFlags[flag] && meta.dependencies && meta.dependencies.includes(moduleFlag)) {
+  for (const flag of getEnabledModules(featureFlags)) {
+    const meta = getModuleMetadata(flag);
+    if (meta && meta.dependencies && meta.dependencies.includes(moduleFlag)) {
       return res.status(400).json({
         success: false,
         message: `Cannot disable ${metadata.name}: ${meta.name} depends on it`,

@@ -48,6 +48,10 @@
         </div>
       </div>
 
+      <div v-if="syncMessage" class="sync-message">
+        {{ syncMessage }}
+      </div>
+
       <div class="tenant-list">
         <div v-for="tenant in tenants" :key="tenant.id" class="tenant-card">
           <div class="tenant-header">
@@ -68,8 +72,12 @@
             >
               Manage Modules
             </button>
-            <button class="btn-ghost btn-sm" @click="triggerSync(tenant.id)">
-              Sync Now
+            <button
+              class="btn-ghost btn-sm"
+              :disabled="savingSync"
+              @click="triggerSync(tenant.id)"
+            >
+              {{ savingSync ? "Syncing..." : "Sync Now" }}
             </button>
           </div>
         </div>
@@ -84,7 +92,10 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import adminAPI from "@/services/adminAPI";
+
+const router = useRouter();
 
 const loading = ref(true);
 const error = ref(null);
@@ -92,6 +103,20 @@ const tenants = ref([]);
 const searchQuery = ref("");
 const planFilter = ref("");
 const savingSync = ref(false);
+const syncMessage = ref(null);
+
+const triggerSync = async (tenantId) => {
+  savingSync.value = true;
+  syncMessage.value = null;
+  try {
+    await adminAPI.triggerErpnextSync(tenantId, { syncType: "full" });
+    syncMessage.value = "Sync enqueued successfully.";
+  } catch (e) {
+    error.value = "Failed to trigger sync.";
+  } finally {
+    savingSync.value = false;
+  }
+};
 
 const loadTenants = async () => {
   loading.value = true;
@@ -115,18 +140,7 @@ const handleSearch = () => {
 };
 
 const viewTenantDetail = (tenantId) => {
-  window.location.href = `/admin/tenants/${tenantId}`;
-};
-
-const triggerSync = async (tenantId) => {
-  savingSync.value = true;
-  try {
-    await adminAPI.triggerErpnextSync(tenantId, { syncType: "full" });
-  } catch (e) {
-    error.value = "Failed to trigger sync.";
-  } finally {
-    savingSync.value = false;
-  }
+  router.push(`/admin/tenants/${tenantId}`);
 };
 
 onMounted(() => {
@@ -227,5 +241,13 @@ onMounted(() => {
   margin-top: var(--space-3);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+.sync-message {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-success-light, #e6f4ea);
+  color: var(--color-success, #1e7e34);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
 }
 </style>
