@@ -109,6 +109,22 @@ const router = createRouter({
       ],
     },
     {
+      path: "/erpnext/accounting",
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "erpnext-accounting",
+          component: () => import("../views/ErpnextAccountingView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresFeature: "erpnext_accounting",
+          },
+        },
+      ],
+    },
+    {
       path: "/new-reservation",
       component: () => import("../layouts/TenantLayout.vue"),
       children: [

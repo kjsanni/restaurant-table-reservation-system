@@ -1,4 +1,6 @@
 const db = require("../../db/models");
+const { validateModuleDependencies } = require("../../integrations/erpnext/module-registry");
+const { getPlansCached } = require("../services/tenantSubscription.service");
 
 const listFeatureFlagsHandler = async (req, res) => {
   const flags = Object.keys(
@@ -23,9 +25,42 @@ const updateTenantFeatureFlagsHandler = async (req, res) => {
   if (!tenant) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
+
   const featureFlags = req.body.featureFlags || {};
+  const sanitizedFeatureFlags = Object.fromEntries(
+    Object.entries(featureFlags).filter(([key]) => !["__proto__", "constructor", "prototype"].includes(key))
+  );
+  const erpnextFlags = Object.keys(sanitizedFeatureFlags).filter((k) => k.startsWith("erpnext_"));
+
+  if (erpnextFlags.length > 0) {
+    const plans = await getPlansCached();
+    const plan = plans[tenant.plan] || plans.starter;
+    const allowedModules = plan.erpnextModules;
+
+    if (Array.isArray(allowedModules)) {
+      for (const flag of erpnextFlags) {
+        if (featureFlags[flag] && !allowedModules.includes(flag)) {
+          return res.status(403).json({
+            success: false,
+            message: `Plan "${tenant.plan}" does not include ERPNext module "${flag}". Upgrade your plan to enable it.`,
+          });
+        }
+      }
+    }
+
+    for (const flag of erpnextFlags) {
+      const depCheck = validateModuleDependencies(featureFlags, flag);
+      if (!depCheck.valid) {
+        return res.status(400).json({
+          success: false,
+          message: `Module "${flag}" requires dependencies: ${depCheck.missing.join(", ")}`,
+        });
+      }
+    }
+  }
+
   const settings = tenant.settings || {};
-  settings.featureFlags = { ...(settings.featureFlags || {}), ...featureFlags };
+  settings.featureFlags = { ...(settings.featureFlags || {}), ...sanitizedFeatureFlags };
   await tenant.update({ settings });
   res.status(200).json({ success: true, featureFlags: settings.featureFlags });
 };
