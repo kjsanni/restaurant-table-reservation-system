@@ -66,9 +66,12 @@ describe("salonCron", () => {
       jest.spyOn(appointmentDao, "create").mockResolvedValue({ id: 100 });
       jest.spyOn(notificationService, "sendSalonConfirmation").mockResolvedValue();
 
+      const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
       const result = await cron.processRecurringAppointments(1);
 
-      expect(result).toHaveLength(0);
+      expect(result).toHaveLength(1);
+      expect(result[0].date).toBe(todayStr);
+      expect(result[0].recurringId).toBe(1);
     });
 
     it("skips recurring templates past their endDate", async () => {
