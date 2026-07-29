@@ -309,6 +309,37 @@
         <button @click="addNote" class="btn-primary">Add</button>
       </div>
     </div>
+
+    <div class="section erpnext-section">
+      <h2>ERPNext Modules</h2>
+      <p class="section-hint">
+        Toggle ERPNext modules for this tenant. Module availability depends on the tenant's subscription plan.
+      </p>
+      <div class="erpnext-modules-grid">
+        <div
+          v-for="mod in erpnextModuleOptions"
+          :key="mod.flag"
+          class="erpnext-module-card"
+        >
+          <div class="module-header">
+            <span class="module-name">{{ mod.name }}</span>
+            <label class="toggle-switch">
+              <input
+                type="checkbox"
+                :checked="tenantFeatureFlags[mod.flag]"
+                @change="toggleErpnextModule(mod.flag, $event.target.checked)"
+              />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <p class="module-desc">{{ mod.description }}</p>
+          <p v-if="!modAllowed(mod.flag)" class="module-warning">
+            Not included in {{ tenant.plan }} plan
+          </p>
+        </div>
+      </div>
+      <div v-if="savingErpnext" class="saving-indicator">Saving...</div>
+    </div>
   </div>
 </template>
 
@@ -352,6 +383,41 @@ const whatsappForm = ref({
 const payoutForm = ref({
   paystackSubaccountCode: "",
 });
+const erpnextFeatureFlags = ref({});
+const savingErpnext = ref(false);
+
+const erpnextModuleOptions = [
+  { flag: "erpnext_accounting", name: "Accounting", description: "Invoice, payment, and financial ledger sync" },
+  { flag: "erpnext_stock", name: "Inventory", description: "Stock items, warehouses, and stock ledger sync" },
+  { flag: "erpnext_crm", name: "CRM", description: "Customer leads and campaign tracking" },
+  { flag: "erpnext_hr", name: "HR", description: "Employee records, attendance, and payroll" },
+  { flag: "erpnext_pos", name: "POS", description: "Point of sale integration" },
+  { flag: "erpnext_manufacturing", name: "Manufacturing", description: "BOM categories and production planning" },
+];
+
+const tenantFeatureFlags = computed(() => {
+  return tenant.value.settings?.featureFlags || {};
+});
+
+const modAllowed = (flag) => {
+  const allowedModules = tenant.value.planData?.erpnextModules;
+  if (allowedModules === null || allowedModules === undefined) return true;
+  return allowedModules.includes(flag);
+};
+
+const toggleErpnextModule = async (flag, enabled) => {
+  savingErpnext.value = true;
+  try {
+    await tenantAdminAPI.updateFeatureFlags(route.params.id, {
+      [flag]: enabled,
+    });
+    await loadTenant();
+  } catch (err) {
+    console.error("Failed to toggle ERPNext module:", err);
+  } finally {
+    savingErpnext.value = false;
+  }
+};
 
 const loadTenant = async () => {
   const response = await tenantAdminAPI.getById(route.params.id);
@@ -918,5 +984,84 @@ onMounted(() => {
   background: var(--surface);
   color: var(--ink);
   font-family: var(--font-sans);
+}
+.erpnext-section {
+  margin-top: var(--space-xl);
+}
+.erpnext-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+.erpnext-module-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+}
+.module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+.module-name {
+  font-weight: 600;
+  font-size: var(--text-base);
+}
+.module-desc {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin: 0 0 var(--space-sm);
+}
+.module-warning {
+  font-size: var(--text-sm);
+  color: var(--warning);
+  margin: 0;
+}
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.2s;
+  border-radius: 24px;
+}
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.2s;
+  border-radius: 50%;
+}
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--brand-500);
+}
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+.saving-indicator {
+  margin-top: var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
 }
 </style>
