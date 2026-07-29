@@ -1,7 +1,7 @@
 "use strict";
 
 const db = require("../../db/models");
-const { validateModuleDependencies, getAllModules, getModuleMetadata, getEnabledModules } = require("../../integrations/erpnext/module-registry");
+const { validateModuleDependencies, getModuleMetadata, getEnabledModules } = require("../../integrations/erpnext/module-registry");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const getErpnextTenantHandler = async (req, res) => {
