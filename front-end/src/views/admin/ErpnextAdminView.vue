@@ -3,7 +3,9 @@
     <div class="page-header">
       <div>
         <h1>ERPNext Integration</h1>
-        <p class="subtitle">Manage ERPNext module provisioning and data sync across tenants</p>
+        <p class="subtitle">
+          Manage ERPNext module provisioning and data sync across tenants
+        </p>
       </div>
     </div>
 
@@ -39,7 +41,9 @@
           <span class="stat-label">Total Tenants</span>
         </div>
         <div class="stat-card">
-          <span class="stat-value">{{ tenants.filter((t) => t.erpnextModules?.length > 0).length }}</span>
+          <span class="stat-value">{{
+            tenants.filter((t) => t.erpnextModules?.length > 0).length
+          }}</span>
           <span class="stat-label">ERPNext Enabled</span>
         </div>
       </div>
@@ -52,11 +56,16 @@
           </div>
           <div class="tenant-meta">
             <span>{{ tenant.userCount }} user(s)</span>
-            <span v-if="tenant.erpnextModules?.length > 0">ERPNext: {{ tenant.erpnextModules.join(", ") }}</span>
+            <span v-if="tenant.erpnextModules?.length > 0"
+              >ERPNext: {{ tenant.erpnextModules.join(", ") }}</span
+            >
             <span v-else>No ERPNext modules</span>
           </div>
           <div class="tenant-actions">
-            <button class="btn-secondary btn-sm" @click="viewTenantDetail(tenant.id)">
+            <button
+              class="btn-secondary btn-sm"
+              @click="viewTenantDetail(tenant.id)"
+            >
               Manage Modules
             </button>
             <button class="btn-ghost btn-sm" @click="triggerSync(tenant.id)">
