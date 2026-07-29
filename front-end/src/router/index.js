@@ -811,6 +811,12 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
         meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
       },
       {
+        path: "settings/totp",
+        name: "platform-totp-settings",
+        component: () => import("../views/admin/TOTPSettingsView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
         path: "security/password-policy",
         name: "platform-password-policy",
         component: () => import("../views/admin/PasswordPolicyView.vue"),

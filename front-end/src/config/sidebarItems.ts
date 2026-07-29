@@ -604,6 +604,16 @@ export const adminNavItems: NavItem[] = [
     section: "Platform",
   },
   {
+    routeName: "platform-totp-settings",
+    text: "Two-Factor Auth",
+    icon: "mdi:shield-check",
+    requiresAuth: true,
+    requiresPermission: "manage_tenants",
+    tenantOnly: true,
+    platformOnly: true,
+    section: "Platform",
+  },
+  {
     routeName: "platform-sessions",
     text: "Sessions",
     icon: "mdi:desktop-classic",

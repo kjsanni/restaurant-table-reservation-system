@@ -12,7 +12,9 @@ const { branding } = useTenantBranding();
 
 const loading = ref(true);
 const error = ref<string | null>(null);
-const activeTab = ref<"overview" | "items" | "stock" | "warehouses">("overview");
+const activeTab = ref<"overview" | "items" | "stock" | "warehouses">(
+  "overview"
+);
 
 const items = ref<any[]>([]);
 const stockEntries = ref<any[]>([]);
@@ -102,16 +104,28 @@ onMounted(() => {
     </div>
 
     <div class="erpnext-tabs">
-      <button :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">
+      <button
+        :class="{ active: activeTab === 'overview' }"
+        @click="activeTab = 'overview'"
+      >
         Overview
       </button>
-      <button :class="{ active: activeTab === 'items' }" @click="activeTab = 'items'">
+      <button
+        :class="{ active: activeTab === 'items' }"
+        @click="activeTab = 'items'"
+      >
         Items
       </button>
-      <button :class="{ active: activeTab === 'stock' }" @click="activeTab = 'stock'">
+      <button
+        :class="{ active: activeTab === 'stock' }"
+        @click="activeTab = 'stock'"
+      >
         Stock Ledger
       </button>
-      <button :class="{ active: activeTab === 'warehouses' }" @click="activeTab = 'warehouses'">
+      <button
+        :class="{ active: activeTab === 'warehouses' }"
+        @click="activeTab = 'warehouses'"
+      >
         Warehouses
       </button>
     </div>

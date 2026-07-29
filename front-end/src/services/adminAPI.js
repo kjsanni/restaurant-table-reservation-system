@@ -1060,4 +1060,11 @@ export default {
   listPlatformRoles,
   assignPlatformRole,
   revokePlatformRole,
+  setupTOTP: () => API.post("/admin/totp/setup"),
+  confirmTOTP: (token) => API.post("/admin/totp/confirm", { token }),
+  disableTOTP: () => API.post("/admin/totp/disable"),
+  getTOTPStatus: () => API.get("/admin/totp/status"),
+  regenerateBackupCodes: () => API.post("/admin/totp/backup-codes/regenerate"),
+  verifyBackupCode: (code) =>
+    API.post("/admin/totp/backup-codes/verify", { code }),
 };

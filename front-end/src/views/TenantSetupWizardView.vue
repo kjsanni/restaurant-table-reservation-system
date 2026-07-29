@@ -109,7 +109,10 @@ const erpnextModules = computed(() => {
     .map(([k]) => k);
 });
 const isErpnextStepComplete = computed(() => {
-  if (erpnextModules.value.includes("erpnext_accounting") || erpnextModules.value.includes("erpnext_stock")) {
+  if (
+    erpnextModules.value.includes("erpnext_accounting") ||
+    erpnextModules.value.includes("erpnext_stock")
+  ) {
     return erpnextCompanyName.value.trim().length > 0;
   }
   return true;
@@ -163,7 +166,10 @@ const submitErpnextOnboarding = async () => {
       throw new Error(data.message || "Failed to create ERPNext company");
     }
 
-    if (erpnextModules.value.includes("erpnext_stock") && erpnextWarehouseName.value.trim()) {
+    if (
+      erpnextModules.value.includes("erpnext_stock") &&
+      erpnextWarehouseName.value.trim()
+    ) {
       const whRes = await fetch("/api/v1/erpnext/onboarding/warehouse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -378,34 +384,40 @@ onMounted(() => {
       </div>
 
       <div v-if="step === 4 && isErpnextEnabled" class="step-content">
-        <h2 style="text-align:center;margin-bottom:16px">
-          ERPNext Setup
-        </h2>
-        <p style="text-align:center;color:#666;margin-bottom:20px">
-          Complete the ERPNext onboarding steps to enable
-          accounting, inventory, and other back-office features.
+        <h2 style="text-align: center; margin-bottom: 16px">ERPNext Setup</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 20px">
+          Complete the ERPNext onboarding steps to enable accounting, inventory,
+          and other back-office features.
         </p>
 
-        <div v-if="erpnextModules.includes('erpnext_accounting') || erpnextModules.includes('erpnext_stock')" class="erpnext-onboarding-step">
+        <div
+          v-if="
+            erpnextModules.includes('erpnext_accounting') ||
+            erpnextModules.includes('erpnext_stock')
+          "
+          class="erpnext-onboarding-step"
+        >
           <h3>Step 1 — Set up your ERP company</h3>
           <div class="form-group">
             <label>Company Name</label>
             <input
               v-model="erpnextCompanyName"
               type="text"
-              :placeholder="businessVertical === 'salon' ? 'My Salon' : 'My Restaurant'"
+              :placeholder="
+                businessVertical === 'salon' ? 'My Salon' : 'My Restaurant'
+              "
             />
           </div>
           <div class="form-group">
             <label>Fiscal Year Start</label>
-            <input
-              v-model="erpnextFiscalYearStart"
-              type="date"
-            />
+            <input v-model="erpnextFiscalYearStart" type="date" />
           </div>
         </div>
 
-        <div v-if="erpnextModules.includes('erpnext_stock')" class="erpnext-onboarding-step">
+        <div
+          v-if="erpnextModules.includes('erpnext_stock')"
+          class="erpnext-onboarding-step"
+        >
           <h3>Step 2 — Set up your warehouse</h3>
           <div class="form-group">
             <label>Warehouse Name</label>
@@ -417,24 +429,28 @@ onMounted(() => {
           </div>
         </div>
 
-        <div v-if="erpnextModules.includes('erpnext_hr')" class="erpnext-onboarding-step">
+        <div
+          v-if="erpnextModules.includes('erpnext_hr')"
+          class="erpnext-onboarding-step"
+        >
           <h3>Step 3 — Import staff records</h3>
-          <p style="color:#666">
+          <p style="color: #666">
             Your existing staff will be imported into ERPNext as employees.
           </p>
         </div>
 
-        <div v-if="erpnextModules.includes('erpnext_manufacturing')" class="erpnext-onboarding-step">
+        <div
+          v-if="erpnextModules.includes('erpnext_manufacturing')"
+          class="erpnext-onboarding-step"
+        >
           <h3>Step 4 — Set up recipes / BOM</h3>
-          <p style="color:#666">
+          <p style="color: #666">
             Item groups and bill of materials will be created for your products.
           </p>
         </div>
 
         <div class="wizard-actions">
-          <button class="btn-secondary" @click="step = 3">
-            Back
-          </button>
+          <button class="btn-secondary" @click="step = 3">Back</button>
           <button
             class="btn-primary"
             :disabled="!isErpnextStepComplete"

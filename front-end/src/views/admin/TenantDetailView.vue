@@ -313,7 +313,8 @@
     <div class="section erpnext-section">
       <h2>ERPNext Modules</h2>
       <p class="section-hint">
-        Toggle ERPNext modules for this tenant. Module availability depends on the tenant's subscription plan.
+        Toggle ERPNext modules for this tenant. Module availability depends on
+        the tenant's subscription plan.
       </p>
       <div class="erpnext-modules-grid">
         <div
@@ -387,12 +388,36 @@ const erpnextFeatureFlags = ref({});
 const savingErpnext = ref(false);
 
 const erpnextModuleOptions = [
-  { flag: "erpnext_accounting", name: "Accounting", description: "Invoice, payment, and financial ledger sync" },
-  { flag: "erpnext_stock", name: "Inventory", description: "Stock items, warehouses, and stock ledger sync" },
-  { flag: "erpnext_crm", name: "CRM", description: "Customer leads and campaign tracking" },
-  { flag: "erpnext_hr", name: "HR", description: "Employee records, attendance, and payroll" },
-  { flag: "erpnext_pos", name: "POS", description: "Point of sale integration" },
-  { flag: "erpnext_manufacturing", name: "Manufacturing", description: "BOM categories and production planning" },
+  {
+    flag: "erpnext_accounting",
+    name: "Accounting",
+    description: "Invoice, payment, and financial ledger sync",
+  },
+  {
+    flag: "erpnext_stock",
+    name: "Inventory",
+    description: "Stock items, warehouses, and stock ledger sync",
+  },
+  {
+    flag: "erpnext_crm",
+    name: "CRM",
+    description: "Customer leads and campaign tracking",
+  },
+  {
+    flag: "erpnext_hr",
+    name: "HR",
+    description: "Employee records, attendance, and payroll",
+  },
+  {
+    flag: "erpnext_pos",
+    name: "POS",
+    description: "Point of sale integration",
+  },
+  {
+    flag: "erpnext_manufacturing",
+    name: "Manufacturing",
+    description: "BOM categories and production planning",
+  },
 ];
 
 const tenantFeatureFlags = computed(() => {
