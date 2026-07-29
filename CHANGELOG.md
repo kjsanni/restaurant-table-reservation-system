@@ -4,7 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [Unreleased] — 2026-07-28
+## [Unreleased] — 2026-07-29
+
+### Added
+- **Compliance automation** — `POST /api/v1/admin/compliance/auto-fulfill-dsar` for auto-fulfilling pending DSAR requests, `GET /api/v1/admin/compliance/reminders` for compliance reminder scheduling, `GET /api/v1/admin/compliance/report` for automated compliance report generation
+- **Advanced analytics** — `GET /api/v1/admin/analytics/revenue` for revenue analytics, `GET /api/v1/admin/analytics/bookings` for booking analytics, `GET /api/v1/admin/analytics/payments` for payment method analytics, `GET /api/v1/admin/analytics/usage` for platform usage metrics
+- **Multi-tenant backend Jest tests** — 103 tests across 9 new files covering resolveTenant middleware, JWT auth, BullMQ, caching, Paystack formatting, and ShaQ Express credentials
+
+### Changed
+- **Compliance controller** — Refactored `getComplianceScorecardHandler` to extract shared `computeScorecard` helper, enabling reuse by the report endpoint
+- **Analytics controller** — Added `getRevenueAnalyticsHandler`, `getBookingAnalyticsHandler`, `getPaymentAnalyticsHandler`, `getUsageAnalyticsHandler` endpoints
+
+### Fixed
+- **Operator CRUD** — Old `OperatorsView.vue` stub `saveOperator()`/`deleteOperator()` methods superseded by `PlatformRoleManagementView.vue` and `RoleManagementView.vue` which call real backend services via `adminAPI.assignPlatformRole` and `adminAPI.revokePlatformRole`
 
 ### Changed
 - **Frontend layout refactor** — Removed shared `App.vue` layout; each portal now owns its own layout (`SuperAdminLayout.vue`, `TenantLayout.vue`, customer portal standalone sidebar)
