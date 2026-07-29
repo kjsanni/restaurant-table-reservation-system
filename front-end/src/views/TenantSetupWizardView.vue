@@ -68,6 +68,10 @@ const selectedModes = ref<string[]>(["dine_in", "takeaway", "delivery"]);
 const submitting = ref(false);
 const errorMsg = ref("");
 const businessVertical = ref<"restaurant" | "salon">("restaurant");
+const erpnextCompanyName = ref("");
+const erpnextFiscalYearStart = ref("");
+const erpnextWarehouseName = ref("");
+const erpnextOnboardingStep = ref(1);
 
 const typeDefaults: Record<RestaurantType, string[]> = {
   full_service: ["dine_in", "takeaway", "delivery"],
@@ -94,6 +98,22 @@ const toggleMode = (mode: string) => {
 };
 
 const isModeComplete = computed(() => selectedModes.value.length > 0);
+const isErpnextEnabled = computed(() => {
+  const flags = authStore.capabilities?.featureFlags || {};
+  return Object.keys(flags).some((k) => k.startsWith("erpnext_") && flags[k]);
+});
+const erpnextModules = computed(() => {
+  const flags = authStore.capabilities?.featureFlags || {};
+  return Object.entries(flags)
+    .filter(([, v]) => v)
+    .map(([k]) => k);
+});
+const isErpnextStepComplete = computed(() => {
+  if (erpnextModules.value.includes("erpnext_accounting") || erpnextModules.value.includes("erpnext_stock")) {
+    return erpnextCompanyName.value.trim().length > 0;
+  }
+  return true;
+});
 
 const submitSetup = async () => {
   if (!selectedType.value || !isModeComplete.value) return;
@@ -114,6 +134,50 @@ const submitSetup = async () => {
       const data = await response.json().catch(() => ({}));
       throw new Error(data.message || "Failed to save setup");
     }
+    await authStore.fetchCapabilities();
+    router.push("/dashboard");
+  } catch (err) {
+    errorMsg.value =
+      err instanceof Error ? err.message : "Something went wrong";
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const submitErpnextOnboarding = async () => {
+  submitting.value = true;
+  errorMsg.value = "";
+  try {
+    const companyPayload: any = {
+      companyName: erpnextCompanyName.value || undefined,
+      fiscalYearStart: erpnextFiscalYearStart.value || undefined,
+    };
+    const companyRes = await fetch("/api/v1/erpnext/onboarding/company", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(companyPayload),
+    });
+    if (!companyRes.ok) {
+      const data = await companyRes.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to create ERPNext company");
+    }
+
+    if (erpnextModules.value.includes("erpnext_stock") && erpnextWarehouseName.value.trim()) {
+      const whRes = await fetch("/api/v1/erpnext/onboarding/warehouse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          warehouseName: erpnextWarehouseName.value,
+        }),
+      });
+      if (!whRes.ok) {
+        const data = await whRes.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to create ERPNext warehouse");
+      }
+    }
+
     await authStore.fetchCapabilities();
     router.push("/dashboard");
   } catch (err) {
@@ -166,6 +230,12 @@ onMounted(() => {
           <span class="step-num">3</span>
           <span class="step-label">Confirm</span>
         </div>
+        <template v-if="isErpnextEnabled">
+          <div :class="['step', step >= 4 && 'active']">
+            <span class="step-num">4</span>
+            <span class="step-label">ERPNext</span>
+          </div>
+        </template>
       </div>
 
       <div v-if="step === 1" class="step-content">
@@ -302,6 +372,75 @@ onMounted(() => {
             @click="submitSetup"
           >
             <span v-if="!submitting">Finish Setup</span>
+            <span v-else>Saving…</span>
+          </button>
+        </div>
+      </div>
+
+      <div v-if="step === 4 && isErpnextEnabled" class="step-content">
+        <h2 style="text-align:center;margin-bottom:16px">
+          ERPNext Setup
+        </h2>
+        <p style="text-align:center;color:#666;margin-bottom:20px">
+          Complete the ERPNext onboarding steps to enable
+          accounting, inventory, and other back-office features.
+        </p>
+
+        <div v-if="erpnextModules.includes('erpnext_accounting') || erpnextModules.includes('erpnext_stock')" class="erpnext-onboarding-step">
+          <h3>Step 1 — Set up your ERP company</h3>
+          <div class="form-group">
+            <label>Company Name</label>
+            <input
+              v-model="erpnextCompanyName"
+              type="text"
+              :placeholder="businessVertical === 'salon' ? 'My Salon' : 'My Restaurant'"
+            />
+          </div>
+          <div class="form-group">
+            <label>Fiscal Year Start</label>
+            <input
+              v-model="erpnextFiscalYearStart"
+              type="date"
+            />
+          </div>
+        </div>
+
+        <div v-if="erpnextModules.includes('erpnext_stock')" class="erpnext-onboarding-step">
+          <h3>Step 2 — Set up your warehouse</h3>
+          <div class="form-group">
+            <label>Warehouse Name</label>
+            <input
+              v-model="erpnextWarehouseName"
+              type="text"
+              :placeholder="'Main Warehouse'"
+            />
+          </div>
+        </div>
+
+        <div v-if="erpnextModules.includes('erpnext_hr')" class="erpnext-onboarding-step">
+          <h3>Step 3 — Import staff records</h3>
+          <p style="color:#666">
+            Your existing staff will be imported into ERPNext as employees.
+          </p>
+        </div>
+
+        <div v-if="erpnextModules.includes('erpnext_manufacturing')" class="erpnext-onboarding-step">
+          <h3>Step 4 — Set up recipes / BOM</h3>
+          <p style="color:#666">
+            Item groups and bill of materials will be created for your products.
+          </p>
+        </div>
+
+        <div class="wizard-actions">
+          <button class="btn-secondary" @click="step = 3">
+            Back
+          </button>
+          <button
+            class="btn-primary"
+            :disabled="!isErpnextStepComplete"
+            @click="submitErpnextOnboarding"
+          >
+            <span v-if="!submitting">Complete ERPNext Setup</span>
             <span v-else>Saving…</span>
           </button>
         </div>
@@ -540,5 +679,33 @@ onMounted(() => {
 .btn-secondary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.erpnext-onboarding-step {
+  background: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.erpnext-onboarding-step h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+.form-group {
+  margin-bottom: 12px;
+}
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+.form-group input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
 }
 </style>
