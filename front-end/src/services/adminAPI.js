@@ -1065,6 +1065,11 @@ export default {
   disableTOTP: () => API.post("/admin/totp/disable"),
   getTOTPStatus: () => API.get("/admin/totp/status"),
   regenerateBackupCodes: () => API.post("/admin/totp/backup-codes/regenerate"),
-  verifyBackupCode: (code) =>
-    API.post("/admin/totp/backup-codes/verify", { code }),
+  verifyBackupCode: (code) => API.post("/admin/totp/backup-codes/verify", { code }),
+  listErpnextTenants: (params = {}) => API.get("/admin/erpnext/tenants", { params }),
+  getErpnextTenant: (id) => API.get(`/admin/erpnext/tenants/${id}/status`),
+  provisionErpnextModule: (id, module) => API.post(`/admin/erpnext/tenants/${id}/provision`, { module }),
+  deprovisionErpnextModule: (id, module) => API.post(`/admin/erpnext/tenants/${id}/deprovision`, { module }),
+  triggerErpnextSync: (id, data = {}) => API.post(`/admin/erpnext/tenants/${id}/sync`, data),
+  getErpnextSyncStatus: (id) => API.get(`/admin/erpnext/tenants/${id}/sync/status`),
 };
