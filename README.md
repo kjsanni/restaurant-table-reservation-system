@@ -2,6 +2,23 @@
 
 Multi-tenant SaaS platform built for the Ghanaian hospitality market, supporting both **restaurant** and **salon** business verticals. Platform offers WhatsApp-first ordering, ShaQ Express delivery integration, Paystack payments (GHS), and Ghana-localized legal compliance. Built with Node.js, Express, Sequelize, Vue 3, and BullMQ.
 
+Repository: `https://github.com/kjsanni/restaurant-table-reservation-system`
+
+---
+
+## Project Summary
+
+RTRS is a full-stack reservation platform that evolved from a single-tenant restaurant app into a multi-tenant SaaS serving both restaurants and salons. The platform provides:
+
+- **Restaurant vertical**: table reservations, floor plans, waitlists, heatmap analytics, no-show tracking, customer loyalty
+- **Salon vertical**: appointment booking, station management, service catalogs, client profiles, walk-in queues, recurring appointments, marketing campaigns, inventory & expenses
+- **Multi-tenant platform**: feature-flagged tenant isolation, subscription billing, per-tenant branding, usage limits
+- **Super-admin portal**: platform-wide tenant management, compliance oversight, analytics dashboards, support ticketing
+- **Compliance & legal**: Ghana-localized legal documents (9 documents), DPA 2012 compliance, DSAR management, compliance automation
+- **Payment integration**: Paystack (GHS — Mobile Money, cards, banks) with platform-managed accounts
+- **Delivery integration**: ShaQ Express for package delivery tracking
+- **WhatsApp integration**: Business API for messaging, ordering, reservations, notifications, delivery
+
 ---
 
 ## Business Verticals
@@ -26,6 +43,8 @@ Multi-tenant SaaS platform built for the Ghanaian hospitality market, supporting
 - **Photo Gallery** — Client portfolio and stylist work showcases
 - **Inventory & Expenses** — Product stock tracking and expense management
 - **Dynamic Pricing Rules** — Configurable price adjustments per service/stylist/time
+
+---
 
 ## Key Features
 
@@ -74,7 +93,7 @@ Multi-tenant SaaS platform built for the Ghanaian hospitality market, supporting
 - **DPA 2012 Compliance** — Data Protection Act 2012 (Act 843) aligned; DPC framework
 
 ### RBAC & Security
-- **Role-Based Access Control** — Admin, Manager, Staff roles with granular permissions
+- **Role-Based Access Control** — Tenant roles (Admin, Manager, Staff) and platform roles (Super Admin)
 - **Group Management** — Create user groups with permission sets
 - **Super Admin Portal** — Platform-wide tenant management, compliance oversight, analytics dashboards
 - **Permission-Based UI** — Action buttons match backend `requirePermission` checks
@@ -84,17 +103,19 @@ Multi-tenant SaaS platform built for the Ghanaian hospitality market, supporting
 - **Account Lockout** — 5 failed attempts / 15-minute sliding window
 - **Audit Logging** — Comprehensive trail for authentication and data mutations
 - **Webhook Security** — HMAC-SHA512 signature verification for Paystack + ShaQ Express
+- **Mass-Assignment Protection** — Explicit field allowlists on all mutation endpoints
+- **SSRF Protection** — POS webhook URL validation against private/loopback hosts
+- **TOTP Enforcement** — Mandatory 2FA for super-admin accounts
 
 ### Scheduling & Calendar
 - **Schedule Management** — Weekly opening hours with toggle switches
 - **Holiday Management** — Add/remove closed dates
 - **Calendar View** — Visual calendar for opening hours and reservations, drag-to-create
 
-### Legal & Compliance (Ghana)
-- **9 Legal Documents** — Privacy, Terms, Cookies, GDPR, DPA, Customer, Tenant/Merchant, Payment & Refund, Accessibility
-- **Tamper-Evident Acceptances** — Immutable `legal_acceptances` records with version tracking
-- **Onboarding Enforcement** — Required Merchant Policy + DPA acceptance before going live
-- **DPA 2012 Compliance** — Data Protection Act 2012 (Act 843) aligned; DPC framework
+### User & Role Management
+- **Platform Role Management** — Assign/revoke platform roles (super-admin, tenant admin, manager, staff)
+- **User Role Management** — Assign/remove/bulk-assign roles to users
+- **Bulk Operations** — Suspend, change plan, send email to multiple tenants at once
 
 ---
 
@@ -102,13 +123,13 @@ Multi-tenant SaaS platform built for the Ghanaian hospitality market, supporting
 
 | Layer | Technology |
 |---|---|
-| Backend Runtime | Node.js + Express |
+| Backend Runtime | Node.js 18+ + Express |
 | Backend ORM | Sequelize + MySQL |
-| Authentication | JWT with rotation |
+| Authentication | JWT with rotation (Tymon JWTAuth pattern) |
 | Authorization | RBAC (roles, groups, granular permissions) |
 | Real-time | Socket.io |
 | Frontend Framework | Vue 3 (Composition API) + TypeScript |
-| Frontend UI | Vuestic UI + CSS custom properties |
+| Frontend UI | Vuestic UI + CSS custom properties (brand tokens) |
 | State Management | Pinia |
 | Build Tool | Vite |
 | Background Jobs | BullMQ + Redis |
@@ -117,6 +138,8 @@ Multi-tenant SaaS platform built for the Ghanaian hospitality market, supporting
 | Delivery | ShaQ Express API (`public-api.shaqexpress.com`) |
 | Messaging | WhatsApp Business API (Meta) |
 | Testing | Jest (backend), Vitest + Playwright (frontend) |
+| Observability | Winston + Sentry |
+| Deployment | PM2 + Apache/Nginx |
 
 ---
 
@@ -126,31 +149,42 @@ Multi-tenant SaaS platform built for the Ghanaian hospitality market, supporting
 restaurant-table-reservation-system/
 ├── back-end/
 │   ├── src/
-│   │   ├── routes/              # 11+ domain routers + tenant-platform routes
-│   │   ├── controllers/         # 10+ controllers + tenant admin + billing
-│   │   ├── services/            # 9+ services + tenant-platform + delivery + WhatsApp
-│   │   ├── DAOs/                # 10+ DAOs + tenant-platform + onboarding
-│   │   ├── middleware/          # 12+ middleware (auth, RBAC, CSRF, rate-limit, audit)
+│   │   ├── routes/              # Domain routers + tenant-platform routes
+│   │   ├── controllers/          # Controllers (auth, tenant, admin, verticals)
+│   │   ├── services/            # Business logic services
+│   │   ├── DAOs/                # Data access objects
+│   │   ├── middleware/          # Auth, RBAC, CSRF, rate-limit, audit, tenant resolution
 │   │   ├── db/
-│   │   │   ├── models/          # 22+ Sequelize models
-│   │   │   ├── migrations/      # 24+ migrations
-│   │   │   └── seeders/         # 6+ seeders
+│   │   │   ├── models/          # Sequelize models (tenant, user, reservation, payment, etc.)
+│   │   │   ├── migrations/      # Sequelize migrations (24+)
+│   │   │   └── seeders/         # Data seeders
 │   │   ├── queues/              # BullMQ workers (notification, report)
+│   │   ├── tenant-platform/     # Multi-tenant module (gated by TENANT_MODE=enabled)
+│   │   │   ├── controllers/     # Compliance, DSAR, audit, legal acceptances
+│   │   │   ├── routes/          # Admin compliance, analytics, legal routes
+│   │   │   ├── DAOs/            # Tenant-scoped data access
+│   │   │   ├── services/        # Tenant-scoped business logic
+│   │   │   ├── DAOs/            # Tenant-scoped data access
+│   │   │   └── middleware/      # Tenant resolution, subscription gating
+│   │   ├── verticals/           # Salon vertical (models, DAOs, controllers, routes)
 │   │   └── utils/               # Server bootstrap, JWT rotation, route helpers
-│   └── ecosystem.config.js      # PM2 production config
+│   ├── ecosystem.config.js      # PM2 production config
+│   └── postman_collection.json  # Full API collection for testing
 ├── front-end/
 │   ├── src/
-│   │   ├── views/               # 23+ page views
+│   │   ├── views/               # 40+ page views (admin, tenant, customer, salon)
 │   │   ├── components/          # 33+ reusable components
-│   │   ├── router/              # 21+ Vue Router routes
-│   │   ├── stores/              # Pinia stores
-│   │   ├── services/            # 12+ API service files
-│   │   └── assets/              # base.css, design-system.css
+│   │   ├── router/              # Vue Router routes
+│   │   ├── stores/              # Pinia stores (auth, tenant)
+│   │   ├── services/            # API service files
+│   │   └── assets/              # Branding CSS, design tokens
 │   └── index.html
 ├── legal/                       # 9 Ghana-localised legal documents
 ├── Specs/                       # Implementation specs and checklists
 ├── DEPLOYMENT-GUIDE.md          # Production setup (Apache/Nginx + PM2)
-└── CHANGELOG.md                 # Version history
+├── CHANGELOG.md                 # Version history
+├── SECURITY_AUDIT_REPORT.md     # Security findings and remediation
+└── VERSION                      # Current version string
 ```
 
 ---
@@ -158,28 +192,17 @@ restaurant-table-reservation-system/
 ## Current Status
 
 ### Test Coverage
-- **Backend:** 181+ Jest tests pass (200+ total test count historically; currently 181 passing with uncommitted delivery/WhatsApp tests)
-- **Frontend:** 20+ unit tests pass (Vitest + Playwright E2E)
+- **Backend:** 655+ Jest tests passing (1 pre-existing failure in `salon-cron.test.js`)
+- **Frontend:** 22+ Vitest unit tests passing, lint + build clean
 - **Multi-tenant E2E:** 110/110 tests pass
+- **Playwright a11y:** 21/21 tests passing
 
-### Uncommitted Work (2026-07-21)
-- **Backend:** Shaq Express delivery integration (Deliveries table, DAO, service, controller, webhook receiver)
-- **Backend:** WhatsApp ordering integration (controller, routes, service, menu/promotion exposure)
-- **Backend:** Two stale migrations fixed with idempotency guards
-- **Frontend:** `DeliveryDashboardView`, `OrderTrackView`, `WhatsAppOrderingSettingsView`, `deliveryAPI.js`
-- **Frontend:** `MenuView`, `PromotionsManagementView`, `CustomerLandingView` updated for WhatsApp sharing
-
-### Uncommitted Work (2026-07-20)
-- Frontend: `PageHeader` removed from standalone views, replaced with inline `topbar`
-- Backend: BullMQ/Jest teardown leak fixed, `--forceExit` removed
-- Backend: Missing tenant columns added (`trialExtendsTo`, `convertedFromTrialAt`, `gracePeriodDays`)
-- Backend: Notification router RBAC fixed
-- Backend: Revenue DAO uses dynamic plan prices
-
-### Known Issues
-- Security audit identified 3 CRITICAL and 7 HIGH vulnerabilities (see `SECURITY_AUDIT_REPORT.md`)
-- `util yaml-js.js` missing module — backend dependency issue
-- Vue `Suspense` experimental feature warning
+### Super Admin Portal
+- Platform role management, user role management, full analytics dashboard
+- Compliance automation (DSAR auto-fulfillment, reminders, reporting)
+- Advanced analytics endpoints (revenue, bookings, payments, usage)
+- Support ticket system with SLA tracking, CSAT surveys, chat
+- Integration analytics for Paystack, WhatsApp, ShaQ Express
 
 ---
 
@@ -261,40 +284,6 @@ The full project documentation lives in the Obsidian vault at `/Users/kjsanni/De
 
 ---
 
-## Configuration
-
-### Environment Variables
-
-```bash
-# Backend
-NODE_ENV=production
-TENANT_MODE=enabled
-REDIS_HOST=localhost
-REDIS_PORT=6379
-DB_HOST=localhost
-DB_NAME=rtrs_production
-DB_USER=rtrs_user
-DB_PASSWORD=secure-password
-JWT_SECRET=<32+ random chars>
-CORS_ORIGINS=https://yourdomain.com
-
-# Payments (Paystack)
-PAYSTACK_SECRET_KEY=sk_live_...
-PAYSTACK_WEBHOOK_SECRET=whsec_...
-PAYSTACK_MODE=live
-
-# WhatsApp Business API
-WHATSAPP_APP_SECRET=<app secret>
-WHATSAPP_WEBHOOK_VERIFY_TOKEN=<verify token>
-WHATSAPP_PHONE_NUMBER_ID=<phone number id>
-
-# ShaQ Express
-SHAQ_EXPRESS_IDENTIFIER=<partner identifier>
-SHAQ_EXPRESS_SECRET=<partner secret>
-```
-
----
-
 ## Testing
 
 ```bash
@@ -312,9 +301,6 @@ cd front-end && npm run test:visual
 
 # Frontend E2E
 cd front-end && npm run test:e2e
-
-# Backend load tests
-cd back-end && npm run loadtest:baseline
 ```
 
 ---
