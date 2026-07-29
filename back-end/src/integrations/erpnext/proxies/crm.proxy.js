@@ -2,8 +2,8 @@
 
 const express = require("express");
 const router = express.Router();
-const tryCatchHandler = require("../../middleware/tryCatch");
-const { protect, requireActiveTenant } = require("../../middleware/auth");
+const tryCatchHandler = require("../../../middleware/tryCatch");
+const { protect, requireActiveTenant } = require("../../../middleware/auth");
 
 const checkErpnextCrm = async (req, res, next) => {
   const tenant = req.tenant;

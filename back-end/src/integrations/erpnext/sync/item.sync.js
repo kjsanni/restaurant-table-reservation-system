@@ -2,7 +2,7 @@
 
 const { getClient } = require("../client");
 const { mapInventoryItemToErpnext } = require("../mappers/item.mapper");
-const db = require("../../db/models");
+const db = require("../../../db/models");
 
 const createOrUpdateErpnextItem = async (item, tenantId) => {
   const tenant = await db.tenant.findByPk(tenantId);

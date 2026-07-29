@@ -1,7 +1,7 @@
 "use strict";
 
 const { getClient } = require("../client");
-const db = require("../../db/models");
+const db = require("../../../db/models");
 
 const mapStaffToErpnextEmployee = (staff, tenant) => {
   return {

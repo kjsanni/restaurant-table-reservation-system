@@ -2,7 +2,7 @@
 
 const { getClient } = require("../client");
 const { mapCustomerToErpnext } = require("../mappers/customer.mapper");
-const db = require("../../db/models");
+const db = require("../../../db/models");
 
 const createOrUpdateErpnextCustomer = async (customer, tenantId) => {
   const payload = mapCustomerToErpnext(customer);

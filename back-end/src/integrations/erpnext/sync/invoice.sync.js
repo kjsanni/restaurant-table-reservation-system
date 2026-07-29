@@ -2,7 +2,7 @@
 
 const { getClient } = require("../client");
 const { mapReservationToInvoice } = require("../mappers/customer.mapper");
-const db = require("../../db/models");
+const db = require("../../../db/models");
 
 const createErpnextInvoice = async (reservation, tenant) => {
   const payload = mapReservationToInvoice(reservation, tenant);

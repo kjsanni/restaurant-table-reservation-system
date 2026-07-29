@@ -2,12 +2,12 @@
 
 const express = require("express");
 const router = express.Router();
-const tryCatchHandler = require("../../middleware/tryCatch");
-const { protect, requireActiveTenant } = require("../../middleware/auth");
-const { getTenantFeatureFlagsHandler } = require("../controllers/featureFlag.controller");
-const { syncCustomer, syncAllCustomers } = require("./sync/customer.sync");
-const { syncInvoice, syncAllInvoices } = require("./sync/invoice.sync");
-const { syncPayment, syncAllPayments } = require("./sync/payment.sync");
+const tryCatchHandler = require("../../../middleware/tryCatch");
+const { protect, requireActiveTenant } = require("../../../middleware/auth");
+const { getTenantFeatureFlagsHandler } = require("../../../tenant-platform/controllers/featureFlag.controller");
+const { syncCustomer, syncAllCustomers } = require("../sync/customer.sync");
+const { syncInvoice, syncAllInvoices } = require("../sync/invoice.sync");
+const { syncPayment, syncAllPayments } = require("../sync/payment.sync");
 
 const checkErpnextFeature = async (req, res, next) => {
   const tenant = req.tenant;

@@ -2,7 +2,7 @@
 
 const { getClient } = require("../client");
 const { mapStockEntry } = require("../mappers/item.mapper");
-const db = require("../../db/models");
+const db = require("../../../db/models");
 
 const createStockEntry = async (item, quantity, type, tenantId) => {
   const tenant = await db.tenant.findByPk(tenantId);
