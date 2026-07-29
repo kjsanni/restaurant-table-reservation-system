@@ -78,43 +78,77 @@ const handleRegister = async () => {
         <h2>Create your account</h2>
         <p class="form-subtitle">Get started in seconds</p>
 
-        <div v-if="generalError" class="alert alert-error">{{ generalError }}</div>
+        <div v-if="generalError" class="alert alert-error">
+          {{ generalError }}
+        </div>
 
         <form @submit.prevent="handleRegister">
           <div class="row">
             <div class="field">
               <label for="firstName">First name</label>
-              <input id="firstName" v-model="form.firstName" type="text" required />
-              <span v-if="validationErrors?.firstName" class="error">{{ validationErrors.firstName[0] }}</span>
+              <input
+                id="firstName"
+                v-model="form.firstName"
+                type="text"
+                required
+              />
+              <span v-if="validationErrors?.firstName" class="error">{{
+                validationErrors.firstName[0]
+              }}</span>
             </div>
             <div class="field">
               <label for="lastName">Last name</label>
-              <input id="lastName" v-model="form.lastName" type="text" required />
-              <span v-if="validationErrors?.lastName" class="error">{{ validationErrors.lastName[0] }}</span>
+              <input
+                id="lastName"
+                v-model="form.lastName"
+                type="text"
+                required
+              />
+              <span v-if="validationErrors?.lastName" class="error">{{
+                validationErrors.lastName[0]
+              }}</span>
             </div>
           </div>
 
           <div class="field">
             <label for="email">Email</label>
             <input id="email" v-model="form.email" type="email" required />
-            <span v-if="validationErrors?.email" class="error">{{ validationErrors.email[0] }}</span>
+            <span v-if="validationErrors?.email" class="error">{{
+              validationErrors.email[0]
+            }}</span>
           </div>
 
           <div class="field">
             <label for="phone">Phone</label>
             <input id="phone" v-model="form.phone" type="tel" required />
-            <span v-if="validationErrors?.phone" class="error">{{ validationErrors.phone[0] }}</span>
+            <span v-if="validationErrors?.phone" class="error">{{
+              validationErrors.phone[0]
+            }}</span>
           </div>
 
           <div class="field">
             <label for="password">Password</label>
-            <input id="password" v-model="form.password" type="password" required minlength="8" />
-            <span v-if="validationErrors?.password" class="error">{{ validationErrors.password[0] }}</span>
+            <input
+              id="password"
+              v-model="form.password"
+              type="password"
+              required
+              minlength="8"
+            />
+            <span v-if="validationErrors?.password" class="error">{{
+              validationErrors.password[0]
+            }}</span>
           </div>
 
           <div class="field">
             <label for="confirmPassword">Confirm password</label>
-            <input id="confirmPassword" v-model="form.confirmPassword" type="password" required minlength="8" />
+            <input
+              id="confirmPassword"
+              v-model="form.confirmPassword"
+              type="password"
+              required
+              minlength="8"
+            />
           </div>
 
           <div v-if="turnstileConfig?.enabled" class="field">
@@ -127,7 +161,8 @@ const handleRegister = async () => {
         </form>
 
         <p class="form-footer">
-          Already have an account? <RouterLink to="/customer/login">Sign in</RouterLink>
+          Already have an account?
+          <RouterLink to="/customer/login">Sign in</RouterLink>
         </p>
       </div>
     </main>

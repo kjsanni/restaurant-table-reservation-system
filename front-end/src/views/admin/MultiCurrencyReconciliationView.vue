@@ -104,8 +104,14 @@ const load = async () => {
   loading.value = true;
   try {
     const [currencyRes, tenantRes] = await Promise.all([
-      adminAPI.getMultiCurrencyTotals({ from: from.value, to: to.value || undefined }),
-      adminAPI.getTenantCurrencyBreakdown({ from: from.value, to: to.value || undefined }),
+      adminAPI.getMultiCurrencyTotals({
+        from: from.value,
+        to: to.value || undefined,
+      }),
+      adminAPI.getTenantCurrencyBreakdown({
+        from: from.value,
+        to: to.value || undefined,
+      }),
     ]);
     currencyRows.value = currencyRes.data?.collection || [];
     tenantRows.value = tenantRes.data?.collection || [];

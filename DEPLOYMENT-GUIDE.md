@@ -108,6 +108,31 @@ cd /var/www/rtrs/front-end
 cp .env.production .env
 ```
 
+## 4.1 Pre-Deployment Environment Checklist
+
+Before starting PM2, verify every placeholder has been replaced in `back-end/.env`:
+
+| Variable | Required | Placeholder to avoid |
+|---|---|---|
+| `JWT_SECRET` | Yes | `CHANGE_ME_GENERATE_A_SECURE_SECRET` / `your-generated-256-bit-secret-here` |
+| `DB_PASSWORD` | Yes | `secure-password` |
+| `SENTRY_DSN` | No | `examplePublicKey@o0.ingest.sentry.io/0000000` |
+| `CORS_ORIGINS` | Yes | `https://your-domain.com` / `http://192.168.1.100` (replace with real IPs) |
+| `FRONTEND_URL` | Yes | `http://192.168.88.10` (replace with real URL) |
+| `API_URL` | Yes | `http://192.168.88.10` (replace with real URL) |
+| `APP_URL` | Yes | `your-domain.com` / `http://localhost:8000` |
+| `SMTP_HOST` | No | leave empty if not using email |
+| `SMTP_USER` | No | leave empty if not using email |
+| `SMTP_PASS` | No | leave empty if not using email |
+
+The application will **fail to start** in production if any required variable is missing or still contains a known placeholder value.
+
+```bash
+# Smoke test: start backend and watch for startup errors
+cd /var/www/rtrs/back-end
+NODE_ENV=production node src/app.js
+```
+
 ---
 
 ## 5. PM2 Configuration

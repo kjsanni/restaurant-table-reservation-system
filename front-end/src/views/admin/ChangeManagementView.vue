@@ -37,9 +37,9 @@
               <span class="timeline-action">{{ log.action }}</span>
               <span class="timeline-time">{{ formatDate(log.createdAt) }}</span>
             </div>
-              <div class="timeline-details">
-                <span>User: {{ log.userId }}</span>
-                <span>Entity: {{ log.entityType }} #{{ log.entityId }}</span>
+            <div class="timeline-details">
+              <span>User: {{ log.userId }}</span>
+              <span>Entity: {{ log.entityType }} #{{ log.entityId }}</span>
             </div>
             <div v-if="log.changes" class="timeline-changes">
               <pre>{{ JSON.stringify(log.changes, null, 2) }}</pre>

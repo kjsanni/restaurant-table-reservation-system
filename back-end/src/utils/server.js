@@ -18,6 +18,7 @@ const rbacRouter = require("../routes/rbac.router");
 const waitlistRouter = require("../routes/waitlist.router");
 const paymentRouter = require("../routes/payment.router");
 const reportRouter = require("../routes/report.router");
+const customReportRouter = require("../routes/custom-report.router");
 const customerRouter = require("../routes/customer.router");
 const adminRouter = require("../routes/admin.router");
 const customerPortalRouter = require("../routes/customer-portal.router");
@@ -29,7 +30,8 @@ const deliveryRouter = require("../routes/delivery.router");
 const shaqexpressRouter = require("../routes/shaqexpress.router");
 const legalRouter = require("../routes/legal.router");
 const publicRouter = require("../routes/public.router");
-const tenantSignupRouter = require("../routes/tenant-signup.router");
+const statusRouter = require("../routes/status.router");
+const docsRouter = require("../routes/docs.router");
 const { setCsrfCookie, generateCsrfToken, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
 const { requestLogger } = require("../middleware/requestLogger");
@@ -177,6 +179,7 @@ if (TENANT_MODE) {
   integrationAnalyticsRoutes = require("../tenant-platform/routes/integrationAnalytics.router");
   impersonationRoutes = require("../tenant-platform/routes/impersonation.router");
   advancedAnalyticsRoutes = require("../tenant-platform/routes/advancedAnalytics.router");
+  platformRoleRoutes = require("../tenant-platform/routes/platform-role.router");
   maintenanceRoutes = require("../tenant-platform/routes/maintenance.router");
   trustSafetyRoutes = require("../tenant-platform/routes/trustSafety.router");
   monitoringRoutes = require("../tenant-platform/routes/monitoring.router");
@@ -191,6 +194,7 @@ if (TENANT_MODE) {
   apiLatencyRoutes = require("../tenant-platform/routes/apiLatency.router");
   cacheStatsRoutes = require("../tenant-platform/routes/cacheStats.router");
   verticalTemplateRoutes = require("../tenant-platform/routes/verticalTemplate.router");
+  webhookEndpointRoutes = require("../tenant-platform/routes/webhookEndpoint.router");
   supportNoteRoutes = require("../tenant-platform/routes/supportNote.router");
   supportAttachmentRoutes = require("../tenant-platform/routes/supportAttachment.router");
   complianceRuleRoutes = require("../tenant-platform/routes/complianceRule.router");
@@ -363,9 +367,13 @@ const createServer = () => {
   app.use("/api/v1/menu", logAction, validateCsrfToken, require("../routes/menu.router"));
   app.use("/api/v1/orders", logAction, validateCsrfToken, require("../routes/order.router"));
   app.use("/api/v1/promotions", logAction, validateCsrfToken, require("../routes/promotion.router"));
+  app.use("/api/v1/reviews", logAction, validateCsrfToken, require("../routes/review.router"));
+  app.use("/api/v1/custom-reports", logAction, validateCsrfToken, customReportRouter);
   app.use("/api/v1/customers", logAction, validateCsrfToken, customerRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
   app.use("/api/v1/public", publicRouter);
+  app.use("/api/v1/public/status", statusRouter);
+  app.use("/api/v1/docs", docsRouter);
   if (TENANT_MODE) {
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, trialRoutes);
     app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, invoiceRoutes);
@@ -411,6 +419,7 @@ const createServer = () => {
     app.use("/api/v1/admin/integrations", logAction, validateCsrfToken, adminMiddleware, integrationAnalyticsRoutes);
     app.use("/api/v1/admin/impersonation", logAction, validateCsrfToken, adminMiddleware, impersonationRoutes);
     app.use("/api/v1/admin/analytics", logAction, validateCsrfToken, adminMiddleware, advancedAnalyticsRoutes);
+    app.use("/api/v1/admin/platform-roles", logAction, validateCsrfToken, adminMiddleware, platformRoleRoutes);
     app.use("/api/v1/admin/maintenance", logAction, validateCsrfToken, adminMiddleware, maintenanceRoutes);
     app.use("/api/v1/admin/trust-safety", logAction, validateCsrfToken, adminMiddleware, trustSafetyRoutes);
     app.use("/api/v1/admin/monitoring", logAction, validateCsrfToken, adminMiddleware, monitoringRoutes);

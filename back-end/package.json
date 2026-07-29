@@ -26,7 +26,9 @@
     "loadtest:baseline": "LOAD_TENANT_MODE=baseline node load-tests/run.js --scenario all --sessions 1 --tenantHeader false --label baseline",
     "loadtest:tenant": "LOAD_TENANT_MODE=enabled node load-tests/run.js --scenario all --sessions 100 --label tenant",
     "loadtest:leak": "node load-tests/leak-check.js --sample 20 --rounds 3",
-    "loadtest:queue": "node load-tests/queue-bench.js --jobs 500 --concurrency 5 --sendMs 50"
+    "loadtest:queue": "node load-tests/queue-bench.js --jobs 500 --concurrency 5 --sendMs 50",
+    "test:postman": "bash scripts/smoke-test.sh",
+    "test:postman:prod": "BASE_URL=http://192.168.88.10 bash scripts/smoke-test.sh"
   },
   "author": "Slavyan Hristov",
   "license": "ISC",
@@ -34,6 +36,7 @@
     "autocannon": "^8.0.0",
     "concurrently": "^10.0.4",
     "jest": "^29.3.1",
+    "newman": "^6.0.0",
     "nodemon": "^3.1.14",
     "sequelize-cli": "^6.6.5"
   },

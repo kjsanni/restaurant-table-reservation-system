@@ -94,6 +94,19 @@ export const authenticatedNavItems: NavItem[] = [
     requiresAuth: true,
   },
   {
+    routeName: "custom-reports",
+    text: "Report Builder",
+    icon: "mdi:chart-areaspline",
+    requiresAuth: true,
+    requiresPermission: "view_reports",
+  },
+  {
+    routeName: "reviews",
+    text: "Reviews",
+    icon: "mdi:star-outline",
+    requiresAuth: true,
+  },
+  {
     routeName: "heatmap",
     text: "Heatmap",
     icon: "mdi:chart-area",

@@ -10,10 +10,11 @@ const resolveTenant = async (req, res, next) => {
     return next();
   }
 
-  // Platform-admin tenant management is not itself a tenant-scoped operation.
-  // Super-admins list/create/suspend tenants without belonging to one, so skip
-  // resolution (and the "tenant identifier required" error) for those routes.
-  const PLATFORM_ADMIN_PATHS = [
+  // Routes that do not require tenant resolution:
+  // - platform-admin tenant management paths
+  // - public auth/registration/password-reset paths
+  // - health check
+  const NO_TENANT_REQUIRED_PATHS = [
     "/api/v1/admin/tenants",
     "/api/v1/admin/plans",
     "/api/v1/admin/payments",
@@ -25,8 +26,16 @@ const resolveTenant = async (req, res, next) => {
     "/api/v1/admin/notifications",
     "/api/v1/billing",
     "/api/v1/public/dsar-request",
+    "/api/v1/health",
+    "/api/v1/auth/login",
+    "/api/v1/auth/register",
+    "/api/v1/auth/register/customer",
+    "/api/v1/auth/register/status",
+    "/api/v1/auth/forgot-password",
+    "/api/v1/auth/reset-password",
+    "/api/v1/auth/turnstile-config",
   ];
-  if (PLATFORM_ADMIN_PATHS.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
+  if (NO_TENANT_REQUIRED_PATHS.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
     return next();
   }
 

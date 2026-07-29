@@ -52,8 +52,8 @@ const protect = async (req, res, next) => {
     // resolveTenant, but the result is never exposed to controllers.
     if (process.env.TENANT_MODE === "enabled" && user.tenantId) {
       try {
-        const Tenant = require("../../tenant-platform/models/tenant")(require("../db/models").sequelize, require("sequelize").DataTypes);
-        const tenant = await Tenant.findByPk(user.tenantId);
+        const db = require("../db/models");
+        const tenant = await db.tenant.findByPk(user.tenantId);
         if (tenant) {
           req.tenant = tenant;
         } else {
@@ -100,7 +100,12 @@ const admin = (req, res, next) => {
 };
 
 const requireSuperAdmin = (req, res, next) => {
-  if (req.user && req.user.isSuperAdmin) {
+  const hasSuperAdmin = req.user && (
+    req.user.isSuperAdmin ||
+    (Array.isArray(req.user.platformRoles) && req.user.platformRoles.includes("platform_admin"))
+  );
+
+  if (hasSuperAdmin) {
     next();
   } else {
     const actorUserId = req.user?.id || null;
@@ -121,6 +126,35 @@ const requireSuperAdmin = (req, res, next) => {
       message: "Super admin access required!",
     });
   }
+};
+
+const requirePlatformRole = (role) => {
+  return (req, res, next) => {
+    const userRoles = Array.isArray(req.user?.platformRoles) ? req.user.platformRoles : [];
+    const hasRole = req.user?.isSuperAdmin || userRoles.includes(role) || userRoles.includes("platform_admin");
+
+    if (hasRole) {
+      next();
+    } else {
+      const actorUserId = req.user?.id || null;
+      const tenantId = req.tenant?.id || null;
+      platformAuditDAO
+        .log(
+          actorUserId,
+          "platform_role.access_denied",
+          "admin",
+          null,
+          tenantId,
+          { path: req.path, method: req.method, requiredRole: role, ipAddress: req.ip },
+          req.ip
+        )
+        .catch(() => {});
+      return res.status(403).json({
+        success: false,
+        message: `Platform role '${role}' required!`,
+      });
+    }
+  };
 };
 
 const staff = (req, res, next) => {
@@ -176,4 +210,4 @@ const requirePermission = (permission) => {
   };
 };
 
-module.exports = { protect, admin, staff, staffOnly, customer, requirePermission, requireSuperAdmin };
+module.exports = { protect, admin, staff, staffOnly, customer, requirePermission, requireSuperAdmin, requirePlatformRole };

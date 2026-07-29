@@ -23,11 +23,17 @@ const getAllSchedules = async (tenantId) => {
 };
 
 const getScheduleByDay = async (dayOfWeek, tenantId) => {
-  const cached = await cache.get(`schedule:${dayOfWeek}`);
+  const cached = await cache.get(`schedule:${dayOfWeek}:${tenantId || "global"}`);
   if (cached) return cached;
 
-  const schedule = await Schedule.findOne({ where: withTenant({ dayOfWeek }, tenantId) });
-  if (schedule) await cache.set(`schedule:${dayOfWeek}`, schedule, 300);
+  let schedule = await Schedule.findOne({ where: withTenant({ dayOfWeek }, tenantId) });
+  if (!schedule && tenantId) {
+    schedule = await Schedule.findOne({ where: { dayOfWeek, tenantId: null } });
+    if (schedule) {
+      console.warn(`Schedule fallback: tenant ${tenantId} missing schedule for ${dayOfWeek}, using global schedule`);
+    }
+  }
+  if (schedule) await cache.set(`schedule:${dayOfWeek}:${tenantId || "global"}`, schedule, 300);
   return schedule;
 };
 

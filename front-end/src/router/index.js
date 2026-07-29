@@ -67,6 +67,24 @@ const router = createRouter({
       meta: { standalone: true },
     },
     {
+      path: "/status",
+      name: "status",
+      component: () => import("../views/StatusPageView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/api-docs",
+      name: "api-docs",
+      component: () => import("../views/ApiDocsView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/tenant/signup",
+      name: "tenant-signup",
+      component: () => import("../views/TenantSignupView.vue"),
+      meta: { standalone: true },
+    },
+    {
       path: "/reservations",
       component: () => import("../layouts/TenantLayout.vue"),
       children: [
@@ -201,6 +219,32 @@ const router = createRouter({
           },
         },
       ],
+    },
+    {
+      path: "/reviews",
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "reviews",
+          component: () => import("../views/admin/ReviewsManagementView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresPermission: "manage_settings",
+          },
+        },
+      ],
+    },
+    {
+      path: "/custom-reports",
+      name: "custom-reports",
+      component: () => import("../views/admin/CustomReportBuilderView.vue"),
+      meta: {
+        standalone: true,
+        requiresAuth: true,
+        requiresPermission: "view_reports",
+      },
     },
     {
       path: "/heatmap",
@@ -958,6 +1002,13 @@ if (import.meta.env.VITE_TENANT_MODE === "enabled") {
         meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
       },
       {
+        path: "platform-roles",
+        name: "platform-roles",
+        component: () =>
+          import("../views/admin/PlatformRoleManagementView.vue"),
+        meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+      },
+      {
         path: "debug",
         name: "platform-debug",
         component: () => import("../views/admin/DebugToolsView.vue"),
@@ -1567,9 +1618,29 @@ const customerPortalRoutes = [
     meta: { requiresAuth: true, standalone: true },
   },
   {
-    path: "/portal/orders",
-    name: "customer-orders",
-    component: () => import("../views/customer/CustomerPortalOrdersView.vue"),
+    path: "/portal/reservations",
+    name: "customer-reservations",
+    component: () =>
+      import("../views/customer/CustomerPortalReservationsView.vue"),
+    meta: { requiresAuth: true, standalone: true },
+  },
+  {
+    path: "/portal/waitlist",
+    name: "customer-waitlist",
+    component: () => import("../views/customer/CustomerPortalWaitlistView.vue"),
+    meta: { requiresAuth: true, standalone: true },
+  },
+  {
+    path: "/portal/loyalty",
+    name: "customer-loyalty",
+    component: () => import("../views/customer/CustomerPortalLoyaltyView.vue"),
+    meta: { requiresAuth: true, standalone: true },
+  },
+  {
+    path: "/portal/promotions",
+    name: "customer-promotions",
+    component: () =>
+      import("../views/customer/CustomerPortalPromotionsView.vue"),
     meta: { requiresAuth: true, standalone: true },
   },
   {

@@ -13,11 +13,7 @@ const error = ref<string | null>(null);
 const billingPeriod = ref<"monthly" | "yearly">("monthly");
 
 const goToRegister = () => {
-  if (authStore.isAuthenticated) {
-    router.push("/portal");
-  } else {
-    router.push("/customer/register");
-  }
+  router.push("/tenant/signup");
 };
 
 onMounted(async () => {
@@ -63,11 +59,15 @@ const features = [
         <div class="nav-actions">
           <button class="nav-link" @click="router.push('/')">Home</button>
           <template v-if="!authStore.isAuthenticated">
-            <button class="nav-link" @click="router.push('/customer/login')">Login</button>
+            <button class="nav-link" @click="router.push('/customer/login')">
+              Login
+            </button>
             <button class="nav-btn" @click="goToRegister">Get Started</button>
           </template>
           <template v-else>
-            <button class="nav-btn" @click="router.push('/portal')">Dashboard</button>
+            <button class="nav-btn" @click="router.push('/portal')">
+              Dashboard
+            </button>
           </template>
         </div>
       </div>
@@ -75,32 +75,65 @@ const features = [
 
     <section class="pricing-hero">
       <h1>Simple, transparent pricing</h1>
-      <p>No hidden fees. Scale as you grow. All plans include WhatsApp ordering and Paystack payments.</p>
+      <p>
+        No hidden fees. Scale as you grow. All plans include WhatsApp ordering
+        and Paystack payments.
+      </p>
       <div class="billing-toggle">
-        <button :class="['toggle-btn', billingPeriod === 'monthly' && 'active']" @click="billingPeriod = 'monthly'">Monthly</button>
-        <button :class="['toggle-btn', billingPeriod === 'yearly' && 'active']" @click="billingPeriod = 'yearly'">Yearly <span class="save-badge">Save 20%</span></button>
+        <button
+          :class="['toggle-btn', billingPeriod === 'monthly' && 'active']"
+          @click="billingPeriod = 'monthly'"
+        >
+          Monthly
+        </button>
+        <button
+          :class="['toggle-btn', billingPeriod === 'yearly' && 'active']"
+          @click="billingPeriod = 'yearly'"
+        >
+          Yearly <span class="save-badge">Save 20%</span>
+        </button>
       </div>
     </section>
 
     <section class="pricing-cards">
       <div v-if="loading" class="loading-state">Loading plans...</div>
       <div v-else-if="error" class="error-state">{{ error }}</div>
-      <div v-else-if="!plans.length" class="empty-state">No plans available right now.</div>
+      <div v-else-if="!plans.length" class="empty-state">
+        No plans available right now.
+      </div>
       <div v-else class="cards-grid">
         <div v-for="plan in plans" :key="plan.id" class="plan-card">
           <div class="plan-header">
             <h3>{{ plan.name }}</h3>
             <div class="plan-price">
-              <span class="price-amount">{{ formatPrice(billingPeriod === 'yearly' ? plan.price * 10 : plan.price, plan.currency) }}</span>
-              <span class="price-period">/ {{ billingPeriod === 'yearly' ? 'year' : 'month' }}</span>
+              <span class="price-amount">{{
+                formatPrice(
+                  billingPeriod === "yearly" ? plan.price * 10 : plan.price,
+                  plan.currency
+                )
+              }}</span>
+              <span class="price-period"
+                >/ {{ billingPeriod === "yearly" ? "year" : "month" }}</span
+              >
             </div>
           </div>
           <ul class="plan-features">
-            <li><Icon icon="mdi:check" width="18" /> Up to {{ plan.maxTables }} tables</li>
-            <li><Icon icon="mdi:check" width="18" /> {{ plan.maxReservationsPerMonth.toLocaleString() }} reservations/month</li>
-            <li v-for="feature in features" :key="feature"><Icon icon="mdi:check" width="18" /> {{ feature }}</li>
+            <li>
+              <Icon icon="mdi:check" width="18" /> Up to
+              {{ plan.maxTables }} tables
+            </li>
+            <li>
+              <Icon icon="mdi:check" width="18" />
+              {{ plan.maxReservationsPerMonth.toLocaleString() }}
+              reservations/month
+            </li>
+            <li v-for="feature in features" :key="feature">
+              <Icon icon="mdi:check" width="18" /> {{ feature }}
+            </li>
           </ul>
-          <button class="plan-cta" @click="goToRegister">Start free trial</button>
+          <button class="plan-cta" @click="goToRegister">
+            Start free trial
+          </button>
         </div>
       </div>
     </section>
@@ -110,19 +143,31 @@ const features = [
       <div class="faq-list">
         <div class="faq-item">
           <h4>Can I switch plans later?</h4>
-          <p>Yes. Upgrade or downgrade anytime from your dashboard. Prorated billing applies automatically.</p>
+          <p>
+            Yes. Upgrade or downgrade anytime from your dashboard. Prorated
+            billing applies automatically.
+          </p>
         </div>
         <div class="faq-item">
           <h4>Do you offer a free trial?</h4>
-          <p>Every plan includes a 14-day free trial. No credit card required to start.</p>
+          <p>
+            Every plan includes a 14-day free trial. No credit card required to
+            start.
+          </p>
         </div>
         <div class="faq-item">
           <h4>What payment methods do you support?</h4>
-          <p>We accept Mobile Money (Momo), Visa/Mastercard, and bank transfers via Paystack — all in GHS.</p>
+          <p>
+            We accept Mobile Money (Momo), Visa/Mastercard, and bank transfers
+            via Paystack — all in GHS.
+          </p>
         </div>
         <div class="faq-item">
           <h4>Is my data secure?</h4>
-          <p>Yes. We comply with Ghana’s Data Protection Act 2012 and use encrypted storage with daily backups.</p>
+          <p>
+            Yes. We comply with Ghana’s Data Protection Act 2012 and use
+            encrypted storage with daily backups.
+          </p>
         </div>
       </div>
     </section>
@@ -242,7 +287,9 @@ const features = [
   margin: 0 auto;
   padding: 1rem 1.5rem 4rem;
 }
-.loading-state, .error-state, .empty-state {
+.loading-state,
+.error-state,
+.empty-state {
   text-align: center;
   padding: 3rem;
   color: #645d54;
@@ -262,11 +309,13 @@ const features = [
   padding: 1.75rem;
   display: flex;
   flex-direction: column;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .plan-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 .plan-header {
   margin-bottom: 1rem;

@@ -1,0 +1,414 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Vibespot REST API",
+    "description": "Public and tenant-scoped APIs for the Vibespot restaurant and salon reservation platform.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Vibespot Technologies Ltd",
+      "url": "https://vibespot.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.vibespot.com/api/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/public/plans": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "List active subscription plans",
+        "responses": {
+          "200": {
+            "description": "Active plans",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "plans": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "name": { "type": "string" },
+                          "slug": { "type": "string" },
+                          "price": { "type": "number" },
+                          "currency": { "type": "string" },
+                          "maxTables": { "type": "integer" },
+                          "maxReservationsPerMonth": { "type": "integer" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/status": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "Platform health status",
+        "responses": {
+          "200": {
+            "description": "Current system status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "status": { "type": "string", "enum": ["operational", "degraded"] },
+                    "checks": {
+                      "type": "object",
+                      "properties": {
+                        "database": { "type": "string" },
+                        "redis": { "type": "string" },
+                        "bullmq": { "type": "string" }
+                      }
+                    },
+                    "uptime": {
+                      "type": "object",
+                      "properties": {
+                        "percentage": { "type": "number" },
+                        "period": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/tenants/signup": {
+      "post": {
+        "tags": ["Public"],
+        "summary": "Self-service tenant signup",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "slug", "email", "password"],
+                "properties": {
+                  "name": { "type": "string", "description": "Business name" },
+                  "slug": { "type": "string", "description": "Unique subdomain slug" },
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 8 },
+                  "businessVertical": { "type": "string", "enum": ["restaurant", "salon"] },
+                  "restaurantType": { "type": "string" },
+                  "serviceModes": { "type": "array", "items": { "type": "string" } },
+                  "planSlug": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tenant created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "tenant": { "type": "object" },
+                    "user": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register/customer": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new customer account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "firstName", "lastName", "phone"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 8 },
+                  "firstName": { "type": "string" },
+                  "lastName": { "type": "string" },
+                  "phone": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Customer registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "user": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login with email and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "token": { "type": "string" },
+                    "refreshToken": { "type": "string" },
+                    "user": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Request password reset",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reset email sent"
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Reset password with token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token", "password"],
+                "properties": {
+                  "token": { "type": "string" },
+                  "password": { "type": "string", "minLength": 8 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful"
+          }
+        }
+      }
+    },
+    "/reservations": {
+      "get": {
+        "tags": ["Reservations"],
+        "summary": "List reservations (tenant-scoped)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Reservations list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "reservations": { "type": "array" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Reservations"],
+        "summary": "Create reservation (tenant-scoped)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "customerId": { "type": "integer" },
+                  "tableId": { "type": "integer" },
+                  "reservationTime": { "type": "string", "format": "date-time" },
+                  "partySize": { "type": "integer" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reservation created"
+          }
+        }
+      }
+    },
+    "/tables": {
+      "get": {
+        "tags": ["Tables"],
+        "summary": "List tables (tenant-scoped)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Tables list"
+          }
+        }
+      }
+    },
+    "/payments": {
+      "get": {
+        "tags": ["Payments"],
+        "summary": "List payments (tenant-scoped)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Payments list"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Payments"],
+        "summary": "Initiate payment (tenant-scoped)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": { "type": "number" },
+                  "currency": { "type": "string", "default": "GHS" },
+                  "method": { "type": "string", "enum": ["momo", "card", "cash"] },
+                  "reservationId": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment initiated"
+          }
+        }
+      }
+    },
+    "/customers": {
+      "get": {
+        "tags": ["Customers"],
+        "summary": "Search customers (tenant-scoped)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Search query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer search results"
+          }
+        }
+      }
+    },
+    "/admin/platform/roles": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List platform roles (super-admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Platform roles list"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

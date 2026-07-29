@@ -152,18 +152,19 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         JWT_SECRET,
         { expiresIn: "5m" }
       );
-      return {
-        pendingTOTP: true,
-        tempToken,
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          permissions: user.permissions || {},
-          isSuperAdmin: !!user.isSuperAdmin,
-        },
-      };
+       return {
+         pendingTOTP: true,
+         tempToken,
+         user: {
+           id: user.id,
+           username: user.username,
+           email: user.email,
+           role: user.role,
+           permissions: user.permissions || {},
+           isSuperAdmin: !!user.isSuperAdmin,
+           platformRoles: user.platformRoles || [],
+         },
+       };
     }
   }
 
@@ -261,6 +262,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
       role: user.role,
       permissions,
       isSuperAdmin: !!user.isSuperAdmin,
+      platformRoles: user.platformRoles || [],
     },
   };
 };

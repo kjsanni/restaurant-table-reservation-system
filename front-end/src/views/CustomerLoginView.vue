@@ -70,19 +70,35 @@ const handleLogin = async () => {
         <h2>Sign in</h2>
         <p class="form-subtitle">Welcome back to your account</p>
 
-        <div v-if="generalError" class="alert alert-error">{{ generalError }}</div>
+        <div v-if="generalError" class="alert alert-error">
+          {{ generalError }}
+        </div>
 
         <form @submit.prevent="handleLogin">
           <div class="field">
             <label for="email">Email</label>
-            <input id="email" v-model="credentials.email" type="email" required />
-            <span v-if="validationErrors?.email" class="error">{{ validationErrors.email[0] }}</span>
+            <input
+              id="email"
+              v-model="credentials.email"
+              type="email"
+              required
+            />
+            <span v-if="validationErrors?.email" class="error">{{
+              validationErrors.email[0]
+            }}</span>
           </div>
 
           <div class="field">
             <label for="password">Password</label>
-            <input id="password" v-model="credentials.password" type="password" required />
-            <span v-if="validationErrors?.password" class="error">{{ validationErrors.password[0] }}</span>
+            <input
+              id="password"
+              v-model="credentials.password"
+              type="password"
+              required
+            />
+            <span v-if="validationErrors?.password" class="error">{{
+              validationErrors.password[0]
+            }}</span>
           </div>
 
           <div v-if="turnstileConfig?.enabled" class="field">
@@ -95,7 +111,8 @@ const handleLogin = async () => {
         </form>
 
         <p class="form-footer">
-          Don't have an account? <RouterLink to="/customer/register">Create one</RouterLink>
+          Don't have an account?
+          <RouterLink to="/customer/register">Create one</RouterLink>
           <span class="sep">·</span>
           <RouterLink to="/forgot-password">Forgot password?</RouterLink>
         </p>

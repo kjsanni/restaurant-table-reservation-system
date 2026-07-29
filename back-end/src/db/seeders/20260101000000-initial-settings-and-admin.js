@@ -3,6 +3,18 @@ const bcrypt = require("bcryptjs");
 
 const SALT_ROUNDS = 10;
 
+const getOrCreateDefaultTenantId = async (queryInterface) => {
+  const existingTenants = await queryInterface.sequelize.query("SELECT id FROM tenants ORDER BY id ASC LIMIT 1", { type: queryInterface.sequelize.QueryTypes.SELECT });
+  if (existingTenants.length === 0) {
+    const [inserted] = await queryInterface.sequelize.query(
+      "INSERT INTO tenants (name, slug, status, createdAt, updatedAt) VALUES ('Default Restaurant', 'default-restaurant', 'active', NOW(), NOW())",
+      { type: queryInterface.sequelize.QueryTypes.INSERT }
+    );
+    return inserted[0];
+  }
+  return existingTenants[0].id;
+};
+
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.bulkDelete("settings", null, {});
@@ -58,6 +70,13 @@ module.exports = {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
+      {
+        key: "tenant_mode_enabled",
+        value: JSON.stringify(true),
+        description: "Enable multi-tenant mode",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ]);
 
     const adminPassword = process.env.ADMIN_INITIAL_PASSWORD;
@@ -67,25 +86,28 @@ module.exports = {
       }
       const randomPassword = `tmp-${require("crypto").randomBytes(16).toString("hex")}`;
       console.log("[Seeder] Generated temporary admin password. Store it securely and change it after first login.");
+
+      const defaultTenantId = await getOrCreateDefaultTenantId(queryInterface);
       await queryInterface.bulkInsert("users", [
         {
           username: "admin",
           email: "admin@rtrs.com",
           password: await bcrypt.hash(randomPassword, SALT_ROUNDS),
           role: "admin",
-          tenantId: 1,
+          tenantId: defaultTenantId,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       ]);
     } else {
+      const defaultTenantId = await getOrCreateDefaultTenantId(queryInterface);
       await queryInterface.bulkInsert("users", [
         {
           username: "admin",
           email: "admin@rtrs.com",
           password: await bcrypt.hash(adminPassword, SALT_ROUNDS),
           role: "admin",
-          tenantId: 1,
+          tenantId: defaultTenantId,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
