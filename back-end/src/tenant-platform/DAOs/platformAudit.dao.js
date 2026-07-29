@@ -1,9 +1,15 @@
 const db = require("../../db/models");
+const { fireWebhook } = require("../services/webhookNotification.service");
 
 const platformAuditDAO = {};
 
 platformAuditDAO.log = (actorUserId, action, entityType, entityId, tenantId, metadata = {}, ipAddress = null) => {
-  return db.platformAuditLog.create({ actorUserId, action, entityType, entityId, tenantId, metadata, ipAddress });
+  const payload = { actorUserId, action, entityType, entityId, tenantId, metadata, ipAddress };
+  const record = db.platformAuditLog.create(payload);
+
+  fireWebhook("platform.audit.created", payload, tenantId).catch(() => {});
+
+  return record;
 };
 
 platformAuditDAO.list = (filters = {}) => {

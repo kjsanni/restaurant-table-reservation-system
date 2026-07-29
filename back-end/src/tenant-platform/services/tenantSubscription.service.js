@@ -1,9 +1,9 @@
 const db = require("../../db/models");
 
 const DEFAULT_PLANS = {
-  starter: { maxTables: 10, maxReservationsPerMonth: 500, price: 29 },
-  growth: { maxTables: 30, maxReservationsPerMonth: 2000, price: 79 },
-  enterprise: { maxTables: Infinity, maxReservationsPerMonth: Infinity, price: null },
+  starter: { maxTables: 10, maxReservationsPerMonth: 500, price: 29, erpnextModules: [] },
+  growth: { maxTables: 30, maxReservationsPerMonth: 2000, price: 79, erpnextModules: ["erpnext_accounting", "erpnext_crm"] },
+  enterprise: { maxTables: Infinity, maxReservationsPerMonth: Infinity, price: null, erpnextModules: null },
 };
 
 const getPlans = async () => {
@@ -13,12 +13,14 @@ const getPlans = async () => {
   });
   const plans = {};
   for (const row of rows) {
+    const rawPrice = row.price !== null && row.price !== undefined ? parseFloat(row.price) : null;
     plans[row.slug] = {
       maxTables: row.maxTables,
       maxReservationsPerMonth: row.maxReservationsPerMonth,
-      price: parseFloat(row.price),
+      price: Number.isNaN(rawPrice) ? null : rawPrice,
       currency: row.currency,
       name: row.name,
+      erpnextModules: row.erpnextModules !== null && row.erpnextModules !== undefined ? row.erpnextModules : null,
     };
   }
   return { ...DEFAULT_PLANS, ...plans };

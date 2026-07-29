@@ -5,6 +5,15 @@ require("dotenv").config({ path: path.resolve(__dirname, "../.env." + (process.e
 const REQUIRED_VARS = ["DB_HOST", "DB_NAME", "DB_USERNAME", "JWT_SECRET", "PORT"];
 const PROD_REQUIRED_VARS = ["FRONTEND_URL", "API_URL", "CORS_ORIGINS"];
 
+const KNOWN_PLACEHOLDERS = new Set([
+  "CHANGE_ME_GENERATE_A_SECURE_SECRET",
+  "your-generated-256-bit-secret-here",
+  "secure-password",
+  "examplePublicKey@o0.ingest.sentry.io/0000000",
+  "your-domain.com",
+  "localhost",
+]);
+
 const validateEnv = (envName) => {
   const missing = REQUIRED_VARS.filter((v) => !process.env[v]);
   if (missing.length > 0) {
@@ -18,6 +27,13 @@ const validateEnv = (envName) => {
       throw new Error(
         `[config] Missing required production environment variables: ${prodMissing.join(", ")}`
       );
+    }
+    for (const [key, value] of Object.entries(process.env)) {
+      if (KNOWN_PLACEHOLDERS.has(value)) {
+        throw new Error(
+          `[config] Placeholder value detected for ${key} in production. Replace "${value}" with a real value.`
+        );
+      }
     }
   }
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 16) {

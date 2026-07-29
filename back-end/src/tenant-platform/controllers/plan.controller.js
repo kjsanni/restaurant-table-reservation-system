@@ -19,7 +19,7 @@ const getPlanHandler = async (req, res) => {
 };
 
 const createPlanHandler = async (req, res) => {
-  const allowed = ["name", "slug", "price", "currency", "maxTables", "maxReservationsPerMonth", "isActive", "sortOrder"];
+  const allowed = ["name", "slug", "price", "currency", "maxTables", "maxReservationsPerMonth", "isActive", "sortOrder", "erpnextModules"];
   const data = {};
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(req.body, key)) {
@@ -47,7 +47,7 @@ const updatePlanHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Plan not found" });
   }
 
-  const allowed = ["name", "slug", "price", "currency", "maxTables", "maxReservationsPerMonth", "isActive", "sortOrder"];
+  const allowed = ["name", "slug", "price", "currency", "maxTables", "maxReservationsPerMonth", "isActive", "sortOrder", "erpnextModules"];
   const updates = {};
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(req.body, key)) {

@@ -42,10 +42,12 @@ const submit = async () => {
   message.value = "";
   try {
     const res = await authAPI.forgotPassword(email.value);
-    message.value = res.data?.message || "If an account exists, a reset link has been sent.";
+    message.value =
+      res.data?.message || "If an account exists, a reset link has been sent.";
     messageType.value = "success";
   } catch (err) {
-    message.value = err.response?.data?.message || "Something went wrong. Please try again.";
+    message.value =
+      err.response?.data?.message || "Something went wrong. Please try again.";
     messageType.value = "error";
   } finally {
     loading.value = false;

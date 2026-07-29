@@ -25,4 +25,14 @@ router
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(totpController.totpStatusHandler))
   .all(httpMethodError);
 
+router
+  .route("/backup-codes/regenerate")
+  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(totpController.regenerateBackupCodesHandler))
+  .all(httpMethodError);
+
+router
+  .route("/backup-codes/verify")
+  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(totpController.verifyBackupCodeHandler))
+  .all(httpMethodError);
+
 module.exports = router;

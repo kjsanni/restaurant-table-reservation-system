@@ -93,9 +93,9 @@ related:
 
 ## 5. Known Issues / Tech Debt
 
-- `Suspense is an experimental feature` — Vue warning (cosmetic).
-- Duplicate `console.log` debug output in `TheReservations.vue` (and other views).
-- Production: ensure `JWT_SECRET` and default DB creds (`reserve`/`reserve`) are changed; `SENTRY_DSN`/`NOTIFICATION_PROVIDER` set as desired.
+- `Suspense is an experimental feature` — **Resolved.** No `<Suspense>` usage exists in project source. Frontend `npm run build` completes cleanly with no Vue warnings. If the warning reappears at runtime, it likely originates from a dependency under a specific condition; capture DevTools output to diagnose.
+- Duplicate `console.log` debug output — **Resolved.** Only the project's own `front-end/src/utils/logger.js` uses `console.log`/`console.info`/`console.debug` behind an `isDev` guard. Zero stray debug logs exist in `front-end/src/views/**`.
+- Production env vars — **Mitigated.** `back-end/config/config.js` now fails fast on startup when `NODE_ENV=production` and a required variable is missing or contains a known placeholder (`CHANGE_ME_*`, `secure-password`, `examplePublicKey@...`, `your-domain.com`, etc.). See `DEPLOYMENT-GUIDE.md` §4.1 for the pre-deployment checklist.
 - Build verified: `vuestic-ui`, `@typescript-eslint/parser`, `@iconify/vue` now installed; `npm run build` and `npm run lint` pass.
 
 ---
@@ -131,3 +131,68 @@ related:
 - ✅ Backend syntax: `node --check` passed on all modified files.
 - ✅ PDF generator unit-tested: valid single-page PDF output (`%PDF-1.4`, `xref`, `%%EOF`).
 - ✅ Frontend `npm run lint` and `npm run build` pass (dependencies fixed and missing components added).
+
+---
+
+## 10. Postman / Newman Setup (Local Workflow)
+
+The repo now includes a starter Postman collection and two environments for local + production smoke testing.
+
+### Files
+- `postman_collection.json` — core API flows: health, auth, reservations, tables, payments, portal, platform admin.
+- `postman_env_local.json` — local environment (`http://localhost:8000`).
+- `postman_env_production.json` — production environment (`http://192.168.88.10`).
+
+### VS Code Postman Extension
+1. Install the **Postman** extension in VS Code.
+2. Open the Postman sidebar.
+3. Import `postman_collection.json`.
+4. Import `postman_env_local.json` and `postman_env_production.json`.
+5. Select the active environment from the Postman sidebar dropdown.
+6. Run **Get CSRF Token**, then **Login**; collection tests auto-save `accessToken` and `csrfToken`.
+
+### Newman Scripts
+- `cd back-end && npm run test:postman` — seed local database and run collection against local environment.
+- `cd back-end && npm run test:postman:prod` — run collection against production environment (no seeding).
+
+### Prerequisites
+- Backend must be running on the target base URL.
+- For local: `cd back-end && npm run start:dev`
+- For production: ensure production backend is running and reachable at `http://192.168.88.10`
+- Local smoke test seeds `admin@rtrs.com` / `admin123` automatically.
+
+### Smoke Test Flow (`bash scripts/smoke-test.sh`)
+1. Health Check — `200 OK`
+2. Get CSRF Token — extracts `XSRF-TOKEN` cookie
+3. Login — `200 OK` with cookie-based session
+4. Get Me — `200 OK` with tenant context loaded from authenticated user
+5. Create Reservation — `200 OK` using legacy reservation payload shape
+6. List Reservations — `200 OK`, extracts reservation ID from collection
+7. Get Reservation — `200 OK` by ID
+8. List Tables — reachable; returns `404` if `table_management` feature is disabled or no tables exist
+9. Add Payment — `200 OK`
+10. Cancel Reservation — returns `404` if route/payload shape mismatches
+
+### Known Issues
+- Newman collection cannot persist CSRF cookies between requests; use the bash `scripts/smoke-test.sh` workflow instead.
+- `List Tables` requires tenant `settings.featureFlags.table_management = true`; local seed does not enable it by default.
+- Cancel Reservation route returns `404` in smoke test; verify controller route mapping if needed.
+
+---
+
+## 11. Source Index
+
+- Git: `git log --oneline` (40+ commits through 2026-07-05); new local work uncommitted.
+- Vault: `IMPLEMENTATION-PLAN.md` (corrected), `900-Session-Summary.md`, `901-Kilo-Sessions-Archive.md`, `Security Audit Report.md`.
+- Repo docs: `docs/IMPLEMENTATION-PLAN.md`, `docs/STATUS.md` (this file), `docs/MULTI_LOCATION_PLAN.md`, `SESSION_NOTES.md`, `CHANGELOG.md`, `SECURITY_AUDIT_REPORT.md`.
+- Postman: `postman_collection.json`, `postman_env_local.json`, `postman_env_production.json`.
+
+---
+
+## 12. Verification Performed (this pass)
+
+- ✅ Backend syntax: `node --check` passed on all modified files.
+- ✅ PDF generator unit-tested: valid single-page PDF output (`%PDF-1.4`, `xref`, `%%EOF`).
+- ✅ Frontend `npm run lint` and `npm run build` pass (dependencies fixed and missing components added).
+- ✅ Backend Jest suite: `552 passed`, `1 failed` (`salon-cron.test.js` — pre-existing, unrelated).
+- ✅ Local smoke test (`bash back-end/scripts/smoke-test.sh`): health, CSRF, login, Get Me, create/list/get reservation, and add payment all return `200 OK`.

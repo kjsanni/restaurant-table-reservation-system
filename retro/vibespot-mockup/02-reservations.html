@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibespot Restaurant — All Reservations</title>
+<style>
+  :root {
+    --brand-900:#0f172a; --brand-800:#1e293b; --brand-700:#334155; --brand-600:#475569;
+    --brand-500:#64748b; --brand-400:#94a3b8; --brand-300:#cbd5e1; --brand-200:#e2e8f0; --brand-100:#f1f5f9; --brand-50:#f8fafc;
+    --accent-600:#b45309; --accent-500:#d97706; --accent-400:#f59e0b; --accent-300:#fbbf24; --accent-100:#fef3c7; --accent-50:#fffbeb;
+    --earth-600:#14532d; --earth-500:#15803d; --earth-100:#dcfce7;
+    --sky-600:#1e40af; --sky-500:#3b82f6; --sky-100:#dbeafe;
+    --rose-600:#be123c; --rose-500:#e11d48; --rose-100:#ffe4e6;
+    --neutral-900:#0f172a; --neutral-800:#334155; --neutral-600:#64748b; --neutral-500:#94a3b8;
+    --neutral-300:#cbd5e1; --neutral-200:#e2e8f0; --neutral-100:#f1f5f9; --neutral-50:#f8fafc;
+    --white:#ffffff; --font-serif:'Georgia', 'Times New Roman', serif; --font-sans:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --radius-xl:20px; --radius-lg:14px; --radius-md:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-sans);background:var(--brand-50);color:var(--neutral-900);min-height:100vh}
+  .app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+  .sidebar{background:linear-gradient(180deg,var(--brand-900) 0%,var(--brand-800) 100%);color:var(--white);padding:28px 22px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .sidebar-brand{display:flex;align-items:center;gap:12px;margin-bottom:28px;animation:fadeDown .6s ease-out both}
+  .sidebar-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--accent-400),var(--accent-500));display:grid;place-items:center;font-family:var(--font-serif);font-weight:700;font-size:16px;color:var(--brand-900)}
+  .sidebar-name{font-family:var(--font-serif);font-size:16px;font-weight:700;line-height:1.15}
+  .nav-group{margin-top:8px}
+  .nav-group-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.45);padding:12px 12px 6px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;color:rgba(255,255,255,.78);text-decoration:none;transition:background .2s ease,color .2s ease,transform .15s ease}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:var(--white);transform:translateX(2px)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(217,119,6,.18),rgba(217,119,6,.06));color:var(--accent-300);font-weight:600}
+  .nav-icon{width:18px;height:18px;display:grid;place-items:center;opacity:.85}
+  .main{padding:36px 40px 60px;overflow-y:auto}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;animation:fadeDown .6s ease-out both}
+  .topbar-left h1{font-family:var(--font-serif);font-size:30px;font-weight:700;letter-spacing:-.02em}
+  .topbar-left p{color:var(--neutral-600);font-size:14px;margin-top:4px}
+  .topbar-actions{display:flex;align-items:center;gap:10px}
+  .btn{padding:10px 16px;border-radius:var(--radius-md);font-family:var(--font-sans);font-weight:600;font-size:13px;cursor:pointer;border:none;transition:transform .15s ease,box-shadow .2s ease;text-decoration:none;display:inline-block}
+  .btn-primary{background:linear-gradient(135deg,var(--brand-700),var(--brand-600));color:var(--white)}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(30,41,59,.22)}
+  .btn-secondary{background:var(--white);color:var(--neutral-800);border:1px solid var(--neutral-300)}
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;animation:fadeUp .6s .1s ease-out both}
+  .chip{padding:7px 12px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--neutral-300);background:var(--white);color:var(--neutral-800);cursor:pointer;transition:background .2s ease,border-color .2s ease}
+  .chip:hover,.chip.active{background:var(--brand-100);border-color:var(--brand-300);color:var(--brand-800)}
+  .table-wrap{background:var(--white);border:1px solid var(--neutral-200);border-radius:var(--radius-xl);box-shadow:0 10px 30px rgba(15,23,42,.05);overflow:hidden;animation:fadeUp .7s .15s ease-out both}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead{background:var(--neutral-50);border-bottom:1px solid var(--neutral-200)}
+  th{text-align:left;padding:12px 16px;font-size:11px;font-weight:700;color:var(--neutral-600);text-transform:uppercase;letter-spacing:.08em}
+  td{padding:14px 16px;border-bottom:1px solid var(--neutral-100);color:var(--neutral-800)}
+  tr:last-child td{border-bottom:none}
+  tr{transition:background .2s ease}
+  tr:hover td{background:rgba(241,245,249,.6)}
+  .pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;display:inline-block}
+  .pill.confirmed{background:var(--accent-100);color:var(--accent-600)}
+  .pill.pending{background:var(--sky-100);color:var(--sky-600)}
+  .pill.in-progress{background:var(--earth-100);color:var(--earth-600)}
+  .pill.cancelled{background:var(--rose-100);color:var(--rose-600)}
+  .pill.completed{background:var(--neutral-100);color:var(--neutral-600)}
+  .pill.paid{background:var(--earth-100);color:var(--earth-600)}
+  .pill.unpaid{background:var(--rose-100);color:var(--rose-600)}
+  .link{font-size:12px;color:var(--accent-600);text-decoration:none;font-weight:600}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+  @media (max-width:960px){.app{grid-template-columns:1fr}.sidebar{display:none}.main{padding:24px}.table-wrap{overflow-x:auto}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-mark">V</div>
+      <div class="sidebar-name">Vibespot<br/>Reservations</div>
+    </div>
+    <nav class="nav-group">
+      <div class="nav-group-title">Dashboard</div>
+      <a class="nav-item" href="01-dashboard.html"><span class="nav-icon">◆</span> Overview</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Reservations</div>
+      <a class="nav-item active" href="02-reservations.html"><span class="nav-icon">▦</span> All Reservations</a>
+      <a class="nav-item" href="03-new-reservation.html"><span class="nav-icon">+</span> New Reservation</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Services</div>
+      <a class="nav-item" href="04-packages.html"><span class="nav-icon">▤</span> Packages</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Customers</div>
+      <a class="nav-item" href="05-waiting-staff.html"><span class="nav-icon">👤</span> Waiting Staff</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">WhatsApp</div>
+      <a class="nav-item" href="06-whatsapp-booking.html"><span class="nav-icon">💬</span> Booking Flow</a>
+      <a class="nav-item" href="07-whatsapp-payment.html"><span class="nav-icon">💳</span> Payment Flow</a>
+    </nav>
+    <nav class="nav-group" style="margin-top:auto">
+      <div class="nav-group-title">Admin</div>
+      <a class="nav-item" href="#reports"><span class="nav-icon">📊</span> Reports</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>All Reservations</h1>
+        <p>Manage bookings, packages, and table assignments.</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn btn-primary" href="03-new-reservation.html">+ New Reservation</a>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="chip active">All</button>
+      <button class="chip">Confirmed</button>
+      <button class="chip">Pending</button>
+      <button class="chip">In Progress</button>
+      <button class="chip">Completed</button>
+      <button class="chip">Cancelled</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Reservation</th>
+            <th>Package</th>
+            <th>Guests</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Table</th>
+            <th>Staff</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Kofi Mensah</b><br/><span style="font-size:11px;color:var(--neutral-600)">+233 24 111 222</span></td>
+            <td>Classic Experience</td>
+            <td>2</td>
+            <td>Jul 01</td>
+            <td>18:00</td>
+            <td>T-04</td>
+            <td>Ama</td>
+            <td><span class="pill confirmed">Confirmed</span></td>
+            <td><span class="pill paid">Paid</span></td>
+            <td><a class="link" href="03-new-reservation.html">View</a></td>
+          </tr>
+          <tr>
+            <td><b>Abena Owusu</b><br/><span style="font-size:11px;color:var(--neutral-600)">+233 20 333 444</span></td>
+            <td>Premium Dining</td>
+            <td>4</td>
+            <td>Jul 01</td>
+            <td>19:30</td>
+            <td>T-01</td>
+            <td>Kwame</td>
+            <td><span class="pill in-progress">In Progress</span></td>
+            <td><span class="pill paid">Paid</span></td>
+            <td><a class="link" href="03-new-reservation.html">View</a></td>
+          </tr>
+          <tr>
+            <td><b>Yaw Boateng</b><br/><span style="font-size:11px;color:var(--neutral-600)">+233 20 111 333</span></td>
+            <td>Sunset Drinks</td>
+            <td>2</td>
+            <td>Jul 01</td>
+            <td>20:00</td>
+            <td>T-12</td>
+            <td>Fatima</td>
+            <td><span class="pill pending">Pending</span></td>
+            <td><span class="pill unpaid">Unpaid</span></td>
+            <td><a class="link" href="03-new-reservation.html">View</a></td>
+          </tr>
+          <tr>
+            <td><b>Efua Osei</b><br/><span style="font-size:11px;color:var(--neutral-600)">+233 27 999 000</span></td>
+            <td>Business Lunch</td>
+            <td>3</td>
+            <td>Jul 02</td>
+            <td>12:30</td>
+            <td>T-07</td>
+            <td>Kofi</td>
+            <td><span class="pill confirmed">Confirmed</span></td>
+            <td><span class="pill unpaid">Unpaid</span></td>
+            <td><a class="link" href="03-new-reservation.html">View</a></td>
+          </tr>
+          <tr>
+            <td><b>Akosua Frimpong</b><br/><span style="font-size:11px;color:var(--neutral-600)">+233 26 555 666</span></td>
+            <td>Celebration Package</td>
+            <td>8</td>
+            <td>Jul 02</td>
+            <td>18:00</td>
+            <td>T-02</td>
+            <td>Ama</td>
+            <td><span class="pill completed">Completed</span></td>
+            <td><span class="pill paid">Paid</span></td>
+            <td><a class="link" href="03-new-reservation.html">View</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+</body>
+</html>

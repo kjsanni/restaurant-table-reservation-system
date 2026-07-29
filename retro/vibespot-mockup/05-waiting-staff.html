@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibespot Restaurant — Waiting Staff</title>
+<style>
+  :root {
+    --brand-900:#0f172a; --brand-800:#1e293b; --brand-700:#334155; --brand-600:#475569;
+    --brand-500:#64748b; --brand-400:#94a3b8; --brand-300:#cbd5e1; --brand-200:#e2e8f0; --brand-100:#f1f5f9; --brand-50:#f8fafc;
+    --accent-600:#b45309; --accent-500:#d97706; --accent-400:#f59e0b; --accent-300:#fbbf24; --accent-100:#fef3c7; --accent-50:#fffbeb;
+    --earth-600:#14532d; --earth-500:#15803d; --earth-100:#dcfce7;
+    --sky-600:#1e40af; --sky-500:#3b82f6; --sky-100:#dbeafe;
+    --rose-600:#be123c; --rose-500:#e11d48; --rose-100:#ffe4e6;
+    --neutral-900:#0f172a; --neutral-800:#334155; --neutral-600:#64748b; --neutral-500:#94a3b8;
+    --neutral-300:#cbd5e1; --neutral-200:#e2e8f0; --neutral-100:#f1f5f9; --neutral-50:#f8fafc;
+    --white:#ffffff; --font-serif:'Georgia', 'Times New Roman', serif; --font-sans:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --radius-xl:20px; --radius-lg:14px; --radius-md:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-sans);background:var(--brand-50);color:var(--neutral-900);min-height:100vh}
+  .app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+  .sidebar{background:linear-gradient(180deg,var(--brand-900) 0%,var(--brand-800) 100%);color:var(--white);padding:28px 22px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .sidebar-brand{display:flex;align-items:center;gap:12px;margin-bottom:28px;animation:fadeDown .6s ease-out both}
+  .sidebar-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--accent-400),var(--accent-500));display:grid;place-items:center;font-family:var(--font-serif);font-weight:700;font-size:16px;color:var(--brand-900)}
+  .sidebar-name{font-family:var(--font-serif);font-size:16px;font-weight:700;line-height:1.15}
+  .nav-group{margin-top:8px}
+  .nav-group-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.45);padding:12px 12px 6px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;color:rgba(255,255,255,.78);text-decoration:none;transition:background .2s ease,color .2s ease,transform .15s ease}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:var(--white);transform:translateX(2px)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(217,119,6,.18),rgba(217,119,6,.06));color:var(--accent-300);font-weight:600}
+  .nav-icon{width:18px;height:18px;display:grid;place-items:center;opacity:.85}
+  .main{padding:36px 40px 60px;overflow-y:auto}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;animation:fadeDown .6s ease-out both}
+  .topbar-left h1{font-family:var(--font-serif);font-size:30px;font-weight:700;letter-spacing:-.02em}
+  .topbar-left p{color:var(--neutral-600);font-size:14px;margin-top:4px}
+  .staff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .staff-card{background:var(--white);border:1px solid var(--neutral-200);border-radius:var(--radius-xl);padding:22px;box-shadow:0 10px 30px rgba(15,23,42,.05);animation:fadeUp .6s ease-out both;transition:transform .2s ease,box-shadow .2s ease}
+  .staff-card:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(15,23,42,.08)}
+  .staff-top{display:flex;align-items:center;gap:14px}
+  .staff-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--brand-500),var(--brand-400));color:var(--white);display:grid;place-items:center;font-family:var(--font-serif);font-weight:700;font-size:17px}
+  .staff-name{font-weight:700;font-size:15px;color:var(--neutral-900)}
+  .staff-role{font-size:12px;color:var(--neutral-600);margin-top:2px}
+  .staff-stat{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--neutral-100);font-size:13px;font-weight:700;color:var(--neutral-900)}
+  .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .status-dot.available{background:#22c55e} .status-dot.busy{background:#ef4444} .status-dot.break{background:#f59e0b}
+  .badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;background:var(--neutral-100);color:var(--neutral-800);margin-top:8px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+  @media (max-width:960px){.app{grid-template-columns:1fr}.sidebar{display:none}.main{padding:24px}.staff-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-mark">V</div>
+      <div class="sidebar-name">Vibespot<br/>Reservations</div>
+    </div>
+    <nav class="nav-group">
+      <div class="nav-group-title">Dashboard</div>
+      <a class="nav-item" href="01-dashboard.html"><span class="nav-icon">◆</span> Overview</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Reservations</div>
+      <a class="nav-item" href="02-reservations.html"><span class="nav-icon">▦</span> All Reservations</a>
+      <a class="nav-item" href="03-new-reservation.html"><span class="nav-icon">+</span> New Reservation</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Services</div>
+      <a class="nav-item" href="04-packages.html"><span class="nav-icon">▤</span> Packages</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Customers</div>
+      <a class="nav-item active" href="05-waiting-staff.html"><span class="nav-icon">👤</span> Waiting Staff</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">WhatsApp</div>
+      <a class="nav-item" href="06-whatsapp-booking.html"><span class="nav-icon">💬</span> Booking Flow</a>
+      <a class="nav-item" href="07-whatsapp-payment.html"><span class="nav-icon">💳</span> Payment Flow</a>
+    </nav>
+    <nav class="nav-group" style="margin-top:auto">
+      <div class="nav-group-title">Admin</div>
+      <a class="nav-item" href="#reports"><span class="nav-icon">📊</span> Reports</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Waiting Staff</h1>
+        <p>Assigned tables and live service status</p>
+      </div>
+    </div>
+
+    <div class="staff-grid">
+      <div class="staff-card">
+        <div class="staff-top">
+          <div class="staff-avatar">A</div>
+          <div>
+            <div class="staff-name">Ama Mensah</div>
+            <div class="staff-role">Senior Server</div>
+          </div>
+        </div>
+        <div class="staff-stat"><span class="status-dot available"></span> Available now</div>
+        <div class="staff-stat">Tables: 4</div>
+        <div class="staff-stat">Orders: 7</div>
+        <span class="badge">Section A</span>
+      </div>
+
+      <div class="staff-card">
+        <div class="staff-top">
+          <div class="staff-avatar">K</div>
+          <div>
+            <div class="staff-name">Kwame Asante</div>
+            <div class="staff-role">Head Waiter</div>
+          </div>
+        </div>
+        <div class="staff-stat"><span class="status-dot busy"></span> On service</div>
+        <div class="staff-stat">Tables: 5</div>
+        <div class="staff-stat">Orders: 9</div>
+        <span class="badge">Section B</span>
+      </div>
+
+      <div class="staff-card">
+        <div class="staff-top">
+          <div class="staff-avatar">K</div>
+          <div>
+            <div class="staff-name">Kofi Boateng</div>
+            <div class="staff-role">Sommelier</div>
+          </div>
+        </div>
+        <div class="staff-stat"><span class="status-dot busy"></span> On service</div>
+        <div class="staff-stat">Tables: 3</div>
+        <div class="staff-stat">Orders: 5</div>
+        <span class="badge">Terrace</span>
+      </div>
+
+      <div class="staff-card">
+        <div class="staff-top">
+          <div class="staff-avatar">F</div>
+          <div>
+            <div class="staff-name">Fatima Ibrahim</div>
+            <div class="staff-role">Server</div>
+          </div>
+        </div>
+        <div class="staff-stat"><span class="status-dot break"></span> On break</div>
+        <div class="staff-stat">Tables: 1</div>
+        <div class="staff-stat">Orders: 2</div>
+        <span class="badge">Section C</span>
+      </div>
+
+      <div class="staff-card">
+        <div class="staff-top">
+          <div class="staff-avatar">Y</div>
+          <div>
+            <div class="staff-name">Yaw Osei</div>
+            <div class="staff-role">Host</div>
+          </div>
+        </div>
+        <div class="staff-stat"><span class="status-dot available"></span> Available now</div>
+        <div class="staff-stat">Tables: 6</div>
+        <div class="staff-stat">Orders: 11</div>
+        <span class="badge">Entrance</span>
+      </div>
+
+      <div class="staff-card">
+        <div class="staff-top">
+          <div class="staff-avatar">E</div>
+          <div>
+            <div class="staff-name">Esi Quartey</div>
+            <div class="staff-role">Runner</div>
+          </div>
+        </div>
+        <div class="staff-stat"><span class="status-dot busy"></span> On service</div>
+        <div class="staff-stat">Tables: 8</div>
+        <div class="staff-stat">Orders: 14</div>
+        <span class="badge">Floor</span>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

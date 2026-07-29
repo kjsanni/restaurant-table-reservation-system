@@ -47,12 +47,17 @@ const bulkChangeVertical = (tenantIds, businessVertical) => {
   });
 };
 
+const updateFeatureFlags = (id, featureFlags) => {
+  return API.patch(`/admin/feature-flags/tenants/${id}`, { featureFlags });
+};
+
 export default {
   create,
   getDashboard,
   getAll,
   getById,
   update,
+  updateFeatureFlags,
   enable,
   disable,
   deleteTenant,

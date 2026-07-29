@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibespot Restaurant — Dashboard</title>
+<style>
+  :root {
+    --brand-900:#0f172a; --brand-800:#1e293b; --brand-700:#334155; --brand-600:#475569;
+    --brand-500:#64748b; --brand-400:#94a3b8; --brand-300:#cbd5e1; --brand-200:#e2e8f0; --brand-100:#f1f5f9; --brand-50:#f8fafc;
+    --accent-600:#b45309; --accent-500:#d97706; --accent-400:#f59e0b; --accent-300:#fbbf24; --accent-100:#fef3c7; --accent-50:#fffbeb;
+    --earth-600:#14532d; --earth-500:#15803d; --earth-100:#dcfce7;
+    --sky-600:#1e40af; --sky-500:#3b82f6; --sky-100:#dbeafe;
+    --rose-600:#be123c; --rose-500:#e11d48; --rose-100:#ffe4e6;
+    --neutral-900:#0f172a; --neutral-800:#334155; --neutral-600:#64748b; --neutral-500:#94a3b8;
+    --neutral-300:#cbd5e1; --neutral-200:#e2e8f0; --neutral-100:#f1f5f9; --neutral-50:#f8fafc;
+    --white:#ffffff; --font-serif:'Georgia', 'Times New Roman', serif; --font-sans:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --radius-xl:20px; --radius-lg:14px; --radius-md:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-sans);background:var(--brand-50);color:var(--neutral-900);min-height:100vh}
+  .app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+  .sidebar{background:linear-gradient(180deg,var(--brand-900) 0%,var(--brand-800) 100%);color:var(--white);padding:28px 22px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .sidebar-brand{display:flex;align-items:center;gap:12px;margin-bottom:28px;animation:fadeDown .6s ease-out both}
+  .sidebar-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--accent-400),var(--accent-500));display:grid;place-items:center;font-family:var(--font-serif);font-weight:700;font-size:16px;color:var(--brand-900)}
+  .sidebar-name{font-family:var(--font-serif);font-size:16px;font-weight:700;line-height:1.15}
+  .nav-group{margin-top:8px}
+  .nav-group-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.45);padding:12px 12px 6px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;color:rgba(255,255,255,.78);text-decoration:none;transition:background .2s ease,color .2s ease,transform .15s ease}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:var(--white);transform:translateX(2px)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(217,119,6,.18),rgba(217,119,6,.06));color:var(--accent-300);font-weight:600}
+  .nav-icon{width:18px;height:18px;display:grid;place-items:center;opacity:.85}
+  .main{padding:36px 40px 60px;overflow-y:auto}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;animation:fadeDown .6s ease-out both}
+  .topbar-left h1{font-family:var(--font-serif);font-size:30px;font-weight:700;letter-spacing:-.02em}
+  .topbar-left p{color:var(--neutral-600);font-size:14px;margin-top:4px}
+  .kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:28px}
+  .kpi-tile{background:var(--white);border:1px solid var(--neutral-200);border-radius:var(--radius-xl);padding:22px 24px;box-shadow:0 10px 30px rgba(15,23,42,.05);animation:fadeUp .6s ease-out both;transition:transform .2s ease,box-shadow .2s ease}
+  .kpi-tile:nth-child(1){animation-delay:.05s} .kpi-tile:nth-child(2){animation-delay:.1s} .kpi-tile:nth-child(3){animation-delay:.15s} .kpi-tile:nth-child(4){animation-delay:.2s}
+  .kpi-tile:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(15,23,42,.08)}
+  .kpi-label{font-size:12px;font-weight:700;color:var(--neutral-600);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+  .kpi-value{font-family:var(--font-serif);font-size:30px;font-weight:700;color:var(--neutral-900);letter-spacing:-.02em}
+  .kpi-meta{font-size:12px;color:var(--neutral-600);margin-top:6px}
+  .panels{display:grid;grid-template-columns:1.3fr 1fr;gap:20px}
+  .panel{background:var(--white);border:1px solid var(--neutral-200);border-radius:var(--radius-xl);padding:24px;box-shadow:0 10px 30px rgba(15,23,42,.05);animation:fadeUp .7s .2s ease-out both}
+  .panel h3{font-family:var(--font-serif);font-size:17px;font-weight:700;margin-bottom:14px;color:var(--neutral-900)}
+  .panel p{margin-bottom:8px;color:var(--neutral-800)}
+  .mini-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--neutral-100)}
+  .mini-row:last-child{border-bottom:none}
+  .mini-meta{font-size:12px;color:var(--neutral-600)}
+  .pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;display:inline-block}
+  .pill.confirmed{background:var(--accent-100);color:var(--accent-600)}
+  .pill.in-progress{background:var(--earth-100);color:var(--earth-600)}
+  .pill.pending{background:var(--sky-100);color:var(--sky-600)}
+  .pill.paid{background:var(--earth-100);color:var(--earth-600)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+  @media (max-width:960px){.app{grid-template-columns:1fr}.sidebar{display:none}.main{padding:24px}.panels{grid-template-columns:1fr}.kpi-strip{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-mark">V</div>
+      <div class="sidebar-name">Vibespot<br/>Reservations</div>
+    </div>
+    <nav class="nav-group">
+      <div class="nav-group-title">Dashboard</div>
+      <a class="nav-item active" href="01-dashboard.html"><span class="nav-icon">◆</span> Overview</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Reservations</div>
+      <a class="nav-item" href="02-reservations.html"><span class="nav-icon">▦</span> All Reservations</a>
+      <a class="nav-item" href="03-new-reservation.html"><span class="nav-icon">+</span> New Reservation</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Services</div>
+      <a class="nav-item" href="04-packages.html"><span class="nav-icon">▤</span> Packages</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Customers</div>
+      <a class="nav-item" href="05-waiting-staff.html"><span class="nav-icon">👤</span> Waiting Staff</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">WhatsApp</div>
+      <a class="nav-item" href="06-whatsapp-booking.html"><span class="nav-icon">💬</span> Booking Flow</a>
+      <a class="nav-item" href="07-whatsapp-payment.html"><span class="nav-icon">💳</span> Payment Flow</a>
+    </nav>
+    <nav class="nav-group" style="margin-top:auto">
+      <div class="nav-group-title">Admin</div>
+      <a class="nav-item" href="#reports"><span class="nav-icon">📊</span> Reports</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Dashboard</h1>
+        <p>Today’s restaurant snapshot</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn btn-primary" href="03-new-reservation.html">+ New Reservation</a>
+      </div>
+    </div>
+
+    <div class="kpi-strip">
+      <div class="kpi-tile">
+        <div class="kpi-label">Total Reservations</div>
+        <div class="kpi-value">128</div>
+        <div class="kpi-meta">Last 30 days · +12% vs prior</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Revenue</div>
+        <div class="kpi-value">GHS 24.8k</div>
+        <div class="kpi-meta">Paid reservations only · +8.4%</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Tables Used</div>
+        <div class="kpi-value">7/12</div>
+        <div class="kpi-meta">Now · 2 VIP + 5 standard</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Staff On Duty</div>
+        <div class="kpi-value">5</div>
+        <div class="kpi-meta">4 waiting · 1 host</div>
+      </div>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <h3>Today's Reservations</h3>
+        <div class="mini-row">
+          <div>
+            <div style="font-weight:700">Kofi Mensah · +233 24 111 222</div>
+            <div class="mini-meta">Classic Experience · T-04 · 18:00</div>
+          </div>
+          <span class="pill confirmed">Confirmed</span>
+        </div>
+        <div class="mini-row">
+          <div>
+            <div style="font-weight:700">Abena Owusu · +233 20 333 444</div>
+            <div class="mini-meta">Premium Dining · T-01 · 19:30</div>
+          </div>
+          <span class="pill in-progress">In Progress</span>
+        </div>
+        <div class="mini-row">
+          <div>
+            <div style="font-weight:700">Yaw Boateng · +233 20 111 333</div>
+            <div class="mini-meta">Sunset Drinks · T-12 · 20:00</div>
+          </div>
+          <span class="pill pending">Pending</span>
+        </div>
+        <div class="mini-row">
+          <div>
+            <div style="font-weight:700">Efua Osei · +233 27 999 000</div>
+            <div class="mini-meta">Business Lunch · T-07 · 12:30</div>
+          </div>
+          <span class="pill confirmed">Confirmed</span>
+        </div>
+        <div class="mini-row">
+          <div>
+            <div style="font-weight:700">Akosua Frimpong · +233 26 555 666</div>
+            <div class="mini-meta">Celebration Package · T-02 · 18:00</div>
+          </div>
+          <span class="pill paid">Paid</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Reservation Payments</h3>
+        <div class="mini-row">
+          <div>
+            <div style="font-weight:700">RES-028</div>
+            <div class="mini-meta">Kofi · Classic Experience</div>
+          </div>
+          <span class="pill paid">Paid</span>
+        </div>
+        <div class="mini-row">
+          <div>
+            <div style="font-weight:700">RES-029</div>
+            <div class="mini-meta">Abena · Premium Dining</div>
+          </div>
+          <span class="pill paid">Paid</span>
+        </div>
+        <div class="mini-row">
+          <div>
+            <div style="font-weight:700">RES-030</div>
+            <div class="mini-meta">Yaw · Sunset Drinks</div>
+          </div>
+          <span class="pill pending">Awaiting Payment</span>
+        </div>
+        <div class="mini-row">
+          <div>
+            <div style="font-weight:700">RES-031</div>
+            <div class="mini-meta">Efua · Business Lunch</div>
+          </div>
+          <span class="pill pending">Awaiting Payment</span>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -63,12 +63,18 @@ const TYPE_DEFAULTS = {
       salon_walkins: true,
       salon_client_profiles: true,
       salon_whatsapp_booking: true,
+      erpnext_accounting: false,
+      erpnext_stock: false,
+      erpnext_crm: false,
+      erpnext_hr: false,
+      erpnext_pos: false,
+      erpnext_manufacturing: false,
     },
   },
   salonDefaults: {
     salon_whatsapp_config: { enabled: false, phoneNumberId: "", token: "" },
     salon_payment_config: { currency: "GHS", depositRequired: false, defaultDepositPercent: 0 },
-    salon_sms_fallback_enabled: "false",
+    salon_sms_fallback_enabled: false,
   },
 };
 

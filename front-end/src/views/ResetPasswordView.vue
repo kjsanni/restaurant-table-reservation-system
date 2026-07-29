@@ -26,7 +26,11 @@
             minlength="8"
           />
         </div>
-        <button type="submit" class="btn-primary" :disabled="loading || !passwordsMatch">
+        <button
+          type="submit"
+          class="btn-primary"
+          :disabled="loading || !passwordsMatch"
+        >
           {{ loading ? "Resetting..." : "Reset Password" }}
         </button>
         <p v-if="message" class="message" :class="messageType">{{ message }}</p>
@@ -51,7 +55,9 @@ const loading = ref(false);
 const message = ref("");
 const messageType = ref("success");
 
-const passwordsMatch = computed(() => password.value === confirmPassword.value && password.value.length > 0);
+const passwordsMatch = computed(
+  () => password.value === confirmPassword.value && password.value.length > 0
+);
 
 const submit = async () => {
   if (!passwordsMatch.value) {
@@ -64,11 +70,13 @@ const submit = async () => {
   message.value = "";
   try {
     const res = await authAPI.resetPassword(route.query.token, password.value);
-    message.value = res.data?.message || "Password reset successful. You can now log in.";
+    message.value =
+      res.data?.message || "Password reset successful. You can now log in.";
     messageType.value = "success";
     setTimeout(() => router.push("/login"), 2000);
   } catch (err) {
-    message.value = err.response?.data?.message || "Something went wrong. Please try again.";
+    message.value =
+      err.response?.data?.message || "Something went wrong. Please try again.";
     messageType.value = "error";
   } finally {
     loading.value = false;

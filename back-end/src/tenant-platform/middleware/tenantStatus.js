@@ -6,9 +6,30 @@ const requireActiveTenant = async (req, res, next) => {
   }
 
   const tenant = req.tenant;
-  const PLATFORM_ADMIN_PATHS = ["/api/v1/admin/tenants", "/api/v1/billing", "/api/v1/public/dsar-request"];
+  const NO_TENANT_REQUIRED_PATHS = [
+    "/api/v1/admin/tenants",
+    "/api/v1/admin/plans",
+    "/api/v1/admin/payments",
+    "/api/v1/admin/usage",
+    "/api/v1/admin/revenue",
+    "/api/v1/admin/bulk",
+    "/api/v1/admin/billing-emails",
+    "/api/v1/admin/audit",
+    "/api/v1/admin/notifications",
+    "/api/v1/billing",
+    "/api/v1/public/dsar-request",
+    "/api/v1/health",
+    "/api/v1/auth/login",
+    "/api/v1/auth/register",
+    "/api/v1/auth/register/customer",
+    "/api/v1/auth/register/status",
+    "/api/v1/auth/forgot-password",
+    "/api/v1/auth/reset-password",
+    "/api/v1/auth/turnstile-config",
+  ];
   if (!tenant) {
-    if (PLATFORM_ADMIN_PATHS.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
+    if (NO_TENANT_REQUIRED_PATHS.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
+      // Safe to continue without tenant activation check for the same reasons documented in resolveTenant.js
       return next();
     }
     return res.status(500).json({

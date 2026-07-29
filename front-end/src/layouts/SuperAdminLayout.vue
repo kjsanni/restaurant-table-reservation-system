@@ -160,16 +160,10 @@ const isActive = (routeName: string) =>
               <span class="sa-user-role">Super Admin</span>
             </div>
           </div>
-          <VaSidebarItem
-            :active="false"
-            @click.stop="logout"
-            class="sa-nav-item sa-logout-item"
-          >
-            <template #icon>
-              <Icon icon="mdi:logout" width="20" height="20" />
-            </template>
+          <div class="sa-logout-item" @click="logout">
+            <Icon icon="mdi:logout" width="20" height="20" />
             <span v-if="!collapsed" class="sa-nav-text">Logout</span>
-          </VaSidebarItem>
+          </div>
         </div>
       </div>
     </aside>
@@ -353,7 +347,19 @@ const isActive = (routeName: string) =>
 }
 
 .sa-logout-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
   color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--duration-fast) var(--ease-out);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
 }
 
 .sa-logout-item:hover {

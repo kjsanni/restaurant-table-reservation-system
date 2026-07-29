@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibespot Restaurant — Reservations Mockup</title>
+<style>
+  :root {
+    --terracotta:#c45c3e; --terracotta-light:#d97b5c; --terracotta-dark:#a3442d;
+    --gold:#d4a853; --gold-light:#e8c87a; --gold-dark:#b8923f;
+    --charcoal:#1a1a1a; --charcoal-light:#2d2d2d;
+    --cream:#faf8f5; --cream-dark:#f0ece4;
+    --forest:#2d5a3d; --forest-light:#3d7a52;
+    --sand:#e8dcc8; --sand-dark:#d4c4a8;
+    --white:#ffffff;
+    --font-serif:'Georgia', 'Times New Roman', serif;
+    --font-sans:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --radius-xl:24px; --radius-lg:16px; --radius-md:12px; --radius-sm:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--font-sans);background:var(--cream);color:var(--charcoal);overflow-x:hidden}
+
+  .hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1704253800593-9b667cdcd47a?fm=jpg&q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;filter:brightness(0.5) saturate(1.15)}
+  .hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg, rgba(196,92,62,0.35) 0%, rgba(45,90,61,0.4) 100%)}
+  .hero-pattern{position:absolute;inset:0;opacity:0.12;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+
+  .hero-content{position:relative;z-index:10;text-align:center;max-width:800px;padding:0 24px;animation:heroIn 1s ease-out both}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.2);padding:8px 20px;border-radius:999px;color:var(--gold-light);font-size:13px;font-weight:600;letter-spacing:0.05em;margin-bottom:24px;text-transform:uppercase}
+  .hero-badge::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold)}
+  .hero-title{font-family:var(--font-serif);font-size:clamp(48px, 7vw, 80px);font-weight:700;color:var(--white);line-height:1.05;letter-spacing:-0.03em;margin-bottom:20px;text-shadow:0 4px 30px rgba(0,0,0,0.3)}
+  .hero-title span{color:var(--gold-light);font-style:italic}
+  .hero-sub{font-size:clamp(16px, 2.2vw, 20px);color:rgba(255,255,255,0.9);line-height:1.6;margin-bottom:40px;max-width:600px;margin-left:auto;margin-right:auto;font-weight:300}
+  .hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+  .btn{padding:16px 32px;border-radius:999px;font-weight:700;font-size:15px;text-decoration:none;display:inline-flex;align-items:center;gap:10px;transition:all 0.3s ease;border:none;cursor:pointer}
+  .btn-primary{background:linear-gradient(135deg, var(--terracotta), var(--terracotta-dark));color:var(--white);box-shadow:0 8px 30px rgba(196,92,62,0.4)}
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(196,92,62,0.5)}
+  .btn-secondary{background:rgba(255,255,255,0.1);backdrop-filter:blur(12px);color:var(--white);border:1px solid rgba(255,255,255,0.25)}
+  .btn-secondary:hover{background:rgba(255,255,255,0.2);transform:translateY(-3px)}
+
+  .scroll-indicator{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;animation:bounce 2s infinite}
+  .scroll-indicator span{width:24px;height:24px;border-right:2px solid rgba(255,255,255,0.7);border-bottom:2px solid rgba(255,255,255,0.7);transform:rotate(45deg)}
+
+  .section{padding:100px 24px;position:relative}
+  .section-inner{max-width:1200px;margin:0 auto}
+  .section-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:var(--terracotta);margin-bottom:12px}
+  .section-title{font-family:var(--font-serif);font-size:clamp(32px, 4vw, 48px);font-weight:700;color:var(--charcoal);letter-spacing:-0.02em;margin-bottom:16px;line-height:1.15}
+  .section-desc{font-size:17px;color:var(--charcoal-light, #4a4a4a);max-width:640px;line-height:1.7;margin-bottom:60px}
+
+  .features{display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:24px}
+  .feature{background:var(--white);border-radius:var(--radius-xl);padding:32px;box-shadow:0 4px 24px rgba(26,26,26,0.06);border:1px solid var(--sand);transition:all 0.4s ease;opacity:0;transform:translateY(30px)}
+  .feature.visible{opacity:1;transform:translateY(0)}
+  .feature:hover{transform:translateY(-6px);box-shadow:0 20px 50px rgba(26,26,26,0.12)}
+  .feature-icon{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:26px;margin-bottom:20px}
+  .feature:nth-child(1) .feature-icon{background:linear-gradient(135deg, #fde8e0, #fad4c8);color:var(--terracotta)}
+  .feature:nth-child(2) .feature-icon{background:linear-gradient(135deg, #e8f0e4, #d4e4ce);color:var(--forest)}
+  .feature:nth-child(3) .feature-icon{background:linear-gradient(135deg, #fdf6e3, #f9ecc8);color:var(--gold-dark)}
+  .feature:nth-child(4) .feature-icon{background:linear-gradient(135deg, #f0e4f4, #e0cce8);color:#7c3a8c}
+  .feature:nth-child(5) .feature-icon{background:linear-gradient(135deg, #e4f0f6, #cce0ec);color:#1e5a8c}
+  .feature:nth-child(6) .feature-icon{background:linear-gradient(135deg, #f6f0e4, #ece0c8);color:#8c6a1e}
+  .feature h3{font-family:var(--font-serif);font-size:20px;font-weight:700;margin-bottom:8px;color:var(--charcoal)}
+  .feature p{font-size:14px;color:var(--charcoal-light, #5a5a5a);line-height:1.6}
+  .feature-link{display:inline-flex;align-items:center;gap:6px;margin-top:16px;font-size:13px;font-weight:700;color:var(--terracotta);text-decoration:none;transition:gap 0.2s ease}
+  .feature-link:hover{gap:10px}
+  .feature-link::after{content:'→';font-size:16px}
+
+  .showcase{background:linear-gradient(180deg, var(--cream) 0%, var(--sand-dark) 100%)}
+  .showcase-grid{display:grid;grid-template-columns:repeat(12, 1fr);gap:20px}
+  .showcase-item{border-radius:var(--radius-lg);overflow:hidden;position:relative;box-shadow:0 8px 30px rgba(26,26,26,0.1);opacity:0;transform:translateY(30px);transition:all 0.6s ease}
+  .showcase-item.visible{opacity:1;transform:translateY(0)}
+  .showcase-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.6s ease}
+  .showcase-item:hover img{transform:scale(1.05)}
+  .showcase-item::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg, transparent 50%, rgba(26,26,26,0.7) 100%);pointer-events:none}
+  .showcase-caption{position:absolute;bottom:0;left:0;right:0;padding:24px;color:var(--white);z-index:2;transform:translateY(8px);transition:transform 0.3s ease}
+  .showcase-item:hover .showcase-caption{transform:translateY(0)}
+  .showcase-caption h4{font-family:var(--font-serif);font-size:18px;font-weight:700;margin-bottom:4px}
+  .showcase-caption p{font-size:13px;opacity:0.85}
+
+  .showcase-item:nth-child(1){grid-column:span 7;aspect-ratio:16/10}
+  .showcase-item:nth-child(2){grid-column:span 5;aspect-ratio:4/5}
+  .showcase-item:nth-child(3){grid-column:span 4;aspect-ratio:3/4}
+  .showcase-item:nth-child(4){grid-column:span 8;aspect-ratio:16/9}
+
+  .stats{display:grid;grid-template-columns:repeat(4, 1fr);gap:24px;margin-top:80px}
+  .stat{text-align:center;padding:32px 20px;background:var(--white);border-radius:var(--radius-xl);box-shadow:0 4px 20px rgba(26,26,26,0.05);opacity:0;transform:translateY(20px);transition:all 0.6s ease}
+  .stat.visible{opacity:1;transform:translateY(0)}
+  .stat-value{font-family:var(--font-serif);font-size:42px;font-weight:700;color:var(--terracotta);line-height:1;margin-bottom:8px}
+  .stat-label{font-size:13px;color:var(--charcoal-light, #6a6a6a);font-weight:600;text-transform:uppercase;letter-spacing:0.08em}
+
+  footer{background:var(--charcoal);color:rgba(255,255,255,0.7);padding:60px 24px 30px;text-align:center}
+  .footer-brand{font-family:var(--font-serif);font-size:24px;font-weight:700;color:var(--white);margin-bottom:12px}
+  .footer-links{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:24px}
+  .footer-links a{color:var(--gold-light);text-decoration:none;font-size:14px;font-weight:600;transition:color 0.2s ease}
+  .footer-links a:hover{color:var(--white)}
+  .footer-copy{font-size:13px;opacity:0.6}
+
+  .pattern-strip{height:12px;background:repeating-linear-gradient(90deg, var(--terracotta) 0px, var(--terracotta) 20px, var(--gold) 20px, var(--gold) 40px, var(--forest) 40px, var(--forest) 60px);opacity:0.9}
+
+  @keyframes heroIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes bounce{0%,20%,50%,80%,100%{transform:translateX(-50%) translateY(0)}40%{transform:translateX(-50%) translateY(-8px)}60%{transform:translateX(-50%) translateY(-4px)}}
+
+  @media(max-width:960px){
+    .showcase-grid{grid-template-columns:1fr}
+    .showcase-item:nth-child(n){grid-column:span 1;aspect-ratio:4/3}
+    .stats{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:640px){
+    .stats{grid-template-columns:1fr}
+    .hero-actions{flex-direction:column;align-items:center}
+    .btn{width:100%;justify-content:center}
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-pattern"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Vibespot Ghana</div>
+    <h1>Reserve Your <span>Table</span> Instantly</h1>
+    <p class="hero-sub">A WhatsApp-first reservation experience built for Ghanaian dinners, celebrations, and nights out with friends.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="01-dashboard.html"><span>Explore Mockup</span></a>
+      <a class="btn btn-secondary" href="#showcase"><span>Preview Screens</span></a>
+    </div>
+  </div>
+  <div class="scroll-indicator"><span></span>Scroll</div>
+</section>
+
+<div class="pattern-strip"></div>
+
+<section class="section" id="features">
+  <div class="section-inner">
+    <div class="section-label">Platform Features</div>
+    <h2 class="section-title">Everything you need to run a modern restaurant</h2>
+    <p class="section-desc">From WhatsApp bookings to real-time staff assignments, our system handles reservations, packages, and payments — all in one place.</p>
+    <div class="features">
+      <a class="feature" href="02-reservations.html">
+        <div class="feature-icon">📋</div>
+        <h3>Smart Reservations</h3>
+        <p>Manage bookings for Ghanaian dinners and events with status tracking, guest counts, table assignments, and live updates.</p>
+        <span class="feature-link">View reservations</span>
+      </a>
+      <a class="feature" href="04-packages.html">
+        <div class="feature-icon">🍽️</div>
+        <h3>Curated Packages</h3>
+        <p>Create dining packages for celebrations and business gatherings with included drinks, pricing, and duration.</p>
+        <span class="feature-link">Browse packages</span>
+      </a>
+      <a class="feature" href="06-whatsapp-booking.html">
+        <div class="feature-icon">💬</div>
+        <h3>WhatsApp Booking</h3>
+        <p>Friends reserve tables directly through WhatsApp chat — the easiest way to book dinner or an event in Ghana.</p>
+        <span class="feature-link">See booking flow</span>
+      </a>
+      <a class="feature" href="07-whatsapp-payment.html">
+        <div class="feature-icon">💳</div>
+        <h3>WhatsApp Payments</h3>
+        <p>Pay for reservations and event packages instantly via MTN MoMo, Vodafone Cash, AirtelTigo, or card.</p>
+        <span class="feature-link">View payment flow</span>
+      </a>
+      <a class="feature" href="05-waiting-staff.html">
+        <div class="feature-icon">👤</div>
+        <h3>Waiting Staff</h3>
+        <p>Track assigned tables, orders, and live service status for your floor team during busy events and weekends.</p>
+        <span class="feature-link">Staff dashboard</span>
+      </a>
+      <a class="feature" href="01-dashboard.html">
+        <div class="feature-icon">📊</div>
+        <h3>Live Dashboard</h3>
+        <p>Real-time KPIs for reservations, revenue, tables in use, and staff on duty — perfect for Ghanaian restaurant peak hours.</p>
+        <span class="feature-link">Open dashboard</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section showcase" id="showcase">
+  <div class="section-inner">
+    <div class="section-label">Screen Preview</div>
+    <h2 class="section-title">Built for Ghanaian dinners and events</h2>
+    <p class="section-desc">From Accra get-togethers to weekend celebrations, the experience is designed around how people actually dine and connect in Ghana.</p>
+    <div class="showcase-grid">
+      <div class="showcase-item">
+        <img src="https://images.unsplash.com/photo-1661506037768-7c5c1f0aadaf?fm=jpg&q=80&w=800&auto=format&fit=crop" alt="Young adults toasting at dinner" loading="lazy" />
+        <div class="showcase-caption"><h4>Dashboard Overview</h4><p>KPIs, bookings, and payment status at a glance.</p></div>
+      </div>
+      <div class="showcase-item">
+        <img src="https://images.unsplash.com/photo-1751748951873-a27688579b9d?fm=jpg&q=80&w=600&auto=format&fit=crop" alt="Bartenders preparing drinks at a Ghanaian event" loading="lazy" />
+        <div class="showcase-caption"><h4>Reservations List</h4><p>Status chips, guest counts, and table assignments.</p></div>
+      </div>
+      <div class="showcase-item">
+        <img src="https://images.unsplash.com/photo-1658734029424-089ff85387e7?fm=jpg&q=80&w=600&auto=format&fit=crop" alt="Group outside restaurant" loading="lazy" />
+        <div class="showcase-caption"><h4>Packages &amp; Drinks</h4><p>Curated inclusions for every dining experience.</p></div>
+      </div>
+      <div class="showcase-item">
+        <img src="https://images.unsplash.com/photo-1647796310365-8741019c7ca9?fm=jpg&q=80&w=800&auto=format&fit=crop" alt="DJ mixing at an Accra event" loading="lazy" />
+        <div class="showcase-caption"><h4>WhatsApp Experience</h4><p>Booking and payments happen where people already are.</p></div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-value">7</div><div class="stat-label">Screens</div></div>
+      <div class="stat"><div class="stat-value">WhatsApp</div><div class="stat-label">First Booking</div></div>
+      <div class="stat"><div class="stat-value">GHS</div><div class="stat-label">Local Payments</div></div>
+      <div class="stat"><div class="stat-value">GH</div><div class="stat-label">Made for Ghana</div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="pattern-strip" style="margin-bottom:40px;opacity:0.5"></div>
+  <div class="footer-brand">Vibespot Reservations</div>
+  <div class="footer-links">
+    <a href="01-dashboard.html">Dashboard</a>
+    <a href="02-reservations.html">Reservations</a>
+    <a href="04-packages.html">Packages</a>
+    <a href="06-whatsapp-booking.html">WhatsApp</a>
+    <a href="07-whatsapp-payment.html">Payments</a>
+  </div>
+  <p class="footer-copy">Restaurant Table Reservation System — Vibespot Technologies Ltd. Ghana</p>
+</footer>
+
+<script>
+  const observer=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}})},{threshold:0.15,rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.feature, .showcase-item, .stat').forEach(el=>observer.observe(el));
+</script>
+
+</body>
+</html>

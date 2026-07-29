@@ -5,6 +5,11 @@ Built with Node + Express + Sequelize + MySQL backend and Vue 3 + TypeScript + V
 Ghana locale (GHS), Paystack payments, WhatsApp ordering, ShaQ Express delivery, DPA 2012 compliance.
 Single-tenant by default; multi-tenant platform code lives under `back-end/src/tenant-platform/` and is gated behind `TENANT_MODE=enabled`.
 
+**Current session additions:**
+- Platform roles, webhook endpoints/notifications, reviews, custom reports, customer loyalty/marketing/waitlist, status/docs, tenant signup.
+- Postman/Newman API testing integration.
+- PWA manifest + service worker baseline.
+
 ## Agent Instructions
 
 - [AGENTS.md](AGENTS.md): Project conventions, verification commands, recommended skills, and critical constraints (do not commit unless asked, do not reintroduce NOT NULL/PARTITION BY on `tenantId`, sync Obsidian vault after work, refresh this file on architecture shifts).
@@ -37,10 +42,11 @@ Single-tenant by default; multi-tenant platform code lives under `back-end/src/t
 
 ## Key Routes
 
-- Public: `/`, `/customer`, `/login`, `/register`, `/menu`, `/checkout`, `/about`, `/legal/:slug`
+- Public: `/`, `/customer`, `/login`, `/register`, `/menu`, `/checkout`, `/about`, `/legal/:slug`, `/status`, `/api-docs`
 - Tenant: `/dashboard`, `/reservations`, `/new-reservation`, `/tables/manage`, `/schedule`, `/calendar`, `/floor-plan`, `/reports`, `/orders/manage`, `/deliveries`, `/payments`, `/revenue`, `/staff/manage`, `/roles/manage`, `/groups/manage`, `/waitlist`, `/audit-logs`, `/search`, `/menu/manage`, `/admin/settings/*`
-- Super-admin (requires `manage_tenants`): `/admin/overview`, `/admin/tenants`, `/admin/tenants/:id/*` (detail, api-keys, branding, grace-period, timeline, notes, trial, invoices, onboarding, dsar), `/admin/plans`, `/admin/payments`, `/admin/usage`, `/admin/revenue`, `/admin/geographic`, `/admin/bulk`, `/admin/financial`, `/admin/feature-flags`, `/admin/integrations`, `/admin/impersonation`, `/admin/analytics`, `/admin/billing-emails`, `/admin/backups`, `/admin/alert-rules`, `/admin/penetration-tests`, `/admin/insurance-documents`, `/admin/encryption-keys`, `/admin/auto-scaling`, `/admin/compliance`, `/admin/failover`, `/admin/maintenance`, `/admin/trust-safety`, `/admin/support-tickets`, `/admin/support-templates`, `/admin/support-chat`, `/admin/monitoring/*`, `/admin/vertical-analytics`, `/admin/vertical-templates`, `/admin/compliance-rules`, `/admin/notification-templates`, `/admin/announcements`, `/admin/data-retention/*`, `/admin/audit`, `/admin/incidents`, `/admin/suspicious-activity`, `/admin/sub-processors`, `/admin/platform-reports`, `/admin/reconciliation`, `/admin/paystack`, `/admin/whatsapp-delivery-failures`, `/admin/shaqexpress-order-conversion`, `/admin/whatsapp-support-ticket-analytics`, `/admin/marketplace`, `/admin/case-studies`, `/admin/referrals`, `/admin/tenant-data-export`, `/admin/cross-tenant-search`, `/admin/data-anonymization`, `/admin/debug`, `/admin/status`, `/admin/migration`, `/admin/change-management`, `/admin/postmortems`, `/admin/fraud`, `/admin/at-risk-tenants`, `/admin/notifications`, `/admin/benchmarks`
-- Customer portal: `/portal`, `/portal/profile`, `/portal/reservations`, `/portal/orders`, `/portal/appointments` (salon), `/portal/gift-cards` (salon), `/portal/referrals` (salon), `/portal/packages` (salon)
+- Super-admin (requires `manage_tenants`): `/admin/overview`, `/admin/tenants`, `/admin/tenants/:id/*` (detail, api-keys, branding, grace-period, timeline, notes, trial, invoices, onboarding, dsar), `/admin/plans`, `/admin/payments`, `/admin/usage`, `/admin/revenue`, `/admin/geographic`, `/admin/bulk`, `/admin/financial`, `/admin/feature-flags`, `/admin/integrations`, `/admin/impersonation`, `/admin/analytics`, `/admin/billing-emails`, `/admin/backups`, `/admin/alert-rules`, `/admin/penetration-tests`, `/admin/insurance-documents`, `/admin/encryption-keys`, `/admin/auto-scaling`, `/admin/compliance`, `/admin/failover`, `/admin/maintenance`, `/admin/trust-safety`, `/admin/support-tickets`, `/admin/support-templates`, `/admin/support-chat`, `/admin/monitoring/*`, `/admin/vertical-analytics`, `/admin/vertical-templates`, `/admin/compliance-rules`, `/admin/notification-templates`, `/admin/announcements`, `/admin/data-retention/*`, `/admin/audit`, `/admin/incidents`, `/admin/suspicious-activity`, `/admin/sub-processors`, `/admin/platform-reports`, `/admin/reconciliation`, `/admin/paystack`, `/admin/whatsapp-delivery-failures`, `/admin/shaqexpress-order-conversion`, `/admin/whatsapp-support-ticket-analytics`, `/admin/marketplace`, `/admin/case-studies`, `/admin/referrals`, `/admin/tenant-data-export`, `/admin/cross-tenant-search`, `/admin/data-anonymization`, `/admin/debug`, `/admin/status`, `/admin/migration`, `/admin/change-management`, `/admin/postmortems`, `/admin/fraud`, `/admin/at-risk-tenants`, `/admin/notifications`, `/admin/benchmarks`, `/admin/platform-roles`, `/admin/reviews`, `/admin/custom-reports`
+- Tenant signup/public: `/tenant/signup`, `/api/v1/tenant-signup`
+- Customer portal: `/portal`, `/portal/profile`, `/portal/reservations`, `/portal/orders`, `/portal/appointments` (salon), `/portal/gift-cards` (salon), `/portal/referrals` (salon), `/portal/packages` (salon), `/portal/loyalty`, `/portal/promotions`, `/portal/waitlist`
 - Salon vertical: `/appointments`, `/stations`, `/station-map`, `/services`, `/packages`, `/gift-cards`, `/referrals`, `/locations`, `/inventory`, `/expenses`, `/pricing`, `/salon/*` (settings, walkins, calendar, shifts, schedule, holidays, reports, recurring, clients, marketing, gallery, unified-schedule, whatsapp-bookings, whatsapp-payments, dashboard, staff)
 - Tenant login by slug: `/t/:tenantSlug/login`
 - Customer portal by slug: `/t/:tenantSlug/portal`
@@ -95,8 +101,9 @@ npm run test:e2e                      # Playwright E2E
 
 ## Verification Gates
 
-- **Backend**: `cd back-end && npm test` — 447 Jest tests; must stay green (catches cross-tenant leaks and RBAC regressions).
-- **Frontend**: `cd front-end && npm run lint && npm run build && npm run test:unit` — lint, build, and 22 unit tests must pass.
+- **Backend**: `cd back-end && npm test` — 552 Jest tests; must stay green (catches cross-tenant leaks and RBAC regressions).
+- **Frontend**: `cd front-end && npm run lint && npm run build && npm run test:unit` — lint, build, and unit tests must pass.
+- **API integration**: Postman collection + Newman for smoke and regression testing of `/api/v1/*` endpoints.
 - **Migrations**: `npm run migrate:up` — replays from earliest unapplied migration; keep `up()` idempotent.
 - **Dependency advisories**: Dependabot PRs are merged after review; recent example: postcss 8.5.23 security patch (source-map path-traversal fix).
 - **Versioning**: `VERSION` file at repo root tracks current release; git tags mark release boundaries (e.g., `v1.1.0`).

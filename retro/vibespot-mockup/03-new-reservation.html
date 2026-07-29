@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibespot Restaurant — New Reservation</title>
+<style>
+  :root {
+    --brand-900:#0f172a; --brand-800:#1e293b; --brand-700:#334155; --brand-600:#475569;
+    --brand-500:#64748b; --brand-400:#94a3b8; --brand-300:#cbd5e1; --brand-200:#e2e8f0; --brand-100:#f1f5f9; --brand-50:#f8fafc;
+    --accent-600:#b45309; --accent-500:#d97706; --accent-400:#f59e0b; --accent-300:#fbbf24; --accent-100:#fef3c7; --accent-50:#fffbeb;
+    --earth-600:#14532d; --earth-500:#15803d; --earth-100:#dcfce7;
+    --sky-600:#1e40af; --sky-500:#3b82f6; --sky-100:#dbeafe;
+    --rose-600:#be123c; --rose-500:#e11d48; --rose-100:#ffe4e6;
+    --neutral-900:#0f172a; --neutral-800:#334155; --neutral-600:#64748b; --neutral-500:#94a3b8;
+    --neutral-300:#cbd5e1; --neutral-200:#e2e8f0; --neutral-100:#f1f5f9; --neutral-50:#f8fafc;
+    --white:#ffffff; --font-serif:'Georgia', 'Times New Roman', serif; --font-sans:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --radius-xl:20px; --radius-lg:14px; --radius-md:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-sans);background:var(--brand-50);color:var(--neutral-900);min-height:100vh}
+  .app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+  .sidebar{background:linear-gradient(180deg,var(--brand-900) 0%,var(--brand-800) 100%);color:var(--white);padding:28px 22px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .sidebar-brand{display:flex;align-items:center;gap:12px;margin-bottom:28px;animation:fadeDown .6s ease-out both}
+  .sidebar-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--accent-400),var(--accent-500));display:grid;place-items:center;font-family:var(--font-serif);font-weight:700;font-size:16px;color:var(--brand-900)}
+  .sidebar-name{font-family:var(--font-serif);font-size:16px;font-weight:700;line-height:1.15}
+  .nav-group{margin-top:8px}
+  .nav-group-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.45);padding:12px 12px 6px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:14px;font-weight:500;color:rgba(255,255,255,.78);text-decoration:none;transition:background .2s ease,color .2s ease,transform .15s ease}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:var(--white);transform:translateX(2px)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(217,119,6,.18),rgba(217,119,6,.06));color:var(--accent-300);font-weight:600}
+  .nav-icon{width:18px;height:18px;display:grid;place-items:center;opacity:.85}
+  .main{padding:36px 40px 60px;overflow-y:auto}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;animation:fadeDown .6s ease-out both}
+  .topbar-left h1{font-family:var(--font-serif);font-size:30px;font-weight:700;letter-spacing:-.02em}
+  .topbar-left p{color:var(--neutral-600);font-size:14px;margin-top:4px}
+  .form-card{background:var(--white);border:1px solid var(--neutral-200);border-radius:var(--radius-xl);padding:26px;box-shadow:0 10px 30px rgba(15,23,42,.05);animation:fadeUp .7s .15s ease-out both}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field.full{grid-column:1/-1}
+  .field label{font-size:11px;font-weight:700;color:var(--neutral-600);text-transform:uppercase;letter-spacing:.08em}
+  .field input,.field select,.field textarea{padding:11px 13px;border-radius:var(--radius-md);border:1px solid var(--neutral-300);font-family:var(--font-sans);font-size:14px;background:var(--white);color:var(--neutral-900);transition:box-shadow .2s ease,border-color .2s ease}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent-500);box-shadow:0 0 0 3px rgba(217,119,6,.15)}
+  .form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+  .package-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .package-option{padding:12px;border:2px solid var(--neutral-200);border-radius:var(--radius-md);cursor:pointer;transition:border-color .2s ease,background .2s ease}
+  .package-option:hover{border-color:var(--accent-300);background:var(--accent-50)}
+  .package-option b{display:block;font-size:14px;color:var(--neutral-900)}
+  .package-option span{font-size:12px;color:var(--neutral-600)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+  @media (max-width:960px){.app{grid-template-columns:1fr}.sidebar{display:none}.main{padding:24px}.form-grid{grid-template-columns:1fr}.package-options{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-mark">V</div>
+      <div class="sidebar-name">Vibespot<br/>Reservations</div>
+    </div>
+    <nav class="nav-group">
+      <div class="nav-group-title">Dashboard</div>
+      <a class="nav-item" href="01-dashboard.html"><span class="nav-icon">◆</span> Overview</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Reservations</div>
+      <a class="nav-item" href="02-reservations.html"><span class="nav-icon">▦</span> All Reservations</a>
+      <a class="nav-item active" href="03-new-reservation.html"><span class="nav-icon">+</span> New Reservation</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Services</div>
+      <a class="nav-item" href="04-packages.html"><span class="nav-icon">▤</span> Packages</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">Customers</div>
+      <a class="nav-item" href="05-waiting-staff.html"><span class="nav-icon">👤</span> Waiting Staff</a>
+    </nav>
+    <nav class="nav-group">
+      <div class="nav-group-title">WhatsApp</div>
+      <a class="nav-item" href="06-whatsapp-booking.html"><span class="nav-icon">💬</span> Booking Flow</a>
+      <a class="nav-item" href="07-whatsapp-payment.html"><span class="nav-icon">💳</span> Payment Flow</a>
+    </nav>
+    <nav class="nav-group" style="margin-top:auto">
+      <div class="nav-group-title">Admin</div>
+      <a class="nav-item" href="#reports"><span class="nav-icon">📊</span> Reports</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>New Reservation</h1>
+        <p>Create a booking with package, guest count, and inclusions.</p>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <form onsubmit="event.preventDefault();alert('Demo only')">
+        <div class="form-grid">
+          <div class="field full">
+            <label>Customer</label>
+            <input type="text" placeholder="Full name" />
+          </div>
+          <div class="field">
+            <label>Phone (WhatsApp)</label>
+            <input type="tel" placeholder="+233 ..." />
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" placeholder="name@example.com" />
+          </div>
+
+          <div class="field full">
+            <label>Package</label>
+            <div class="package-options">
+              <div class="package-option"><b>Classic Experience</b><span>GHS 150 · 2 hrs · Welcome drinks</span></div>
+              <div class="package-option"><b>Premium Dining</b><span>GHS 350 · 3 hrs · Cocktails included</span></div>
+              <div class="package-option"><b>Family Feast</b><span>GHS 500 · 3 hrs · Kids menu + drinks</span></div>
+              <div class="package-option"><b>Business Lunch</b><span>GHS 200 · 1.5 hrs · Coffee/tea/water</span></div>
+              <div class="package-option"><b>Sunset Drinks</b><span>GHS 280 · 2 hrs · Terrace seating</span></div>
+              <div class="package-option"><b>Celebration</b><span>GHS 600 · 4 hrs · Champagne + cake</span></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Date</label>
+            <input type="date" />
+          </div>
+          <div class="field">
+            <label>Time</label>
+            <input type="time" />
+          </div>
+          <div class="field">
+            <label>Guests</label>
+            <input type="number" min="1" value="2" />
+          </div>
+          <div class="field">
+            <label>Table Preference</label>
+            <select>
+              <option>T-01 (VIP)</option>
+              <option>T-02 (Large)</option>
+              <option>T-04 (Standard)</option>
+              <option>T-07 (Standard)</option>
+              <option>T-12 (Terrace)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Assigned Staff</label>
+            <select>
+              <option>Ama</option>
+              <option>Kwame</option>
+              <option>Kofi</option>
+              <option>Fatima</option>
+              <option>Yaw</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Payment Status</label>
+            <select>
+              <option>Unpaid</option>
+              <option>Paid</option>
+              <option>Deposit Paid</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label>Notes</label>
+            <textarea rows="3" placeholder="Allergies, seating, special requests..."></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <a class="btn btn-secondary" href="02-reservations.html">Cancel</a>
+          <button class="btn btn-primary" type="submit">Save Reservation</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+</body>
+</html>

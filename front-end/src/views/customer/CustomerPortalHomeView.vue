@@ -26,6 +26,9 @@ const portalLinks = computed(() => {
       path: "/portal/reservations",
       icon: "mdi:calendar",
     },
+    { name: "Waitlist", path: "/portal/waitlist", icon: "mdi:clock-time-four" },
+    { name: "Promotions", path: "/portal/promotions", icon: "mdi:tag" },
+    { name: "Loyalty", path: "/portal/loyalty", icon: "mdi:star" },
     { name: "Orders", path: "/portal/orders", icon: "mdi:food" },
   ];
   if (isSalon.value) {

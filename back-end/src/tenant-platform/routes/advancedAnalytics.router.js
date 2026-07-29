@@ -20,4 +20,24 @@ router
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(advancedAnalyticsController.getLtvCacHandler))
   .all(httpMethodError);
 
+router
+  .route("/revenue")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(advancedAnalyticsController.getRevenueAnalyticsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/bookings")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(advancedAnalyticsController.getBookingAnalyticsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/payments")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(advancedAnalyticsController.getPaymentAnalyticsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/usage")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(advancedAnalyticsController.getUsageAnalyticsHandler))
+  .all(httpMethodError);
+
 module.exports = router;

@@ -76,7 +76,14 @@ const resetPassword = async (token, password) => {
   return await API.post("/auth/reset-password", { token, password });
 };
 
-const registerCustomer = async (email, password, firstName, lastName, phone, cfTurnstileToken) => {
+const registerCustomer = async (
+  email,
+  password,
+  firstName,
+  lastName,
+  phone,
+  cfTurnstileToken
+) => {
   const payload = { email, password, firstName, lastName, phone };
   if (cfTurnstileToken) {
     payload.cfTurnstileToken = cfTurnstileToken;

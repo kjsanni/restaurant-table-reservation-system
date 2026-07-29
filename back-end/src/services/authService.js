@@ -18,7 +18,11 @@ const verifyToken = (token) => {
 };
 
 const verifyRefreshToken = (token) => {
-  return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET || getCurrentSecret());
+  const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
+  if (!refreshSecret) {
+    throw new Error("REFRESH_TOKEN_SECRET is not configured");
+  }
+  return jwt.verify(token, refreshSecret);
 };
 
 const registerUser = async (userDAO, payload, tenantId, role = "staff", options = {}) => {
@@ -152,18 +156,19 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         JWT_SECRET,
         { expiresIn: "5m" }
       );
-      return {
-        pendingTOTP: true,
-        tempToken,
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          permissions: user.permissions || {},
-          isSuperAdmin: !!user.isSuperAdmin,
-        },
-      };
+       return {
+         pendingTOTP: true,
+         tempToken,
+         user: {
+           id: user.id,
+           username: user.username,
+           email: user.email,
+           role: user.role,
+           permissions: user.permissions || {},
+           isSuperAdmin: !!user.isSuperAdmin,
+           platformRoles: user.platformRoles || [],
+         },
+       };
     }
   }
 
@@ -261,6 +266,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
       role: user.role,
       permissions,
       isSuperAdmin: !!user.isSuperAdmin,
+      platformRoles: user.platformRoles || [],
     },
   };
 };

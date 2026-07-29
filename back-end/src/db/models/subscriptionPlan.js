@@ -49,6 +49,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 7,
       },
+      erpnextModules: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: null,
+      },
     },
     {
       sequelize,

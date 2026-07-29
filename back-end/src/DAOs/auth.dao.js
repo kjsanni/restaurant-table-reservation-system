@@ -42,7 +42,7 @@ const findUserByEmail = async (email, tenantId) => {
 const findUserById = async (id, tenantId) => {
   return await User.findOne({
     where: withTenant({ id }, tenantId),
-    attributes: ["id", "username", "email", "role", "permissions", "locale", "isSuperAdmin", "createdAt", "updatedAt"],
+    attributes: ["id", "username", "email", "role", "permissions", "locale", "isSuperAdmin", "platformRoles", "tenantId", "createdAt", "updatedAt"],
   });
 };
 

@@ -1,0 +1,195 @@
+const tenantSignupController = require("../controllers/tenant-signup.controller");
+
+jest.mock("../services/authService", () => ({
+  registerUser: jest.fn(),
+  generateToken: jest.fn((userId, role) => `token-${userId}`),
+  generateRefreshToken: jest.fn(() => "refresh-token"),
+}));
+
+jest.mock("../DAOs/auth.dao", () => ({
+  findUserByEmail: jest.fn(),
+  createRefreshToken: jest.fn(),
+}));
+
+jest.mock("../tenant-platform/DAOs/tenantAdmin.dao", () => ({
+  findBySlug: jest.fn(),
+  create: jest.fn(),
+}));
+
+jest.mock("../tenant-platform/DAOs/plan.dao", () => ({
+  findBySlug: jest.fn(),
+}));
+
+jest.mock("../tenant-platform/services/tenantTypeDefaults.service", () => ({
+  applyTypeDefaults: jest.fn(),
+}));
+
+jest.mock("../db/models", () => ({
+  sequelize: {
+    transaction: jest.fn(async (fn) => fn()),
+  },
+}));
+
+const authService = require("../services/authService");
+const authDAO = require("../DAOs/auth.dao");
+const tenantAdminDAO = require("../tenant-platform/DAOs/tenantAdmin.dao");
+const planDAO = require("../tenant-platform/DAOs/plan.dao");
+const db = require("../db/models");
+
+function createReq(body = {}) {
+  return {
+    body,
+    secure: false,
+    ip: "127.0.0.1",
+    connection: { remoteAddress: "127.0.0.1" },
+    socket: { remoteAddress: "127.0.0.1" },
+  };
+}
+
+function createRes() {
+  const res = {};
+  res.status = jest.fn().mockReturnValue(res);
+  res.json = jest.fn().mockReturnValue(res);
+  res.cookie = jest.fn().mockReturnValue(res);
+  return res;
+}
+
+describe("tenant-signup.controller", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    authService.generateToken.mockImplementation((userId, role) => `token-${userId}`);
+    authService.generateRefreshToken.mockReturnValue("refresh-token");
+    db.sequelize.transaction.mockImplementation(async (fn) => fn());
+  });
+
+  it("returns 400 when required fields are missing", async () => {
+    const req = createReq({});
+    const res = createRes();
+    await tenantSignupController.signupTenantHandler(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: "Name, slug, email, and password are required",
+    });
+  });
+
+  it("returns 409 when slug is taken", async () => {
+    tenantAdminDAO.findBySlug.mockResolvedValue({ id: 1, slug: "existing" });
+    const req = createReq({
+      name: "Test Business",
+      slug: "existing",
+      email: "test@test.com",
+      password: "Password123",
+    });
+    const res = createRes();
+    await tenantSignupController.signupTenantHandler(req, res);
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: "Business slug is already taken",
+    });
+  });
+
+  it("returns 409 when email already exists", async () => {
+    tenantAdminDAO.findBySlug.mockResolvedValue(null);
+    authDAO.findUserByEmail.mockResolvedValue({ id: 1, email: "test@test.com" });
+    const req = createReq({
+      name: "Test Business",
+      slug: "new-business",
+      email: "test@test.com",
+      password: "Password123",
+    });
+    const res = createRes();
+    await tenantSignupController.signupTenantHandler(req, res);
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: "An account with this email already exists",
+    });
+  });
+
+  it("creates tenant and admin user on success", async () => {
+    tenantAdminDAO.findBySlug.mockResolvedValue(null);
+    authDAO.findUserByEmail.mockResolvedValue(null);
+    planDAO.findBySlug.mockResolvedValue({ id: 1, slug: "starter", name: "Starter" });
+
+    const mockTenant = {
+      id: 10,
+      name: "Test Business",
+      slug: "test-business",
+      plan: "starter",
+      businessVertical: "restaurant",
+      restaurantType: "full_service",
+      serviceModes: ["dine_in", "takeaway", "delivery"],
+      save: jest.fn().mockResolvedValue(true),
+    };
+    tenantAdminDAO.create.mockResolvedValue(mockTenant);
+
+    authService.registerUser.mockResolvedValue({
+      id: 20,
+      username: "test",
+      email: "test@test.com",
+      role: "admin",
+      permissions: {},
+    });
+
+    const req = createReq({
+      name: "Test Business",
+      slug: "test-business",
+      email: "test@test.com",
+      password: "Password123",
+      businessVertical: "restaurant",
+      restaurantType: "full_service",
+      serviceModes: ["dine_in", "takeaway", "delivery"],
+      planSlug: "starter",
+    });
+    const res = createRes();
+
+    await tenantSignupController.signupTenantHandler(req, res);
+
+    expect(tenantAdminDAO.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Test Business",
+        slug: "test-business",
+        plan: "starter",
+        status: "trialing",
+      }),
+      expect.any(Object)
+    );
+    expect(authService.registerUser).toHaveBeenCalledWith(
+      authDAO,
+      expect.objectContaining({
+        email: "test@test.com",
+        password: "Password123",
+      }),
+      10,
+      "admin",
+      expect.any(Object)
+    );
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.cookie).toHaveBeenCalledWith("token", "token-20", expect.any(Object));
+    expect(res.cookie).toHaveBeenCalledWith("refreshToken", "refresh-token", expect.any(Object));
+  });
+
+  it("returns 400 when plan slug is invalid", async () => {
+    tenantAdminDAO.findBySlug.mockResolvedValue(null);
+    authDAO.findUserByEmail.mockResolvedValue(null);
+    planDAO.findBySlug.mockResolvedValue(null);
+
+    const req = createReq({
+      name: "Test Business",
+      slug: "test-business",
+      email: "test@test.com",
+      password: "Password123",
+      planSlug: "nonexistent",
+    });
+    const res = createRes();
+
+    await tenantSignupController.signupTenantHandler(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: "Invalid plan selected",
+    });
+  });
+});

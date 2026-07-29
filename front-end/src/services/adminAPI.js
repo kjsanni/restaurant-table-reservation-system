@@ -856,6 +856,18 @@ const deleteComplianceEvidence = (id) => {
   return API.delete(`/admin/compliance/${id}`);
 };
 
+const listPlatformRoles = () => {
+  return API.get("/admin/platform/roles");
+};
+
+const assignPlatformRole = (userId, role) => {
+  return API.post("/admin/platform/roles/assign", { userId, role });
+};
+
+const revokePlatformRole = (userId, role) => {
+  return API.post("/admin/platform/roles/revoke", { userId, role });
+};
+
 export default {
   emailLogs,
   exportAuditLog,
@@ -1045,4 +1057,14 @@ export default {
   createComplianceEvidence,
   updateComplianceEvidence,
   deleteComplianceEvidence,
+  listPlatformRoles,
+  assignPlatformRole,
+  revokePlatformRole,
+  setupTOTP: () => API.post("/admin/totp/setup"),
+  confirmTOTP: (token) => API.post("/admin/totp/confirm", { token }),
+  disableTOTP: () => API.post("/admin/totp/disable"),
+  getTOTPStatus: () => API.get("/admin/totp/status"),
+  regenerateBackupCodes: () => API.post("/admin/totp/backup-codes/regenerate"),
+  verifyBackupCode: (code) =>
+    API.post("/admin/totp/backup-codes/verify", { code }),
 };
