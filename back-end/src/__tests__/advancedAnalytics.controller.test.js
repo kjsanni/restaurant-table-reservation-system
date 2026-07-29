@@ -86,9 +86,9 @@ describe("advancedAnalytics.controller", () => {
   });
 
   it("getUsageAnalyticsHandler returns usage data", async () => {
-    db.tenant.count.mockResolvedValueOnce(5);
-    db.reservation.count.mockResolvedValueOnce(20);
-    db.user.count.mockResolvedValueOnce(15);
+    db.tenant.count = jest.fn().mockResolvedValue(5);
+    db.reservation.count = jest.fn().mockResolvedValue(20);
+    db.user.count = jest.fn().mockResolvedValue(15);
     await advancedAnalyticsController.getUsageAnalyticsHandler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     const data = res.json.mock.calls[0][0];
