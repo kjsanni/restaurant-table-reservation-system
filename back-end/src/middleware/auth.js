@@ -73,7 +73,22 @@ const protect = async (req, res, next) => {
       // Super-admin / platform user: allow tenant-scoped routes without a
       // tenant, but only if resolveTenant was explicitly bypassed (platform
       // admin paths). If resolveTenant set one from a spoofed header, clear it.
-      if (req.tenant && !req.path.startsWith("/api/v1/admin/tenants") && !req.path.startsWith("/api/v1/admin/plans") && !req.path.startsWith("/api/v1/admin/payments") && !req.path.startsWith("/api/v1/admin/usage") && !req.path.startsWith("/api/v1/admin/revenue") && !req.path.startsWith("/api/v1/admin/bulk") && !req.path.startsWith("/api/v1/admin/billing-emails") && !req.path.startsWith("/api/v1/admin/audit") && !req.path.startsWith("/api/v1/admin/notifications")) {
+      // NOTE: This allowlist must be kept in sync with resolveTenant.js and
+      // tenantStatus.js NO_TENANT_REQUIRED_PATHS. Omitting a path here will
+      // incorrectly block platform admin access to that route.
+      const adminPathPrefixes = [
+        "/api/v1/admin/tenants",
+        "/api/v1/admin/plans",
+        "/api/v1/admin/payments",
+        "/api/v1/admin/usage",
+        "/api/v1/admin/revenue",
+        "/api/v1/admin/bulk",
+        "/api/v1/admin/billing-emails",
+        "/api/v1/admin/audit",
+        "/api/v1/admin/notifications",
+      ];
+      const isAdminPath = adminPathPrefixes.some((prefix) => req.path === prefix || req.path.startsWith(prefix + "/"));
+      if (req.tenant && !isAdminPath) {
         req.tenant = null;
       }
     }

@@ -35,16 +35,14 @@ const updateTenantFeatureFlagsHandler = async (req, res) => {
   if (erpnextFlags.length > 0) {
     const plans = await getPlansCached();
     const plan = plans[tenant.plan] || plans.starter;
-    const allowedModules = plan.erpnextModules;
+    const allowedModules = Array.isArray(plan.erpnextModules) ? plan.erpnextModules : [];
 
-    if (Array.isArray(allowedModules)) {
-      for (const flag of erpnextFlags) {
-        if (featureFlags[flag] && !allowedModules.includes(flag)) {
-          return res.status(403).json({
-            success: false,
-            message: `Plan "${tenant.plan}" does not include ERPNext module "${flag}". Upgrade your plan to enable it.`,
-          });
-        }
+    for (const flag of erpnextFlags) {
+      if (featureFlags[flag] && !allowedModules.includes(flag)) {
+        return res.status(403).json({
+          success: false,
+          message: `Plan "${tenant.plan}" does not include ERPNext module "${flag}". Upgrade your plan to enable it.`,
+        });
       }
     }
 

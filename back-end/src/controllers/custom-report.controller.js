@@ -21,7 +21,11 @@ const runCustomReportHandler = async (req, res) => {
     return res.status(200).json({ success: true, ...result });
   } catch (err) {
     console.error("runCustomReportHandler error:", err.message);
-    return res.status(err.status || 500).json({ success: false, message: err.message || "Failed to generate report" });
+    const status = err.status || 500;
+    if (status === 500) {
+      return res.status(500).json({ success: false, message: "Failed to generate report" });
+    }
+    return res.status(status).json({ success: false, message: err.message || "Failed to generate report" });
   }
 };
 

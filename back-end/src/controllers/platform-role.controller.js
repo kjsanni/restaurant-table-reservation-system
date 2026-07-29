@@ -66,15 +66,19 @@ const assignPlatformRoleHandler = async (req, res) => {
     user.platformRoles = currentRoles;
     await user.save();
 
-    await platformAuditDAO.log(
-      req.user?.id || null,
-      "platform_role_assigned",
-      "user",
-      userId,
-      req.tenant?.id,
-      { role, assignedBy: req.user?.id },
-      req.ip
-    ).catch(() => {});
+    await platformAuditDAO
+      .log(
+        req.user?.id || null,
+        "platform_role_assigned",
+        "user",
+        userId,
+        req.tenant?.id,
+        { role, assignedBy: req.user?.id },
+        req.ip
+      )
+      .catch((err) => {
+        console.error("platform_role_assigned audit log failed:", err.message);
+      });
   }
 
   return res.status(200).json({ success: true, platformRoles: user.platformRoles });
@@ -103,15 +107,19 @@ const revokePlatformRoleHandler = async (req, res) => {
     user.platformRoles = currentRoles;
     await user.save();
 
-    await platformAuditDAO.log(
-      req.user?.id || null,
-      "platform_role_revoked",
-      "user",
-      userId,
-      req.tenant?.id,
-      { role, revokedBy: req.user?.id },
-      req.ip
-    ).catch(() => {});
+    await platformAuditDAO
+      .log(
+        req.user?.id || null,
+        "platform_role_revoked",
+        "user",
+        userId,
+        req.tenant?.id,
+        { role, revokedBy: req.user?.id },
+        req.ip
+      )
+      .catch((err) => {
+        console.error("platform_role_revoked audit log failed:", err.message);
+      });
   }
 
   return res.status(200).json({ success: true, platformRoles: user.platformRoles });

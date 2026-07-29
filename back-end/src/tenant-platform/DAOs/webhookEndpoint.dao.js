@@ -14,19 +14,21 @@ webhookEndpointDAO.findAll = (filters = {}) => {
   return db.webhookEndpoint.findAll({ where });
 };
 
-webhookEndpointDAO.findById = (id) => {
-  return db.webhookEndpoint.findByPk(id);
+webhookEndpointDAO.findById = (id, tenantId = null) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  return db.webhookEndpoint.findOne({ where });
 };
 
-webhookEndpointDAO.update = (id, updates) => {
-  return db.webhookEndpoint.findByPk(id).then((record) => {
+webhookEndpointDAO.update = (id, updates, tenantId = null) => {
+  return db.webhookEndpoint.findOne({ where: { id, ...(tenantId ? { tenantId } : {}) } }).then((record) => {
     if (!record) return null;
     return record.update(updates);
   });
 };
 
-webhookEndpointDAO.remove = (id) => {
-  return db.webhookEndpoint.findByPk(id).then((record) => {
+webhookEndpointDAO.remove = (id, tenantId = null) => {
+  return db.webhookEndpoint.findOne({ where: { id, ...(tenantId ? { tenantId } : {}) } }).then((record) => {
     if (!record) return null;
     return record.destroy();
   });

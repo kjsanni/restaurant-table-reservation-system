@@ -54,6 +54,12 @@ const erpnextAPI = {
 
   getWarehouses: () => apiClient.get("/inventory/warehouses"),
 
+  syncInventoryItems: (itemIds = null) =>
+    apiClient.post("/inventory/sync/items", { itemIds }),
+
+  syncStockEntries: () =>
+    apiClient.post("/inventory/sync/stock-entries"),
+
   getOnboardingStatus: () => apiClient.get("/onboarding/status"),
 
   createCompany: (data) => apiClient.post("/onboarding/company", data),

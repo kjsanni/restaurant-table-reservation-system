@@ -63,4 +63,36 @@ router.get("/inventory/warehouses", tryCatchHandler(requireActiveTenant, checkEr
   }
 }));
 
+router.post("/inventory/sync/items", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
+  const tenant = req.tenant;
+  const { itemIds } = req.body;
+  const { syncItem, syncAllItems } = require("../sync/item.sync");
+  try {
+    if (itemIds && itemIds.length > 0) {
+      const results = [];
+      for (const itemId of itemIds) {
+        const result = await syncItem(tenant.id, itemId);
+        results.push(result);
+      }
+      res.status(200).json({ success: true, results });
+    } else {
+      const results = await syncAllItems(tenant.id);
+      res.status(200).json({ success: true, results });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
+router.post("/inventory/sync/stock-entries", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
+  const tenant = req.tenant;
+  const { syncStockAdjustments } = require("../sync/stock-entry.sync");
+  try {
+    const results = await syncStockAdjustments(tenant.id);
+    res.status(200).json({ success: true, results });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
 module.exports = router;

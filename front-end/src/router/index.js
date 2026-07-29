@@ -125,6 +125,22 @@ const router = createRouter({
       ],
     },
     {
+      path: "/erpnext/inventory",
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "erpnext-inventory",
+          component: () => import("../views/ErpnextInventoryView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresFeature: "erpnext_stock",
+          },
+        },
+      ],
+    },
+    {
       path: "/new-reservation",
       component: () => import("../layouts/TenantLayout.vue"),
       children: [

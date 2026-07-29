@@ -43,9 +43,10 @@ const joinWaitlistHandler = async (req, res) => {
     }
 
     const { partySize, desiredTime, notes } = req.body;
+    const validPartySize = Number.isInteger(partySize) && partySize > 0 && partySize <= 50 ? partySize : 2;
     const entry = await waitlistDAO.createEntry({
       name: `${customer.firstName} ${customer.lastName}`.trim(),
-      partySize: partySize || 2,
+      partySize: validPartySize,
       phone: customer.phone,
       email: customer.email,
       desiredTime,

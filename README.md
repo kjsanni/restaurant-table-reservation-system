@@ -1,12 +1,12 @@
 # Restaurant Table Reservation System (RTRS)
 
-Multi-tenant restaurant table reservation SaaS with **WhatsApp-first ordering**, **ShaQ Express delivery integration**, **Paystack payments (GHS)**, and **Ghana-localized legal compliance**. Built with Node.js, Express, Sequelize, Vue 3, and BullMQ.
+Multi-tenant SaaS platform built for the Ghanaian hospitality market, supporting both **restaurant** and **salon** business verticals. Platform offers WhatsApp-first ordering, ShaQ Express delivery integration, Paystack payments (GHS), and Ghana-localized legal compliance. Built with Node.js, Express, Sequelize, Vue 3, and BullMQ.
 
 ---
 
-## Key Features
+## Business Verticals
 
-### Core Operations
+### Restaurant Vertical
 - **Reservation Management** — Create, edit, cancel, and seat guests with drag-and-drop floor plan and calendar views
 - **Table Management** — Register tables with capacity, block/unblock, merge for large parties, assign staff
 - **Waitlist Management** — Queue guests, auto-suggest seating when tables free up via Socket.io real-time updates
@@ -14,6 +14,28 @@ Multi-tenant restaurant table reservation SaaS with **WhatsApp-first ordering**,
 - **Heatmap Analytics** — 1D weekly + 2D date-hour reservation density matrices
 - **No-Show Tracking** — One-click marking, stats widget, trend indicators
 - **Customer Database** — Profiles, loyalty tags, visit history, preferences
+
+### Salon Vertical
+- **Appointment Management** — Book, reschedule, and cancel appointments with stylist assignment
+- **Station Management** — Register salon stations, assign to zones, manage availability
+- **Service Catalog** — Configurable services with duration, pricing, and stylist eligibility
+- **Client Records** — Client profiles with visit history, VIP tiers, and preference tracking
+- **Walk-In Queue** — Kanban board for walk-in appointment management
+- **Recurring Appointments** — Scheduled appointments with repeat patterns
+- **Marketing Campaigns** — WhatsApp-based campaigns with delivery analytics
+- **Photo Gallery** — Client portfolio and stylist work showcases
+- **Inventory & Expenses** — Product stock tracking and expense management
+- **Dynamic Pricing Rules** — Configurable price adjustments per service/stylist/time
+
+## Key Features
+
+### Multi-Tenant SaaS Platform
+- **Feature-Flagged Multi-Tenancy** — `TENANT_MODE=enabled`; single repo, zero overhead when disabled
+- **Tenant Resolution** — Header (`X-Tenant-Id`, `X-Tenant-Slug`) or subdomain-based routing
+- **Subscription Billing** — Paystack integration with starter/growth/enterprise plans, grace periods, auto-suspension
+- **Per-Tenant Branding** — Logo, colors, theme, business hours, notification channels
+- **Usage Limits** — Enforced per-plan limits for tables and reservations
+- **Platform Admin Dashboard** — Create/manage tenants, view MRR, usage, revenue, bulk operations, support notes, trial management, invoices, billing emails, timeline, grace period, white-label, API keys, audit log, notifications, onboarding checklist
 
 ### WhatsApp-Native Customer Experience
 - **WhatsApp Ordering** — End-to-end conversational ordering via WhatsApp Business API (menu browsing, cart, checkout, payment link)
@@ -29,15 +51,6 @@ Multi-tenant restaurant table reservation SaaS with **WhatsApp-first ordering**,
 - **Order Tracking** — Customer-facing tracking view with status history
 - **Delivery Fee Calculation** — Configurable per-tenant delivery fees
 
-### Multi-Tenant SaaS Platform
-- **Feature-Flagged Multi-Tenancy** — `TENANT_MODE=enabled`; single repo, zero overhead when disabled
-- **Tenant Resolution** — Header (`X-Tenant-Id`, `X-Tenant-Slug`) or subdomain-based routing
-- **Subscription Billing** — Paystack integration with starter/growth/enterprise plans, grace periods, auto-suspension
-- **Bring-Your-Own Gateway (BYOK)** — Tenants can bring own Paystack keys + ShaQ Express credentials for discounted pricing
-- **Per-Tenant Settings** — Branding, currency (GHS default), business hours, notification channels, message templates
-- **Usage Limits** — Enforced per-plan limits for tables and reservations
-- **Platform Admin Dashboard** — Create/manage tenants, view MRR, usage, revenue, bulk operations, support notes, trial management, invoices, billing emails, timeline, grace period, white-label, API keys, audit log, notifications, onboarding checklist
-
 ### Background Jobs & Performance
 - **BullMQ Job Queue** — Offloaded notifications, email, WhatsApp, CSV/PDF exports with retry/DLQ
 - **Redis Cache** — Tenant resolution caching (5min TTL), schedule/holiday caching, rate-limit shared store
@@ -51,10 +64,19 @@ Multi-tenant restaurant table reservation SaaS with **WhatsApp-first ordering**,
 - **Paystack Integration** — GHS payments via Mobile Money (MTN, Vodafone, AirtelTigo), cards, banks
 - **Revenue Reports** — Time-series dashboard with SVG charts, CSV export, preset ranges
 - **Payment Dashboard** — Admin view with status summary, bar chart, filterable table
+- **Platform Analytics** — Tenant growth metrics, churn analysis, LTV/CAC, revenue analytics, booking analytics, payment analytics, usage metrics
+
+### Compliance & Legal (Ghana)
+- **Compliance Automation** — Auto-fulfill simple DSAR requests, compliance reminder scheduling, automated compliance reports
+- **9 Legal Documents** — Privacy, Terms, Cookies, GDPR, DPA, Customer, Tenant/Merchant, Payment & Refund, Accessibility
+- **Tamper-Evident Acceptances** — Immutable `legal_acceptances` records with version tracking
+- **Onboarding Enforcement** — Required Merchant Policy + DPA acceptance before going live
+- **DPA 2012 Compliance** — Data Protection Act 2012 (Act 843) aligned; DPC framework
 
 ### RBAC & Security
 - **Role-Based Access Control** — Admin, Manager, Staff roles with granular permissions
 - **Group Management** — Create user groups with permission sets
+- **Super Admin Portal** — Platform-wide tenant management, compliance oversight, analytics dashboards
 - **Permission-Based UI** — Action buttons match backend `requirePermission` checks
 - **JWT Authentication** — Secure tokens with rotation support
 - **CSRF Protection** — Strict sameSite enforcement

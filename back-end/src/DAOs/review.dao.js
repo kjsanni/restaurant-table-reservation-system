@@ -41,11 +41,21 @@ const findByCustomer = async (customerId, tenantId, limit = 50) => {
 const getAllForTenant = async (tenantId, filters = {}, pagination = {}) => {
   const where = withTenant({}, tenantId);
   if (filters.rating) where.rating = filters.rating;
-  if (filters.from) where.createdAt = { [Op.gte]: new Date(filters.from) };
+  if (filters.from) {
+    const fromDate = new Date(filters.from);
+    if (Number.isNaN(fromDate.getTime())) {
+      throw { status: 400, message: "Invalid 'from' date" };
+    }
+    where.createdAt = { [Op.gte]: fromDate };
+  }
   if (filters.to) {
+    const toDate = new Date(filters.to);
+    if (Number.isNaN(toDate.getTime())) {
+      throw { status: 400, message: "Invalid 'to' date" };
+    }
     where.createdAt = {
       ...(where.createdAt || {}),
-      [Op.lte]: new Date(filters.to),
+      [Op.lte]: toDate,
     };
   }
 

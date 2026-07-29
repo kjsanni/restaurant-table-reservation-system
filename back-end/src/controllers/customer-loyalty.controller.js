@@ -55,11 +55,12 @@ const redeemPointsHandler = async (req, res) => {
     }
 
     const { points } = req.body;
-    if (!points || Number(points) <= 0) {
+    const redeemPoints = Number(points);
+    if (!Number.isInteger(redeemPoints) || redeemPoints <= 0) {
       return res.status(400).json({ success: false, message: "Invalid points value." });
     }
 
-    const redeemed = await reservationDAO.redeemCustomerPoints(customer.id, Number(points), req.tenant?.id);
+    const redeemed = await reservationDAO.redeemCustomerPoints(customer.id, redeemPoints, req.tenant?.id);
     return res.status(200).json({ success: true, loyalty: redeemed });
   } catch (err) {
     console.error("redeemPointsHandler error:", err.message);

@@ -4,6 +4,8 @@ const { createQueue } = require("../../queues/queue");
 const { syncCustomer, syncAllCustomers } = require("./sync/customer.sync");
 const { syncInvoice, syncAllInvoices } = require("./sync/invoice.sync");
 const { syncPayment, syncAllPayments } = require("./sync/payment.sync");
+const { syncItem, syncAllItems } = require("./sync/item.sync");
+const { syncStockEntry, syncStockAdjustments } = require("./sync/stock-entry.sync");
 
 const erpnextQueue = createQueue("erpnext-sync");
 
@@ -20,6 +22,16 @@ const enqueueInvoiceSync = async (tenantId, reservationId = null) => {
 const enqueuePaymentSync = async (tenantId, paymentId = null) => {
   if (!erpnextQueue) return { enqueued: false };
   return erpnextQueue.add("sync-payment", { tenantId, paymentId });
+};
+
+const enqueueItemSync = async (tenantId, itemId = null) => {
+  if (!erpnextQueue) return { enqueued: false };
+  return erpnextQueue.add("sync-item", { tenantId, itemId });
+};
+
+const enqueueStockEntrySync = async (tenantId) => {
+  if (!erpnextQueue) return { enqueued: false };
+  return erpnextQueue.add("sync-stock-entry", { tenantId });
 };
 
 const enqueueFullSync = async (tenantId) => {
@@ -51,10 +63,19 @@ const startErpnextWorker = () => {
             return syncPayment(tenantId, paymentId);
           }
           return syncAllPayments(tenantId);
+        case "sync-item":
+          if (itemId) {
+            return syncItem(tenantId, itemId);
+          }
+          return syncAllItems(tenantId);
+        case "sync-stock-entry":
+          return syncStockAdjustments(tenantId);
         case "full-sync":
           await syncAllCustomers(tenantId);
           await syncAllInvoices(tenantId);
           await syncAllPayments(tenantId);
+          await syncAllItems(tenantId);
+          await syncStockAdjustments(tenantId);
           return { status: "completed", tenantId };
         default:
           throw new Error(`Unknown ERPNext sync job: ${job.name}`);
@@ -78,6 +99,8 @@ module.exports = {
   enqueueCustomerSync,
   enqueueInvoiceSync,
   enqueuePaymentSync,
+  enqueueItemSync,
+  enqueueStockEntrySync,
   enqueueFullSync,
   startErpnextWorker,
 };

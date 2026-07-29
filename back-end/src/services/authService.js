@@ -18,7 +18,11 @@ const verifyToken = (token) => {
 };
 
 const verifyRefreshToken = (token) => {
-  return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET || getCurrentSecret());
+  const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
+  if (!refreshSecret) {
+    throw new Error("REFRESH_TOKEN_SECRET is not configured");
+  }
+  return jwt.verify(token, refreshSecret);
 };
 
 const registerUser = async (userDAO, payload, tenantId, role = "staff", options = {}) => {

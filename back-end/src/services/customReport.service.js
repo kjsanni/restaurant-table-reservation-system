@@ -167,6 +167,10 @@ const buildCustomReport = async (config, tenantId) => {
 
   const order = [];
   if (config.sortBy) {
+    const allowedColumns = new Set(source.fields.map((f) => f.key));
+    if (!allowedColumns.has(config.sortBy)) {
+      throw { status: 400, message: "Invalid sort column" };
+    }
     order.push([config.sortBy, config.sortOrder === "desc" ? "DESC" : "ASC"]);
   }
 
