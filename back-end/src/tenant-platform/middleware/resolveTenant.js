@@ -36,6 +36,10 @@ const resolveTenant = async (req, res, next) => {
     "/api/v1/auth/turnstile-config",
   ];
   if (NO_TENANT_REQUIRED_PATHS.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
+    // Safe to skip tenant resolution because these routes either:
+    // - operate on platform-wide resources (tenants, plans, billing, audit)
+    // - are public auth flows that resolve tenant later or do not need it
+    // - are health checks with no tenant-scoped data access
     return next();
   }
 

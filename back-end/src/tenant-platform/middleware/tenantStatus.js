@@ -29,6 +29,7 @@ const requireActiveTenant = async (req, res, next) => {
   ];
   if (!tenant) {
     if (NO_TENANT_REQUIRED_PATHS.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
+      // Safe to continue without tenant activation check for the same reasons documented in resolveTenant.js
       return next();
     }
     return res.status(500).json({

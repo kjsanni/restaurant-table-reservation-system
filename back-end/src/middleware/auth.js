@@ -100,6 +100,11 @@ const admin = (req, res, next) => {
 };
 
 const requireSuperAdmin = (req, res, next) => {
+  // Decision: platform_admin platform role is granted full super-admin access here.
+  // This is intentional for now because the existing platform portals do not yet
+  // distinguish between platform-admin-only routes and true super-admin routes.
+  // Revisit this block when finer-grained platform roles are required, and split
+  // requireSuperAdmin into dedicated middleware for any narrower scope.
   const hasSuperAdmin = req.user && (
     req.user.isSuperAdmin ||
     (Array.isArray(req.user.platformRoles) && req.user.platformRoles.includes("platform_admin"))
