@@ -1,192 +1,392 @@
-<script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useAuthStore } from "@/stores/auth";
-import erpnextAPI from "@/services/erpnextAPI";
-import { useTenantBranding } from "@/composables/useTenantBranding";
-
-const authStore = useAuthStore();
-const { branding } = useTenantBranding();
-
-const loading = ref(true);
-const error = ref<string | null>(null);
-const leads = ref<any[]>([]);
-const customers = ref<any[]>([]);
-
-const tenant = computed(() => authStore.currentTenant);
-const isCrmEnabled = computed(() => {
-  const flags = tenant.value?.settings?.featureFlags || {};
-  return !!flags.erpnext_crm;
-});
-
-const loadCrm = async () => {
-  try {
-    const [leadsRes, custRes] = await Promise.all([
-      erpnextAPI.getCrmLeads(),
-      erpnextAPI.getCrmCustomers(),
-    ]);
-    leads.value = leadsRes.data?.data || [];
-    customers.value = custRes.data?.data || [];
-  } catch (err: any) {
-    error.value = err.message || "Failed to load CRM data";
-  } finally {
-    loading.value = false;
-  }
-};
-
-const syncCrm = async () => {
-  try {
-    await erpnextAPI.syncCrmLeads();
-    await erpnextAPI.syncCrmCustomers();
-    await loadCrm();
-  } catch (err: any) {
-    error.value = err.message || "Failed to sync CRM data";
-  }
-};
-
-onMounted(() => {
-  if (!isCrmEnabled.value) return;
-  loadCrm();
-});
-</script>
-
 <template>
-  <div v-if="!isCrmEnabled" class="erpnext-disabled">
-    <p>ERPNext CRM is not enabled for this tenant.</p>
-  </div>
-
-  <div v-else-if="loading" class="erpnext-loading">
-    <p>Loading CRM data...</p>
-  </div>
-
-  <div v-else-if="error" class="erpnext-error">
-    <p>{{ error }}</p>
-    <button @click="loadCrm">Retry</button>
-  </div>
-
-  <div v-else class="erpnext-crm">
-    <h2>CRM</h2>
-
-    <div class="erpnext-summary-cards">
-      <div class="erpnext-card">
-        <h3>Leads</h3>
-        <p class="erpnext-stat">{{ leads.length }}</p>
-      </div>
-      <div class="erpnext-card">
-        <h3>Customers</h3>
-        <p class="erpnext-stat">{{ customers.length }}</p>
-      </div>
+  <div class="erpnext-view">
+    <div class="page-header">
+      <h1>ERPNext CRM</h1>
+      <p class="subtitle">Customers, leads, campaigns, and opportunities</p>
     </div>
 
-    <div class="erpnext-actions">
-      <button @click="syncCrm">Sync CRM</button>
+    <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading CRM data...</p>
     </div>
 
-    <h3>Leads</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Mobile</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="lead in leads" :key="lead.name">
-          <td>{{ lead.customer_name }}</td>
-          <td>{{ lead.email_id }}</td>
-          <td>{{ lead.mobile_no }}</td>
-          <td>{{ lead.status }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-else class="erpnext-content">
+      <div class="tab-nav">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          :class="['tab-btn', { active: activeTab === tab.key }]"
+          @click="activeTab = tab.key"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
 
-    <h3>Customers</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Mobile</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="cust in customers" :key="cust.name">
-          <td>{{ cust.customer_name }}</td>
-          <td>{{ cust.email_id }}</td>
-          <td>{{ cust.mobile_no }}</td>
-        </tr>
-      </tbody>
-    </table>
+      <div v-if="error" class="error-state">
+        <p>{{ error }}</p>
+        <button class="btn-primary" @click="loadCurrentTab">Retry</button>
+      </div>
+
+      <div v-else-if="activeTab === 'customers'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Customers</h3>
+          <div class="filters">
+            <input
+              v-model="custSearch"
+              type="search"
+              placeholder="Search customers..."
+              class="form-input"
+            />
+            <button class="btn-secondary" @click="loadCustomers">Search</button>
+          </div>
+        </div>
+        <div v-if="customers.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="c in customers" :key="c.name">
+                <td>{{ c.customer_name }}</td>
+                <td>{{ c.email_id }}</td>
+                <td>{{ c.mobile_no }}</td>
+                <td>{{ c.customer_type }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No customers found.</div>
+      </div>
+
+      <div v-else-if="activeTab === 'leads'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Leads</h3>
+          <div class="filters">
+            <input
+              v-model="leadSearch"
+              type="search"
+              placeholder="Search leads..."
+              class="form-input"
+            />
+            <button class="btn-secondary" @click="loadLeads">Search</button>
+          </div>
+        </div>
+        <div v-if="leads.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Source</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="l in leads" :key="l.name">
+                <td>{{ l.lead_name }}</td>
+                <td>{{ l.email_id }}</td>
+                <td>{{ l.lead_source }}</td>
+                <td>{{ l.status }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No leads found.</div>
+      </div>
+
+      <div v-else-if="activeTab === 'campaigns'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Campaigns</h3>
+          <div class="filters">
+            <input
+              v-model="campaignSearch"
+              type="search"
+              placeholder="Search campaigns..."
+              class="form-input"
+            />
+            <button class="btn-secondary" @click="loadCampaigns">Search</button>
+          </div>
+        </div>
+        <div v-if="campaigns.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Start</th>
+                <th>End</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="c in campaigns" :key="c.name">
+                <td>{{ c.campaign_name }}</td>
+                <td>{{ c.status }}</td>
+                <td>{{ c.start_date }}</td>
+                <td>{{ c.end_date }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No campaigns found.</div>
+      </div>
+
+      <div v-else-if="activeTab === 'opportunities'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Opportunities</h3>
+        </div>
+        <div v-if="opportunities.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Source</th>
+                <th>Status</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="o in opportunities" :key="o.name">
+                <td>{{ o.party_name || o.customer_name }}</td>
+                <td>{{ o.source }}</td>
+                <td>{{ o.status }}</td>
+                <td>{{ o.opportunity_amount }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No opportunities found.</div>
+      </div>
+    </div>
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted } from "vue";
+import erpnextAPI from "@/services/erpnextAPI";
+
+const loading = ref(true);
+const error = ref(null);
+const activeTab = ref("customers");
+
+const custSearch = ref("");
+const customers = ref([]);
+
+const leadSearch = ref("");
+const leads = ref([]);
+
+const campaignSearch = ref("");
+const campaigns = ref([]);
+
+const opportunities = ref([]);
+
+const tabs = [
+  { key: "customers", label: "Customers" },
+  { key: "leads", label: "Leads" },
+  { key: "campaigns", label: "Campaigns" },
+  { key: "opportunities", label: "Opportunities" },
+];
+
+const loadCustomers = async () => {
+  try {
+    const params = {};
+    if (custSearch.value) params.search = custSearch.value;
+    const res = await erpnextAPI.getCrmCustomers(params);
+    customers.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load customers";
+  }
+};
+
+const loadLeads = async () => {
+  try {
+    const params = {};
+    if (leadSearch.value) params.search = leadSearch.value;
+    const res = await erpnextAPI.getCrmLeads(params);
+    leads.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load leads";
+  }
+};
+
+const loadCampaigns = async () => {
+  try {
+    const params = {};
+    if (campaignSearch.value) params.search = campaignSearch.value;
+    const res = await erpnextAPI.getCrmCampaigns(params);
+    campaigns.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load campaigns";
+  }
+};
+
+const loadOpportunities = async () => {
+  try {
+    const res = await erpnextAPI.getCrmOpportunities();
+    opportunities.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load opportunities";
+  }
+};
+
+const loadCurrentTab = async () => {
+  error.value = null;
+  if (activeTab.value === "customers") await loadCustomers();
+  else if (activeTab.value === "leads") await loadLeads();
+  else if (activeTab.value === "campaigns") await loadCampaigns();
+  else if (activeTab.value === "opportunities") await loadOpportunities();
+};
+
+onMounted(async () => {
+  loading.value = true;
+  error.value = null;
+  await Promise.all([
+    loadCustomers(),
+    loadLeads(),
+    loadCampaigns(),
+    loadOpportunities(),
+  ]);
+  loading.value = false;
+});
+</script>
+
 <style scoped>
-.erpnext-crm {
-  padding: var(--space-lg);
-  max-width: 1200px;
-  margin: 0 auto;
+.erpnext-view {
+  padding: var(--space-6);
 }
-
-.erpnext-summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
+.page-header {
+  margin-bottom: var(--space-6);
 }
-
-.erpnext-stat {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--brand-600);
+.page-header h1 {
+  margin: 0 0 var(--space-1);
 }
-
-.erpnext-actions {
-  display: flex;
-  gap: var(--space-sm);
-  margin-top: var(--space-md);
-  margin-bottom: var(--space-lg);
+.subtitle {
+  color: var(--color-text-muted);
+  margin: 0;
 }
-
-.erpnext-actions button {
-  padding: var(--space-sm) var(--space-md);
-  background: var(--brand-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.erpnext-disabled,
-.erpnext-loading,
-.erpnext-error {
-  padding: var(--space-xl);
+.loading-state {
   text-align: center;
-  color: var(--text-secondary);
+  padding: var(--space-8);
 }
-
-.erpnext-error {
-  color: var(--error);
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto var(--space-4);
 }
-
-table {
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.tab-nav {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-4);
+}
+.tab-btn {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.panel-header h3 {
+  margin: 0;
+}
+.filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.form-input {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.table-wrapper {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: var(--border-default);
+  border-radius: var(--radius-md);
+}
+.data-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-sm);
 }
-
-th,
-td {
-  padding: var(--space-sm) var(--space-md);
+.data-table th,
+.data-table td {
+  padding: var(--space-3) var(--space-4);
   text-align: left;
-  border-bottom: 1px solid var(--brand-200);
+  border-bottom: 1px solid var(--border-subtle);
 }
-
-th {
+.data-table th {
   font-weight: 600;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--tracking-wider);
+  background: var(--color-surface-alt);
+}
+.data-table tbody tr:hover {
+  background: var(--color-surface-sunken);
+}
+.empty-state {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--color-text-muted);
+}
+.error-state {
+  padding: var(--space-4);
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+.btn-primary {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: none;
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+  color: var(--white);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+.btn-secondary {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
 }
 </style>

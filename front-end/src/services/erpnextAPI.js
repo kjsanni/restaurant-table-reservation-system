@@ -26,6 +26,9 @@ const erpnextAPI = {
   getProfitLoss: (params = {}) =>
     apiClient.get("/accounting/profit-loss", { params }),
 
+  getBalanceSheet: (params = {}) =>
+    apiClient.get("/accounting/balance-sheet", { params }),
+
   getInvoices: (params = {}) =>
     apiClient.get("/accounting/invoices", { params }),
 
@@ -52,6 +55,12 @@ const erpnextAPI = {
   getStockLedger: (params = {}) =>
     apiClient.get("/inventory/stock", { params }),
 
+  getStockValuation: (params = {}) =>
+    apiClient.get("/inventory/stock/valuation", { params }),
+
+  getLowStockAlerts: (params = {}) =>
+    apiClient.get("/inventory/stock/low-stock", { params }),
+
   getWarehouses: () => apiClient.get("/inventory/warehouses"),
 
   syncInventoryItems: (itemIds = null) =>
@@ -61,12 +70,23 @@ const erpnextAPI = {
 
   getHrEmployees: (params = {}) => apiClient.get("/hr/employees", { params }),
 
+  getHrAttendance: (params = {}) =>
+    apiClient.get("/hr/employees/attendance", { params }),
+
+  getHrPayroll: (params = {}) =>
+    apiClient.get("/hr/employees/payroll", { params }),
+
   syncEmployees: (staffIds = null) =>
     apiClient.post("/hr/sync/employees", { staffIds }),
 
   getCrmLeads: (params = {}) => apiClient.get("/crm/leads", { params }),
 
   getCrmCustomers: (params = {}) => apiClient.get("/crm/customers", { params }),
+
+  getCrmCampaigns: (params = {}) => apiClient.get("/crm/campaigns", { params }),
+
+  getCrmOpportunities: (params = {}) =>
+    apiClient.get("/crm/opportunities", { params }),
 
   syncCrmLeads: (customerIds = null) =>
     apiClient.post("/crm/sync/leads", { customerIds }),

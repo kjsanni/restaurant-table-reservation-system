@@ -1,309 +1,324 @@
-<script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { Icon } from "@iconify/vue";
-import { useAuthStore } from "@/stores/auth";
-import erpnextAPI from "@/services/erpnextAPI";
-import { useTenantBranding } from "@/composables/useTenantBranding";
-
-const router = useRouter();
-const authStore = useAuthStore();
-const { branding } = useTenantBranding();
-
-const loading = ref(true);
-const error = ref<string | null>(null);
-const activeTab = ref<"overview" | "items" | "stock" | "warehouses">(
-  "overview"
-);
-
-const items = ref<any[]>([]);
-const stockEntries = ref<any[]>([]);
-const warehouses = ref<any[]>([]);
-const lowStockCount = ref(0);
-
-const tenant = computed(() => authStore.currentTenant);
-const isStockEnabled = computed(() => {
-  const flags = tenant.value?.settings?.featureFlags || {};
-  return !!flags.erpnext_stock;
-});
-
-const loadOverview = async () => {
-  try {
-    const [itemsRes, stockRes, whRes] = await Promise.all([
-      erpnextAPI.getInventoryItems(),
-      erpnextAPI.getStockLedger(),
-      erpnextAPI.getWarehouses(),
-    ]);
-    items.value = itemsRes.data?.data || [];
-    stockEntries.value = stockRes.data?.data || [];
-    warehouses.value = whRes.data?.data || [];
-    lowStockCount.value = items.value.filter(
-      (item) => item.opening_qty <= item.reorder_level
-    ).length;
-  } catch (err: any) {
-    error.value = err.message || "Failed to load ERPNext inventory data";
-  } finally {
-    loading.value = false;
-  }
-};
-
-const syncItems = async () => {
-  try {
-    await erpnextAPI.syncInventoryItems();
-    await loadOverview();
-  } catch (err: any) {
-    error.value = err.message || "Failed to sync inventory items";
-  }
-};
-
-const syncStock = async () => {
-  try {
-    await erpnextAPI.syncStockEntries();
-    await loadOverview();
-  } catch (err: any) {
-    error.value = err.message || "Failed to sync stock entries";
-  }
-};
-
-onMounted(() => {
-  if (!isStockEnabled.value) return;
-  loadOverview();
-});
-</script>
-
 <template>
-  <div v-if="!isStockEnabled" class="erpnext-disabled">
-    <p>ERPNext Inventory is not enabled for this tenant.</p>
-  </div>
+  <div class="erpnext-view">
+    <div class="page-header">
+      <h1>ERPNext Inventory</h1>
+      <p class="subtitle">Items, stock levels, and warehouses</p>
+    </div>
 
-  <div v-else-if="loading" class="erpnext-loading">
-    <p>Loading ERPNext inventory data...</p>
-  </div>
+    <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading inventory data...</p>
+    </div>
 
-  <div v-else-if="error" class="erpnext-error">
-    <p>{{ error }}</p>
-    <button @click="loadOverview">Retry</button>
-  </div>
-
-  <div v-else class="erpnext-inventory">
-    <h2>Inventory</h2>
-
-    <div class="erpnext-summary-cards">
-      <div class="erpnext-card">
-        <h3>Total Items</h3>
-        <p class="erpnext-stat">{{ items.length }}</p>
+    <div v-else class="erpnext-content">
+      <div class="tab-nav">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          :class="['tab-btn', { active: activeTab === tab.key }]"
+          @click="activeTab = tab.key"
+        >
+          {{ tab.label }}
+        </button>
       </div>
-      <div class="erpnext-card">
-        <h3>Low Stock</h3>
-        <p class="erpnext-stat erpnext-warning">{{ lowStockCount }}</p>
+
+      <div v-if="error" class="error-state">
+        <p>{{ error }}</p>
+        <button class="btn-primary" @click="loadCurrentTab">Retry</button>
       </div>
-      <div class="erpnext-card">
-        <h3>Warehouses</h3>
-        <p class="erpnext-stat">{{ warehouses.length }}</p>
+
+      <div v-else-if="activeTab === 'items'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Items</h3>
+          <div class="filters">
+            <input
+              v-model="itemSearch"
+              type="search"
+              placeholder="Search items..."
+              class="form-input"
+            />
+            <button class="btn-secondary" @click="loadItems">Search</button>
+          </div>
+        </div>
+        <div v-if="items.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Item Code</th>
+                <th>Item Name</th>
+                <th>Stock</th>
+                <th>Valuation Rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in items" :key="item.name">
+                <td>{{ item.item_code }}</td>
+                <td>{{ item.item_name }}</td>
+                <td>{{ item.actual_qty ?? item.qty }}</td>
+                <td>{{ item.valuation_rate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No items found.</div>
       </div>
-    </div>
 
-    <div class="erpnext-tabs">
-      <button
-        :class="{ active: activeTab === 'overview' }"
-        @click="activeTab = 'overview'"
-      >
-        Overview
-      </button>
-      <button
-        :class="{ active: activeTab === 'items' }"
-        @click="activeTab = 'items'"
-      >
-        Items
-      </button>
-      <button
-        :class="{ active: activeTab === 'stock' }"
-        @click="activeTab = 'stock'"
-      >
-        Stock Ledger
-      </button>
-      <button
-        :class="{ active: activeTab === 'warehouses' }"
-        @click="activeTab = 'warehouses'"
-      >
-        Warehouses
-      </button>
-    </div>
-
-    <div v-if="activeTab === 'overview'" class="erpnext-overview">
-      <div class="erpnext-actions">
-        <button @click="syncItems">Sync Items</button>
-        <button @click="syncStock">Sync Stock Entries</button>
+      <div v-else-if="activeTab === 'stock'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Stock Valuation</h3>
+          <button class="btn-secondary" @click="loadStockValuation">
+            Refresh
+          </button>
+        </div>
+        <div v-if="stockValuation.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Item Code</th>
+                <th>Warehouse</th>
+                <th>Qty</th>
+                <th>Valuation Rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in stockValuation" :key="row.name">
+                <td>{{ row.item_code }}</td>
+                <td>{{ row.warehouse }}</td>
+                <td>{{ row.actual_qty }}</td>
+                <td>{{ row.valuation_rate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No stock valuation data available.</div>
       </div>
-    </div>
 
-    <div v-if="activeTab === 'items'" class="erpnext-items">
-      <h3>Items</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Qty</th>
-            <th>Cost</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in items" :key="item.name">
-            <td>{{ item.item_code }}</td>
-            <td>{{ item.item_name }}</td>
-            <td>{{ item.item_group }}</td>
-            <td>{{ item.opening_qty }}</td>
-            <td>{{ item.valuation_rate }}</td>
-            <td>{{ item.status }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div v-if="activeTab === 'stock'" class="erpnext-stock">
-      <h3>Stock Ledger</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Warehouse</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="entry in stockEntries" :key="entry.name">
-            <td>{{ entry.item_code }}</td>
-            <td>{{ entry.qty }}</td>
-            <td>{{ entry.warehouse }}</td>
-            <td>{{ entry.posting_date }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div v-if="activeTab === 'warehouses'" class="erpnext-warehouses">
-      <h3>Warehouses</h3>
-      <ul>
-        <li v-for="wh in warehouses" :key="wh.name">
-          {{ wh.warehouse_name }} — {{ wh.company }}
-        </li>
-      </ul>
+      <div v-else-if="activeTab === 'warehouses'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Warehouses</h3>
+        </div>
+        <div v-if="warehouses.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Company</th>
+                <th>Address</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="wh in warehouses" :key="wh.name">
+                <td>{{ wh.name }}</td>
+                <td>{{ wh.company }}</td>
+                <td>{{ wh.address_line1 || "—" }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No warehouses found.</div>
+      </div>
     </div>
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted } from "vue";
+import erpnextAPI from "@/services/erpnextAPI";
+
+const loading = ref(true);
+const error = ref(null);
+const activeTab = ref("items");
+
+const itemSearch = ref("");
+const items = ref([]);
+
+const stockValuation = ref([]);
+
+const warehouses = ref([]);
+
+const tabs = [
+  { key: "items", label: "Items" },
+  { key: "stock", label: "Stock Valuation" },
+  { key: "warehouses", label: "Warehouses" },
+];
+
+const loadItems = async () => {
+  try {
+    const params = {};
+    if (itemSearch.value) params.search = itemSearch.value;
+    const res = await erpnextAPI.getInventoryItems(params);
+    items.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load items";
+  }
+};
+
+const loadStockValuation = async () => {
+  try {
+    const res = await erpnextAPI.getStockValuation();
+    stockValuation.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load stock valuation";
+  }
+};
+
+const loadWarehouses = async () => {
+  try {
+    const res = await erpnextAPI.getWarehouses();
+    warehouses.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load warehouses";
+  }
+};
+
+const loadCurrentTab = async () => {
+  error.value = null;
+  if (activeTab.value === "items") await loadItems();
+  else if (activeTab.value === "stock") await loadStockValuation();
+  else if (activeTab.value === "warehouses") await loadWarehouses();
+};
+
+onMounted(async () => {
+  loading.value = true;
+  error.value = null;
+  await Promise.all([loadItems(), loadStockValuation(), loadWarehouses()]);
+  loading.value = false;
+});
+</script>
+
 <style scoped>
-.erpnext-inventory {
-  padding: var(--space-lg);
-  max-width: 1200px;
-  margin: 0 auto;
+.erpnext-view {
+  padding: var(--space-6);
 }
-
-.erpnext-summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
+.page-header {
+  margin-bottom: var(--space-6);
 }
-
-.erpnext-stat {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--brand-600);
+.page-header h1 {
+  margin: 0 0 var(--space-1);
 }
-
-.erpnext-warning {
-  color: var(--warning);
+.subtitle {
+  color: var(--color-text-muted);
+  margin: 0;
 }
-
-.erpnext-tabs {
+.loading-state {
+  text-align: center;
+  padding: var(--space-8);
+}
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto var(--space-4);
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.tab-nav {
   display: flex;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
-  border-bottom: 2px solid var(--brand-200);
-  padding-bottom: var(--space-sm);
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-4);
 }
-
-.erpnext-tabs button {
-  padding: var(--space-sm) var(--space-md);
+.tab-btn {
+  padding: var(--space-2) var(--space-4);
   border: none;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--color-text-muted);
   cursor: pointer;
+  font-weight: 500;
   border-bottom: 2px solid transparent;
-  font-size: 0.875rem;
+  margin-bottom: -1px;
 }
-
-.erpnext-tabs button.active {
-  color: var(--brand-600);
-  border-bottom-color: var(--brand-600);
+.tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
-
-.erpnext-card {
-  background: var(--surface);
-  border: 1px solid var(--brand-200);
-  border-radius: var(--radius-md);
-  padding: var(--space-md);
-}
-
-.erpnext-actions {
+.panel-header {
   display: flex;
-  gap: var(--space-sm);
-  margin-top: var(--space-md);
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
-
-.erpnext-actions button {
-  padding: var(--space-sm) var(--space-md);
-  background: var(--brand-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
+.panel-header h3 {
+  margin: 0;
 }
-
-.erpnext-disabled,
-.erpnext-loading,
-.erpnext-error {
-  padding: var(--space-xl);
-  text-align: center;
-  color: var(--text-secondary);
+.filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
-
-.erpnext-error {
-  color: var(--error);
+.form-input {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
-
-table {
+.table-wrapper {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: var(--border-default);
+  border-radius: var(--radius-md);
+}
+.data-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: var(--font-size-sm);
 }
-
-th,
-td {
-  padding: var(--space-sm) var(--space-md);
+.data-table th,
+.data-table td {
+  padding: var(--space-3) var(--space-4);
   text-align: left;
-  border-bottom: 1px solid var(--brand-200);
+  border-bottom: 1px solid var(--border-subtle);
 }
-
-th {
+.data-table th {
   font-weight: 600;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--tracking-wider);
+  background: var(--color-surface-alt);
 }
-
-ul {
-  list-style: none;
-  padding: 0;
+.data-table tbody tr:hover {
+  background: var(--color-surface-sunken);
 }
-
-li {
-  padding: var(--space-sm) 0;
-  border-bottom: 1px solid var(--brand-200);
+.empty-state {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--color-text-muted);
+}
+.error-state {
+  padding: var(--space-4);
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+.btn-primary {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: none;
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
+  color: var(--white);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+.btn-secondary {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
 }
 </style>
