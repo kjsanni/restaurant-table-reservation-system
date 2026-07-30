@@ -1,5 +1,6 @@
 const axios = require("axios");
 const authDAO = require("../DAOs/auth.dao");
+const { validateWebhookUrl } = require("../tenant-platform/services/webhookNotification.service");
 
 const dispatch = async (event, payload, tenantId) => {
   try {
@@ -14,9 +15,15 @@ const dispatch = async (event, payload, tenantId) => {
     if (!active.length) return;
 
     const results = await Promise.allSettled(
-      active.map((sub) =>
-        axios.post(sub.url, { event, payload, timestamp: new Date().toISOString() }, { timeout: 5000 })
-      )
+      active.map(async (sub) => {
+        try {
+          await validateWebhookUrl(sub.url);
+        } catch (err) {
+          console.error(`Webhook URL validation failed for ${sub.url}:`, err.message);
+          throw err;
+        }
+        return axios.post(sub.url, { event, payload, timestamp: new Date().toISOString() }, { timeout: 5000 });
+      })
     );
 
     results.forEach((result, index) => {

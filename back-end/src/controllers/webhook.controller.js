@@ -2,6 +2,7 @@ const webhookService = require("../services/webhook.service");
 const failedPaymentAlertDAO = require("../tenant-platform/DAOs/failedPaymentAlert.dao");
 const db = require("../db/models");
 const { verifyWebhookSignature } = require("../tenant-platform/services/paystack.service");
+const { validateWebhookUrl } = require("../tenant-platform/services/webhookNotification.service");
 
 const listSubscriptionsHandler = async (req, res) => {
   const config = await require("../DAOs/auth.dao").getSettingValue(
@@ -17,6 +18,15 @@ const updateSubscriptionsHandler = async (req, res) => {
   if (!Array.isArray(subscriptions)) {
     return res.status(400).json({ success: false, message: "subscriptions must be an array" });
   }
+  for (const sub of subscriptions) {
+    if (sub.url) {
+      try {
+        await validateWebhookUrl(sub.url);
+      } catch (err) {
+        return res.status(400).json({ success: false, message: `Invalid webhook URL: ${err.message}` });
+      }
+    }
+  }
   const authDAO = require("../DAOs/auth.dao");
   const updated = await authDAO.updateSettings(
     "webhooks",
@@ -29,6 +39,11 @@ const testHandler = async (req, res) => {
   const { url, event } = req.body;
   if (!url) {
     return res.status(400).json({ success: false, message: "url is required" });
+  }
+  try {
+    await validateWebhookUrl(url);
+  } catch (err) {
+    return res.status(400).json({ success: false, message: `Invalid webhook URL: ${err.message}` });
   }
   await webhookService.dispatch(event || "test", { message: "webhook test payload" }, req.tenant?.id);
   return res.status(200).json({ success: true, message: "Test webhook dispatched" });
