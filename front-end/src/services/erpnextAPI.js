@@ -94,6 +94,12 @@ const erpnextAPI = {
   syncCrmCustomers: (customerIds = null) =>
     apiClient.post("/crm/sync/customers", { customerIds }),
 
+  getManufacturingBoms: (params = {}) =>
+    apiClient.get("/manufacturing/boms", { params }),
+
+  getManufacturingPlans: (params = {}) =>
+    apiClient.get("/manufacturing/production-plans", { params }),
+
   getOnboardingStatus: () => apiClient.get("/onboarding/status"),
 
   createCompany: (data) => apiClient.post("/onboarding/company", data),

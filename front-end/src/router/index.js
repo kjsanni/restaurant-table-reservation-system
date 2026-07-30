@@ -173,6 +173,22 @@ const router = createRouter({
       ],
     },
     {
+      path: "/erpnext/manufacturing",
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "erpnext-manufacturing",
+          component: () => import("../views/ErpnextManufacturingView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresFeature: "erpnext_manufacturing",
+          },
+        },
+      ],
+    },
+    {
       path: "/new-reservation",
       component: () => import("../layouts/TenantLayout.vue"),
       children: [

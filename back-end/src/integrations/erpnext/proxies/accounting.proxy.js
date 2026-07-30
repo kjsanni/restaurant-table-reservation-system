@@ -68,6 +68,23 @@ router.get("/accounting/balance-sheet", tryCatchHandler(requireActiveTenant, che
   }
 }));
 
+router.get("/accounting/tax-report", tryCatchHandler(requireActiveTenant, checkErpnextFeature, async (req, res) => {
+  const tenant = req.tenant;
+  const { getClient } = require("../client");
+  const { from, to } = req.query;
+  const filters = { company: tenant.name };
+  if (from) filters.from_date = from;
+  if (to) filters.to_date = to;
+  try {
+    const result = await getClient().get("/api/resource/GST Settings", {
+      params: { filters: { company: tenant.name } },
+    });
+    res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
 router.get("/accounting/invoices", tryCatchHandler(requireActiveTenant, checkErpnextFeature, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");

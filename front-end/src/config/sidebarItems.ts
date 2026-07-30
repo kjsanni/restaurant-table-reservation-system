@@ -257,6 +257,13 @@ export const authenticatedNavItems: NavItem[] = [
     requiresFeature: "erpnext_pos",
   },
   {
+    routeName: "erpnext-manufacturing",
+    text: "Manufacturing",
+    icon: "mdi:factory",
+    requiresAuth: true,
+    requiresFeature: "erpnext_manufacturing",
+  },
+  {
     routeName: "salon-inventory",
     text: "Inventory",
     icon: "mdi:warehouse",
