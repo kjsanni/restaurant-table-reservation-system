@@ -4,7 +4,7 @@ const fs = require("fs");
 const os = require("os");
 
 const escapeShellArg = (value) => {
-  if (value == null) {
+  if (value === null || value === undefined) {
     return '""';
   }
   const str = String(value);

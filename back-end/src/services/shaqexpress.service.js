@@ -2,6 +2,7 @@ const axios = require("axios");
 const deliveryDAO = require("../DAOs/delivery.dao");
 const db = require("../db/models");
 const logger = require("../utils/logger");
+const { normalizeSettingValue } = require("../utils/settings");
 
 const SHAQ_BASE_URL = "https://public-api.shaqexpress.com/api/v1";
 
@@ -14,7 +15,7 @@ const getCredentials = async (tenantId) => {
   if (!setting || !setting.value) {
     throw new Error("Shaq Express is not configured.");
   }
-  const cfg = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
+  const cfg = normalizeSettingValue(setting.value);
   return {
     identifier: cfg.identifier,
     secret: cfg.secret,

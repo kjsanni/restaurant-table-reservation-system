@@ -4,6 +4,8 @@ const User = db.user;
 const RefreshToken = db.refreshToken;
 const Setting = db.setting;
 
+const { normalizeSettingValue } = require("../utils/settings");
+
 const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const hashPassword = async (password) => {
@@ -128,17 +130,6 @@ const deleteStaffUser = async (id, tenantId) => {
     throw { status: 404, message: "User not found!" };
   }
   return await user.destroy();
-};
-
-const normalizeSettingValue = (value) => {
-  if (typeof value === "string") {
-    try {
-      return JSON.parse(value);
-    } catch {
-      return value;
-    }
-  }
-  return value;
 };
 
 const getSettingByKey = async (key, tenantId) => {

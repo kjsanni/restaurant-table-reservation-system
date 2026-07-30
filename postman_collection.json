@@ -8,7 +8,7 @@
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8000" },
     { "key": "apiPath", "value": "/api/v1" },
-    { "key": "csrfToken", "value": "0137c89d1ec13a1003c37b12a419cb8c4bb35fcbdcb01ddb98727bef9b5f7a23" },
+    { "key": "csrfToken", "value": "YOUR_CSRF_TOKEN" },
     { "key": "reservationId", "value": "1" },
     { "key": "tableId", "value": "1" }
   ],

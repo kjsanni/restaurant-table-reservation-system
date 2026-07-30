@@ -220,7 +220,7 @@ const appointmentController = {
           email: skill.user?.email,
           skillLevel: skill.skillLevel,
         }))
-        .filter((item) => item.id != null);
+        .filter((item) => item.id !== null && item.id !== undefined);
       res.json({ success: true, data: stylists });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });

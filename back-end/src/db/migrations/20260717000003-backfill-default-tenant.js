@@ -33,7 +33,9 @@ module.exports = {
       "FloorPlans",
     ];
 
+    const allowedTables = new Set(tables);
     for (const table of tables) {
+      if (!allowedTables.has(table)) continue;
       try {
         await queryInterface.sequelize.query(
           `UPDATE \`${table}\` SET tenantId = 1 WHERE tenantId IS NULL`
@@ -44,7 +46,9 @@ module.exports = {
     }
 
     const junctionTables = ["user_groups", "table_staff", "reservation_staff"];
+    const allowedJunctionTables = new Set(junctionTables);
     for (const jt of junctionTables) {
+      if (!allowedJunctionTables.has(jt)) continue;
       try {
         await queryInterface.sequelize.query(
           `UPDATE \`${jt}\` SET tenantId = 1 WHERE tenantId IS NULL`

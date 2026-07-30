@@ -13,17 +13,20 @@ const dispatch = async (event, payload, tenantId) => {
     const active = subs.filter((s) => s.active && Array.isArray(s.events) && s.events.includes(event));
     if (!active.length) return;
 
-    await Promise.allSettled(
+    const results = await Promise.allSettled(
       active.map((sub) =>
-        axios
-          .post(sub.url, { event, payload, timestamp: new Date().toISOString() }, { timeout: 5000 })
-          .catch((err) => {
-            if (err && err.code !== "ECONNABORTED") {
-              console.error(`Webhook delivery failed to ${sub.url}:`, err.message);
-            }
-          })
+        axios.post(sub.url, { event, payload, timestamp: new Date().toISOString() }, { timeout: 5000 })
       )
     );
+
+    results.forEach((result, index) => {
+      if (result.status === "rejected") {
+        const err = result.reason;
+        if (err && err.code !== "ECONNABORTED") {
+          console.error(`Webhook delivery failed to ${active[index].url}:`, err.message);
+        }
+      }
+    });
   } catch (err) {
     console.error("Webhook dispatch error:", err.message);
   }

@@ -11,7 +11,7 @@ const withTenant = (where = {}, tenantId) =>
   tenantId ? { ...where, tenantId } : where;
 
 const calculateDiscount = (total, discountType, discountValue) => {
-  if (!discountType || discountValue == null || parseFloat(discountValue) <= 0) {
+  if (!discountType || discountValue === null || discountValue === undefined || parseFloat(discountValue) <= 0) {
     return 0;
   }
   const value = parseFloat(discountValue);
@@ -80,7 +80,7 @@ const updateOrder = async (id, tenantId, data) => {
     data.completedAt = new Date();
   }
 
-  if (data.discountType || data.discountValue != null) {
+  if (data.discountType || data.discountValue !== null && data.discountValue !== undefined) {
     const items = await OrderItem.findAll({ where: { orderId: id } });
     const subtotal = items.reduce((s, i) => s + parseFloat(i.lineTotal || 0), 0);
     const discountAmount = calculateDiscount(subtotal, data.discountType || order.discountType, data.discountValue || order.discountValue || 0);

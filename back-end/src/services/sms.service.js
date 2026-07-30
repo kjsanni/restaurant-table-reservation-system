@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { normalizeSettingValue } = require("../utils/settings");
 
 const AFRICASTALKING_BASE = "https://api.africastalking.com/restless/send";
 
@@ -13,7 +14,7 @@ const sendSMS = async ({ to, message, senderId = "RTRS" }, tenantId = null) => {
         where: { key: "africastalking_config", tenantId },
       });
       if (setting && setting.value) {
-        const cfg = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
+        const cfg = normalizeSettingValue(setting.value);
         if (cfg.username) username = cfg.username;
         if (cfg.apiKey) apiKey = cfg.apiKey;
         if (cfg.senderId) senderId = cfg.senderId;

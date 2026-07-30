@@ -27,25 +27,28 @@ module.exports = {
     await addTenantIdIfMissing("groups");
     await addTenantIdIfMissing("roles");
 
-    const dropIfExists = async (table, indexName) => {
-      try {
-        await queryInterface.sequelize.query(`DROP INDEX \`${indexName}\` ON \`${table}\``);
-      } catch (err) {
-        if (!err.message.includes("check that column/key exists")) {
-          throw err;
-        }
-      }
+    const allowedIndexes = {
+      users: ["users_tenant_id_email", "users_tenant_id_username"],
+      Customers: ["customers_tenant_id_email"],
+      Tables: ["tables_tenant_id_name"],
+      holidays: ["holidays_tenant_id_date"],
+      settings: ["settings_tenant_id_key"],
+      emailTemplates: ["email_templates_tenant_id_key"],
+      groups: ["groups_tenant_id_name"],
+      roles: ["roles_tenant_id_name"],
     };
 
-    await dropIfExists("users", "users_tenant_id_email");
-    await dropIfExists("users", "users_tenant_id_username");
-    await dropIfExists("Customers", "customers_tenant_id_email");
-    await dropIfExists("Tables", "tables_tenant_id_name");
-    await dropIfExists("holidays", "holidays_tenant_id_date");
-    await dropIfExists("settings", "settings_tenant_id_key");
-    await dropIfExists("emailTemplates", "email_templates_tenant_id_key");
-    await dropIfExists("groups", "groups_tenant_id_name");
-    await dropIfExists("roles", "roles_tenant_id_name");
+    for (const [table, indexes] of Object.entries(allowedIndexes)) {
+      for (const indexName of indexes) {
+        try {
+          await queryInterface.removeIndex(table, indexName);
+        } catch (err) {
+          if (!err.message.includes("check that column/key exists")) {
+            throw err;
+          }
+        }
+      }
+    }
 
     await queryInterface.addIndex("users", ["tenantId", "email"], { unique: true });
     await queryInterface.addIndex("users", ["tenantId", "username"], { unique: true });

@@ -184,8 +184,8 @@ const editHandler = async (req, res) => {
 const updatePositionHandler = async (req, res) => {
   const { id } = req.params;
   const { positionX, positionY, floorPlanId, posX, posY } = req.body;
-  const x = positionX != null ? positionX : posX;
-  const y = positionY != null ? positionY : posY;
+  const x = positionX !== null && positionX !== undefined ? positionX : posX;
+  const y = positionY !== null && positionY !== undefined ? positionY : posY;
   const table = await tableService.updateTablePosition(
     tableDAO,
     id,

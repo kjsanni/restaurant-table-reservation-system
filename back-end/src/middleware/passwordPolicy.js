@@ -1,4 +1,5 @@
 const authDAO = require("../DAOs/auth.dao");
+const { normalizeSettingValue } = require("../utils/settings");
 
 const enforcePasswordPolicy = async (req, res, next) => {
   const password = req.body?.password;
@@ -17,7 +18,7 @@ const enforcePasswordPolicy = async (req, res, next) => {
   try {
     const setting = await authDAO.getSettingByKey("password_policy", req.tenant?.id);
     if (setting && setting.value) {
-      const v = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
+      const v = normalizeSettingValue(setting.value);
       policy = { ...policy, ...v };
     }
   } catch {
