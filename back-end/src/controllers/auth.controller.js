@@ -123,6 +123,7 @@ const registerHandler = async (req, res) => {
 const loginHandler = async (req, res) => {
   const payload = req.body;
   const ipAddress = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;
+  // authDAO implements both userDAO and refreshTokenDAO interfaces
   const result = await authService.loginUser(authDAO, payload, req.tenant?.id, authDAO, ipAddress);
 
   if (result.pendingTOTP) {

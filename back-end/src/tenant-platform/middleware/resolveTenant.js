@@ -1,4 +1,5 @@
 const { isTenantModeEnabled } = require("../utils/tenantMode");
+const { isNoTenantRequired } = require("../../middleware/noTenantPaths");
 const db = require("../../db/models");
 const { cache } = require("../../utils/cache");
 
@@ -14,28 +15,7 @@ const resolveTenant = async (req, res, next) => {
   // - platform-admin tenant management paths
   // - public auth/registration/password-reset paths
   // - health check
-  const NO_TENANT_REQUIRED_PATHS = [
-    "/api/v1/admin/tenants",
-    "/api/v1/admin/plans",
-    "/api/v1/admin/payments",
-    "/api/v1/admin/usage",
-    "/api/v1/admin/revenue",
-    "/api/v1/admin/bulk",
-    "/api/v1/admin/billing-emails",
-    "/api/v1/admin/audit",
-    "/api/v1/admin/notifications",
-    "/api/v1/billing",
-    "/api/v1/public/dsar-request",
-    "/api/v1/health",
-    "/api/v1/auth/login",
-    "/api/v1/auth/register",
-    "/api/v1/auth/register/customer",
-    "/api/v1/auth/register/status",
-    "/api/v1/auth/forgot-password",
-    "/api/v1/auth/reset-password",
-    "/api/v1/auth/turnstile-config",
-  ];
-  if (NO_TENANT_REQUIRED_PATHS.some((p) => req.path === p || req.path.startsWith(p + "/"))) {
+  if (isNoTenantRequired(req.path)) {
     // Safe to skip tenant resolution because these routes either:
     // - operate on platform-wide resources (tenants, plans, billing, audit)
     // - are public auth flows that resolve tenant later or do not need it

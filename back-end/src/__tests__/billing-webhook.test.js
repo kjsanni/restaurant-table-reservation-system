@@ -66,7 +66,7 @@ describe("billingController.webhookHandler", () => {
       create: jest.fn(),
     };
     db.tenant = {
-      findOne: jest.fn().mockResolvedValue(null),
+      findOne: jest.fn().mockResolvedValue({ id: 1 }),
       findByPk: jest.fn().mockResolvedValue({ id: 1, update: jest.fn() }),
     };
 
@@ -102,7 +102,7 @@ describe("billingController.webhookHandler", () => {
   });
 
   it("processes new events and stores them", async () => {
-    req.body = { id: "evt_new", event: "invoice.payment_succeeded", data: { metadata: { tenantId: 1 } } };
+    req.body = { id: "evt_new", event: "invoice.payment_succeeded", data: { customer: { customer_code: "cust_123" } } };
 
     db.paystackEvent.findOne.mockResolvedValue(null);
     db.paystackEvent.create.mockResolvedValue({ id: 1 });
@@ -130,9 +130,8 @@ describe("billingController.webhookHandler", () => {
       data: {
         amount: 12000,
         reference: "ref_abc",
-        customer: { email: "wa_233241234567@rtrs.local" },
+        customer: { email: "wa_233241234567@rtrs.local", customer_code: "cust_1" },
         metadata: {
-          tenantId: 1,
           orderId: 100,
           customerPhone: "+233241234567",
           deliveryLocation: {
@@ -221,7 +220,6 @@ describe("billingController.webhookHandler", () => {
     it("does not create delivery when metadata has no deliveryLocation", async () => {
       req.body = buildChargeSuccessBody({
         metadata: {
-          tenantId: 1,
           orderId: 100,
           customerPhone: "+233241234567",
           discountAmount: 0,
@@ -263,7 +261,6 @@ describe("billingController.webhookHandler", () => {
       req.body = buildChargeSuccessBody({
         amount: 10000,
         metadata: {
-          tenantId: 1,
           orderId: 100,
           customerPhone: "+233241234567",
           deliveryLocation: {
@@ -288,7 +285,6 @@ describe("billingController.webhookHandler", () => {
       req.body = buildChargeSuccessBody({
         amount: 5000,
         metadata: {
-          tenantId: 1,
           orderId: 100,
           customerPhone: "+233241234567",
           deliveryLocation: {

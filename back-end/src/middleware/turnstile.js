@@ -45,8 +45,9 @@ const verifyTurnstileToken = async (token, remoteIp) => {
   }
 };
 
-const validateTurnstile = (req, res, next) => {
-  getTurnstileConfig().then((config) => {
+const validateTurnstile = async (req, res, next) => {
+  try {
+    const config = await getTurnstileConfig();
     if (!config.enabled) {
       return next();
     }
@@ -59,24 +60,21 @@ const validateTurnstile = (req, res, next) => {
       });
     }
 
-    verifyTurnstileToken(token, req.ip || req.connection.remoteAddress)
-      .then((valid) => {
-        if (valid) {
-          next();
-        } else {
-          res.status(403).json({
-            success: false,
-            message: "Turnstile verification failed. Please try again.",
-          });
-        }
-      })
-      .catch(() => {
-        res.status(403).json({
-          success: false,
-          message: "Turnstile verification failed. Please try again.",
-        });
-      });
-  });
+    const valid = await verifyTurnstileToken(token, req.ip || req.connection.remoteAddress);
+    if (valid) {
+      return next();
+    }
+
+    return res.status(403).json({
+      success: false,
+      message: "Turnstile verification failed. Please try again.",
+    });
+  } catch (error) {
+    return res.status(403).json({
+      success: false,
+      message: "Turnstile verification failed. Please try again.",
+    });
+  }
 };
 
 module.exports = validateTurnstile;

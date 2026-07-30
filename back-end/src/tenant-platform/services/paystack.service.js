@@ -1,9 +1,10 @@
 const axios = require("axios");
 const db = require("../../db/models");
 
-const PAYSTACK_BASE = process.env.PAYSTACK_MODE === "live"
-  ? "https://api.paystack.co"
-  : "https://api.paystack.co";
+const PAYSTACK_BASE =
+  process.env.PAYSTACK_MODE === "live"
+    ? "https://api.paystack.co"
+    : "https://api.paystack.co";
 
 const envSecretKey = process.env.PAYSTACK_SECRET_KEY;
 const envWebhookSecret = process.env.PAYSTACK_WEBHOOK_SECRET;

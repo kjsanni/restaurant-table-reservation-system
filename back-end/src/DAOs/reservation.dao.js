@@ -476,10 +476,10 @@ const cancelReservation = async (reservationId, tenantId) => {
   }
 
   if (["cancelled", "seated", "completed", "missed"].includes(reservation.resStatus)) {
-    return await destroyReservation(reservation, tenantId);
+    return await deleteReservation(reservation, tenantId);
   }
 
-  return await deleteReservation(reservation, tenantId);
+  return await cancelReservation(reservation, tenantId);
 };
 
 const setReservationStatus = async (reservation, status, tenantId) => {

@@ -1660,11 +1660,8 @@ router.beforeEach((to, from, next) => {
   ) {
     if (authStore.isSuperAdmin) {
       next({ name: "super-admin-overview" });
-    } else if (
-      authStore.user?.permissions?.manage_tenants ||
-      authStore.user?.role === "admin"
-    ) {
-      next({ name: "tenant-landing" });
+    } else if (authStore.user?.role === "admin") {
+      next({ name: "admin-settings" });
     } else {
       next({ name: "tenant-landing" });
     }
