@@ -7,6 +7,7 @@ import tableAPI from "@/services/tableAPI";
 import appointmentAPI from "@/services/appointmentAPI";
 import salonDashboardAPI from "@/services/salonDashboardAPI";
 import logger from "@/utils/logger";
+import { ERP_NEXT_MODULES } from "@/config/erpnextModules";
 
 interface Booking {
   id: number;
@@ -130,53 +131,7 @@ const kpis = computed(() => {
 
 const erpnextModuleCards = computed(() => {
   const flags = authStore.currentTenant?.settings?.featureFlags || {};
-  const modules: Array<{
-    flag: string;
-    name: string;
-    description: string;
-    path: string;
-  }> = [];
-  const mapping: Record<
-    string,
-    { name: string; description: string; path: string }
-  > = {
-    erpnext_accounting: {
-      name: "Accounting",
-      description: "P&L, invoices, payments",
-      path: "/erpnext/accounting",
-    },
-    erpnext_stock: {
-      name: "Inventory",
-      description: "Items, stock, warehouses",
-      path: "/erpnext/inventory",
-    },
-    erpnext_crm: {
-      name: "CRM",
-      description: "Customers, leads, campaigns",
-      path: "/erpnext/crm",
-    },
-    erpnext_hr: {
-      name: "Staff Records",
-      description: "Employees, attendance, payroll",
-      path: "/erpnext/employees",
-    },
-    erpnext_pos: {
-      name: "POS",
-      description: "Point of sale integration",
-      path: "#",
-    },
-    erpnext_manufacturing: {
-      name: "Manufacturing",
-      description: "BOMs, production plans",
-      path: "/erpnext/manufacturing",
-    },
-  };
-  for (const [flag, enabled] of Object.entries(flags)) {
-    if (enabled && mapping[flag]) {
-      modules.push({ flag, ...mapping[flag] });
-    }
-  }
-  return modules;
+  return ERP_NEXT_MODULES.filter((mod) => flags[mod.flag]);
 });
 
 const detail = (b: any) => {

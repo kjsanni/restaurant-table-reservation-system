@@ -168,6 +168,7 @@ import { useToastStore } from "@/stores/toast";
 import planAPI from "@/services/planAPI";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
+import { ERP_NEXT_MODULE_OPTIONS } from "@/config/erpnextModules";
 
 const toastStore = useToastStore();
 
@@ -188,14 +189,7 @@ const form = ref({
   erpnextModules: [],
 });
 
-const erpnextModuleOptions = [
-  { flag: "erpnext_accounting", name: "Accounting" },
-  { flag: "erpnext_stock", name: "Inventory" },
-  { flag: "erpnext_crm", name: "CRM" },
-  { flag: "erpnext_hr", name: "HR" },
-  { flag: "erpnext_pos", name: "POS" },
-  { flag: "erpnext_manufacturing", name: "Manufacturing" },
-];
+const erpnextModuleOptions = ERP_NEXT_MODULE_OPTIONS;
 
 const loadPlans = async () => {
   const response = await planAPI.listPlans();
