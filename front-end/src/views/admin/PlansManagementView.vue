@@ -41,7 +41,9 @@
             </td>
             <td>
               <span v-if="plan.erpnextModules?.length" class="erpnext-badge">
-                {{ plan.erpnextModules.length }} module{{ plan.erpnextModules.length === 1 ? "" : "s" }}
+                {{ plan.erpnextModules.length }} module{{
+                  plan.erpnextModules.length === 1 ? "" : "s"
+                }}
               </span>
               <span v-else class="text-muted">—</span>
             </td>
@@ -129,7 +131,11 @@
           <div class="form-group">
             <label>ERPNext Modules</label>
             <div class="checkbox-group">
-              <label v-for="mod in erpnextModuleOptions" :key="mod.flag" class="checkbox-label">
+              <label
+                v-for="mod in erpnextModuleOptions"
+                :key="mod.flag"
+                class="checkbox-label"
+              >
                 <input
                   type="checkbox"
                   :value="mod.flag"
@@ -138,7 +144,9 @@
                 {{ mod.name }}
               </label>
             </div>
-            <p class="form-hint">Allowed ERPNext modules for tenants on this plan.</p>
+            <p class="form-hint">
+              Allowed ERPNext modules for tenants on this plan.
+            </p>
           </div>
           <div class="modal-actions">
             <button type="button" @click="closeModal" class="btn-secondary">

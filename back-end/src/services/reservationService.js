@@ -176,11 +176,11 @@ const cancelReservation = async (reservationId, reservationDAO, tenantId) => {
     };
   }
   if (["cancelled", "seated", "completed", "missed"].includes(reservation.resStatus)) {
-    const result = await reservationDAO.destroyReservation(reservation, tenantId);
+    const result = await reservationDAO.deleteReservation(reservation, tenantId);
     webhookService.dispatch("reservation.cancelled", result, tenantId);
     return result;
   }
-  const result = await reservationDAO.deleteReservation(reservationId, tenantId);
+  const result = await reservationDAO.deleteReservation(reservation, tenantId);
   webhookService.dispatch("reservation.cancelled", result, tenantId);
   return result;
 };

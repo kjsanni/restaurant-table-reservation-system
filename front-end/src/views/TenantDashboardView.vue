@@ -128,6 +128,57 @@ const kpis = computed(() => {
   return base;
 });
 
+const erpnextModuleCards = computed(() => {
+  const flags = authStore.currentTenant?.settings?.featureFlags || {};
+  const modules: Array<{
+    flag: string;
+    name: string;
+    description: string;
+    path: string;
+  }> = [];
+  const mapping: Record<
+    string,
+    { name: string; description: string; path: string }
+  > = {
+    erpnext_accounting: {
+      name: "Accounting",
+      description: "P&L, invoices, payments",
+      path: "/erpnext/accounting",
+    },
+    erpnext_stock: {
+      name: "Inventory",
+      description: "Items, stock, warehouses",
+      path: "/erpnext/inventory",
+    },
+    erpnext_crm: {
+      name: "CRM",
+      description: "Customers, leads, campaigns",
+      path: "/erpnext/crm",
+    },
+    erpnext_hr: {
+      name: "Staff Records",
+      description: "Employees, attendance, payroll",
+      path: "/erpnext/employees",
+    },
+    erpnext_pos: {
+      name: "POS",
+      description: "Point of sale integration",
+      path: "#",
+    },
+    erpnext_manufacturing: {
+      name: "Manufacturing",
+      description: "BOMs, production plans",
+      path: "/erpnext/manufacturing",
+    },
+  };
+  for (const [flag, enabled] of Object.entries(flags)) {
+    if (enabled && mapping[flag]) {
+      modules.push({ flag, ...mapping[flag] });
+    }
+  }
+  return modules;
+});
+
 const detail = (b: any) => {
   const who = b.Customer?.name || b.name || "Guest";
   const when = b.resTime ? b.resTime.slice(0, 5) : "—";
@@ -238,6 +289,24 @@ onMounted(async () => {
             <div class="kpi-label">{{ kpi.label }}</div>
             <div class="kpi-value">{{ kpi.value }}</div>
             <div class="kpi-delta">{{ kpi.delta }}</div>
+          </div>
+        </div>
+
+        <div v-if="erpnextModuleCards.length" class="erpnext-strip">
+          <div class="erpnext-strip-header">
+            <h3>ERPNext</h3>
+            <span class="erpnext-strip-hint">Enabled modules</span>
+          </div>
+          <div class="erpnext-modules">
+            <button
+              v-for="mod in erpnextModuleCards"
+              :key="mod.flag"
+              class="erpnext-module-card"
+              @click="router.push(mod.path)"
+            >
+              <div class="erpnext-module-name">{{ mod.name }}</div>
+              <div class="erpnext-module-desc">{{ mod.description }}</div>
+            </button>
           </div>
         </div>
 
@@ -812,5 +881,54 @@ onMounted(async () => {
   .quick-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.erpnext-strip {
+  margin-bottom: var(--space-4);
+}
+.erpnext-strip-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.erpnext-strip-header h3 {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--ink-muted);
+}
+.erpnext-strip-hint {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+.erpnext-modules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+.erpnext-module-card {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+.erpnext-module-card:hover {
+  border-color: var(--accent);
+  background: var(--surface-sunken);
+}
+.erpnext-module-name {
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--space-1);
+}
+.erpnext-module-desc {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
 }
 </style>

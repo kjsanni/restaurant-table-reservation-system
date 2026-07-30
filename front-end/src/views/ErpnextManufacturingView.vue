@@ -31,7 +31,12 @@
         <div class="panel-header">
           <h3>Bills of Material</h3>
           <div class="filters">
-            <input v-model="bomSearch" type="search" placeholder="Search BOMs..." class="form-input" />
+            <input
+              v-model="bomSearch"
+              type="search"
+              placeholder="Search BOMs..."
+              class="form-input"
+            />
             <button class="btn-secondary" @click="loadBoms">Search</button>
           </div>
         </div>
@@ -70,7 +75,9 @@
               <option value="Submitted">Submitted</option>
               <option value="Completed">Completed</option>
             </select>
-            <button class="btn-secondary" @click="loadProductionPlans">Apply</button>
+            <button class="btn-secondary" @click="loadProductionPlans">
+              Apply
+            </button>
           </div>
         </div>
         <div v-if="productionPlans.length" class="table-wrapper">
@@ -140,7 +147,8 @@ const loadProductionPlans = async () => {
     const res = await erpnextAPI.getManufacturingPlans(params);
     productionPlans.value = res.data?.data || [];
   } catch (e) {
-    error.value = e.response?.data?.message || "Failed to load production plans";
+    error.value =
+      e.response?.data?.message || "Failed to load production plans";
   }
 };
 

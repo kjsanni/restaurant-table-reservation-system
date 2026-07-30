@@ -479,7 +479,7 @@ const cancelReservation = async (reservationId, tenantId) => {
     return await deleteReservation(reservation, tenantId);
   }
 
-  return await cancelReservation(reservation, tenantId);
+  return await setReservationStatus(reservation, "cancelled", tenantId);
 };
 
 const setReservationStatus = async (reservation, status, tenantId) => {
