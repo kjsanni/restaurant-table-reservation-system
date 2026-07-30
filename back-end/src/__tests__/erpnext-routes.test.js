@@ -1,27 +1,18 @@
 describe("ERPNext integration route loading", () => {
-  it("loads accounting proxy routes without throwing", () => {
-    expect(() => {
-      require("../integrations/erpnext/proxies/accounting.proxy");
-    }).not.toThrow();
-  });
+  const proxyModules = [
+    { name: "accounting", path: "../integrations/erpnext/proxies/accounting.proxy" },
+    { name: "HR", path: "../integrations/erpnext/proxies/hr.proxy" },
+    { name: "inventory", path: "../integrations/erpnext/proxies/inventory.proxy" },
+    { name: "CRM", path: "../integrations/erpnext/proxies/crm.proxy" },
+  ];
 
-  it("loads HR proxy routes without throwing", () => {
-    expect(() => {
-      require("../integrations/erpnext/proxies/hr.proxy");
-    }).not.toThrow();
-  });
-
-  it("loads inventory proxy routes without throwing", () => {
-    expect(() => {
-      require("../integrations/erpnext/proxies/inventory.proxy");
-    }).not.toThrow();
-  });
-
-  it("loads CRM proxy routes without throwing", () => {
-    expect(() => {
-      require("../integrations/erpnext/proxies/crm.proxy");
-    }).not.toThrow();
-  });
+  for (const mod of proxyModules) {
+    it(`loads ${mod.name} proxy routes without throwing`, () => {
+      expect(() => {
+        require(mod.path);
+      }).not.toThrow();
+    });
+  }
 
   it("loads onboarding routes without throwing", () => {
     expect(() => {
@@ -39,5 +30,16 @@ describe("ERPNext integration route loading", () => {
     expect(() => {
       require("../integrations/erpnext/client");
     }).not.toThrow();
+  });
+
+  it("CRM proxy exposes routes matching frontend erpnextAPI CRM methods", () => {
+    const crm = require("../integrations/erpnext/proxies/crm.proxy");
+    const layerPaths = crm.stack
+      .filter((l) => l.route)
+      .map((l) => l.route.path);
+
+    expect(layerPaths).toEqual(
+      expect.arrayContaining(["/customers", "/leads", "/campaigns", "/opportunities"])
+    );
   });
 });
