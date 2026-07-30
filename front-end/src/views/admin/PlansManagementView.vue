@@ -19,6 +19,7 @@
             <th>Price</th>
             <th>Max Tables</th>
             <th>Max Reservations / mo</th>
+            <th>ERPNext</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -37,6 +38,12 @@
                   ? "∞"
                   : plan.maxReservationsPerMonth
               }}
+            </td>
+            <td>
+              <span v-if="plan.erpnextModules?.length" class="erpnext-badge">
+                {{ plan.erpnextModules.length }} module{{ plan.erpnextModules.length === 1 ? "" : "s" }}
+              </span>
+              <span v-else class="text-muted">—</span>
             </td>
             <td>
               <span
@@ -119,6 +126,20 @@
               <option :value="false">Inactive</option>
             </select>
           </div>
+          <div class="form-group">
+            <label>ERPNext Modules</label>
+            <div class="checkbox-group">
+              <label v-for="mod in erpnextModuleOptions" :key="mod.flag" class="checkbox-label">
+                <input
+                  type="checkbox"
+                  :value="mod.flag"
+                  v-model="form.erpnextModules"
+                />
+                {{ mod.name }}
+              </label>
+            </div>
+            <p class="form-hint">Allowed ERPNext modules for tenants on this plan.</p>
+          </div>
           <div class="modal-actions">
             <button type="button" @click="closeModal" class="btn-secondary">
               Cancel
@@ -156,7 +177,17 @@ const form = ref({
   maxReservationsPerMonth: 500,
   isActive: true,
   sortOrder: 0,
+  erpnextModules: [],
 });
+
+const erpnextModuleOptions = [
+  { flag: "erpnext_accounting", name: "Accounting" },
+  { flag: "erpnext_stock", name: "Inventory" },
+  { flag: "erpnext_crm", name: "CRM" },
+  { flag: "erpnext_hr", name: "HR" },
+  { flag: "erpnext_pos", name: "POS" },
+  { flag: "erpnext_manufacturing", name: "Manufacturing" },
+];
 
 const loadPlans = async () => {
   const response = await planAPI.listPlans();
@@ -174,6 +205,7 @@ const openCreateModal = () => {
     maxReservationsPerMonth: 500,
     isActive: true,
     sortOrder: plans.value.length,
+    erpnextModules: [],
   };
   showModal.value = true;
 };
@@ -189,6 +221,7 @@ const editPlan = (plan) => {
     maxReservationsPerMonth: plan.maxReservationsPerMonth,
     isActive: plan.isActive,
     sortOrder: plan.sortOrder,
+    erpnextModules: plan.erpnextModules || [],
   };
   showModal.value = true;
 };
@@ -445,5 +478,41 @@ onMounted(() => {
   justify-content: flex-end;
   gap: var(--space-3);
   margin-top: var(--space-6);
+}
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.checkbox-label input {
+  accent-color: var(--brand-600);
+}
+.form-hint {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+.erpnext-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--earth-100);
+  color: var(--earth-600);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.text-muted {
+  color: var(--ink-muted);
 }
 </style>

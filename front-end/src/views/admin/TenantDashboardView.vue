@@ -195,6 +195,7 @@
             <th>Name</th>
             <th>Slug</th>
             <th>Plan</th>
+            <th>ERPNext</th>
             <th>Vertical</th>
             <th>Status</th>
             <th>Subscription</th>
@@ -214,6 +215,12 @@
             <td>{{ tenant.name }}</td>
             <td>{{ tenant.slug }}</td>
             <td>{{ tenant.plan }}</td>
+            <td>
+              <span v-if="tenant.erpnextModules?.length" class="erpnext-badge">
+                {{ tenant.erpnextModules.join(", ") }}
+              </span>
+              <span v-else class="text-muted">—</span>
+            </td>
             <td>{{ tenant.businessVertical || "—" }}</td>
             <td>
               <span :class="['status-badge', tenant.status]">{{
@@ -788,5 +795,17 @@ onMounted(async () => {
   margin: 0 0 var(--space-4) 0;
   color: var(--ink-muted);
   font-size: var(--text-sm);
+}
+.erpnext-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-success-light, #e6f4ea);
+  color: var(--color-success, #1e7e34);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+.text-muted {
+  color: var(--ink-muted);
 }
 </style>
