@@ -28,7 +28,9 @@
     "loadtest:leak": "node load-tests/leak-check.js --sample 20 --rounds 3",
     "loadtest:queue": "node load-tests/queue-bench.js --jobs 500 --concurrency 5 --sendMs 50",
     "test:postman": "bash scripts/smoke-test.sh",
-    "test:postman:prod": "BASE_URL=http://192.168.88.10 bash scripts/smoke-test.sh"
+    "test:postman:prod": "BASE_URL=http://192.168.88.10 bash scripts/smoke-test.sh",
+    "audit": "npm audit --omit=dev --audit-level=moderate",
+    "audit:fix": "npm audit --omit=dev --audit-level=moderate --fix"
   },
   "author": "Slavyan Hristov",
   "license": "ISC",
