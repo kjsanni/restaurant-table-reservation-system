@@ -57,17 +57,13 @@ const validateTurnstile = async (req, res, next) => {
     }
 
     const token = getTurnstileToken(req);
-    // codeql[js/user-controlled-bypass] Token is validated before use; empty/invalid tokens return 403.
-    if (typeof token !== "string" || token.trim().length === 0) {
-      return res.status(403).json({
-        success: false,
-        message: "Turnstile verification failed. Please complete the challenge.",
-      });
-    }
+    const hasToken = typeof token === "string" && token.trim().length > 0;
 
-    const valid = await verifyTurnstileToken(token, req.ip || req.connection.remoteAddress);
-    if (valid) {
-      return next();
+    if (hasToken) {
+      const valid = await verifyTurnstileToken(token, req.ip || req.connection.remoteAddress);
+      if (valid) {
+        return next();
+      }
     }
 
     return res.status(403).json({
