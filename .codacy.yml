@@ -1,0 +1,17 @@
+---
+engines:
+  jshint:
+    enabled: true
+    config:
+      node: true
+      esversion: 6
+    exclude_paths:
+      - "front-end/src/**/*.vue"
+      - "front-end/src/views/**/*.vue"
+      - "front-end/src/components/**/*.vue"
+  csslint:
+    enabled: true
+  stylelint:
+    enabled: true
+  semgrep:
+    enabled: true

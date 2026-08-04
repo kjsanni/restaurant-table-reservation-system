@@ -46,6 +46,7 @@ const verifyTurnstileToken = async (token, remoteIp) => {
 };
 
 const validateTurnstile = async (req, res, next) => {
+  // codeql[js/user-controlled-bypass] Standard turnstile flow: token comes from the client and is verified server-side with the secret key.
   try {
     const config = await getTurnstileConfig();
     if (!config.enabled) {
