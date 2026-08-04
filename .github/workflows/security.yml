@@ -46,7 +46,7 @@ jobs:
         with:
           node-version: 20
       - name: Install Semgrep
-        run: npm install -g @semgrep/semgrep
+        run: npm install -g semgrep
       - name: Run Semgrep SAST scan
         run: semgrep --config p/security-audit --config p/owasp-top-ten --config p/nodejs --config p/vuejs --sarif --output semgrep.sarif .
       - name: Upload SARIF
