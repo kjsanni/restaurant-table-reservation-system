@@ -196,9 +196,7 @@ onUnmounted(() => {
         <div class="tl-topbar-right">
           <LocaleSwitcher />
           <TenantSwitcher
-            v-if="
-              user?.permissions?.manage_tenants && authStore.tenantModeEnabled
-            "
+            v-if="user?.permissions?.manage_tenants"
             :modelValue="authStore.currentTenant?.id || ''"
             @update:modelValue="authStore.setTenant"
           />
@@ -210,7 +208,9 @@ onUnmounted(() => {
 
       <main class="tl-content">
         <RouterView v-slot="{ Component }">
-          <component v-if="Component" :is="Component" :key="$route.name" />
+          <Transition name="tl-fade" mode="out-in">
+            <component v-if="Component" :is="Component" :key="$route.name" />
+          </Transition>
         </RouterView>
       </main>
 
@@ -578,5 +578,15 @@ onUnmounted(() => {
   .tl-content {
     padding: var(--space-6) var(--space-4);
   }
+}
+
+.tl-fade-enter-active,
+.tl-fade-leave-active {
+  transition: opacity 0.2s var(--ease-in-out);
+}
+
+.tl-fade-enter-from,
+.tl-fade-leave-to {
+  opacity: 0;
 }
 </style>

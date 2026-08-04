@@ -3,8 +3,9 @@ const router = express.Router();
 const tipController = require("../controllers/whistleblowerTip.controller");
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
 const tryCatchHandler = require("../../middleware/tryCatch");
+const { logAction } = require("../../middleware/auditLog");
 
-router.use(protect, requireSuperAdmin);
+router.use(protect, requireSuperAdmin, logAction);
 
 router.post("/", tryCatchHandler(tipController.createTipHandler));
 router.get("/", tryCatchHandler(tipController.listTipsHandler));

@@ -47,11 +47,7 @@ const protect = async (req, res, next) => {
 
     req.user = user;
 
-    // Tenant isolation: override whatever resolveTenant set from client
-    // headers with the tenant from the authenticated user's JWT. This makes
-    // x-tenant-id spoofing harmless — the DB lookup still happens in
-    // resolveTenant, but the result is never exposed to controllers.
-    if (process.env.TENANT_MODE === "enabled" && user.tenantId) {
+    if (user.tenantId) {
       try {
         const db = require("../db/models");
         const tenant = await db.tenant.findByPk(user.tenantId);
@@ -70,10 +66,7 @@ const protect = async (req, res, next) => {
           message: "Failed to resolve tenant.",
         });
       }
-    } else if (process.env.TENANT_MODE === "enabled" && !user.tenantId) {
-      // Super-admin / platform user: allow tenant-scoped routes without a
-      // tenant, but only if resolveTenant was explicitly bypassed (platform
-      // admin paths). If resolveTenant set one from a spoofed header, clear it.
+    } else {
       if (req.tenant && !isNoTenantRequired(req.path)) {
         req.tenant = null;
       }

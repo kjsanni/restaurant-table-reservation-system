@@ -510,7 +510,7 @@ const updateSettingsHandler = async (req, res) => {
       const { resetTenantModeCache } = require("../tenant-platform/utils/tenantMode");
       resetTenantModeCache();
     } catch {
-      // module not loaded when TENANT_MODE off; ignore
+      // ignore
     }
   }
   return res.status(200).json({

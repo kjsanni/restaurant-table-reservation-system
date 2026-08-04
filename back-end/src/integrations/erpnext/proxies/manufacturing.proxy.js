@@ -17,7 +17,7 @@ const checkErpnextManufacturing = async (req, res, next) => {
   next();
 };
 
-router.get("/boms", tryCatchHandler(requireActiveTenant, checkErpnextManufacturing, async (req, res) => {
+router.get("/manufacturing/boms", tryCatchHandler(requireActiveTenant, checkErpnextManufacturing, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { search, page = 1, pageSize = 20 } = req.query;
@@ -33,7 +33,7 @@ router.get("/boms", tryCatchHandler(requireActiveTenant, checkErpnextManufacturi
   }
 }));
 
-router.get("/boms/:bomId", tryCatchHandler(requireActiveTenant, checkErpnextManufacturing, async (req, res) => {
+router.get("/manufacturing/boms/:bomId", tryCatchHandler(requireActiveTenant, checkErpnextManufacturing, async (req, res) => {
   const tenant = req.tenant;
   const { bomId } = req.params;
   const { getClient } = require("../client");
@@ -45,7 +45,7 @@ router.get("/boms/:bomId", tryCatchHandler(requireActiveTenant, checkErpnextManu
   }
 }));
 
-router.get("/production-plans", tryCatchHandler(requireActiveTenant, checkErpnextManufacturing, async (req, res) => {
+router.get("/manufacturing/production-plans", tryCatchHandler(requireActiveTenant, checkErpnextManufacturing, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { status, from, to, page = 1, pageSize = 20 } = req.query;

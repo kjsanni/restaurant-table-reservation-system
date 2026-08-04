@@ -51,7 +51,7 @@ describe("salonCron", () => {
     it("skips past weekly occurrences without backfilling and advances lastGeneratedAt", async () => {
       const recurring = {
         ...baseRecurring,
-        lastGeneratedAt: "2026-07-15",
+        lastGeneratedAt: "2026-07-14",
         startDate: "2026-07-01",
       };
 

@@ -8,12 +8,6 @@ const isTenantModeEnabled = async () => {
   const now = Date.now();
   if (cachedEnabled !== null && now - cachedAt < 60000) return cachedEnabled;
 
-  if (process.env.TENANT_MODE !== "enabled") {
-    cachedEnabled = false;
-    cachedAt = now;
-    return false;
-  }
-
   let enabled = false;
   try {
     const setting = await db.setting.findOne({ where: { key: "tenant_mode_enabled" } });

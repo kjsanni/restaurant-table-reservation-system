@@ -24,10 +24,7 @@ const processQueue = (error) => {
 
 API.interceptors.request.use((config) => {
   const authStore = useAuthStore();
-  if (
-    authStore.currentTenant &&
-    import.meta.env.VITE_TENANT_MODE === "enabled"
-  ) {
+  if (authStore.currentTenant) {
     config.headers["X-Tenant-Id"] = authStore.currentTenant.id;
   }
   return config;

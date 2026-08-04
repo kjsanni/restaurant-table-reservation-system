@@ -81,7 +81,7 @@ const updateOrder = async (id, tenantId, data) => {
   }
 
   if (data.discountType || data.discountValue !== null && data.discountValue !== undefined) {
-    const items = await OrderItem.findAll({ where: { orderId: id } });
+    const items = await OrderItem.findAll({ where: { orderId: id, ...withTenant({}, tenantId) } });
     const subtotal = items.reduce((s, i) => s + parseFloat(i.lineTotal || 0), 0);
     const discountAmount = calculateDiscount(subtotal, data.discountType || order.discountType, data.discountValue || order.discountValue || 0);
     data.total = (subtotal - discountAmount).toFixed(2);
@@ -266,7 +266,7 @@ const recalculateOrderTotal = async (orderId, tenantId) => {
   if (!order) return null;
 
   const items = await OrderItem.findAll({
-    where: { orderId },
+    where: { orderId, ...withTenant({}, tenantId) },
   });
 
   const subtotal = items.reduce((sum, item) => sum + parseFloat(item.lineTotal || 0), 0);

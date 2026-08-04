@@ -25,7 +25,7 @@ The multi-tenant SaaS module is scaffolded and feature-complete at the API layer
 
 - Schema-per-tenant or database-per-tenant sharding.
 - Moving multi-tenant code to a separate repo/service.
-- Changing the existing `TENANT_MODE=enabled` feature-flag contract.
+- Moving multi-tenant code to a separate repo/service.
 
 ## Scope
 
@@ -44,7 +44,7 @@ The multi-tenant SaaS module is scaffolded and feature-complete at the API layer
 
 ## Acceptance Criteria
 
-1. With `TENANT_MODE=enabled`, `req.tenant` is populated before any domain router executes.
+1. `req.tenant` is populated before any domain router executes.
 2. New `Customer`, `Reservation`, `User`, `Table`, `Payment`, `Waitlist`, `AuditLog`, `TimeOff`, `Shift`, `EmailTemplate`, `Role`, `Group`, `FloorPlan`, `Schedule`, `Holiday`, `ReservationStatusHistory`, `Refund`, `TableEvent`, `LoginAttempt`, `PermissionTemplate`, `StaffShift` rows created through Sequelize include `tenantId`.
 3. Two tenants can both have an admin with email `admin@x.com` without unique-key collisions.
 4. Tenant lookup by slug/id is cached in Redis with TTL and negative caching.
@@ -52,7 +52,7 @@ The multi-tenant SaaS module is scaffolded and feature-complete at the API layer
 6. Tenant cron runs exactly once across PM2 cluster instances.
 7. Tenant switcher supports search/pagination instead of loading all tenants.
 8. Backend test suite passes after migrations and model changes.
-9. No regression in single-tenant mode (`TENANT_MODE` unset/disabled).
+9. No regression in tenant isolation.
 
 ## Implementation Order
 

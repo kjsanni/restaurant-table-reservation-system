@@ -29,7 +29,7 @@ module.exports = {
       {
         key: "tenant_mode_enabled",
         value: JSON.stringify(false),
-        description: "Enable multi-tenant mode (SaaS). Requires TENANT_MODE=enabled to take effect.",
+        description: "Multi-tenant mode is always enabled (SaaS).",
       },
     ];
 

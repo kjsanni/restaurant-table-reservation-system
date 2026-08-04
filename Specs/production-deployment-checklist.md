@@ -60,7 +60,7 @@
 ### Configuration
 - [ ] Set `instances: "max"` or a fixed number based on CPU cores
 - [ ] Set `exec_mode: "cluster"`
-- [ ] Enable `--no-daemon` for Docker/Kubernetes, or use PM2 daemon with `pm2 startup`
+- [ ] Enable `--no-daemon` for container runtimes, or use PM2 daemon with `pm2 startup`
 - [ ] Set `max_memory_restart` (e.g., `1G`) to prevent memory leaks
 
 ### Cron / Workers
@@ -79,8 +79,6 @@
 
 ### Environment Variables
 - [ ] `NODE_ENV=production`
-- [ ] `TENANT_MODE=enabled` (only after full multi-tenant testing)
-- [ ] `VITE_TENANT_MODE=enabled` in frontend build
 - [ ] `JWT_SECRET` — 32+ random characters, rotated quarterly
 - [ ] `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`
 - [ ] `DB_POOL_MIN`, `DB_POOL_MAX`, `DB_POOL_IDLE`, `DB_POOL_ACQUIRE`
@@ -108,7 +106,7 @@
 ## 5. Frontend
 
 ### Build
-- [ ] Build with `VITE_TENANT_MODE=enabled npm run build`
+- [ ] Build with `npm run build`
 - [ ] Verify `dist/` contains tenant admin routes
 - [ ] Set `VITE_API_URL` to production API endpoint
 
@@ -156,9 +154,8 @@
 ## 8. Rollback Plan
 
 - [ ] Database migration rollback scripts tested (`db:migrate:undo`)
-- [ ] Feature flag `TENANT_MODE` can be disabled instantly
 - [ ] Blue/green deployment or canary release strategy defined
-- [ ] Backend can run single-tenant mode with existing data (tenantId nullable)
+- [ ] Per-tenant suspension capability for rollback (not global flag disable)
 
 ---
 

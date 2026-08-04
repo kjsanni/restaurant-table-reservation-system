@@ -5,10 +5,6 @@ const CRON_LOCK_KEY = "tenant:cron:lock";
 const CRON_LOCK_TTL = 300;
 
 const runTenantCron = async () => {
-  if (process.env.TENANT_MODE !== "enabled") {
-    return;
-  }
-
   let lockAcquired = false;
   try {
     if (client && client.isReady) {

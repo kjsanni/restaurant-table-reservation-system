@@ -17,7 +17,7 @@ const checkErpnextCrm = async (req, res, next) => {
   next();
 };
 
-router.get("/customers", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
+router.get("/crm/customers", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { search, page = 1, pageSize = 20 } = req.query;
@@ -33,7 +33,7 @@ router.get("/customers", tryCatchHandler(requireActiveTenant, checkErpnextCrm, a
   }
 }));
 
-router.get("/leads", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
+router.get("/crm/leads", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { search, page = 1, pageSize = 20 } = req.query;
@@ -49,7 +49,7 @@ router.get("/leads", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async
   }
 }));
 
-router.get("/campaigns", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
+router.get("/crm/campaigns", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { search, page = 1, pageSize = 20 } = req.query;
@@ -65,7 +65,7 @@ router.get("/campaigns", tryCatchHandler(requireActiveTenant, checkErpnextCrm, a
   }
 }));
 
-router.get("/opportunities", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
+router.get("/crm/opportunities", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { search, page = 1, pageSize = 20 } = req.query;

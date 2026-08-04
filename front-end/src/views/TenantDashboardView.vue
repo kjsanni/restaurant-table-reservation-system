@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
@@ -57,13 +58,23 @@ const salonAppointments = ref<any[]>([]);
 const quickLinks = computed<QuickLink[]>(() => [
   {
     path: "/reservations",
-    icon: "📅",
+    icon: "mdi:calendar-clock",
     label: "Reservations",
     hint: "View & manage",
   },
-  { path: "/tables", icon: "🪑", label: "Tables", hint: "Floor plan" },
-  { path: "/schedule", icon: "⏰", label: "Schedule", hint: "Opening hours" },
-  { path: "/staff", icon: "👥", label: "Staff", hint: "Team management" },
+  { path: "/tables", icon: "mdi:table", label: "Tables", hint: "Floor plan" },
+  {
+    path: "/schedule",
+    icon: "mdi:clock-outline",
+    label: "Schedule",
+    hint: "Opening hours",
+  },
+  {
+    path: "/staff",
+    icon: "mdi:account-group",
+    label: "Staff",
+    hint: "Team management",
+  },
 ]);
 
 const formatTime = (v: string) => {
@@ -409,7 +420,9 @@ onMounted(async () => {
             class="qcard"
             @click="router.push(item.path)"
           >
-            <div class="qcard-icon">{{ item.icon }}</div>
+            <div class="qcard-icon">
+              <Icon :icon="item.icon" width="28" height="28" />
+            </div>
             <div class="qcard-body">
               <b>{{ item.label }}</b>
               <span>{{ item.hint }}</span>

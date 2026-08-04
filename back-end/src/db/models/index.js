@@ -99,39 +99,37 @@ Object.keys(db).forEach((modelName) => {
 // The tenant model is normally registered by the directory scan above (see
 // src/db/models/tenant.js). This guarded block is a belt-and-suspenders fallback:
 // if the tenant model is ever moved back under src/tenant-platform/models and is
-// therefore not picked up by the scanner, it is registered here when
-// TENANT_MODE=enabled so resolveTenant and tenant-platform services can access
-// `db.tenant`. It is a no-op when `db.tenant` already exists.
-if (process.env.TENANT_MODE === "enabled" && !db.tenant) {
+// therefore not picked up by the scanner, it is registered here so resolveTenant
+// and tenant-platform services can access `db.tenant`. It is a no-op when
+// `db.tenant` already exists.
+if (!db.tenant) {
   try {
     const tenantModelFactory = require("../../tenant-platform/models/tenant");
     const Tenant = tenantModelFactory(sequelize, Sequelize.DataTypes);
     db[Tenant.name] = Tenant;
     if (Tenant.associate) Tenant.associate(db);
-    logger.info("[db] Tenant model registered via fallback (TENANT_MODE=enabled)");
+    logger.info("[db] Tenant model registered via fallback");
   } catch (err) {
     logger.error("[db] Failed to register tenant model:", err.message);
   }
 }
 
-if (process.env.TENANT_MODE === "enabled") {
-  try {
-    const salonModelsPath = require("path").join(__dirname, "../../verticals/salon/models");
-    const salonFiles = require("fs").readdirSync(salonModelsPath).filter((file) => file !== "index.js" && file.slice(-3) === ".js");
-    salonFiles.forEach((file) => {
-      const model = require(require("path").join(salonModelsPath, file))(sequelize, Sequelize.DataTypes);
-      db[model.name] = model;
-    });
-    Object.keys(db).forEach((modelName) => {
-      if (db[modelName].associate && !db[modelName].__salonAssociated) {
-        db[modelName].associate(db);
-        db[modelName].__salonAssociated = true;
-      }
-    });
-    logger.info("[db] Salon models registered (TENANT_MODE=enabled)");
-  } catch (err) {
-    logger.error("[db] Failed to register salon models:", err.message);
-  }
+try {
+  const salonModelsPath = require("path").join(__dirname, "../../verticals/salon/models");
+  const salonFiles = require("fs").readdirSync(salonModelsPath).filter((file) => file !== "index.js" && file.slice(-3) === ".js");
+  salonFiles.forEach((file) => {
+    const model = require(require("path").join(salonModelsPath, file))(sequelize, Sequelize.DataTypes);
+    db[model.name] = model;
+  });
+  Object.keys(db).forEach((modelName) => {
+    if (db[modelName].associate && !db[modelName].__salonAssociated) {
+      db[modelName].associate(db);
+      db[modelName].__salonAssociated = true;
+    }
+  });
+  logger.info("[db] Salon models registered");
+} catch (err) {
+  logger.error("[db] Failed to register salon models:", err.message);
 }
 
 db.sequelize = sequelize;

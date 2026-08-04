@@ -1,5 +1,4 @@
 process.env.JWT_SECRET = "current-secret-key-here-1234567890123456789012345678";
-process.env.TENANT_MODE = "enabled";
 
 jest.mock("../DAOs/auth.dao");
 jest.mock("../DAOs/role.dao");
@@ -43,10 +42,16 @@ describe("auth middleware", () => {
 
     const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
     platformAuditDAO.log = jest.fn().mockResolvedValue({});
+
+    const db = require("../db/models");
+    db.tenant = {
+      findByPk: jest.fn().mockResolvedValue({ id: 10, name: "Test Tenant", toJSON: () => ({ id: 10, name: "Test Tenant" }) }),
+    };
   });
 
   afterEach(() => {
-    delete process.env.TENANT_MODE;
+    jest.clearAllMocks();
+    jest.resetModules();
   });
 
   describe("protect", () => {
@@ -153,7 +158,7 @@ describe("auth middleware", () => {
       expect(next).toHaveBeenCalled();
     });
 
-    it("loads tenant from DB when TENANT_MODE=enabled and user has tenantId", async () => {
+    it("loads tenant from DB when user has tenantId", async () => {
       const db = require("../db/models");
       db.tenant = {
         findByPk: jest.fn().mockResolvedValue({ id: 10, name: "Tenant A", toJSON: () => ({ id: 10, name: "Tenant A" }) }),

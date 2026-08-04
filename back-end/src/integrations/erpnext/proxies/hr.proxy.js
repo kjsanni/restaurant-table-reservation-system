@@ -17,7 +17,7 @@ const checkErpnextHr = async (req, res, next) => {
   next();
 };
 
-router.get("/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
+router.get("/hr/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { search, page = 1, pageSize = 20 } = req.query;
@@ -33,7 +33,7 @@ router.get("/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr, as
   }
 }));
 
-router.get("/employees/:employeeId", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
+router.get("/hr/employees/:employeeId", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
   const tenant = req.tenant;
   const { employeeId } = req.params;
   const { getClient } = require("../client");
@@ -45,7 +45,7 @@ router.get("/employees/:employeeId", tryCatchHandler(requireActiveTenant, checkE
   }
 }));
 
-router.get("/employees/attendance", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
+router.get("/hr/employees/attendance", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { from, to, page = 1, pageSize = 20 } = req.query;
@@ -62,7 +62,7 @@ router.get("/employees/attendance", tryCatchHandler(requireActiveTenant, checkEr
   }
 }));
 
-router.get("/employees/payroll", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
+router.get("/hr/employees/payroll", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { from, to, page = 1, pageSize = 20 } = req.query;
@@ -79,7 +79,7 @@ router.get("/employees/payroll", tryCatchHandler(requireActiveTenant, checkErpne
   }
 }));
 
-router.post("/sync/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
+router.post("/hr/sync/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
   const tenant = req.tenant;
   const { staffIds } = req.body;
   const { syncEmployee, syncAllEmployees } = require("../sync/employee.sync");

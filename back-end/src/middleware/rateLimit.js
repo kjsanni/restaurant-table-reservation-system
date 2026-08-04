@@ -28,8 +28,11 @@ const makeLimiter = (prefix, opts) => {
     return (req, res, next) => next();
   }
   const store = createRedisStore(prefix);
-  if (!store && process.env.NODE_ENV === "production") {
-    console.warn(`[rateLimit] Redis unavailable for ${prefix}; falling back to in-memory store. Set REDIS_HOST/REDIS_PORT in production.`);
+  if (!store) {
+    if (process.env.NODE_ENV === "production") {
+      return (req, res) => res.status(503).json({ success: false, message: "Service temporarily unavailable. Please try again later." });
+    }
+    console.warn(`[rateLimit] Redis unavailable for ${prefix}; using in-memory store.`);
   }
   return rateLimit({ ...opts, store });
 };

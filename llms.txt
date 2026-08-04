@@ -3,7 +3,7 @@
 Multi-tenant restaurant and salon reservation SaaS operated by **Vibespot Technologies Ltd. (Ghana)**
 Built with Node + Express + Sequelize + MySQL backend and Vue 3 + TypeScript + Vite frontend.
 Ghana locale (GHS), Paystack payments, WhatsApp ordering, ShaQ Express delivery, DPA 2012 compliance.
-Single-tenant by default; multi-tenant platform code lives under `back-end/src/tenant-platform/` and is gated behind `TENANT_MODE=enabled`.
+Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` with vertical modules under `back-end/src/verticals/restaurant/` and `back-end/src/verticals/salon/`.
 
 **Current session additions:**
 - Platform roles, webhook endpoints/notifications, reviews, custom reports, customer loyalty/marketing/waitlist, status/docs, tenant signup.
@@ -25,7 +25,7 @@ Single-tenant by default; multi-tenant platform code lives under `back-end/src/t
 ## Architecture
 
 - **Monorepo layout**: `back-end/` (Express + Sequelize + Redis/BullMQ + Socket.IO) and `front-end/` (Vue 3 + Pinia + Vuestic UI).
-- **Multi-tenant mode**: activated by `TENANT_MODE=enabled`. Tenant context resolved by `resolveTenant` middleware; all tenant-platform code under `back-end/src/tenant-platform/`.
+- **Tenant architecture**: Always multi-tenant. Tenant context resolved by `resolveTenant` middleware; all tenant-platform code under `back-end/src/tenant-platform/`. Restaurant is a vertical module under `back-end/src/verticals/restaurant/`, alongside salon under `back-end/src/verticals/salon/`.
 - **Three frontend entry points** (Vite dev servers):
   - Super-admin portal: `front-end/vite.config.super-admin.js` → port `8080`
   - Tenant portal: `front-end/vite.config.tenant.js` → port `8081`
@@ -112,6 +112,8 @@ npm run test:e2e                      # Playwright E2E
 
 Project skills live under `.kilo/skills/` in this repo. Load `restaurant-rbac` for any auth/permission/staff-table work.
 Global skills from `~/.kilo/skills/` cover UI, testing, architecture, security, and deployment workflows.
+
+**Active workflow guide:** `multi-tenant-saas-workflow` (`~/.kilo/skills/multi-tenant-saas-workflow/SKILL.md`, mirrored in Obsidian at `Skills/multi-tenant-saas-workflow.md`). Use its 7-phase lifecycle for all multi-tenant SaaS work: Discovery & Planning → Architecture & Module System → Implementation → Testing & Quality → Documentation → Deployment & Observability → Operate & Iterate.
 
 ## Obsidian Integration
 

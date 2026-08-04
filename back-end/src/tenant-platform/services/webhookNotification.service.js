@@ -4,7 +4,7 @@ const { URL } = require("url");
 const dns = require("dns");
 const webhookEndpointDAO = require("../DAOs/webhookEndpoint.dao");
 
-const ALLOWED_PROTOCOLS = new Set(["https:", "http:"]);
+const ALLOWED_PROTOCOLS = new Set(["https:"]);
 const BLOCKED_HOSTS = new Set([
   "localhost",
   "127.0.0.1",
@@ -34,12 +34,16 @@ const validateWebhookUrl = async (url) => {
   }
 
   if (!ALLOWED_PROTOCOLS.has(parsed.protocol)) {
-    throw new Error("Webhook URL must use http or https");
+    throw new Error("Webhook URL must use https");
   }
 
   const hostname = parsed.hostname.toLowerCase();
   if (BLOCKED_HOSTS.has(hostname)) {
     throw new Error("Webhook URL points to a blocked host");
+  }
+
+  if (hostname.includes(":")) {
+    throw new Error("Webhook URL must not use an IPv6 literal address");
   }
 
   return new Promise((resolve, reject) => {

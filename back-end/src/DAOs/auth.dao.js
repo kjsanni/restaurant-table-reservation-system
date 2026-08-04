@@ -114,8 +114,10 @@ const updateStaffUser = async (id, updates, tenantId) => {
   return await user.update(updates);
 };
 
-const updateUser = async (id, updates) => {
-  const user = await User.findByPk(id);
+const updateUser = async (id, updates, tenantId) => {
+  const user = await User.findOne({
+    where: withTenant({ id }, tenantId),
+  });
   if (!user) {
     throw { status: 404, message: "User not found!" };
   }

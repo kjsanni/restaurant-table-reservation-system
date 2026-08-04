@@ -4,11 +4,11 @@ Project instructions for AI coding agents working on the Restaurant Table Reserv
 
 ## What this is
 
-A multi-tenant (and single-tenant) restaurant table reservation SaaS.
+A multi-tenant restaurant table reservation SaaS with restaurant and salon verticals.
 
 - **Backend:** Node + Express, MySQL via `mysql2` + **Sequelize** (ORM), Redis (`bullmq` job queue, rate-limit), Socket.IO, Paystack payments (Ghana Cedi / GHS — Mobile Money, cards, banks). JWT auth. Winston + Sentry observability.
 - **Frontend:** Vue 3 (Composition API) + TypeScript, Vite, Pinia, Vue Router, **Vuestic UI**, Chart.js, Iconify. Brand palette centralized in `front-end/src/theme/colors.js`.
-- **Multi-tenant:** all tenant-platform code lives under `back-end/src/tenant-platform/` and is gated behind `TENANT_MODE=enabled` (never loaded in single-tenant mode). Tenant context is resolved by a `resolveTenant` middleware.
+- **Multi-tenant:** all tenant-platform code lives under `back-end/src/tenant-platform/`. Restaurant is now a vertical module under `back-end/src/verticals/restaurant/`, alongside salon under `back-end/src/verticals/salon/`. Tenant context is resolved by a `resolveTenant` middleware.
 - **Locale:** deployed and used in **Ghana** — GHS currency, Ghana Data Protection Act 2012 (Act 843) / Data Protection Commission, Bank of Ghana + GRA for payments.
 
 ## Conventions
@@ -47,7 +47,7 @@ Load these by default for this project; match the skill to the task at hand.
 - `define-architecture` — multi-tenant module boundaries, tenant context propagation, route/role protection.
 - `api-and-interface-design` — stable Express `/api/v1` controller/route contracts and Sequelize service APIs.
 - `pr-reviewer` / `tidy` — quality gates before landing; catch cross-tenant leaks, RBAC gaps, duplication.
-- `code-review-and-quality` — multi-axis review of `tenant-platform` code gated behind `TENANT_MODE`.
+- `code-review-and-quality` — multi-axis review of `tenant-platform` code.
 - `restaurant-rbac` (project skill) — required for any auth/permission/staff-table change.
 - `security-and-hardening` — payments (Paystack/GHS), JWT, PII under DPA 2012.
 - `performance-optimization` — BullMQ/Redis/read-replica paths, frontend bundle (rollup-plugin-visualizer).

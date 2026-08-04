@@ -4,6 +4,8 @@
 > Stack: Node.js + Express + Sequelize + MySQL 8.0 + Redis + BullMQ
 > Author: Performance Engineering
 > Status: **Baseline + multi-tenant benchmarks executed on a local single-node rig**
+>
+> > **Architecture note:** This report was written before single-tenant mode was removed. The system is now always multi-tenant (`TENANT_MODE` toggle removed). The single-tenant baseline runs below represent a pre-architecture-change comparison and are retained for historical context; the multi-tenant findings and recommendations remain current.
 
 ---
 
@@ -11,7 +13,7 @@
 
 A full load-testing harness (`back-end/load-tests/`) was built using **autocannon** and executed
 against two isolated server instances — a single-tenant **baseline** and a
-**multi-tenant** (`TENANT_MODE=enabled`) instance — driving realistic
+**multi-tenant** instance — driving realistic
 authenticated traffic across Reservation, Customer, Table, Payment, Report, and
 Notification (BullMQ) workloads.
 
@@ -34,11 +36,12 @@ Notification (BullMQ) workloads.
 
 1. 🔴 **`db.tenant` was never registered on the shared models object** → header/slug
    tenant resolution threw `500 Failed to resolve tenant` for every request in
-   `TENANT_MODE`. **Resolved** (the tenant model is now loaded into `db`; see §7.1).
-2. 🔴 **Disabling `TENANT_MODE` on a populated multi-tenant DB leaks all tenants'
+   tenant mode. **Resolved** (the tenant model is now loaded into `db`; see §7.1).
+2. 🔴 **Disabling tenant isolation on a populated multi-tenant DB leaks all tenants'
    data** — the leak checker observed **9,010 cross-tenant rows** exposed. The
-   documented "flip `TENANT_MODE` off to roll back" plan is therefore unsafe once
-   multi-tenant data exists.
+    documented "flip `TENANT_MODE` off to roll back" plan is therefore unsafe once
+    multi-tenant data exists. (Historical — `TENANT_MODE` toggle has since been removed;
+    the system is always multi-tenant.)
 3. 🔴 **Default rate limits (100 req / 15 min / IP) make the API unusable under any
    real load** and even for a single active staff user. Load testing is impossible
    without raising them; production limits need re-tuning.
@@ -61,9 +64,9 @@ Server topology used for the runs:
 
 | Port | Mode | Flags |
 |---|---|---|
-| 8000 | Pre-existing dev server (untouched) | `TENANT_MODE=enabled`, default limits |
-| **8100** | **Multi-tenant test target** | `TENANT_MODE=enabled`, `RATE_LIMIT_DISABLED=true`, pool 10/50 |
-| **8101** | **Single-tenant baseline target** | `TENANT_MODE=disabled`, `RATE_LIMIT_DISABLED=true`, pool 10/50 |
+| 8000 | Pre-existing dev server (untouched) | default limits |
+| **8100** | **Multi-tenant test target** | `RATE_LIMIT_DISABLED=true`, pool 10/50 |
+| **8101** | **Single-tenant baseline target** (pre-architecture-change) | `RATE_LIMIT_DISABLED=true`, pool 10/50 |
 
 > Tests were **never** run against production. Dedicated ports and disposable,
 > namespaced (`loadtest-*`) tenant data were used throughout.
@@ -110,7 +113,7 @@ every measured request.
 
 Configuration: 50 connections, 10 s per scenario, single Node instance.
 
-### 4.1 Baseline (single-tenant, `TENANT_MODE=disabled`)
+### 4.1 Baseline (single-tenant, pre-architecture-change run)
 
 | Scenario | Throughput (rps) | p50 (ms) | p95 (ms) | p99 (ms) | Error % |
 |---|---|---|---|---|---|
@@ -121,7 +124,7 @@ Configuration: 50 connections, 10 s per scenario, single Node instance.
 | payments | 1503.9 | 33 | 39 | 44 | 0.00 |
 | reports | 20.0 | 2043 | 2248 | 3059 | 0.00 |
 
-### 4.2 Multi-Tenant (`TENANT_MODE=enabled`, 5 tenants)
+### 4.2 Multi-Tenant (5 tenants)
 
 | Scenario | Throughput (rps) | p50 (ms) | p95 (ms) | p99 (ms) | Error % |
 |---|---|---|---|---|---|
@@ -230,18 +233,18 @@ paths.
    `resolveTenant` and all `tenant-platform` services call `db.tenant.*`, but the
    tenant model (originally only in `src/tenant-platform/models/`) was never
    attached to the shared `db` object built by `src/db/models/index.js`. With
-   `TENANT_MODE=enabled` and header/slug resolution, **every request returned
-   `500 Failed to resolve tenant`**. This is now resolved: the tenant model is
-   registered on `db` (via `src/db/models/tenant.js`, picked up by the model
-   directory scanner; a guarded `TENANT_MODE`-gated fallback also exists in
-   `src/db/models/index.js`). Verified: login + scoped reads return 200 with the
-   correct tenant's rows, and `db.tenant` resolves to a single model instance
-   (no double-registration).
+    `TENANT_MODE=enabled` and header/slug resolution, **every request returned
+    `500 Failed to resolve tenant`**. This is now resolved: the tenant model is
+    registered on `db` (via `src/db/models/tenant.js`, picked up by the model
+    directory scanner; a guarded fallback also exists in
+    `src/db/models/index.js`). Verified: login + scoped reads return 200 with the
+    correct tenant's rows, and `db.tenant` resolves to a single model instance
+    (no double-registration).
 
 2. **Rollback via `TENANT_MODE` off = full cross-tenant data exposure**
    The leak checker run against a single-tenant server holding multi-tenant data
    found **9,010 cross-tenant reservation rows** returned to the wrong tenant.
-   Isolation depends entirely on `TENANT_MODE` being on (DAOs only add the
+   Isolation depends entirely on tenant mode being active (DAOs only add the
    `tenantId` filter when `req.tenant`/`req.user.tenantId` is set). The checklist's
    "flip `TENANT_MODE` off to roll back instantly" is **unsafe** once tenants
    share the DB. In tenant mode, isolation is **correct (0 leaks)**.
@@ -290,9 +293,9 @@ paths.
 
 **Immediate (blockers):**
 1. ✅ Tenant model is registered on `db` (keep it). Add a regression test that
-   boots the app with `TENANT_MODE=enabled` and asserts a header-resolved request
+   boots the app and asserts a header-resolved request
    returns 200 (guards against the model being un-registered again).
-2. Redefine the rollback plan — **do not** disable `TENANT_MODE` on shared data.
+2. Redefine the rollback plan — **do not** disable tenant isolation on shared data.
    Use per-tenant suspension, not a global flag flip, for rollback.
 3. Re-tune rate limits: raise `generalLimiter` substantially and key it on
    `userId`/`tenantId`. Ship the new `RATE_LIMIT_*` env knobs to production config.
@@ -331,7 +334,7 @@ LOAD_TENANTS=100 npm run loadtest:seed          # 100 tenants
 LOAD_TENANTS=5 LOAD_CUSTOMERS=50 LOAD_RESERVATIONS=100 npm run loadtest:seed
 
 # 3. Start a dedicated test server (NEVER production), e.g.:
-PORT=8100 TENANT_MODE=enabled RATE_LIMIT_DISABLED=true \
+PORT=8100 RATE_LIMIT_DISABLED=true \
   DB_POOL_MIN=10 DB_POOL_MAX=50 node ./src/app.js
 
 # 4. Run scenarios
@@ -376,7 +379,7 @@ JSON result artifacts are written to `load-tests/results/`.
 
 | File | Change | Risk |
 |---|---|---|
-| `src/db/models/index.js` | `TENANT_MODE`-gated **fallback** to register `db.tenant` if the model is not picked up by the directory scanner (no-op when already present) | Low — guarded |
+| `src/db/models/index.js` | Guarded **fallback** to register `db.tenant` if the model is not picked up by the directory scanner (no-op when already present) | Low — guarded |
 | `src/middleware/rateLimit.js` | `RATE_LIMIT_*` / `RATE_LIMIT_DISABLED` env overrides; production defaults unchanged | Low — additive |
 | `back-end/package.json` | `loadtest:*` / `test:load` scripts; autocannon devDependency | None |
 
