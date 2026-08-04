@@ -1,6 +1,6 @@
 {
   "node": true,
-  "esversion": 6,
+  "esversion": 2020,
   "globals": {
     "Set": true
   }

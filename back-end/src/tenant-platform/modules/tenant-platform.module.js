@@ -2,6 +2,7 @@
 
 const { adminMiddleware } = require("../../utils/server");
 const { logAction, validateCsrfToken } = require("../../middleware");
+const { webhookLimiter } = require("../../middleware/rateLimit");
 
 const tenantAdminRoutes = require("../routes/tenantAdmin.router");
 const planRoutes = require("../routes/plan.router");
@@ -10,6 +11,7 @@ const usageRoutes = require("../routes/usage.router");
 const revenueRoutes = require("../routes/revenue.router");
 const bulkActionRoutes = require("../routes/bulkAction.router");
 const noteRoutes = require("../routes/note.router");
+const onboardingRoutes = require("../routes/onboarding.router");
 const trialRoutes = require("../routes/trial.router");
 const invoiceRoutes = require("../routes/invoice.router");
 const billingEmailRoutes = require("../routes/billingEmail.router");

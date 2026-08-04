@@ -1,0 +1,4 @@
+front-end/src/**/*.vue
+front-end/src/views/**/*.vue
+front-end/src/components/**/*.vue
+back-end/src/__tests__/erpnext-routes.test.js
