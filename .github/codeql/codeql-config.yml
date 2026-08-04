@@ -9,3 +9,5 @@ exclude:
 
 paths-ignore:
   - '**/*.css'
+  - 'front-end/playwright-report/**'
+  - 'front-end/test-results/**'
