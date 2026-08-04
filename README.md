@@ -1,5 +1,7 @@
 # Restaurant Table Reservation System (RTRS)
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/95072b74db194a008dcf326a386edcf8)](https://app.codacy.com/gh/kjsanni/restaurant-table-reservation-system?utm_source=github.com&utm_medium=referral&utm_content=kjsanni/restaurant-table-reservation-system&utm_campaign=Badge_Grade)
+
 Multi-tenant SaaS platform built for the Ghanaian hospitality market, supporting both **restaurant** and **salon** business verticals. Platform offers WhatsApp-first ordering, ShaQ Express delivery integration, Paystack payments (GHS), and Ghana-localized legal compliance. Built with Node.js, Express, Sequelize, Vue 3, and BullMQ.
 
 Repository: `https://github.com/kjsanni/restaurant-table-reservation-system`
