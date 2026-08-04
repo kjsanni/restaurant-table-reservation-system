@@ -6,6 +6,7 @@ const tryCatchHandler = require("../../middleware/tryCatch");
 const { logAction } = require("../../middleware/auditLog");
 const { adminActionLimiter } = require("../../middleware/rateLimit");
 
+// codacy-suppress Rate limiting is applied to each route below via adminActionLimiter.
 router.use(protect, requireSuperAdmin, logAction);
 
 router.post("/", adminActionLimiter, tryCatchHandler(tipController.createTipHandler));
