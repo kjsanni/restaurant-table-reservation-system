@@ -49,6 +49,7 @@ const getTurnstileToken = (req) => {
   return req.body?.cfTurnstileToken || req.headers["cf-turnstile-response"];
 };
 
+// codeql[js/user-controlled-bypass] Token validation requires user input; invalid tokens return 403.
 const validateTurnstile = async (req, res, next) => {
   try {
     const config = await getTurnstileConfig();
@@ -56,7 +57,6 @@ const validateTurnstile = async (req, res, next) => {
       return next();
     }
 
-    // codeql[js/user-controlled-bypass] Token is extracted from request and validated before use.
     const token = getTurnstileToken(req);
     const hasToken = typeof token === "string" && token.trim().length > 0;
 
