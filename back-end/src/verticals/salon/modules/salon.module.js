@@ -1,7 +1,5 @@
 "use strict";
 
-const { requireVertical } = require("../../middleware/requireVertical");
-const { requiredFeature, requiresServiceMode } = require("../middleware/featureGuard");
 const { logAction, validateCsrfToken } = require("../../middleware");
 
 const salonAppointmentRoutes = require("../routes/appointment.router");
