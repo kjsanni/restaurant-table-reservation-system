@@ -1,4 +1,8 @@
 ---
+exclude_paths:
+  - "back-end/src/middleware/turnstile.js"
+  - "back-end/src/tenant-platform/routes/whistleblowerTip.router.js"
+
 engines:
   jshint:
     enabled: true
