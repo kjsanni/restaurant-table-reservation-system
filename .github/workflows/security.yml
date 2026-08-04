@@ -42,17 +42,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Semgrep SAST scan
-        uses: semgrep/semgrep-action@v1
+      - uses: actions/setup-python@v5
         with:
-          config: >-
-            p/security-audit
-            p/owasp-top-ten
-            p/nodejs
-            p/vuejs
-          generateSARIF: true
-      - name: List SARIF files
-        run: ls -la *.sarif || true
+          python-version: "3.11"
+      - name: Install Semgrep
+        run: pip install semgrep
+      - name: Run Semgrep SAST scan
+        run: semgrep --config p/security-audit --config p/owasp-top-ten --config p/nodejs --config p/vuejs --sarif --output semgrep.sarif .
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v3
         with:
