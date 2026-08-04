@@ -34,7 +34,6 @@ router.get("/manufacturing/boms", tryCatchHandler(requireActiveTenant, checkErpn
 }));
 
 router.get("/manufacturing/boms/:bomId", tryCatchHandler(requireActiveTenant, checkErpnextManufacturing, async (req, res) => {
-  const tenant = req.tenant;
   const { bomId } = req.params;
   const { getClient } = require("../client");
   try {

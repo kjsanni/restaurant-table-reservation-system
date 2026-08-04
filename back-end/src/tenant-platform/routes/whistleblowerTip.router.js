@@ -6,13 +6,12 @@ const tryCatchHandler = require("../../middleware/tryCatch");
 const { logAction } = require("../../middleware/auditLog");
 const { adminActionLimiter } = require("../../middleware/rateLimit");
 
-// codeql[js/missing-rate-limiting] adminActionLimiter is applied below.
-router.use(protect, requireSuperAdmin, adminActionLimiter, logAction);
+router.use(protect, requireSuperAdmin, logAction);
 
-router.post("/", tryCatchHandler(tipController.createTipHandler));
-router.get("/", tryCatchHandler(tipController.listTipsHandler));
-router.get("/stats", tryCatchHandler(tipController.getTipStatsHandler));
-router.get("/:id", tryCatchHandler(tipController.getTipHandler));
-router.patch("/:id", tryCatchHandler(tipController.updateTipHandler));
+router.post("/", adminActionLimiter, tryCatchHandler(tipController.createTipHandler));
+router.get("/", adminActionLimiter, tryCatchHandler(tipController.listTipsHandler));
+router.get("/stats", adminActionLimiter, tryCatchHandler(tipController.getTipStatsHandler));
+router.get("/:id", adminActionLimiter, tryCatchHandler(tipController.getTipHandler));
+router.patch("/:id", adminActionLimiter, tryCatchHandler(tipController.updateTipHandler));
 
 module.exports = router;

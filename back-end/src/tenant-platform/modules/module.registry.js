@@ -104,7 +104,7 @@ class ModuleRegistry {
 
   getEnabled() {
     const enabled = [];
-    for (const [id, module] of this.modules) {
+    for (const [, module] of this.modules) {
       try {
         if (module.enabled && module.enabled() === false) {
           continue;

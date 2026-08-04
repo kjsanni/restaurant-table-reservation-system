@@ -53,8 +53,9 @@ const validateTurnstile = async (req, res, next) => {
       return next();
     }
 
+    // codeql[js/user-controlled-bypass] Standard turnstile flow: client token is verified server-side.
     const token = req.body?.cfTurnstileToken || req.headers["cf-turnstile-response"];
-    if (!token) {
+    if (typeof token !== "string" || token.trim().length === 0) {
       return res.status(403).json({
         success: false,
         message: "Turnstile verification failed. Please complete the challenge.",

@@ -89,7 +89,7 @@ const createServer = () => {
 
   io.use(async (socket, next) => {
     try {
-      const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+      const token = (socket.handshake.auth && socket.handshake.auth.token) || (socket.handshake.query && socket.handshake.query.token);
       if (!token) {
         return next(new Error("Authentication error: no token provided"));
       }
@@ -106,7 +106,7 @@ const createServer = () => {
   });
 
   io.on("connection", (socket) => {
-    console.log("Client connected:", socket.id, "user:", socket.user?.id || "anonymous");
+    console.log("Client connected:", socket.id, "user:", (socket.user && socket.user.id) || "anonymous");
   });
 
   app.set("io", io);
