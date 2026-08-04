@@ -1,7 +1,6 @@
 "use strict";
 
-const express = require("express");
-const { adminMiddleware, adminActionLimiter } = require("../../utils/server");
+const { adminMiddleware } = require("../../utils/server");
 const { logAction, validateCsrfToken } = require("../../middleware");
 
 const tenantAdminRoutes = require("../routes/tenantAdmin.router");

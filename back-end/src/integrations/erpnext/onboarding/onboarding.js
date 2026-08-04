@@ -3,7 +3,7 @@
 const express = require("express");
 const router = express.Router();
 const tryCatchHandler = require("../../../middleware/tryCatch");
-const { protect, requireActiveTenant } = require("../../../middleware/auth");
+const { requireActiveTenant } = require("../../../middleware/auth");
 const db = require("../../../db/models");
 
 const checkErpnextOnboarding = async (req, res, next) => {

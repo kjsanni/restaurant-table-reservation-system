@@ -1,11 +1,7 @@
-"use strict";
-
-const express = require("express");
-const crypto = require("crypto");
 const fs = require("fs");
-const path = require("path");
+const crypto = require("crypto");
 
-const CHECKSUM_FILE = path.join(__dirname, "..", "..", "..", "..", "module-checksums.json");
+const CHECKSUM_FILE = require("path").join(__dirname, "..", "..", "..", "..", "module-checksums.json");
 
 const computeFileChecksum = (filePath) => {
   try {
@@ -35,6 +31,27 @@ const saveChecksums = (checksums) => {
   }
 };
 
+const getModuleFiles = (module) => {
+  const files = [];
+  if (module.manifestPath && fs.existsSync(module.manifestPath)) {
+    files.push(module.manifestPath);
+  }
+
+  const dir = module.dirPath || (module.manifestPath ? require("path").dirname(module.manifestPath) : null);
+  if (dir && fs.existsSync(dir)) {
+    const entries = fs.readdirSync(dir);
+    for (const entry of entries) {
+      const fullPath = require("path").join(dir, entry);
+      const stat = fs.statSync(fullPath);
+      if (stat.isFile() && /\.(js|json|ts|vue|css|html)$/.test(entry)) {
+        files.push(fullPath);
+      }
+    }
+  }
+
+  return [...new Set(files)];
+};
+
 class ModuleRegistry {
   constructor() {
     this.modules = new Map();
@@ -56,21 +73,25 @@ class ModuleRegistry {
     const updated = { ...this.checksums };
 
     for (const [id, module] of this.modules) {
-      const manifestPath = module.manifestPath || null;
-      if (!manifestPath) continue;
-
-      const currentChecksum = computeFileChecksum(manifestPath);
-      if (!currentChecksum) {
-        violations.push({ moduleId: id, reason: "manifest_unreadable", path: manifestPath });
+      const files = getModuleFiles(module);
+      if (!files.length) {
         continue;
       }
 
-      const stored = this.checksums[id];
-      if (stored && stored !== currentChecksum) {
-        violations.push({ moduleId: id, reason: "checksum_mismatch", path: manifestPath, stored, current: currentChecksum });
-      }
+      for (const filePath of files) {
+        const currentChecksum = computeFileChecksum(filePath);
+        if (!currentChecksum) {
+          violations.push({ moduleId: id, reason: "file_unreadable", path: filePath });
+          continue;
+        }
 
-      updated[id] = currentChecksum;
+        const stored = this.checksums[id];
+        if (stored && stored !== currentChecksum) {
+          violations.push({ moduleId: id, reason: "checksum_mismatch", path: filePath, stored, current: currentChecksum });
+        }
+
+        updated[id] = currentChecksum;
+      }
     }
 
     if (violations.length === 0) {

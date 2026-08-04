@@ -43,7 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Semgrep SAST scan
-        uses: returntocorp/semgrep-action@v1
+        uses: semgrep/semgrep-action@v1
         with:
           config: >-
             p/security-audit

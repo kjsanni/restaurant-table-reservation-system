@@ -1,6 +1,5 @@
 "use strict";
 
-const express = require("express");
 const { requireVertical } = require("../../middleware/requireVertical");
 const { requiredFeature, requiresServiceMode } = require("../../tenant-platform/middleware/featureGuard");
 const { logAction, validateCsrfToken } = require("../../middleware");

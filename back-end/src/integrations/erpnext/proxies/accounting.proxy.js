@@ -3,8 +3,7 @@
 const express = require("express");
 const router = express.Router();
 const tryCatchHandler = require("../../../middleware/tryCatch");
-const { protect, requireActiveTenant } = require("../../../middleware/auth");
-const { getTenantFeatureFlagsHandler } = require("../../../tenant-platform/controllers/featureFlag.controller");
+const { requireActiveTenant } = require("../../../middleware/auth");
 const { syncCustomer, syncAllCustomers } = require("../sync/customer.sync");
 const { syncInvoice, syncAllInvoices } = require("../sync/invoice.sync");
 const { syncPayment, syncAllPayments } = require("../sync/payment.sync");

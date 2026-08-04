@@ -28,15 +28,16 @@ const { Server } = require("socket.io");
 const tryCatchHandler = require("../middleware/tryCatch");
 const { protect, requireSuperAdmin } = require("../middleware/auth");
 const ipAllowlist = require("../middleware/ipAllowlist");
-const { authLimiter, generalLimiter, bulkOperationLimiter, adminActionLimiter, syncLimiter, webhookLimiter } = require("../middleware/rateLimit");
+const { authLimiter, generalLimiter, adminActionLimiter, syncLimiter, webhookLimiter } = require("../middleware/rateLimit");
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
 const { startBackupWorker } = require("../queues/backup.queue");
+const { checkQueueDepths } = require("../queues/queue");
 const { resolveTenant } = require("../tenant-platform/middleware/resolveTenant");
 const { requireActiveTenant } = require("../tenant-platform/middleware/tenantStatus");
-const { requiredFeature: requireFeature, requiresServiceMode } = require("../tenant-platform/middleware/featureGuard");
+const { requiresServiceMode } = require("../tenant-platform/middleware/featureGuard");
 const { requireVertical } = require("../middleware/requireVertical");
-const { registry, loadModules } = require("../tenant-platform/modules/module.loader");
+const { loadModules } = require("../tenant-platform/modules/module.loader");
 const erpnextAccountingRouter = require("../integrations/erpnext/proxies/accounting.proxy");
 const erpnextInventoryRouter = require("../integrations/erpnext/proxies/inventory.proxy");
 const erpnextHrRouter = require("../integrations/erpnext/proxies/hr.proxy");
@@ -179,9 +180,15 @@ const createServer = () => {
     res.json({ success: true, token });
   });
 
-  app.get("/api/v1/health", (req, res) => {
-    res.json({ success: true, status: "healthy", timestamp: new Date().toISOString() });
-  });
+  app.get("/api/v1/health", tryCatchHandler(async (req, res) => {
+    const queueAlerts = await checkQueueDepths();
+    res.json({
+      success: true,
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      queueAlerts: queueAlerts.length ? queueAlerts : undefined,
+    });
+  }));
 
   app.use(tryCatchHandler(resolveTenant));
   app.use(tryCatchHandler(requireActiveTenant));
