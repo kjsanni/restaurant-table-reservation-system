@@ -3,6 +3,7 @@ const router = express.Router();
 const httpMethodError = require("../middleware/httpMethodError");
 const webhookController = require("../controllers/webhook.controller");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
+const { webhookLimiter } = require("../middleware/rateLimit");
 
 router
   .route("/")
@@ -17,7 +18,7 @@ router
 
 router
   .route("/paystack")
-  .post(webhookController.paystackEventHandler)
+  .post(webhookLimiter, webhookController.paystackEventHandler)
   .all(httpMethodError);
 
 module.exports = router;

@@ -97,10 +97,10 @@ load();
       <h3 class="integration-title">Multi-Tenant Mode</h3>
       <div class="setting-row">
         <div class="setting-info">
-          <label class="setting-label">Enable SaaS Multi-Tenancy</label>
+          <label class="setting-label">Multi-Tenant Mode</label>
           <p class="setting-description">
-            When enabled (and the server runs with TENANT_MODE=enabled), the
-            platform supports multiple restaurants with isolated data.
+            Multi-tenant mode is always active on this platform. Each tenant has
+            isolated data and branding.
           </p>
         </div>
         <VaSwitch

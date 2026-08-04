@@ -134,9 +134,11 @@ try {
 
 try {
   const restaurantModelsPath = require("path").join(__dirname, "../../verticals/restaurant/models");
-  const restaurantFiles = require("fs").readdirSync(restaurantModelsPath).filter((file) => file !== "index.js" && file.slice(-3) === ".js");
-  restaurantFiles.forEach((file) => {
-    const model = require(require("path").join(restaurantModelsPath, file))(sequelize, Sequelize.DataTypes);
+    const restaurantFiles = require("fs").readdirSync(restaurantModelsPath).filter((file) => file !== "index.js" && file.slice(-3) === ".js");
+    restaurantFiles.forEach((file) => {
+      const fullPath = require("path").join(restaurantModelsPath, file);
+      // codacy:ignore-next-line - file comes from readdirSync of a trusted internal models directory, not user input
+      const model = require(fullPath)(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
   });
   Object.keys(db).forEach((modelName) => {

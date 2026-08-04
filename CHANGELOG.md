@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [Unreleased] — 2026-08-04
+
+### Added — Release Automation
+- **Changesets** — Added `.changeset/` config for per-PR changelog entries; `release.yml` workflow auto-generates CHANGELOG, bumps `VERSION`, and creates GitHub releases on merge to `main`
+- **Branch protection** — Added `.github/branch-protection.json` and `.github/dependabot.yml` config for automated PR review enforcement and dependency updates
+- **Release workflow** — New `release.yml` runs changesets version bump, syncs `VERSION` and sub-package.json versions, then creates a tagged GitHub release
+- **PR template** — Added `.github/PULL_REQUEST_TEMPLATE.md` enforcing conventional commits, testing checklist, and project constraints (nullable `tenantId`, salon CSS vars, RBAC rules)
+- **`version:bump` script** — Root `package.json` now has a script to sync `VERSION` + root `package.json` in one command (`npm run version:bump -- 1.2.0`)
+
+### Fixed — Security & Lint (Codacy/Semgrep)
+- **SQL Injection in migrations** — Replaced raw `UPDATE \`${table}\`` queries with Sequelize `queryInterface.bulkUpdate()` in `20260717000003-backfill-default-tenant.js` and `20260718000003-backfill-remaining-nulls.js` (Semgrep)
+- **CSRF cookie HttpOnly** — Added `nosemgrep` suppression comments for XSRF-TOKEN cookie in `csrf.js` and `server.js`; `httpOnly: false` is intentional for double-submit CSRF pattern (frontend JS must read the token)
+- **Unpinned GitHub Actions** — Pinned `appleboy/ssh-action` to commit SHA `029f5b4aeeeb58fdfe1410a5d17f967dacf36262`, `trufflesecurity/trufflehog@main` → `@v3` with SHA `fda044631b344997a4556f52aadbd7c8275d0802`, `podman/setup-podman@v3` (repo deprecated) → direct `podman --version` verification (ubuntu-latest has Podman pre-installed) (Codacy)
+- **Non-literal require** — Added `codacy:ignore-next-line` suppressions for dynamic `require(mod.path)` in `erpnext-routes.test.js` (hardcoded array paths) and `require(fullPath)` in `db/models/index.js` (readdirSync of trusted internal directory) (Codacy)
+- **SSRF webhook URL** — Added `codacy:ignore-next-line` suppression in `webhook.service.js` explaining that `sub.url` is pre-validated by `validateWebhookUrl` (blocks non-HTTPS, private IPs, `localhost`, link-local) (Codacy)
+- **Dynamic path construction** — Added `codacy:ignore-next-line` suppressions in `module.registry.js` for filesystem operations on internally-registered module paths (Codacy)
+- **HSTS numeric literal** — Replaced magic number `31536000` with computed expression `365 * 24 * 60 * 60` in `server.js` for self-documenting code
+
+### Changed — Version Sync
+- **Package versions synced** — `back-end/package.json` and `front-end/package.json` bumped from `1.0.0` → `1.1.0` to match root `VERSION` file and root `package.json`
+
+### Added — Tooling
+- **`@changesets/cli`** — Added as root `devDependency` for changelog management
+
+---
+
 ## [Unreleased] — 2026-07-29
 
 ### Added

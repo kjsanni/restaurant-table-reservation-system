@@ -4,6 +4,7 @@ const httpMethodError = require("../middleware/httpMethodError");
 const promotionController = require("../controllers/promotion.controller");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 const { validateCsrfToken } = require("../middleware/csrf");
+const { generalLimiter } = require("../middleware/rateLimit");
 
 router
   .route("/")
@@ -13,7 +14,7 @@ router
 
 router
   .route("/validate")
-  .post(promotionController.validatePromotionHandler)
+  .post(generalLimiter, promotionController.validatePromotionHandler)
   .all(httpMethodError);
 
 router

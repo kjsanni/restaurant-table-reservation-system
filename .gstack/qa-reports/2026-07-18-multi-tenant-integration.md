@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-18
 **System:** Restaurant Table Reservation System (RTRS)
-**Mode:** `TENANT_MODE=enabled` (set in `back-end/.env`)
+**Mode:** Multi-tenant (always-on; `TENANT_MODE` toggle removed in favor of always-on multi-tenant architecture)
 **Tier:** Integration (all 10 requested checks) + bug fixes
 **Status:** ✅ PASS — all 10 checks green after fixing 4 critical bugs
 
@@ -109,8 +109,8 @@ exemption in both `resolveTenant` (skip when no identifier) and `requireActiveTe
 ## How to Reproduce
 
 ```bash
-# Backend (TENANT_MODE enabled)
-cd back-end && TENANT_MODE=enabled node ./src/app.js
+# Backend (multi-tenant, always-on)
+cd back-end && node ./src/app.js
 
 # Auth token (admin)
 node -e "const j=require('jsonwebtoken'),fs=require('fs');const e=fs.readFileSync('.env','utf8').split('\n').reduce((a,l)=>{const m=l.match(/^([^=]+)=(.*)$/);if(m)a[m[1]]=m[2];return a},{});console.log(j.sign({userId:25,role:'admin'},e.JWT_SECRET,{expiresIn:e.JWT_EXPIRES_IN}))"
@@ -127,7 +127,7 @@ redis-cli --scan --pattern 'rl:admin:*' | xargs redis-cli del   # reset between 
 
 ## Conclusion
 
-All 10 multi-tenant integration checks **pass** with `TENANT_MODE=enabled`. Four critical
+All 10 multi-tenant integration checks **pass** with multi-tenant mode active. Four critical
 bugs were discovered and fixed (rate-limiter module export, shared store, missing `Tenant`
 model, platform-admin tenant-context bypass). Backend (121 tests) and frontend build are
 green. The multi-tenant module is now functionally production-ready at the integration

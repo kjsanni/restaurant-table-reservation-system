@@ -21,6 +21,7 @@ describe("ERPNext integration route loading", () => {
   for (const mod of proxyModules) {
     it(`loads ${mod.name} proxy routes without throwing`, () => {
       expect(() => {
+        // codacy:ignore-next-line - proxyModules paths are hardcoded string literals from the array above, not user input
         require(mod.path);
       }).not.toThrow();
     });

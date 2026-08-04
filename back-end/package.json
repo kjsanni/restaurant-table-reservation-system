@@ -1,6 +1,6 @@
 {
   "name": "restaurant-table-reservation-system-back-end",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Back-end of Restaurant Table Reservation System. Created with Node.JS",
   "repository": {
     "type": "git",

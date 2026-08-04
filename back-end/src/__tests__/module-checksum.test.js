@@ -8,6 +8,8 @@ jest.mock("fs", () => {
     writeFileSync: jest.fn((path, data) => {
       store[path] = data;
     }),
+    readdirSync: jest.fn(() => []),
+    statSync: jest.fn(() => ({ isFile: () => false })),
   };
 });
 

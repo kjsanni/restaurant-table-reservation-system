@@ -13,6 +13,7 @@ const setCsrfCookie = (req, res, next) => {
     const token = generateCsrfToken();
     const isProduction = process.env.NODE_ENV === "production";
     res.cookie(CSRF_COOKIE_NAME, token, {
+      // nosemgrep: javascript.lang.security.audit.cookie-http-only-disabled - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
       httpOnly: false,
       secure: isProduction,
       sameSite: isProduction ? "lax" : false,

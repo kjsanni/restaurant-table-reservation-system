@@ -6,6 +6,7 @@ node_modules/
 .env.local
 .env.*.local
 .env.production
+.env*.bak
 
 # Logs
 logs/
@@ -30,9 +31,15 @@ screenshots/
 *.jpg
 *.jpeg
 
+# Test artifacts
+test-results/
+playwright-report/
+
+# Tenant portal build output (untracked, not in version control)
+tenant/
+
 # Mockups
 .kilo/mockups/
-
 
 #Ignore vscode AI rules
 .github/instructions/codacy.instructions.md

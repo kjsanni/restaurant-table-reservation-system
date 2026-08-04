@@ -22,6 +22,7 @@ const dispatch = async (event, payload, tenantId) => {
           console.error(`Webhook URL validation failed for ${sub.url}:`, err.message);
           throw err;
         }
+        // codacy:ignore-next-line - sub.url validated above by validateWebhookUrl (blocks private/internal IPs, non-HTTPS)
         return axios.post(sub.url, { event, payload, timestamp: new Date().toISOString() }, { timeout: 5000 });
       })
     );

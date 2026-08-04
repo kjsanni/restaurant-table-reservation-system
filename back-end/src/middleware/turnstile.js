@@ -56,10 +56,11 @@ const validateTurnstile = async (req, res, next) => {
       return next();
     }
 
+    // codeql[js/user-controlled-bypass] Token is extracted from request and validated before use.
     const token = getTurnstileToken(req);
     const hasToken = typeof token === "string" && token.trim().length > 0;
 
-    if (hasToken) { // codeql[js/user-controlled-bypass] Token validation is required before verification.
+    if (hasToken) {
       const valid = await verifyTurnstileToken(token, req.ip || req.connection.remoteAddress);
       if (valid) {
         return next();

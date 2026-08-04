@@ -5,6 +5,7 @@ const CHECKSUM_FILE = require("path").join(__dirname, "..", "..", "..", "..", "m
 
 const computeFileChecksum = (filePath) => {
   try {
+    // codacy:ignore-next-line - filePath is derived from internally-registered module paths, not user input
     const content = fs.readFileSync(filePath, "utf8");
     return crypto.createHash("sha256").update(content).digest("hex");
   } catch (err) {
@@ -15,6 +16,7 @@ const computeFileChecksum = (filePath) => {
 const loadStoredChecksums = () => {
   try {
     if (fs.existsSync(CHECKSUM_FILE)) {
+      // codacy:ignore-next-line - CHECKSUM_FILE is a static internal path
       return JSON.parse(fs.readFileSync(CHECKSUM_FILE, "utf8"));
     }
   } catch {
@@ -25,6 +27,7 @@ const loadStoredChecksums = () => {
 
 const saveChecksums = (checksums) => {
   try {
+    // codacy:ignore-next-line - CHECKSUM_FILE is a static internal path
     fs.writeFileSync(CHECKSUM_FILE, JSON.stringify(checksums, null, 2));
   } catch {
     // ignore write errors in read-only environments
@@ -34,14 +37,18 @@ const saveChecksums = (checksums) => {
 const getModuleFiles = (module) => {
   const files = [];
   if (module.manifestPath && fs.existsSync(module.manifestPath)) {
+    // codacy:ignore-next-line - manifestPath is a static internal path registered via ModuleRegistry.register()
     files.push(module.manifestPath);
   }
 
   const dir = module.dirPath || (module.manifestPath ? require("path").dirname(module.manifestPath) : null);
   if (dir && fs.existsSync(dir)) {
+    // codacy:ignore-next-line - dir is derived from internally-registered module paths
     const entries = fs.readdirSync(dir);
     for (const entry of entries) {
+      // codacy:ignore-next-line - dir is derived from internally-registered module paths, not user input
       const fullPath = require("path").join(dir, entry);
+      // codacy:ignore-next-line - fullPath is constructed from trusted dir + readdirSync entries
       const stat = fs.statSync(fullPath);
       if (stat.isFile() && /\.(js|json|ts|vue|css|html)$/.test(entry)) {
         files.push(fullPath);

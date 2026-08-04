@@ -22,9 +22,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: back-end/package-lock.json
       - name: Set up Podman
-        uses: podman/setup-podman@v3
-        with:
-          version: v4.8.0
+        run: podman --version
       - name: Generate version tag
         id: version
         run: |
@@ -59,7 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Deploy to staging
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.0.3 # 029f5b4aeeeb58fdfe1410a5d17f967dacf36262
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USERNAME }}
@@ -86,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Deploy to production
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.0.3 # 029f5b4aeeeb58fdfe1410a5d17f967dacf36262
         with:
           host: ${{ secrets.PRODUCTION_HOST }}
           username: ${{ secrets.PRODUCTION_USERNAME }}

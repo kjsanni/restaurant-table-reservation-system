@@ -27,7 +27,7 @@ const forgotPasswordHandler = async (req, res) => {
     userAgent: req.get("user-agent") || null,
   });
 
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${raw}`;
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${raw}`;
 
   try {
     await emailService.sendEmail({

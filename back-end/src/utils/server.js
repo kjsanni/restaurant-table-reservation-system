@@ -157,7 +157,7 @@ const createServer = () => {
   app.use(
     helmet({
       crossOriginResourcePolicy: false,
-      hsts: process.env.NODE_ENV === "production" ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
+      hsts: process.env.NODE_ENV === "production" ? { maxAge: 365 * 24 * 60 * 60, includeSubDomains: true, preload: true } : false,
     })
   );
   app.use(cspHeaders);
@@ -168,6 +168,7 @@ const createServer = () => {
     const token = req.cookies?.[CSRF_COOKIE_NAME] || generateCsrfToken();
     if (!req.cookies?.[CSRF_COOKIE_NAME]) {
       res.cookie(CSRF_COOKIE_NAME, token, {
+        // nosemgrep: javascript.lang.security.audit.cookie-http-only-disabled - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
         httpOnly: false,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "lax" : false,

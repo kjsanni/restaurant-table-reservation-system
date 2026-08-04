@@ -1,0 +1,96 @@
+name-template: "v$NEXT_PATCH_VERSION"
+tag-template: "v$NEXT_PATCH_VERSION"
+
+categories:
+  - title: "### 🚀 New Features"
+    labels:
+      - "feat"
+      - "feature"
+      - "enhancement"
+  - title: "### 🐛 Bug Fixes"
+    labels:
+      - "fix"
+      - "bugfix"
+      - "bug"
+  - title: "### 🔒 Security"
+    labels:
+      - "security"
+      - "security-hardening"
+  - title: "### 🏗️ CI/CD & Tooling"
+    labels:
+      - "ci"
+      - "chore"
+      - "refactor"
+      - "tooling"
+  - title: "### 📚 Documentation"
+    labels:
+      - "docs"
+  - title: "### 🎨 UI/UX"
+    labels:
+      - "ui"
+      - "ux"
+      - "design"
+  - title: "### 💳 Payments & Subscriptions"
+    labels:
+      - "payments"
+      - "subscription"
+      - "billing"
+  - title: "### 🏢 Multi-tenant / SaaS"
+    labels:
+      - "multi-tenant"
+      - "tenant-platform"
+      - "saas"
+
+change-template: "- $PR_NUMBER: $TITLE ($PR_BODY)"
+no-changes-template: "No changes. _See commit history._"
+
+version-resolver:
+  major:
+    labels:
+      - "breaking-change"
+      - "major"
+  minor:
+    labels:
+      - "feat"
+      - "feature"
+      - "enhancement"
+  patch:
+    labels:
+      - "fix"
+      - "bugfix"
+      - "bug"
+      - "security"
+      - "chore"
+      - "refactor"
+      - "docs"
+      - "ci"
+      - "ui"
+      - "ux"
+      - "design"
+      - "payments"
+      - "subscription"
+      - "billing"
+      - "multi-tenant"
+      - "tenant-platform"
+      - "saas"
+
+exclude-release-labels:
+  - "no-changelog"
+
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  ## 📊 Stats
+
+  - Commits since last release: $COMMITS
+  - PRs since last release: $PR_COUNT
+
+  ## 🔍 Report
+
+  $FAILED_CHECKS
+
+  ## 🔗 Full Changelog
+
+  https://github.com/$REPO_SLUG/compare/$PREVIOUS_VERSION...v$NEXT_PATCH_VERSION
