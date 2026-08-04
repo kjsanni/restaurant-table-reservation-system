@@ -14,7 +14,7 @@ engines:
       - "front-end/src/views/**/*.vue"
       - "front-end/src/components/**/*.vue"
   csslint:
-    enabled: true
+    enabled: false
   stylelint:
     enabled: true
   semgrep:
