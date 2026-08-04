@@ -42,15 +42,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install Semgrep
-        run: |
-          curl -sL https://semgrep.dev/install | sh
-          echo "$HOME/.semgrep/bin" >> $GITHUB_PATH
       - name: Run Semgrep SAST scan
-        run: semgrep --config p/security-audit --config p/owasp-top-ten --config p/nodejs --config p/vuejs --sarif --output semgrep.sarif .
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/owasp-top-ten
+            p/nodejs
+            p/vuejs
+          generateSARIF: true
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v3
         with:
