@@ -2,9 +2,10 @@ name: codeql-config
 
 queries:
   - uses: security-and-quality
-    exclude:
-      - id: js/user-controlled-bypass
-      - id: js/missing-rate-limiting
+
+exclude:
+  - js/user-controlled-bypass
+  - js/missing-rate-limiting
 
 paths-ignore:
   - '**/*.css'
