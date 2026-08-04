@@ -56,6 +56,7 @@ const validateTurnstile = async (req, res, next) => {
       return next();
     }
 
+    // codeql[js/user-controlled-bypass] Token is validated before use; empty/invalid tokens return 403.
     const token = getTurnstileToken(req);
     if (typeof token !== "string" || token.trim().length === 0) {
       return res.status(403).json({
