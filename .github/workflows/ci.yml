@@ -44,6 +44,7 @@ jobs:
       REDIS_PORT: 6379
       JWT_SECRET: test-secret-key-for-ci-only
       CORS_ORIGINS: http://localhost:8080
+      PORT: 8000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
