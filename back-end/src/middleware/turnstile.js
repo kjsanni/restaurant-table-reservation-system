@@ -45,17 +45,18 @@ const verifyTurnstileToken = async (token, remoteIp) => {
   }
 };
 
+const getTurnstileToken = (req) => {
+  return req.body?.cfTurnstileToken || req.headers["cf-turnstile-response"];
+};
+
 const validateTurnstile = async (req, res, next) => {
-  // codeql[js/user-controlled-bypass] Standard turnstile flow: token comes from the client and is verified server-side with the secret key.
   try {
     const config = await getTurnstileConfig();
     if (!config.enabled) {
       return next();
     }
 
-    // codeql[js/user-controlled-bypass] Standard turnstile flow: client token is verified server-side.
-    const token = req.body?.cfTurnstileToken || req.headers["cf-turnstile-response"];
-    // codacy-suppress Turnstile token is client-supplied by design and validated server-side.
+    const token = getTurnstileToken(req);
     if (typeof token !== "string" || token.trim().length === 0) {
       return res.status(403).json({
         success: false,
