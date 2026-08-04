@@ -49,7 +49,8 @@ const getTurnstileToken = (req) => {
   return req.body?.cfTurnstileToken || req.headers["cf-turnstile-response"];
 };
 
-// codeql[js/user-controlled-bypass] Token validation requires user input; invalid tokens return 403.
+// Validates Cloudflare Turnstile tokens on protected routes.
+// When turnstile is disabled via platform config, the middleware is a no-op.
 const validateTurnstile = async (req, res, next) => {
   try {
     const config = await getTurnstileConfig();
@@ -58,13 +59,9 @@ const validateTurnstile = async (req, res, next) => {
     }
 
     const token = getTurnstileToken(req);
-    const hasToken = typeof token === "string" && token.trim().length > 0;
-
-    if (hasToken) {
-      const valid = await verifyTurnstileToken(token, req.ip || req.connection.remoteAddress);
-      if (valid) {
-        return next();
-      }
+    const valid = await verifyTurnstileToken(token, req.ip || req.connection.remoteAddress);
+    if (valid) {
+      return next();
     }
 
     return res.status(403).json({

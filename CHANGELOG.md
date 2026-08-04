@@ -21,6 +21,8 @@ All notable changes to this project will be documented in this file.
 - **SSRF webhook URL** — Added `codacy:ignore-next-line` suppression in `webhook.service.js` explaining that `sub.url` is pre-validated by `validateWebhookUrl` (blocks non-HTTPS, private IPs, `localhost`, link-local) (Codacy)
 - **Dynamic path construction** — Added `codacy:ignore-next-line` suppressions in `module.registry.js` for filesystem operations on internally-registered module paths (Codacy)
 - **HSTS numeric literal** — Replaced magic number `31536000` with computed expression `365 * 24 * 60 * 60` in `server.js` for self-documenting code
+- **CodeQL: User-controlled bypass** — Restructured `turnstile.js` `validateTurnstile` to call `verifyTurnstileToken` unconditionally instead of gating on `hasToken` (user input), eliminating the bypass path
+- **CodeQL: Missing rate limiting** — Added `generalLimiter` to `/api/v1/stats`, `/api/v1/audit-logs`, `/api/v1/rbac`, `/api/v1/notifications`, `/api/v1/email-templates`, `/api/v1/sync`, and `/api/v1/legal` routes
 
 ### Changed — Version Sync
 - **Package versions synced** — `back-end/package.json` and `front-end/package.json` bumped from `1.0.0` → `1.1.0` to match root `VERSION` file and root `package.json`

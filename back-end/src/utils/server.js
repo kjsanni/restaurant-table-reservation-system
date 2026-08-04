@@ -195,8 +195,8 @@ const createServer = () => {
   app.use("/api/v1", generalLimiter, require("../routes"));
   app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
   app.use("/api/v1/auth", validateCsrfToken, authLimiter, passwordResetRouter);
-  app.use("/api/v1/audit-logs", auditLogRouter);
-  app.use("/api/v1/rbac", logAction, validateCsrfToken, rbacRouter);
+  app.use("/api/v1/audit-logs", generalLimiter, auditLogRouter);
+  app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
   app.use("/api/v1/public", publicRouter);
   app.use("/api/v1/public/status", statusRouter);
@@ -222,16 +222,16 @@ const createServer = () => {
     adminMiddleware,
     erpnextAdminRouter
   );
-  app.use("/api/v1/notifications", logAction, validateCsrfToken, notificationRouter);
-  app.use("/api/v1/email-templates", logAction, validateCsrfToken, emailTemplateRouter);
+  app.use("/api/v1/notifications", generalLimiter, logAction, validateCsrfToken, notificationRouter);
+  app.use("/api/v1/email-templates", generalLimiter, logAction, validateCsrfToken, emailTemplateRouter);
   app.use("/api/v1/webhooks", logAction, webhookLimiter, webhookRouter);
   app.use("/api/v1/webhooks/shaqexpress", logAction, webhookLimiter, shaqexpressRouter);
-  app.use("/api/v1/sync", logAction, syncLimiter, require("../routes/sync.router"));
-  app.use("/api/v1/legal", legalRouter);
+  app.use("/api/v1/sync", generalLimiter, logAction, syncLimiter, require("../routes/sync.router"));
+  app.use("/api/v1/legal", generalLimiter, legalRouter);
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
   }
-  app.get("/api/v1/stats", tryCatchHandler(protect), (req, res, next) => {
+  app.get("/api/v1/stats", generalLimiter, tryCatchHandler(protect), (req, res, next) => {
     res.json({ success: true, stats: getStats() });
   });
   app.get("/robots.txt", (req, res) => {
