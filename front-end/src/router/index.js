@@ -91,12 +91,6 @@ const router = createRouter({
       meta: { standalone: true },
     },
     {
-      path: "/tenant/signup",
-      name: "tenant-signup",
-      component: () => import("../views/TenantSignupView.vue"),
-      meta: { standalone: true },
-    },
-    {
       path: "/reservations",
       component: () => import("../layouts/TenantLayout.vue"),
       children: [
@@ -1779,7 +1773,7 @@ router.addRoute({
 });
 
 router.addRoute({
-  path: "/customer/register",
+  path: "/customer/register/:tenantSlug?",
   name: "customer-register",
   component: () => import("../views/CustomerRegisterView.vue"),
   meta: { standalone: true },

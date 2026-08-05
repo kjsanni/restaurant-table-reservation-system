@@ -86,55 +86,101 @@
     >
       <div class="modal">
         <h2>Create New Venue</h2>
-        <form @submit.prevent="createTenant">
-          <div class="form-group">
-            <label>Name *</label>
-            <input v-model="form.name" required />
+        <div class="wizard-steps">
+          <div
+            v-for="step in wizardSteps"
+            :key="step.key"
+            class="wizard-step"
+            :class="{
+              active: wizardStep === step.key,
+              completed: wizardStep > step.key,
+            }"
+          >
+            <div class="wizard-step-number">{{ step.key }}</div>
+            <div class="wizard-step-label">{{ step.label }}</div>
           </div>
-          <div class="form-group">
-            <label>Slug *</label>
-            <div class="slug-row">
-              <input v-model="form.slug" required />
-              <button
-                type="button"
-                class="btn-secondary"
-                @click="form.slug = generateSlug(form.name)"
-                :disabled="!form.name"
-              >
-                Generate
-              </button>
+        </div>
+
+        <form @submit.prevent="createTenant">
+          <div v-if="wizardStep === 1" class="wizard-panel">
+            <div class="form-group">
+              <label>Name *</label>
+              <input v-model="form.name" required />
+            </div>
+            <div class="form-group">
+              <label>Slug *</label>
+              <div class="slug-row">
+                <input v-model="form.slug" required />
+                <button
+                  type="button"
+                  class="btn-secondary"
+                  @click="form.slug = generateSlug(form.name)"
+                  :disabled="!form.name"
+                >
+                  Generate
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Domain</label>
+              <input v-model="form.domain" />
             </div>
           </div>
-          <div class="form-group">
-            <label>Domain</label>
-            <input v-model="form.domain" />
+
+          <div v-if="wizardStep === 2" class="wizard-panel">
+            <div class="form-group">
+              <label>Business Vertical</label>
+              <select v-model="form.businessVertical">
+                <option value="restaurant">Restaurant</option>
+                <option value="salon">Salon</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Restaurant Type</label>
+              <select v-model="form.restaurantType">
+                <option value="full_service">Full Service Restaurant</option>
+                <option value="quick_service">Quick Service</option>
+                <option value="cloud_kitchen">Cloud Kitchen</option>
+                <option value="dine_in_only">Dine-In Only</option>
+                <option value="cafe">Cafe</option>
+                <option value="bar">Bar / Lounge</option>
+              </select>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Plan</label>
-            <select v-model="form.plan">
-              <option v-for="plan in plans" :key="plan.slug" :value="plan.slug">
-                {{ plan.name }} — {{ plan.currency }} {{ plan.price }} / mo
-              </option>
-            </select>
+
+          <div v-if="wizardStep === 3" class="wizard-panel">
+            <div class="form-group">
+              <label>Plan</label>
+              <select v-model="form.plan">
+                <option
+                  v-for="plan in plans"
+                  :key="plan.slug"
+                  :value="plan.slug"
+                >
+                  {{ plan.name }} — {{ plan.currency }} {{ plan.price }} / mo
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Currency</label>
+              <select v-model="form.currency">
+                <option value="GHS">GHS</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Billing Email</label>
+              <input v-model="form.billingEmail" />
+            </div>
+            <div class="form-group">
+              <label>Billing Name</label>
+              <input v-model="form.billingName" />
+            </div>
           </div>
-          <div class="form-group">
-            <label>Billing Email</label>
-            <input v-model="form.billingEmail" />
-          </div>
-          <div class="form-group">
-            <label>Billing Name</label>
-            <input v-model="form.billingName" />
-          </div>
-          <div class="form-group">
-            <label>Currency</label>
-            <select v-model="form.currency">
-              <option value="GHS">GHS</option>
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-              <option value="GBP">GBP</option>
-            </select>
-          </div>
-          <div class="modal-actions">
+
+          <div class="wizard-actions">
             <button
               type="button"
               @click="closeCreateModal"
@@ -142,7 +188,25 @@
             >
               Cancel
             </button>
-            <button type="submit" class="btn-primary">Create Venue</button>
+            <button
+              v-if="wizardStep > 1"
+              type="button"
+              class="btn-secondary"
+              @click="wizardStep -= 1"
+            >
+              Back
+            </button>
+            <button
+              v-if="wizardStep < 3"
+              type="button"
+              class="btn-primary"
+              @click="wizardStep += 1"
+            >
+              Next
+            </button>
+            <button v-if="wizardStep === 3" type="submit" class="btn-primary">
+              Create Venue
+            </button>
           </div>
         </form>
       </div>
@@ -295,6 +359,7 @@ const verticalForm = ref({
   businessVertical: "restaurant",
 });
 const showCreateModal = ref(false);
+const wizardStep = ref(1);
 const form = ref({
   name: "",
   slug: "",
@@ -303,7 +368,15 @@ const form = ref({
   billingEmail: "",
   billingName: "",
   currency: "GHS",
+  businessVertical: "restaurant",
+  restaurantType: "full_service",
 });
+
+const wizardSteps = [
+  { key: 1, label: "Identity" },
+  { key: 2, label: "Configuration" },
+  { key: 3, label: "Billing" },
+];
 
 const filteredTenants = computed(() => {
   return tenants.value.filter((t) => {
@@ -362,11 +435,13 @@ const openCreateModal = () => {
     billingName: "",
     currency: "GHS",
   };
+  wizardStep.value = 1;
   showCreateModal.value = true;
 };
 
 const closeCreateModal = () => {
   showCreateModal.value = false;
+  wizardStep.value = 1;
 };
 
 const allSelected = computed({
@@ -807,5 +882,68 @@ onMounted(async () => {
 }
 .text-muted {
   color: var(--ink-muted);
+}
+.wizard-steps {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+.wizard-step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  opacity: 0.6;
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+.wizard-step.active {
+  opacity: 1;
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.wizard-step.completed {
+  opacity: 0.85;
+  border-color: var(--brand-500);
+}
+.wizard-step-number {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  background: var(--border);
+  color: var(--ink-muted);
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+.wizard-step.active .wizard-step-number {
+  background: var(--accent);
+  color: var(--white);
+}
+.wizard-step.completed .wizard-step-number {
+  background: var(--brand-500);
+  color: var(--white);
+}
+.wizard-step-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+.wizard-step.active .wizard-step-label {
+  color: var(--ink);
+}
+.wizard-panel {
+  margin-bottom: var(--space-4);
+}
+.wizard-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
 }
 </style>

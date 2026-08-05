@@ -82,11 +82,15 @@ const registerCustomer = async (
   firstName,
   lastName,
   phone,
-  cfTurnstileToken
+  cfTurnstileToken,
+  tenantSlug
 ) => {
   const payload = { email, password, firstName, lastName, phone };
   if (cfTurnstileToken) {
     payload.cfTurnstileToken = cfTurnstileToken;
+  }
+  if (tenantSlug) {
+    payload.tenantSlug = tenantSlug;
   }
   return await API.post("/auth/register/customer", payload);
 };

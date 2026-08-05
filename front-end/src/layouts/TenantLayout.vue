@@ -31,6 +31,7 @@ const shouldShow = (item: {
   requiresAdmin?: boolean;
   requiresPermission?: string;
   requiresFeature?: string;
+  requiresServiceMode?: string;
   requiresVertical?: string;
 }) => {
   if (item.requiresAuth && !isAuthenticated.value) return false;
@@ -44,6 +45,12 @@ const shouldShow = (item: {
   if (
     item.requiresFeature &&
     !capabilities.value?.featureFlags?.[item.requiresFeature]
+  ) {
+    return false;
+  }
+  if (
+    item.requiresServiceMode &&
+    !capabilities.value?.serviceModes?.includes(item.requiresServiceMode)
   ) {
     return false;
   }

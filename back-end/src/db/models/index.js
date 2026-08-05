@@ -87,13 +87,6 @@ fs.readdirSync(__dirname)
     db[model.name] = model;
   });
 
-Object.keys(db).forEach((modelName) => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-    db[modelName].__salonAssociated = true;
-  }
-});
-
 // Multi-tenant model safety fallback.
 //
 // The tenant model is normally registered by the directory scan above (see
@@ -107,7 +100,6 @@ if (!db.tenant) {
     const tenantModelFactory = require("../../tenant-platform/models/tenant");
     const Tenant = tenantModelFactory(sequelize, Sequelize.DataTypes);
     db[Tenant.name] = Tenant;
-    if (Tenant.associate) Tenant.associate(db);
     logger.info("[db] Tenant model registered via fallback");
   } catch (err) {
     logger.error("[db] Failed to register tenant model:", err.message);
@@ -121,16 +113,16 @@ try {
     const model = require(require("path").join(salonModelsPath, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
   });
-  Object.keys(db).forEach((modelName) => {
-    if (db[modelName].associate && !db[modelName].__salonAssociated) {
-      db[modelName].associate(db);
-      db[modelName].__salonAssociated = true;
-    }
-  });
   logger.info("[db] Salon models registered");
 } catch (err) {
   logger.error("[db] Failed to register salon models:", err.message);
 }
+
+Object.keys(db).forEach((modelName) => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
+});
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;

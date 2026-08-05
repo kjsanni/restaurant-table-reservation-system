@@ -341,13 +341,79 @@
       </div>
       <div v-if="savingErpnext" class="saving-indicator">Saving...</div>
     </div>
+
+    <div class="section feature-flags-section">
+      <h2>Feature Flags</h2>
+      <p class="section-hint">Enable or disable features for this tenant.</p>
+      <div v-if="flagLoading" class="loading-state-inline">
+        <div class="spinner-sm"></div>
+      </div>
+      <template v-else>
+        <div class="search-row">
+          <input
+            v-model="flagSearch"
+            type="text"
+            placeholder="Search flags..."
+            class="search-input"
+          />
+        </div>
+        <div v-if="filteredTenantFlags.length" class="flags-categorized">
+          <div
+            v-for="group in filteredTenantFlags"
+            :key="group.category"
+            class="flag-group"
+          >
+            <h4 class="flag-group-title">{{ group.category }}</h4>
+            <div class="flags-list">
+              <div
+                v-for="item in group.flags"
+                :key="item.flag"
+                class="flag-row"
+              >
+                <div class="flag-info">
+                  <span class="flag-label">{{ item.label || item.flag }}</span>
+                  <span v-if="item.description" class="flag-description">{{
+                    item.description
+                  }}</span>
+                  <div
+                    v-if="getMissingDependencies(item).length"
+                    class="dependency-warning"
+                  >
+                    Requires:
+                    {{
+                      getMissingDependencies(item)
+                        .map((d) => formatFlagLabel(d))
+                        .join(", ")
+                    }}
+                  </div>
+                </div>
+                <label class="toggle-switch">
+                  <input
+                    type="checkbox"
+                    :checked="!!item.value"
+                    :disabled="hasBlockingDependency(item)"
+                    @change="toggleTenantFlag(item.flag, $event.target.checked)"
+                  />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else-if="flagCatalog.length" class="empty-state">
+          No matching flags
+        </div>
+        <div v-else class="empty-state">No feature flags configured</div>
+      </template>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
+import adminAPI from "@/services/adminAPI";
 import noteAPI from "@/services/noteAPI";
 import { useAuthStore } from "@/stores/auth";
 
@@ -386,6 +452,48 @@ const payoutForm = ref({
 });
 const erpnextFeatureFlags = ref({});
 const savingErpnext = ref(false);
+const flagCatalog = ref([]);
+const flagLoading = ref(false);
+const flagSearch = ref("");
+
+const categorizedTenantFlags = computed(() => {
+  const catalog = flagCatalog.value || [];
+  const currentFlags = tenant.value.settings?.featureFlags || {};
+  const groups = {};
+
+  for (const item of catalog) {
+    const category = item.category || "Platform";
+    if (!groups[category]) {
+      groups[category] = [];
+    }
+    groups[category].push({
+      ...item,
+      value: !!currentFlags[item.flag],
+    });
+  }
+
+  return Object.entries(groups).map(([category, flags]) => ({
+    category,
+    flags,
+  }));
+});
+
+const filteredTenantFlags = computed(() => {
+  const term = flagSearch.value.trim().toLowerCase();
+  if (!term) return categorizedTenantFlags.value;
+
+  return categorizedTenantFlags.value
+    .map((group) => ({
+      ...group,
+      flags: group.flags.filter((flag) => {
+        const searchable = [flag.flag, flag.label, flag.description]
+          .join(" ")
+          .toLowerCase();
+        return searchable.includes(term);
+      }),
+    }))
+    .filter((group) => group.flags.length > 0);
+});
 
 const erpnextModuleOptions = [
   {
@@ -444,6 +552,47 @@ const toggleErpnextModule = async (flag, enabled) => {
   }
 };
 
+const getMissingDependencies = (flag) => {
+  if (!flag.dependencies || !flag.dependencies.length) return [];
+  const currentFlags = tenant.value.settings?.featureFlags || {};
+  return flag.dependencies.filter((dep) => !currentFlags[dep]);
+};
+
+const hasBlockingDependency = (flag) => {
+  return (
+    getMissingDependencies(flag).length > 0 &&
+    !(flag.value || tenant.value.settings?.featureFlags?.[flag.flag])
+  );
+};
+
+const formatFlagLabel = (flagKey) => {
+  const meta = flagCatalog.value.find((f) => f.flag === flagKey);
+  return meta?.label || flagKey;
+};
+
+const loadFlagCatalog = async () => {
+  flagLoading.value = true;
+  try {
+    const res = await adminAPI.listFeatureFlags();
+    flagCatalog.value = res.data?.flags || [];
+  } catch {
+    flagCatalog.value = [];
+  } finally {
+    flagLoading.value = false;
+  }
+};
+
+const toggleTenantFlag = async (flag, enabled) => {
+  try {
+    const currentFlags = { ...(tenant.value.settings?.featureFlags || {}) };
+    currentFlags[flag] = enabled;
+    await tenantAdminAPI.updateFeatureFlags(route.params.id, currentFlags);
+    await loadTenant();
+  } catch (err) {
+    console.error("Failed to toggle feature flag:", err);
+  }
+};
+
 const loadTenant = async () => {
   const response = await tenantAdminAPI.getById(route.params.id);
   tenant.value = response.data.item;
@@ -460,6 +609,10 @@ const loadTenant = async () => {
   dataRegion.value = tenant.value.dataRegion || "";
   residencyNotes.value = tenant.value.residencyNotes || "";
   await loadNotes();
+};
+
+const loadAllFlags = async () => {
+  await Promise.all([loadTenant(), loadFlagCatalog()]);
 };
 
 const loadNotes = async () => {
@@ -649,7 +802,7 @@ const formatDate = (date) => {
 };
 
 onMounted(() => {
-  loadTenant();
+  loadAllFlags();
   loadNotes();
 });
 </script>
@@ -1088,5 +1241,78 @@ onMounted(() => {
   margin-top: var(--space-md);
   font-size: var(--text-sm);
   color: var(--ink-muted);
+}
+.feature-flags-section {
+  margin-top: var(--space-xl);
+}
+.flags-categorized {
+  margin-top: var(--space-md);
+}
+.flag-group {
+  margin-bottom: var(--space-lg);
+}
+.flag-group-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+  margin: 0 0 var(--space-sm);
+}
+.flags-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.flag-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.flag-info {
+  flex: 1;
+  min-width: 0;
+}
+.flag-label {
+  font-weight: 500;
+  font-size: var(--text-sm);
+  display: block;
+}
+.flag-description {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  display: block;
+  margin-top: 2px;
+}
+.dependency-warning {
+  font-size: var(--text-sm);
+  color: var(--warning);
+  margin-top: var(--space-xs);
+}
+.loading-state-inline {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-lg);
+}
+.search-input {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  background: var(--surface);
+  color: var(--ink);
+  width: 100%;
+  max-width: 320px;
+}
+.empty-state {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  padding: var(--space-lg);
+  text-align: center;
 }
 </style>

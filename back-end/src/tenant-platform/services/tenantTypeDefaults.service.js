@@ -31,6 +31,16 @@ const TYPE_DEFAULTS = {
       pos_sync: true,
     },
   },
+  dine_in_only: {
+    serviceModes: ["dine_in"],
+    featureFlags: {
+      table_management: true,
+      waitlist: true,
+      staff_scheduling: true,
+      loyalty: false,
+      pos_sync: false,
+    },
+  },
   cafe: {
     serviceModes: ["dine_in", "takeaway"],
     featureFlags: {
@@ -117,11 +127,10 @@ const ALL_FEATURE_FLAGS = Object.values(FLAG_CATEGORIES).flatMap((category) => O
 const applyTypeDefaults = (tenant, restaurantType) => {
   const defaults = TYPE_DEFAULTS[restaurantType] || TYPE_DEFAULTS.full_service;
 
-  if (!tenant.settings) {
-    tenant.settings = {};
-  }
-
-  tenant.settings.featureFlags = { ...defaults.featureFlags };
+  tenant.settings = {
+    ...(tenant.settings || {}),
+    featureFlags: { ...defaults.featureFlags },
+  };
   tenant.serviceModes = [...defaults.serviceModes];
   tenant.restaurantType = restaurantType;
 

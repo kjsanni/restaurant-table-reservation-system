@@ -13,7 +13,8 @@ const error = ref<string | null>(null);
 const billingPeriod = ref<"monthly" | "yearly">("monthly");
 
 const goToRegister = () => {
-  router.push("/tenant/signup");
+  window.location.href =
+    "mailto:admin@vibespot.gh?subject=New%20Venue%20Signup%20Request";
 };
 
 onMounted(async () => {

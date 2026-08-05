@@ -5,12 +5,12 @@ const {
   disableTenant,
   getTenantDashboard,
 } = require("../services/tenantSubscription.service");
-const { applyTypeDefaults } = require("../services/tenantTypeDefaults.service");
+const { applyTypeDefaults, seedSalonSettings } = require("../services/tenantTypeDefaults.service");
 const axios = require("axios");
 const { normalizeSettingValue } = require("../../utils/settings");
 
 const createTenantHandler = async (req, res) => {
-  const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType } = req.body;
+  const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType, businessVertical, serviceModes } = req.body;
 
   if (!name || !slug) {
     return res.status(400).json({ success: false, message: "Name and slug are required" });
@@ -26,20 +26,38 @@ const createTenantHandler = async (req, res) => {
     return res.status(409).json({ success: false, message: `Slug "${normalizedSlug}" is already in use` });
   }
 
+  const typeDefaults =
+    require("../services/tenantTypeDefaults.service").TYPE_DEFAULTS[
+      restaurantType || "full_service"
+    ] || require("../services/tenantTypeDefaults.service").TYPE_DEFAULTS.full_service;
+
+  const salonDefaults = require("../services/tenantTypeDefaults.service").TYPE_DEFAULTS.salonDefaults || {};
+
+  const settings = {
+    featureFlags: { ...typeDefaults.featureFlags },
+    ...(businessVertical === "salon" ? salonDefaults : {}),
+  };
+
   const tenant = await tenantAdminDAO.create({
     name,
     slug: normalizedSlug,
-    domain,
+    domain: domain ? String(domain).trim() : null,
     plan: plan || "starter",
     status: status || "active",
     billingEmail,
     billingName,
     currency: currency || "GHS",
-    settings: {},
+    businessVertical: businessVertical || "restaurant",
+    serviceModes: Array.isArray(serviceModes) && serviceModes.length > 0 ? serviceModes : typeDefaults.serviceModes,
+    settings,
+    restaurantType: restaurantType || "full_service",
   });
 
-  applyTypeDefaults(tenant, restaurantType || "full_service");
-  await tenant.save();
+  if (businessVertical === "salon") {
+    seedSalonSettings(tenant.id).catch((err) => {
+      console.error("Failed to seed salon settings:", err.message);
+    });
+  }
 
   res.status(201).json({ success: true, item: tenant });
 };
@@ -92,13 +110,16 @@ const updateTenantHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
 
-  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "restaurantType", "restaurantSubtype", "serviceModes", "businessVertical", "whatsappConfig", "dataRegion", "residencyNotes"];
+  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "restaurantType", "restaurantSubtype", "serviceModes", "businessVertical", "whatsappConfig", "dataRegion", "residencyNotes", "domain"];
   const updates = {};
   const changes = {};
 
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(req.body, key)) {
-      const next = req.body[key];
+      let next = req.body[key];
+      if (key === "domain" && next !== null && next !== undefined) {
+        next = String(next).trim() || null;
+      }
       const prev = tenant[key];
       if (prev !== next) {
         updates[key] = next;

@@ -175,11 +175,6 @@ const cancelReservation = async (reservationId, reservationDAO, tenantId) => {
       message: "Reservation not found!",
     };
   }
-  if (["cancelled", "seated", "completed", "missed"].includes(reservation.resStatus)) {
-    const result = await reservationDAO.deleteReservation(reservation, tenantId);
-    webhookService.dispatch("reservation.cancelled", result, tenantId);
-    return result;
-  }
   const result = await reservationDAO.deleteReservation(reservation, tenantId);
   webhookService.dispatch("reservation.cancelled", result, tenantId);
   return result;
