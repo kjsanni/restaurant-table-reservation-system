@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const db = require("../db/models");
 const planDAO = require("../tenant-platform/DAOs/plan.dao");
 
@@ -16,6 +18,19 @@ const listPublicPlansHandler = async (req, res) => {
   return res.status(200).json({ success: true, plans: sanitized });
 };
 
+const getChangelogHandler = async (req, res) => {
+  const changelogPath = path.join(process.cwd(), "..", "CHANGELOG.md");
+  try {
+    const content = fs.readFileSync(changelogPath, "utf8");
+    return res.status(200).json({ success: true, content });
+  } catch (err) {
+    return res
+      .status(err.code === "ENOENT" ? 404 : 500)
+      .json({ success: false, message: "Changelog not available." });
+  }
+};
+
 module.exports = {
   listPublicPlansHandler,
+  getChangelogHandler,
 };

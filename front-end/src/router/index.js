@@ -79,6 +79,12 @@ const router = createRouter({
       meta: { standalone: true },
     },
     {
+      path: "/changelog",
+      name: "changelog",
+      component: () => import("../views/ChangelogView.vue"),
+      meta: { standalone: true },
+    },
+    {
       path: "/tenant/signup",
       name: "tenant-signup",
       component: () => import("../views/TenantSignupView.vue"),
