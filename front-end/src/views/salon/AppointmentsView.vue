@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import appointmentAPI from "@/services/appointmentAPI";
 import serviceAPI from "@/services/serviceAPI";
 import stationAPI from "@/services/stationAPI";
+import locationAPI from "@/services/locationAPI";
 import logger from "@/utils/logger";
 import { io, Socket } from "socket.io-client";
 import { useI18n } from "@/composables/useI18n";
@@ -48,6 +49,8 @@ const generalError = ref("");
 const services = ref<ServiceOption[]>([]);
 const stations = ref<StationOption[]>([]);
 const stylists = ref<StylistOption[]>([]);
+const locations = ref<Array<{ id: number; name: string }>>([]);
+const selectedLocationId = ref<number | "">("");
 const socket = ref<Socket | null>(null);
 
 const statusOptions = [
@@ -158,6 +161,15 @@ const loadStylists = async (serviceId: number) => {
   }
 };
 
+const loadLocations = async () => {
+  try {
+    const res = await locationAPI.getLocations({ limit: 100 });
+    locations.value = res.data.data || [];
+  } catch (err) {
+    logger.error("Failed to load locations", { error: err });
+  }
+};
+
 const submitForm = async () => {
   submitting.value = true;
   generalError.value = "";
@@ -171,6 +183,9 @@ const submitForm = async () => {
       serviceId: Number(form.value.serviceId),
       stationId: form.value.stationId ? Number(form.value.stationId) : null,
       stylistId: form.value.stylistId ? Number(form.value.stylistId) : null,
+      locationId: selectedLocationId.value
+        ? Number(selectedLocationId.value)
+        : null,
       start,
       durationMinutes: service?.durationMinutes || 30,
       status: "pending",
@@ -195,7 +210,12 @@ const submitForm = async () => {
 const loadAppointments = async () => {
   loading.value = true;
   try {
-    const res = await appointmentAPI.getAppointments({ limit: 100 });
+    const res = await appointmentAPI.getAppointments({
+      limit: 100,
+      ...(selectedLocationId.value
+        ? { locationId: selectedLocationId.value }
+        : {}),
+    });
     appointments.value = res.data.data || [];
   } catch (err) {
     logger.error("Failed to load appointments", { error: err });
@@ -277,7 +297,7 @@ const bulkCancel = async () => {
 };
 
 onMounted(async () => {
-  await loadAppointments();
+  await Promise.all([loadAppointments(), loadLocations()]);
   socket.value = io("", { path: "/socket.io" });
   socket.value.on("salon-appointment-created", async () => {
     await loadAppointments();
@@ -324,9 +344,22 @@ const handleServiceChange = async () => {
     <div class="content-wrapper">
       <div class="panel-head" style="margin-bottom: 16px">
         <h2>{{ t("salon.appointments") }}</h2>
-        <button class="btn-primary" @click="openForm">
-          {{ t("salon.newAppointment") }}
-        </button>
+        <div class="topbar-actions">
+          <select
+            v-if="locations.length"
+            v-model="selectedLocationId"
+            class="location-filter"
+            @change="loadAppointments"
+          >
+            <option value="">All Locations</option>
+            <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+              {{ loc.name }}
+            </option>
+          </select>
+          <button class="btn-primary" @click="openForm">
+            {{ t("salon.newAppointment") }}
+          </button>
+        </div>
       </div>
 
       <div v-if="showForm" class="form-panel">
@@ -392,6 +425,15 @@ const handleServiceChange = async () => {
                 :value="String(station.id)"
               >
                 {{ station.name }}
+              </option>
+            </select>
+          </div>
+          <div v-if="locations.length" class="field">
+            <label for="location">Location</label>
+            <select id="location" v-model="selectedLocationId">
+              <option value="">{{ t("salon.unassigned") }}</option>
+              <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+                {{ loc.name }}
               </option>
             </select>
           </div>
@@ -484,7 +526,7 @@ const handleServiceChange = async () => {
                 <input
                   type="checkbox"
                   :checked="selectedIds.includes(apt.id)"
-                  @change="toggleSelect(apt)"
+                   @change="toggleSelect(apt.id)"
                 />
               </td>
               <td>
@@ -542,9 +584,22 @@ const handleServiceChange = async () => {
 }
 .topbar {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 24px;
+}
+.topbar-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.location-filter {
+  padding: 6px 10px;
+  border: 1px solid var(--border, #e5e5e5);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
 }
 .topbar-left h1 {
   font-family: var(--font-serif);

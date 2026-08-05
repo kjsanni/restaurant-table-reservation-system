@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "stationId",
         as: "station",
       });
+      Appointment.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
       Appointment.belongsTo(models.user, {
         foreignKey: "stylistId",
         as: "stylist",
@@ -40,6 +44,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
       },
       stylistId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      locationId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },

@@ -29,6 +29,9 @@ const validateAppointment = (data) => {
   if (data.paymentStatus && !["deposit", "partial", "paid", "unpaid"].includes(data.paymentStatus)) {
     errors.push("paymentStatus must be one of deposit, partial, paid, unpaid");
   }
+  if (data.locationId !== undefined && (!Number.isInteger(data.locationId) || data.locationId <= 0)) {
+    errors.push("locationId must be a positive integer");
+  }
   if (data.depositAmount !== undefined && (typeof data.depositAmount !== "number" || data.depositAmount < 0)) {
     errors.push("depositAmount must be a non-negative number");
   }
@@ -87,6 +90,7 @@ const appointmentController = {
         appointmentId: appointment.id,
         customerId: appointment.customerId,
         serviceId: appointment.serviceId,
+        locationId: appointment.locationId,
         start: appointment.start,
       });
 
@@ -110,7 +114,7 @@ const appointmentController = {
       if (validationErrors.length > 0) {
         return res.status(422).json({ success: false, message: "Validation failed", errors: validationErrors });
       }
-      const allowed = ["status", "start", "durationMinutes", "end", "bufferMinutes", "notes", "paymentStatus", "depositAmount", "serviceId", "stylistId", "stationId"];
+      const allowed = ["status", "start", "durationMinutes", "end", "bufferMinutes", "notes", "paymentStatus", "depositAmount", "serviceId", "stylistId", "stationId", "locationId"];
       const updates = {};
       for (const key of allowed) {
         if (Object.prototype.hasOwnProperty.call(req.body, key)) {
@@ -125,6 +129,7 @@ const appointmentController = {
       await logAction(req, "appointment_updated", {
         appointmentId: appointment.id,
         changes: updates,
+        locationId: appointment.locationId,
       });
 
       emitSalonAppointmentEvent(req, "salon-appointment-updated", appointment);

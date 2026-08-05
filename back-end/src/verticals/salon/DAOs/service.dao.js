@@ -7,6 +7,7 @@ const serviceDao = {
     if (filters.categoryId) where.categoryId = filters.categoryId;
     if (filters.isAvailable !== undefined) where.isAvailable = filters.isAvailable;
     if (filters.whatsappBookable !== undefined) where.whatsappBookable = filters.whatsappBookable;
+    if (filters.locationId) where.locationId = filters.locationId;
     if (filters.search) {
       where.name = { [require("sequelize").Op.iLike]: `%${filters.search}%` };
     }
