@@ -95,6 +95,16 @@ jobs:
         working-directory: front-end
         run: npm run build
 
+  legal-sync-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check LEGAL_DOCUMENT_VERSIONS sync
+        run: node scripts/check-legal-versions.js
+
   e2e-test:
     runs-on: ubuntu-latest
     needs: [backend-test, frontend-test]
