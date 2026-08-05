@@ -135,8 +135,43 @@ const processMarketingCampaigns = async (tenantId) => {
 };
 
 const resolveRecipients = async (tenantId, targetAudience) => {
-  const customers = await salonModels.sequelize.models.customer.findAll({
-    where: { tenantId },
+  const { Op, col, fn, where: sqWhere, literal } = require("sequelize");
+  const customerModel = salonModels.sequelize.models.customer;
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  const baseWhere = { tenantId };
+
+  let segmentWhere = {};
+  switch (targetAudience) {
+    case "vip":
+      segmentWhere = {
+        [Op.or]: [
+          { points: { [Op.gte]: 100 } },
+          { tags: { [Op.contains]: ["vip"] } },
+        ],
+      };
+      break;
+    case "new":
+      segmentWhere = {
+        visitCount: { [Op.lte]: 2 },
+      };
+      break;
+    case "inactive":
+      segmentWhere = {
+        [Op.or]: [
+          { lastVisitDate: { [Op.lt]: thirtyDaysAgo } },
+          { lastVisitDate: null },
+        ],
+      };
+      break;
+    case "all":
+    default:
+      segmentWhere = {};
+      break;
+  }
+
+  const customers = await customerModel.findAll({
+    where: { ...baseWhere, ...segmentWhere },
     attributes: ["phone", "email"],
   });
   return customers
