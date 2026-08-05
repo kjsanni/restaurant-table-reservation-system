@@ -43,14 +43,27 @@ const paymentModel = db.payment;
 const { formatPhoneNumber } = require("../services/whatsapp.service");
 
 describe("Reservation — chooseTable past-date guard", () => {
+  const RealDate = Date;
+
   beforeEach(() => {
     jest.spyOn(reservationDAO, 'findReservationById').mockResolvedValue(null);
     jest.spyOn(reservationDAO, 'setReservationStatus').mockResolvedValue({ id: 1, resStatus: 'missed' });
     jest.spyOn(tableDAO, 'findTableById').mockResolvedValue(null);
+    // Mock Date to 2026-07-28 10:00:00 so time-comparison assertions are deterministic
+    global.Date = class extends RealDate {
+      constructor() {
+        super();
+        return new RealDate(2026, 6, 28, 10, 0, 0, 0);
+      }
+      static now() {
+        return new RealDate(2026, 6, 28, 10, 0, 0, 0).getTime();
+      }
+    };
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
+    global.Date = RealDate;
   });
 
   it("throws when the reservation date is in the past", async () => {

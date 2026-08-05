@@ -132,26 +132,6 @@ try {
   logger.error("[db] Failed to register salon models:", err.message);
 }
 
-try {
-  const restaurantModelsPath = require("path").join(__dirname, "../../verticals/restaurant/models");
-    const restaurantFiles = require("fs").readdirSync(restaurantModelsPath).filter((file) => file !== "index.js" && file.slice(-3) === ".js");
-    restaurantFiles.forEach((file) => {
-      const fullPath = require("path").join(restaurantModelsPath, file);
-      // codacy:ignore-next-line - file comes from readdirSync of a trusted internal models directory, not user input
-      const model = require(fullPath)(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
-  Object.keys(db).forEach((modelName) => {
-    if (db[modelName].associate && !db[modelName].__restaurantAssociated) {
-      db[modelName].associate(db);
-      db[modelName].__restaurantAssociated = true;
-    }
-  });
-  logger.info("[db] Restaurant models registered");
-} catch (err) {
-  logger.error("[db] Failed to register restaurant models:", err.message);
-}
-
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 // Flag consumed by src/db/readReplica.js so reporting DAOs can decide whether to
