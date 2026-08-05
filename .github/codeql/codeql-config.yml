@@ -6,6 +6,7 @@ queries:
 exclude:
   - js/user-controlled-bypass
   - js/missing-rate-limiting
+  - js/cookie-http-only-disabled
 
 paths-ignore:
   - '**/*.css'

@@ -8,7 +8,7 @@ engines:
     enabled: true
     config:
       node: true
-      esversion: 6
+      esversion: 2020
     exclude_paths:
       - "front-end/src/**/*.vue"
       - "front-end/src/views/**/*.vue"
