@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
@@ -219,6 +219,13 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+watch(
+  () => authStore.currentTenant?.id,
+  () => {
+    loadDashboard();
+  }
+);
 </script>
 
 <template>

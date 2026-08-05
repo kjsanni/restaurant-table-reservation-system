@@ -198,7 +198,6 @@ onUnmounted(() => {
           <TenantSwitcher
             v-if="user?.permissions?.manage_tenants"
             :modelValue="authStore.currentTenant?.id || ''"
-            @update:modelValue="authStore.setTenant"
           />
           <div v-if="user" class="tl-user-chip">
             {{ user.username?.charAt(0)?.toUpperCase() }}
@@ -209,7 +208,11 @@ onUnmounted(() => {
       <main class="tl-content">
         <RouterView v-slot="{ Component }">
           <Transition name="tl-fade" mode="out-in">
-            <component v-if="Component" :is="Component" :key="$route.name" />
+            <component
+              v-if="Component"
+              :is="Component"
+              :key="`${$route.name}-${authStore.currentTenant?.id ?? 'platform'}`"
+            />
           </Transition>
         </RouterView>
       </main>

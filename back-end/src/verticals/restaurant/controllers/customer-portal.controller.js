@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/customer-portal.controller");
+module.exports = require("../../../controllers/customer-portal.controller");

@@ -1,27 +1,27 @@
 "use strict";
 
-const { requireVertical } = require("../../middleware/requireVertical");
-const { requiredFeature, requiresServiceMode } = require("../../tenant-platform/middleware/featureGuard");
-const { logAction, validateCsrfToken } = require("../../middleware");
+const { requireVertical } = require("../../../middleware/requireVertical");
+const { requiredFeature, requiresServiceMode } = require("../../../tenant-platform/middleware/featureGuard");
+const { logAction, validateCsrfToken } = require("../../../middleware");
 
-const tableRouter = require("./routes/table.router");
-const reservationRouter = require("./routes/reservation.router");
-const scheduleRouter = require("./routes/schedule.router");
-const shiftRouter = require("./routes/shift.router");
-const timeOffRouter = require("./routes/timeOff.router");
-const floorPlanRouter = require("./routes/floorPlan.router");
-const waitlistRouter = require("./routes/waitlist.router");
-const paymentRouter = require("./routes/payment.router");
-const reportRouter = require("./routes/report.router");
-const menuRouter = require("./routes/menu.router");
-const orderRouter = require("./routes/order.router");
-const promotionRouter = require("./routes/promotion.router");
-const reviewRouter = require("./routes/review.router");
-const customReportRouter = require("./routes/custom-report.router");
-const customerRouter = require("./routes/customer.router");
-const customerPortalRouter = require("./routes/customer-portal.router");
-const deliveryRouter = require("./routes/delivery.router");
-const whatsappRouter = require("./routes/whatsapp.router");
+const tableRouter = require("../routes/table.router");
+const reservationRouter = require("../routes/reservation.router");
+const scheduleRouter = require("../routes/schedule.router");
+const shiftRouter = require("../routes/shift.router");
+const timeOffRouter = require("../routes/timeOff.router");
+const floorPlanRouter = require("../routes/floorPlan.router");
+const waitlistRouter = require("../routes/waitlist.router");
+const paymentRouter = require("../routes/payment.router");
+const reportRouter = require("../routes/report.router");
+const menuRouter = require("../routes/menu.router");
+const orderRouter = require("../routes/order.router");
+const promotionRouter = require("../routes/promotion.router");
+const reviewRouter = require("../routes/review.router");
+const customReportRouter = require("../routes/custom-report.router");
+const customerRouter = require("../routes/customer.router");
+const customerPortalRouter = require("../routes/customer-portal.router");
+const deliveryRouter = require("../routes/delivery.router");
+const whatsappRouter = require("../routes/whatsapp.router");
 
 const restaurantModule = {
   id: "restaurant",

@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/timeOff.controller");
+module.exports = require("../../../controllers/timeOff.controller");

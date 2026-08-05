@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/custom-report.controller");
+module.exports = require("../../../controllers/custom-report.controller");

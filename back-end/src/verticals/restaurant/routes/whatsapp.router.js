@@ -1,1 +1,1 @@
-module.exports = require("../../routes/whatsapp.router");
+module.exports = require("../../../routes/whatsapp.router");

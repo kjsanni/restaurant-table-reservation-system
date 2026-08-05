@@ -1,1 +1,1 @@
-module.exports = require("../../services/reservationService");
+module.exports = require("../../../services/reservationService");

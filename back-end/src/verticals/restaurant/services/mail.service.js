@@ -1,1 +1,1 @@
-module.exports = require("../../services/mail.service");
+module.exports = require("../../../services/mail.service");

@@ -159,7 +159,7 @@ import { ref, computed, onMounted } from "vue";
 import commissionAPI from "@/services/commissionAPI";
 import { useI18n } from "@/composables/useI18n";
 import serviceAPI from "@/services/serviceAPI";
-import userAPI from "@/services/userAPI";
+import authAPI from "@/services/authAPI";
 
 const { t } = useI18n();
 
@@ -209,7 +209,7 @@ const loadData = async () => {
   try {
     const [commissionsRes, stylistsRes, servicesRes] = await Promise.all([
       commissionAPI.getCommissions({ limit: 100 }),
-      userAPI.getUsers({ limit: 100 }),
+      authAPI.getUsers({ limit: 100 }),
       serviceAPI.getServices({ limit: 100 }),
     ]);
     items.value = commissionsRes.data?.data || [];

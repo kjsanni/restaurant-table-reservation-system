@@ -1,1 +1,1 @@
-module.exports = require("../../routes/custom-report.router");
+module.exports = require("../../../routes/custom-report.router");

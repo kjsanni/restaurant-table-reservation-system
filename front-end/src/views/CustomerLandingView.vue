@@ -179,9 +179,7 @@ onMounted(() => {
           <button class="nav-link" @click="router.push('/changelog')">
             Changelog
           </button>
-          <button class="nav-link" @click="router.push('/help')">
-            Help
-          </button>
+          <button class="nav-link" @click="router.push('/help')">Help</button>
           <button class="nav-link" @click="router.push('/api-docs')">
             API Docs
           </button>

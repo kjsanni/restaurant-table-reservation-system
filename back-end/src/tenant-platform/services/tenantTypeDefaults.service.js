@@ -78,6 +78,42 @@ const TYPE_DEFAULTS = {
   },
 };
 
+const FLAG_CATEGORIES = {
+  restaurant: {
+    label: "Restaurant",
+    flags: {
+      table_management: { label: "Table Management", description: "Enable table mapping, floor plans, and table assignments" },
+      waitlist: { label: "Waitlist", description: "Allow customers to join a digital waitlist" },
+      staff_scheduling: { label: "Staff Scheduling", description: "Shift scheduling, attendance, and station assignments" },
+      loyalty: { label: "Loyalty", description: "Points, rewards, and customer loyalty programs" },
+      pos_sync: { label: "POS Sync", description: "Sync orders and payments with external POS systems" },
+    },
+  },
+  salon: {
+    label: "Salon",
+    flags: {
+      salon_appointments: { label: "Appointments", description: "Calendar-based appointment booking" },
+      salon_walkins: { label: "Walk-ins", description: "Walk-in customer check-in and queue" },
+      salon_client_profiles: { label: "Client Profiles", description: "Client history, preferences, and notes" },
+      salon_whatsapp_booking: { label: "WhatsApp Booking", description: "Receive and confirm bookings via WhatsApp" },
+      salon_module_enabled: { label: "Salon Module", description: "Enable the full salon vertical (switches business mode)" },
+    },
+  },
+  erpnext: {
+    label: "ERPNext",
+    flags: {
+      erpnext_accounting: { label: "Accounting", description: "Invoice, payment, and financial ledger sync", dependencies: [] },
+      erpnext_stock: { label: "Inventory", description: "Stock items, warehouses, and stock ledger sync", dependencies: [] },
+      erpnext_crm: { label: "CRM", description: "Customer leads and campaign tracking", dependencies: [] },
+      erpnext_hr: { label: "HR", description: "Employee records, attendance, and payroll", dependencies: [] },
+      erpnext_pos: { label: "POS", description: "Point of sale integration", dependencies: ["erpnext_accounting", "erpnext_stock"] },
+      erpnext_manufacturing: { label: "Manufacturing", description: "BOM categories and production planning", dependencies: ["erpnext_stock"] },
+    },
+  },
+};
+
+const ALL_FEATURE_FLAGS = Object.values(FLAG_CATEGORIES).flatMap((category) => Object.keys(category.flags));
+
 const applyTypeDefaults = (tenant, restaurantType) => {
   const defaults = TYPE_DEFAULTS[restaurantType] || TYPE_DEFAULTS.full_service;
 
@@ -112,6 +148,8 @@ const hasServiceMode = (tenant, mode) => {
 
 module.exports = {
   TYPE_DEFAULTS,
+  FLAG_CATEGORIES,
+  ALL_FEATURE_FLAGS,
   applyTypeDefaults,
   getFeatureFlag,
   hasServiceMode,

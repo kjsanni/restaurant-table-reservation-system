@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/floorPlan.controller");
+module.exports = require("../../../controllers/floorPlan.controller");

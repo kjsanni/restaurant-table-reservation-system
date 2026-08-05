@@ -526,7 +526,7 @@ const handleServiceChange = async () => {
                 <input
                   type="checkbox"
                   :checked="selectedIds.includes(apt.id)"
-                   @change="toggleSelect(apt.id)"
+                  @change="toggleSelect(apt.id)"
                 />
               </td>
               <td>

@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/reservation.controller");
+module.exports = require("../../../controllers/reservation.controller");

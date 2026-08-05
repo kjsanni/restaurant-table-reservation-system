@@ -1,6 +1,6 @@
 "use strict";
 
-const { logAction, validateCsrfToken } = require("../../middleware");
+const { logAction, validateCsrfToken } = require("../../../middleware");
 
 const salonAppointmentRoutes = require("../routes/appointment.router");
 const salonStationRoutes = require("../routes/station.router");
@@ -13,14 +13,14 @@ const salonInventoryRoutes = require("../routes/inventoryItem.router");
 const salonExpensesRoutes = require("../routes/expense.router");
 const salonPricingRulesRoutes = require("../routes/pricingRule.router");
 const salonCommissionRoutes = require("../routes/commission.router");
-const salonCustomerPortalRoutes = require("../../routes/salon-customer-portal.router");
-const salonReportsRoutes = require("../../routes/salon-reports.router");
+const salonCustomerPortalRoutes = require("../../../routes/salon-customer-portal.router");
+const salonReportsRoutes = require("../../../routes/salon-reports.router");
 const salonRecurringAppointmentRoutes = require("../routes/recurring-appointment.router");
 const salonClientSegmentationRoutes = require("../routes/client-segmentation.router");
 const salonStaffRoutes = require("../routes/staff.router");
 const salonMarketingCampaignRoutes = require("../routes/marketing-campaign.router");
 const salonGalleryRoutes = require("../routes/gallery.router");
-const salonDashboardRoutes = require("../../routes/salon-dashboard.router");
+const salonDashboardRoutes = require("../../../routes/salon-dashboard.router");
 
 const salonModule = {
   id: "salon",

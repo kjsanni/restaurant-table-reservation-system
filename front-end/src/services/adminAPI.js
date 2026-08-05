@@ -335,6 +335,33 @@ const toggleSalonModule = (id, enabled) => {
   });
 };
 
+const getFlagAuditLog = (tenantId) => {
+  return API.get(`/admin/feature-flags/tenants/${tenantId}/audit-log`);
+};
+
+const bulkCategoryAction = (tenantId, category, action) => {
+  return API.post(`/admin/feature-flags/tenants/${tenantId}/bulk`, {
+    category,
+    action,
+  });
+};
+
+const resetTenantFlags = (tenantId) => {
+  return API.post(`/admin/feature-flags/tenants/${tenantId}/reset`);
+};
+
+const createFlagPreset = (data) => {
+  return API.post("/admin/feature-flags/presets", data);
+};
+
+const listFlagPresets = () => {
+  return API.get("/admin/feature-flags/presets");
+};
+
+const applyFlagPreset = (tenantId, presetId) => {
+  return API.post(`/admin/feature-flags/presets/${presetId}/apply/${tenantId}`);
+};
+
 const listPlatformRefunds = (params = {}) => {
   const query = new URLSearchParams();
   if (params.status) query.set("status", params.status);
@@ -966,6 +993,12 @@ export default {
   getGlobalFeatureFlags,
   updateGlobalFeatureFlags,
   toggleSalonModule,
+  getFlagAuditLog,
+  bulkCategoryAction,
+  resetTenantFlags,
+  createFlagPreset,
+  listFlagPresets,
+  applyFlagPreset,
   listPlatformRefunds,
   updateRefundStatus,
   getSubscriptionHealth,

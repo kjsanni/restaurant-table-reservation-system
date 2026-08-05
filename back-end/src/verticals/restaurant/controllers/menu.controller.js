@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/menu.controller");
+module.exports = require("../../../controllers/menu.controller");

@@ -1,1 +1,1 @@
-module.exports = require("../../services/shaqexpress.service");
+module.exports = require("../../../services/shaqexpress.service");

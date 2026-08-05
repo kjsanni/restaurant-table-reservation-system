@@ -1,1 +1,1 @@
-module.exports = require("../../routes/table.router");
+module.exports = require("../../../routes/table.router");

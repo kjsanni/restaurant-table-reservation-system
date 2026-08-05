@@ -1,1 +1,1 @@
-module.exports = require("../../routes/review.router");
+module.exports = require("../../../routes/review.router");

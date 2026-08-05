@@ -1,1 +1,1 @@
-module.exports = require("../../services/promotionService");
+module.exports = require("../../../services/promotionService");

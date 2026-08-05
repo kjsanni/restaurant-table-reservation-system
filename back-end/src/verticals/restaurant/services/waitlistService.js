@@ -1,1 +1,1 @@
-module.exports = require("../../services/waitlistService");
+module.exports = require("../../../services/waitlistService");

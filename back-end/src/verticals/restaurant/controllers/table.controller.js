@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/table.controller");
+module.exports = require("../../../controllers/table.controller");

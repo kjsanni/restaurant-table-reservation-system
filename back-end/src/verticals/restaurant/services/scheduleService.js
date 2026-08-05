@@ -1,1 +1,1 @@
-module.exports = require("../../services/scheduleService");
+module.exports = require("../../../services/scheduleService");

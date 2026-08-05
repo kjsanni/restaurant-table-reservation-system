@@ -44,17 +44,7 @@ const erpnextManufacturingRouter = require("../integrations/erpnext/proxies/manu
 const erpnextOnboardingRouter = require("../integrations/erpnext/onboarding/onboarding");
 const erpnextAdminRouter = require("../integrations/erpnext/admin/admin.router");
 
-const superAdminProtect = (req, res, next) => {
-  protect(req, res, () => {
-    requireSuperAdmin(req, res, next);
-  });
-};
-
-const adminMiddleware = (req, res, next) => {
-  ipAllowlist(req, res, () => {
-    superAdminProtect(req, res, next);
-  });
-};
+const { adminMiddleware } = require("../middleware/adminMiddleware");
 
 const requestTimeout = (timeout = 15000) => {
   return (req, res, next) => {

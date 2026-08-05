@@ -1,1 +1,1 @@
-module.exports = require("../../routes/payment.router");
+module.exports = require("../../../routes/payment.router");

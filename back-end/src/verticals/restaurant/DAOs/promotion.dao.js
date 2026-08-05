@@ -1,1 +1,1 @@
-module.exports = require("../../DAOs/promotion.dao");
+module.exports = require("../../../DAOs/promotion.dao");

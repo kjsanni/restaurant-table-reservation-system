@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/waitlist.controller");
+module.exports = require("../../../controllers/waitlist.controller");

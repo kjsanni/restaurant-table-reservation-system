@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/review.controller");
+module.exports = require("../../../controllers/review.controller");

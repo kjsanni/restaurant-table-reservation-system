@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/shift.controller");
+module.exports = require("../../../controllers/shift.controller");

@@ -1,1 +1,1 @@
-module.exports = require("../../routes/promotion.router");
+module.exports = require("../../../routes/promotion.router");

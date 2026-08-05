@@ -1,1 +1,1 @@
-module.exports = require("../../DAOs/floorPlan.dao");
+module.exports = require("../../../DAOs/floorPlan.dao");

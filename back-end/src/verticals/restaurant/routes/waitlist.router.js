@@ -1,1 +1,1 @@
-module.exports = require("../../routes/waitlist.router");
+module.exports = require("../../../routes/waitlist.router");

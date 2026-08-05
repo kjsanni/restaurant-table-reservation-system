@@ -1,1 +1,1 @@
-module.exports = require("../../routes/customer.router");
+module.exports = require("../../../routes/customer.router");

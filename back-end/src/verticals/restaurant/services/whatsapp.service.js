@@ -1,1 +1,1 @@
-module.exports = require("../../services/whatsapp.service");
+module.exports = require("../../../services/whatsapp.service");

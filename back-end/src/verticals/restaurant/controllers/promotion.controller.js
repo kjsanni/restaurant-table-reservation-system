@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/promotion.controller");
+module.exports = require("../../../controllers/promotion.controller");

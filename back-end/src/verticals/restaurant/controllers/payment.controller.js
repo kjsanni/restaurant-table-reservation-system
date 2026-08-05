@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/payment.controller");
+module.exports = require("../../../controllers/payment.controller");

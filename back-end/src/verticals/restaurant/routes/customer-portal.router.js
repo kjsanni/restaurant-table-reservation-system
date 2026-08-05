@@ -1,1 +1,1 @@
-module.exports = require("../../routes/customer-portal.router");
+module.exports = require("../../../routes/customer-portal.router");

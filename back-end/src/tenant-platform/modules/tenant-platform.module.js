@@ -1,6 +1,6 @@
 "use strict";
 
-const { adminMiddleware } = require("../../utils/server");
+const { adminMiddleware } = require("../../middleware/adminMiddleware");
 const { logAction, validateCsrfToken } = require("../../middleware");
 const { webhookLimiter } = require("../../middleware/rateLimit");
 

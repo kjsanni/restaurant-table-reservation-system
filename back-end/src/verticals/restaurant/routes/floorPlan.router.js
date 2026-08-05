@@ -1,1 +1,1 @@
-module.exports = require("../../routes/floorPlan.router");
+module.exports = require("../../../routes/floorPlan.router");

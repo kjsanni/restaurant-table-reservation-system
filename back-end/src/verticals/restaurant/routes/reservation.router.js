@@ -1,1 +1,1 @@
-module.exports = require("../../routes/reservation.router");
+module.exports = require("../../../routes/reservation.router");

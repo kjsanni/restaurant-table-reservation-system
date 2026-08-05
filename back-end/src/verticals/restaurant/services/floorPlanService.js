@@ -1,1 +1,1 @@
-module.exports = require("../../services/floorPlanService");
+module.exports = require("../../../services/floorPlanService");

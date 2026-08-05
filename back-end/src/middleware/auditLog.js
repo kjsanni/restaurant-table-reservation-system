@@ -57,6 +57,7 @@ const logAction = async (req, res, next) => {
       route.includes("register")
     )
       entityType = "auth";
+    else if (route.includes("feature-flags")) entityType = "feature_flag";
 
     try {
       await AuditLog.create({

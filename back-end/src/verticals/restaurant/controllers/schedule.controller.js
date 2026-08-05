@@ -1,1 +1,1 @@
-module.exports = require("../../controllers/schedule.controller");
+module.exports = require("../../../controllers/schedule.controller");

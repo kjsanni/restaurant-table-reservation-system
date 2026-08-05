@@ -1,1 +1,1 @@
-module.exports = require("../../DAOs/waitlist.dao");
+module.exports = require("../../../DAOs/waitlist.dao");
