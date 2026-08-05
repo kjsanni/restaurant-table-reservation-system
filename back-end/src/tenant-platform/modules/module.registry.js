@@ -1,7 +1,14 @@
 const fs = require("fs");
 const crypto = require("crypto");
+const path = require("path");
 
-const CHECKSUM_FILE = require("path").join(__dirname, "..", "..", "..", "..", "module-checksums.json");
+const PROJECT_ROOT = path.resolve(__dirname, "..", "..", "..", "..");
+const CHECKSUM_FILE = path.join(PROJECT_ROOT, "module-checksums.json");
+
+const isPathSafe = (filePath) => {
+  const resolved = path.resolve(filePath);
+  return resolved === PROJECT_ROOT || resolved.startsWith(PROJECT_ROOT + path.sep);
+};
 
 const computeFileChecksum = (filePath) => {
   try {
@@ -36,19 +43,18 @@ const saveChecksums = (checksums) => {
 
 const getModuleFiles = (module) => {
   const files = [];
-  if (module.manifestPath && fs.existsSync(module.manifestPath)) {
-    // codacy:ignore-next-line - manifestPath is a static internal path registered via ModuleRegistry.register()
+  if (module.manifestPath && fs.existsSync(module.manifestPath) && isPathSafe(module.manifestPath)) {
     files.push(module.manifestPath);
   }
 
-  const dir = module.dirPath || (module.manifestPath ? require("path").dirname(module.manifestPath) : null);
-  if (dir && fs.existsSync(dir)) {
-    // codacy:ignore-next-line - dir is derived from internally-registered module paths
+  const dir = module.dirPath || (module.manifestPath ? path.dirname(module.manifestPath) : null);
+  if (dir && fs.existsSync(dir) && isPathSafe(dir)) {
     const entries = fs.readdirSync(dir);
     for (const entry of entries) {
-      // codacy:ignore-next-line - dir is derived from internally-registered module paths, not user input
-      const fullPath = require("path").join(dir, entry);
-      // codacy:ignore-next-line - fullPath is constructed from trusted dir + readdirSync entries
+      const fullPath = path.join(dir, entry);
+      if (!isPathSafe(fullPath)) {
+        continue;
+      }
       const stat = fs.statSync(fullPath);
       if (stat.isFile() && /\.(js|json|ts|vue|css|html)$/.test(entry)) {
         files.push(fullPath);

@@ -34,7 +34,7 @@ describe("turnstile middleware", () => {
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: "Turnstile verification failed. Please complete the challenge.",
+      message: "Turnstile verification failed. Please try again.",
     });
   });
 

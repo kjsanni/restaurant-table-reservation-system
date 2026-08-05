@@ -1,12 +1,18 @@
+const path = require("path");
 const { ModuleRegistry } = require("../tenant-platform/modules/module.registry");
 
+const PROJECT_ROOT = path.resolve(__dirname, "..", "..", "..");
+const SAFE_MANIFEST = path.join(PROJECT_ROOT, "src", "__tests__", "test.module.js");
+
+const fsStore = {};
+
 jest.mock("fs", () => {
-  const store = {};
+  const store = fsStore;
   return {
-    existsSync: jest.fn((path) => path in store || false),
-    readFileSync: jest.fn((path) => store[path] || ""),
-    writeFileSync: jest.fn((path, data) => {
-      store[path] = data;
+    existsSync: jest.fn((p) => p in store || false),
+    readFileSync: jest.fn((p) => store[p] || ""),
+    writeFileSync: jest.fn((p, data) => {
+      store[p] = data;
     }),
     readdirSync: jest.fn(() => []),
     statSync: jest.fn(() => ({ isFile: () => false })),
@@ -32,7 +38,7 @@ describe("ModuleRegistry checksum verification", () => {
         name: "Test Module",
         version: "1.0.0",
         enabled: () => true,
-        manifestPath: "/fake/path/test.module.js",
+        manifestPath: SAFE_MANIFEST,
         routes: [],
       });
     }).not.toThrow();
@@ -46,7 +52,7 @@ describe("ModuleRegistry checksum verification", () => {
       name: "Test Module",
       version: "1.0.0",
       enabled: () => true,
-      manifestPath: "/fake/path/test.module.js",
+      manifestPath: SAFE_MANIFEST,
       routes: [],
     });
 
@@ -60,15 +66,15 @@ describe("ModuleRegistry checksum verification", () => {
       name: "Test Module",
       version: "1.0.0",
       enabled: () => true,
-      manifestPath: "/fake/path/test.module.js",
+      manifestPath: SAFE_MANIFEST,
       routes: [],
     });
 
     registry.checksums = { "test-module": "original-checksum" };
 
     fs.existsSync.mockReturnValue(true);
-    fs.readFileSync.mockImplementation((path) => {
-      if (path === "/fake/path/test.module.js") return "modified content";
+    fs.readFileSync.mockImplementation((filePath) => {
+      if (filePath === SAFE_MANIFEST) return "modified content";
       return "";
     });
 
@@ -87,7 +93,7 @@ describe("ModuleRegistry checksum verification", () => {
       name: "Test Module",
       version: "1.0.0",
       enabled: () => true,
-      manifestPath: "/fake/path/test.module.js",
+      manifestPath: SAFE_MANIFEST,
       routes: [],
     });
 
@@ -106,5 +112,64 @@ describe("ModuleRegistry checksum verification", () => {
 
     const violations = registry.verifyIntegrity();
     expect(violations).toEqual([]);
+  });
+
+  it("skips modules with manifestPath outside project root", () => {
+    const outsideManifest = "/etc/passwd";
+    fsStore[outsideManifest] = "root:x:0:0:root:/root:/bin/bash";
+    fs.existsSync.mockImplementation((p) => p === outsideManifest || p in fsStore);
+
+    registry.register({
+      id: "outside-module",
+      name: "Outside Module",
+      version: "1.0.0",
+      enabled: () => true,
+      manifestPath: outsideManifest,
+      routes: [],
+    });
+
+    const violations = registry.verifyIntegrity();
+    expect(violations).toEqual([]);
+    expect(fs.readFileSync).not.toHaveBeenCalledWith(outsideManifest, expect.anything());
+  });
+
+  it("skips modules with dirPath outside project root", () => {
+    const outsideDir = "/tmp";
+    fsStore[outsideDir] = true;
+    fs.existsSync.mockImplementation((p) => p === outsideDir || p in fsStore);
+    fs.readdirSync.mockReturnValue([]);
+
+    registry.register({
+      id: "outside-dir-module",
+      name: "Outside Dir Module",
+      version: "1.0.0",
+      enabled: () => true,
+      dirPath: outsideDir,
+      routes: [],
+    });
+
+    const violations = registry.verifyIntegrity();
+    expect(violations).toEqual([]);
+    expect(fs.readdirSync).not.toHaveBeenCalledWith(outsideDir);
+  });
+
+  it("blocks path traversal in dirPath", () => {
+    const traversalDir = path.join(PROJECT_ROOT, "..", "..", "etc");
+    fsStore[traversalDir] = true;
+    fs.existsSync.mockImplementation((p) => p === traversalDir || p in fsStore);
+    fs.readdirSync.mockReturnValue([]);
+
+    registry.register({
+      id: "traversal-module",
+      name: "Traversal Module",
+      version: "1.0.0",
+      enabled: () => true,
+      dirPath: traversalDir,
+      routes: [],
+    });
+
+    const violations = registry.verifyIntegrity();
+    expect(violations).toEqual([]);
+    expect(fs.readdirSync).not.toHaveBeenCalledWith(traversalDir);
   });
 });
