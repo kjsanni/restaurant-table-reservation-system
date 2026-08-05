@@ -44,4 +44,19 @@ router
   .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(dataAnonymizationController.anonymizeTenantHandler))
   .all(httpMethodError);
 
+router
+  .route("/:id/test-paystack")
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.testPaystackHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:id/test-shaqexpress")
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.testShaqExpressHandler))
+  .all(httpMethodError);
+
+router
+  .route("/:id/gateway")
+  .patch(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.updateGatewayHandler))
+  .all(httpMethodError);
+
 module.exports = router;

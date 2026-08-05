@@ -369,6 +369,24 @@ const getPaystackSettlements = (tenantId) => {
   );
 };
 
+const testPaystackKeys = (tenantId, { publicKey, secretKey }) => {
+  return API.post(`/admin/tenants/${tenantId}/test-paystack`, {
+    publicKey,
+    secretKey,
+  });
+};
+
+const testShaqExpress = (tenantId, { identifier, secret }) => {
+  return API.post(`/admin/tenants/${tenantId}/test-shaqexpress`, {
+    identifier,
+    secret,
+  });
+};
+
+const updateGateway = (tenantId, payload) => {
+  return API.patch(`/admin/tenants/${tenantId}/gateway`, payload);
+};
+
 const getWebhookStatus = () => {
   return API.get("/admin/integrations/webhooks/status");
 };
@@ -1078,4 +1096,7 @@ export default {
     API.post(`/admin/erpnext/tenants/${id}/sync`, data),
   getErpnextSyncStatus: (id) =>
     API.get(`/admin/erpnext/tenants/${id}/sync/status`),
+  testPaystackKeys,
+  testShaqExpress,
+  updateGateway,
 };
