@@ -307,7 +307,7 @@ const filteredCategorizedFlags = computed(() => {
 });
 
 const tenantFlagItems = computed(() => {
-  if (!tenantFlags.value && tenantFlags.value !== null) return [];
+  if (tenantFlags.value === undefined) return [];
   const catalog = globalFlagCatalog.value || [];
   const catalogMap = {};
   for (const item of catalog) {
