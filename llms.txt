@@ -108,7 +108,7 @@ npm run test:e2e                      # Playwright E2E
 
 ## Verification Gates
 
-- **Backend**: `cd back-end && npm test` — 729 Jest tests; must stay green (catches cross-tenant leaks and RBAC regressions).
+- **Backend**: `cd back-end && npm test` — 732 Jest tests; must stay green (catches cross-tenant leaks and RBAC regressions).
 - **Frontend**: `cd front-end && npm run lint && npm run build && npm run test:unit` — lint, build, and unit tests must pass.
 - **API integration**: Postman collection + Newman for smoke and regression testing of `/api/v1/*` endpoints.
 - **Migrations**: `npm run migrate:up` — replays from earliest unapplied migration; keep `up()` idempotent.
