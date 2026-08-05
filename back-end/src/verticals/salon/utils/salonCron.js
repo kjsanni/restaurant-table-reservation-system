@@ -135,7 +135,7 @@ const processMarketingCampaigns = async (tenantId) => {
 };
 
 const resolveRecipients = async (tenantId, targetAudience) => {
-  const { Op, col, fn, where: sqWhere, literal } = require("sequelize");
+  const { Op } = require("sequelize");
   const customerModel = salonModels.sequelize.models.customer;
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
