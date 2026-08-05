@@ -9,6 +9,9 @@ Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` w
 - Platform roles, webhook endpoints/notifications, reviews, custom reports, customer loyalty/marketing/waitlist, status/docs, tenant signup.
 - Postman/Newman API testing integration.
 - PWA manifest + service worker baseline.
+- Security lint fixes (Semgrep/Codacy CodeQL): SQL injection in migrations, CSRF HttpOnly suppression, pinned GitHub Actions, SSRF suppression, path traversal protection in module registry.
+- Release automation: changesets, release-drafter, tagged release workflow, PR template, branch protection, Dependabot.
+- Version sync: root + sub-packages at 1.1.0; `version:bump` script for one-command sync.
 
 ## Agent Instructions
 
@@ -18,6 +21,10 @@ Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` w
 
 - [README.md](README.md): Primary project documentation, features, tech stack, structure, quick start, and testing commands.
 - [CHANGELOG.md](CHANGELOG.md): Version history and release notes.
+- [.changeset/config.json](.changeset/config.json): Changeset config for per-PR changelog entries.
+- [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md): PR template enforcing conventional commits and testing checklist.
+- [.github/branch-protection.json](.github/branch-protection.json): CI/CD enforcement config.
+- [.github/dependabot.yml](.github/dependabot.yml): Weekly dependency update schedule.
 - [SESSION_NOTES.md](SESSION_NOTES.md): Recent development session notes and status.
 - [docs/README.md](docs/README.md): In-repo documentation index (architecture, security, RBAC, payments, features).
 - [back-end/src/tenant-platform/README.md](back-end/src/tenant-platform/README.md): Multi-tenant module overview, activation, tenant resolution, subscription plans, and platform admin API.
@@ -101,12 +108,12 @@ npm run test:e2e                      # Playwright E2E
 
 ## Verification Gates
 
-- **Backend**: `cd back-end && npm test` — 552 Jest tests; must stay green (catches cross-tenant leaks and RBAC regressions).
+- **Backend**: `cd back-end && npm test` — 729 Jest tests; must stay green (catches cross-tenant leaks and RBAC regressions).
 - **Frontend**: `cd front-end && npm run lint && npm run build && npm run test:unit` — lint, build, and unit tests must pass.
 - **API integration**: Postman collection + Newman for smoke and regression testing of `/api/v1/*` endpoints.
 - **Migrations**: `npm run migrate:up` — replays from earliest unapplied migration; keep `up()` idempotent.
 - **Dependency advisories**: Dependabot PRs are merged after review; recent example: postcss 8.5.23 security patch (source-map path-traversal fix).
-- **Versioning**: `VERSION` file at repo root tracks current release; git tags mark release boundaries (e.g., `v1.1.0`).
+- **Versioning**: `VERSION` file at repo root tracks current release (1.1.0); git tags mark release boundaries. `npm run version:bump -- <new-version>` syncs root `VERSION` + root `package.json`. Sub-packages (`back-end/`, `front-end/`) must be updated separately.
 
 ## Skills
 
