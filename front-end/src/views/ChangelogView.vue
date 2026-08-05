@@ -65,7 +65,10 @@ const parsedSections = computed(() => {
           <button class="nav-link" @click="router.push('/status')">
             Status
           </button>
-          <button class="nav-link active">Changelog</button>
+          <button class="nav-link" @click="router.push('/changelog')" active>
+            Changelog
+          </button>
+          <button class="nav-link" @click="router.push('/help')">Help</button>
           <button class="nav-link" @click="router.push('/legal')">Legal</button>
         </div>
       </div>

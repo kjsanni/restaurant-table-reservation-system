@@ -85,6 +85,12 @@ const router = createRouter({
       meta: { standalone: true },
     },
     {
+      path: "/help",
+      name: "help-center",
+      component: () => import("../views/HelpCenterView.vue"),
+      meta: { standalone: true },
+    },
+    {
       path: "/tenant/signup",
       name: "tenant-signup",
       component: () => import("../views/TenantSignupView.vue"),
