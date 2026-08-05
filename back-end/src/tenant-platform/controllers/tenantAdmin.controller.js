@@ -214,9 +214,7 @@ const sanitizeTenant = (tenant) => {
     }
   }
   if (obj.settings) {
-    const cfg = normalizeSettingValue(
-  const cfg = normalizeSettingValue(obj.settings);
-    );
+    const cfg = normalizeSettingValue(obj.settings);
     if (cfg.shaqexpress_config) {
       if (cfg.shaqexpress_config.secret) {
         const s = String(cfg.shaqexpress_config.secret);
