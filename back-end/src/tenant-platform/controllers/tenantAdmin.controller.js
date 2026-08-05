@@ -215,7 +215,7 @@ const sanitizeTenant = (tenant) => {
   }
   if (obj.settings) {
     const cfg = normalizeSettingValue(
-      typeof obj.settings === "string" ? JSON.parse(obj.settings) : obj.settings
+  const cfg = normalizeSettingValue(obj.settings);
     );
     if (cfg.shaqexpress_config) {
       if (cfg.shaqexpress_config.secret) {
