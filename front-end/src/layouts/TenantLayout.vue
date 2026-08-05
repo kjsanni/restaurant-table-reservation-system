@@ -374,7 +374,7 @@ onUnmounted(() => {
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.75) !important;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -387,17 +387,18 @@ onUnmounted(() => {
 
 .tl-nav-item:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: white;
+  color: white !important;
 }
 
 .tl-nav-item-active {
   background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
-  color: white;
+  color: white !important;
   box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25);
 }
 
 .tl-nav-text {
   white-space: nowrap;
+  color: #ffffff !important;
 }
 
 .tl-sidebar-bottom {
@@ -411,7 +412,7 @@ onUnmounted(() => {
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.6) !important;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -423,7 +424,7 @@ onUnmounted(() => {
 
 .tl-logout-item:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: white;
+  color: white !important;
 }
 
 .tl-main {

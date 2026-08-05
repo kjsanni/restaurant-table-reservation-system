@@ -79,6 +79,13 @@ const quickLinks = computed<QuickLink[]>(() => [
 
 const formatTime = (v: string) => {
   if (!v) return "—";
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(v)) {
+    const [h, m] = v.split(":").map(Number);
+    const hour = h % 24;
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
+  }
   const d = new Date(v);
   if (isNaN(d.getTime())) return v;
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -113,8 +120,10 @@ const kpis = computed(() => {
     {
       label: "Revenue",
       value: `GHS ${(
-        bookings.value.reduce((sum, b) => sum + (b.expectedTotal || 0), 0) /
-        1000
+        bookings.value.reduce(
+          (sum, b) => sum + Number(b.expectedTotal || 0),
+          0
+        ) / 1000
       ).toFixed(1)}k`,
       delta: "Today",
     },
