@@ -36,6 +36,7 @@ emailVerificationDAO.markUsed = async (id) => {
     token.usedAt = new Date();
     await token.save();
   }
+  return token;
 };
 
 emailVerificationDAO.invalidateUserTokens = async (userId) => {
