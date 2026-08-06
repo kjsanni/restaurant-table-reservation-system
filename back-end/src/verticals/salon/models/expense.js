@@ -2,11 +2,20 @@
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Expense extends Model {
-    static associate(models) {}
+    static associate(models) {
+      Expense.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
+    }
   }
   Expense.init(
     {
       tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      locationId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },

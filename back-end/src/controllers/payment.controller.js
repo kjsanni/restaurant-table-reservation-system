@@ -94,6 +94,7 @@ const getHistoryHandler = async (req, res) => {
   const filters = {
     reservationId: req.query.reservationId,
     method: req.query.method,
+    locationId: req.query.locationId,
     from: req.query.from,
     to: req.query.to,
   };
@@ -111,7 +112,8 @@ const getHistoryHandler = async (req, res) => {
 const getRevenueStatsHandler = async (req, res) => {
   const from = req.query.from;
   const to = req.query.to;
-  const stats = await paymentService.getRevenueStats(from, to, req.tenant?.id);
+  const locationId = req.query.locationId;
+  const stats = await paymentService.getRevenueStats(from, to, req.tenant?.id, locationId);
   return res.status(200).json({ success: true, stats });
 };
 

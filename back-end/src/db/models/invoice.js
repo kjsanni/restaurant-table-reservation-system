@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
     "invoice",
     {
       tenantId: { type: DataTypes.INTEGER, allowNull: false },
+      locationId: { type: DataTypes.INTEGER, allowNull: true },
       invoiceNumber: { type: DataTypes.STRING(50), allowNull: false, unique: true },
       amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
       currency: { type: DataTypes.STRING(3), allowNull: false, defaultValue: "GHS" },
@@ -26,6 +27,10 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: false,
     }
   );
+
+  Invoice.associate = (models) => {
+    Invoice.belongsTo(models.location, { foreignKey: "locationId", as: "location" });
+  };
 
   return Invoice;
 };

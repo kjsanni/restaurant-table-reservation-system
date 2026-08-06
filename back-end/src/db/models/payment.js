@@ -12,12 +12,20 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "orderId",
         onDelete: "SET NULL",
       });
+      Payment.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
     }
   }
 
   Payment.init(
     {
       tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      locationId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },

@@ -1,9 +1,9 @@
 const invoiceDAO = require("../DAOs/invoice.dao");
 
 const listInvoicesHandler = async (req, res) => {
-  const { status, limit } = req.query;
+  const { status, limit, locationId } = req.query;
   const tenantId = parseInt(req.params.tenantId, 10);
-  const data = await invoiceDAO.list({ tenantId, status, limit: limit ? parseInt(limit, 10) : 100 });
+  const data = await invoiceDAO.list({ tenantId, status, locationId, limit: limit ? parseInt(limit, 10) : 100 });
   res.status(200).json({ success: true, collection: data });
 };
 
@@ -16,7 +16,7 @@ const getInvoiceHandler = async (req, res) => {
 };
 
 const createInvoiceHandler = async (req, res) => {
-  const { amount, currency, dueDate, lineItems, notes } = req.body;
+  const { amount, currency, dueDate, lineItems, notes, locationId } = req.body;
   const tenantId = parseInt(req.params.tenantId, 10);
   if (!tenantId || !amount) {
     return res.status(400).json({ success: false, message: "tenantId and amount are required" });
@@ -28,6 +28,7 @@ const createInvoiceHandler = async (req, res) => {
   const invoiceNumber = `INV-${Date.now().toString(36).toUpperCase()}`;
   const record = await invoiceDAO.create({
     tenantId,
+    locationId: locationId || null,
     invoiceNumber,
     amount,
     currency: currency || "GHS",
@@ -39,7 +40,7 @@ const createInvoiceHandler = async (req, res) => {
 };
 
 const updateInvoiceHandler = async (req, res) => {
-  const allowed = ["status", "dueDate", "paidAt", "lineItems", "notes"];
+  const allowed = ["status", "dueDate", "paidAt", "lineItems", "notes", "locationId"];
   const updates = {};
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(req.body, key)) {

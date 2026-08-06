@@ -88,7 +88,7 @@ const commissionController = {
       if (validationErrors.length) {
         return res.status(422).json({ success: false, message: "Validation failed", errors: validationErrors });
       }
-      const allowed = ["amount", "rateType", "rateValue", "status", "paidAt", "notes"];
+      const allowed = ["amount", "rateType", "rateValue", "status", "paidAt", "notes", "locationId"];
       const updates = {};
       for (const key of allowed) {
         if (Object.prototype.hasOwnProperty.call(req.body, key)) {
@@ -152,7 +152,8 @@ const commissionController = {
     try {
       const tenantId = req.tenant?.id;
       const userId = req.query.userId ? Number(req.query.userId) : null;
-      const total = await commissionDao.getPendingTotal(tenantId, userId);
+      const locationId = req.query.locationId ? Number(req.query.locationId) : null;
+      const total = await commissionDao.getPendingTotal(tenantId, userId, locationId);
       res.json({ success: true, total });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });

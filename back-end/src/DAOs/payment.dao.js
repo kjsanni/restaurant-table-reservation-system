@@ -57,6 +57,7 @@ const getPaymentHistory = async (filters = {}, tenantId, pagination = {}) => {
   const where = withTenant({}, tenantId);
   if (filters.reservationId) where.reservationId = filters.reservationId;
   if (filters.method) where.method = filters.method;
+  if (filters.locationId) where.locationId = filters.locationId;
   if (filters.from) where.paidAt = { ...(where.paidAt && typeof where.paidAt === "object" ? where.paidAt : {}), [Op.gte]: filters.from };
   if (filters.to) where.paidAt = { ...(where.paidAt && typeof where.paidAt === "object" ? where.paidAt : {}), [Op.lte]: filters.to };
 
@@ -85,8 +86,9 @@ const getPaymentHistory = async (filters = {}, tenantId, pagination = {}) => {
   };
 };
 
-const getRevenueStats = async (from, to, tenantId) => {
+const getRevenueStats = async (from, to, tenantId, locationId) => {
   const where = withTenant({}, tenantId);
+  if (locationId) where.locationId = locationId;
   if (from) where.paidAt = { ...where.paidAt, [Op.gte]: from };
   if (to) where.paidAt = { ...where.paidAt, [Op.lte]: to };
 
@@ -130,8 +132,9 @@ const getRevenueStats = async (from, to, tenantId) => {
   }, { label: "payment.getRevenueStats" });
 };
 
-const getRevenueTimeSeries = async (from, to, granularity = "day", tenantId) => {
+const getRevenueTimeSeries = async (from, to, granularity = "day", tenantId, locationId) => {
   const where = withTenant({}, tenantId);
+  if (locationId) where.locationId = locationId;
   if (from) where.paidAt = { ...where.paidAt, [Op.gte]: from };
   if (to) where.paidAt = { ...where.paidAt, [Op.lte]: to };
 
@@ -171,8 +174,9 @@ const getRevenueTimeSeries = async (from, to, granularity = "day", tenantId) => 
   };
 };
 
-const getTaxReport = async (from, to, tenantId, vatRate = 0.15) => {
+const getTaxReport = async (from, to, tenantId, vatRate = 0.15, locationId) => {
   const where = withTenant({}, tenantId);
+  if (locationId) where.locationId = locationId;
   if (from) where.paidAt = { ...where.paidAt, [Op.gte]: from };
   if (to) where.paidAt = { ...where.paidAt, [Op.lte]: to };
 

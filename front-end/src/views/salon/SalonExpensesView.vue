@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import expenseAPI from "@/services/expenseAPI";
+import locationAPI from "@/services/locationAPI";
 import { useI18n } from "@/composables/useI18n";
 import { useSalonCrudView } from "@/composables/useSalonCrudView";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
@@ -16,7 +17,12 @@ interface Expense {
   paymentMethod?: string;
   reference?: string;
   note?: string;
+  locationId?: number | null;
+  location?: { id: number; name: string };
 }
+
+const locations = ref<Array<{ id: number; name: string }>>([]);
+const selectedLocationId = ref<number | "">("");
 
 const {
   list: expenses,
@@ -40,6 +46,7 @@ const {
     paymentMethod: "",
     reference: "",
     note: "",
+    locationId: null,
   },
   editMapper: (expense) => ({
     category: expense.category,
@@ -51,6 +58,7 @@ const {
     paymentMethod: expense.paymentMethod || "",
     reference: expense.reference || "",
     note: expense.note || "",
+    locationId: expense.locationId || null,
   }),
 });
 
@@ -62,7 +70,27 @@ const totalExpenses = () => {
   return expenses.value.reduce((sum, ex) => sum + Number(ex.amount || 0), 0);
 };
 
-onMounted(loadExpenses);
+const loadLocations = async () => {
+  try {
+    const res = await locationAPI.list();
+    locations.value = res.data.data || [];
+  } catch (err) {
+    console.error("Failed to load locations", err);
+  }
+};
+
+const filteredLoad = async () => {
+  const params: any = { limit: 100 };
+  if (selectedLocationId.value) {
+    params.locationId = selectedLocationId.value;
+  }
+  await loadExpenses(params);
+};
+
+onMounted(async () => {
+  await loadLocations();
+  await filteredLoad();
+});
 </script>
 
 <template>
@@ -88,6 +116,23 @@ onMounted(loadExpenses);
       </div>
 
       <div v-else class="stack">
+        <div v-if="locations.length" class="location-filter-bar">
+          <label>{{ t("salon.location", "Location") }}</label>
+          <select
+            v-model="selectedLocationId"
+            class="field-input"
+            @change="filteredLoad"
+          >
+            <option value="">{{ t("salon.allLocations", "All locations") }}</option>
+            <option
+              v-for="loc in locations"
+              :key="loc.id"
+              :value="loc.id"
+            >
+              {{ loc.name }}
+            </option>
+          </select>
+        </div>
         <div class="summary-card">
           <div class="summary-item">
             <span class="summary-label">{{ t("salon.totalExpenses") }}</span>
@@ -134,6 +179,19 @@ onMounted(loadExpenses);
             <label>
               {{ t("salon.date", "Date") }}
               <input v-model="form.date" class="field-input" type="date" />
+            </label>
+            <label>
+              {{ t("salon.location", "Location") }}
+              <select v-model="form.locationId" class="field-input">
+                <option value="">{{ t("salon.selectLocation", "Select location") }}</option>
+                <option
+                  v-for="loc in locations"
+                  :key="loc.id"
+                  :value="loc.id"
+                >
+                  {{ loc.name }}
+                </option>
+              </select>
             </label>
             <label>
               {{ t("salon.paymentMethod", "Payment Method") }}
@@ -289,6 +347,20 @@ onMounted(loadExpenses);
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+.location-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+}
+.location-filter-bar label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--neutral-700);
 }
 .summary-card {
   display: grid;

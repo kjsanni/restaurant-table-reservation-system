@@ -33,11 +33,11 @@ export function useSalonCrudView<T>(config: {
   const form = ref<Record<string, any>>({ ...config.defaultForm });
   const extra = ref<Record<string, any>>({ ...(config.extra || {}) });
 
-  const load = async () => {
+  const load = async (params = {}) => {
     loading.value = true;
     try {
       const method = resolveMethod(config.listMethod, "list");
-      const res = await api[method]({ limit: 100 });
+      const res = await api[method]({ limit: 100, ...params });
       list.value = res.data.data || [];
     } catch (err) {
       logger.error(`Failed to load ${config.entityName}s`, { error: err });
