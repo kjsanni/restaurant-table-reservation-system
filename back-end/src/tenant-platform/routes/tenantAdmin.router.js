@@ -47,17 +47,17 @@ router
 
 router
   .route("/:id/test-paystack")
-  .post(tryCatchHandler(adminActionLimiter), tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.testPaystackHandler))
+  .post(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.testPaystackHandler))
   .all(httpMethodError);
 
 router
   .route("/:id/test-shaqexpress")
-  .post(tryCatchHandler(adminActionLimiter), tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.testShaqExpressHandler))
+  .post(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.testShaqExpressHandler))
   .all(httpMethodError);
 
 router
   .route("/:id/gateway")
-  .patch(tryCatchHandler(adminActionLimiter), tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.updateGatewayHandler))
+  .patch(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(tenantAdminController.updateGatewayHandler))
   .all(httpMethodError);
 
 module.exports = router;
