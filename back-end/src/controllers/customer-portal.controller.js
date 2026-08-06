@@ -84,6 +84,17 @@ const cancelReservationHandler = async (req, res) => {
     if (reservation.resStatus === "cancelled" || reservation.resStatus === "completed") {
       return res.status(400).json({ success: false, message: "Reservation cannot be cancelled" });
     }
+
+    const customer = await reservationDAO.findOrCreateCustomer(
+      buildCustomerDetails(req.user),
+      null,
+      req.tenant?.id
+    );
+
+    if (!customer || reservation.customerId !== customer.id) {
+      return res.status(403).json({ success: false, message: "Not authorized for this reservation" });
+    }
+
     const updated = await reservationDAO.updateReservation(reservationId, { resStatus: "cancelled" }, req.tenant?.id);
     return res.status(200).json({ success: true, reservation: updated });
   } catch (err) {

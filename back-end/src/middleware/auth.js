@@ -94,65 +94,65 @@ const admin = (req, res, next) => {
 };
 
 const requireSuperAdmin = (req, res, next) => {
-  // Decision: platform_admin platform role is granted full super-admin access here.
-  // This is intentional for now because the existing platform portals do not yet
-  // distinguish between platform-admin-only routes and true super-admin routes.
-  // Revisit this block when finer-grained platform roles are required, and split
-  // requireSuperAdmin into dedicated middleware for any narrower scope.
-  const hasSuperAdmin = req.user && (
-    req.user.isSuperAdmin ||
-    (Array.isArray(req.user.platformRoles) && req.user.platformRoles.includes("platform_admin"))
-  );
+  if (req.user && req.user.isSuperAdmin) {
+    return next();
+  }
 
-  if (hasSuperAdmin) {
-    next();
-  } else {
+  const actorUserId = req.user?.id || null;
+  const tenantId = req.tenant?.id || null;
+  platformAuditDAO
+    .log(
+      actorUserId,
+      "super_admin.access_denied",
+      "admin",
+      null,
+      tenantId,
+      { path: req.path, method: req.method, ipAddress: req.ip },
+      req.ip
+    )
+    .catch(() => {});
+  return res.status(403).json({
+    success: false,
+    message: "Super admin access required!",
+  });
+};
+
+const ROLE_HIERARCHY = {
+  platform_admin: 5,
+  platform_billing: 4,
+  platform_support: 3,
+  platform_technical: 2,
+  platform_compliance: 1,
+};
+
+const requirePlatformRole = (role) => {
+  return (req, res, next) => {
+    const hasSuperAdmin = req.user?.isSuperAdmin === true;
+    const userRoles = Array.isArray(req.user?.platformRoles) ? req.user.platformRoles : [];
+    const requiredLevel = ROLE_HIERARCHY[role] || 0;
+    const userMaxLevel = Math.max(0, ...userRoles.map((r) => ROLE_HIERARCHY[r] || 0));
+
+    if (hasSuperAdmin || userMaxLevel >= requiredLevel) {
+      return next();
+    }
+
     const actorUserId = req.user?.id || null;
     const tenantId = req.tenant?.id || null;
     platformAuditDAO
       .log(
         actorUserId,
-        "super_admin.access_denied",
+        "platform_role.access_denied",
         "admin",
         null,
         tenantId,
-        { path: req.path, method: req.method, ipAddress: req.ip },
+        { path: req.path, method: req.method, requiredRole: role, ipAddress: req.ip },
         req.ip
       )
       .catch(() => {});
     return res.status(403).json({
       success: false,
-      message: "Super admin access required!",
+      message: `Platform role '${role}' required!`,
     });
-  }
-};
-
-const requirePlatformRole = (role) => {
-  return (req, res, next) => {
-    const userRoles = Array.isArray(req.user?.platformRoles) ? req.user.platformRoles : [];
-    const hasRole = req.user?.isSuperAdmin || userRoles.includes(role) || userRoles.includes("platform_admin");
-
-    if (hasRole) {
-      next();
-    } else {
-      const actorUserId = req.user?.id || null;
-      const tenantId = req.tenant?.id || null;
-      platformAuditDAO
-        .log(
-          actorUserId,
-          "platform_role.access_denied",
-          "admin",
-          null,
-          tenantId,
-          { path: req.path, method: req.method, requiredRole: role, ipAddress: req.ip },
-          req.ip
-        )
-        .catch(() => {});
-      return res.status(403).json({
-        success: false,
-        message: `Platform role '${role}' required!`,
-      });
-    }
   };
 };
 

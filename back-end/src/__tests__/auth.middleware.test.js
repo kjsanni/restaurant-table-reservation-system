@@ -344,11 +344,15 @@ describe("auth middleware", () => {
       expect(res.status).not.toHaveBeenCalled();
     });
 
-    it("calls next for platform admin role", async () => {
+    it("denies platform admin role without isSuperAdmin", async () => {
       const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_admin"] } });
       const res = makeRes();
       require("../middleware/auth").requireSuperAdmin(req, res, jest.fn());
-      expect(res.status).not.toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: "Super admin access required!",
+      });
     });
 
     it("returns 403 and logs for non-super-admin", async () => {
@@ -377,29 +381,63 @@ describe("auth middleware", () => {
 
   describe("requirePlatformRole", () => {
     it("calls next when user has the required role", async () => {
-      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["tenant_admin"] } });
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_admin"] } });
       const res = makeRes();
-      require("../middleware/auth").requirePlatformRole("tenant_admin")(req, res, jest.fn());
+      require("../middleware/auth").requirePlatformRole("platform_admin")(req, res, jest.fn());
       expect(res.status).not.toHaveBeenCalled();
     });
 
     it("calls next when user is super admin regardless of role", async () => {
       const req = makeReq({ user: { id: 1, isSuperAdmin: true, platformRoles: [] } });
       const res = makeRes();
-      require("../middleware/auth").requirePlatformRole("tenant_admin")(req, res, jest.fn());
+      require("../middleware/auth").requirePlatformRole("platform_admin")(req, res, jest.fn());
       expect(res.status).not.toHaveBeenCalled();
     });
 
     it("returns 403 when user lacks the required role", async () => {
       const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: [] }, tenant: { id: 10 } });
       const res = makeRes();
-      require("../middleware/auth").requirePlatformRole("tenant_admin")(req, res, jest.fn());
+      require("../middleware/auth").requirePlatformRole("platform_admin")(req, res, jest.fn());
 
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        message: "Platform role 'tenant_admin' required!",
+        message: "Platform role 'platform_admin' required!",
       });
+    });
+
+    it("grants access to higher-privilege roles via hierarchy", async () => {
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_admin"] } });
+      const res = makeRes();
+      require("../middleware/auth").requirePlatformRole("platform_billing")(req, res, jest.fn());
+      expect(res.status).not.toHaveBeenCalled();
+    });
+
+    it("denies access to higher-privilege roles", async () => {
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_billing"] } });
+      const res = makeRes();
+      require("../middleware/auth").requirePlatformRole("platform_admin")(req, res, jest.fn());
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: "Platform role 'platform_admin' required!",
+      });
+    });
+
+    it("grants access to equal-privilege roles", async () => {
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_billing"] } });
+      const res = makeRes();
+      require("../middleware/auth").requirePlatformRole("platform_billing")(req, res, jest.fn());
+      expect(res.status).not.toHaveBeenCalled();
+    });
+
+    it("denies access to higher-privilege roles", async () => {
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_support"] } });
+      const res = makeRes();
+      require("../middleware/auth").requirePlatformRole("platform_billing")(req, res, jest.fn());
+
+      expect(res.status).toHaveBeenCalledWith(403);
     });
   });
 });

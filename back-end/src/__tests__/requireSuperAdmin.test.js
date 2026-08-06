@@ -57,6 +57,44 @@ describe("requireSuperAdmin middleware", () => {
     expect(platformAuditDAO.log).toHaveBeenCalledTimes(1);
   });
 
+  it("denies platform_admin platform role without isSuperAdmin", () => {
+    const req = createReq({
+      id: 5,
+      email: "platform-admin@example.com",
+      isSuperAdmin: false,
+      platformRoles: ["platform_admin"],
+    });
+    const res = createRes();
+    const next = jest.fn();
+
+    requireSuperAdmin(req, res, next);
+
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: "Super admin access required!",
+    });
+    expect(platformAuditDAO.log).toHaveBeenCalledTimes(1);
+  });
+
+  it("denies platform_billing platform role without isSuperAdmin", () => {
+    const req = createReq({
+      id: 6,
+      email: "billing@example.com",
+      isSuperAdmin: false,
+      platformRoles: ["platform_billing"],
+    });
+    const res = createRes();
+    const next = jest.fn();
+
+    requireSuperAdmin(req, res, next);
+
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(platformAuditDAO.log).toHaveBeenCalledTimes(1);
+  });
+
   it("denies staff users", () => {
     const req = createReq({ id: 3, email: "staff@example.com", isSuperAdmin: false });
     const res = createRes();
