@@ -7,6 +7,20 @@
       "file": "postman_env_local.json",
       "author": "kjsanni",
       "date": "2026-08-05"
+    },
+    {
+      "check_id": "javascript.express.disabled-cookie-http-only",
+      "reason": "XSRF-TOKEN cookie must be readable by frontend JavaScript for the double-submit CSRF pattern. HttpOnly is intentionally disabled.",
+      "file": "back-end/src/middleware/csrf.js",
+      "author": "kjsanni",
+      "date": "2026-08-05"
+    },
+    {
+      "check_id": "javascript.express.disabled-cookie-http-only",
+      "reason": "XSRF-TOKEN cookie must be readable by frontend JavaScript for the double-submit CSRF pattern. HttpOnly is intentionally disabled.",
+      "file": "back-end/src/utils/server.js",
+      "author": "kjsanni",
+      "date": "2026-08-05"
     }
   ]
 }
