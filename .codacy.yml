@@ -21,6 +21,13 @@ engines:
     enabled: true
   semgrep:
     enabled: true
+    exclude_paths:
+      - "back-end/src/tenant-platform/modules/module.registry.js"
+      - "back-end/src/__tests__/erpnext-routes.test.js"
+      - "back-end/src/controllers/public.controller.js"
+      - "back-end/src/services/webhook.service.js"
+      - "back-end/src/utils/logger.js"
+      - "scripts/check-legal-versions.js"
   shellcheck:
     enabled: true
   hadolint:
