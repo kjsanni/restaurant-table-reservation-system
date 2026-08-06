@@ -34,4 +34,66 @@ platformAuditDAO.findRecent = (action, limit = 5) => {
   });
 };
 
+platformAuditDAO.findAllForUser = (actorUserId, filters = {}) => {
+  const where = { actorUserId };
+  if (filters.action) where.action = filters.action;
+  if (filters.entityType) where.entityType = filters.entityType;
+  if (filters.startDate) where.createdAt = { [db.Sequelize.Op.gte]: filters.startDate };
+  if (filters.endDate) where.createdAt = { ...where.createdAt, [db.Sequelize.Op.lte]: filters.endDate };
+
+  return db.platformAuditLog.findAll({
+    where,
+    order: [["createdAt", "DESC"]],
+    limit: filters.limit || 100,
+    offset: filters.offset || 0,
+  });
+};
+
+platformAuditDAO.findAllForTenant = (tenantId, filters = {}) => {
+  const where = { tenantId };
+  if (filters.action) where.action = filters.action;
+  if (filters.entityType) where.entityType = filters.entityType;
+  if (filters.startDate) where.createdAt = { [db.Sequelize.Op.gte]: filters.startDate };
+  if (filters.endDate) where.createdAt = { ...where.createdAt, [db.Sequelize.Op.lte]: filters.endDate };
+
+  return db.platformAuditLog.findAll({
+    where,
+    order: [["createdAt", "DESC"]],
+    limit: filters.limit || 100,
+    offset: filters.offset || 0,
+  });
+};
+
+platformAuditDAO.findSuspicious = (filters = {}) => {
+  const suspiciousActions = [
+    "platform_role.assign",
+    "platform_role.revoke",
+    "tenant.create",
+    "tenant.update",
+    "tenant.delete",
+    "billing.update",
+    "compliance.update",
+    "break_glass.request",
+    "break_glass.approve",
+    "break_glass.revoke",
+  ];
+
+  const where = { action: { [db.Sequelize.Op.in]: suspiciousActions } };
+  if (filters.startDate) where.createdAt = { [db.Sequelize.Op.gte]: filters.startDate };
+  if (filters.endDate) where.createdAt = { [db.Sequelize.Op.lte]: filters.endDate };
+
+  return db.platformAuditLog.findAll({
+    where,
+    include: [
+      {
+        model: db.user,
+        as: "actor",
+        attributes: ["id", "username", "email"],
+      },
+    ],
+    order: [["createdAt", "DESC"]],
+    limit: filters.limit || 100,
+  });
+};
+
 module.exports = platformAuditDAO;

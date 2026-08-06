@@ -54,7 +54,9 @@ onMounted(loadSegmentation);
             >
           </div>
           <div v-if="!segmentation.length" class="summary-card empty-card">
-            <span class="summary-label">{{ t("salon.noData") }}</span>
+            <span class="summary-label">{{
+              t("salon.noData", "No data")
+            }}</span>
           </div>
         </div>
 

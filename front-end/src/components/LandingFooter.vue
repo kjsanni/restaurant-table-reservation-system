@@ -6,18 +6,28 @@ import { computed } from "vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
-const isSalon = computed(() => authStore.currentTenant?.businessVertical === "salon");
+const isSalon = computed(
+  () => authStore.currentTenant?.businessVertical === "salon"
+);
 </script>
 
 <template>
   <footer class="landing-footer">
     <div class="footer-inner">
       <div class="footer-brand">
-        <Icon :icon="isSalon ? 'mdi:content-cut' : 'mdi:silverware-fork-knife'" width="24" height="24" />
+        <Icon
+          :icon="isSalon ? 'mdi:content-cut' : 'mdi:silverware-fork-knife'"
+          width="24"
+          height="24"
+        />
         <span>Vibespot</span>
       </div>
       <p class="footer-text">
-        {{ isSalon ? 'Salon management platform by Vibespot Technologies Ltd.' : 'Restaurant Table Reservation System by Vibespot Technologies Ltd.' }}
+        {{
+          isSalon
+            ? "Salon management platform by Vibespot Technologies Ltd."
+            : "Restaurant Table Reservation System by Vibespot Technologies Ltd."
+        }}
       </p>
       <p class="footer-copy">&copy; 2026 All rights reserved.</p>
       <slot name="admin-link" />

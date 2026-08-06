@@ -9,16 +9,10 @@ jest.mock("../DAOs/whistleblowerTip.dao", () => ({
 }));
 
 const tipDAO = require("../DAOs/whistleblowerTip.dao");
+const { createRes } = require("./utils/test-response");
 
 function createReq(user = { id: 1, tenantId: null }, body = {}) {
   return { user, body, params: {}, query: {} };
-}
-
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  return res;
 }
 
 describe("whistleblowerTip.controller", () => {

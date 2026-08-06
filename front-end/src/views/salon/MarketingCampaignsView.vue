@@ -174,7 +174,7 @@ onMounted(loadCampaigns);
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading campaigns...</p>
+        <p>{{ t("salon.loadingCampaigns") }}</p>
       </div>
 
       <div v-else class="stack">
@@ -194,10 +194,16 @@ onMounted(loadCampaigns);
             <label>
               {{ t("salon.type", "Type") }}
               <select v-model="form.type" class="field-input">
-                <option value="email">Email</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="sms">SMS</option>
-                <option value="social">Social</option>
+                <option value="email">
+                  {{ t("salon.campaignTypeEmail") }}
+                </option>
+                <option value="whatsapp">
+                  {{ t("salon.campaignTypeWhatsapp") }}
+                </option>
+                <option value="sms">{{ t("salon.campaignTypeSms") }}</option>
+                <option value="social">
+                  {{ t("salon.campaignTypeSocial") }}
+                </option>
               </select>
             </label>
             <label>

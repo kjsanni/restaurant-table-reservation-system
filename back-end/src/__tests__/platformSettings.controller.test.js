@@ -15,16 +15,10 @@ jest.mock("../tenant-platform/DAOs/platformAudit.dao", () => ({
 
 const authDAO = require("../DAOs/auth.dao");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
+const { createRes } = require("./utils/test-response");
 
 function createReq(user = { id: 1 }, body = {}) {
   return { user, body, ip: "127.0.0.1" };
-}
-
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  return res;
 }
 
 beforeEach(() => {

@@ -38,7 +38,7 @@ const dayLabel = (day: string) => {
 };
 
 const formatTime = (time: string) => {
-  if (!time) return "—";
+  if (!time) return t("salon.emDash", "—");
   const [h, m] = time.split(":").map(Number);
   const ampm = h >= 12 ? "PM" : "AM";
   const hour = h % 12 || 12;

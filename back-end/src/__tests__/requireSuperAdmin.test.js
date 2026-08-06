@@ -5,6 +5,7 @@ jest.mock("../tenant-platform/DAOs/platformAudit.dao", () => ({
 }));
 
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
+const { createRes } = require("./utils/test-response");
 
 function createReq(user = null, tenant = null) {
   return {
@@ -16,21 +17,13 @@ function createReq(user = null, tenant = null) {
   };
 }
 
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  res.end = jest.fn().mockReturnValue(res);
-  return res;
-}
-
 describe("requireSuperAdmin middleware", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it("allows a user with isSuperAdmin=true", () => {
-    const req = createReq({ id: 1, email: "admin@rtrs.com", isSuperAdmin: true });
+    const req = createReq({ id: 1, email: "admin@rtrs.com", isSuperAdmin: true, totpEnabled: true });
     const res = createRes();
     const next = jest.fn();
 
@@ -38,7 +31,23 @@ describe("requireSuperAdmin middleware", () => {
 
     expect(next).toHaveBeenCalledTimes(1);
     expect(res.status).not.toHaveBeenCalled();
-    expect(platformAuditDAO.log).not.toHaveBeenCalled();
+    expect(platformAuditDAO.log).toHaveBeenCalledTimes(1);
+  });
+
+  it("denies super admin when TOTP is not enabled", () => {
+    const req = createReq({ id: 1, email: "admin@rtrs.com", isSuperAdmin: true, totpEnabled: false });
+    const res = createRes();
+    const next = jest.fn();
+
+    requireSuperAdmin(req, res, next);
+
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: "TOTP is required for super-admin access.",
+      code: "requires_totp",
+    });
   });
 
   it("denies a regular admin without isSuperAdmin", () => {

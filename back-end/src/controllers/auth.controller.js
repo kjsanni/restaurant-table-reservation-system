@@ -220,7 +220,7 @@ const loginTOTPHandler = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid TOTP token" });
     }
 
-    const newToken = authService.generateToken(user.id, user.role);
+    const newToken = authService.generateToken(user.id, user.role, user.locale);
     const newRefreshToken = authService.generateRefreshToken();
 
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);

@@ -200,7 +200,7 @@ onUnmounted(() => {
             <textarea
               v-model="form.maintenanceNotes"
               rows="3"
-              placeholder="Optional notes..."
+              :placeholder="t('salon.maintenanceNotesPlaceholder')"
             ></textarea>
           </div>
           <div class="modal-actions">
@@ -211,9 +211,11 @@ onUnmounted(() => {
                 resetForm();
               "
             >
-              Cancel
+              {{ t("salon.cancelBtn") }}
             </button>
-            <button class="btn-primary" @click="submitForm">Save</button>
+            <button class="btn-primary" @click="submitForm">
+              {{ t("salon.save") }}
+            </button>
           </div>
         </div>
       </div>

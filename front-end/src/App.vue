@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, provide } from "vue";
 import { useTenantBranding } from "@/composables/useTenantBranding";
 import { getCurrentInstance } from "vue";
-import { useI18n } from "@/composables/useI18n";
+import { useI18n, type UseI18nReturn } from "@/composables/useI18n";
 
 useTenantBranding();
-useI18n();
+const i18n = useI18n();
+provide("i18n", i18n);
 
 const app = getCurrentInstance()?.appContext?.app;
 if (app) {

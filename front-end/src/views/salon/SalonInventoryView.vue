@@ -4,6 +4,7 @@ import inventoryItemAPI from "@/services/inventoryItemAPI";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
 import { useToastStore } from "@/stores/toast";
+import { useSalonCrudView } from "@/composables/useSalonCrudView";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 
 const { t } = useI18n();
@@ -25,49 +26,22 @@ interface InventoryItem {
   note?: string;
 }
 
-const items = ref<InventoryItem[]>([]);
 const alerts = ref<InventoryItem[]>([]);
-const loading = ref(true);
-const showForm = ref(false);
-const editingId = ref<number | null>(null);
-const form = ref({
-  name: "",
-  sku: "",
-  category: "",
-  quantity: 0,
-  unit: "pcs",
-  costPrice: 0,
-  sellingPrice: 0,
-  currency: "GHS",
-  reorderLevel: 5,
-  expiryDate: "",
-  isActive: true,
-  note: "",
-});
 
-const loadItems = async () => {
-  loading.value = true;
-  try {
-    const res = await inventoryItemAPI.getItems({ limit: 100 });
-    items.value = res.data.data || [];
-  } catch (err) {
-    logger.error("Failed to load inventory items", { error: err });
-  } finally {
-    loading.value = false;
-  }
-};
-
-const loadAlerts = async () => {
-  try {
-    const res = await inventoryItemAPI.getLowStock();
-    alerts.value = res.data.data || [];
-  } catch (err) {
-    logger.error("Failed to load low stock alerts", { error: err });
-  }
-};
-
-const resetForm = () => {
-  form.value = {
+const {
+  list: items,
+  loading,
+  showForm,
+  editingId,
+  form,
+  load: loadItems,
+  resetForm,
+  submitForm,
+  edit: editItem,
+} = useSalonCrudView<InventoryItem>({
+  api: inventoryItemAPI,
+  entityName: "Inventory Item",
+  defaultForm: {
     name: "",
     sku: "",
     category: "",
@@ -80,31 +54,8 @@ const resetForm = () => {
     expiryDate: "",
     isActive: true,
     note: "",
-  };
-  editingId.value = null;
-};
-
-const submitForm = async () => {
-  try {
-    const payload = { ...form.value };
-    if (editingId.value) {
-      const res = await inventoryItemAPI.updateItem(editingId.value, payload);
-      const idx = items.value.findIndex((it) => it.id === editingId.value);
-      if (idx !== -1) items.value[idx] = res.data.data;
-    } else {
-      const res = await inventoryItemAPI.createItem(payload);
-      items.value.push(res.data.data);
-    }
-    showForm.value = false;
-    resetForm();
-  } catch (err) {
-    logger.error("Failed to save inventory item", { error: err });
-  }
-};
-
-const editItem = (item: InventoryItem) => {
-  editingId.value = item.id;
-  form.value = {
+  },
+  editMapper: (item) => ({
     name: item.name,
     sku: item.sku || "",
     category: item.category || "",
@@ -117,13 +68,21 @@ const editItem = (item: InventoryItem) => {
     expiryDate: item.expiryDate ? item.expiryDate.slice(0, 10) : "",
     isActive: item.isActive,
     note: item.note || "",
-  };
-  showForm.value = true;
+  }),
+});
+
+const loadAlerts = async () => {
+  try {
+    const res = await inventoryItemAPI.getLowStock();
+    alerts.value = res.data.data || [];
+  } catch (err) {
+    logger.error("Failed to load low stock alerts", { error: err });
+  }
 };
 
 const deleteItem = async (id: number) => {
   try {
-    await inventoryItemAPI.deleteItem(id);
+    await inventoryItemAPI.delete(id);
     items.value = items.value.filter((it) => it.id !== id);
     toastStore.add(t("salon.itemDeleted", "Item deleted"), "success");
   } catch (err) {
@@ -164,7 +123,7 @@ onMounted(() => {
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading inventory...</p>
+        <p>{{ t("salon.loadingInventory") }}</p>
       </div>
 
       <div v-else class="stack">
@@ -199,15 +158,15 @@ onMounted(() => {
               <input v-model="form.name" class="field-input" />
             </label>
             <label>
-              SKU
+              {{ t("salon.sku") }}
               <input v-model="form.sku" class="field-input" />
             </label>
             <label>
-              Category
+              {{ t("salon.category", "Category") }}
               <input v-model="form.category" class="field-input" />
             </label>
             <label>
-              Quantity
+              {{ t("salon.qty", "Qty") }}
               <input
                 v-model.number="form.quantity"
                 class="field-input"
@@ -220,7 +179,7 @@ onMounted(() => {
               <input v-model="form.unit" class="field-input" />
             </label>
             <label>
-              Cost Price
+              {{ t("salon.cost", "Cost Price") }}
               <input
                 v-model.number="form.costPrice"
                 class="field-input"
@@ -229,7 +188,7 @@ onMounted(() => {
               />
             </label>
             <label>
-              Selling Price
+              {{ t("salon.sell", "Selling Price") }}
               <input
                 v-model.number="form.sellingPrice"
                 class="field-input"
@@ -246,7 +205,7 @@ onMounted(() => {
               </select>
             </label>
             <label>
-              Reorder Level
+              {{ t("salon.reorder", "Reorder Level") }}
               <input
                 v-model.number="form.reorderLevel"
                 class="field-input"
@@ -255,7 +214,7 @@ onMounted(() => {
               />
             </label>
             <label>
-              Expiry Date
+              {{ t("salon.expiryDate", "Expiry Date") }}
               <input
                 v-model="form.expiryDate"
                 class="field-input"
@@ -274,7 +233,7 @@ onMounted(() => {
               </select>
             </label>
             <label class="full">
-              Note
+              {{ t("salon.notes", "Note") }}
               <textarea v-model="form.note" class="field-input" rows="2" />
             </label>
           </div>
@@ -298,12 +257,12 @@ onMounted(() => {
             <thead>
               <tr>
                 <th>{{ t("salon.name", "Name") }}</th>
-                <th>SKU</th>
-                <th>Category</th>
-                <th>Qty</th>
-                <th>Cost</th>
-                <th>Sell</th>
-                <th>Reorder</th>
+                <th>{{ t("salon.sku", "SKU") }}</th>
+                <th>{{ t("salon.category", "Category") }}</th>
+                <th>{{ t("salon.qty", "Qty") }}</th>
+                <th>{{ t("salon.cost", "Cost") }}</th>
+                <th>{{ t("salon.sell", "Sell") }}</th>
+                <th>{{ t("salon.reorder", "Reorder") }}</th>
                 <th>{{ t("salon.status", "Status") }}</th>
                 <th>{{ t("salon.actions", "Actions") }}</th>
               </tr>

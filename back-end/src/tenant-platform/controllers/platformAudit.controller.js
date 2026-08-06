@@ -11,6 +11,42 @@ const listPlatformAuditHandler = async (req, res) => {
   res.status(200).json({ success: true, collection: data });
 };
 
+const listForUserHandler = async (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  const { action, startDate, endDate, limit, offset } = req.query;
+  const data = await platformAuditDAO.findAllForUser(userId, {
+    action,
+    startDate,
+    endDate,
+    limit: limit ? parseInt(limit, 10) : 100,
+    offset: offset ? parseInt(offset, 10) : 0,
+  });
+  res.status(200).json({ success: true, collection: data });
+};
+
+const listForTenantHandler = async (req, res) => {
+  const tenantId = parseInt(req.params.tenantId, 10);
+  const { action, startDate, endDate, limit, offset } = req.query;
+  const data = await platformAuditDAO.findAllForTenant(tenantId, {
+    action,
+    startDate,
+    endDate,
+    limit: limit ? parseInt(limit, 10) : 100,
+    offset: offset ? parseInt(offset, 10) : 0,
+  });
+  res.status(200).json({ success: true, collection: data });
+};
+
+const suspiciousActivityHandler = async (req, res) => {
+  const { startDate, endDate, limit } = req.query;
+  const data = await platformAuditDAO.findSuspicious({
+    startDate,
+    endDate,
+    limit: limit ? parseInt(limit, 10) : 100,
+  });
+  res.status(200).json({ success: true, suspicious: data });
+};
+
 const recentActivityHandler = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 20;
   const data = await platformAuditDAO.list({ limit });
@@ -73,6 +109,9 @@ const exportAuditLogHandler = async (req, res) => {
 
 module.exports = {
   listPlatformAuditHandler,
+  listForUserHandler,
+  listForTenantHandler,
+  suspiciousActivityHandler,
   recentActivityHandler,
   exportAuditLogHandler,
 };

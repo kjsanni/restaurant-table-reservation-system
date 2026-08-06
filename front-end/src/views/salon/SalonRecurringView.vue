@@ -116,19 +116,19 @@ onMounted(loadRecurring);
               />
             </label>
             <label>
-              Start Date
+              {{ t("salon.startDate", "Start Date") }}
               <input v-model="form.startDate" class="field-input" type="date" />
             </label>
             <label>
-              End Date (optional)
+              {{ t("salon.endDateOptional", "End Date (optional)") }}
               <input v-model="form.endDate" class="field-input" type="date" />
             </label>
             <label>
-              Time of Day
+              {{ t("salon.timeOfDay", "Time of Day") }}
               <input v-model="form.timeOfDay" class="field-input" />
             </label>
             <label>
-              Duration (minutes)
+              {{ t("salon.durationMinutes", "Duration (minutes)") }}
               <input
                 v-model.number="form.durationMinutes"
                 class="field-input"
@@ -142,21 +142,25 @@ onMounted(loadRecurring);
               :disabled="saving"
               @click="createRecurring"
             >
-              {{ saving ? "Saving..." : "Create Recurring" }}
+              {{
+                saving
+                  ? t("salon.savingBtn", "Saving...")
+                  : t("salon.createRecurring", "Create Recurring")
+              }}
             </button>
           </div>
         </div>
 
         <div class="settings-card">
-          <h3>Active Recurrences</h3>
+          <h3>{{ t("salon.activeRecurrences", "Active Recurrences") }}</h3>
           <table class="report-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Frequency</th>
-                <th>Start</th>
-                <th>End</th>
-                <th>Active</th>
+                <th>{{ t("salon.id", "ID") }}</th>
+                <th>{{ t("salon.frequency", "Frequency") }}</th>
+                <th>{{ t("salon.start", "Start") }}</th>
+                <th>{{ t("salon.end", "End") }}</th>
+                <th>{{ t("salon.activeLabel", "Active") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -165,11 +169,20 @@ onMounted(loadRecurring);
                 <td>{{ item.frequency }}</td>
                 <td>{{ item.startDate }}</td>
                 <td>{{ item.endDate || "—" }}</td>
-                <td>{{ item.active ? "Yes" : "No" }}</td>
+                <td>
+                  {{
+                    item.active ? t("salon.yes", "Yes") : t("salon.no", "No")
+                  }}
+                </td>
               </tr>
               <tr v-if="!recurringAppointments.length">
                 <td colspan="5" class="empty-state">
-                  No recurring appointments
+                  {{
+                    t(
+                      "salon.noRecurringAppointments",
+                      "No recurring appointments"
+                    )
+                  }}
                 </td>
               </tr>
             </tbody>

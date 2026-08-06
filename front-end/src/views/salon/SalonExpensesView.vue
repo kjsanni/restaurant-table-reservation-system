@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted } from "vue";
 import expenseAPI from "@/services/expenseAPI";
-import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
+import { useSalonCrudView } from "@/composables/useSalonCrudView";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 
 const { t } = useI18n();
@@ -18,34 +18,21 @@ interface Expense {
   note?: string;
 }
 
-const expenses = ref<Expense[]>([]);
-const loading = ref(true);
-const showForm = ref(false);
-const editingId = ref<number | null>(null);
-const form = ref({
-  category: "",
-  amount: 0,
-  currency: "GHS",
-  date: new Date().toISOString().slice(0, 10),
-  paymentMethod: "",
-  reference: "",
-  note: "",
-});
-
-const loadExpenses = async () => {
-  loading.value = true;
-  try {
-    const res = await expenseAPI.getExpenses({ limit: 100 });
-    expenses.value = res.data.data || [];
-  } catch (err) {
-    logger.error("Failed to load expenses", { error: err });
-  } finally {
-    loading.value = false;
-  }
-};
-
-const resetForm = () => {
-  form.value = {
+const {
+  list: expenses,
+  loading,
+  showForm,
+  editingId,
+  form,
+  load: loadExpenses,
+  resetForm,
+  submitForm,
+  edit: editExpense,
+  deleteItem: deleteExpense,
+} = useSalonCrudView<Expense>({
+  api: expenseAPI,
+  entityName: "Expense",
+  defaultForm: {
     category: "",
     amount: 0,
     currency: "GHS",
@@ -53,31 +40,8 @@ const resetForm = () => {
     paymentMethod: "",
     reference: "",
     note: "",
-  };
-  editingId.value = null;
-};
-
-const submitForm = async () => {
-  try {
-    const payload = { ...form.value };
-    if (editingId.value) {
-      const res = await expenseAPI.updateExpense(editingId.value, payload);
-      const idx = expenses.value.findIndex((ex) => ex.id === editingId.value);
-      if (idx !== -1) expenses.value[idx] = res.data.data;
-    } else {
-      const res = await expenseAPI.createExpense(payload);
-      expenses.value.push(res.data.data);
-    }
-    showForm.value = false;
-    resetForm();
-  } catch (err) {
-    logger.error("Failed to save expense", { error: err });
-  }
-};
-
-const editExpense = (expense: Expense) => {
-  editingId.value = expense.id;
-  form.value = {
+  },
+  editMapper: (expense) => ({
     category: expense.category,
     amount: Number(expense.amount),
     currency: expense.currency || "GHS",
@@ -87,19 +51,8 @@ const editExpense = (expense: Expense) => {
     paymentMethod: expense.paymentMethod || "",
     reference: expense.reference || "",
     note: expense.note || "",
-  };
-  showForm.value = true;
-};
-
-const deleteExpense = async (id: number) => {
-  if (!confirm(t("salon.confirmDelete", "Delete this expense?"))) return;
-  try {
-    await expenseAPI.deleteExpense(id);
-    expenses.value = expenses.value.filter((ex) => ex.id !== id);
-  } catch (err) {
-    logger.error("Failed to delete expense", { error: err });
-  }
-};
+  }),
+});
 
 const formatCurrency = (value: number, currency = "GHS") => {
   return `${currency} ${Number(value).toFixed(2)}`;
@@ -131,19 +84,19 @@ onMounted(loadExpenses);
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading expenses...</p>
+        <p>{{ t("salon.loadingExpenses") }}</p>
       </div>
 
       <div v-else class="stack">
         <div class="summary-card">
           <div class="summary-item">
-            <span class="summary-label">Total Expenses</span>
+            <span class="summary-label">{{ t("salon.totalExpenses") }}</span>
             <span class="summary-value">{{
               formatCurrency(totalExpenses(), expenses[0]?.currency || "GHS")
             }}</span>
           </div>
           <div class="summary-item">
-            <span class="summary-label">Entries</span>
+            <span class="summary-label">{{ t("salon.entries") }}</span>
             <span class="summary-value">{{ expenses.length }}</span>
           </div>
         </div>
@@ -158,11 +111,11 @@ onMounted(loadExpenses);
           </h3>
           <div class="grid">
             <label class="full">
-              Category
+              {{ t("salon.category", "Category") }}
               <input v-model="form.category" class="field-input" />
             </label>
             <label>
-              Amount
+              {{ t("salon.amount", "Amount") }}
               <input
                 v-model.number="form.amount"
                 class="field-input"
@@ -179,19 +132,19 @@ onMounted(loadExpenses);
               </select>
             </label>
             <label>
-              Date
+              {{ t("salon.date", "Date") }}
               <input v-model="form.date" class="field-input" type="date" />
             </label>
             <label>
-              Payment Method
+              {{ t("salon.paymentMethod", "Payment Method") }}
               <input v-model="form.paymentMethod" class="field-input" />
             </label>
             <label>
-              Reference
+              {{ t("salon.reference", "Reference") }}
               <input v-model="form.reference" class="field-input" />
             </label>
             <label class="full">
-              Note
+              {{ t("salon.notes", "Note") }}
               <textarea v-model="form.note" class="field-input" rows="2" />
             </label>
           </div>
@@ -210,15 +163,15 @@ onMounted(loadExpenses);
         </div>
 
         <div class="settings-card">
-          <h3>{{ t("salon.campaignsList", "Expenses") }}</h3>
+          <h3>{{ t("salon.expensesList", "Expenses") }}</h3>
           <table class="report-table">
             <thead>
               <tr>
-                <th>Category</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Payment Method</th>
-                <th>Reference</th>
+                <th>{{ t("salon.category", "Category") }}</th>
+                <th>{{ t("salon.amount", "Amount") }}</th>
+                <th>{{ t("salon.date", "Date") }}</th>
+                <th>{{ t("salon.paymentMethod", "Payment Method") }}</th>
+                <th>{{ t("salon.reference", "Reference") }}</th>
                 <th>{{ t("salon.actions", "Actions") }}</th>
               </tr>
             </thead>
@@ -234,11 +187,11 @@ onMounted(loadExpenses);
                   {{
                     expense.date
                       ? new Date(expense.date).toLocaleDateString()
-                      : "—"
+                      : t("salon.emDash")
                   }}
                 </td>
-                <td>{{ expense.paymentMethod || "—" }}</td>
-                <td>{{ expense.reference || "—" }}</td>
+                <td>{{ expense.paymentMethod || t("salon.emDash") }}</td>
+                <td>{{ expense.reference || t("salon.emDash") }}</td>
                 <td class="actions">
                   <button
                     class="btn-secondary-sm"

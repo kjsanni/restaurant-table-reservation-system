@@ -5,8 +5,8 @@ const { verifyTokenWithFallback, getCurrentSecret } = require("../utils/jwtRotat
 const JWT_SECRET = getCurrentSecret();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30m";
 
-const generateToken = (userId, role) => {
-  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+const generateToken = (userId, role, locale = "en") => {
+  return jwt.sign({ userId, role, locale }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
 
 const generateRefreshToken = () => {
@@ -68,7 +68,7 @@ const refreshAccessToken = async (refreshTokenDAO, refreshToken, tenantId) => {
     throw { status: 401, message: "User not found!" };
   }
 
-  const newAccessToken = generateToken(user.id, user.role);
+  const newAccessToken = generateToken(user.id, user.role, user.locale);
   const newRefreshToken = generateRefreshToken();
 
   if (refreshTokenDAO.createRefreshToken && refreshTokenDAO.revokeRefreshToken) {
@@ -172,7 +172,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
     }
   }
 
-  const token = generateToken(user.id, user.role);
+  const token = generateToken(user.id, user.role, user.locale);
   const refreshToken = generateRefreshToken();
 
   let permissions = user.permissions || {};

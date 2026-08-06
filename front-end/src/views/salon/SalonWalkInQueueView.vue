@@ -391,22 +391,22 @@ onMounted(async () => {
             :disabled="submitting"
             @click="showForm = false"
           >
-            Cancel
+            {{ t("salon.cancelBtn") }}
           </button>
           <button
             class="btn-primary"
             :disabled="submitting"
             @click="submitForm"
           >
-            <span v-if="!submitting">Add to Queue</span>
-            <span v-else>Saving...</span>
+            <span v-if="!submitting">{{ t("salon.addToQueue") }}</span>
+            <span v-else>{{ t("salon.savingBtn") }}</span>
           </button>
         </div>
       </div>
 
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading queue...</p>
+        <p>{{ t("salon.loadingQueue") }}</p>
       </div>
 
       <div v-else class="queue-board">
@@ -424,17 +424,17 @@ onMounted(async () => {
               :class="['queue-card', statusClass(apt.status)]"
             >
               <div class="card-header">
-                <b>{{ apt.service?.name || "Service" }}</b>
+                <b>{{ apt.service?.name || t("salon.serviceFallback") }}</b>
                 <span class="card-time">{{ formatTime(apt.start) }}</span>
               </div>
               <div class="card-body">
                 <div class="card-client">
-                  {{ apt.customer?.firstName || "Guest" }}
+                  {{ apt.customer?.firstName || t("salon.guest") }}
                   {{ apt.customer?.lastName || "" }}
                 </div>
                 <div class="card-meta">
-                  {{ apt.stylist?.name || "Unassigned" }} ·
-                  {{ apt.station?.name || "Unassigned" }}
+                  {{ apt.stylist?.name || t("salon.unassignedFallback") }} ·
+                  {{ apt.station?.name || t("salon.unassignedFallback") }}
                 </div>
                 <div class="card-duration">{{ apt.durationMinutes }}m</div>
               </div>
@@ -452,7 +452,7 @@ onMounted(async () => {
                   </option>
                 </select>
                 <button class="btn-danger-sm" @click="removeWalkin(apt.id)">
-                  Remove
+                  {{ t("salon.removeBtn") }}
                 </button>
               </div>
             </div>

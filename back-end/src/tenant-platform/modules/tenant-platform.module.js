@@ -83,6 +83,7 @@ const dataRetentionPolicyRoutes = require("../routes/dataRetentionPolicy.router"
 const postmortemRoutes = require("../routes/postmortem.router");
 const migrationRoutes = require("../routes/migration.router");
 const debugRoutes = require("../routes/debug.router");
+const breakGlassRoutes = require("../routes/breakGlass.router");
 
 const tenantPlatformModule = {
   id: "tenant-platform",
@@ -166,6 +167,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/data-anonymization", router: dataAnonymizationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/platform-settings", router: platformSettingsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/benchmarks", router: benchmarkRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/break-glass", router: breakGlassRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/billing", router: billingRoutes, middleware: [logAction, validateCsrfToken] },
     { path: "/api/v1/public/dsar-request", router: publicDsarRoutes },
     { path: "/api/v1/public/tenants", router: publicTenantRoutes },

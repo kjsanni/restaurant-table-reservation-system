@@ -351,7 +351,7 @@ const handleServiceChange = async () => {
             class="location-filter"
             @change="loadAppointments"
           >
-            <option value="">All Locations</option>
+            <option value="">{{ t("salon.allLocations") }}</option>
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">
               {{ loc.name }}
             </option>

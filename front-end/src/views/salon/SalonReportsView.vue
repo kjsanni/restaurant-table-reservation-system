@@ -8,6 +8,7 @@ const { t } = useI18n();
 
 const loading = ref(true);
 const saving = ref(false);
+const exporting = ref(false);
 const from = ref("");
 const to = ref("");
 
@@ -45,6 +46,29 @@ const applyFilters = () => {
   loadReports();
 };
 
+const exportCsv = async () => {
+  exporting.value = true;
+  try {
+    const res = await salonReportsAPI.exportCsv(
+      from.value || undefined,
+      to.value || undefined
+    );
+    const blob = new Blob([res.data], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `salon-reports-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    logger.error("Failed to export salon reports", { error: err });
+  } finally {
+    exporting.value = false;
+  }
+};
+
 onMounted(loadReports);
 </script>
 
@@ -66,6 +90,17 @@ onMounted(loadReports);
         </label>
         <button class="btn-primary" :disabled="saving" @click="applyFilters">
           {{ t("salon.apply") }}
+        </button>
+        <button
+          class="btn-secondary"
+          :disabled="exporting || loading"
+          @click="exportCsv"
+        >
+          {{
+            exporting
+              ? t("salon.exporting", "Exporting...")
+              : t("salon.exportCsv", "Export CSV")
+          }}
         </button>
       </div>
     </div>
@@ -110,7 +145,7 @@ onMounted(loadReports);
               </tr>
               <tr v-if="!revenueByService.length">
                 <td colspan="3" class="empty-state">
-                  No revenue data available
+                  {{ t("salon.noRevenueData", "No revenue data available") }}
                 </td>
               </tr>
             </tbody>
@@ -175,7 +210,7 @@ onMounted(loadReports);
                 <th>{{ t("salon.day") }}</th>
                 <th>{{ t("salon.hour") }}</th>
                 <th>{{ t("salon.appointments") }}</th>
-                <th>Total Minutes</th>
+                <th>{{ t("salon.totalMinutes", "Total Minutes") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -190,7 +225,7 @@ onMounted(loadReports);
               </tr>
               <tr v-if="!peakHours.length">
                 <td colspan="4" class="empty-state">
-                  No peak-hour data available
+                  {{ t("salon.noPeakHourData", "No peak-hour data available") }}
                 </td>
               </tr>
             </tbody>
@@ -247,6 +282,41 @@ onMounted(loadReports);
   font-size: 14px;
   background: var(--white);
   color: var(--neutral-900);
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--sky-600) 0%, var(--sky-500) 100%);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--sky-700) 0%, var(--sky-600) 100%);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.btn-secondary {
+  background: var(--neutral-100);
+  color: var(--neutral-900);
+  border: 1px solid var(--neutral-200);
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--neutral-200);
+}
+.btn-secondary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 .content-wrapper {
   flex: 1;

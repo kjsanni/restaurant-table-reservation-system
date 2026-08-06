@@ -1,21 +1,5 @@
-import API from "./API";
+import { createSalonCrudAPI } from "@/composables/useSalonCrudAPI";
 
-class PricingRuleAPI {
-  getRules(params = {}) {
-    return API.get("/salon/pricing", { params });
-  }
-  getRule(id) {
-    return API.get(`/salon/pricing/${id}`);
-  }
-  createRule(payload) {
-    return API.post("/salon/pricing", payload);
-  }
-  updateRule(id, payload) {
-    return API.patch(`/salon/pricing/${id}`, payload);
-  }
-  deleteRule(id) {
-    return API.delete(`/salon/pricing/${id}`);
-  }
-}
-
-export default new PricingRuleAPI();
+export default createSalonCrudAPI({
+  basePath: "/salon/pricing",
+});

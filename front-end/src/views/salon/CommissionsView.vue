@@ -2,8 +2,15 @@
   <div class="commissions-view">
     <div class="page-header">
       <div>
-        <h1>Commissions</h1>
-        <p class="subtitle">Track and manage stylist commissions</p>
+        <h1>{{ t("salon.commissionsTitle", "Commissions") }}</h1>
+        <p class="subtitle">
+          {{
+            t(
+              "salon.commissionsSubtitle",
+              "Track and manage stylist commissions"
+            )
+          }}
+        </p>
       </div>
       <div class="header-actions">
         <button class="btn-primary" @click="openCreateForm" :disabled="loading">

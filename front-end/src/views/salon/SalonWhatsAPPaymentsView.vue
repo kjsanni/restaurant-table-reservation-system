@@ -68,7 +68,7 @@
                   class="btn-refund"
                   @click="refundAppointment(apt)"
                 >
-                  Refund
+                  {{ t("salon.refund", "Refund") }}
                 </button>
               </td>
             </tr>
@@ -129,12 +129,22 @@ const canRefund = (apt) => {
 };
 
 const refundAppointment = async (apt) => {
-  if (!confirm(`Refund appointment #${apt.id}? This cannot be undone.`)) return;
+  if (
+    !confirm(
+      t(
+        "salon.refundConfirm",
+        `Refund appointment #${apt.id}? This cannot be undone.`
+      )
+    )
+  )
+    return;
   try {
     await appointmentAPI.refundAppointment(apt.id);
     await load();
   } catch (e) {
-    alert(e?.response?.data?.message || "Refund failed");
+    alert(
+      e?.response?.data?.message || t("salon.refundFailed", "Refund failed")
+    );
   }
 };
 

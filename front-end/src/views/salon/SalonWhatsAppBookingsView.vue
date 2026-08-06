@@ -34,20 +34,20 @@
         <div class="spinner-sm"></div>
       </div>
       <div v-else-if="items.length === 0" class="empty-state">
-        No WhatsApp bookings found
+        No {{ t("salon.whatsappBookings") }} found
       </div>
       <div v-else class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Customer</th>
-              <th>Service</th>
-              <th>Stylist</th>
-              <th>Station</th>
-              <th>Status</th>
-              <th>Payment</th>
+              <th>{{ t("salon.tableDate") }}</th>
+              <th>{{ t("salon.tableTime") }}</th>
+              <th>{{ t("salon.tableCustomer") }}</th>
+              <th>{{ t("salon.tableService") }}</th>
+              <th>{{ t("salon.tableStylist") }}</th>
+              <th>{{ t("salon.tableStation") }}</th>
+              <th>{{ t("salon.tableStatus") }}</th>
+              <th>{{ t("salon.tablePayment") }}</th>
             </tr>
           </thead>
           <tbody>

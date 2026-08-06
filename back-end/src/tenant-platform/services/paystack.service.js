@@ -121,6 +121,23 @@ const createPlan = async ({ name, amount, interval = "monthly", currency = "GHS"
   return response.data.data;
 };
 
+const PAYSTACK_CHANNEL_MAP = {
+  mobile_money: "mobile_money",
+  mtn_momo: "mtn_momo",
+  vodafone_cash: "vodafone_cash",
+  airtel_tigo: "airtel_tigo",
+  card_paystack: "card",
+  card: "card",
+  bank_transfer: "bank_transfer",
+};
+
+const mapChannels = (channels) => {
+  if (!Array.isArray(channels)) return null;
+  return channels
+    .map((ch) => PAYSTACK_CHANNEL_MAP[ch] || ch)
+    .filter(Boolean);
+};
+
 const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = null, channels = null }) => {
   const client = await buildPlatformClient();
   const payload = {
@@ -135,8 +152,9 @@ const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = nu
     payload.bearer = splitConfig.bearer || "subaccount";
   }
 
-  if (channels && Array.isArray(channels) && channels.length) {
-    payload.channels = channels;
+  const mappedChannels = mapChannels(channels);
+  if (mappedChannels && mappedChannels.length) {
+    payload.channels = mappedChannels;
   }
 
   const response = await client.post("/transaction/initialize", payload);

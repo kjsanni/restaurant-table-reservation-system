@@ -83,7 +83,7 @@ const TYPE_DEFAULTS = {
   },
   salonDefaults: {
     salon_whatsapp_config: { enabled: false, phoneNumberId: "", token: "" },
-    salon_payment_config: { currency: "GHS", depositRequired: false, defaultDepositPercent: 0 },
+    salon_payment_config: { currency: "GHS", depositRequired: false, defaultDepositPercent: 0, enabledChannels: ["card_paystack"], momoProviders: ["mtn_momo", "vodafone_cash", "airtel_tigo"] },
     salon_sms_fallback_enabled: false,
   },
 };

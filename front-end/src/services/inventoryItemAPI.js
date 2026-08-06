@@ -1,24 +1,15 @@
-import API from "./API";
+import { createSalonCrudAPI } from "@/composables/useSalonCrudAPI";
 
-class InventoryAPI {
-  getItems(params = {}) {
-    return API.get("/salon/inventory", { params });
-  }
-  getItem(id) {
-    return API.get(`/salon/inventory/${id}`);
-  }
-  createItem(payload) {
-    return API.post("/salon/inventory", payload);
-  }
-  updateItem(id, payload) {
-    return API.patch(`/salon/inventory/${id}`, payload);
-  }
-  deleteItem(id) {
-    return API.delete(`/salon/inventory/${id}`);
-  }
-  getLowStock() {
-    return API.get("/salon/inventory/alerts/low-stock");
-  }
-}
-
-export default new InventoryAPI();
+export default createSalonCrudAPI({
+  basePath: "/salon/inventory",
+  methods: {
+    list: "/salon/inventory",
+    get: (id) => `/salon/inventory/${id}`,
+    create: "/salon/inventory",
+    update: (id) => `/salon/inventory/${id}`,
+    delete: (id) => `/salon/inventory/${id}`,
+  },
+  extra: {
+    getLowStock: { method: "get", path: "/salon/inventory/alerts/low-stock" },
+  },
+});

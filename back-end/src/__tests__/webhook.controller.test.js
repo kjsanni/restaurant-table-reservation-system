@@ -20,6 +20,7 @@ jest.mock("../db/models", () => ({
 const { verifyWebhookSignature } = require("../tenant-platform/services/paystack.service");
 const failedPaymentAlertDAO = require("../tenant-platform/DAOs/failedPaymentAlert.dao");
 const db = require("../db/models");
+const { createRes } = require("./utils/test-response");
 
 function createReq(body, headers = {}) {
   return {
@@ -28,13 +29,6 @@ function createReq(body, headers = {}) {
     tenant: { id: 1 },
     ip: "127.0.0.1",
   };
-}
-
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  return res;
 }
 
 describe("webhook.controller paystackEventHandler", () => {

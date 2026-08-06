@@ -7,6 +7,16 @@ class SalonReportsAPI {
     if (to) params.to = to;
     return API.get("/salon/reports", { params });
   }
+
+  exportCsv(from, to) {
+    const params = {};
+    if (from) params.from = from;
+    if (to) params.to = to;
+    return API.get("/salon/reports/export/csv", {
+      params,
+      responseType: "blob",
+    });
+  }
 }
 
 export default new SalonReportsAPI();

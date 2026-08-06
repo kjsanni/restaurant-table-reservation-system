@@ -4,24 +4,12 @@ jest.mock("../verticals/salon/DAOs/referral.dao");
 jest.mock("../middleware/auditLog", () => ({ logAction: jest.fn() }));
 
 const referralController = require("../verticals/salon/controllers/referral.controller");
+const { makeRes } = require("./utils/test-response");
 
 describe("referral.controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-
-  function makeRes() {
-    const json = jest.fn();
-    const status = jest.fn(function () {
-      return { json: json };
-    });
-    return {
-      res: { status: status, json: json },
-      expectJson: function (expected) {
-        expect(json).toHaveBeenCalledWith(expected);
-      },
-    };
-  }
 
   it("getReferrals returns data for tenant", async () => {
     require("../verticals/salon/DAOs/referral.dao").findAll.mockResolvedValue([

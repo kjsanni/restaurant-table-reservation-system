@@ -1110,6 +1110,12 @@ router.addRoute({
       meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
     },
     {
+      path: "break-glass",
+      name: "break-glass",
+      component: () => import("../views/admin/BreakGlassView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+    },
+    {
       path: "debug",
       name: "platform-debug",
       component: () => import("../views/admin/DebugToolsView.vue"),

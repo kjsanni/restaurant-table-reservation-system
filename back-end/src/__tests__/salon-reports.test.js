@@ -62,4 +62,31 @@ describe("salon-reports.controller", () => {
     expect(appointmentDao.getTopStylists).toHaveBeenCalledWith(1, "2026-01-01", "2026-01-31");
     expect(appointmentDao.getAppointmentsBySource).toHaveBeenCalledWith(1, "2026-01-01", "2026-01-31");
   });
+
+  it("exports salon reports as csv", async () => {
+    appointmentDao.getRevenueByService.mockResolvedValue([
+      { serviceId: 1, serviceName: "Haircut", appointmentCount: 10, revenue: 500 },
+    ]);
+    appointmentDao.getTopStylists.mockResolvedValue([
+      { stylistId: 1, stylistName: "Jane", appointmentCount: 5, revenue: 250 },
+    ]);
+    appointmentDao.getAppointmentsBySource.mockResolvedValue([
+      { source: "walkin", appointmentCount: 3 },
+    ]);
+    appointmentDao.getPeakHours.mockResolvedValue([
+      { hour: 10, dayOfWeek: 6, appointmentCount: 5 },
+    ]);
+
+    const req = buildReq({ query: { from: "2026-01-01", to: "2026-01-31" } });
+    const res = { status: jest.fn().mockReturnThis(), send: jest.fn().mockReturnThis(), setHeader: jest.fn() };
+
+    await salonReportsController.exportSalonReportsHandler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "text/csv");
+    expect(res.setHeader).toHaveBeenCalledWith("Content-Disposition", expect.stringContaining("attachment; filename=salon-reports-"));
+    expect(res.send).toHaveBeenCalledWith(expect.stringContaining("Haircut,500.00,10"));
+    expect(res.send).toHaveBeenCalledWith(expect.stringContaining("Jane,5,250.00"));
+    expect(res.send).toHaveBeenCalledWith(expect.stringContaining("walkin,3"));
+  });
 });

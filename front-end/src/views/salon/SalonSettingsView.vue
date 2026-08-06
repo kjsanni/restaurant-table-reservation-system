@@ -14,6 +14,7 @@ const salonPaymentConfig = ref({
   depositRequired: false,
   defaultDepositPercent: 0,
   enabledChannels: ["card_paystack"],
+  momoProviders: ["mtn_momo", "vodafone_cash", "airtel_tigo"],
 });
 
 const salonSmsFallback = ref({
@@ -113,7 +114,9 @@ onMounted(loadSettings);
 
 onBeforeUnmount(() => {
   if (saving.value) {
-    const ok = confirm("Settings are still saving. Leave anyway?");
+    const ok = confirm(
+      t("salon.leaveUnsaved", "Settings are still saving. Leave anyway?")
+    );
     if (!ok) {
       throw new Error("Navigation cancelled");
     }
@@ -188,6 +191,39 @@ onBeforeUnmount(() => {
                   v-model="salonPaymentConfig.enabledChannels"
                 />
                 {{ t("salon.cardPaystack") }}
+              </label>
+            </div>
+          </div>
+          <div
+            class="field"
+            v-if="salonPaymentConfig.enabledChannels.includes('mobile_money')"
+          >
+            <label>{{ t("salon.momoProviders") }}</label>
+            <p class="field-hint">{{ t("salon.selectMomoProviders") }}</p>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  :value="'mtn_momo'"
+                  v-model="salonPaymentConfig.momoProviders"
+                />
+                {{ t("salon.mtnMomo") }}
+              </label>
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  :value="'vodafone_cash'"
+                  v-model="salonPaymentConfig.momoProviders"
+                />
+                {{ t("salon.vodafoneCash") }}
+              </label>
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  :value="'airtel_tigo'"
+                  v-model="salonPaymentConfig.momoProviders"
+                />
+                {{ t("salon.airtelTigoMoney") }}
               </label>
             </div>
           </div>

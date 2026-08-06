@@ -337,15 +337,27 @@ describe("auth middleware", () => {
   });
 
   describe("requireSuperAdmin", () => {
-    it("calls next for super admin", async () => {
-      const req = makeReq({ user: { id: 1, isSuperAdmin: true } });
+    it("calls next for super admin with TOTP enabled", async () => {
+      const req = makeReq({ user: { id: 1, isSuperAdmin: true, totpEnabled: true } });
       const res = makeRes();
       require("../middleware/auth").requireSuperAdmin(req, res, jest.fn());
       expect(res.status).not.toHaveBeenCalled();
     });
 
+    it("denies super admin when TOTP is not enabled", async () => {
+      const req = makeReq({ user: { id: 1, isSuperAdmin: true, totpEnabled: false } });
+      const res = makeRes();
+      require("../middleware/auth").requireSuperAdmin(req, res, jest.fn());
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: "TOTP is required for super-admin access.",
+        code: "requires_totp",
+      });
+    });
+
     it("denies platform admin role without isSuperAdmin", async () => {
-      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_admin"] } });
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_admin"], totpEnabled: true } });
       const res = makeRes();
       require("../middleware/auth").requireSuperAdmin(req, res, jest.fn());
       expect(res.status).toHaveBeenCalledWith(403);
@@ -357,7 +369,7 @@ describe("auth middleware", () => {
 
     it("returns 403 and logs for non-super-admin", async () => {
       const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
-      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: [] }, tenant: { id: 10 } });
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: [], totpEnabled: true }, tenant: { id: 10 } });
       const res = makeRes();
 
       require("../middleware/auth").requireSuperAdmin(req, res, jest.fn());
@@ -380,22 +392,34 @@ describe("auth middleware", () => {
   });
 
   describe("requirePlatformRole", () => {
-    it("calls next when user has the required role", async () => {
-      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_admin"] } });
+    it("calls next when user has the required role and TOTP enabled", async () => {
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_admin"], totpEnabled: true } });
       const res = makeRes();
       require("../middleware/auth").requirePlatformRole("platform_admin")(req, res, jest.fn());
       expect(res.status).not.toHaveBeenCalled();
     });
 
-    it("calls next when user is super admin regardless of role", async () => {
-      const req = makeReq({ user: { id: 1, isSuperAdmin: true, platformRoles: [] } });
+    it("denies platform role when TOTP is not enabled", async () => {
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_admin"], totpEnabled: false } });
+      const res = makeRes();
+      require("../middleware/auth").requirePlatformRole("platform_admin")(req, res, jest.fn());
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: "TOTP is required for platform role access.",
+        code: "requires_totp",
+      });
+    });
+
+    it("calls next when user is super admin with TOTP regardless of role", async () => {
+      const req = makeReq({ user: { id: 1, isSuperAdmin: true, platformRoles: [], totpEnabled: true } });
       const res = makeRes();
       require("../middleware/auth").requirePlatformRole("platform_admin")(req, res, jest.fn());
       expect(res.status).not.toHaveBeenCalled();
     });
 
     it("returns 403 when user lacks the required role", async () => {
-      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: [] }, tenant: { id: 10 } });
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: [], totpEnabled: true }, tenant: { id: 10 } });
       const res = makeRes();
       require("../middleware/auth").requirePlatformRole("platform_admin")(req, res, jest.fn());
 
@@ -407,14 +431,14 @@ describe("auth middleware", () => {
     });
 
     it("grants access to higher-privilege roles via hierarchy", async () => {
-      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_admin"] } });
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_admin"], totpEnabled: true } });
       const res = makeRes();
       require("../middleware/auth").requirePlatformRole("platform_billing")(req, res, jest.fn());
       expect(res.status).not.toHaveBeenCalled();
     });
 
     it("denies access to higher-privilege roles", async () => {
-      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_billing"] } });
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_billing"], totpEnabled: true } });
       const res = makeRes();
       require("../middleware/auth").requirePlatformRole("platform_admin")(req, res, jest.fn());
 
@@ -426,14 +450,14 @@ describe("auth middleware", () => {
     });
 
     it("grants access to equal-privilege roles", async () => {
-      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_billing"] } });
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_billing"], totpEnabled: true } });
       const res = makeRes();
       require("../middleware/auth").requirePlatformRole("platform_billing")(req, res, jest.fn());
       expect(res.status).not.toHaveBeenCalled();
     });
 
     it("denies access to higher-privilege roles", async () => {
-      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_support"] } });
+      const req = makeReq({ user: { id: 1, isSuperAdmin: false, platformRoles: ["platform_support"], totpEnabled: true } });
       const res = makeRes();
       require("../middleware/auth").requirePlatformRole("platform_billing")(req, res, jest.fn());
 

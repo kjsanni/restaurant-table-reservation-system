@@ -7,16 +7,10 @@ jest.mock("../tenant-platform/DAOs/platformReferral.dao", () => ({
 }));
 
 const platformReferralDAO = require("../tenant-platform/DAOs/platformReferral.dao");
+const { createRes } = require("./utils/test-response");
 
 function createReq(user = { id: 1 }, body = {}, params = {}) {
   return { user, body, params, ip: "127.0.0.1" };
-}
-
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  return res;
 }
 
 describe("platformReferral.controller", () => {

@@ -7,16 +7,10 @@ jest.mock("../db/models", () => ({
 }));
 
 const db = require("../db/models");
+const { createRes } = require("./utils/test-response");
 
 function createReq(params = {}) {
   return { params };
-}
-
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  return res;
 }
 
 describe("publicTenant.controller", () => {

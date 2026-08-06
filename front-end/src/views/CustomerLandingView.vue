@@ -189,15 +189,11 @@ onMounted(() => {
           <span>Vibespot</span>
         </div>
         <div class="nav-actions">
-          <button
-            v-if="!isSalon"
-            class="nav-link"
-            @click="goToMenu"
-          >
+          <button v-if="!isSalon" class="nav-link" @click="goToMenu">
             Menu
           </button>
           <button class="nav-link" @click="goToReserve">
-            {{ isSalon ? 'Book Appointment' : 'Reserve' }}
+            {{ isSalon ? "Book Appointment" : "Reserve" }}
           </button>
           <button class="nav-link" @click="router.push('/pricing')">
             Pricing
