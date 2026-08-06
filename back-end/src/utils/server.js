@@ -159,7 +159,7 @@ const createServer = () => {
     if (!req.cookies?.[CSRF_COOKIE_NAME]) {
       res.cookie(CSRF_COOKIE_NAME, token, {
         // nosemgrep: javascript.lang.security.audit.cookie-http-only-disabled - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
-        httpOnly: false,
+        httpOnly: false, // guardrails-disable-line - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "lax" : false,
         path: "/",
