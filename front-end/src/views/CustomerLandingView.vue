@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import menuAPI from "@/services/menuAPI";
@@ -60,6 +60,16 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {});
+
+watch(
+  () => businessVertical.value,
+  (vertical) => {
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-vertical", vertical || "");
+    }
+  },
+  { immediate: true }
+);
 
 const loadMenu = async () => {
   try {
