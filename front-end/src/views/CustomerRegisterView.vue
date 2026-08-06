@@ -34,13 +34,29 @@ const tenantBranding = ref<{
 }>({});
 const loadingBranding = ref(false);
 
-const brandSideStyle = computed(() => ({
-  background: tenantBranding.value.primaryColor || "#0f172a",
-}));
+const brandSideStyle = computed(() => {
+  const color = tenantBranding.value.primaryColor;
+  if (color && isValidHexColor(color)) {
+    return { background: color };
+  }
+  return { background: "#0f172a" };
+});
+
+const isValidHexColor = (value: string) =>
+  /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value);
+
+const isValidUrl = (value: string) => {
+  try {
+    const url = new URL(value, window.location.origin);
+    return ["http:", "https:", ""].includes(url.protocol);
+  } catch {
+    return false;
+  }
+};
 
 const applyBrandingToDOM = (branding: Record<string, any>) => {
   const root = document.documentElement;
-  if (branding.primaryColor) {
+  if (branding.primaryColor && isValidHexColor(branding.primaryColor)) {
     root.style.setProperty("--brand-500", branding.primaryColor);
     root.style.setProperty("--brand-400", branding.primaryColor);
     root.style.setProperty("--brand-600", branding.primaryColor);
@@ -52,9 +68,12 @@ const applyBrandingToDOM = (branding: Record<string, any>) => {
     root.style.setProperty("--accent-soft", branding.primaryColor);
     root.style.setProperty("--accent-text", branding.primaryColor);
   }
-  if (branding.secondaryColor) {
+  if (branding.secondaryColor && isValidHexColor(branding.secondaryColor)) {
     root.style.setProperty("--brand-900", branding.secondaryColor);
     root.style.setProperty("--brand-800", branding.secondaryColor);
+  }
+  if (branding.logoUrl && isValidUrl(branding.logoUrl)) {
+    root.style.setProperty("--brand-logo", branding.logoUrl);
   }
 };
 
@@ -159,11 +178,20 @@ const handleRegister = async () => {
                 id="firstName"
                 v-model="form.firstName"
                 type="text"
+                autocomplete="given-name"
                 required
+                :aria-invalid="!!validationErrors?.firstName"
+                :aria-describedby="
+                  validationErrors?.firstName ? 'firstName-error' : undefined
+                "
               />
-              <span v-if="validationErrors?.firstName" class="error">{{
-                validationErrors.firstName[0]
-              }}</span>
+              <span
+                v-if="validationErrors?.firstName"
+                id="firstName-error"
+                class="error"
+                role="alert"
+                >{{ validationErrors.firstName[0] }}</span
+              >
             </div>
             <div class="field">
               <label for="lastName">Last name</label>
@@ -171,28 +199,65 @@ const handleRegister = async () => {
                 id="lastName"
                 v-model="form.lastName"
                 type="text"
+                autocomplete="family-name"
                 required
+                :aria-invalid="!!validationErrors?.lastName"
+                :aria-describedby="
+                  validationErrors?.lastName ? 'lastName-error' : undefined
+                "
               />
-              <span v-if="validationErrors?.lastName" class="error">{{
-                validationErrors.lastName[0]
-              }}</span>
+              <span
+                v-if="validationErrors?.lastName"
+                id="lastName-error"
+                class="error"
+                role="alert"
+                >{{ validationErrors.lastName[0] }}</span
+              >
             </div>
           </div>
 
           <div class="field">
             <label for="email">Email</label>
-            <input id="email" v-model="form.email" type="email" required />
-            <span v-if="validationErrors?.email" class="error">{{
-              validationErrors.email[0]
-            }}</span>
+            <input
+              id="email"
+              v-model="form.email"
+              type="email"
+              autocomplete="email"
+              required
+              :aria-invalid="!!validationErrors?.email"
+              :aria-describedby="
+                validationErrors?.email ? 'email-error' : undefined
+              "
+            />
+            <span
+              v-if="validationErrors?.email"
+              id="email-error"
+              class="error"
+              role="alert"
+              >{{ validationErrors.email[0] }}</span
+            >
           </div>
 
           <div class="field">
             <label for="phone">Phone</label>
-            <input id="phone" v-model="form.phone" type="tel" required />
-            <span v-if="validationErrors?.phone" class="error">{{
-              validationErrors.phone[0]
-            }}</span>
+            <input
+              id="phone"
+              v-model="form.phone"
+              type="tel"
+              autocomplete="tel"
+              required
+              :aria-invalid="!!validationErrors?.phone"
+              :aria-describedby="
+                validationErrors?.phone ? 'phone-error' : undefined
+              "
+            />
+            <span
+              v-if="validationErrors?.phone"
+              id="phone-error"
+              class="error"
+              role="alert"
+              >{{ validationErrors.phone[0] }}</span
+            >
           </div>
 
           <div class="field">
@@ -201,12 +266,21 @@ const handleRegister = async () => {
               id="password"
               v-model="form.password"
               type="password"
+              autocomplete="new-password"
               required
               minlength="8"
+              :aria-invalid="!!validationErrors?.password"
+              :aria-describedby="
+                validationErrors?.password ? 'password-error' : undefined
+              "
             />
-            <span v-if="validationErrors?.password" class="error">{{
-              validationErrors.password[0]
-            }}</span>
+            <span
+              v-if="validationErrors?.password"
+              id="password-error"
+              class="error"
+              role="alert"
+              >{{ validationErrors.password[0] }}</span
+            >
           </div>
 
           <div class="field">
@@ -394,8 +468,6 @@ const handleRegister = async () => {
   width: 100%;
   max-width: 24rem;
   background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: var(--radius-xl);
   padding: 2rem;
@@ -404,6 +476,14 @@ const handleRegister = async () => {
     0 1px 2px rgba(26, 20, 16, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   position: relative;
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .form-card {
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    will-change: transform;
+  }
 }
 
 .form-card::before {

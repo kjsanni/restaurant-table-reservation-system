@@ -413,8 +413,6 @@ const handleTOTPLogin = async () => {
   width: 100%;
   max-width: 420px;
   background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: var(--radius-xl);
   padding: 40px;
@@ -423,6 +421,14 @@ const handleTOTPLogin = async () => {
     0 1px 2px rgba(26, 20, 16, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   position: relative;
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .form-card {
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    will-change: transform;
+  }
 }
 
 .form-card::before {

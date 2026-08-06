@@ -125,7 +125,9 @@ watch(
   () => authStore.currentTenant?.businessVertical,
   (vertical) => {
     if (typeof document !== "undefined") {
-      document.documentElement.setAttribute("data-vertical", vertical || "");
+      const allowed = ["restaurant", "salon"];
+      const safe = allowed.includes(vertical) ? vertical : "";
+      document.documentElement.setAttribute("data-vertical", safe);
     }
   },
   { immediate: true }
@@ -182,10 +184,10 @@ watch(
         </div>
 
         <div class="tl-sidebar-bottom">
-          <div class="tl-logout-item" @click="logout">
+          <button type="button" class="tl-logout-item" @click="logout">
             <Icon icon="mdi:logout" width="20" height="20" />
             <span v-if="!collapsed" class="tl-nav-text">Logout</span>
-          </div>
+          </button>
         </div>
       </div>
     </aside>
@@ -464,8 +466,19 @@ watch(
   z-index: var(--z-sticky);
   position: sticky;
   top: 0;
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 var(--space-6);
+  gap: var(--space-4);
+  z-index: var(--z-sticky);
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .tl-topbar {
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    will-change: transform;
+  }
 }
 
 .tl-topbar-left {
