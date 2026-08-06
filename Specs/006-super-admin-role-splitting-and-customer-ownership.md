@@ -112,7 +112,7 @@ Test matrix:
 
 ## P0-2: Salon + Restaurant Customer Ownership Enforcement
 
-### Scope
+### Ownership Enforcement Scope
 
 Close authorization gaps in customer-facing portal routes so that customers can only access their own data.
 
@@ -147,7 +147,7 @@ Close authorization gaps in customer-facing portal routes so that customers can 
 | `GET /packages` | `listServicePackagesHandler` | Tenant-scoped public data | None |
 | `GET /pricing-rules` | `listPricingRulesHandler` | Tenant-scoped public data | None |
 
-### Tasks
+### Ownership Enforcement Tasks
 
 #### T2.1 Fix restaurant reservation cancellation ownership
 
@@ -192,7 +192,7 @@ Test cases:
 4. Salon customer cancels own appointment → 200
 5. Salon customer cancels another customer's appointment → 403
 
-### Verification
+### Ownership Enforcement Verification
 
 | Check | Command | Expected |
 |-------|---------|----------|
