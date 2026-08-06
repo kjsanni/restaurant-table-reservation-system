@@ -43,7 +43,7 @@
     "sequelize-cli": "^6.6.5"
   },
   "dependencies": {
-    "@sentry/node": "^10.68.0",
+    "@sentry/node": "^10.69.0",
     "axios": "^1.18.1",
     "axios-debug-log": "^1.0.0",
     "bcrypt": "^6.0.0",
