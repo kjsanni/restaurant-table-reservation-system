@@ -27,6 +27,8 @@ const emailService = require("../services/emailService");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 const { makeRes } = require("./utils/test-response");
 
+const VERIFICATION_TOKEN_TTL_MS = 86400000;
+
 describe("emailVerification.controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -97,7 +99,7 @@ describe("emailVerification.controller", () => {
         userId: 1,
         email: "test@test.com",
         token: "new-verify-token",
-        expiresAt: new Date(Date.now() + 86400000),
+        expiresAt: new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS),
       });
 
       const req = { body: { email: "test@test.com" }, ip: "127.0.0.1" };

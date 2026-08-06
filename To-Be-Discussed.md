@@ -2,7 +2,15 @@
 
 ## D-5: Offline PWA for Salons
 
-### Design Questions — Resolved (2026-08-06)
+### Status: IMPLEMENTED (2026-08-06)
+
+All 4 slices implemented and verified:
+- Slice 1: Service worker shell with cache-first for static assets, network-first for API, separate API cache, manifest with icons
+- Slice 2: IndexedDB layer (`offlineDB.ts`) + sync engine (`syncEngine.ts`) with pending mutations queue and replay logic
+- Slice 3: Offline-aware UI — `OfflineBanner.vue`, draft appointment queue in `AppointmentsView.vue`, sync status indicator in `TenantLayout.vue`
+- Slice 4: Security hardening — HTTPS-only service worker registration guard, Safari graceful degradation, no PII/payment history stored offline
+
+### Design Questions — Resolved
 
 | # | Question | Decision |
 |---|----------|----------|

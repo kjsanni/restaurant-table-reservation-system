@@ -4,6 +4,8 @@ const { verifyWebhookSignature } = require("../../tenant-platform/services/payst
 const { sendWithSmsFallback } = require("../../services/notification.service");
 const messageTemplates = require("../../services/messageTemplates.service");
 
+const ALLOWED_TEMPLATES = ["salon_payment_confirmed"];
+
 const sendPaymentConfirmation = async (appointment) => {
   const customer = await db.user.findByPk(appointment.customerId);
   if (!customer?.phone) return;
@@ -12,7 +14,12 @@ const sendPaymentConfirmation = async (appointment) => {
   const dateStr = start.toISOString().slice(0, 10);
   const timeStr = start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-  const message = messageTemplates.render("salon_payment_confirmed", {
+  const templateName = "salon_payment_confirmed";
+  if (!ALLOWED_TEMPLATES.includes(templateName)) {
+    throw new Error(`Template not allowed: ${templateName}`);
+  }
+
+  const message = messageTemplates.render(templateName, {
     appointmentId: appointment.id,
     date: dateStr,
     time: timeStr,

@@ -47,7 +47,7 @@ export const useOfflineAppointments = () => {
     }
 
     const draft: DraftAppointment = {
-      id: `draft-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      id: `draft-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
       ...payload,
       isDraft: true,
     };

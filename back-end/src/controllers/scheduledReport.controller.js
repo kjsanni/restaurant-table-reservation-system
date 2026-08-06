@@ -111,6 +111,16 @@ const runScheduledReportHandler = async (req, res) => {
   }
 };
 
+const escapeHtml = (value) => {
+  const str = String(value ?? "");
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
 const computeNextRun = (frequency, frequencyDay, frequencyTime) => {
   const now = new Date();
   const [hours, minutes] = (frequencyTime || "08:00").split(":").map(Number);
@@ -162,7 +172,7 @@ const processScheduledReport = async (report) => {
   await exportSalonReportsHandler(mockReq, mockRes);
 
   const subject = `Scheduled Report: ${report.name}`;
-  const html = `<p>Please find attached your scheduled report: <strong>${report.name}</strong>.</p>`;
+  const html = `<p>Please find attached your scheduled report: <strong>${escapeHtml(report.name)}</strong>.</p>`;
   const from = process.env.DEFAULT_FROM_EMAIL || "reports@vibespot.tech";
 
   await sendReportToRecipients(report, subject, html, from, csv);

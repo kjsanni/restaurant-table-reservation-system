@@ -1,7 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
 
-module.exports = (sequelize, DataTypes) => {
+const defineBreakGlassRequest = (sequelize, DataTypes) => {
   const BreakGlassRequest = sequelize.define(
     "breakGlassRequest",
     {
@@ -53,16 +53,22 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  BreakGlassRequest.associate = (models) => {
-    BreakGlassRequest.belongsTo(models.user, {
-      foreignKey: "userId",
-      as: "requester",
-    });
-    BreakGlassRequest.belongsTo(models.user, {
-      foreignKey: "approverId",
-      as: "approver",
-    });
-  };
+  return BreakGlassRequest;
+};
 
+const associateBreakGlassRequest = (BreakGlassRequest, models) => {
+  BreakGlassRequest.belongsTo(models.user, {
+    foreignKey: "userId",
+    as: "requester",
+  });
+  BreakGlassRequest.belongsTo(models.user, {
+    foreignKey: "approverId",
+    as: "approver",
+  });
+};
+
+module.exports = (sequelize, DataTypes) => {
+  const BreakGlassRequest = defineBreakGlassRequest(sequelize, DataTypes);
+  BreakGlassRequest.associate = (models) => associateBreakGlassRequest(BreakGlassRequest, models);
   return BreakGlassRequest;
 };

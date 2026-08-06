@@ -52,7 +52,14 @@ const buildPlatformClient = async () => {
 
 const paystackRequest = async (method, path, payload = null) => {
   const client = await buildPlatformClient();
-  const response = await client[method](path, payload);
+  let response;
+  if (method === "get") {
+    response = await client.get(path);
+  } else if (method === "post") {
+    response = await client.post(path, payload);
+  } else {
+    throw new Error(`Unsupported HTTP method: ${method}`);
+  }
   return response.data.data;
 };
 
