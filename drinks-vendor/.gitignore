@@ -1,1 +1,0 @@
-# drinks-vendor/ — HTML/CSS mockup files for the drinks-vendor feature concept (not part of the Vue 3 application). Excluded from git tracking to avoid triggering 7500+ CSSLint false positives in Codacy and GuardRails scans.
