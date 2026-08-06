@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import menuAPI from "@/services/menuAPI";
@@ -60,6 +60,18 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {});
+
+watch(
+  () => businessVertical.value,
+  (vertical) => {
+    if (typeof document !== "undefined") {
+      const allowed = ["restaurant", "salon"];
+      const safe = allowed.includes(vertical) ? vertical : "";
+      document.documentElement.setAttribute("data-vertical", safe);
+    }
+  },
+  { immediate: true }
+);
 
 const loadMenu = async () => {
   try {
@@ -274,10 +286,17 @@ onMounted(() => {
   left: 0;
   right: 0;
   z-index: 100;
-  backdrop-filter: blur(16px) saturate(180%);
   background: rgba(255, 255, 255, 0.72);
   border-bottom: 1px solid var(--border);
   transition: all 0.3s ease;
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .landing-nav {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    will-change: transform;
+  }
 }
 
 .nav-inner {

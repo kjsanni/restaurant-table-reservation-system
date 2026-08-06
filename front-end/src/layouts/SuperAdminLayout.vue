@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { VaSidebarItem } from "vuestic-ui";
@@ -12,6 +12,48 @@ const route = useRoute();
 const authStore = useAuthStore();
 
 const collapsed = ref(false);
+const sidebarVisible = ref(true);
+const windowWidth = ref<number>(
+  typeof window !== "undefined" ? window.innerWidth : 1024
+);
+
+const checkWindowWidth = () => {
+  windowWidth.value = window.innerWidth;
+  if (windowWidth.value <= 768) {
+    if (!sidebarVisible.value) {
+      sidebarVisible.value = true;
+    }
+  } else {
+    if (!sidebarVisible.value) {
+      sidebarVisible.value = true;
+      collapsed.value = false;
+    }
+  }
+};
+
+const toggleSidebar = () => {
+  if (windowWidth.value <= 768) {
+    if (collapsed.value && sidebarVisible.value) {
+      collapsed.value = false;
+    } else if (!collapsed.value && sidebarVisible.value) {
+      collapsed.value = true;
+    } else {
+      sidebarVisible.value = !sidebarVisible.value;
+      if (sidebarVisible.value) collapsed.value = true;
+    }
+  } else {
+    collapsed.value = !collapsed.value;
+  }
+};
+
+onMounted(() => {
+  checkWindowWidth();
+  window.addEventListener("resize", checkWindowWidth);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("resize", checkWindowWidth);
+});
 
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 const user = computed<User | null>(
@@ -106,11 +148,29 @@ const logout = async () => {
 const isActive = (routeName: string) =>
   route.name === routeName ||
   (typeof route.name === "string" && route.name.startsWith(`${routeName}-`));
+
+watch(
+  () => authStore.currentTenant?.businessVertical,
+  (vertical) => {
+    if (typeof document !== "undefined") {
+      const allowed = ["restaurant", "salon"];
+      const safe = allowed.includes(vertical) ? vertical : "";
+      document.documentElement.setAttribute("data-vertical", safe);
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
   <div class="sa-layout">
-    <aside class="sa-sidebar" :class="{ minimized: collapsed }">
+    <aside
+      class="sa-sidebar"
+      :class="[
+        { minimized: collapsed },
+        { 'sidebar-mobile-visible': sidebarVisible && windowWidth <= 768 },
+      ]"
+    >
       <div class="sa-sidebar-inner">
         <div class="sa-sidebar-top">
           <div class="sa-sidebar-header">
@@ -167,17 +227,54 @@ const isActive = (routeName: string) =>
               <span class="sa-user-role">Super Admin</span>
             </div>
           </div>
-          <div class="sa-logout-item" @click="logout">
+          <button type="button" class="sa-logout-item" @click="logout">
             <Icon icon="mdi:logout" width="20" height="20" />
             <span v-if="!collapsed" class="sa-nav-text">Logout</span>
-          </div>
+          </button>
         </div>
       </div>
     </aside>
 
-    <main class="sa-main" :style="{ marginLeft: collapsed ? '72px' : '260px' }">
-      <router-view />
-    </main>
+    <div
+      class="sa-main"
+      :style="{
+        marginLeft: sidebarVisible ? (collapsed ? '72px' : '260px') : '0px',
+      }"
+    >
+      <header class="sa-topbar">
+        <div class="sa-topbar-left">
+          <button
+            class="sa-toggle-btn"
+            @click="toggleSidebar"
+            :aria-label="collapsed ? 'Expand menu' : 'Collapse menu'"
+          >
+            <Icon
+              :icon="collapsed ? 'mdi-menu-right' : 'mdi-menu-left'"
+              width="20"
+              height="20"
+            />
+          </button>
+        </div>
+        <div class="sa-topbar-center">
+          <span class="sa-topbar-title">{{
+            route.meta.title || "Platform Admin"
+          }}</span>
+        </div>
+        <div class="sa-topbar-right">
+          <div v-if="user" class="sa-user-chip">
+            {{ user.username?.charAt(0)?.toUpperCase() }}
+          </div>
+        </div>
+      </header>
+
+      <main class="sa-content">
+        <RouterView v-slot="{ Component }">
+          <Transition name="sa-fade" mode="out-in">
+            <component v-if="Component" :is="Component" :key="$route.name" />
+          </Transition>
+        </RouterView>
+      </main>
+    </div>
   </div>
 </template>
 
@@ -378,14 +475,131 @@ const isActive = (routeName: string) =>
   flex: 1;
   min-height: 100vh;
   transition: margin var(--duration-normal) var(--ease-in-out);
+  display: flex;
+  flex-direction: column;
 }
 
-@media (max-width: 768px) {
+.sa-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--topbar-height);
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 var(--space-6);
+  gap: var(--space-4);
+  z-index: var(--z-sticky);
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 var(--space-6);
+  gap: var(--space-4);
+  z-index: var(--z-sticky);
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .sa-topbar {
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    will-change: transform;
+  }
+}
+
+.sa-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sa-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.sa-toggle-btn:hover {
+  background: var(--neutral-100);
+}
+
+.sa-topbar-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.sa-topbar-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-base);
+  color: var(--ink);
+  letter-spacing: var(--tracking-tight);
+}
+
+.sa-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sa-user-chip {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-400), var(--accent-600));
+  color: white;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sa-content {
+  flex: 1;
+  padding: var(--space-8) var(--space-6);
+  min-height: calc(100vh - var(--topbar-height));
+  position: relative;
+  z-index: 1;
+}
+
+@media screen and (max-width: 768px) {
   .sa-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh !important;
+    z-index: var(--z-modal) !important;
     transform: translateX(-100%);
+    transition: transform var(--duration-normal) var(--ease-in-out);
   }
-  .sa-main {
-    margin-left: 0;
+
+  .sa-sidebar.sidebar-mobile-visible {
+    transform: translateX(0);
   }
+
+  .sa-content {
+    padding: var(--space-6) var(--space-4);
+  }
+}
+
+.sa-fade-enter-active,
+.sa-fade-leave-active {
+  transition: opacity 0.2s var(--ease-in-out);
+}
+
+.sa-fade-enter-from,
+.sa-fade-leave-to {
+  opacity: 0;
 }
 </style>

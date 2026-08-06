@@ -118,13 +118,13 @@ onMounted(loadReports);
         </div>
 
         <div class="report-section">
-          <h3>Top Stylists</h3>
+          <h3>{{ t("salon.topStylists") }}</h3>
           <table class="report-table">
             <thead>
               <tr>
-                <th>Stylist</th>
-                <th>Appointments</th>
-                <th>Revenue</th>
+                <th>{{ t("salon.stylist") }}</th>
+                <th>{{ t("salon.appointments") }}</th>
+                <th>{{ t("salon.revenue") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -135,7 +135,7 @@ onMounted(loadReports);
               </tr>
               <tr v-if="!topStylists.length">
                 <td colspan="3" class="empty-state">
-                  No stylist data available
+                  {{ t("salon.noStylistData") }}
                 </td>
               </tr>
             </tbody>
@@ -143,13 +143,13 @@ onMounted(loadReports);
         </div>
 
         <div class="report-section">
-          <h3>Appointments by Source</h3>
+          <h3>{{ t("salon.appointmentsBySource") }}</h3>
           <table class="report-table">
             <thead>
               <tr>
-                <th>Source</th>
-                <th>Appointments</th>
-                <th>Total Minutes</th>
+                <th>{{ t("salon.source") }}</th>
+                <th>{{ t("salon.appointments") }}</th>
+                <th>{{ t("salon.totalMinutes") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -160,7 +160,7 @@ onMounted(loadReports);
               </tr>
               <tr v-if="!appointmentsBySource.length">
                 <td colspan="3" class="empty-state">
-                  No source data available
+                  {{ t("salon.noSourceData") }}
                 </td>
               </tr>
             </tbody>
@@ -168,13 +168,13 @@ onMounted(loadReports);
         </div>
 
         <div class="report-section">
-          <h3>Peak Hours</h3>
+          <h3>{{ t("salon.peakHours") }}</h3>
           <table class="report-table">
             <thead>
               <tr>
-                <th>Day</th>
-                <th>Hour</th>
-                <th>Appointments</th>
+                <th>{{ t("salon.day") }}</th>
+                <th>{{ t("salon.hour") }}</th>
+                <th>{{ t("salon.appointments") }}</th>
                 <th>Total Minutes</th>
               </tr>
             </thead>

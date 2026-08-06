@@ -13,6 +13,7 @@ const salonPaymentConfig = ref({
   currency: "GHS",
   depositRequired: false,
   defaultDepositPercent: 0,
+  enabledChannels: ["card_paystack"],
 });
 
 const salonSmsFallback = ref({
@@ -167,6 +168,28 @@ onBeforeUnmount(() => {
               min="0"
               max="100"
             />
+          </div>
+          <div class="field">
+            <label>{{ t("salon.paymentChannels") }}</label>
+            <p class="field-hint">{{ t("salon.selectPaymentChannels") }}</p>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  :value="'mobile_money'"
+                  v-model="salonPaymentConfig.enabledChannels"
+                />
+                {{ t("salon.mobileMoney") }}
+              </label>
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  :value="'card_paystack'"
+                  v-model="salonPaymentConfig.enabledChannels"
+                />
+                {{ t("salon.cardPaystack") }}
+              </label>
+            </div>
           </div>
           <div class="form-actions">
             <button

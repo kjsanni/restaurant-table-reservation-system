@@ -5,9 +5,13 @@ jest.mock("../middleware/auditLog", () => ({ logAction: jest.fn() }));
 jest.mock("../tenant-platform/services/paystack.service", () => ({
   refundPayment: jest.fn().mockResolvedValue({ reference: "refund-456" }),
 }));
+jest.mock("../verticals/salon/services/appointmentScheduling.service", () => ({
+  createCommissionForAppointment: jest.fn().mockResolvedValue({ id: 1 }),
+}));
 
 const appointmentController = require("../verticals/salon/controllers/appointment.controller");
 const appointmentDao = require("../verticals/salon/DAOs/appointment.dao");
+const appointmentSchedulingService = require("../verticals/salon/services/appointmentScheduling.service");
 
 describe("appointment.controller", () => {
   beforeEach(() => {
@@ -170,5 +174,56 @@ describe("appointment.controller", () => {
     const { refundPayment } = require("../tenant-platform/services/paystack.service");
     expect(refundPayment).toHaveBeenCalledWith("ref-123");
     ref.expectJson({ success: true, message: "Refund processed successfully for appointment #1" });
+  });
+
+  it("updateAppointment auto-creates commission when status changes to completed", async () => {
+    appointmentDao.findById.mockResolvedValue({ id: 1, status: "confirmed", serviceId: 2, stylistId: 3, tenantId: 1 });
+    appointmentDao.update.mockResolvedValue({ id: 1, status: "completed", serviceId: 2, stylistId: 3, tenantId: 1 });
+    appointmentSchedulingService.createCommissionForAppointment.mockResolvedValue({ id: 1, amount: 10 });
+
+    const ref = makeRes();
+    const req = { tenant: { id: 1 }, body: { customerId: 1, serviceId: 2, start: "2026-08-01T10:00:00.000Z", status: "completed" }, params: { id: 1 } };
+
+    await appointmentController.updateAppointment(req, ref.res);
+
+    expect(appointmentSchedulingService.createCommissionForAppointment).toHaveBeenCalledWith({
+      id: 1,
+      status: "completed",
+      serviceId: 2,
+      stylistId: 3,
+      tenantId: 1,
+    });
+    ref.expectJson({ success: true, data: { id: 1, status: "completed", serviceId: 2, stylistId: 3, tenantId: 1 } });
+  });
+
+  it("updateAppointment still calls commission service when commissions are disabled (service returns null)", async () => {
+    appointmentDao.findById.mockResolvedValue({ id: 1, status: "confirmed", serviceId: 2, stylistId: 3, tenantId: 1 });
+    appointmentDao.update.mockResolvedValue({ id: 1, status: "completed", serviceId: 2, stylistId: 3, tenantId: 1 });
+    appointmentSchedulingService.createCommissionForAppointment.mockResolvedValue(null);
+
+    const ref = makeRes();
+    const req = { tenant: { id: 1 }, body: { customerId: 1, serviceId: 2, start: "2026-08-01T10:00:00.000Z", status: "completed" }, params: { id: 1 } };
+
+    await appointmentController.updateAppointment(req, ref.res);
+
+    expect(appointmentSchedulingService.createCommissionForAppointment).toHaveBeenCalledWith({
+      id: 1,
+      status: "completed",
+      serviceId: 2,
+      stylistId: 3,
+      tenantId: 1,
+    });
+  });
+
+  it("updateAppointment does not create commission when status is not completed", async () => {
+    appointmentDao.findById.mockResolvedValue({ id: 1, status: "confirmed", serviceId: 2, stylistId: 3, tenantId: 1 });
+    appointmentDao.update.mockResolvedValue({ id: 1, status: "confirmed", serviceId: 2, stylistId: 3, tenantId: 1 });
+
+    const ref = makeRes();
+    const req = { tenant: { id: 1 }, body: { customerId: 1, serviceId: 2, start: "2026-08-01T10:00:00.000Z", status: "confirmed" }, params: { id: 1 } };
+
+    await appointmentController.updateAppointment(req, ref.res);
+
+    expect(appointmentSchedulingService.createCommissionForAppointment).not.toHaveBeenCalled();
   });
 });

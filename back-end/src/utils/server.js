@@ -20,7 +20,7 @@ const statusRouter = require("../routes/status.router");
 const docsRouter = require("../routes/docs.router");
 const { setCsrfCookie, generateCsrfToken, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
-const { requestLogger } = require("../middleware/requestLogger");
+  const { requestLogger, logStream } = require("../middleware/requestLogger");
 const { logAction } = require("../middleware/auditLog");
 const { cspHeaders } = require("../middleware/csp");
 const { getCurrentSecret } = require("../utils/jwtRotation");
@@ -32,7 +32,8 @@ const { authLimiter, generalLimiter, adminActionLimiter, syncLimiter, webhookLim
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
 const { startBackupWorker } = require("../queues/backup.queue");
-const { checkQueueDepths } = require("../queues/queue");
+  const { client: redisClient } = require("./cache");
+  const { checkQueueDepths } = require("../queues/queue");
 const { resolveTenant } = require("../tenant-platform/middleware/resolveTenant");
 const { requireActiveTenant } = require("../tenant-platform/middleware/tenantStatus");
 const { loadModules } = require("../tenant-platform/modules/module.loader");
@@ -103,15 +104,15 @@ const createServer = () => {
 
   const { runTenantCron } = require("../tenant-platform/utils/tenantCron");
   runTenantCron();
-  setInterval(runTenantCron, 6 * 60 * 60 * 1000);
+  const tenantCronInterval = setInterval(runTenantCron, 6 * 60 * 60 * 1000).unref();
 
   const { runSalonCron } = require("../verticals/salon/utils/salonCron");
   runSalonCron().catch((err) => console.error("[SalonCron] startup error:", err.message));
-  setInterval(() => runSalonCron().catch((err) => console.error("[SalonCron] error:", err.message)), 60 * 60 * 1000);
+  const salonCronInterval = setInterval(() => runSalonCron().catch((err) => console.error("[SalonCron] error:", err.message)), 60 * 60 * 1000).unref();
 
   const { runBackupCron } = require("../tenant-platform/utils/backupCron");
   runBackupCron();
-  setInterval(runBackupCron, 60 * 60 * 1000);
+  const backupCronInterval = setInterval(runBackupCron, 60 * 60 * 1000).unref();
 
   const workers = [];
   try {
@@ -127,6 +128,29 @@ const createServer = () => {
 
   const shutdownWorkers = async () => {
     await Promise.all(workers.map((w) => w.close().catch(() => {})));
+    clearInterval(tenantCronInterval);
+    clearInterval(salonCronInterval);
+    clearInterval(backupCronInterval);
+    if (io) io.close();
+    if (logStream && typeof logStream.end === "function") {
+      logStream.end();
+    }
+    try {
+      await require("../db/models").sequelize.close();
+    } catch (err) {
+      console.error("[shutdown] DB close error:", err.message);
+    }
+    if (redisClient && redisClient.isReady) {
+      try {
+        await redisClient.quit();
+      } catch (err) {
+        console.error("[shutdown] Redis close error:", err.message);
+      }
+    }
+    server.close(() => {
+      console.log("[shutdown] Server closed");
+      process.exit(0);
+    });
   };
   process.once("SIGTERM", shutdownWorkers);
   process.once("SIGINT", shutdownWorkers);

@@ -191,6 +191,57 @@ const appointmentSchedulingService = {
 
     return slots;
   },
+
+  async getSalonCommissionConfig(tenantId) {
+    try {
+      const setting = await salonModels.sequelize.models.setting.findOne({
+        where: { key: "salon_commission_config", tenantId },
+      });
+      if (setting && setting.value) {
+        return JSON.parse(setting.value);
+      }
+    } catch {
+      // ignore parse errors
+    }
+    return {};
+  },
+
+  async createCommissionForAppointment(appointment) {
+    const config = await this.getSalonCommissionConfig(appointment.tenantId);
+    if (!config || config.enabled === false) {
+      return null;
+    }
+
+    const service = await salonModels.sequelize.models.service.findByPk(appointment.serviceId);
+    const servicePrice = service?.price || 0;
+    if (servicePrice <= 0 || !appointment.stylistId) {
+      return null;
+    }
+
+    const rateType = config.defaultRateType || "percentage";
+    const rateValue = Number(config.defaultRateValue || 0);
+    if (!rateValue || rateValue <= 0) {
+      return null;
+    }
+
+    const amount =
+      rateType === "percentage"
+        ? (servicePrice * rateValue) / 100
+        : rateValue;
+
+    const commission = await salonModels.sequelize.models.commission.create({
+      tenantId: appointment.tenantId,
+      userId: appointment.stylistId,
+      appointmentId: appointment.id,
+      serviceId: appointment.serviceId,
+      amount: Math.round(amount * 100) / 100,
+      rateType,
+      rateValue,
+      status: "pending",
+    });
+
+    return commission;
+  },
 };
 
 module.exports = appointmentSchedulingService;

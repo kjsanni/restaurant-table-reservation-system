@@ -6,6 +6,12 @@ const logStream = fs.createWriteStream(
   { flags: "a" }
 );
 
+const closeLogStream = () => {
+  if (typeof logStream.end === "function") {
+    logStream.end();
+  }
+};
+
 const requestLogger = (req, res, next) => {
   const start = Date.now();
   const originalEnd = res.end;
@@ -28,4 +34,4 @@ const requestLogger = (req, res, next) => {
   next();
 };
 
-module.exports = { requestLogger };
+module.exports = { requestLogger, closeLogStream };
