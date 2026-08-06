@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { VaSidebarItem } from "vuestic-ui";
@@ -120,6 +120,16 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener("resize", checkWindowWidth);
 });
+
+watch(
+  () => authStore.currentTenant?.businessVertical,
+  (vertical) => {
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-vertical", vertical || "");
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>

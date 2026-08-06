@@ -252,4 +252,87 @@
   --wa-dark-300: #37e87a;
   --wa-dark-200: #64f0a0;
   --wa-dark-100: #a8f7cd;
+
+  /* ─── Vertical Accent Overrides ─── */
+  --vertical-accent-500: var(--accent-500);
+  --vertical-accent-400: var(--accent-400);
+  --vertical-accent-600: var(--accent-600);
+}
+
+[data-vertical="cloud-kitchen"] {
+  --vertical-accent-500: #f59e0b;
+  --vertical-accent-400: #fbbf24;
+  --vertical-accent-600: #d97706;
+}
+
+[data-vertical="dine-in"] {
+  --vertical-accent-500: #d97706;
+  --vertical-accent-400: #f59e0b;
+  --vertical-accent-600: #b45309;
+}
+
+[data-vertical="full-restaurant"] {
+  --vertical-accent-500: #b45309;
+  --vertical-accent-400: #d97706;
+  --vertical-accent-600: #92400e;
+}
+
+[data-vertical="cafe"] {
+  --vertical-accent-500: #65a30d;
+  --vertical-accent-400: #84cc16;
+  --vertical-accent-600: #4d7c0f;
+}
+
+[data-vertical="bar"] {
+  --vertical-accent-500: #7c3aed;
+  --vertical-accent-400: #a78bfa;
+  --vertical-accent-600: #6d28d9;
+}
+
+[data-vertical="barbers-male"] {
+  --vertical-accent-500: #1d4ed8;
+  --vertical-accent-400: #3b82f6;
+  --vertical-accent-600: #1e40af;
+}
+
+[data-vertical="barbers-female"] {
+  --vertical-accent-500: #db2777;
+  --vertical-accent-400: #ec4899;
+  --vertical-accent-600: #be185d;
+}
+
+[data-vertical="barbers-unisex"] {
+  --vertical-accent-500: #6366f1;
+  --vertical-accent-400: #818cf8;
+  --vertical-accent-600: #4f46e5;
+}
+
+[data-vertical="dreadlocks"] {
+  --vertical-accent-500: #ea580c;
+  --vertical-accent-400: #f97316;
+  --vertical-accent-600: #c2410c;
+}
+
+[data-vertical="nail-salon"] {
+  --vertical-accent-500: #ec4899;
+  --vertical-accent-400: #f472b6;
+  --vertical-accent-600: #db2777;
+}
+
+[data-vertical="spa"] {
+  --vertical-accent-500: #0d9488;
+  --vertical-accent-400: #14b8a6;
+  --vertical-accent-600: #0f766e;
+}
+
+[data-vertical="hair-dressers"] {
+  --vertical-accent-500: #f59e0b;
+  --vertical-accent-400: #fbbf24;
+  --vertical-accent-600: #d97706;
+}
+
+[data-vertical="boutique"] {
+  --vertical-accent-500: #be185d;
+  --vertical-accent-400: #db2777;
+  --vertical-accent-600: #9d174d;
 }

@@ -26,6 +26,7 @@ Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` w
 - [.github/branch-protection.json](.github/branch-protection.json): CI/CD enforcement config.
 - [.github/dependabot.yml](.github/dependabot.yml): Weekly dependency update schedule.
 - [SESSION_NOTES.md](SESSION_NOTES.md): Recent development session notes and status.
+- [SKIN.md](SKIN.md): Skin workflow specification — design tokens, motion strategy, vertical differentiation, and 7-phase implementation checklist for portals and vertical markets.
 - [docs/README.md](docs/README.md): In-repo documentation index (architecture, security, RBAC, payments, features).
 - [back-end/src/tenant-platform/README.md](back-end/src/tenant-platform/README.md): Multi-tenant module overview, activation, tenant resolution, subscription plans, and platform admin API.
 
@@ -44,7 +45,9 @@ Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` w
 - **Router**: `front-end/src/router/index.js` — standalone routes (landing, login, register, customer portal) plus conditionally added admin/tenant/salon routes. Super-admin routes are nested under `/super-admin` with `SuperAdminLayout`; tenant routes under `/admin` with `TenantLayout`. Customer portal routes use `standalone: true`.
 - **Auth store**: `front-end/src/stores/auth.ts` — login, logout, getMe, settings, tenant mode, capabilities, refresh token, locale. `logout()` resets user, entryPoint, and currentTenant. `fetchTenantMode()` reuses `fetchSettings()`.
 - **API interceptor**: `front-end/src/services/API.js` — queues concurrent 401s so only one refresh-token request is in flight at a time; unauthenticated `/auth/locale` requests are no longer fired from `App.vue` to avoid 401 noise.
-- **Design system**: `front-end/src/assets/base.css` and `front-end/src/assets/design-system.css` define CSS custom properties for brand palette (warm browns + amber accent), typography (Fraunces + Public Sans), spacing, radius, shadows, and Vuestic overrides. JS mirror tokens in `front-end/src/theme/colors.js`. Tenant branding white-labels via CSS variables (`useTenantBranding.js`).
+- **Design system**: `front-end/src/assets/base.css` and `front-end/src/assets/design-system.css` define CSS custom properties for brand palette (warm browns + amber accent), typography (Fraunces + Public Sans + JetBrains Mono), spacing, radius, shadows, Vuestic overrides, modal/toast skin, skeleton loaders, and vertical accent differentiation. JS mirror tokens in `front-end/src/theme/colors.js`. Tenant branding white-labels via CSS variables (`useTenantBranding.js`). `data-vertical` attributes on `<html>` drive per-vertical accent colors for 11 verticals.
+- **Auth surfaces**: Split-screen login/register flows with cinematic brand panels, glassmorphism form cards, staggered field animations, floating ambient orbs, and SVG noise grain overlays. Distinct experiences for super-admin, tenant, and customer portals.
+- **Toast system**: `AppToast.vue` + `stores/toast.js` provides glassmorphism toast notifications with SVG icons, auto-dismiss progress bars, and slide-scale transitions.
 - **Security hardening**: Tenant-platform controllers use explicit field allowlists to prevent mass assignment (`alertRule`, `autoScalingTrigger`, `caseStudy`, `complianceEvidence`, `incident`, `subProcessor`, `dataRetentionPolicy`, `platformReferral`, `marketplace`, `encryptionKey`). `sync.service.js` validates POS sync URLs against private/loopback IPs to prevent SSRF. `monitoring.controller.js` returns generic error messages to avoid information disclosure. `platformAudit.router.js` `/recent` requires `manage_tenants` permission.
 
 ## Key Routes
@@ -108,8 +111,8 @@ npm run test:e2e                      # Playwright E2E
 
 ## Verification Gates
 
-- **Backend**: `cd back-end && npm test` — 732 Jest tests; must stay green (catches cross-tenant leaks and RBAC regressions).
-- **Frontend**: `cd front-end && npm run lint && npm run build && npm run test:unit` — lint, build, and unit tests must pass.
+- **Backend**: `cd back-end && npm test` — 736 Jest tests across 116 suites; must stay green (catches cross-tenant leaks and RBAC regressions).
+- **Frontend**: `cd front-end && npm run lint && npm run build && npm run test:unit` — lint, build, and 22 Vitest unit tests must pass.
 - **API integration**: Postman collection + Newman for smoke and regression testing of `/api/v1/*` endpoints.
 - **Migrations**: `npm run migrate:up` — replays from earliest unapplied migration; keep `up()` idempotent.
 - **Dependency advisories**: Dependabot PRs are merged after review; recent example: postcss 8.5.23 security patch (source-map path-traversal fix).

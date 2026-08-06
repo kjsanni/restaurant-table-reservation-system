@@ -146,6 +146,8 @@ const handleTOTPLogin = async () => {
 <template>
   <div class="page">
     <aside class="brand-side">
+      <div class="orb orb-1" aria-hidden="true"></div>
+      <div class="orb orb-2" aria-hidden="true"></div>
       <div class="brand-top">
         <div class="brand-mark">R</div>
         <div class="brand-name">{{ brandName }}</div>
@@ -272,6 +274,7 @@ const handleTOTPLogin = async () => {
   position: relative;
   overflow: hidden;
 }
+
 .brand-side::before {
   content: "";
   position: absolute;
@@ -289,6 +292,17 @@ const handleTOTPLogin = async () => {
     );
   pointer-events: none;
 }
+
+.brand-side::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
 .brand-top {
   position: relative;
   display: flex;
@@ -296,6 +310,7 @@ const handleTOTPLogin = async () => {
   gap: 14px;
   animation: fadeDown 0.7s ease-out both;
 }
+
 .brand-mark {
   width: 42px;
   height: 42px;
@@ -309,31 +324,37 @@ const handleTOTPLogin = async () => {
   color: var(--brand-900);
   box-shadow: 0 10px 30px rgba(217, 119, 6, 0.25);
 }
+
 .brand-name {
   font-family: var(--font-serif);
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
+
 .brand-center {
   position: relative;
   animation: fadeUp 0.8s 0.1s ease-out both;
 }
+
 .brand-center h1 {
   font-family: var(--font-serif);
-  font-size: 46px;
+  font-size: clamp(2rem, 4vw, 3rem);
   line-height: 1.05;
   font-weight: 700;
   letter-spacing: -0.03em;
   margin-bottom: 18px;
   color: var(--white);
 }
+
 .brand-center p {
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.78);
   max-width: 420px;
 }
+
 .brand-bottom {
   position: relative;
   font-size: 13px;
@@ -341,24 +362,80 @@ const handleTOTPLogin = async () => {
   animation: fadeUp 0.8s 0.25s ease-out both;
 }
 
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.orb-1 {
+  width: 300px;
+  height: 300px;
+  background: var(--accent-400);
+  top: -80px;
+  right: -60px;
+  animation: float 8s ease-in-out infinite;
+}
+
+.orb-2 {
+  width: 240px;
+  height: 240px;
+  background: var(--brand-400);
+  bottom: -40px;
+  left: -40px;
+  animation: float 10s 2s ease-in-out infinite;
+}
+
 .form-side {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px;
+  position: relative;
+  background:
+    radial-gradient(
+      ellipse at 30% 20%,
+      rgba(217, 119, 6, 0.04) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 70% 80%,
+      rgba(180, 83, 9, 0.03) 0%,
+      transparent 50%
+    ),
+    var(--background);
   animation: fadeIn 0.7s 0.15s ease-out both;
 }
+
 .form-card {
   width: 100%;
   max-width: 420px;
-  background: var(--white);
-  border: 1px solid var(--neutral-200);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: var(--radius-xl);
   padding: 40px;
   box-shadow:
     0 20px 60px rgba(26, 20, 16, 0.08),
-    0 1px 2px rgba(26, 20, 16, 0.04);
+    0 1px 2px rgba(26, 20, 16, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  position: relative;
 }
+
+.form-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.015;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
 .form-card h2 {
   font-family: var(--font-serif);
   font-size: 26px;
@@ -366,16 +443,35 @@ const handleTOTPLogin = async () => {
   color: var(--neutral-900);
   margin-bottom: 6px;
 }
+
 .subtitle {
+  font-family: var(--font-sans);
   font-size: 14px;
   color: var(--neutral-600);
   margin-bottom: 28px;
 }
+
 .field {
   margin-bottom: 18px;
+  animation: fadeUp 0.5s ease-out both;
 }
+
+.field:nth-child(1) {
+  animation-delay: 0.15s;
+}
+.field:nth-child(2) {
+  animation-delay: 0.25s;
+}
+.field:nth-child(3) {
+  animation-delay: 0.35s;
+}
+.field:nth-child(4) {
+  animation-delay: 0.45s;
+}
+
 .field label {
   display: block;
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 700;
   color: var(--neutral-800);
@@ -383,6 +479,7 @@ const handleTOTPLogin = async () => {
   letter-spacing: 0.08em;
   margin-bottom: 8px;
 }
+
 .field input {
   width: 100%;
   padding: 13px 16px;
@@ -391,22 +488,30 @@ const handleTOTPLogin = async () => {
   font-family: var(--font-sans);
   font-size: 14px;
   color: var(--neutral-900);
-  background: var(--neutral-50);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
 }
+
 .field input:focus {
   outline: none;
   border-color: var(--accent-500);
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+  background: rgba(255, 255, 255, 0.95);
 }
+
 .actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 24px;
+  gap: 16px;
 }
+
 .btn-primary {
   flex: 1;
   padding: 13px 18px;
@@ -418,42 +523,83 @@ const handleTOTPLogin = async () => {
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  transition: transform 0.15s ease;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+  position: relative;
+  overflow: hidden;
 }
+
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.btn-primary:hover:not(:disabled)::after {
+  opacity: 1;
+}
+
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 12px 30px rgba(74, 53, 43, 0.25);
 }
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
 .link {
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--accent-600);
   text-decoration: none;
   font-weight: 600;
-  transition: color 0.2s ease;
+  transition: color var(--duration-fast) var(--ease-in-out);
+  white-space: nowrap;
 }
+
 .link:hover {
   color: var(--accent-500);
 }
+
 .alert {
   padding: 12px;
   border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
   font-size: 13px;
   margin-bottom: 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
+
 .alert-warning {
   background: var(--accent-100);
   color: var(--accent-600);
+  border: 1px solid rgba(217, 119, 6, 0.15);
 }
+
 .alert-danger {
   background: var(--rose-100);
   color: var(--rose-600);
+  border: 1px solid rgba(225, 29, 72, 0.15);
 }
+
 .footer-note {
   margin-top: 22px;
+  font-family: var(--font-sans);
   font-size: 13px;
   color: var(--neutral-600);
   text-align: center;
@@ -469,6 +615,7 @@ const handleTOTPLogin = async () => {
     transform: translateY(0);
   }
 }
+
 @keyframes fadeDown {
   from {
     opacity: 0;
@@ -479,12 +626,36 @@ const handleTOTPLogin = async () => {
     transform: translateY(0);
   }
 }
+
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(12px, -12px);
+  }
+  66% {
+    transform: translate(-8px, 8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -497,6 +668,9 @@ const handleTOTPLogin = async () => {
   }
   .form-side {
     padding: 24px;
+  }
+  .form-card {
+    padding: 28px;
   }
 }
 </style>
