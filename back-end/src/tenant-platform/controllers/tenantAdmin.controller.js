@@ -282,10 +282,7 @@ const testPaystackHandler = async (req, res) => {
     });
   } catch (err) {
     const status = err.response?.status || 500;
-    const message =
-      status === 401
-        ? "Invalid secret key"
-        : "Paystack error — try again";
+    const message = status === 401 ? "Invalid secret key" : "Paystack error — try again";
     res.status(status === 401 ? 400 : 502).json({ success: false, message });
   }
 };
@@ -314,10 +311,7 @@ const testShaqExpressHandler = async (req, res) => {
     });
   } catch (err) {
     const status = err.response?.status || 500;
-    const message =
-      status === 401
-        ? "Invalid identifier or secret"
-        : "ShaQ Express error — try again";
+    const message = status === 401 ? "Invalid identifier or secret" : "ShaQ Express error — try again";
     res.status(status === 401 ? 400 : 502).json({ success: false, message });
   }
 };
