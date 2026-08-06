@@ -7,6 +7,7 @@ PATCH1="node_modules/vuestic-ui/dist/es/src/composables/useTeleported.js"
 PATCH2="node_modules/vuestic-ui/dist/esm-node/src/composables/useTeleported.mjs"
 
 if [ -f "$PATCH1" ]; then
+  # shellcheck disable=SC2016
   sed -i '' 's/\.\$vaColorConfig\.getAppStylesRootAttribute()/\$vaColorConfig == null ? void 0 : \$vaColorConfig.getAppStylesRootAttribute == null ? void 0 : \$vaColorConfig.getAppStylesRootAttribute()/' "$PATCH1"
   echo "Patched $PATCH1"
 else
@@ -14,6 +15,7 @@ else
 fi
 
 if [ -f "$PATCH2" ]; then
+  # shellcheck disable=SC2016
   sed -i '' 's/\.\$vaColorConfig\.getAppStylesRootAttribute()/\$vaColorConfig == null ? void 0 : \$vaColorConfig.getAppStylesRootAttribute == null ? void 0 : \$vaColorConfig.getAppStylesRootAttribute()/' "$PATCH2"
   echo "Patched $PATCH2"
 else

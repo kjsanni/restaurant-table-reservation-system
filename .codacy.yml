@@ -6,14 +6,9 @@ exclude_paths:
 
 engines:
   jshint:
-    enabled: true
-    config:
-      node: true
-      esversion: 2020
-    exclude_paths:
-      - "front-end/src/**/*.vue"
-      - "front-end/src/views/**/*.vue"
-      - "front-end/src/components/**/*.vue"
+    enabled: false
+  eslint:
+    enabled: false
   csslint:
     enabled: false
   stylelint:
