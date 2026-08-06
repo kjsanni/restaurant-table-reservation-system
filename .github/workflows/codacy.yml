@@ -68,6 +68,14 @@ jobs:
             exit 1
           fi
 
+      # Remove non-security engine results (JSHint, remark-lint) from SARIF
+      # before uploading to GitHub ASVS. These engines produce code-quality
+      # findings that the CLI does not respect .codacy.yml disables for.
+      - name: Filter SARIF for GitHub ASVS
+        run: |
+          jq '.runs |= [.[] | select(.tool.driver.name as $name | $name | test("Semgrep|Shellcheck|Hadolint|TSLint|Stylelint|Jacksonlinter"; "i"))]' results.sarif > sarif_filtered.sarif
+          mv sarif_filtered.sarif results.sarif
+
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
         uses: github/codeql-action/upload-sarif@v3
