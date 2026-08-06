@@ -533,23 +533,54 @@ const setReservationTable = async (
   const linkedTableIds = selected.filter((id) => id !== tableId);
 
   return await db.sequelize.transaction(async (t) => {
-    await Table.update(
+    const allFree = await Table.findAll({
+      where: withTenant({ isOccupied: false }, tenantId),
+      lock: { level: "UPDATE" },
+      transaction: t,
+    });
+
+    const finalSelected = [tableId];
+    if (neededTables > 1) {
+      const linked = allFree
+        .filter((t) => t.id !== tableId)
+        .slice(0, neededTables - 1)
+        .map((t) => t.id);
+      finalSelected.push(...linked);
+    }
+
+    const finalLinkedIds = finalSelected.filter((id) => id !== tableId);
+
+    const [primaryUpdated] = await Table.update(
       {
         isOccupied: true,
         reservationId: reservationId,
-        linkedTableIds: linkedTableIds.length > 0 ? linkedTableIds : null,
+        linkedTableIds: finalLinkedIds.length > 0 ? finalLinkedIds : null,
       },
-      { where: withTenant({ id: tableId }, tenantId), transaction: t }
+      {
+        where: withTenant({ id: tableId, isOccupied: false }, tenantId),
+        transaction: t,
+      }
     );
 
-    if (linkedTableIds.length > 0) {
-      await Table.update(
+    if (primaryUpdated === 0) {
+      throw { status: 409, message: "Table was just reserved by another request" };
+    }
+
+    if (finalLinkedIds.length > 0) {
+      const [linkedUpdated] = await Table.update(
         {
           isOccupied: true,
           reservationId: reservationId,
         },
-        { where: { id: linkedTableIds }, transaction: t }
+        {
+          where: { id: finalLinkedIds, isOccupied: false },
+          transaction: t,
+        }
       );
+
+      if (linkedUpdated !== finalLinkedIds.length) {
+        throw { status: 409, message: "Some linked tables were just reserved by another request" };
+      }
     }
 
     await Reservation.update(
