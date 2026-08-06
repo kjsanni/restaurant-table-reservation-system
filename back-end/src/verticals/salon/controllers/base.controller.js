@@ -4,70 +4,64 @@ const createCrudHandlers = (dao, entityName, options = {}) => {
   const displayName = options.displayName || entityName;
   const passQueryToFindAll = options.passQueryToFindAll !== false;
 
+  const getTenantId = (req) => req.tenant?.id;
+  const logError = (operation, err) => console.error(`${operation} error:`, err.message);
+
   const createHandler = async (req, res) => {
     try {
-      const tenantId = req.tenant?.id;
-      const data = req.body;
-      const record = await dao.create(data, tenantId);
+      const record = await dao.create(req.body, getTenantId(req));
       return res.status(201).json({ success: true, data: record });
     } catch (err) {
-      console.error(`create${entityName}Handler error:`, err.message);
+      logError(`create${entityName}Handler`, err);
       return res.status(500).json({ success: false, message: `Failed to create ${displayName}` });
     }
   };
 
   const listHandler = async (req, res) => {
     try {
-      const tenantId = req.tenant?.id;
-      const records = passQueryToFindAll ? await dao.findAll(tenantId, req.query) : await dao.findAll(tenantId);
+      const records = passQueryToFindAll ? await dao.findAll(getTenantId(req), req.query) : await dao.findAll(getTenantId(req));
       return res.status(200).json({ success: true, data: records });
     } catch (err) {
-      console.error(`get${entityName}sHandler error:`, err.message);
+      logError(`get${entityName}sHandler`, err);
       return res.status(500).json({ success: false, message: `Failed to load ${displayName}s` });
     }
   };
 
   const getHandler = async (req, res) => {
     try {
-      const tenantId = req.tenant?.id;
-      const { id } = req.params;
-      const record = await dao.findById(id, tenantId);
+      const record = await dao.findById(req.params.id, getTenantId(req));
       if (!record) {
         return res.status(404).json({ success: false, message: `${displayName} not found` });
       }
       return res.status(200).json({ success: true, data: record });
     } catch (err) {
-      console.error(`get${entityName}Handler error:`, err.message);
+      logError(`get${entityName}Handler`, err);
       return res.status(500).json({ success: false, message: `Failed to load ${displayName}` });
     }
   };
 
   const updateHandler = async (req, res) => {
     try {
-      const tenantId = req.tenant?.id;
-      const { id } = req.params;
-      const updated = await dao.update(id, tenantId, req.body);
+      const updated = await dao.update(req.params.id, getTenantId(req), req.body);
       if (!updated) {
         return res.status(404).json({ success: false, message: `${displayName} not found` });
       }
       return res.status(200).json({ success: true, data: updated });
     } catch (err) {
-      console.error(`update${entityName}Handler error:`, err.message);
+      logError(`update${entityName}Handler`, err);
       return res.status(500).json({ success: false, message: `Failed to update ${displayName}` });
     }
   };
 
   const deleteHandler = async (req, res) => {
     try {
-      const tenantId = req.tenant?.id;
-      const { id } = req.params;
-      const removed = await dao.delete(id, tenantId);
+      const removed = await dao.delete(req.params.id, getTenantId(req));
       if (!removed) {
         return res.status(404).json({ success: false, message: `${displayName} not found` });
       }
       return res.status(200).json({ success: true });
     } catch (err) {
-      console.error(`delete${entityName}Handler error:`, err.message);
+      logError(`delete${entityName}Handler`, err);
       return res.status(500).json({ success: false, message: `Failed to delete ${displayName}` });
     }
   };

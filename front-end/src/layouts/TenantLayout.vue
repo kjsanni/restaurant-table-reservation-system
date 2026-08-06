@@ -8,10 +8,12 @@ import type { User } from "@/stores/auth";
 import { tenantNavItems } from "@/config/sidebarItems";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 import TenantSwitcher from "@/components/TenantSwitcher.vue";
+import { useOnlineStatus } from "@/composables/useOnlineStatus";
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const { status, pendingCount } = useOnlineStatus();
 
 const collapsed = ref(false);
 const sidebarVisible = ref(true);
@@ -214,6 +216,18 @@ watch(
           }}</span>
         </div>
         <div class="tl-topbar-right">
+          <span v-if="status === 'offline'" class="sync-indicator offline">
+            Offline
+          </span>
+          <span v-else-if="status === 'syncing'" class="sync-indicator syncing">
+            Syncing...
+          </span>
+          <span v-else-if="status === 'sync-failed'" class="sync-indicator sync-failed">
+            Sync failed
+          </span>
+          <span v-else-if="pendingCount > 0" class="sync-indicator pending">
+            {{ pendingCount }} pending
+          </span>
           <LocaleSwitcher />
           <TenantSwitcher
             v-if="user?.permissions?.manage_tenants"
@@ -623,5 +637,37 @@ watch(
 .tl-fade-enter-from,
 .tl-fade-leave-to {
   opacity: 0;
+}
+
+.sync-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+.sync-indicator.offline {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+.sync-indicator.syncing {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+.sync-indicator.sync-failed {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+.sync-indicator.pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
 }
 </style>

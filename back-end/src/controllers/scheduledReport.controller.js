@@ -5,8 +5,7 @@ const { exportSalonReportsHandler } = require("../controllers/salon-reports.cont
 
 const listScheduledReportsHandler = async (req, res) => {
   try {
-    const tenantId = req.tenant?.id;
-    const items = await scheduledReportDAO.list({ tenantId });
+    const items = await scheduledReportDAO.list({ tenantId: req.tenant?.id });
     return res.status(200).json({ success: true, collection: items });
   } catch (err) {
     console.error("listScheduledReportsHandler error:", err.message);
@@ -16,17 +15,16 @@ const listScheduledReportsHandler = async (req, res) => {
 
 const createScheduledReportHandler = async (req, res) => {
   try {
-    const tenantId = req.tenant?.id;
-    const { name, reportType, format, filters, frequency, frequencyDay, frequencyTime, recipients } = req.body;
+    const { name, reportType, frequency, recipients, format, filters, frequencyDay, frequencyTime } = req.body;
 
-    if (!name || !reportType || !frequency || !recipients || !Array.isArray(recipients) || recipients.length === 0) {
+    if (!name || !reportType || !frequency || !recipients?.length) {
       return res.status(400).json({ success: false, message: "name, reportType, frequency, and recipients are required" });
     }
 
     const nextRunAt = computeNextRun(frequency, frequencyDay, frequencyTime);
 
     const report = await scheduledReportDAO.create({
-      tenantId,
+      tenantId: req.tenant?.id,
       name,
       reportType,
       format: format || "csv",
@@ -55,25 +53,7 @@ const updateScheduledReportHandler = async (req, res) => {
       return res.status(404).json({ success: false, message: "Scheduled report not found" });
     }
 
-    const { name, filters, frequency, frequencyDay, frequencyTime, recipients, enabled } = req.body;
-    const updates = {};
-
-    if (name !== undefined) updates.name = name;
-    if (filters !== undefined) updates.filters = filters;
-    if (frequency !== undefined) updates.frequency = frequency;
-    if (frequencyDay !== undefined) updates.frequencyDay = frequencyDay;
-    if (frequencyTime !== undefined) updates.frequencyTime = frequencyTime;
-    if (recipients !== undefined) updates.recipients = recipients;
-    if (enabled !== undefined) updates.enabled = enabled;
-
-    if (frequency || frequencyTime) {
-      updates.nextRunAt = computeNextRun(
-        frequency || report.frequency,
-        frequencyDay !== undefined ? frequencyDay : report.frequencyDay,
-        frequencyTime || report.frequencyTime
-      );
-    }
-
+    const updates = buildScheduledReportUpdates(req.body, report);
     const updated = await scheduledReportDAO.update(req.params.id, updates);
     return res.status(200).json({ success: true, item: updated });
   } catch (err) {
@@ -82,10 +62,30 @@ const updateScheduledReportHandler = async (req, res) => {
   }
 };
 
+const buildScheduledReportUpdates = (body, existing) => {
+  const updates = {};
+  const fields = ["name", "filters", "frequency", "frequencyDay", "frequencyTime", "recipients", "enabled"];
+
+  fields.forEach((field) => {
+    if (body[field] !== undefined) {
+      updates[field] = body[field];
+    }
+  });
+
+  if (body.frequency || body.frequencyTime) {
+    updates.nextRunAt = computeNextRun(
+      body.frequency || existing.frequency,
+      body.frequencyDay !== undefined ? body.frequencyDay : existing.frequencyDay,
+      body.frequencyTime || existing.frequencyTime
+    );
+  }
+
+  return updates;
+};
+
 const deleteScheduledReportHandler = async (req, res) => {
   try {
-    const tenantId = req.tenant?.id;
-    const report = await scheduledReportDAO.remove(req.params.id, tenantId);
+    const report = await scheduledReportDAO.remove(req.params.id, req.tenant?.id);
     if (!report) {
       return res.status(404).json({ success: false, message: "Scheduled report not found" });
     }
@@ -98,14 +98,12 @@ const deleteScheduledReportHandler = async (req, res) => {
 
 const runScheduledReportHandler = async (req, res) => {
   try {
-    const tenantId = req.tenant?.id;
-    const report = await scheduledReportDAO.findById(req.params.id, tenantId);
+    const report = await scheduledReportDAO.findById(req.params.id, req.tenant?.id);
     if (!report) {
       return res.status(404).json({ success: false, message: "Scheduled report not found" });
     }
 
     await processScheduledReport(report);
-
     return res.status(200).json({ success: true, message: "Report sent" });
   } catch (err) {
     console.error("runScheduledReportHandler error:", err.message);
@@ -167,20 +165,22 @@ const processScheduledReport = async (report) => {
   const html = `<p>Please find attached your scheduled report: <strong>${report.name}</strong>.</p>`;
   const from = process.env.DEFAULT_FROM_EMAIL || "reports@vibespot.tech";
 
+  await sendReportToRecipients(report, subject, html, from, csv);
+  await scheduledReportDAO.update(report.id, {
+    lastRunAt: new Date(),
+    nextRunAt: computeNextRun(report.frequency, report.frequencyDay, report.frequencyTime),
+  });
+};
+
+const sendReportToRecipients = async (report, subject, html, from, csv) => {
   for (const recipient of report.recipients) {
     await sendEmail({
       to: recipient,
       subject,
-      text: `${subject}\n\nReport type: ${report.reportType}\nPeriod: ${filters.from || "N/A"} to ${filters.to || "N/A"}`,
+      text: `${subject}\n\nReport type: ${report.reportType}\nPeriod: ${report.filters?.from || "N/A"} to ${report.filters?.to || "N/A"}`,
       html,
     });
   }
-
-  const nextRunAt = computeNextRun(report.frequency, report.frequencyDay, report.frequencyTime);
-  await scheduledReportDAO.update(report.id, {
-    lastRunAt: new Date(),
-    nextRunAt,
-  });
 };
 
 module.exports = {

@@ -155,6 +155,15 @@ const form = ref({
   durationMinutes: 60,
 });
 
+const withLoading = async (loadingRef, action) => {
+  loadingRef.value = true;
+  try {
+    await action();
+  } finally {
+    loadingRef.value = false;
+  }
+};
+
 const submitRequest = async () => {
   submitting.value = true;
   try {
@@ -173,44 +182,34 @@ const submitRequest = async () => {
   }
 };
 
-const approve = async (requestId) => {
-  const notes = prompt("Approval notes (optional):");
+const handleBreakGlassAction = async (actionFn, requestId) => {
+  const notes = prompt(
+    `${actionFn === adminAPI.approveBreakGlass ? "Approval" : "Denial"} notes (optional):`
+  );
   if (notes === null) return;
-  const res = await adminAPI.approveBreakGlass(requestId, notes || "");
+  const res = await actionFn(requestId, notes || "");
   if (res.data?.success) {
-    await loadPendingRequests();
-    await loadMyRequests();
+    await Promise.all([loadPendingRequests(), loadMyRequests()]);
   }
 };
 
-const deny = async (requestId) => {
-  const notes = prompt("Denial reason (optional):");
-  if (notes === null) return;
-  const res = await adminAPI.denyBreakGlass(requestId, notes || "");
-  if (res.data?.success) {
-    await loadPendingRequests();
-    await loadMyRequests();
-  }
-};
+const approve = (requestId) =>
+  handleBreakGlassAction(adminAPI.approveBreakGlass, requestId);
+const deny = (requestId) =>
+  handleBreakGlassAction(adminAPI.denyBreakGlass, requestId);
 
 const loadMyRequests = async () => {
-  myLoading.value = true;
-  try {
+  await withLoading(myLoading, async () => {
     const res = await adminAPI.listMyBreakGlassRequests();
     myRequests.value = res.data?.collection || [];
-  } finally {
-    myLoading.value = false;
-  }
+  });
 };
 
 const loadPendingRequests = async () => {
-  pendingLoading.value = true;
-  try {
+  await withLoading(pendingLoading, async () => {
     const res = await adminAPI.listBreakGlassRequests({ status: "pending" });
     pendingRequests.value = res.data?.collection || [];
-  } finally {
-    pendingLoading.value = false;
-  }
+  });
 };
 
 const formatDate = (date) => {

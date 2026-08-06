@@ -1,165 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from "vue";
-import salonReportsAPI from "@/services/salonReportsAPI";
-import logger from "@/utils/logger";
-import { useI18n } from "@/composables/useI18n";
-
-const { t } = useI18n();
-
-const loading = ref(true);
-const saving = ref(false);
-const exporting = ref(false);
-const from = ref("");
-const to = ref("");
-
-const summary = ref({
-  totalRevenue: 0,
-  totalAppointments: 0,
-  dateRange: { from: null, to: null },
-});
-const revenueByService = ref<any[]>([]);
-const topStylists = ref<any[]>([]);
-const appointmentsBySource = ref<any[]>([]);
-const peakHours = ref<any[]>([]);
-
-const scheduledReports = ref<any[]>([]);
-const scheduledLoading = ref(false);
-const showScheduleForm = ref(false);
-const scheduleForm = ref({
-  name: "",
-  reportType: "salon_revenue",
-  frequency: "weekly",
-  frequencyDay: 1,
-  frequencyTime: "08:00",
-  recipients: "",
-});
-const runningId = ref<number | null>(null);
-
-const loadReports = async () => {
-  loading.value = true;
-  try {
-    const res = await salonReportsAPI.getRevenueByService(
-      from.value || undefined,
-      to.value || undefined
-    );
-    const data = res.data;
-    summary.value = data.summary || summary.value;
-    revenueByService.value = data.revenueByService || [];
-    topStylists.value = data.topStylists || [];
-    appointmentsBySource.value = data.appointmentsBySource || [];
-    peakHours.value = data.peakHours || [];
-  } catch (err) {
-    logger.error("Failed to load salon reports", { error: err });
-  } finally {
-    loading.value = false;
-  }
-};
-
-const applyFilters = () => {
-  loadReports();
-};
-
-const exportCsv = async () => {
-  exporting.value = true;
-  try {
-    const res = await salonReportsAPI.exportCsv(
-      from.value || undefined,
-      to.value || undefined
-    );
-    const blob = new Blob([res.data], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `salon-reports-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  } catch (err) {
-    logger.error("Failed to export salon reports", { error: err });
-  } finally {
-    exporting.value = false;
-  }
-};
-
-const loadScheduledReports = async () => {
-  scheduledLoading.value = true;
-  try {
-    const res = await salonReportsAPI.listScheduledReports();
-    scheduledReports.value = res.data?.collection || [];
-  } catch (err) {
-    logger.error("Failed to load scheduled reports", { error: err });
-  } finally {
-    scheduledLoading.value = false;
-  }
-};
-
-const createScheduledReport = async () => {
-  saving.value = true;
-  try {
-    const recipients = scheduleForm.value.recipients
-      .split(",")
-      .map((email) => email.trim())
-      .filter(Boolean);
-
-    await salonReportsAPI.createScheduledReport({
-      name: scheduleForm.value.name,
-      reportType: scheduleForm.value.reportType,
-      format: "csv",
-      frequency: scheduleForm.value.frequency,
-      frequencyDay:
-        scheduleForm.value.frequency === "weekly"
-          ? scheduleForm.value.frequencyDay
-          : undefined,
-      frequencyTime: scheduleForm.value.frequencyTime,
-      recipients,
-    });
-
-    showScheduleForm.value = false;
-    scheduleForm.value = {
-      name: "",
-      reportType: "salon_revenue",
-      frequency: "weekly",
-      frequencyDay: 1,
-      frequencyTime: "08:00",
-      recipients: "",
-    };
-    await loadScheduledReports();
-  } catch (err) {
-    logger.error("Failed to create scheduled report", { error: err });
-  } finally {
-    saving.value = false;
-  }
-};
-
-const deleteScheduledReport = async (id: number) => {
-  if (!confirm("Delete this scheduled report?")) return;
-  try {
-    await salonReportsAPI.deleteScheduledReport(id);
-    await loadScheduledReports();
-  } catch (err) {
-    logger.error("Failed to delete scheduled report", { error: err });
-  }
-};
-
-const runScheduledReport = async (id: number) => {
-  runningId.value = id;
-  try {
-    await salonReportsAPI.runScheduledReport(id);
-    await loadScheduledReports();
-  } catch (err) {
-    logger.error("Failed to run scheduled report", { error: err });
-  } finally {
-    runningId.value = null;
-  }
-};
-
-onMounted(() => {
-  loadReports();
-  loadScheduledReports();
-});
-</script>
-
 <template>
   <div class="main-wrapper">
     <div class="topbar">
@@ -176,7 +14,11 @@ onMounted(() => {
           {{ t("salon.to") }}
           <input v-model="to" type="date" />
         </label>
-        <button class="btn-primary" :disabled="saving" @click="applyFilters">
+        <button
+          class="btn-primary"
+          :disabled="exporting || loading"
+          @click="applyFilters"
+        >
           {{ t("salon.apply") }}
         </button>
         <button
@@ -462,6 +304,171 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import salonReportsAPI from "@/services/salonReportsAPI";
+import logger from "@/utils/logger";
+import { useI18n } from "@/composables/useI18n";
+
+const { t } = useI18n();
+
+const loading = ref(true);
+const exporting = ref(false);
+const from = ref("");
+const to = ref("");
+
+const summary = ref({
+  totalRevenue: 0,
+  totalAppointments: 0,
+  dateRange: { from: null, to: null },
+});
+const revenueByService = ref<any[]>([]);
+const topStylists = ref<any[]>([]);
+const appointmentsBySource = ref<any[]>([]);
+const peakHours = ref<any[]>([]);
+
+const scheduledReports = ref<any[]>([]);
+const scheduledLoading = ref(false);
+const showScheduleForm = ref(false);
+const scheduleForm = ref({
+  name: "",
+  reportType: "salon_revenue",
+  frequency: "weekly",
+  frequencyDay: 1,
+  frequencyTime: "08:00",
+  recipients: "",
+});
+const runningId = ref<number | null>(null);
+const saving = ref(false);
+
+const withLoading = async (loadingRef, action) => {
+  loadingRef.value = true;
+  try {
+    await action();
+  } finally {
+    loadingRef.value = false;
+  }
+};
+
+const downloadBlob = (data: string, filename: string) => {
+  const blob = new Blob([data], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+const loadReports = async () => {
+  await withLoading(loading, async () => {
+    const res = await salonReportsAPI.getRevenueByService(
+      from.value || undefined,
+      to.value || undefined
+    );
+    const data = res.data;
+    summary.value = data.summary || summary.value;
+    revenueByService.value = data.revenueByService || [];
+    topStylists.value = data.topStylists || [];
+    appointmentsBySource.value = data.appointmentsBySource || [];
+    peakHours.value = data.peakHours || [];
+  });
+};
+
+const applyFilters = () => {
+  loadReports();
+};
+
+const exportCsv = async () => {
+  await withLoading(exporting, async () => {
+    const res = await salonReportsAPI.exportCsv(
+      from.value || undefined,
+      to.value || undefined
+    );
+    downloadBlob(
+      res.data,
+      `salon-reports-${new Date().toISOString().slice(0, 10)}.csv`
+    );
+  });
+};
+
+const loadScheduledReports = async () => {
+  await withLoading(scheduledLoading, async () => {
+    const res = await salonReportsAPI.listScheduledReports();
+    scheduledReports.value = res.data?.collection || [];
+  });
+};
+
+const buildScheduledReportPayload = () => {
+  const recipients = scheduleForm.value.recipients
+    .split(",")
+    .map((email) => email.trim())
+    .filter(Boolean);
+
+  return {
+    name: scheduleForm.value.name,
+    reportType: scheduleForm.value.reportType,
+    format: "csv",
+    frequency: scheduleForm.value.frequency,
+    frequencyDay:
+      scheduleForm.value.frequency === "weekly"
+        ? scheduleForm.value.frequencyDay
+        : undefined,
+    frequencyTime: scheduleForm.value.frequencyTime,
+    recipients,
+  };
+};
+
+const resetScheduleForm = () => {
+  scheduleForm.value = {
+    name: "",
+    reportType: "salon_revenue",
+    frequency: "weekly",
+    frequencyDay: 1,
+    frequencyTime: "08:00",
+    recipients: "",
+  };
+};
+
+const createScheduledReport = async () => {
+  await withLoading(saving, async () => {
+    await salonReportsAPI.createScheduledReport(buildScheduledReportPayload());
+    showScheduleForm.value = false;
+    resetScheduleForm();
+    await loadScheduledReports();
+  });
+};
+
+const deleteScheduledReport = async (id: number) => {
+  if (!confirm("Delete this scheduled report?")) return;
+  try {
+    await salonReportsAPI.deleteScheduledReport(id);
+    await loadScheduledReports();
+  } catch (err) {
+    logger.error("Failed to delete scheduled report", { error: err });
+  }
+};
+
+const runScheduledReport = async (id: number) => {
+  runningId.value = id;
+  try {
+    await salonReportsAPI.runScheduledReport(id);
+    await loadScheduledReports();
+  } catch (err) {
+    logger.error("Failed to run scheduled report", { error: err });
+  } finally {
+    runningId.value = null;
+  }
+};
+
+onMounted(() => {
+  loadReports();
+  loadScheduledReports();
+});
+</script>
 
 <style scoped>
 .main-wrapper {

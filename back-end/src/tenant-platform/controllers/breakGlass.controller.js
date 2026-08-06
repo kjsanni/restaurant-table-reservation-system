@@ -3,116 +3,97 @@ const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const MAX_DURATION_MINUTES = 240;
 
-const requestBreakGlassHandler = async (req, res) => {
-  const { justification, durationMinutes } = req.body;
-
-  if (!justification || typeof justification !== "string" || justification.trim().length < 10) {
-    return res.status(400).json({
-      success: false,
-      message: "Justification must be at least 10 characters.",
+const logBreakGlassAudit = async (userId, event, requestId, tenantId, extra, ip) => {
+  await platformAuditDAO
+    .log(userId, event, "break_glass", requestId, tenantId, extra, ip)
+    .catch((err) => {
+      console.error(`${event} audit log failed:`, err.message);
     });
+};
+
+const validateBreakGlassRequest = (justification, durationMinutes) => {
+  if (!justification || typeof justification !== "string" || justification.trim().length < 10) {
+    return { error: { status: 400, message: "Justification must be at least 10 characters." } };
   }
 
   const duration = parseInt(durationMinutes, 10);
   if (!duration || duration < 1 || duration > MAX_DURATION_MINUTES) {
-    return res.status(400).json({
-      success: false,
-      message: `Duration must be between 1 and ${MAX_DURATION_MINUTES} minutes.`,
-    });
+    return { error: { status: 400, message: `Duration must be between 1 and ${MAX_DURATION_MINUTES} minutes.` } };
   }
 
-  const request = await breakGlassRequestDAO.create(req.user.id, justification.trim(), duration);
+  return { duration };
+};
 
-  await platformAuditDAO
-    .log(
-      req.user.id,
-      "break_glass.requested",
-      "break_glass",
-      request.id,
-      req.tenant?.id || null,
-      { durationMinutes: duration, justification: justification.trim() },
-      req.ip
-    )
-    .catch((err) => {
-      console.error("break_glass.requested audit log failed:", err.message);
-    });
+const requestBreakGlassHandler = async (req, res) => {
+  const validation = validateBreakGlassRequest(req.body.justification, req.body.durationMinutes);
+  if (validation.error) {
+    return res.status(validation.error.status).json({ success: false, message: validation.error.message });
+  }
+
+  const request = await breakGlassRequestDAO.create(req.user.id, req.body.justification.trim(), validation.duration);
+
+  await logBreakGlassAudit(
+    req.user.id,
+    "break_glass.requested",
+    request.id,
+    req.tenant?.id || null,
+    { durationMinutes: validation.duration, justification: req.body.justification.trim() },
+    req.ip
+  );
 
   return res.status(201).json({ success: true, request });
 };
 
 const approveBreakGlassHandler = async (req, res) => {
-  const { requestId } = req.params;
-  const { notes } = req.body;
-
-  const request = await breakGlassRequestDAO.approve(requestId, req.user.id, notes);
+  const request = await breakGlassRequestDAO.approve(req.params.requestId, req.user.id, req.body.notes);
   if (!request) {
     return res.status(404).json({ success: false, message: "Break-glass request not found or not pending." });
   }
 
-  await platformAuditDAO
-    .log(
-      req.user.id,
-      "break_glass.approved",
-      "break_glass",
-      request.id,
-      req.tenant?.id || null,
-      { elevatedUntil: request.elevatedUntil, notes },
-      req.ip
-    )
-    .catch((err) => {
-      console.error("break_glass.approved audit log failed:", err.message);
-    });
+  await logBreakGlassAudit(
+    req.user.id,
+    "break_glass.approved",
+    request.id,
+    req.tenant?.id || null,
+    { elevatedUntil: request.elevatedUntil, notes: req.body.notes },
+    req.ip
+  );
 
   return res.status(200).json({ success: true, request });
 };
 
 const denyBreakGlassHandler = async (req, res) => {
-  const { requestId } = req.params;
-  const { notes } = req.body;
-
-  const request = await breakGlassRequestDAO.deny(requestId, req.user.id, notes);
+  const request = await breakGlassRequestDAO.deny(req.params.requestId, req.user.id, req.body.notes);
   if (!request) {
     return res.status(404).json({ success: false, message: "Break-glass request not found or not pending." });
   }
 
-  await platformAuditDAO
-    .log(
-      req.user.id,
-      "break_glass.denied",
-      "break_glass",
-      request.id,
-      req.tenant?.id || null,
-      { notes },
-      req.ip
-    )
-    .catch((err) => {
-      console.error("break_glass.denied audit log failed:", err.message);
-    });
+  await logBreakGlassAudit(
+    req.user.id,
+    "break_glass.denied",
+    request.id,
+    req.tenant?.id || null,
+    { notes: req.body.notes },
+    req.ip
+  );
 
   return res.status(200).json({ success: true, request });
 };
 
 const revokeBreakGlassHandler = async (req, res) => {
-  const { requestId } = req.params;
-
-  const request = await breakGlassRequestDAO.revoke(requestId, req.user.id);
+  const request = await breakGlassRequestDAO.revoke(req.params.requestId, req.user.id);
   if (!request) {
     return res.status(404).json({ success: false, message: "Break-glass request not found or not active." });
   }
 
-  await platformAuditDAO
-    .log(
-      req.user.id,
-      "break_glass.revoked",
-      "break_glass",
-      request.id,
-      req.tenant?.id || null,
-      {},
-      req.ip
-    )
-    .catch((err) => {
-      console.error("break_glass.revoked audit log failed:", err.message);
-    });
+  await logBreakGlassAudit(
+    req.user.id,
+    "break_glass.revoked",
+    request.id,
+    req.tenant?.id || null,
+    {},
+    req.ip
+  );
 
   return res.status(200).json({ success: true, request });
 };

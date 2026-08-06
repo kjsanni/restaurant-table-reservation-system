@@ -50,6 +50,12 @@ const buildPlatformClient = async () => {
   return buildClient(config.secretKey);
 };
 
+const paystackRequest = async (method, path, payload = null) => {
+  const client = await buildPlatformClient();
+  const response = await client[method](path, payload);
+  return response.data.data;
+};
+
 const validateSecretKey = async (secretKey) => {
   const client = buildClient(secretKey);
   try {
@@ -89,36 +95,21 @@ const verifyWebhookSignature = async (payload, signature) => {
   return hash === signature;
 };
 
-const createCustomer = async ({ email, firstName, lastName, phone }) => {
-  const client = await buildPlatformClient();
-  const response = await client.post("/customer", {
-    email,
-    first_name: firstName,
-    last_name: lastName,
-    phone,
-  });
-  return response.data.data;
+const createCustomer = async (payload) => {
+  return paystackRequest("post", "/customer", payload);
 };
 
-const createSubscription = async ({ customerCode, planCode, authorization }) => {
-  const client = await buildPlatformClient();
-  const response = await client.post("/subscription", {
-    customer: customerCode,
-    plan: planCode,
-    authorization,
-  });
-  return response.data.data;
+const createSubscription = async (payload) => {
+  return paystackRequest("post", "/subscription", payload);
 };
 
 const createPlan = async ({ name, amount, interval = "monthly", currency = "GHS" }) => {
-  const client = await buildPlatformClient();
-  const response = await client.post("/plan", {
+  return paystackRequest("post", "/plan", {
     name,
     amount: amount * 100,
     interval,
     currency,
   });
-  return response.data.data;
 };
 
 const PAYSTACK_CHANNEL_MAP = {
@@ -139,7 +130,6 @@ const mapChannels = (channels) => {
 };
 
 const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = null, channels = null }) => {
-  const client = await buildPlatformClient();
   const payload = {
     email,
     amount: amount * 100,
@@ -157,28 +147,21 @@ const initializeCharge = async ({ email, amount, metadata = {}, splitConfig = nu
     payload.channels = mappedChannels;
   }
 
-  const response = await client.post("/transaction/initialize", payload);
-  return response.data.data;
+  return paystackRequest("post", "/transaction/initialize", payload);
 };
 
 const verifyPayment = async (reference) => {
-  const client = await buildPlatformClient();
-  const response = await client.get(`/transaction/verify/${reference}`);
-  return response.data.data;
+  return paystackRequest("get", `/transaction/verify/${reference}`);
 };
 
 const refundPayment = async (reference, amount = null) => {
-  const client = await buildPlatformClient();
   const payload = { transaction: reference };
   if (amount !== null) payload.amount = amount * 100;
-  const response = await client.post("/refund", payload);
-  return response.data.data;
+  return paystackRequest("post", "/refund", payload);
 };
 
 const fetchCustomer = async (customerCode) => {
-  const client = await buildPlatformClient();
-  const response = await client.get(`/customer/${customerCode}`);
-  return response.data.data;
+  return paystackRequest("get", `/customer/${customerCode}`);
 };
 
 const buildSplitConfig = (tenant) => {

@@ -11,13 +11,17 @@ const buildCustomerDetails = (user) => {
   return { email, phone, firstName, lastName };
 };
 
+const resolveCustomer = async (req) => {
+  return await reservationDAO.findOrCreateCustomer(
+    buildCustomerDetails(req.user),
+    null,
+    req.tenant?.id
+  );
+};
+
 const getCustomerProfileHandler = async (req, res) => {
   try {
-    const customer = await reservationDAO.findOrCreateCustomer(
-      buildCustomerDetails(req.user),
-      null,
-      req.tenant?.id
-    );
+    const customer = await resolveCustomer(req);
     if (!customer) {
       return res.status(404).json({
         success: false,
@@ -33,11 +37,7 @@ const getCustomerProfileHandler = async (req, res) => {
 
 const updateCustomerProfileHandler = async (req, res) => {
   try {
-    const customer = await reservationDAO.findOrCreateCustomer(
-      buildCustomerDetails(req.user),
-      null,
-      req.tenant?.id
-    );
+    const customer = await resolveCustomer(req);
     if (!customer) {
       return res.status(404).json({
         success: false,
@@ -54,11 +54,7 @@ const updateCustomerProfileHandler = async (req, res) => {
 
 const getCustomerReservationsHandler = async (req, res) => {
   try {
-    const customer = await reservationDAO.findOrCreateCustomer(
-      buildCustomerDetails(req.user),
-      null,
-      req.tenant?.id
-    );
+    const customer = await resolveCustomer(req);
     if (!customer) {
       return res.status(200).json({ success: true, reservations: [] });
     }
@@ -84,12 +80,7 @@ const cancelReservationHandler = async (req, res) => {
       return res.status(400).json({ success: false, message: "Reservation cannot be cancelled" });
     }
 
-    const customer = await reservationDAO.findOrCreateCustomer(
-      buildCustomerDetails(req.user),
-      null,
-      req.tenant?.id
-    );
-
+    const customer = await resolveCustomer(req);
     if (!customer || reservation.customerId !== customer.id) {
       return res.status(403).json({ success: false, message: "Not authorized for this reservation" });
     }

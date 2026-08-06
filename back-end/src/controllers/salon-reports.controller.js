@@ -9,27 +9,31 @@ const escapeCsv = (value) => {
   return str;
 };
 
+const fetchSalonReportData = async (tenantId, from, to) => {
+  const [revenueByService, topStylists, appointmentsBySource, peakHours] = await Promise.all([
+    appointmentDao.getRevenueByService(tenantId, from, to),
+    appointmentDao.getTopStylists(tenantId, from, to),
+    appointmentDao.getAppointmentsBySource(tenantId, from, to),
+    appointmentDao.getPeakHours(tenantId, from, to),
+  ]);
+
+  const totalRevenue = revenueByService.reduce((sum, item) => sum + item.revenue, 0);
+  const totalAppointments = appointmentsBySource.reduce((sum, item) => sum + item.appointmentCount, 0);
+
+  return { revenueByService, topStylists, appointmentsBySource, peakHours, totalRevenue, totalAppointments };
+};
+
 const getSalonReportsHandler = async (req, res) => {
   try {
-    const tenantId = req.tenant?.id;
-    const { from, to } = req.query;
-
-    const [revenueByService, topStylists, appointmentsBySource, peakHours] = await Promise.all([
-      appointmentDao.getRevenueByService(tenantId, from, to),
-      appointmentDao.getTopStylists(tenantId, from, to),
-      appointmentDao.getAppointmentsBySource(tenantId, from, to),
-      appointmentDao.getPeakHours(tenantId, from, to),
-    ]);
-
-    const totalRevenue = revenueByService.reduce((sum, item) => sum + item.revenue, 0);
-    const totalAppointments = appointmentsBySource.reduce((sum, item) => sum + item.appointmentCount, 0);
+    const { revenueByService, topStylists, appointmentsBySource, peakHours, totalRevenue, totalAppointments } =
+      await fetchSalonReportData(req.tenant?.id, req.query.from, req.query.to);
 
     return res.status(200).json({
       success: true,
       summary: {
         totalRevenue,
         totalAppointments,
-        dateRange: { from: from || null, to: to || null },
+        dateRange: { from: req.query.from || null, to: req.query.to || null },
       },
       revenueByService,
       topStylists,
@@ -44,23 +48,13 @@ const getSalonReportsHandler = async (req, res) => {
 
 const exportSalonReportsHandler = async (req, res) => {
   try {
-    const tenantId = req.tenant?.id;
-    const { from, to } = req.query;
-
-    const [revenueByService, topStylists, appointmentsBySource, peakHours] = await Promise.all([
-      appointmentDao.getRevenueByService(tenantId, from, to),
-      appointmentDao.getTopStylists(tenantId, from, to),
-      appointmentDao.getAppointmentsBySource(tenantId, from, to),
-      appointmentDao.getPeakHours(tenantId, from, to),
-    ]);
-
-    const totalRevenue = revenueByService.reduce((sum, item) => sum + item.revenue, 0);
-    const totalAppointments = appointmentsBySource.reduce((sum, item) => sum + item.appointmentCount, 0);
+    const { revenueByService, topStylists, appointmentsBySource, peakHours, totalRevenue, totalAppointments } =
+      await fetchSalonReportData(req.tenant?.id, req.query.from, req.query.to);
 
     const rows = [
       ["Salon Reports Export"],
       [`Generated At`, new Date().toISOString()],
-      [`Date Range`, `${from || "N/A"} to ${to || "N/A"}`],
+      [`Date Range`, `${req.query.from || "N/A"} to ${req.query.to || "N/A"}`],
       [],
       ["Summary"],
       ["Total Revenue", totalRevenue.toFixed(2)],

@@ -27,9 +27,7 @@ breakGlassRequestDAO.listPending = (filters = {}) => {
 
   return db.breakGlassRequest.findAll({
     where,
-    include: [
-      { model: db.user, as: "requester", attributes: ["id", "username", "email"] },
-    ],
+    include: [{ model: db.user, as: "requester", attributes: ["id", "username", "email"] }],
     order: [["createdAt", "ASC"]],
     limit: filters.limit || 100,
   });
@@ -41,12 +39,20 @@ breakGlassRequestDAO.listForUser = (userId, filters = {}) => {
 
   return db.breakGlassRequest.findAll({
     where,
-    include: [
-      { model: db.user, as: "approver", attributes: ["id", "username", "email"] },
-    ],
+    include: [{ model: db.user, as: "approver", attributes: ["id", "username", "email"] }],
     order: [["createdAt", "DESC"]],
     limit: filters.limit || 100,
   });
+};
+
+const applyRequestResolution = async (request, status, approverId, notes, elevatedUntil) => {
+  request.status = status;
+  request.approverId = approverId;
+  request.notes = notes;
+  request.resolvedAt = new Date();
+  if (elevatedUntil) request.elevatedUntil = elevatedUntil;
+  await request.save();
+  return request;
 };
 
 breakGlassRequestDAO.approve = async (id, approverId, notes) => {
@@ -56,12 +62,7 @@ breakGlassRequestDAO.approve = async (id, approverId, notes) => {
   const elevatedUntil = new Date();
   elevatedUntil.setMinutes(elevatedUntil.getMinutes() + request.durationMinutes);
 
-  request.status = "approved";
-  request.approverId = approverId;
-  request.notes = notes;
-  request.elevatedUntil = elevatedUntil;
-  request.resolvedAt = new Date();
-  await request.save();
+  await applyRequestResolution(request, "approved", approverId, notes, elevatedUntil);
 
   const user = await db.user.findByPk(request.userId);
   if (user) {
@@ -76,12 +77,7 @@ breakGlassRequestDAO.deny = async (id, approverId, notes) => {
   const request = await breakGlassRequestDAO.findById(id);
   if (!request || request.status !== "pending") return null;
 
-  request.status = "denied";
-  request.approverId = approverId;
-  request.notes = notes;
-  request.resolvedAt = new Date();
-  await request.save();
-
+  await applyRequestResolution(request, "denied", approverId, notes, null);
   return request;
 };
 
@@ -89,10 +85,8 @@ breakGlassRequestDAO.revoke = async (id, revokedBy) => {
   const request = await breakGlassRequestDAO.findById(id);
   if (!request || request.status !== "approved") return null;
 
-  request.status = "revoked";
   request.notes = request.notes ? `${request.notes}\nRevoked by ${revokedBy}` : `Revoked by ${revokedBy}`;
-  request.resolvedAt = new Date();
-  await request.save();
+  await applyRequestResolution(request, "revoked", revokedBy, request.notes, null);
 
   const user = await db.user.findByPk(request.userId);
   if (user) {

@@ -3,6 +3,7 @@ import { ref, provide } from "vue";
 import { useTenantBranding } from "@/composables/useTenantBranding";
 import { getCurrentInstance } from "vue";
 import { useI18n, type UseI18nReturn } from "@/composables/useI18n";
+import OfflineBanner from "@/components/OfflineBanner.vue";
 
 useTenantBranding();
 const i18n = useI18n();
@@ -45,8 +46,17 @@ const resetError = () => {
       <button class="retry-btn" @click="resetError">Try again</button>
     </div>
   </div>
-  <RouterView v-else />
+  <div v-else class="app-shell">
+    <OfflineBanner />
+    <RouterView />
+  </div>
 </template>
+
+<style scoped>
+.app-shell {
+  padding-top: 0;
+}
+</style>
 
 <style scoped>
 .error-boundary {

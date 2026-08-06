@@ -39,22 +39,26 @@ export function useSalonCrudView<T>(config: {
     editingId.value = null;
   };
 
+  const saveItem = async (payload: Record<string, any>) => {
+    if (editingId.value) {
+      const res = await api[config.updateMethod || "update"](
+        editingId.value,
+        payload
+      );
+      const idx = list.value.findIndex(
+        (item: any) => item.id === editingId.value
+      );
+      if (idx !== -1) list.value[idx] = res.data.data;
+    } else {
+      const res = await api[config.createMethod || "create"](payload);
+      list.value.push(res.data.data);
+    }
+  };
+
   const submitForm = async () => {
     try {
       const payload = { ...form.value };
-      if (editingId.value) {
-        const res = await api[config.updateMethod || "update"](
-          editingId.value,
-          payload
-        );
-        const idx = list.value.findIndex(
-          (item: any) => item.id === editingId.value
-        );
-        if (idx !== -1) list.value[idx] = res.data.data;
-      } else {
-        const res = await api[config.createMethod || "create"](payload);
-        list.value.push(res.data.data);
-      }
+      await saveItem(payload);
       showForm.value = false;
       resetForm();
     } catch (err) {
@@ -70,12 +74,16 @@ export function useSalonCrudView<T>(config: {
     showForm.value = true;
   };
 
+  const removeItem = async (id: number) => {
+    await api[config.deleteMethod || "delete"](id);
+    list.value = list.value.filter((item: any) => item.id !== id);
+  };
+
   const deleteItem = async (id: number) => {
     if (!confirm(t("salon.confirmDelete", `Delete this ${config.entityName}?`)))
       return;
     try {
-      await api[config.deleteMethod || "delete"](id);
-      list.value = list.value.filter((item: any) => item.id !== id);
+      await removeItem(id);
     } catch (err) {
       logger.error(`Failed to delete ${config.entityName}`, { error: err });
     }
