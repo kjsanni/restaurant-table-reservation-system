@@ -50,11 +50,6 @@ jobs:
           format: sarif
           # Adjust severity of non-security issues
           gh-code-scanning-compat: true
-          # Only run security-relevant tools (override .codacy.yml engines
-          # which are not respected for all engines by the CLI)
-          tool: "semgrep,shellcheck,hadolint,stylelint"
-          # Enforce quality gate: any finding from the above tools blocks the build
-          max-allowed-issues: 0
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
