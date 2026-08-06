@@ -60,7 +60,7 @@
     "pdfkit": "^0.19.1",
     "qrcode": "^1.5.4",
     "rate-limit-redis": "^6.0.0",
-    "redis": "^5.12.1",
+    "redis": "^6.2.0",
     "sequelize": "^6.37.8",
     "socket.io": "^4.8.3",
     "speakeasy": "^2.0.0",
