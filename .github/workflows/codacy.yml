@@ -50,9 +50,31 @@ jobs:
           format: sarif
           # Adjust severity of non-security issues
           gh-code-scanning-compat: true
-          # Force 0 exit code to allow SARIF file generation
-          # This will handover control about PR rejection to the GitHub side
+          # Allow pre-existing code-quality findings (JSHint, remark-lint)
+          # that the CLI does not fully respect .codacy.yml engine disables for.
+          # Security quality gate is enforced by the post-scan SARIF check below.
           max-allowed-issues: 2147483647
+
+      # Enforce quality gate on security issues only (error-level in SARIF).
+      # This catches new security findings without blocking on pre-existing
+      # code-quality issues from engines that .codacy.yml cannot disable.
+      - name: Enforce security quality gate
+        run: |
+          security_count=$(jq '[.runs[].results[] | select(.level == "error" or .level == "fatal")] | length' results.sarif)
+          echo "Security findings (error/fatal level): $security_count"
+          if [ "$security_count" -gt 0 ]; then
+            echo "::error::Codacy found $security_count security findings. See SARIF results for details."
+            jq '.runs[].results[] | select(.level == "error" or .level == "fatal") | {ruleId, message: .message.text, file: .locations[0].physicalLocation.artifactLocation.uri, line: .locations[0].physicalLocation.region.line}' results.sarif
+            exit 1
+          fi
+
+      # Remove non-security engine results (JSHint, remark-lint) from SARIF
+      # before uploading to GitHub ASVS. These engines produce code-quality
+      # findings that the CLI does not respect .codacy.yml disables for.
+      - name: Filter SARIF for GitHub ASVS
+        run: |
+          jq '.runs |= [.[] | select(.tool.driver.name as $name | $name | test("Semgrep|Shellcheck|Hadolint|TSLint|Stylelint|Jacksonlinter"; "i"))]' results.sarif > sarif_filtered.sarif
+          mv sarif_filtered.sarif results.sarif
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file

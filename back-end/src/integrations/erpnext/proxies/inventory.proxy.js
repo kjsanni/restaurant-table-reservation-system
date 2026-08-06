@@ -2,8 +2,8 @@
 
 const express = require("express");
 const router = express.Router();
-const tryCatchHandler = require("../../middleware/tryCatch");
-const { protect, requireActiveTenant } = require("../../middleware/auth");
+const tryCatchHandler = require("../../../middleware/tryCatch");
+const { requireActiveTenant } = require("../../../middleware/auth");
 
 const checkErpnextStock = async (req, res, next) => {
   const tenant = req.tenant;
@@ -17,7 +17,7 @@ const checkErpnextStock = async (req, res, next) => {
   next();
 };
 
-router.get("/items", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
+router.get("/inventory/items", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { search, page = 1, pageSize = 20 } = req.query;
@@ -33,7 +33,7 @@ router.get("/items", tryCatchHandler(requireActiveTenant, checkErpnextStock, asy
   }
 }));
 
-router.get("/stock", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
+router.get("/inventory/stock", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { itemCode, warehouse, page = 1, pageSize = 20 } = req.query;
@@ -50,7 +50,7 @@ router.get("/stock", tryCatchHandler(requireActiveTenant, checkErpnextStock, asy
   }
 }));
 
-router.get("/warehouses", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
+router.get("/inventory/warehouses", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   try {
@@ -63,7 +63,34 @@ router.get("/warehouses", tryCatchHandler(requireActiveTenant, checkErpnextStock
   }
 }));
 
-router.post("/sync/items", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
+router.get("/inventory/stock/valuation", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
+  const tenant = req.tenant;
+  const { getClient } = require("../client");
+  try {
+    const result = await getClient().get("/api/resource/Stock Ledger Entry", {
+      params: { filters: { company: tenant.name }, fields: ["item_code", "warehouse", "actual_qty", "valuation_rate"], limit_page_length: 1000 },
+    });
+    res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
+router.get("/inventory/stock/low-stock", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
+  const tenant = req.tenant;
+  const { getClient } = require("../client");
+  const { threshold = 10 } = req.query;
+  try {
+    const result = await getClient().get("/api/resource/Item", {
+      params: { filters: { company: tenant.name, actual_qty: ["<", parseInt(threshold, 10)] }, limit_page_length: 1000 },
+    });
+    res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
+router.post("/inventory/sync/items", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
   const tenant = req.tenant;
   const { itemIds } = req.body;
   const { syncItem, syncAllItems } = require("../sync/item.sync");
@@ -84,7 +111,7 @@ router.post("/sync/items", tryCatchHandler(requireActiveTenant, checkErpnextStoc
   }
 }));
 
-router.post("/sync/stock-entries", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
+router.post("/inventory/sync/stock-entries", tryCatchHandler(requireActiveTenant, checkErpnextStock, async (req, res) => {
   const tenant = req.tenant;
   const { syncStockAdjustments } = require("../sync/stock-entry.sync");
   try {

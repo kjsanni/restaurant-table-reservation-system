@@ -1,6 +1,6 @@
 {
   "name": "restaurant-table-reservation-system-back-end",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Back-end of Restaurant Table Reservation System. Created with Node.JS",
   "repository": {
     "type": "git",
@@ -13,6 +13,7 @@
     "start": "node ./src/app.js",
     "start:dev": "npm run migrate:up && nodemon -L ./src/app.js",
     "start:prod": "npm run migrate:up && node ./src/app.js",
+    "restart:backend": "bash scripts/restart-backend.sh",
     "app:dev": "concurrently -n \"server,client\" -c \"bgYellow,bgGreen\" \"npm run start:dev\" \"npm run --prefix ../front-end dev\"",
     "app:prod": "concurrently -n \"server,client\" -c \"bgYellow,bgGreen\" \"npm run start:prod\" \"npm run --prefix ../front-end dev\"",
     "migrate:up": "npx sequelize db:migrate",
@@ -23,12 +24,14 @@
     "loadtest:seed:clean": "node load-tests/seed.js --clean",
     "loadtest:unseed": "node load-tests/unseed.js",
     "test:load": "node load-tests/run.js --scenario all",
-    "loadtest:baseline": "LOAD_TENANT_MODE=baseline node load-tests/run.js --scenario all --sessions 1 --tenantHeader false --label baseline",
-    "loadtest:tenant": "LOAD_TENANT_MODE=enabled node load-tests/run.js --scenario all --sessions 100 --label tenant",
+    "loadtest:baseline": "node load-tests/run.js --scenario all --sessions 1 --tenantHeader false --label baseline",
+    "loadtest:tenant": "node load-tests/run.js --scenario all --sessions 100 --label tenant",
     "loadtest:leak": "node load-tests/leak-check.js --sample 20 --rounds 3",
     "loadtest:queue": "node load-tests/queue-bench.js --jobs 500 --concurrency 5 --sendMs 50",
     "test:postman": "bash scripts/smoke-test.sh",
-    "test:postman:prod": "BASE_URL=http://192.168.88.10 bash scripts/smoke-test.sh"
+    "test:postman:prod": "BASE_URL=http://192.168.88.10 bash scripts/smoke-test.sh",
+    "audit": "npm audit --omit=dev --audit-level=moderate",
+    "audit:fix": "npm audit --omit=dev --audit-level=moderate --fix"
   },
   "author": "Slavyan Hristov",
   "license": "ISC",
@@ -37,7 +40,7 @@
     "concurrently": "^10.0.4",
     "jest": "^30.4.2",
     "nodemon": "^3.1.14",
-    "sequelize-cli": "^6.6.2"
+    "sequelize-cli": "^6.6.5"
   },
   "dependencies": {
     "@sentry/node": "^10.68.0",

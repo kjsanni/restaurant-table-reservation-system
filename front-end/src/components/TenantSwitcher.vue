@@ -59,7 +59,7 @@ const onChange = (event) => {
     emit("update:modelValue", "");
     return;
   }
-  const tenant = tenants.value.find((t) => t.id === tenantId);
+  const tenant = tenants.value.find((t) => String(t.id) === String(tenantId));
   if (tenant) {
     authStore.setTenant(tenant);
     emit("update:modelValue", tenant.id);

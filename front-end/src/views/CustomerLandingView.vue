@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
 import menuAPI from "@/services/menuAPI";
 import tableAPI from "@/services/tableAPI";
 import { useCartStore } from "@/stores/cart";
-import { useCurrency } from "@/composables/useCurrency";
 import logger from "@/utils/logger";
+import LandingHero from "@/components/LandingHero.vue";
+import PreviewSection from "@/components/PreviewSection.vue";
+import CtaStrip from "@/components/CtaStrip.vue";
+import MarqueeStrip from "@/components/MarqueeStrip.vue";
+import FeaturesStrip from "@/components/FeaturesStrip.vue";
+import LandingFooter from "@/components/LandingFooter.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -55,10 +59,7 @@ onMounted(async () => {
   initScrollReveal();
 });
 
-onUnmounted(() => {
-  document.removeEventListener("mousemove", onHeroMouseMove);
-  document.removeEventListener("mouseleave", onHeroMouseLeave);
-});
+onUnmounted(() => {});
 
 const loadMenu = async () => {
   try {
@@ -132,28 +133,6 @@ const goToReserve = () => {
 const goToLogin = () => router.push("/login");
 const goToRegister = () => router.push("/register");
 
-const dietaryTag = (item: any) => {
-  const tags = item.dietaryTags || item.tags || [];
-  return tags.slice(0, 2);
-};
-
-const heroGlow = ref({ x: 0, y: 0, visible: false });
-let heroEl: HTMLElement | null = null;
-
-const onHeroMouseMove = (e: MouseEvent) => {
-  if (!heroEl) return;
-  const rect = heroEl.getBoundingClientRect();
-  heroGlow.value = {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top,
-    visible: true,
-  };
-};
-
-const onHeroMouseLeave = () => {
-  heroGlow.value.visible = false;
-};
-
 const initScrollReveal = () => {
   const sections = document.querySelectorAll<HTMLElement>(".reveal-section");
   if (!sections.length) return;
@@ -176,11 +155,7 @@ const initScrollReveal = () => {
 };
 
 onMounted(() => {
-  heroEl = document.querySelector(".hero-spotlight");
-  if (heroEl) {
-    heroEl.addEventListener("mousemove", onHeroMouseMove);
-    heroEl.addEventListener("mouseleave", onHeroMouseLeave);
-  }
+  initScrollReveal();
 });
 </script>
 
@@ -201,6 +176,10 @@ onMounted(() => {
           <button class="nav-link" @click="router.push('/status')">
             Status
           </button>
+          <button class="nav-link" @click="router.push('/changelog')">
+            Changelog
+          </button>
+          <button class="nav-link" @click="router.push('/help')">Help</button>
           <button class="nav-link" @click="router.push('/api-docs')">
             API Docs
           </button>
@@ -217,434 +196,36 @@ onMounted(() => {
       </div>
     </nav>
 
-    <section class="hero hero-spotlight">
-      <div class="hero-bg">
-        <div class="hero-slide">
-          <img
-            src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1600&q=80"
-            alt="Restaurant interior"
-            loading="eager"
-            fetchpriority="high"
-            width="1600"
-            height="900"
-          />
-        </div>
-        <div class="hero-slide">
-          <img
-            src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=80"
-            alt="Plated dish"
-            loading="eager"
-            width="1600"
-            height="900"
-          />
-        </div>
-        <div class="hero-slide">
-          <img
-            src="https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=1600&q=80"
-            alt="Restaurant bar"
-            loading="eager"
-            width="1600"
-            height="900"
-          />
-        </div>
-        <div class="hero-slide">
-          <img
-            src="https://images.unsplash.com/photo-1544148103-0773bf10d330?w=1600&q=80"
-            alt="Fine dining"
-            loading="eager"
-            width="1600"
-            height="900"
-          />
-        </div>
-        <div class="hero-overlay"></div>
-        <div class="hero-orb hero-orb-1"></div>
-        <div class="hero-orb hero-orb-2"></div>
-        <div class="hero-orb hero-orb-3"></div>
-        <div
-          class="hero-glow"
-          :style="{
-            background: heroGlow.visible
-              ? `radial-gradient(700px circle at ${heroGlow.x}px ${heroGlow.y}px, rgba(217,119,6,0.18), transparent 40%)`
-              : 'none',
-          }"
-        ></div>
-      </div>
-      <div class="hero-content">
-        <div class="hero-badge">
-          <Icon icon="mdi:whatsapp" width="16" height="16" />
-          Order via WhatsApp
-        </div>
-        <h1 class="hero-title">
-          Great food,<br />
-          <span class="hero-accent">zero hassle.</span>
-        </h1>
-        <p class="hero-subtitle">
-          Browse our menu, check free tables, and book your table in seconds.
-          Takeaway, walk-in, or reservation — we've got you covered.
-        </p>
-        <div class="hero-actions">
-          <button class="btn-primary-lg" @click="goToMenu">
-            <Icon icon="mdi:book-open-outline" width="20" height="20" />
-            View Menu
-          </button>
-          <button
-            v-if="hasDineIn"
-            class="btn-secondary-lg"
-            @click="goToReserve"
-          >
-            <Icon icon="mdi:calendar-check" width="20" height="20" />
-            Book a Table
-          </button>
-          <button
-            v-if="hasDelivery && !hasDineIn"
-            class="btn-secondary-lg"
-            @click="goToMenu"
-          >
-            <Icon icon="mdi:moped" width="20" height="20" />
-            Order Delivery
-          </button>
-        </div>
-        <div class="hero-social-proof">
-          <div class="hero-avatars">
-            <div class="avatar avatar-1">AK</div>
-            <div class="avatar avatar-2">KO</div>
-            <div class="avatar avatar-3">EA</div>
-          </div>
-          <p class="hero-proof-text">
-            <span class="proof-bold">2,400+</span> happy guests this month
-          </p>
-        </div>
-      </div>
-    </section>
+    <LandingHero
+      :hasDineIn="hasDineIn"
+      :hasDelivery="hasDelivery"
+      :isSalon="isSalon"
+      @menu="goToMenu"
+      @reserve="goToReserve"
+    />
 
-    <section class="preview-section reveal-section">
-      <div class="section-header">
-        <h2 class="section-title">Explore</h2>
-        <p class="section-subtitle">See what's fresh and what's free.</p>
-      </div>
-      <div class="tab-bar">
-        <button
-          v-if="!isSalon"
-          :class="['tab', activeTab === 'menu' && 'tab-active']"
-          @click="activeTab = 'menu'"
-        >
-          <Icon icon="mdi:food" width="18" height="18" />
-          Menu
-        </button>
-        <button
-          v-if="!isSalon && hasTableManagement"
-          :class="['tab', activeTab === 'tables' && 'tab-active']"
-          @click="activeTab = 'tables'"
-        >
-          <Icon icon="mdi:table-chair" width="18" height="18" />
-          Free Tables
-        </button>
-        <button
-          v-if="isSalon"
-          :class="['tab', activeTab === 'services' && 'tab-active']"
-          @click="activeTab = 'services'"
-        >
-          <Icon icon="mdi:content-cut" width="18" height="18" />
-          Services
-        </button>
-      </div>
+    <PreviewSection
+      :isSalon="isSalon"
+      :hasTableManagement="hasTableManagement"
+      :loading="loading"
+      :apiError="apiError"
+      v-model:activeTab="activeTab"
+      :menuItems="menuItems"
+      :tables="tables"
+      :services="services"
+      :addingToCart="addingToCart"
+      @addToCart="addToCart"
+      @reserve="goToReserve"
+    />
 
-      <div v-if="loading" class="preview-skeleton">
-        <div class="skeleton-grid">
-          <div v-for="n in 4" :key="n" class="skeleton-card">
-            <div class="skeleton-media"></div>
-            <div class="skeleton-body">
-              <div class="skeleton-line skeleton-title"></div>
-              <div class="skeleton-line skeleton-text"></div>
-              <div class="skeleton-line skeleton-text short"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div v-else-if="apiError" class="empty-state">
-        <p>
-          We couldn't load the latest menu and table info. Please try again
-          later.
-        </p>
-      </div>
-      <template v-else>
-        <div v-if="!isSalon && activeTab === 'menu'" class="menu-grid">
-          <div v-for="item in menuItems" :key="item.id" class="menu-card">
-            <div class="menu-card-media">
-              <img
-                :src="
-                  item.image ||
-                  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80'
-                "
-                :alt="item.name"
-                loading="lazy"
-              />
-              <div v-if="item.isAvailable === false" class="media-badge sold">
-                Sold out
-              </div>
-            </div>
-            <div class="menu-card-body">
-              <div class="menu-card-header">
-                <h3>{{ item.name }}</h3>
-                <span class="menu-price">{{ fmt(item.price) }}</span>
-              </div>
-              <p class="menu-card-desc">{{ item.description }}</p>
-              <div class="menu-card-footer">
-                <div class="dietary-chips">
-                  <span
-                    v-for="tag in dietaryTag(item)"
-                    :key="tag"
-                    class="dietary-chip"
-                  >
-                    {{ tag }}
-                  </span>
-                </div>
-                <button
-                  :class="['add-btn', addingToCart === item.id && 'adding']"
-                  :disabled="
-                    item.isAvailable === false || addingToCart === item.id
-                  "
-                  @click="addToCart(item)"
-                  :aria-label="'Add ' + item.name + ' to cart'"
-                >
-                  <Icon
-                    :icon="
-                      addingToCart === item.id ? 'mdi:check' : 'mdi:cart-plus'
-                    "
-                    width="18"
-                    height="18"
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+    <CtaStrip :isSalon="isSalon" @menu="goToMenu" @reserve="goToReserve" />
 
-        <div
-          v-else-if="isSalon && activeTab === 'services'"
-          class="services-grid"
-        >
-          <div v-for="svc in services" :key="svc.id" class="service-card">
-            <div class="service-card-body">
-              <h3>{{ svc.name }}</h3>
-              <p class="service-desc">{{ svc.description }}</p>
-              <div class="service-meta">
-                <span class="service-price">{{ fmt(svc.price) }}</span>
-                <span class="service-duration"
-                  >{{ svc.durationMinutes }} min</span
-                >
-              </div>
-              <p v-if="svc.depositAmount > 0" class="service-deposit">
-                Deposit: {{ fmt(svc.depositAmount) }}
-              </p>
-              <span v-if="svc.category" class="service-category">{{
-                svc.category.name
-              }}</span>
-            </div>
-            <button class="btn-book" @click="goToReserve()">Book Now</button>
-          </div>
-          <div v-if="!services.length" class="empty-state">
-            No services available right now.
-          </div>
-        </div>
-        <div v-else class="tables-grid">
-          <div v-for="table in tables" :key="table.id" class="table-card">
-            <div class="table-media">
-              <img
-                src="https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=600&q=80"
-                alt="Table"
-                loading="lazy"
-              />
-            </div>
-            <div class="table-body">
-              <div class="table-header">
-                <h3>{{ table.name || `Table ${table.id}` }}</h3>
-                <span class="table-capacity">{{ table.capacity }} seats</span>
-              </div>
-              <p class="table-section">{{ table.section || "Main" }}</p>
-              <button class="btn-reserve" @click="goToReserve()">
-                Reserve
-              </button>
-            </div>
-          </div>
-          <div v-if="!tables.length" class="empty-state">
-            No free tables right now. Check back soon.
-          </div>
-        </div>
-      </template>
-    </section>
+    <MarqueeStrip :isSalon="isSalon" />
 
-    <section class="cta-strip reveal-section">
-      <div class="cta-inner">
-        <div>
-          <h2 v-if="isSalon">Ready for your appointment?</h2>
-          <h2 v-else>Ready to dine?</h2>
-          <p v-if="isSalon">
-            Book your next haircut, color, or treatment online.
-          </p>
-          <p v-else>
-            Join 2,400+ guests who order and book with us every month.
-          </p>
-        </div>
-        <div class="cta-actions">
-          <button v-if="!isSalon" class="btn-primary-lg" @click="goToMenu">
-            Order Now
-          </button>
-          <button class="btn-secondary-lg" @click="goToReserve">
-            <span v-if="isSalon">Book Now</span>
-            <span v-else>Book Table</span>
-          </button>
-        </div>
-      </div>
-    </section>
+    <FeaturesStrip :isSalon="isSalon" />
 
-    <section class="marquee reveal-section" v-if="!isSalon">
-      <div class="marquee-track">
-        <span class="marquee-item">Instant Booking</span>
-        <span class="marquee-item">Paystack Payments</span>
-        <span class="marquee-item">WhatsApp Confirmations</span>
-        <span class="marquee-item">Mobile Money</span>
-        <span class="marquee-item">Salon &amp; Restaurant</span>
-        <span class="marquee-item">24/7 Support</span>
-        <span class="marquee-item">GHS Pricing</span>
-        <span class="marquee-item">Secure Checkout</span>
-      </div>
-    </section>
-
-    <section class="marquee reveal-section" v-else>
-      <div class="marquee-track">
-        <span class="marquee-item">MTN Mobile Money</span>
-        <span class="marquee-item">Vodafone Cash</span>
-        <span class="marquee-item">AirtelTigo Money</span>
-        <span class="marquee-item">Paystack</span>
-        <span class="marquee-item">Bank of Ghana</span>
-        <span class="marquee-item">WhatsApp Business</span>
-        <span class="marquee-item">Instant Booking</span>
-        <span class="marquee-item">GHS Pricing</span>
-      </div>
-    </section>
-
-    <section class="features-strip reveal-section">
-      <div class="bento" v-if="!isSalon">
-        <div class="bento-item b1">
-          <div class="feature-icon">
-            <Icon icon="mdi:clock-fast" width="28" height="28" />
-          </div>
-          <h3>Quick Checkout</h3>
-          <p>Save time with saved preferences and quick reorder.</p>
-        </div>
-        <div class="bento-item b2">
-          <div class="feature-icon">
-            <Icon icon="mdi:whatsapp" width="28" height="28" />
-          </div>
-          <h3>WhatsApp Confirmations</h3>
-          <p>Get instant updates on your order and reservation.</p>
-        </div>
-        <div class="bento-item b3">
-          <div class="feature-icon">
-            <Icon icon="mdi:shield-check" width="28" height="28" />
-          </div>
-          <h3>Secure Payments</h3>
-          <p>Pay with Mobile Money, card, or cash — GHS pricing.</p>
-        </div>
-        <div class="bento-item b4">
-          <div class="feature-icon">
-            <Icon icon="mdi:account-group" width="28" height="28" />
-          </div>
-          <h3>Salon Profiles</h3>
-          <p>Client histories, preferences, and visit tracking.</p>
-        </div>
-        <div class="bento-item b5">
-          <div class="feature-icon">
-            <Icon icon="mdi:calendar-clock" width="28" height="28" />
-          </div>
-          <h3>Smart Scheduling</h3>
-          <p>Double-booking guards, buffer times, and reminders.</p>
-        </div>
-        <div class="bento-item b6">
-          <div class="feature-icon">
-            <Icon icon="mdi:chart-bar" width="28" height="28" />
-          </div>
-          <h3>Reports &amp; Insights</h3>
-          <p>Revenue by service, top stylists, and peak hours.</p>
-        </div>
-      </div>
-
-      <div class="bento salon-bento" v-else>
-        <div class="bento-item b1">
-          <div class="feature-icon">
-            <Icon icon="mdi:whatsapp" width="28" height="28" />
-          </div>
-          <h3>WhatsApp Booking Bot</h3>
-          <p>
-            Clients book by chatting your salon number. The bot checks
-            availability live, confirms the slot, and asks for payment — no app,
-            no logins, no friction.
-          </p>
-        </div>
-        <div class="bento-item b2">
-          <div class="feature-icon">
-            <Icon icon="mdi:cellphone" width="28" height="28" />
-          </div>
-          <h3>Mobile Money Payments</h3>
-          <p>
-            Send Paystack payment links right inside WhatsApp. MTN, Vodafone,
-            AirtelTigo — clients pay in taps, you get instant confirmation.
-          </p>
-        </div>
-        <div class="bento-item b3">
-          <div class="feature-icon">
-            <Icon icon="mdi:calendar-check" width="28" height="28" />
-          </div>
-          <h3>Smart Appointments</h3>
-          <p>
-            Book by service, stylist, or station. Conflict detection, deposits,
-            and automatic reminders keep your chairs full and calendar clean.
-          </p>
-        </div>
-        <div class="bento-item b4">
-          <div class="feature-icon">
-            <Icon icon="mdi:content-cut" width="28" height="28" />
-          </div>
-          <h3>Service Catalog</h3>
-          <p>
-            Prices, durations, deposits, assigned stylists, and station
-            requirements.
-          </p>
-        </div>
-        <div class="bento-item b5">
-          <div class="feature-icon">
-            <Icon icon="mdi:account-star" width="28" height="28" />
-          </div>
-          <h3>Client Profiles</h3>
-          <p>
-            Every visit, preference, hair type, and payment method in one
-            record.
-          </p>
-        </div>
-        <div class="bento-item b6">
-          <div class="feature-icon">
-            <Icon icon="mdi:chart-bar" width="28" height="28" />
-          </div>
-          <h3>Reports &amp; Insights</h3>
-          <p>
-            Revenue by service, top stylists, peak hours, and client lifetime
-            value.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <footer class="landing-footer">
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <Icon icon="mdi:silverware-fork-knife" width="24" height="24" />
-          <span>Vibespot</span>
-        </div>
-        <p class="footer-text">
-          Restaurant Table Reservation System by Vibespot Technologies Ltd.
-        </p>
-        <p class="footer-copy">&copy; 2026 All rights reserved.</p>
+    <LandingFooter>
+      <template #admin-link>
         <button
           v-if="
             isAuthenticated &&
@@ -658,8 +239,8 @@ onMounted(() => {
           <Icon icon="mdi:cog" width="14" height="14" />
           Staff / Admin
         </button>
-      </div>
-    </footer>
+      </template>
+    </LandingFooter>
 
     <Transition name="cart-fly">
       <button

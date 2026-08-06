@@ -144,13 +144,13 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
   }
 
   if (user.isSuperAdmin) {
-    if (!user.totpEnabled) {
+    if (!user.totpEnabled && process.env.NODE_ENV !== "development") {
       throw {
         status: 403,
         message: "Super admin accounts require two-factor authentication. Please contact another super admin to enable TOTP.",
       };
     }
-    if (!user.totpConfirmed) {
+    if (!user.totpConfirmed && user.totpEnabled) {
       const tempToken = jwt.sign(
         { userId: user.id, role: user.role, purpose: "totp_verification" },
         JWT_SECRET,

@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "defaultStylistId",
         as: "defaultStylist",
       });
+      Service.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
       Service.hasMany(models.appointment, {
         foreignKey: "serviceId",
         as: "appointments",
@@ -77,6 +81,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: true,
+      },
+      locationId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
       },
     },
     {

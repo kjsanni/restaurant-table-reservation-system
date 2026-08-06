@@ -5,10 +5,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 
 const attachTenantHeader = (config) => {
   const authStore = useAuthStore();
-  if (
-    import.meta.env.VITE_TENANT_MODE === "enabled" &&
-    authStore.currentTenant
-  ) {
+  if (authStore.currentTenant) {
     config.headers["X-Tenant-Id"] = authStore.currentTenant.id;
   }
   return config;

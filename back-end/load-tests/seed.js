@@ -29,9 +29,8 @@ const bcrypt = require("bcryptjs");
 const db = require("../src/db/models");
 const cfg = require("./config");
 
-// The tenant model lives under tenant-platform and is only attached to `db` at
-// runtime when TENANT_MODE loads it. Register it here so seeding works
-// regardless of the server's TENANT_MODE flag.
+// The tenant model is loaded at startup as part of the always-on multi-tenant
+// platform. Register it here as a fallback so seeding works regardless.
 if (!db.tenant) {
   const { DataTypes } = require("sequelize");
   db.tenant = require("../src/tenant-platform/models/tenant")(db.sequelize, DataTypes);
@@ -213,7 +212,7 @@ async function seed() {
   console.log(`\nWrote tenant manifest -> ${manifestPath}`);
 
   // Also provision a single-tenant baseline admin on tenant 1 (existing default
-  // tenant) so `loadtest:baseline` can run against a TENANT_MODE=disabled server.
+   // tenant) so `loadtest:baseline` can run against a non-isolated baseline server.
   const baselineEmail = "loadbaseline@rtrs.com";
   let baseAdmin = await db.user.findOne({ where: { tenantId: 1, email: baselineEmail } });
   if (!baseAdmin) {

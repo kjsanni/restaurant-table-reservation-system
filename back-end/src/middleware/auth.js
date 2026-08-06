@@ -1,5 +1,6 @@
 const { verifyToken } = require("../services/authService");
 const authDAO = require("../DAOs/auth.dao");
+const { isNoTenantRequired } = require("./noTenantPaths");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 
 const protect = async (req, res, next) => {
@@ -46,11 +47,7 @@ const protect = async (req, res, next) => {
 
     req.user = user;
 
-    // Tenant isolation: override whatever resolveTenant set from client
-    // headers with the tenant from the authenticated user's JWT. This makes
-    // x-tenant-id spoofing harmless — the DB lookup still happens in
-    // resolveTenant, but the result is never exposed to controllers.
-    if (process.env.TENANT_MODE === "enabled" && user.tenantId) {
+    if (user.tenantId) {
       try {
         const db = require("../db/models");
         const tenant = await db.tenant.findByPk(user.tenantId);
@@ -69,26 +66,8 @@ const protect = async (req, res, next) => {
           message: "Failed to resolve tenant.",
         });
       }
-    } else if (process.env.TENANT_MODE === "enabled" && !user.tenantId) {
-      // Super-admin / platform user: allow tenant-scoped routes without a
-      // tenant, but only if resolveTenant was explicitly bypassed (platform
-      // admin paths). If resolveTenant set one from a spoofed header, clear it.
-      // NOTE: This allowlist must be kept in sync with resolveTenant.js and
-      // tenantStatus.js NO_TENANT_REQUIRED_PATHS. Omitting a path here will
-      // incorrectly block platform admin access to that route.
-      const adminPathPrefixes = [
-        "/api/v1/admin/tenants",
-        "/api/v1/admin/plans",
-        "/api/v1/admin/payments",
-        "/api/v1/admin/usage",
-        "/api/v1/admin/revenue",
-        "/api/v1/admin/bulk",
-        "/api/v1/admin/billing-emails",
-        "/api/v1/admin/audit",
-        "/api/v1/admin/notifications",
-      ];
-      const isAdminPath = adminPathPrefixes.some((prefix) => req.path === prefix || req.path.startsWith(prefix + "/"));
-      if (req.tenant && !isAdminPath) {
+    } else {
+      if (req.tenant && !isNoTenantRequired(req.path)) {
         req.tenant = null;
       }
     }

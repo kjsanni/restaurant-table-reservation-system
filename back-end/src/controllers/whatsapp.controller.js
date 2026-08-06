@@ -96,7 +96,7 @@ const resolveTenantId = async (metadata) => {
       where: { key: "whatsapp_config" },
     });
     if (setting && setting.value) {
-      const cfg = typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
+      const cfg = require("../../utils/settings").normalizeSettingValue(setting.value);
       if (cfg.phoneNumberId === metadata.phone_number_id) {
         return cfg.tenantId || null;
       }

@@ -25,7 +25,7 @@ const updateSplits = async (reservationId, id, splits, tenantId) => {
   if (!payment) return null;
   const totalSplit = (splits || []).reduce((sum, split) => sum + parseFloat(split.amount || 0), 0);
   const allowedTotal = parseFloat(payment.amount || 0);
-  if (totalSplit > allowedTotal + 0.001 || totalSplit < allowedTotal - 0.001) {
+  if (totalSplit > allowedTotal + 0.01 || totalSplit < allowedTotal - 0.01) {
     throw { status: 400, message: `Split amounts must sum to the payment amount (${allowedTotal.toFixed(2)}).` };
   }
   await payment.update({ splits: splits || [] });
@@ -57,11 +57,11 @@ const getPaymentHistory = async (filters = {}, tenantId, pagination = {}) => {
   const where = withTenant({}, tenantId);
   if (filters.reservationId) where.reservationId = filters.reservationId;
   if (filters.method) where.method = filters.method;
-  if (filters.from) where.paidAt = { ...where.paidAt, [Op.gte]: filters.from };
-  if (filters.to) where.paidAt = { ...where.paidAt, [Op.lte]: filters.to };
+  if (filters.from) where.paidAt = { ...(where.paidAt && typeof where.paidAt === "object" ? where.paidAt : {}), [Op.gte]: filters.from };
+  if (filters.to) where.paidAt = { ...(where.paidAt && typeof where.paidAt === "object" ? where.paidAt : {}), [Op.lte]: filters.to };
 
   const limit = pagination.limit ? parseInt(pagination.limit, 10) : undefined;
-  const offset = pagination.offset != null ? parseInt(pagination.offset, 10) : undefined;
+  const offset = pagination.offset !== null && pagination.offset !== undefined ? parseInt(pagination.offset, 10) : undefined;
 
   const { rows, count } = await Payment.findAndCountAll({
     where,
@@ -79,7 +79,7 @@ const getPaymentHistory = async (filters = {}, tenantId, pagination = {}) => {
   return {
     collection: rows,
     total: count,
-    page: limit && offset != null ? Math.floor(offset / limit) + 1 : undefined,
+    page: limit && offset !== null && offset !== undefined ? Math.floor(offset / limit) + 1 : undefined,
     pageSize: limit,
     totalPages: limit ? Math.ceil(count / limit) : undefined,
   };

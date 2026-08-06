@@ -31,6 +31,7 @@ const shouldShow = (item: {
   requiresAdmin?: boolean;
   requiresPermission?: string;
   requiresFeature?: string;
+  requiresServiceMode?: string;
   requiresVertical?: string;
 }) => {
   if (item.requiresAuth && !isAuthenticated.value) return false;
@@ -44,6 +45,12 @@ const shouldShow = (item: {
   if (
     item.requiresFeature &&
     !capabilities.value?.featureFlags?.[item.requiresFeature]
+  ) {
+    return false;
+  }
+  if (
+    item.requiresServiceMode &&
+    !capabilities.value?.serviceModes?.includes(item.requiresServiceMode)
   ) {
     return false;
   }
@@ -196,11 +203,8 @@ onUnmounted(() => {
         <div class="tl-topbar-right">
           <LocaleSwitcher />
           <TenantSwitcher
-            v-if="
-              user?.permissions?.manage_tenants && authStore.tenantModeEnabled
-            "
+            v-if="user?.permissions?.manage_tenants"
             :modelValue="authStore.currentTenant?.id || ''"
-            @update:modelValue="authStore.setTenant"
           />
           <div v-if="user" class="tl-user-chip">
             {{ user.username?.charAt(0)?.toUpperCase() }}
@@ -210,7 +214,13 @@ onUnmounted(() => {
 
       <main class="tl-content">
         <RouterView v-slot="{ Component }">
-          <component v-if="Component" :is="Component" :key="$route.name" />
+          <Transition name="tl-fade" mode="out-in">
+            <component
+              v-if="Component"
+              :is="Component"
+              :key="`${$route.name}-${authStore.currentTenant?.id ?? 'platform'}`"
+            />
+          </Transition>
         </RouterView>
       </main>
 
@@ -371,7 +381,7 @@ onUnmounted(() => {
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.75) !important;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -384,17 +394,18 @@ onUnmounted(() => {
 
 .tl-nav-item:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: white;
+  color: white !important;
 }
 
 .tl-nav-item-active {
   background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
-  color: white;
+  color: white !important;
   box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25);
 }
 
 .tl-nav-text {
   white-space: nowrap;
+  color: #ffffff !important;
 }
 
 .tl-sidebar-bottom {
@@ -408,7 +419,7 @@ onUnmounted(() => {
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.6) !important;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -420,7 +431,7 @@ onUnmounted(() => {
 
 .tl-logout-item:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: white;
+  color: white !important;
 }
 
 .tl-main {
@@ -578,5 +589,15 @@ onUnmounted(() => {
   .tl-content {
     padding: var(--space-6) var(--space-4);
   }
+}
+
+.tl-fade-enter-active,
+.tl-fade-leave-active {
+  transition: opacity 0.2s var(--ease-in-out);
+}
+
+.tl-fade-enter-from,
+.tl-fade-leave-to {
+  opacity: 0;
 }
 </style>

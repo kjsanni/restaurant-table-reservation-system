@@ -101,9 +101,35 @@ The third layer "Data Access Layer" handles all logic which accomplishes communi
 
 ##### Example cURL
 > ```javascript
->  curl -i -H 'Accept: text/html' http://localhost:5000/api/v1/
+>  curl -X POST http://localhost:5000/api/v1/reservations -d @filename
 > ```
 </details>
+
+## Development
+
+### Canonical startup
+
+```bash
+# Backend only (nodemon with auto-reload)
+npm run start:dev
+
+# Frontend only
+cd ../front-end && npm run dev
+
+# Both together
+npm run app:dev
+```
+
+### Restart backend
+
+```bash
+# Kill stale processes and restart with nodemon
+npm run restart:backend
+# or directly:
+bash scripts/restart-backend.sh
+```
+
+> **Note:** Always use `npm run start:dev` (nodemon) for backend development. Direct `node ./src/app.js` bypasses auto-reload and can leave stale processes on port 8000.
 
 #### API Info
 

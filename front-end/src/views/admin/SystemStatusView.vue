@@ -75,7 +75,7 @@ const load = async () => {
       { name: "Memory", status: envInfo.value.checks?.memory || "unknown" },
     ];
     const statuses = checks.value.map((c) => c.status);
-    if (statuses.every((s) => s === "healthy" || s === "unavailable")) {
+    if (statuses.every((s) => s === "healthy")) {
       overallStatus.value = "Operational";
     } else if (statuses.some((s) => s === "degraded" || s === "warning")) {
       overallStatus.value = "Degraded";

@@ -3,10 +3,11 @@ const authDAO = require("../DAOs/auth.dao");
 const roleDAO = require("../DAOs/role.dao");
 const { applyTypeDefaults, TYPE_DEFAULTS } = require("../tenant-platform/services/tenantTypeDefaults.service");
 const customerService = require("../services/customerService");
+const db = require("../db/models");
 
 const registerCustomerHandler = async (req, res) => {
   try {
-    const { email, password, firstName, lastName, phone } = req.body;
+    const { email, password, firstName, lastName, phone, tenantSlug } = req.body;
 
     if (!email || !password || !firstName || !lastName || !phone) {
       return res.status(400).json({
@@ -15,7 +16,22 @@ const registerCustomerHandler = async (req, res) => {
       });
     }
 
-    const existing = await authDAO.findUserByEmail(email, req.tenant?.id);
+    let tenantId = req.tenant?.id;
+    if (!tenantId && tenantSlug) {
+      const tenant = await db.tenant.findOne({
+        where: { slug: tenantSlug },
+        attributes: ["id"],
+      });
+      if (!tenant) {
+        return res.status(404).json({
+          success: false,
+          message: "Tenant not found.",
+        });
+      }
+      tenantId = tenant.id;
+    }
+
+    const existing = await authDAO.findUserByEmail(email, tenantId);
     if (existing) {
       return res.status(409).json({
         success: false,
@@ -29,18 +45,18 @@ const registerCustomerHandler = async (req, res) => {
       username,
       email,
       password,
-    }, req.tenant?.id, "customer");
+    }, tenantId, "customer");
 
     await customerService.findOrCreateCustomer(
       { firstName, lastName, email, phone },
-      req.tenant?.id
+      tenantId
     );
 
     const token = authService.generateToken(user.id, user.role);
     const refreshToken = authService.generateRefreshToken();
 
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    await authDAO.createRefreshToken(user.id, refreshToken, expiresAt, req.tenant?.id);
+    await authDAO.createRefreshToken(user.id, refreshToken, expiresAt, tenantId);
 
     const isSecure = req.secure || false;
     const cookieBase = {
@@ -123,6 +139,7 @@ const registerHandler = async (req, res) => {
 const loginHandler = async (req, res) => {
   const payload = req.body;
   const ipAddress = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;
+  // authDAO implements both userDAO and refreshTokenDAO interfaces
   const result = await authService.loginUser(authDAO, payload, req.tenant?.id, authDAO, ipAddress);
 
   if (result.pendingTOTP) {
@@ -509,7 +526,7 @@ const updateSettingsHandler = async (req, res) => {
       const { resetTenantModeCache } = require("../tenant-platform/utils/tenantMode");
       resetTenantModeCache();
     } catch {
-      // module not loaded when TENANT_MODE off; ignore
+      // ignore
     }
   }
   return res.status(200).json({

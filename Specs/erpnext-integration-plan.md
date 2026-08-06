@@ -259,7 +259,7 @@ back-end/src/integrations/erpnext/
 
 | Dependency | Status | Notes |
 |------------|--------|-------|
-| `TENANT_MODE` + `resolveTenant` | ✅ Existing | All ERPNext sync jobs are tenant-scoped |
+| `resolveTenant` | ✅ Existing | All ERPNext sync jobs are tenant-scoped |
 | `tenant.settings.featureFlags` | ✅ Existing | ERPNext modules stored as boolean flags |
 | Super-admin feature flag UI | ✅ Existing | `FeatureFlagsView.vue` + `TenantDetailView.vue` |
 | Plan system | ✅ Existing | `subscriptionPlan` + `tenantSubscription.service.js` |

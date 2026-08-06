@@ -2,10 +2,10 @@
 
 const express = require("express");
 const router = express.Router();
-const tryCatchHandler = require("../../middleware/tryCatch");
-const httpMethodError = require("../../middleware/httpMethodError");
-const { protect, requireSuperAdmin } = require("../../middleware/auth");
-const erpnextController = require("../controllers/erpnext.controller");
+const tryCatchHandler = require("../../../middleware/tryCatch");
+const httpMethodError = require("../../../middleware/httpMethodError");
+const { protect, requireSuperAdmin } = require("../../../middleware/auth");
+const erpnextController = require("../../../tenant-platform/controllers/erpnext.controller");
 
 router
   .route("/tenants")

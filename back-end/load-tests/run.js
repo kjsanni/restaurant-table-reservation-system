@@ -17,7 +17,7 @@
  *   node load-tests/run.js --scenario mixed_read --connections 50 --duration 20 --sessions 100
  *   node load-tests/run.js --scenario all --label baseline
  *
- * Env: LOAD_BASE_URL, LOAD_TENANT_MODE (label only), etc. (see config.js)
+ * Env: LOAD_BASE_URL, LOAD_MODE (label only; system is always multi-tenant), etc. (see config.js)
  */
 
 const fs = require("fs");
@@ -39,7 +39,7 @@ const SCENARIO = arg("scenario", "mixed_read");
 const CONNECTIONS = parseInt(arg("connections", cfg.CONNECTIONS), 10);
 const DURATION = parseInt(arg("duration", cfg.DURATION), 10);
 const SESSIONS = parseInt(arg("sessions", "50"), 10);
-const LABEL = arg("label", cfg.TENANT_MODE);
+const LABEL = arg("label", cfg.MODE);
 const USE_TENANT_HEADER = arg("tenantHeader", "true") !== "false";
 const WRITE_RESULTS = arg("out", "true") !== "false";
 
@@ -252,7 +252,7 @@ async function main() {
 
   const report = {
     label: LABEL,
-    tenant_mode: cfg.TENANT_MODE,
+    mode: cfg.MODE,
     base_url: cfg.BASE_URL,
     tenant_header: USE_TENANT_HEADER,
     sessions: sessions.length,

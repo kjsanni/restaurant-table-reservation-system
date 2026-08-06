@@ -1,171 +1,197 @@
-<script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useAuthStore } from "@/stores/auth";
-import erpnextAPI from "@/services/erpnextAPI";
-import { useTenantBranding } from "@/composables/useTenantBranding";
+<template>
+  <ErpnextBaseView
+    title="ERPNext Staff Records"
+    subtitle="Employee directory, attendance, and payroll"
+    :tabs="tabs"
+    v-model:activeTab="activeTab"
+    :loading="loading"
+    :error="error"
+    loading-text="Loading staff data..."
+    @retry="loadCurrentTab"
+  >
+    <template #tab-content="{ activeTab }">
+      <div v-if="activeTab === 'employees'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Employees</h3>
+          <div class="filters">
+            <input
+              v-model="empSearch"
+              type="search"
+              placeholder="Search employees..."
+              class="form-input"
+            />
+            <button class="btn-secondary" @click="loadEmployees">Search</button>
+          </div>
+        </div>
+        <div v-if="employees.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="emp in employees" :key="emp.name">
+                <td>{{ emp.employee_name }}</td>
+                <td>{{ emp.company_email || emp.personal_email }}</td>
+                <td>{{ emp.department }}</td>
+                <td>{{ emp.designation }}</td>
+                <td>{{ emp.status }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No employees found.</div>
+      </div>
 
-const authStore = useAuthStore();
-const { branding } = useTenantBranding();
+      <div v-if="activeTab === 'attendance'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Attendance</h3>
+          <div class="filters">
+            <input v-model="attFrom" type="date" class="form-input" />
+            <span class="filter-sep">to</span>
+            <input v-model="attTo" type="date" class="form-input" />
+            <button class="btn-secondary" @click="loadAttendance">Apply</button>
+          </div>
+        </div>
+        <div v-if="attendance.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Hours</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in attendance" :key="row.name">
+                <td>{{ row.employee_name }}</td>
+                <td>{{ row.attendance_date }}</td>
+                <td>{{ row.status }}</td>
+                <td>{{ row.working_hours }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No attendance records found.</div>
+      </div>
+
+      <div v-if="activeTab === 'payroll'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Payroll</h3>
+          <div class="filters">
+            <input v-model="payFrom" type="date" class="form-input" />
+            <span class="filter-sep">to</span>
+            <input v-model="payTo" type="date" class="form-input" />
+            <button class="btn-secondary" @click="loadPayroll">Apply</button>
+          </div>
+        </div>
+        <div v-if="payroll.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Period</th>
+                <th>Gross Pay</th>
+                <th>Net Pay</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in payroll" :key="row.name">
+                <td>{{ row.employee_name }}</td>
+                <td>{{ row.start_date }} → {{ row.end_date }}</td>
+                <td>{{ row.gross_pay }}</td>
+                <td>{{ row.net_pay }}</td>
+                <td>{{ row.status }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No payroll records found.</div>
+      </div>
+    </template>
+  </ErpnextBaseView>
+</template>
+
+<script setup>
+import { ref, onMounted } from "vue";
+import erpnextAPI from "@/services/erpnextAPI";
+import ErpnextBaseView from "@/components/erpnext/ErpnextBaseView.vue";
+import "@/components/erpnext/erpnext-view-shared.css";
 
 const loading = ref(true);
-const error = ref<string | null>(null);
-const employees = ref<any[]>([]);
-const lowStaffCount = ref(0);
+const error = ref(null);
+const activeTab = ref("employees");
 
-const tenant = computed(() => authStore.currentTenant);
-const isHrEnabled = computed(() => {
-  const flags = tenant.value?.settings?.featureFlags || {};
-  return !!flags.erpnext_hr;
-});
+const empSearch = ref("");
+const employees = ref([]);
+
+const attFrom = ref("");
+const attTo = ref("");
+const attendance = ref([]);
+
+const payFrom = ref("");
+const payTo = ref("");
+const payroll = ref([]);
+
+const tabs = [
+  { key: "employees", label: "Employees" },
+  { key: "attendance", label: "Attendance" },
+  { key: "payroll", label: "Payroll" },
+];
 
 const loadEmployees = async () => {
   try {
-    const result = await erpnextAPI.getHrEmployees();
-    employees.value = result.data?.data || [];
-    lowStaffCount.value = employees.value.filter(
-      (e) => e.status === "Active"
-    ).length;
-  } catch (err: any) {
-    error.value = err.message || "Failed to load HR data";
-  } finally {
-    loading.value = false;
+    const params = {};
+    if (empSearch.value) params.search = empSearch.value;
+    const res = await erpnextAPI.getHrEmployees(params);
+    employees.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load employees";
   }
 };
 
-const syncEmployees = async () => {
+const loadAttendance = async () => {
   try {
-    await erpnextAPI.syncEmployees();
-    await loadEmployees();
-  } catch (err: any) {
-    error.value = err.message || "Failed to sync employees";
+    const params = {};
+    if (attFrom.value) params.from = attFrom.value;
+    if (attTo.value) params.to = attTo.value;
+    const res = await erpnextAPI.getHrAttendance(params);
+    attendance.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load attendance";
   }
 };
 
-onMounted(() => {
-  if (!isHrEnabled.value) return;
-  loadEmployees();
+const loadPayroll = async () => {
+  try {
+    const params = {};
+    if (payFrom.value) params.from = payFrom.value;
+    if (payTo.value) params.to = payTo.value;
+    const res = await erpnextAPI.getHrPayroll(params);
+    payroll.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load payroll";
+  }
+};
+
+const loadCurrentTab = async () => {
+  error.value = null;
+  if (activeTab.value === "employees") await loadEmployees();
+  else if (activeTab.value === "attendance") await loadAttendance();
+  else if (activeTab.value === "payroll") await loadPayroll();
+};
+
+onMounted(async () => {
+  loading.value = true;
+  error.value = null;
+  await Promise.all([loadEmployees(), loadAttendance(), loadPayroll()]);
+  loading.value = false;
 });
 </script>
-
-<template>
-  <div v-if="!isHrEnabled" class="erpnext-disabled">
-    <p>ERPNext HR is not enabled for this tenant.</p>
-  </div>
-
-  <div v-else-if="loading" class="erpnext-loading">
-    <p>Loading HR data...</p>
-  </div>
-
-  <div v-else-if="error" class="erpnext-error">
-    <p>{{ error }}</p>
-    <button @click="loadEmployees">Retry</button>
-  </div>
-
-  <div v-else class="erpnext-employees">
-    <h2>Staff Records</h2>
-
-    <div class="erpnext-summary-cards">
-      <div class="erpnext-card">
-        <h3>Total Staff</h3>
-        <p class="erpnext-stat">{{ employees.length }}</p>
-      </div>
-      <div class="erpnext-card">
-        <h3>Active</h3>
-        <p class="erpnext-stat">{{ lowStaffCount }}</p>
-      </div>
-    </div>
-
-    <div class="erpnext-actions">
-      <button @click="syncEmployees">Sync Staff</button>
-    </div>
-
-    <h3>Employees</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Department</th>
-          <th>Designation</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="emp in employees" :key="emp.name">
-          <td>{{ emp.employee_name }}</td>
-          <td>{{ emp.department }}</td>
-          <td>{{ emp.designation }}</td>
-          <td>{{ emp.status }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</template>
-
-<style scoped>
-.erpnext-employees {
-  padding: var(--space-lg);
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.erpnext-summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
-}
-
-.erpnext-stat {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--brand-600);
-}
-
-.erpnext-actions {
-  display: flex;
-  gap: var(--space-sm);
-  margin-top: var(--space-md);
-  margin-bottom: var(--space-lg);
-}
-
-.erpnext-actions button {
-  padding: var(--space-sm) var(--space-md);
-  background: var(--brand-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.erpnext-disabled,
-.erpnext-loading,
-.erpnext-error {
-  padding: var(--space-xl);
-  text-align: center;
-  color: var(--text-secondary);
-}
-
-.erpnext-error {
-  color: var(--error);
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: var(--space-sm) var(--space-md);
-  text-align: left;
-  border-bottom: 1px solid var(--brand-200);
-}
-
-th {
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-</style>

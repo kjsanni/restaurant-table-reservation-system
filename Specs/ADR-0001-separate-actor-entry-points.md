@@ -25,7 +25,7 @@ The platform must support **professional white-labeling** for restaurant and sal
 
 Existing code already establishes:
 - Tenant branding via CSS variables in `front-end/src/composables/useTenantBranding.js`.
-- Multi-tenant backend gated behind `TENANT_MODE=enabled` under `back-end/src/tenant-platform/`.
+- Multi-tenant backend under `back-end/src/tenant-platform/`, with restaurant and salon as vertical modules under `back-end/src/verticals/`.
 - Rejection of separate repo/microservice architecture for tenant platform code.
 
 ## Decision
@@ -78,7 +78,7 @@ Adopt a **three-entry-point strategy** within the existing monolith, implemented
 ### Alternative: Full microservice/port separation from day one
 
 - **ALT-003**: **Description**: Three independent frontend apps, separate backend gateways, and separate auth flows.
-- **ALT-004**: **Rejection Reason**: Rejected by existing project guidance: multi-tenant and billing code stays in one backend under `TENANT_MODE=enabled`. Separate microservices would duplicate code, complicate shared-session handling, and provide no white-label benefit over a well-structured monolith with actor-scoped entry points.
+- **ALT-004**: **Rejection Reason**: Rejected by existing project guidance: multi-tenant and billing code stays in one backend. Separate microservices would duplicate code, complicate shared-session handling, and provide no white-label benefit over a well-structured monolith with actor-scoped entry points.
 
 ### Alternative: Subdomain-only routing (no path-based tenant routes)
 
@@ -101,6 +101,6 @@ Adopt a **three-entry-point strategy** within the existing monolith, implemented
 - **REF-002**: `front-end/src/views/admin/SuperAdminOverviewView.vue` — super admin landing page.
 - **REF-003**: `front-end/src/views/TenantDashboardView.vue` — tenant dashboard view.
 - **REF-004**: `front-end/src/composables/useTenantBranding.js` — existing CSS-variable white-label mechanism.
-- **REF-005**: `back-end/src/tenant-platform/` — multi-tenant backend module gated by `TENANT_MODE=enabled`.
+- **REF-005**: `back-end/src/tenant-platform/` — multi-tenant backend module.
 - **REF-006**: `.kilo/skills/restaurant-rbac` — RBAC rules and permission names.
 - **REF-007**: `front-end/src/config/sidebarItems.ts` — sidebar items gated by `tenantOnly`, `requiresAdmin`, and `requiresPermission`.

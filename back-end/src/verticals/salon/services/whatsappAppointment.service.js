@@ -10,6 +10,7 @@ const messageTemplates = require("../../../services/messageTemplates.service");
 const { withRetry } = require("../../../utils/retry");
 const whatsappService = require("../../../services/whatsapp.service");
 const db = require("../../../db/models");
+const { normalizeSettingValue } = require("../../../utils/settings");
 
 const SESSION_PREFIX = "whatsapp:salon:session:";
 const SESSION_TTL = 60 * 60 * 24;
@@ -18,7 +19,7 @@ const getSalonPaymentConfig = async (tenantId) => {
   try {
     const setting = await db.setting.findOne({ where: { key: "salon_payment_config", tenantId } });
     if (setting && setting.value) {
-      return typeof setting.value === "string" ? JSON.parse(setting.value) : setting.value;
+      return normalizeSettingValue(setting.value);
     }
   } catch {
     // ignore parse errors

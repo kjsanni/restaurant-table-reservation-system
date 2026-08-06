@@ -14,5 +14,11 @@ RUN npm run build
 FROM nginx:alpine AS runner
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY front-end/nginx.conf /etc/nginx/conf.d/default.conf
+RUN chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/log/nginx && \
+    chmod -R 755 /usr/share/nginx/html
+RUN apk add --no-cache curl
+USER nginx
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/ || exit 1
 CMD ["nginx", "-g", "daemon off;"]

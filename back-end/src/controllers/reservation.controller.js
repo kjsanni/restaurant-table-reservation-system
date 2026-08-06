@@ -44,9 +44,9 @@ const getAllHandler = async (req, res) => {
 
   const result = await reservationService.getAllReservations(
     reservationDAO,
+    req.tenant?.id,
     filters,
-    pagination,
-    req.tenant?.id
+    pagination
   );
 
   const response = { success: true };
@@ -368,7 +368,7 @@ const getRevenueTimeSeriesHandler = async (req, res) => {
       message: "Invalid granularity. Use 'day', 'week', or 'month'.",
     });
   }
-  const data = await reservationService.getRevenueTimeSeries(from, to, granularity, req.tenant?.id);
+  const data = await reservationService.getRevenueTimeSeries(from, to, req.tenant?.id, granularity);
   return res.status(200).json({ success: true, ...data });
 };
 

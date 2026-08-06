@@ -65,6 +65,29 @@
             ? "Accepted"
             : "Pending"
         }}</span>
+        <div
+          v-if="step.gatewayMode && editingGateway === idx"
+          class="gateway-editor"
+        >
+          <GatewayConfigCard
+            :tenant-id="tenantId"
+            :title="
+              step.title.includes('Payment')
+                ? 'Payment Gateway'
+                : 'Delivery API'
+            "
+            :description="step.description"
+            :mode="step.gatewayMode"
+            @save="(payload) => onGatewaySave(idx, payload)"
+          />
+          <button
+            class="btn-secondary"
+            :disabled="gatewaySaving"
+            @click="editingGateway = null"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
     <p v-if="missingRequired.length" class="required-note">
@@ -80,12 +103,14 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { Icon } from "@iconify/vue";
 import { useToastStore } from "@/stores/toast";
 import logger from "@/utils/logger";
 import onboardingAPI from "@/services/onboardingAPI";
 import legalAcceptanceAPI, {
   LEGAL_DOCUMENT_VERSIONS,
 } from "@/services/legalAcceptanceAPI";
+import GatewayConfigCard from "@/components/admin/GatewayConfigCard.vue";
 
 const toastStore = useToastStore();
 
@@ -95,8 +120,15 @@ const tenantId = route.params.id;
 // Required policy steps are driven by the immutable server-side acceptance
 // record (versioned, with IP + timestamp) — not by a local checkbox.
 const REQUIRED_POLICY_SLUGS = ["tenant", "dpa"];
-const acceptances = ref({}); // slug -> { version, acceptedAt, ipAddress }
+const acceptances = ref({});
 const accepting = ref(false);
+const editingGateway = ref(null);
+const gatewaySaving = ref(false);
+
+const isGatewayConfigured = (step) => {
+  if (!step.gatewayMode) return step.done;
+  return step.gatewayMode === "own";
+};
 
 const steps = ref([
   {
@@ -141,6 +173,24 @@ const steps = ref([
     required: true,
     policySlug: "dpa",
     links: [{ slug: "dpa", label: "Read Data Processing Agreement" }],
+  },
+  {
+    title: "Connect Payment Gateway (Optional)",
+    description:
+      "Use Vibespot's Paystack account or connect your own Paystack keys for direct settlements.",
+    done: false,
+    optional: true,
+    step: 8,
+    gatewayMode: "platform",
+  },
+  {
+    title: "Connect Delivery API (Optional)",
+    description:
+      "Use Vibespot's ShaQ Express account or connect your own delivery credentials.",
+    done: false,
+    optional: true,
+    step: 9,
+    gatewayMode: "platform",
   },
 ]);
 
@@ -191,13 +241,36 @@ const loadAcceptances = async () => {
 const toggleStep = (idx) => {
   const step = steps.value[idx];
   if (step.policySlug) {
-    // toggling a required policy on records the acceptance server-side
     if (!policyAccepted(step.policySlug)) {
       acceptPolicy(step.policySlug);
     }
     return;
   }
+  if (step.gatewayMode) {
+    editingGateway.value = idx;
+    return;
+  }
   steps.value[idx].done = !steps.value[idx].done;
+};
+
+const onGatewaySave = async (idx, payload) => {
+  const step = steps.value[idx];
+  gatewaySaving.value = true;
+  try {
+    await onboardingAPI.updateOnboarding(tenantId, {
+      gatewayMode: payload.paymentGateway || payload.deliveryGateway,
+      gatewayStep: step.step,
+    });
+    step.gatewayMode = payload.paymentGateway || payload.deliveryGateway;
+    step.done = step.gatewayMode === "own" || step.gatewayMode === "platform";
+    editingGateway.value = null;
+    toastStore.add("Gateway configuration saved", "success", 3000);
+  } catch (err) {
+    logger.warn("Failed to save gateway config", err);
+    toastStore.add("Failed to save gateway configuration", "error", 4000);
+  } finally {
+    gatewaySaving.value = false;
+  }
 };
 
 const acceptPolicy = async (slug) => {
@@ -412,5 +485,28 @@ onMounted(() => {
   font-size: var(--text-sm);
   font-weight: 600;
   font-family: var(--font-sans);
+}
+.gateway-editor {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+.btn-secondary {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-secondary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-secondary:hover {
+  background: var(--neutral-100);
+}
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

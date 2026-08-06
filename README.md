@@ -49,7 +49,7 @@ RTRS is a full-stack reservation platform that evolved from a single-tenant rest
 ## Key Features
 
 ### Multi-Tenant SaaS Platform
-- **Feature-Flagged Multi-Tenancy** — `TENANT_MODE=enabled`; single repo, zero overhead when disabled
+- **Multi-Tenant SaaS** — restaurant and salon verticals as modules; always multi-tenant
 - **Tenant Resolution** — Header (`X-Tenant-Id`, `X-Tenant-Slug`) or subdomain-based routing
 - **Subscription Billing** — Paystack integration with starter/growth/enterprise plans, grace periods, auto-suspension
 - **Per-Tenant Branding** — Logo, colors, theme, business hours, notification channels
@@ -159,15 +159,17 @@ restaurant-table-reservation-system/
 │   │   │   ├── migrations/      # Sequelize migrations (24+)
 │   │   │   └── seeders/         # Data seeders
 │   │   ├── queues/              # BullMQ workers (notification, report)
-│   │   ├── tenant-platform/     # Multi-tenant module (gated by TENANT_MODE=enabled)
+│   │   ├── tenant-platform/     # Multi-tenant admin module
 │   │   │   ├── controllers/     # Compliance, DSAR, audit, legal acceptances
 │   │   │   ├── routes/          # Admin compliance, analytics, legal routes
 │   │   │   ├── DAOs/            # Tenant-scoped data access
 │   │   │   ├── services/        # Tenant-scoped business logic
 │   │   │   ├── DAOs/            # Tenant-scoped data access
 │   │   │   └── middleware/      # Tenant resolution, subscription gating
-│   │   ├── verticals/           # Salon vertical (models, DAOs, controllers, routes)
-│   │   └── utils/               # Server bootstrap, JWT rotation, route helpers
+│   │   ├── verticals/           # Vertical modules (restaurant, salon)
+│   │   │   ├── restaurant/      # Restaurant vertical module
+│   │   │   ├── salon/           # Salon vertical module
+│   │   ├── utils/               # Server bootstrap, JWT rotation, route helpers
 │   ├── ecosystem.config.js      # PM2 production config
 │   └── postman_collection.json  # Full API collection for testing
 ├── front-end/
@@ -246,10 +248,10 @@ cd front-end && npm run dev
 
 ```bash
 # Backend
-TENANT_MODE=enabled PAYSTACK_SECRET_KEY=sk_test_... PAYSTACK_WEBHOOK_SECRET=whsec_... PAYSTACK_MODE=test node ./src/app.js
+PAYSTACK_SECRET_KEY=sk_test_... PAYSTACK_WEBHOOK_SECRET=whsec_... PAYSTACK_MODE=test node ./src/app.js
 
 # Frontend
-VITE_TENANT_MODE=enabled npm run dev
+npm run dev
 ```
 
 ### Production Deployment

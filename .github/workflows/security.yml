@@ -1,0 +1,69 @@
+name: Security Scans
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: "0 0 * * 1"
+
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: back-end/package-lock.json
+      - name: Run npm audit (backend)
+        working-directory: back-end
+        run: npm audit --audit-level=high --json > backend-audit.json || true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: front-end/package-lock.json
+      - name: Run npm audit (frontend)
+        working-directory: front-end
+        run: npm audit --audit-level=high --json > frontend-audit.json || true
+      - name: Upload audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-results
+          path: |
+            back-end/backend-audit.json
+            front-end/frontend-audit.json
+          retention-days: 30
+
+  sast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Semgrep
+        run: pip install semgrep
+      - name: Run Semgrep SAST scan
+        run: semgrep --config p/security-audit --config p/owasp-top-ten --config p/nodejs --config p/vuejs --sarif --output semgrep.sarif . || true
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run TruffleShield secret scan
+        uses: trufflesecurity/trufflehog@fda044631b344997a4556f52aadbd7c8275d0802
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified

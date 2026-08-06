@@ -3,9 +3,19 @@ const { validateModuleDependencies } = require("../../integrations/erpnext/modul
 const { getPlansCached } = require("../services/tenantSubscription.service");
 
 const listFeatureFlagsHandler = async (req, res) => {
-  const flags = Object.keys(
-    require("../services/tenantTypeDefaults.service").TYPE_DEFAULTS.full_service.featureFlags
-  );
+  const { FLAG_CATEGORIES, ALL_FEATURE_FLAGS } = require("../services/tenantTypeDefaults.service");
+  const flags = ALL_FEATURE_FLAGS.map((flag) => {
+    const categoryEntry = Object.entries(FLAG_CATEGORIES).find(([_, category]) => category.flags[flag]);
+    const category = categoryEntry?.[1];
+    const metadata = category?.flags[flag] || {};
+    return {
+      flag,
+      category: category?.label || "Platform",
+      label: metadata.label || flag,
+      description: metadata.description || "",
+      dependencies: metadata.dependencies || [],
+    };
+  });
   res.status(200).json({ success: true, flags });
 };
 
@@ -88,6 +98,102 @@ const toggleSalonModuleHandler = async (req, res) => {
   res.status(200).json({ success: true, featureFlags: settings.featureFlags });
 };
 
+const getFlagAuditLogHandler = async (req, res) => {
+  const tenantId = req.params.id;
+  const logs = await db.auditLog.findAll({
+    where: {
+      entityType: "feature_flag",
+      entityId: tenantId,
+    },
+    order: [["createdAt", "DESC"]],
+    limit: 100,
+  });
+  res.status(200).json({ success: true, logs });
+};
+
+const bulkCategoryActionHandler = async (req, res) => {
+  const tenant = await db.tenant.findByPk(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  const { category, action } = req.body || {};
+  const validCategories = Object.keys(require("../services/tenantTypeDefaults.service").FLAG_CATEGORIES);
+  if (!validCategories.includes(category)) {
+    return res.status(400).json({ success: false, message: `Invalid category: ${category}` });
+  }
+  if (!["enable", "disable"].includes(action)) {
+    return res.status(400).json({ success: false, message: 'Action must be "enable" or "disable"' });
+  }
+
+  const { FLAG_CATEGORIES } = require("../services/tenantTypeDefaults.service");
+  const flags = FLAG_CATEGORIES[category].flags;
+  const value = action === "enable";
+  const updates = {};
+  for (const flag of Object.keys(flags)) {
+    updates[flag] = value;
+  }
+
+  const settings = tenant.settings || {};
+  settings.featureFlags = { ...(settings.featureFlags || {}), ...updates };
+  await tenant.update({ settings });
+  res.status(200).json({ success: true, featureFlags: settings.featureFlags });
+};
+
+const resetTenantFlagsHandler = async (req, res) => {
+  const tenant = await db.tenant.findByPk(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  const { applyTypeDefaults } = require("../services/tenantTypeDefaults.service");
+  const restaurantType = tenant.restaurantType || "full_service";
+  const updated = applyTypeDefaults(tenant, restaurantType);
+  await tenant.update({ settings: updated.settings, serviceModes: updated.serviceModes, restaurantType: updated.restaurantType });
+  res.status(200).json({ success: true, featureFlags: updated.settings.featureFlags });
+};
+
+const createFlagPresetHandler = async (req, res) => {
+  const { name, featureFlags, description, isPublic } = req.body || {};
+  if (!name || !featureFlags) {
+    return res.status(400).json({ success: false, message: "Name and featureFlags are required" });
+  }
+
+  const preset = await db.featureFlagPreset.create({
+    name,
+    description: description || "",
+    featureFlags,
+    isPublic: !!isPublic,
+    createdBy: req.user?.id || null,
+  });
+  res.status(201).json({ success: true, preset });
+};
+
+const listFlagPresetsHandler = async (req, res) => {
+  const presets = await db.featureFlagPreset.findAll({
+    where: { isPublic: true },
+    order: [["createdAt", "DESC"]],
+  });
+  res.status(200).json({ success: true, presets });
+};
+
+const applyFlagPresetHandler = async (req, res) => {
+  const tenant = await db.tenant.findByPk(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  const preset = await db.featureFlagPreset.findByPk(req.params.presetId);
+  if (!preset) {
+    return res.status(404).json({ success: false, message: "Preset not found" });
+  }
+
+  const settings = tenant.settings || {};
+  settings.featureFlags = { ...(settings.featureFlags || {}), ...preset.featureFlags };
+  await tenant.update({ settings });
+  res.status(200).json({ success: true, featureFlags: settings.featureFlags });
+};
+
 module.exports = {
   listFeatureFlagsHandler,
   getTenantFeatureFlagsHandler,
@@ -95,4 +201,10 @@ module.exports = {
   getGlobalFeatureFlagsHandler,
   updateGlobalFeatureFlagsHandler,
   toggleSalonModuleHandler,
+  getFlagAuditLogHandler,
+  bulkCategoryActionHandler,
+  resetTenantFlagsHandler,
+  createFlagPresetHandler,
+  listFlagPresetsHandler,
+  applyFlagPresetHandler,
 };

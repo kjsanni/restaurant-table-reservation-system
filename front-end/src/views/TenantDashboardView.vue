@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
+import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
 import appointmentAPI from "@/services/appointmentAPI";
 import salonDashboardAPI from "@/services/salonDashboardAPI";
+import orderAPI from "@/services/orderAPI";
 import logger from "@/utils/logger";
+import { ERP_NEXT_MODULES } from "@/config/erpnextModules";
 
 interface Booking {
   id: number;
@@ -40,9 +43,18 @@ const router = useRouter();
 const authStore = useAuthStore();
 const bookings = ref<Booking[]>([]);
 const tables = ref<Table[]>([]);
+const orders = ref<any[]>([]);
 const loading = ref(true);
 const isSalon = computed(
   () => authStore.currentTenant?.businessVertical === "salon"
+);
+const hasDineIn = computed(() =>
+  (authStore.capabilities?.serviceModes || []).includes("dine_in")
+);
+const hasTakeawayOrDelivery = computed(() =>
+  (authStore.capabilities?.serviceModes || []).some((m: string) =>
+    ["takeaway", "delivery"].includes(m)
+  )
 );
 const salonDashboard = ref<{
   appointmentsToday: number;
@@ -53,20 +65,64 @@ const salonDashboard = ref<{
 const salonLoading = ref(false);
 const salonAppointments = ref<any[]>([]);
 
-const quickLinks = computed<QuickLink[]>(() => [
-  {
-    path: "/reservations",
-    icon: "📅",
-    label: "Reservations",
-    hint: "View & manage",
-  },
-  { path: "/tables", icon: "🪑", label: "Tables", hint: "Floor plan" },
-  { path: "/schedule", icon: "⏰", label: "Schedule", hint: "Opening hours" },
-  { path: "/staff", icon: "👥", label: "Staff", hint: "Team management" },
-]);
+const quickLinks = computed<QuickLink[]>(() => {
+  const links: QuickLink[] = [];
+  if (hasDineIn.value) {
+    links.push(
+      {
+        path: "/reservations",
+        icon: "mdi:calendar-clock",
+        label: "Reservations",
+        hint: "View & manage",
+      },
+      {
+        path: "/tables",
+        icon: "mdi:table",
+        label: "Tables",
+        hint: "Floor plan",
+      },
+      {
+        path: "/schedule",
+        icon: "mdi:clock-outline",
+        label: "Schedule",
+        hint: "Opening hours",
+      },
+      {
+        path: "/staff",
+        icon: "mdi:account-group",
+        label: "Staff",
+        hint: "Team management",
+      }
+    );
+  }
+  if (hasTakeawayOrDelivery.value) {
+    links.push(
+      {
+        path: "/orders/manage",
+        icon: "mdi:food",
+        label: "Orders",
+        hint: "Kitchen & delivery",
+      },
+      {
+        path: "/menu/manage",
+        icon: "mdi:book-open-variant",
+        label: "Menu",
+        hint: "Manage menu",
+      }
+    );
+  }
+  return links;
+});
 
 const formatTime = (v: string) => {
   if (!v) return "—";
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(v)) {
+    const [h, m] = v.split(":").map(Number);
+    const hour = h % 24;
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
+  }
   const d = new Date(v);
   if (isNaN(d.getTime())) return v;
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -87,35 +143,48 @@ const floor = computed(() => {
 });
 
 const kpis = computed(() => {
-  const base = [
-    {
-      label: "Bookings Today",
-      value: bookings.value.length,
-      delta: "▲ 3 vs yesterday",
-    },
-    {
-      label: "Covers",
-      value: bookings.value.reduce((sum, b) => sum + (b.people || 0), 0),
-      delta: "Avg party 3.2",
-    },
-    {
-      label: "Revenue",
-      value: `GHS ${(
-        bookings.value.reduce((sum, b) => sum + (b.expectedTotal || 0), 0) /
-        1000
-      ).toFixed(1)}k`,
-      delta: "Today",
-    },
-    {
-      label: "Occupancy",
-      value: `${
-        tables.value.length
-          ? Math.round((floor.value.occupied / tables.value.length) * 100)
-          : 0
-      }%`,
-      delta: `${floor.value.occupied} of ${tables.value.length} tables`,
-    },
-  ];
+  const base: any[] = [];
+
+  if (hasDineIn.value) {
+    base.push(
+      {
+        label: "Bookings Today",
+        value: bookings.value.length,
+        delta: "▲ 3 vs yesterday",
+      },
+      {
+        label: "Covers",
+        value: bookings.value.reduce((sum, b) => sum + (b.people || 0), 0),
+        delta: "Avg party 3.2",
+      },
+      {
+        label: "Occupancy",
+        value: `${
+          tables.value.length
+            ? Math.round((floor.value.occupied / tables.value.length) * 100)
+            : 0
+        }%`,
+        delta: `${floor.value.occupied} of ${tables.value.length} tables`,
+      }
+    );
+  }
+
+  if (hasTakeawayOrDelivery.value && !hasDineIn.value) {
+    base.push({
+      label: "Orders Today",
+      value: orders.value.length,
+      delta: "Active orders",
+    });
+  }
+
+  base.push({
+    label: "Revenue",
+    value: `GHS ${(
+      bookings.value.reduce((sum, b) => sum + Number(b.expectedTotal || 0), 0) /
+      1000
+    ).toFixed(1)}k`,
+    delta: "Today",
+  });
 
   if (isSalon.value && salonDashboard.value) {
     base.push({
@@ -126,6 +195,11 @@ const kpis = computed(() => {
   }
 
   return base;
+});
+
+const erpnextModuleCards = computed(() => {
+  const flags = authStore.currentTenant?.settings?.featureFlags || {};
+  return ERP_NEXT_MODULES.filter((mod) => flags[mod.flag]);
 });
 
 const detail = (b: any) => {
@@ -152,9 +226,14 @@ const statusClass = (s: string) => `t-${s}`;
 
 const loadDashboard = async () => {
   const today = new Date().toISOString().slice(0, 10);
-  const [bRes, tRes] = await Promise.allSettled([
-    reservationAPI.getReservations({ date: today, limit: 10 }),
-    tableAPI.getTables(),
+  const [bRes, tRes, oRes] = await Promise.allSettled([
+    hasDineIn.value
+      ? reservationAPI.getReservations({ date: today, limit: 10 })
+      : Promise.resolve({ data: [] }),
+    hasDineIn.value ? tableAPI.getTables() : Promise.resolve({ data: [] }),
+    hasTakeawayOrDelivery.value && !hasDineIn.value
+      ? orderAPI.getOrders({ date: today, limit: 10 })
+      : Promise.resolve({ data: [] }),
   ]);
   if (bRes.status === "fulfilled") {
     const data = bRes.value?.data;
@@ -163,6 +242,10 @@ const loadDashboard = async () => {
   if (tRes.status === "fulfilled") {
     const data = tRes.value?.data;
     tables.value = data?.collection || data?.tables || data || [];
+  }
+  if (oRes.status === "fulfilled") {
+    const data = oRes.value?.data;
+    orders.value = data?.collection || data?.orders || data || [];
   }
 
   if (isSalon.value) {
@@ -202,6 +285,13 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+watch(
+  () => authStore.currentTenant?.id,
+  () => {
+    loadDashboard();
+  }
+);
 </script>
 
 <template>
@@ -241,63 +331,26 @@ onMounted(async () => {
           </div>
         </div>
 
+        <div v-if="erpnextModuleCards.length" class="erpnext-strip">
+          <div class="erpnext-strip-header">
+            <h3>ERPNext</h3>
+            <span class="erpnext-strip-hint">Enabled modules</span>
+          </div>
+          <div class="erpnext-modules">
+            <button
+              v-for="mod in erpnextModuleCards"
+              :key="mod.flag"
+              class="erpnext-module-card"
+              @click="router.push(mod.path)"
+            >
+              <div class="erpnext-module-name">{{ mod.name }}</div>
+              <div class="erpnext-module-desc">{{ mod.description }}</div>
+            </button>
+          </div>
+        </div>
+
         <div class="lower-grid">
-          <template v-if="!isSalon">
-            <div class="panel bookings-panel">
-              <div class="panel-head">
-                <h3>Today's Bookings</h3>
-                <button
-                  class="panel-link"
-                  @click="router.push('/reservations')"
-                >
-                  View all
-                </button>
-              </div>
-              <div v-if="!bookings.length" class="empty">
-                No bookings yet today.
-              </div>
-              <div v-else class="booking-list">
-                <div v-for="b in bookings" :key="b.id" class="booking">
-                  <div class="booking-time">{{ formatTime(b.resTime) }}</div>
-                  <div class="booking-party">{{ b.people }}</div>
-                  <div class="booking-who">
-                    <div>{{ b.Customer?.name || b.name || "Guest" }}</div>
-                    <div class="booking-meta">{{ detail(b) }}</div>
-                  </div>
-                  <span
-                    class="booking-tag"
-                    :class="statusClass(b.resStatus || b.status || 'pending')"
-                  >
-                    {{ statusLabel(b.resStatus || b.status || "pending") }}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div class="panel floor-panel">
-              <h3>Live Floor</h3>
-              <div class="floor-grid">
-                <div class="floor-stat occupied">
-                  <div class="floor-num">{{ floor.occupied }}</div>
-                  <div class="floor-label">Occupied</div>
-                </div>
-                <div class="floor-stat free">
-                  <div class="floor-num">{{ floor.free }}</div>
-                  <div class="floor-label">Free</div>
-                </div>
-                <div class="floor-stat reserved">
-                  <div class="floor-num">{{ floor.reserved }}</div>
-                  <div class="floor-label">Reserved</div>
-                </div>
-                <div class="floor-stat blocked">
-                  <div class="floor-num">{{ floor.blocked }}</div>
-                  <div class="floor-label">Blocked</div>
-                </div>
-              </div>
-            </div>
-          </template>
-
-          <template v-else>
+          <template v-if="isSalon">
             <div class="panel bookings-panel">
               <div class="panel-head">
                 <h3>Today's Appointments</h3>
@@ -376,6 +429,132 @@ onMounted(async () => {
               </div>
             </div>
           </template>
+
+          <template v-else-if="hasDineIn">
+            <div class="panel bookings-panel">
+              <div class="panel-head">
+                <h3>Today's Bookings</h3>
+                <button
+                  class="panel-link"
+                  @click="router.push('/reservations')"
+                >
+                  View all
+                </button>
+              </div>
+              <div v-if="!bookings.length" class="empty">
+                No bookings yet today.
+              </div>
+              <div v-else class="booking-list">
+                <div v-for="b in bookings" :key="b.id" class="booking">
+                  <div class="booking-time">{{ formatTime(b.resTime) }}</div>
+                  <div class="booking-party">{{ b.people }}</div>
+                  <div class="booking-who">
+                    <div>{{ b.Customer?.name || b.name || "Guest" }}</div>
+                    <div class="booking-meta">{{ detail(b) }}</div>
+                  </div>
+                  <span
+                    class="booking-tag"
+                    :class="statusClass(b.resStatus || b.status || 'pending')"
+                  >
+                    {{ statusLabel(b.resStatus || b.status || "pending") }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel floor-panel">
+              <h3>Live Floor</h3>
+              <div class="floor-grid">
+                <div class="floor-stat occupied">
+                  <div class="floor-num">{{ floor.occupied }}</div>
+                  <div class="floor-label">Occupied</div>
+                </div>
+                <div class="floor-stat free">
+                  <div class="floor-num">{{ floor.free }}</div>
+                  <div class="floor-label">Free</div>
+                </div>
+                <div class="floor-stat reserved">
+                  <div class="floor-num">{{ floor.reserved }}</div>
+                  <div class="floor-label">Reserved</div>
+                </div>
+                <div class="floor-stat blocked">
+                  <div class="floor-num">{{ floor.blocked }}</div>
+                  <div class="floor-label">Blocked</div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <template v-else>
+            <div class="panel bookings-panel">
+              <div class="panel-head">
+                <h3>Recent Orders</h3>
+                <button
+                  class="panel-link"
+                  @click="router.push('/orders/manage')"
+                >
+                  View all
+                </button>
+              </div>
+              <div v-if="!orders.length" class="empty">
+                No orders yet today.
+              </div>
+              <div v-else class="booking-list">
+                <div v-for="o in orders" :key="o.id" class="booking">
+                  <div class="booking-time">{{ formatTime(o.createdAt) }}</div>
+                  <div class="booking-party">{{ o.items?.length || 0 }}</div>
+                  <div class="booking-who">
+                    <div>Order #{{ o.id }}</div>
+                    <div class="booking-meta">
+                      {{ o.status || "pending" }} ·
+                      {{ o.paymentStatus || "unpaid" }}
+                    </div>
+                  </div>
+                  <span
+                    class="booking-tag"
+                    :class="statusClass(o.status || 'pending')"
+                  >
+                    {{ statusLabel(o.status || "pending") }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel floor-panel">
+              <h3>Operations</h3>
+              <div class="floor-grid">
+                <div class="floor-stat occupied">
+                  <div class="floor-num">{{ orders.length }}</div>
+                  <div class="floor-label">Active Orders</div>
+                </div>
+                <div class="floor-stat free">
+                  <div class="floor-num">
+                    {{
+                      orders.filter((o: any) => o.status === "completed").length
+                    }}
+                  </div>
+                  <div class="floor-label">Completed</div>
+                </div>
+                <div class="floor-stat reserved">
+                  <div class="floor-num">
+                    {{
+                      orders.filter((o: any) => o.paymentStatus === "paid")
+                        .length
+                    }}
+                  </div>
+                  <div class="floor-label">Paid</div>
+                </div>
+                <div class="floor-stat blocked">
+                  <div class="floor-num">
+                    {{
+                      orders.filter((o: any) => o.status === "cancelled").length
+                    }}
+                  </div>
+                  <div class="floor-label">Cancelled</div>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
 
         <div class="quick-grid">
@@ -385,7 +564,9 @@ onMounted(async () => {
             class="qcard"
             @click="router.push(item.path)"
           >
-            <div class="qcard-icon">{{ item.icon }}</div>
+            <div class="qcard-icon">
+              <Icon :icon="item.icon" width="28" height="28" />
+            </div>
             <div class="qcard-body">
               <b>{{ item.label }}</b>
               <span>{{ item.hint }}</span>
@@ -812,5 +993,54 @@ onMounted(async () => {
   .quick-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.erpnext-strip {
+  margin-bottom: var(--space-4);
+}
+.erpnext-strip-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.erpnext-strip-header h3 {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--ink-muted);
+}
+.erpnext-strip-hint {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+.erpnext-modules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+.erpnext-module-card {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+.erpnext-module-card:hover {
+  border-color: var(--accent);
+  background: var(--surface-sunken);
+}
+.erpnext-module-name {
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--space-1);
+}
+.erpnext-module-desc {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
 }
 </style>

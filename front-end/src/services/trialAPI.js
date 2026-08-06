@@ -12,10 +12,7 @@ const client = axios.create({
 
 client.interceptors.request.use((config) => {
   const authStore = useAuthStore();
-  if (
-    import.meta.env.VITE_TENANT_MODE === "enabled" &&
-    authStore.currentTenant
-  ) {
+  if (authStore.currentTenant) {
     config.headers["X-Tenant-Id"] = authStore.currentTenant.id;
   }
   return config;

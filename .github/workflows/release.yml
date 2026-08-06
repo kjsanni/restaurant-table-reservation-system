@@ -1,0 +1,69 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Bump level: major|minor|patch|prepatch|prerelease"
+        required: false
+        default: "patch"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  url: ${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+      - name: Install dependencies
+        run: npm install
+      - name: Apply changesets
+        run: |
+          npx changeset version
+          # Sync VERSION file and sub-package.json to root version
+          VERSION=$(node -p "require('./package.json').version")
+          echo "$VERSION" > VERSION
+          node -e "
+            const fs = require('fs');
+            const v = process.env.VERSION;
+            ['back-end/package.json', 'front-end/package.json'].forEach(f => {
+              const p = JSON.parse(fs.readFileSync(f, 'utf8'));
+              p.version = v;
+              fs.writeFileSync(f, JSON.stringify(p, null, 2) + '\n');
+            });
+          "
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          git add VERSION package.json back-end/package.json front-end/package.json CHANGELOG.md
+          git commit -m "fix(release): bump to v\${VERSION}" --allow-empty || true
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        uses: Release-Drafter/release-drafter@6a93d829887aa2e0748befe2e808c66c0ec6e4c7
+        if: ${{ env.VERSION != '' }}
+        with:
+          tag: v${{ env.VERSION }}
+          name: v${{ env.VERSION }}
+          body: |
+            See CHANGELOG.md for details.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish Release
+        run: |
+          echo "Release v${{ env.VERSION }} has been created."

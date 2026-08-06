@@ -5,10 +5,12 @@ const {
   disableTenant,
   getTenantDashboard,
 } = require("../services/tenantSubscription.service");
-const { applyTypeDefaults } = require("../services/tenantTypeDefaults.service");
+const { applyTypeDefaults, seedSalonSettings } = require("../services/tenantTypeDefaults.service");
+const axios = require("axios");
+const { normalizeSettingValue } = require("../../utils/settings");
 
 const createTenantHandler = async (req, res) => {
-  const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType } = req.body;
+  const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType, businessVertical, serviceModes } = req.body;
 
   if (!name || !slug) {
     return res.status(400).json({ success: false, message: "Name and slug are required" });
@@ -24,20 +26,38 @@ const createTenantHandler = async (req, res) => {
     return res.status(409).json({ success: false, message: `Slug "${normalizedSlug}" is already in use` });
   }
 
+  const typeDefaults =
+    require("../services/tenantTypeDefaults.service").TYPE_DEFAULTS[
+      restaurantType || "full_service"
+    ] || require("../services/tenantTypeDefaults.service").TYPE_DEFAULTS.full_service;
+
+  const salonDefaults = require("../services/tenantTypeDefaults.service").TYPE_DEFAULTS.salonDefaults || {};
+
+  const settings = {
+    featureFlags: { ...typeDefaults.featureFlags },
+    ...(businessVertical === "salon" ? salonDefaults : {}),
+  };
+
   const tenant = await tenantAdminDAO.create({
     name,
     slug: normalizedSlug,
-    domain,
+    domain: domain ? String(domain).trim() : null,
     plan: plan || "starter",
     status: status || "active",
     billingEmail,
     billingName,
     currency: currency || "GHS",
-    settings: {},
+    businessVertical: businessVertical || "restaurant",
+    serviceModes: Array.isArray(serviceModes) && serviceModes.length > 0 ? serviceModes : typeDefaults.serviceModes,
+    settings,
+    restaurantType: restaurantType || "full_service",
   });
 
-  applyTypeDefaults(tenant, restaurantType || "full_service");
-  await tenant.save();
+  if (businessVertical === "salon") {
+    seedSalonSettings(tenant.id).catch((err) => {
+      console.error("Failed to seed salon settings:", err.message);
+    });
+  }
 
   res.status(201).json({ success: true, item: tenant });
 };
@@ -90,13 +110,16 @@ const updateTenantHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }
 
-  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "restaurantType", "restaurantSubtype", "serviceModes", "businessVertical", "whatsappConfig", "dataRegion", "residencyNotes"];
+  const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "restaurantType", "restaurantSubtype", "serviceModes", "businessVertical", "whatsappConfig", "dataRegion", "residencyNotes", "domain"];
   const updates = {};
   const changes = {};
 
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(req.body, key)) {
-      const next = req.body[key];
+      let next = req.body[key];
+      if (key === "domain" && next !== null && next !== undefined) {
+        next = String(next).trim() || null;
+      }
       const prev = tenant[key];
       if (prev !== next) {
         updates[key] = next;
@@ -195,6 +218,201 @@ const getDashboardHandler = async (req, res) => {
   res.status(200).json({ success: true, ...dashboard });
 };
 
+const SENSITIVE_FIELDS = [
+  "paystackSecretKey",
+  "shaqexpressSecret",
+  "secret",
+  "webhookSecret",
+  "previousSecretKey",
+];
+
+const sanitizeTenant = (tenant) => {
+  const obj = tenant.toJSON ? tenant.toJSON() : { ...tenant };
+  for (const f of SENSITIVE_FIELDS) {
+    if (obj[f] !== undefined && obj[f] !== null) {
+      const str = String(obj[f]);
+      obj[f] = str.slice(-4).padStart(str.length, "*");
+    }
+  }
+  if (obj.settings) {
+    const cfg = normalizeSettingValue(obj.settings);
+    if (cfg.shaqexpress_config) {
+      if (cfg.shaqexpress_config.secret) {
+        const s = String(cfg.shaqexpress_config.secret);
+        cfg.shaqexpress_config.secret = s
+          .slice(-4)
+          .padStart(s.length, "*");
+      }
+    }
+    obj.settings = cfg;
+  }
+  return obj;
+};
+
+const testPaystackHandler = async (req, res) => {
+  const tenant = await tenantAdminDAO.findById(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  const { publicKey, secretKey } = req.body;
+  if (!publicKey || !secretKey) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Public key and secret key are required" });
+  }
+  if (!secretKey.startsWith("sk_")) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Secret key must start with sk_" });
+  }
+
+  try {
+    const client = axios.create({
+      baseURL: "https://api.paystack.co",
+      headers: {
+        Authorization: `Bearer ${secretKey}`,
+        "Content-Type": "application/json",
+      },
+    });
+    const response = await client.get("/balance");
+    res.status(200).json({
+      success: true,
+      data: response.data.data,
+    });
+  } catch (err) {
+    const status = err.response?.status || 500;
+    const message = status === 401 ? "Invalid secret key" : "Paystack error — try again";
+    res.status(status === 401 ? 400 : 502).json({ success: false, message });
+  }
+};
+
+const testShaqExpressHandler = async (req, res) => {
+  const tenant = await tenantAdminDAO.findById(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  const { identifier, secret } = req.body;
+  if (!identifier || !secret) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Identifier and secret are required" });
+  }
+
+  try {
+    const response = await axios.post(
+      "https://public-api.shaqexpress.com/api/v1/auth/login",
+      { identifier, secret }
+    );
+    res.status(200).json({
+      success: true,
+      data: { token: response.data?.data?.token },
+    });
+  } catch (err) {
+    const status = err.response?.status || 500;
+    const message = status === 401 ? "Invalid identifier or secret" : "ShaQ Express error — try again";
+    res.status(status === 401 ? 400 : 502).json({ success: false, message });
+  }
+};
+
+const applyPaymentGatewaySettings = (tenant, paymentGateway, changes) => {
+  if (paymentGateway === undefined) return;
+  if (!["platform", "own"].includes(paymentGateway)) {
+    throw new Error("Invalid payment gateway mode");
+  }
+  if (tenant.paymentGateway !== paymentGateway) {
+    changes.push({ field: "paymentGateway", from: tenant.paymentGateway, to: paymentGateway });
+    tenant.paymentGateway = paymentGateway;
+  }
+};
+
+const applyDeliveryGatewaySettings = (tenant, deliveryGateway, changes) => {
+  if (deliveryGateway === undefined) return;
+  if (!["platform", "own"].includes(deliveryGateway)) {
+    throw new Error("Invalid delivery gateway mode");
+  }
+  if (tenant.deliveryGateway !== deliveryGateway) {
+    changes.push({ field: "deliveryGateway", from: tenant.deliveryGateway, to: deliveryGateway });
+    tenant.deliveryGateway = deliveryGateway;
+  }
+};
+
+const applyPaystackSettings = (tenant, paystackPublicKey, paystackSecretKey, changes) => {
+  if (paystackPublicKey !== undefined && tenant.paystackPublicKey !== paystackPublicKey) {
+    tenant.paystackPublicKey = paystackPublicKey;
+    changes.push({ field: "paystackPublicKey", changed: true });
+  }
+  if (paystackSecretKey !== undefined && paystackSecretKey !== null) {
+    tenant.paystackSecretKey = paystackSecretKey;
+    changes.push({ field: "paystackSecretKey", changed: true });
+  }
+};
+
+const applyShaqExpressSettings = (tenant, shaqexpressIdentifier, shaqexpressSecret, shaqexpressWebhookUrl, changes) => {
+  if (
+    shaqexpressIdentifier === undefined &&
+    shaqexpressSecret === undefined &&
+    shaqexpressWebhookUrl === undefined
+  ) {
+    return;
+  }
+  const settings = tenant.settings || {};
+  const shaqConfig = {
+    identifier: shaqexpressIdentifier ?? settings.shaqexpress_config?.identifier ?? null,
+    secret: shaqexpressSecret ?? settings.shaqexpress_config?.secret ?? null,
+    webhookUrl: shaqexpressWebhookUrl ?? settings.shaqexpress_config?.webhookUrl ?? null,
+    enabled: true,
+  };
+  settings.shaqexpress_config = shaqConfig;
+  tenant.settings = settings;
+  changes.push({ field: "shaqexpress_config", changed: true });
+};
+
+const updateGatewayHandler = async (req, res) => {
+  const tenant = await tenantAdminDAO.findById(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
+
+  const {
+    paymentGateway,
+    deliveryGateway,
+    paystackPublicKey,
+    paystackSecretKey,
+    shaqexpressIdentifier,
+    shaqexpressSecret,
+    shaqexpressWebhookUrl,
+  } = req.body;
+
+  const changes = [];
+
+  try {
+    applyPaymentGatewaySettings(tenant, paymentGateway, changes);
+    applyDeliveryGatewaySettings(tenant, deliveryGateway, changes);
+    applyPaystackSettings(tenant, paystackPublicKey, paystackSecretKey, changes);
+    applyShaqExpressSettings(tenant, shaqexpressIdentifier, shaqexpressSecret, shaqexpressWebhookUrl, changes);
+  } catch (err) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+
+  await tenant.save();
+
+  if (changes.length > 0) {
+    await platformAuditDAO.log(
+      req.user?.id || null,
+      "tenant.gateway_updated",
+      "tenant",
+      tenant.id,
+      tenant.id,
+      { changes },
+      req.ip
+    );
+  }
+
+  res.status(200).json({ success: true, item: sanitizeTenant(tenant) });
+};
+
 module.exports = {
   createTenantHandler,
   getTenantsHandler,
@@ -205,4 +423,7 @@ module.exports = {
   enableTenantHandler,
   disableTenantHandler,
   getDashboardHandler,
+  testPaystackHandler,
+  testShaqExpressHandler,
+  updateGatewayHandler,
 };

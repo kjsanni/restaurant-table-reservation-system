@@ -15,7 +15,8 @@ const appointmentDao = {
     }
     if (filters.stylistId) where.stylistId = filters.stylistId;
     if (filters.stationId) where.stationId = filters.stationId;
-    if (filters.paymentStatus) where.paymentStatus = filters.paymentStatus;
+     if (filters.paymentStatus) where.paymentStatus = filters.paymentStatus;
+    if (filters.locationId) where.locationId = filters.locationId;
 
     const { count, rows } = await salonModels.sequelize.models.appointment.findAndCountAll({
       where,
@@ -24,6 +25,7 @@ const appointmentDao = {
         { model: salonModels.sequelize.models.service, as: "service", attributes: ["id", "name", "price", "durationMinutes"] },
         { model: salonModels.sequelize.models.station, as: "station", attributes: ["id", "name", "type", "zone"] },
         { model: salonModels.sequelize.models.user, as: "stylist", attributes: ["id", "username", "email"] },
+        { model: salonModels.sequelize.models.location, as: "location", attributes: ["id", "name", "city", "region"], required: false },
       ],
       order: [["start", "DESC"]],
       limit: filters.limit || 50,
@@ -40,6 +42,7 @@ const appointmentDao = {
         { model: salonModels.sequelize.models.service, as: "service" },
         { model: salonModels.sequelize.models.station, as: "station" },
         { model: salonModels.sequelize.models.user, as: "stylist" },
+        { model: salonModels.sequelize.models.location, as: "location", attributes: ["id", "name", "city", "region"], required: false },
       ],
     });
   },
@@ -75,13 +78,17 @@ const appointmentDao = {
     return true;
   },
 
-  async findConflicts(tenantId, stationId, stylistId, start, durationMinutes, excludeId = null, bufferMinutes = 0) {
+  async findConflicts(tenantId, stationId, stylistId, start, durationMinutes, excludeId = null, bufferMinutes = 0, locationId = null) {
     const end = new Date(new Date(start).getTime() + (durationMinutes + bufferMinutes) * 60000);
     const where = {
       tenantId,
       status: { [Op.notIn]: ["cancelled", "no_show"] },
       start: { [Op.lt]: end },
     };
+
+    if (locationId) {
+      where.locationId = locationId;
+    }
 
     const orConditions = [];
     if (stationId) {

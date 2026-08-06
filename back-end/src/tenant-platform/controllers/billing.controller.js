@@ -146,13 +146,12 @@ const webhookHandler = async (req, res) => {
   }
 };
 
-// Resolve tenant from webhook data WITHOUT trusting metadata.tenantId alone.
+// Resolve tenant from webhook data WITHOUT trusting metadata.tenantId.
 // Prefer Paystack's own identifiers (customer_code / authorization) so a
 // forged payload with a guessed metadata.tenantId cannot target another tenant.
 const resolveTenantFromWebhook = async (data) => {
   const customerCode = data?.customer?.customer_code;
   const authorization = data?.authorization;
-  const metadataTenantId = data?.metadata?.tenantId;
 
   if (customerCode) {
     const byCustomer = await db.tenant.findOne({
@@ -166,11 +165,6 @@ const resolveTenantFromWebhook = async (data) => {
       where: { paystackAuthorization: authorization },
     });
     if (byAuth) return byAuth.id;
-  }
-
-  if (metadataTenantId) {
-    const byMeta = await db.tenant.findByPk(metadataTenantId);
-    if (byMeta) return metadataTenantId;
   }
 
   return null;

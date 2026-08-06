@@ -103,6 +103,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(100),
         allowNull: true,
       },
+      paymentGateway: {
+        type: DataTypes.STRING(20),
+        allowNull: false,
+        defaultValue: "platform",
+      },
+      deliveryGateway: {
+        type: DataTypes.STRING(20),
+        allowNull: false,
+        defaultValue: "platform",
+      },
       billingEmail: {
         type: DataTypes.STRING(100),
         allowNull: true,

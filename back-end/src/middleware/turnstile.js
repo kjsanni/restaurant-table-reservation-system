@@ -45,38 +45,35 @@ const verifyTurnstileToken = async (token, remoteIp) => {
   }
 };
 
-const validateTurnstile = (req, res, next) => {
-  getTurnstileConfig().then((config) => {
+const getTurnstileToken = (req) => {
+  return req.body?.cfTurnstileToken || req.headers["cf-turnstile-response"];
+};
+
+// Validates Cloudflare Turnstile tokens on protected routes.
+// When turnstile is disabled via platform config, the middleware is a no-op.
+const validateTurnstile = async (req, res, next) => {
+  try {
+    const config = await getTurnstileConfig();
     if (!config.enabled) {
       return next();
     }
 
-    const token = req.body?.cfTurnstileToken || req.headers["cf-turnstile-response"];
-    if (!token) {
-      return res.status(403).json({
-        success: false,
-        message: "Turnstile verification failed. Please complete the challenge.",
-      });
+    const token = getTurnstileToken(req);
+    const valid = await verifyTurnstileToken(token, req.ip || req.connection.remoteAddress);
+    if (valid) {
+      return next();
     }
 
-    verifyTurnstileToken(token, req.ip || req.connection.remoteAddress)
-      .then((valid) => {
-        if (valid) {
-          next();
-        } else {
-          res.status(403).json({
-            success: false,
-            message: "Turnstile verification failed. Please try again.",
-          });
-        }
-      })
-      .catch(() => {
-        res.status(403).json({
-          success: false,
-          message: "Turnstile verification failed. Please try again.",
-        });
-      });
-  });
+    return res.status(403).json({
+      success: false,
+      message: "Turnstile verification failed. Please try again.",
+    });
+  } catch (error) {
+    return res.status(403).json({
+      success: false,
+      message: "Turnstile verification failed. Please try again.",
+    });
+  }
 };
 
 module.exports = validateTurnstile;

@@ -1,0 +1,29 @@
+{
+  "repository": "kjsanni/restaurant-table-reservation-system",
+  "default_branch": "main",
+  "enforce_admins": true,
+  "require_code_owner_reviews": true,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": true
+  },
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "CI / backend-test",
+      "CI / frontend-test",
+      "CI / e2e-test",
+      "Security Scans / dependency-audit",
+      "Security Scans / sast",
+      "Security Scans / secret-scan",
+      "Codacy Production / Codacy Static Code Analysis",
+      "Kilo Code Review"
+    ]
+  },
+  "restrict_pushes": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "block_creates": true,
+  "required_conversation_resolution": true
+}

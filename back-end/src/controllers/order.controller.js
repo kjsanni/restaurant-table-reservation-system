@@ -156,23 +156,11 @@ const updateOrderHandler = async (req, res) => {
     }
   }
 
-  const order = await orderService.getOrder(req.params.orderId, req.tenant?.id);
-  if (!order) {
-    return res.status(404).json({ success: false, message: "Order not found" });
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ success: false, message: "No allowed fields provided for update." });
   }
 
-  const updated = await orderService.getOrder(req.params.orderId, req.tenant?.id);
-  if (updates.status) {
-    updated.status = updates.status;
-  }
-  if (updates.paymentStatus) {
-    updated.paymentStatus = updates.paymentStatus;
-  }
-  if (updates.notes) {
-    updated.notes = updates.notes;
-  }
-
-  const saved = await orderDAO.updateOrder(req.params.orderId, req.tenant?.id, updated);
+  const saved = await orderDAO.updateOrder(req.params.orderId, req.tenant?.id, updates);
   return res.status(200).json({ success: true, order: saved });
 };
 

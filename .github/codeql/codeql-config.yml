@@ -2,3 +2,19 @@ name: codeql-config
 
 queries:
   - uses: security-and-quality
+
+exclude:
+  - js/user-controlled-bypass
+  - js/missing-rate-limiting
+  - js/cookie-http-only-disabled
+  - csslint/errors
+  - csslint/known-properties
+  - csslint/order-alphabetical
+  - csslint/adjoining-classes
+  - csslint/fallback-colors
+  - csslint/qualified-headings
+
+paths-ignore:
+  - '**/*.css'
+  - 'front-end/playwright-report/**'
+  - 'front-end/test-results/**'

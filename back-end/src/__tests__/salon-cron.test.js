@@ -51,7 +51,7 @@ describe("salonCron", () => {
     it("skips past weekly occurrences without backfilling and advances lastGeneratedAt", async () => {
       const recurring = {
         ...baseRecurring,
-        lastGeneratedAt: "2026-07-15",
+        lastGeneratedAt: "2026-07-14",
         startDate: "2026-07-01",
       };
 
@@ -66,12 +66,30 @@ describe("salonCron", () => {
       jest.spyOn(appointmentDao, "create").mockResolvedValue({ id: 100 });
       jest.spyOn(notificationService, "sendSalonConfirmation").mockResolvedValue();
 
-      const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
-      const result = await cron.processRecurringAppointments(1);
+      const today = new Date("2026-07-28");
+      const originalDate = global.Date;
+      const mockDate = class extends Date {
+        constructor(...args) {
+          if (args.length === 0) {
+            return new originalDate(today);
+          }
+          return new originalDate(...args);
+        }
+        static now() {
+          return today.getTime();
+        }
+      };
+      global.Date = mockDate;
 
-      expect(result).toHaveLength(1);
-      expect(result[0].date).toBe(todayStr);
-      expect(result[0].recurringId).toBe(1);
+      try {
+        const result = await cron.processRecurringAppointments(1);
+
+        expect(result).toHaveLength(1);
+        expect(result[0].date).toBe("2026-07-28");
+        expect(result[0].recurringId).toBe(1);
+      } finally {
+        global.Date = originalDate;
+      }
     });
 
     it("skips recurring templates past their endDate", async () => {
@@ -144,6 +162,94 @@ describe("salonCron", () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({ campaignId: 1, status: "sent" });
+    });
+
+    it("resolves only VIP customers when targetAudience is vip", async () => {
+      const tenantId = 1;
+      const campaign = {
+        id: 2,
+        tenantId,
+        status: "scheduled",
+        scheduledAt: new Date(),
+        content: "VIP offer",
+        targetAudience: "vip",
+      };
+
+      const cron = require("../verticals/salon/utils/salonCron");
+      const marketingDao = require("../verticals/salon/DAOs/marketingCampaign.dao");
+      const models = require("../db/models");
+      const notificationService = require("../services/notification.service");
+
+      jest.spyOn(marketingDao, "findDueForSending").mockResolvedValue([campaign]);
+      jest.spyOn(marketingDao, "update").mockResolvedValue({ id: 2 });
+      jest.spyOn(models.sequelize.models.customer, "findAll").mockResolvedValue([
+        { id: 1, phone: "+233241000001", email: "vip@test.com", points: 250 },
+        { id: 3, phone: "+233241000003", email: "reg@test.com", points: 10 },
+      ]);
+      jest.spyOn(notificationService, "sendViaChannels").mockResolvedValue({ success: true });
+
+      const result = await cron.processMarketingCampaigns(tenantId);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ campaignId: 2, status: "sent", count: 2 });
+    });
+
+    it("resolves only inactive customers when targetAudience is inactive", async () => {
+      const tenantId = 1;
+      const campaign = {
+        id: 3,
+        tenantId,
+        status: "scheduled",
+        scheduledAt: new Date(),
+        content: "We miss you",
+        targetAudience: "inactive",
+      };
+
+      const cron = require("../verticals/salon/utils/salonCron");
+      const marketingDao = require("../verticals/salon/DAOs/marketingCampaign.dao");
+      const models = require("../db/models");
+      const notificationService = require("../services/notification.service");
+
+      jest.spyOn(marketingDao, "findDueForSending").mockResolvedValue([campaign]);
+      jest.spyOn(marketingDao, "update").mockResolvedValue({ id: 3 });
+      jest.spyOn(models.sequelize.models.customer, "findAll").mockResolvedValue([
+        { id: 5, phone: "+233241000005", email: "inactive@test.com", lastVisitDate: new Date("2025-01-01") },
+      ]);
+      jest.spyOn(notificationService, "sendViaChannels").mockResolvedValue({ success: true });
+
+      const result = await cron.processMarketingCampaigns(tenantId);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ campaignId: 3, status: "sent", count: 1 });
+    });
+
+    it("resolves only new customers when targetAudience is new", async () => {
+      const tenantId = 1;
+      const campaign = {
+        id: 4,
+        tenantId,
+        status: "scheduled",
+        scheduledAt: new Date(),
+        content: "Welcome!",
+        targetAudience: "new",
+      };
+
+      const cron = require("../verticals/salon/utils/salonCron");
+      const marketingDao = require("../verticals/salon/DAOs/marketingCampaign.dao");
+      const models = require("../db/models");
+      const notificationService = require("../services/notification.service");
+
+      jest.spyOn(marketingDao, "findDueForSending").mockResolvedValue([campaign]);
+      jest.spyOn(marketingDao, "update").mockResolvedValue({ id: 4 });
+      jest.spyOn(models.sequelize.models.customer, "findAll").mockResolvedValue([
+        { id: 6, phone: "+233241000006", email: "new@test.com", visitCount: 1 },
+      ]);
+      jest.spyOn(notificationService, "sendViaChannels").mockResolvedValue({ success: true });
+
+      const result = await cron.processMarketingCampaigns(tenantId);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ campaignId: 4, status: "sent", count: 1 });
     });
   });
 });

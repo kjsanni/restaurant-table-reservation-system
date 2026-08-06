@@ -9,4 +9,9 @@ router
   .get(tryCatchHandler(publicController.listPublicPlansHandler))
   .all(httpMethodError);
 
+router
+  .route("/changelog")
+  .get(tryCatchHandler(publicController.getChangelogHandler))
+  .all(httpMethodError);
+
 module.exports = router;

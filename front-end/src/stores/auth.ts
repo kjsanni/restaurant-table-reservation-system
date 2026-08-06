@@ -93,7 +93,8 @@ export const useAuthStore = defineStore("auth", () => {
     firstName: string,
     lastName: string,
     phone: string,
-    cfTurnstileToken?: string
+    cfTurnstileToken?: string,
+    tenantSlug?: string
   ) => {
     const response = await authAPI.registerCustomer(
       email,
@@ -101,7 +102,8 @@ export const useAuthStore = defineStore("auth", () => {
       firstName,
       lastName,
       phone,
-      cfTurnstileToken
+      cfTurnstileToken,
+      tenantSlug
     );
     if (response?.data?.user) {
       user.value = response.data.user;

@@ -13,6 +13,7 @@ This guide covers deploying the Restaurant Table Reservation System to a product
 - Node.js 18+
 - PM2 (`npm install -g pm2`)
 - Apache or Nginx
+- Podman (`sudo apt install -y podman podman-compose`)
 
 ---
 
@@ -58,6 +59,8 @@ EXIT;
 
 ## 3. Deploy Application
 
+### Option A: Podman Compose (Recommended)
+
 ```bash
 git clone https://github.com/kjsanni/restaurant-table-reservation-system.git /var/www/rtrs
 cd /var/www/rtrs
@@ -73,6 +76,57 @@ The `deploy-prod.sh` script:
 - Runs database migrations
 - Seeds default roles, groups, and admin user
 - Performs rollback on migration failure
+
+### Option B: Manual Podman Commands
+
+```bash
+# Build images
+podman build -t rtrs-backend -f back-end/Dockerfile .
+podman build -t rtrs-frontend -f front-end/Dockerfile .
+
+# Create network
+podman network create rtrs-network
+
+# Run MySQL
+podman run -d --name rtrs-mysql \
+  --network rtrs-network \
+  -e MYSQL_ROOT_PASSWORD=secure-password \
+  -e MYSQL_DATABASE=rtrs_production \
+  -e MYSQL_USER=rtrs_user \
+  -e MYSQL_PASSWORD=secure-password \
+  -p 3306:3306 \
+  -v mysql_data:/var/lib/mysql \
+  mysql:8.0
+
+# Run Redis
+podman run -d --name rtrs-redis \
+  --network rtrs-network \
+  -p 6379:6379 \
+  -v redis_data:/data \
+  redis:7-alpine
+
+# Run backend
+podman run -d --name rtrs-backend \
+  --network rtrs-network \
+  -e NODE_ENV=production \
+  -e PORT=8000 \
+  -e DB_HOST=rtrs-mysql \
+  -e DB_PORT=3306 \
+  -e DB_NAME=rtrs_production \
+  -e DB_USERNAME=rtrs_user \
+  -e DB_PASSWORD=secure-password \
+  -e JWT_SECRET=your-generated-256-bit-secret-here \
+  -e REDIS_HOST=rtrs-redis \
+  -e REDIS_PORT=6379 \
+  -p 8000:8000 \
+  rtrs-backend
+
+# Run frontend
+podman run -d --name rtrs-frontend \
+  --network rtrs-network \
+  -p 8080:8080 \
+  rtrs-frontend
+```
 
 ---
 

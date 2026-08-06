@@ -22,7 +22,13 @@ const init = async () => {
     });
   } catch (err) {
     await connect.closeConnection();
-    logger.error("Error econuntered", err);
+    logger.error("Error encountered", err);
+    if (err instanceof Error) {
+      console.error(err.stack);
+    } else {
+      console.error(JSON.stringify(err, null, 2));
+    }
+    process.exit(1);
   }
 };
 

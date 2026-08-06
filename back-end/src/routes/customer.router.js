@@ -4,7 +4,7 @@ const tryCatchHandler = require("../middleware/tryCatch");
 const httpMethodError = require("../middleware/httpMethodError");
 const customerController = require("../controllers/customer.controller");
 const { protect } = require("../middleware/auth");
-const { generalLimiter } = require("../middleware/rateLimit");
+const { generalLimiter, authLimiter } = require("../middleware/rateLimit");
 const { validateCsrfToken } = require("../middleware/csrf");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 
@@ -45,17 +45,17 @@ router
 
 router
   .route("/check-whatsapp")
-  .post(generalLimiter, tryCatchHandler(customerController.checkWhatsAppHandler))
+  .post(authLimiter, tryCatchHandler(customerController.checkWhatsAppHandler))
   .all(httpMethodError);
 
 router
   .route("/send-otp")
-  .post(generalLimiter, tryCatchHandler(customerController.sendOtpHandler))
+  .post(authLimiter, tryCatchHandler(customerController.sendOtpHandler))
   .all(httpMethodError);
 
 router
   .route("/verify-otp")
-  .post(generalLimiter, tryCatchHandler(customerController.verifyOtpHandler))
+  .post(authLimiter, tryCatchHandler(customerController.verifyOtpHandler))
   .all(httpMethodError);
 
 module.exports = router;

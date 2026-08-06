@@ -4,7 +4,7 @@ const fs = require("fs");
 const os = require("os");
 
 const escapeShellArg = (value) => {
-  if (value == null) {
+  if (value === null || value === undefined) {
     return '""';
   }
   const str = String(value);
@@ -20,8 +20,13 @@ const runBackup = async (options = {}) => {
     outputDir = path.join(os.tmpdir(), "backups"),
   } = options;
 
+  const sanitizedType = String(type).replace(/[^a-zA-Z0-9_-]/g, "");
+  if (!sanitizedType) {
+    throw { status: 400, message: "Invalid backup type" };
+  }
+
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const fileName = `backup-${type}-${timestamp}.sql`;
+  const fileName = `backup-${sanitizedType}-${timestamp}.sql`;
   const outputPath = path.join(outputDir, fileName);
 
   if (!fs.existsSync(outputDir)) {

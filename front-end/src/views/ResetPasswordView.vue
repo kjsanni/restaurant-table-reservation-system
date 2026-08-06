@@ -69,7 +69,7 @@ const submit = async () => {
   loading.value = true;
   message.value = "";
   try {
-    const res = await authAPI.resetPassword(route.query.token, password.value);
+    const res = await authAPI.resetPassword(route.params.token, password.value);
     message.value =
       res.data?.message || "Password reset successful. You can now log in.";
     messageType.value = "success";

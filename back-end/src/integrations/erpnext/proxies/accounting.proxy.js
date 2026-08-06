@@ -2,12 +2,11 @@
 
 const express = require("express");
 const router = express.Router();
-const tryCatchHandler = require("../../middleware/tryCatch");
-const { protect, requireActiveTenant } = require("../../middleware/auth");
-const { getTenantFeatureFlagsHandler } = require("../controllers/featureFlag.controller");
-const { syncCustomer, syncAllCustomers } = require("./sync/customer.sync");
-const { syncInvoice, syncAllInvoices } = require("./sync/invoice.sync");
-const { syncPayment, syncAllPayments } = require("./sync/payment.sync");
+const tryCatchHandler = require("../../../middleware/tryCatch");
+const { requireActiveTenant } = require("../../../middleware/auth");
+const { syncCustomer, syncAllCustomers } = require("../sync/customer.sync");
+const { syncInvoice, syncAllInvoices } = require("../sync/invoice.sync");
+const { syncPayment, syncAllPayments } = require("../sync/payment.sync");
 
 const checkErpnextFeature = async (req, res, next) => {
   const tenant = req.tenant;
@@ -47,6 +46,38 @@ router.get("/accounting/profit-loss", tryCatchHandler(requireActiveTenant, check
   if (to) filters.to_date = to;
   try {
     const result = await getClient().get("/api/resource/Profit and Loss Statement", { params: { filters } });
+    res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
+router.get("/accounting/balance-sheet", tryCatchHandler(requireActiveTenant, checkErpnextFeature, async (req, res) => {
+  const tenant = req.tenant;
+  const { getClient } = require("../client");
+  const { from, to } = req.query;
+  const filters = { company: tenant.name };
+  if (from) filters.from_date = from;
+  if (to) filters.to_date = to;
+  try {
+    const result = await getClient().get("/api/resource/Balance Sheet", { params: { filters } });
+    res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
+router.get("/accounting/tax-report", tryCatchHandler(requireActiveTenant, checkErpnextFeature, async (req, res) => {
+  const tenant = req.tenant;
+  const { getClient } = require("../client");
+  const { from, to } = req.query;
+  const filters = { company: tenant.name };
+  if (from) filters.from_date = from;
+  if (to) filters.to_date = to;
+  try {
+    const result = await getClient().get("/api/resource/GST Settings", {
+      params: { filters: { company: tenant.name } },
+    });
     res.status(200).json({ success: true, data: result.data });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

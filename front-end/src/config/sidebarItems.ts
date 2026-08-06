@@ -6,6 +6,7 @@ export interface NavItem {
   requiresAdmin?: boolean;
   requiresPermission?: string;
   requiresFeature?: string;
+  requiresServiceMode?: string;
   requiresVertical?: string;
   tenantOnly?: boolean;
   platformOnly?: boolean;
@@ -35,7 +36,7 @@ export const authenticatedNavItems: NavItem[] = [
     text: "Reservations",
     icon: "mdi:format-list-bulleted",
     requiresAuth: true,
-    requiresFeature: "dine_in",
+    requiresServiceMode: "dine_in",
   },
   {
     routeName: "table-management",
@@ -56,7 +57,7 @@ export const authenticatedNavItems: NavItem[] = [
     text: "Calendar",
     icon: "mdi:calendar",
     requiresAuth: true,
-    requiresFeature: "dine_in",
+    requiresServiceMode: "dine_in",
   },
   {
     routeName: "staff-management",
@@ -88,6 +89,18 @@ export const authenticatedNavItems: NavItem[] = [
     requiresFeature: "waitlist",
   },
   {
+    routeName: "order-dashboard",
+    text: "Orders",
+    icon: "mdi:food",
+    requiresAuth: true,
+  },
+  {
+    routeName: "menu-management",
+    text: "Menu",
+    icon: "mdi:book-open-variant",
+    requiresAuth: true,
+  },
+  {
     routeName: "reports",
     text: "Reports",
     icon: "mdi:chart-bar",
@@ -111,7 +124,7 @@ export const authenticatedNavItems: NavItem[] = [
     text: "Heatmap",
     icon: "mdi:chart-area",
     requiresAuth: true,
-    requiresFeature: "dine_in",
+    requiresServiceMode: "dine_in",
   },
   {
     routeName: "payments",
@@ -255,6 +268,13 @@ export const authenticatedNavItems: NavItem[] = [
     icon: "mdi:cash-register",
     requiresAuth: true,
     requiresFeature: "erpnext_pos",
+  },
+  {
+    routeName: "erpnext-manufacturing",
+    text: "Manufacturing",
+    icon: "mdi:factory",
+    requiresAuth: true,
+    requiresFeature: "erpnext_manufacturing",
   },
   {
     routeName: "salon-inventory",

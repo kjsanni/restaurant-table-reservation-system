@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { getApiErrorMessage } from "@/utils/apiError";
 import TurnstileWidget from "@/components/TurnstileWidget.vue";
 import { useTurnstileConfig } from "@/composables/useTurnstileConfig";
+import { getBySlug as getPublicTenant } from "@/services/tenantPublicAPI";
 
 const { config: turnstileConfig } = useTurnstileConfig();
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 const form = ref({
@@ -23,10 +25,61 @@ const submitting = ref(false);
 const generalError = ref<string | null>(null);
 const validationErrors = ref<Record<string, string[]> | null>(null);
 const cfTurnstileToken = ref("");
+const tenantSlug = ref<string>((route.params.tenantSlug as string) || "");
+const tenantBranding = ref<{
+  brandName?: string;
+  logoUrl?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+}>({});
+const loadingBranding = ref(false);
+
+const brandSideStyle = computed(() => ({
+  background: tenantBranding.value.primaryColor || "#0f172a",
+}));
+
+const applyBrandingToDOM = (branding: Record<string, any>) => {
+  const root = document.documentElement;
+  if (branding.primaryColor) {
+    root.style.setProperty("--brand-500", branding.primaryColor);
+    root.style.setProperty("--brand-400", branding.primaryColor);
+    root.style.setProperty("--brand-600", branding.primaryColor);
+    root.style.setProperty("--brand-700", branding.primaryColor);
+    root.style.setProperty("--accent", branding.primaryColor);
+    root.style.setProperty("--accent-500", branding.primaryColor);
+    root.style.setProperty("--accent-400", branding.primaryColor);
+    root.style.setProperty("--accent-600", branding.primaryColor);
+    root.style.setProperty("--accent-soft", branding.primaryColor);
+    root.style.setProperty("--accent-text", branding.primaryColor);
+  }
+  if (branding.secondaryColor) {
+    root.style.setProperty("--brand-900", branding.secondaryColor);
+    root.style.setProperty("--brand-800", branding.secondaryColor);
+  }
+};
+
+const loadTenantBranding = async () => {
+  if (!tenantSlug.value) return;
+  loadingBranding.value = true;
+  try {
+    const response = await getPublicTenant(tenantSlug.value);
+    const settings = response.data?.item?.settings || {};
+    tenantBranding.value = settings.branding || {};
+    applyBrandingToDOM(tenantBranding.value);
+  } catch {
+    tenantBranding.value = {};
+  } finally {
+    loadingBranding.value = false;
+  }
+};
 
 const onTurnstileSuccess = (token: string) => {
   cfTurnstileToken.value = token;
 };
+
+onMounted(() => {
+  loadTenantBranding();
+});
 
 const handleRegister = async () => {
   if (submitting.value) return;
@@ -47,7 +100,8 @@ const handleRegister = async () => {
       form.value.firstName,
       form.value.lastName,
       form.value.phone,
-      cfTurnstileToken.value || undefined
+      cfTurnstileToken.value || undefined,
+      tenantSlug.value || undefined
     );
     router.push("/portal");
   } catch (err) {
@@ -61,16 +115,29 @@ const handleRegister = async () => {
 
 <template>
   <div class="page">
-    <aside class="brand-side">
+    <aside class="brand-side" :style="brandSideStyle">
       <div class="brand-top">
-        <div class="brand-mark">R</div>
-        <div class="brand-name">Customer Portal</div>
+        <div class="brand-mark" v-if="!tenantBranding.logoUrl">R</div>
+        <img
+          v-else
+          :src="tenantBranding.logoUrl"
+          class="brand-logo"
+          alt="Tenant logo"
+        />
+        <div class="brand-name">
+          {{ tenantBranding.brandName || "Customer Portal" }}
+        </div>
       </div>
       <div class="brand-center">
         <h1>Join us today.</h1>
         <p>Create an account to manage your reservations and preferences.</p>
       </div>
-      <div class="brand-bottom">&copy; 2026 Vibespot Technologies Ltd</div>
+      <div class="brand-bottom" v-if="tenantSlug">
+        &copy; 2026 {{ tenantBranding.brandName || "Tenant" }}
+      </div>
+      <div class="brand-bottom" v-else>
+        &copy; 2026 Vibespot Technologies Ltd
+      </div>
     </aside>
 
     <main class="form-side">
@@ -176,7 +243,7 @@ const handleRegister = async () => {
 }
 .brand-side {
   flex: 1;
-  background: #0f172a;
+  background: var(--brand-900, #0f172a);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -192,11 +259,17 @@ const handleRegister = async () => {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 0.5rem;
-  background: #38bdf8;
-  color: #0f172a;
+  background: var(--accent, #38bdf8);
+  color: var(--brand-900, #0f172a);
   display: grid;
   place-items: center;
   font-weight: 700;
+}
+.brand-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  object-fit: contain;
 }
 .brand-name {
   font-size: 1.25rem;
@@ -264,7 +337,7 @@ const handleRegister = async () => {
 }
 .field input:focus {
   outline: none;
-  border-color: #38bdf8;
+  border-color: var(--accent, #38bdf8);
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
 }
 .error {
@@ -287,7 +360,7 @@ const handleRegister = async () => {
 .btn-primary {
   width: 100%;
   padding: 0.7rem;
-  background: #0f172a;
+  background: var(--brand-900, #0f172a);
   color: #fff;
   border: none;
   border-radius: 0.5rem;

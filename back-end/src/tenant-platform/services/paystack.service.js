@@ -1,9 +1,8 @@
 const axios = require("axios");
 const db = require("../../db/models");
+const { normalizeSettingValue } = require("../../utils/settings");
 
-const PAYSTACK_BASE = process.env.PAYSTACK_MODE === "live"
-  ? "https://api.paystack.co"
-  : "https://api.paystack.co";
+const PAYSTACK_BASE = "https://api.paystack.co";
 
 const envSecretKey = process.env.PAYSTACK_SECRET_KEY;
 const envWebhookSecret = process.env.PAYSTACK_WEBHOOK_SECRET;
@@ -23,10 +22,7 @@ const loadPaystackConfig = async () => {
   try {
     const setting = await db.setting.findOne({ where: { key: "paystack_config" } });
     if (setting && setting.value) {
-      const cfg =
-        typeof setting.value === "string"
-          ? JSON.parse(setting.value)
-          : setting.value;
+      const cfg = normalizeSettingValue(setting.value);
       if (cfg.secretKey) secretKey = cfg.secretKey;
       if (cfg.webhookSecret) webhookSecret = cfg.webhookSecret;
       if (cfg.mode) mode = cfg.mode;

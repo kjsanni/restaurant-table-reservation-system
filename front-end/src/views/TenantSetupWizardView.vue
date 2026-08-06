@@ -8,7 +8,12 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 type RestaurantType =
-  "full_service" | "quick_service" | "cloud_kitchen" | "cafe" | "bar";
+  | "full_service"
+  | "quick_service"
+  | "cloud_kitchen"
+  | "dine_in_only"
+  | "cafe"
+  | "bar";
 
 const RESTAURANT_TYPES: {
   value: RestaurantType;
@@ -33,6 +38,12 @@ const RESTAURANT_TYPES: {
     label: "Cloud Kitchen",
     description: "Delivery-only, no dine-in space",
     icon: "mdi:package-variant-closed",
+  },
+  {
+    value: "dine_in_only",
+    label: "Dine-In Only",
+    description: "Table service only, no takeaway or delivery",
+    icon: "mdi:silverware",
   },
   {
     value: "cafe",
@@ -77,6 +88,7 @@ const typeDefaults: Record<RestaurantType, string[]> = {
   full_service: ["dine_in", "takeaway", "delivery"],
   quick_service: ["takeaway", "delivery"],
   cloud_kitchen: ["delivery"],
+  dine_in_only: ["dine_in"],
   cafe: ["dine_in", "takeaway"],
   bar: ["dine_in", "takeaway"],
 };

@@ -5,28 +5,14 @@ const cookieParser = require("cookie-parser");
 const notFound = require("../middleware/notFound");
 const errorHandler = require("../middleware/errorHandler");
 const { Sentry } = require("../middleware/monitoring");
-const tableRouter = require("../routes/table.router");
-const reservationRouter = require("../routes/reservation.router");
 const authRouter = require("../routes/auth.router");
 const passwordResetRouter = require("../routes/passwordReset.router");
-const scheduleRouter = require("../routes/schedule.router");
-const shiftRouter = require("../routes/shift.router");
-const timeOffRouter = require("../routes/timeOff.router");
-const floorPlanRouter = require("../routes/floorPlan.router");
 const auditLogRouter = require("../routes/auditLog.router");
 const rbacRouter = require("../routes/rbac.router");
-const waitlistRouter = require("../routes/waitlist.router");
-const paymentRouter = require("../routes/payment.router");
-const reportRouter = require("../routes/report.router");
-const customReportRouter = require("../routes/custom-report.router");
-const customerRouter = require("../routes/customer.router");
 const adminRouter = require("../routes/admin.router");
-const customerPortalRouter = require("../routes/customer-portal.router");
 const notificationRouter = require("../routes/notification.router");
 const emailTemplateRouter = require("../routes/emailTemplate.router");
 const webhookRouter = require("../routes/webhook.router");
-const whatsappRouter = require("../routes/whatsapp.router");
-const deliveryRouter = require("../routes/delivery.router");
 const shaqexpressRouter = require("../routes/shaqexpress.router");
 const legalRouter = require("../routes/legal.router");
 const publicRouter = require("../routes/public.router");
@@ -42,215 +28,23 @@ const { Server } = require("socket.io");
 const tryCatchHandler = require("../middleware/tryCatch");
 const { protect, requireSuperAdmin } = require("../middleware/auth");
 const ipAllowlist = require("../middleware/ipAllowlist");
-
-const superAdminProtect = (req, res, next) => {
-  protect(req, res, () => {
-    requireSuperAdmin(req, res, next);
-  });
-};
-
-const adminMiddleware = (req, res, next) => {
-  ipAllowlist(req, res, () => {
-    superAdminProtect(req, res, next);
-  });
-};
-
-const { authLimiter, generalLimiter, bulkOperationLimiter, adminActionLimiter, syncLimiter, webhookLimiter } = require("../middleware/rateLimit");
+const { authLimiter, generalLimiter, adminActionLimiter, syncLimiter, webhookLimiter } = require("../middleware/rateLimit");
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
 const { startBackupWorker } = require("../queues/backup.queue");
+const { checkQueueDepths } = require("../queues/queue");
+const { resolveTenant } = require("../tenant-platform/middleware/resolveTenant");
+const { requireActiveTenant } = require("../tenant-platform/middleware/tenantStatus");
+const { loadModules } = require("../tenant-platform/modules/module.loader");
+const erpnextAccountingRouter = require("../integrations/erpnext/proxies/accounting.proxy");
+const erpnextInventoryRouter = require("../integrations/erpnext/proxies/inventory.proxy");
+const erpnextHrRouter = require("../integrations/erpnext/proxies/hr.proxy");
+const erpnextCrmRouter = require("../integrations/erpnext/proxies/crm.proxy");
+const erpnextManufacturingRouter = require("../integrations/erpnext/proxies/manufacturing.proxy");
+const erpnextOnboardingRouter = require("../integrations/erpnext/onboarding/onboarding");
+const erpnextAdminRouter = require("../integrations/erpnext/admin/admin.router");
 
-const TENANT_MODE = process.env.TENANT_MODE === "enabled";
-let resolveTenant = null;
-let requireActiveTenant = null;
-let tenantAdminRoutes = null;
-let planRoutes = null;
-let platformPaymentRoutes = null;
-let usageRoutes = null;
-let revenueRoutes = null;
-let bulkActionRoutes = null;
-let noteRoutes = null;
-let trialRoutes = null;
-let invoiceRoutes = null;
-let billingEmailRoutes = null;
-let statusTimelineRoutes = null;
-let gracePeriodRoutes = null;
-let whiteLabelRoutes = null;
-let apiKeyRoutes = null;
-let platformAuditRoutes = null;
-let notificationRoutes = null;
-let erpnextProxyRoutes = null;
-let erpnextOnboardingRoutes = null;
-let erpnextHrRoutes = null;
-let erpnextCrmRoutes = null;
-let erpnextInventoryRoutes = null;
-let erpnextAdminRoutes = null;
-let legalAcceptanceRoutes = null;
-let dsarRequestRoutes = null;
-  let publicDsarRoutes = null;
-  let benchmarkRoutes = null;
-  let billingRoutes = null;
-  let requireFeature = null;
-  let requiresServiceMode = null;
-  let supportTicketRoutes = null;
-  let totpRoutes = null;
-  let sessionRoutes = null;
-  let incidentRoutes = null;
-  let failedPaymentAlertRoutes = null;
-  let backupRoutes = null;
-  let deploymentRoutes = null;
-  let securityRoutes = null;
-  let complianceRoutes = null;
-  let supportChatRoutes = null;
-  let supportTemplateRoutes = null;
-  let featureFlagRoutes = null;
-  let financialManagementRoutes = null;
-  let whistleblowerTipRoutes = null;
-  let integrationAnalyticsRoutes = null;
-  let impersonationRoutes = null;
-  let salonAppointmentRoutes = null;
-  let salonStationRoutes = null;
-  let salonServiceRoutes = null;
-  let salonServicePackageRoutes = null;
-  let salonGiftCardRoutes = null;
-  let alertRuleRoutes = null;
-  let salonReferralRoutes = null;
-  let salonLocationRoutes = null;
-  let salonInventoryRoutes = null;
-  let salonExpensesRoutes = null;
-  let salonPricingRulesRoutes = null;
-  let salonCommissionRoutes = null;
-  let apiLatencyRoutes = null;
-  let cacheStatsRoutes = null;
-  let verticalTemplateRoutes = null;
-  let supportNoteRoutes = null;
-  let supportAttachmentRoutes = null;
-  let complianceRuleRoutes = null;
-  let notificationTemplateRoutes = null;
-  let announcementRoutes = null;
-  let dataRetentionPolicyRoutes = null;
-  let salonCustomerPortalRoutes = null;
-  let salonDashboardRoutes = null;
-  let penetrationTestReportRoutes = null;
-  let insuranceDocumentRoutes = null;
-  let tenantMigrationRoutes = null;
-  let encryptionKeyRoutes = null;
-  let autoScalingTriggerRoutes = null;
-  let complianceEvidenceRoutes = null;
-  let dataAnonymizationRoutes = null;
-  let platformSettingsRoutes = null;
-
-if (TENANT_MODE) {
-  ({ resolveTenant } = require("../tenant-platform/middleware/resolveTenant"));
-  ({ requireActiveTenant } = require("../tenant-platform/middleware/tenantStatus"));
-  ({ requiredFeature: requireFeature, requiresServiceMode } = require("../tenant-platform/middleware/featureGuard"));
-  tenantAdminRoutes = require("../tenant-platform/routes/tenantAdmin.router");
-  planRoutes = require("../tenant-platform/routes/plan.router");
-  platformPaymentRoutes = require("../tenant-platform/routes/platformPayment.router");
-  usageRoutes = require("../tenant-platform/routes/usage.router");
-  revenueRoutes = require("../tenant-platform/routes/revenue.router");
-  bulkActionRoutes = require("../tenant-platform/routes/bulkAction.router");
-  noteRoutes = require("../tenant-platform/routes/note.router");
-  trialRoutes = require("../tenant-platform/routes/trial.router");
-  invoiceRoutes = require("../tenant-platform/routes/invoice.router");
-  billingEmailRoutes = require("../tenant-platform/routes/billingEmail.router");
-  statusTimelineRoutes = require("../tenant-platform/routes/statusTimeline.router");
-  gracePeriodRoutes = require("../tenant-platform/routes/gracePeriod.router");
-  whiteLabelRoutes = require("../tenant-platform/routes/whiteLabel.router");
-  apiKeyRoutes = require("../tenant-platform/routes/apiKey.router");
-  platformAuditRoutes = require("../tenant-platform/routes/platformAudit.router");
-  notificationRoutes = require("../tenant-platform/routes/notification.router");
-  erpnextProxyRoutes = require("../integrations/erpnext/proxies/accounting.proxy");
-  erpnextOnboardingRoutes = require("../integrations/erpnext/onboarding/onboarding");
-  erpnextHrRoutes = require("../integrations/erpnext/proxies/hr.proxy");
-  erpnextCrmRoutes = require("../integrations/erpnext/proxies/crm.proxy");
-  erpnextInventoryRoutes = require("../integrations/erpnext/proxies/inventory.proxy");
-  erpnextAdminRoutes = require("../integrations/erpnext/admin/admin.router");
-  legalAcceptanceRoutes = require("../tenant-platform/routes/legalAcceptance.router");
-  dsarRequestRoutes = require("../tenant-platform/routes/dsarRequest.router");
-  publicDsarRoutes = require("../tenant-platform/routes/publicDsar.router");
-  publicTenantRoutes = require("../tenant-platform/routes/publicTenant.router");
-  benchmarkRoutes = require("../tenant-platform/routes/benchmark.router");
-  billingRoutes = require("../tenant-platform/routes/billing.router");
-  supportTicketRoutes = require("../tenant-platform/routes/supportTicket.router");
-  totpRoutes = require("../tenant-platform/routes/totp.router");
-  sessionRoutes = require("../tenant-platform/routes/session.router");
-  incidentRoutes = require("../tenant-platform/routes/incident.router");
-  failedPaymentAlertRoutes = require("../tenant-platform/routes/failedPaymentAlert.router");
-  backupRoutes = require("../tenant-platform/routes/backup.router");
-  deploymentRoutes = require("../tenant-platform/routes/deployment.router");
-  securityRoutes = require("../tenant-platform/routes/security.router");
-  complianceRoutes = require("../tenant-platform/routes/compliance.router");
-  supportChatRoutes = require("../tenant-platform/routes/supportChat.router");
-  supportTemplateRoutes = require("../tenant-platform/routes/supportTemplate.router");
-  featureFlagRoutes = require("../tenant-platform/routes/featureFlag.router");
-  financialManagementRoutes = require("../tenant-platform/routes/financialManagement.router");
-  whistleblowerTipRoutes = require("../tenant-platform/routes/whistleblowerTip.router");
-  integrationAnalyticsRoutes = require("../tenant-platform/routes/integrationAnalytics.router");
-  impersonationRoutes = require("../tenant-platform/routes/impersonation.router");
-  advancedAnalyticsRoutes = require("../tenant-platform/routes/advancedAnalytics.router");
-  platformRoleRoutes = require("../tenant-platform/routes/platform-role.router");
-  maintenanceRoutes = require("../tenant-platform/routes/maintenance.router");
-  trustSafetyRoutes = require("../tenant-platform/routes/trustSafety.router");
-  monitoringRoutes = require("../tenant-platform/routes/monitoring.router");
-  verticalAnalyticsRoutes = require("../tenant-platform/routes/verticalAnalytics.router");
-  dataRetentionRoutes = require("../tenant-platform/routes/dataRetention.router");
-  incidentRoutes = require("../tenant-platform/routes/incident.router");
-  suspiciousActivityRoutes = require("../tenant-platform/routes/suspiciousActivity.router");
-  subProcessorRoutes = require("../tenant-platform/routes/subProcessor.router");
-  debugRoutes = require("../tenant-platform/routes/debug.router");
-  migrationRoutes = require("../tenant-platform/routes/migration.router");
-  postmortemRoutes = require("../tenant-platform/routes/postmortem.router");
-  apiLatencyRoutes = require("../tenant-platform/routes/apiLatency.router");
-  cacheStatsRoutes = require("../tenant-platform/routes/cacheStats.router");
-  verticalTemplateRoutes = require("../tenant-platform/routes/verticalTemplate.router");
-  webhookEndpointRoutes = require("../tenant-platform/routes/webhookEndpoint.router");
-  supportNoteRoutes = require("../tenant-platform/routes/supportNote.router");
-  supportAttachmentRoutes = require("../tenant-platform/routes/supportAttachment.router");
-  complianceRuleRoutes = require("../tenant-platform/routes/complianceRule.router");
-  notificationTemplateRoutes = require("../tenant-platform/routes/notificationTemplate.router");
-  announcementRoutes = require("../tenant-platform/routes/announcement.router");
-  dataRetentionPolicyRoutes = require("../tenant-platform/routes/dataRetentionPolicy.router");
-  subProcessorRoutes = require("../tenant-platform/routes/subProcessor.router");
-  platformReportRoutes = require("../tenant-platform/routes/platformReport.router");
-  alertRuleRoutes = require("../tenant-platform/routes/alertRule.router");
-  reconciliationRoutes = require("../tenant-platform/routes/reconciliation.router");
-  paystackConfigRoutes = require("../tenant-platform/routes/paystackConfig.router");
-  shaqExpressConversionRoutes = require("../tenant-platform/routes/shaqExpressConversion.router");
-  supportTicketAnalyticsRoutes = require("../tenant-platform/routes/supportTicketAnalytics.router");
-  marketplaceRoutes = require("../tenant-platform/routes/marketplace.router");
-  caseStudyRoutes = require("../tenant-platform/routes/caseStudy.router");
-  platformReferralRoutes = require("../tenant-platform/routes/platformReferral.router");
-  crossTenantSearchRoutes = require("../tenant-platform/routes/crossTenantSearch.router");
-  penetrationTestReportRoutes = require("../tenant-platform/routes/penetrationTestReport.router");
-  insuranceDocumentRoutes = require("../tenant-platform/routes/insuranceDocument.router");
-  tenantMigrationRoutes = require("../tenant-platform/routes/tenantMigration.router");
-  encryptionKeyRoutes = require("../tenant-platform/routes/encryptionKey.router");
-  autoScalingTriggerRoutes = require("../tenant-platform/routes/autoScalingTrigger.router");
-  complianceEvidenceRoutes = require("../tenant-platform/routes/complianceEvidence.router");
-  dataAnonymizationRoutes = require("../tenant-platform/routes/dataAnonymization.router");
-  platformSettingsRoutes = require("../tenant-platform/routes/platformSettings.router");
-  ({ requireVertical } = require("../middleware/requireVertical"));
-  salonAppointmentRoutes = require("../verticals/salon/routes/appointment.router");
-  salonStationRoutes = require("../verticals/salon/routes/station.router");
-  salonServiceRoutes = require("../verticals/salon/routes/service.router");
-  salonServicePackageRoutes = require("../verticals/salon/routes/servicePackage.router");
-  salonGiftCardRoutes = require("../verticals/salon/routes/giftCard.router");
-  salonReferralRoutes = require("../verticals/salon/routes/referral.router");
-  salonLocationRoutes = require("../verticals/salon/routes/location.router");
-  salonInventoryRoutes = require("../verticals/salon/routes/inventoryItem.router");
-  salonExpensesRoutes = require("../verticals/salon/routes/expense.router");
-  salonPricingRulesRoutes = require("../verticals/salon/routes/pricingRule.router");
-  salonCommissionRoutes = require("../verticals/salon/routes/commission.router");
-  salonCustomerPortalRoutes = require("../routes/salon-customer-portal.router");
-  salonReportsRoutes = require("../routes/salon-reports.router");
-  salonRecurringAppointmentRoutes = require("../verticals/salon/routes/recurring-appointment.router");
-  salonClientSegmentationRoutes = require("../verticals/salon/routes/client-segmentation.router");
-  salonStaffRoutes = require("../verticals/salon/routes/staff.router");
-  salonMarketingCampaignRoutes = require("../verticals/salon/routes/marketing-campaign.router");
-  salonGalleryRoutes = require("../verticals/salon/routes/gallery.router");
-  salonDashboardRoutes = require("../routes/salon-dashboard.router");
-}
+const { adminMiddleware } = require("../middleware/adminMiddleware");
 
 const requestTimeout = (timeout = 15000) => {
   return (req, res, next) => {
@@ -272,7 +66,7 @@ const createServer = () => {
 
   getCurrentSecret();
 
-  const corsOrigins = process.env.CORS_ORIGINS?.split(",").filter(o => o.trim());
+  const corsOrigins = process.env.CORS_ORIGINS?.split(",").filter((o) => o.trim());
   const allowedOrigins = corsOrigins.length > 0 ? corsOrigins : ["http://localhost:8080"];
 
   const io = new Server(server, {
@@ -283,25 +77,41 @@ const createServer = () => {
     },
   });
 
+  io.use(async (socket, next) => {
+    try {
+      const token = (socket.handshake.auth && socket.handshake.auth.token) || (socket.handshake.query && socket.handshake.query.token);
+      if (!token) {
+        return next(new Error("Authentication error: no token provided"));
+      }
+      const decoded = require("../services/authService").verifyToken(token);
+      const user = await require("../DAOs/auth.dao").findUserById(decoded.userId);
+      if (!user) {
+        return next(new Error("Authentication error: user not found"));
+      }
+      socket.user = user;
+      next();
+    } catch (err) {
+      next(new Error("Authentication error: invalid token"));
+    }
+  });
+
   io.on("connection", (socket) => {
-    console.log("Client connected:", socket.id);
+    console.log("Client connected:", socket.id, "user:", (socket.user && socket.user.id) || "anonymous");
   });
 
   app.set("io", io);
 
-  if (TENANT_MODE) {
-    const { runTenantCron } = require("../tenant-platform/utils/tenantCron");
-    runTenantCron();
-    setInterval(runTenantCron, 6 * 60 * 60 * 1000);
+  const { runTenantCron } = require("../tenant-platform/utils/tenantCron");
+  runTenantCron();
+  setInterval(runTenantCron, 6 * 60 * 60 * 1000);
 
-    const { runSalonCron } = require("../verticals/salon/utils/salonCron");
-    runSalonCron().catch((err) => console.error("[SalonCron] startup error:", err.message));
-    setInterval(() => runSalonCron().catch((err) => console.error("[SalonCron] error:", err.message)), 60 * 60 * 1000);
+  const { runSalonCron } = require("../verticals/salon/utils/salonCron");
+  runSalonCron().catch((err) => console.error("[SalonCron] startup error:", err.message));
+  setInterval(() => runSalonCron().catch((err) => console.error("[SalonCron] error:", err.message)), 60 * 60 * 1000);
 
-    const { runBackupCron } = require("../tenant-platform/utils/backupCron");
-    runBackupCron();
-    setInterval(runBackupCron, 60 * 60 * 1000);
-  }
+  const { runBackupCron } = require("../tenant-platform/utils/backupCron");
+  runBackupCron();
+  setInterval(runBackupCron, 60 * 60 * 1000);
 
   const workers = [];
   try {
@@ -327,12 +137,19 @@ const createServer = () => {
   app.use(setCsrfCookie);
   app.use(requestTimeout(15000));
 
-  app.use(cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }));
+  app.use(
+    cors({
+      origin: allowedOrigins,
+      credentials: true,
+    })
+  );
   app.use(express.json({ limit: "5kb" }));
-  app.use(helmet({ crossOriginResourcePolicy: false, hsts: process.env.NODE_ENV === "production" ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false }));
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false,
+      hsts: process.env.NODE_ENV === "production" ? { maxAge: 365 * 24 * 60 * 60, includeSubDomains: true, preload: true } : false,
+    })
+  );
   app.use(cspHeaders);
   app.use(require("../middleware/sanitize").sanitize);
   app.use(require("../middleware/apiLatency"));
@@ -341,7 +158,8 @@ const createServer = () => {
     const token = req.cookies?.[CSRF_COOKIE_NAME] || generateCsrfToken();
     if (!req.cookies?.[CSRF_COOKIE_NAME]) {
       res.cookie(CSRF_COOKIE_NAME, token, {
-        httpOnly: false,
+        // nosemgrep: javascript.lang.security.audit.cookie-http-only-disabled - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
+        httpOnly: false, // guardrails-disable-line - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "lax" : false,
         path: "/",
@@ -351,162 +169,59 @@ const createServer = () => {
     res.json({ success: true, token });
   });
 
-  app.get("/api/v1/health", (req, res) => {
-    res.json({ success: true, status: "healthy", timestamp: new Date().toISOString() });
-  });
+  app.get("/api/v1/health", tryCatchHandler(async (req, res) => {
+    const queueAlerts = await checkQueueDepths();
+    res.json({
+      success: true,
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      queueAlerts: queueAlerts.length ? queueAlerts : undefined,
+    });
+  }));
 
-  if (TENANT_MODE) {
-    app.use(tryCatchHandler(resolveTenant));
-    app.use(tryCatchHandler(requireActiveTenant));
-  }
+  app.use(tryCatchHandler(resolveTenant));
+  app.use(tryCatchHandler(requireActiveTenant));
 
   app.use("/api/v1", generalLimiter, require("../routes"));
-  app.use("/api/v1/tables", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("table_management")] : []), tableRouter);
-  app.use("/api/v1/reservations", logAction, validateCsrfToken, ...(TENANT_MODE ? [requiresServiceMode("dine_in")] : []), reservationRouter);
   app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
   app.use("/api/v1/auth", validateCsrfToken, authLimiter, passwordResetRouter);
-  app.use("/api/v1/schedule", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), scheduleRouter);
-  app.use("/api/v1/shifts", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), shiftRouter);
-  app.use("/api/v1/time-offs", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("staff_scheduling")] : []), timeOffRouter);
-  app.use("/api/v1/floor-plans", logAction, validateCsrfToken, ...(TENANT_MODE ? [requireFeature("table_management")] : []), floorPlanRouter);
-  app.use("/api/v1/audit-logs", auditLogRouter);
-  app.use("/api/v1/rbac", logAction, validateCsrfToken, rbacRouter);
-  app.use("/api/v1/waitlist", logAction, validateCsrfToken, bulkOperationLimiter, ...(TENANT_MODE ? [requireFeature("waitlist"), requiresServiceMode("dine_in")] : []), waitlistRouter);
-  app.use("/api/v1/payments", logAction, validateCsrfToken, paymentRouter);
-  app.use("/api/v1/reports", logAction, validateCsrfToken, reportRouter);
-  app.use("/api/v1/menu", logAction, validateCsrfToken, require("../routes/menu.router"));
-  app.use("/api/v1/orders", logAction, validateCsrfToken, require("../routes/order.router"));
-  app.use("/api/v1/promotions", logAction, validateCsrfToken, require("../routes/promotion.router"));
-  app.use("/api/v1/reviews", logAction, validateCsrfToken, require("../routes/review.router"));
-  app.use("/api/v1/custom-reports", logAction, validateCsrfToken, customReportRouter);
-  app.use("/api/v1/customers", logAction, validateCsrfToken, customerRouter);
+  app.use("/api/v1/audit-logs", generalLimiter, auditLogRouter);
+  app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
   app.use("/api/v1/public", publicRouter);
   app.use("/api/v1/public/status", statusRouter);
   app.use("/api/v1/docs", docsRouter);
-  if (TENANT_MODE) {
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, trialRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, invoiceRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, statusTimelineRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, gracePeriodRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, whiteLabelRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, apiKeyRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, onboardingRoutes);
-    app.use("/api/v1/erpnext", logAction, validateCsrfToken, erpnextProxyRoutes);
-    app.use("/api/v1/erpnext/onboarding", logAction, validateCsrfToken, erpnextOnboardingRoutes);
-    app.use("/api/v1/erpnext/hr", logAction, validateCsrfToken, erpnextHrRoutes);
-    app.use("/api/v1/erpnext/crm", logAction, validateCsrfToken, erpnextCrmRoutes);
-    app.use("/api/v1/erpnext/inventory", logAction, validateCsrfToken, erpnextInventoryRoutes);
-    app.use("/api/v1/admin/erpnext", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, erpnextAdminRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, legalAcceptanceRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, dsarRequestRoutes);
-    app.use("/api/v1/admin/benchmarks", logAction, validateCsrfToken, adminMiddleware, benchmarkRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, noteRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, tenantAdminRoutes);
-    app.use("/api/v1/admin/plans", logAction, validateCsrfToken, adminMiddleware, planRoutes);
-    app.use("/api/v1/admin/payments", logAction, validateCsrfToken, adminMiddleware, platformPaymentRoutes);
-    app.use("/api/v1/admin/usage", logAction, validateCsrfToken, adminMiddleware, usageRoutes);
-    app.use("/api/v1/admin/revenue", logAction, validateCsrfToken, adminMiddleware, revenueRoutes);
-    app.use("/api/v1/admin/bulk", logAction, validateCsrfToken, adminMiddleware, bulkActionRoutes);
-    app.use("/api/v1/admin/billing-emails", logAction, validateCsrfToken, adminMiddleware, billingEmailRoutes);
-    app.use("/api/v1/admin/audit", logAction, validateCsrfToken, adminMiddleware, platformAuditRoutes);
-    app.use("/api/v1/admin/notifications", logAction, validateCsrfToken, adminMiddleware, notificationRoutes);
-    app.use("/api/v1/admin/support-tickets", logAction, validateCsrfToken, adminMiddleware, supportTicketAnalyticsRoutes);
-    app.use("/api/v1/admin/support-tickets", logAction, validateCsrfToken, adminMiddleware, supportTicketRoutes);
-    app.use("/api/v1/admin/totp", logAction, validateCsrfToken, adminMiddleware, totpRoutes);
-    app.use("/api/v1/admin/sessions", logAction, validateCsrfToken, adminMiddleware, sessionRoutes);
-    app.use("/api/v1/admin/incidents", logAction, validateCsrfToken, adminMiddleware, incidentRoutes);
-    app.use("/api/v1/admin/payment-alerts", logAction, validateCsrfToken, adminMiddleware, failedPaymentAlertRoutes);
-    app.use("/api/v1/admin/backups", logAction, validateCsrfToken, adminMiddleware, backupRoutes);
-    app.use("/api/v1/admin/deployment", logAction, validateCsrfToken, adminMiddleware, deploymentRoutes);
-    app.use("/api/v1/admin/security", logAction, validateCsrfToken, adminMiddleware, securityRoutes);
-    app.use("/api/v1/admin/compliance", logAction, validateCsrfToken, adminMiddleware, complianceRoutes);
-    app.use("/api/v1/admin/support-chat", logAction, validateCsrfToken, adminMiddleware, supportChatRoutes);
-    app.use("/api/v1/admin/support-notes", logAction, validateCsrfToken, adminMiddleware, supportNoteRoutes);
-    app.use("/api/v1/admin/support-attachments", logAction, validateCsrfToken, adminMiddleware, supportAttachmentRoutes);
-    app.use("/api/v1/admin/compliance-rules", logAction, validateCsrfToken, adminMiddleware, complianceRuleRoutes);
-    app.use("/api/v1/admin/notification-templates", logAction, validateCsrfToken, adminMiddleware, notificationTemplateRoutes);
-    app.use("/api/v1/admin/announcements", logAction, validateCsrfToken, adminMiddleware, announcementRoutes);
-    app.use("/api/v1/admin/data-retention/policies", logAction, validateCsrfToken, adminMiddleware, dataRetentionPolicyRoutes);
-    app.use("/api/v1/admin/support-templates", logAction, validateCsrfToken, adminMiddleware, supportTemplateRoutes);
-    app.use("/api/v1/admin/feature-flags", logAction, validateCsrfToken, adminMiddleware, featureFlagRoutes);
-    app.use("/api/v1/admin/financial", logAction, validateCsrfToken, adminMiddleware, financialManagementRoutes);
-    app.use("/api/v1/admin/whistleblower", logAction, validateCsrfToken, adminMiddleware, whistleblowerTipRoutes);
-    app.use("/api/v1/admin/integrations", logAction, validateCsrfToken, adminMiddleware, integrationAnalyticsRoutes);
-    app.use("/api/v1/admin/impersonation", logAction, validateCsrfToken, adminMiddleware, impersonationRoutes);
-    app.use("/api/v1/admin/analytics", logAction, validateCsrfToken, adminMiddleware, advancedAnalyticsRoutes);
-    app.use("/api/v1/admin/platform-roles", logAction, validateCsrfToken, adminMiddleware, platformRoleRoutes);
-    app.use("/api/v1/admin/maintenance", logAction, validateCsrfToken, adminMiddleware, maintenanceRoutes);
-    app.use("/api/v1/admin/trust-safety", logAction, validateCsrfToken, adminMiddleware, trustSafetyRoutes);
-    app.use("/api/v1/admin/monitoring", logAction, validateCsrfToken, adminMiddleware, monitoringRoutes);
-    app.use("/api/v1/admin/monitoring/api-latency", logAction, validateCsrfToken, adminMiddleware, apiLatencyRoutes);
-    app.use("/api/v1/admin/monitoring/cache", logAction, validateCsrfToken, adminMiddleware, cacheStatsRoutes);
-    app.use("/api/v1/admin/vertical-analytics", logAction, validateCsrfToken, adminMiddleware, verticalAnalyticsRoutes);
-    app.use("/api/v1/admin/vertical-templates", logAction, validateCsrfToken, adminMiddleware, verticalTemplateRoutes);
-    app.use("/api/v1/admin/data-retention", logAction, validateCsrfToken, adminMiddleware, dataRetentionRoutes);
-    app.use("/api/v1/admin/suspicious-activity", logAction, validateCsrfToken, adminMiddleware, suspiciousActivityRoutes);
-    app.use("/api/v1/admin/sub-processors", logAction, validateCsrfToken, adminMiddleware, subProcessorRoutes);
-    app.use("/api/v1/admin/platform-reports", logAction, validateCsrfToken, adminMiddleware, platformReportRoutes);
-    app.use("/api/v1/admin/alert-rules", logAction, validateCsrfToken, adminMiddleware, alertRuleRoutes);
-    app.use("/api/v1/admin/reconciliation", logAction, validateCsrfToken, adminMiddleware, reconciliationRoutes);
-    app.use("/api/v1/admin/paystack", logAction, validateCsrfToken, adminMiddleware, paystackConfigRoutes);
-    app.use("/api/v1/admin/shaqexpress", logAction, validateCsrfToken, adminMiddleware, shaqExpressConversionRoutes);
-    app.use("/api/v1/admin/marketplace", logAction, validateCsrfToken, adminMiddleware, marketplaceRoutes);
-    app.use("/api/v1/admin/case-studies", logAction, validateCsrfToken, adminMiddleware, caseStudyRoutes);
-    app.use("/api/v1/admin/referrals", logAction, validateCsrfToken, adminMiddleware, platformReferralRoutes);
-    app.use("/api/v1/admin/search", logAction, validateCsrfToken, adminMiddleware, crossTenantSearchRoutes);
-    app.use("/api/v1/admin/penetration-tests", logAction, validateCsrfToken, adminMiddleware, penetrationTestReportRoutes);
-    app.use("/api/v1/admin/insurance-documents", logAction, validateCsrfToken, adminMiddleware, insuranceDocumentRoutes);
-    app.use("/api/v1/admin/encryption-keys", logAction, validateCsrfToken, adminMiddleware, encryptionKeyRoutes);
-    app.use("/api/v1/admin/auto-scaling", logAction, validateCsrfToken, adminMiddleware, autoScalingTriggerRoutes);
-    app.use("/api/v1/admin/compliance", logAction, validateCsrfToken, adminMiddleware, complianceEvidenceRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, tenantAdminRoutes);
-    app.use("/api/v1/admin/tenants", logAction, validateCsrfToken, adminMiddleware, tenantMigrationRoutes);
-    app.use("/api/v1/admin/debug", logAction, validateCsrfToken, adminMiddleware, debugRoutes);
-    app.use("/api/v1/admin/migration", logAction, validateCsrfToken, adminMiddleware, migrationRoutes);
-    app.use("/api/v1/admin/postmortems", logAction, validateCsrfToken, adminMiddleware, postmortemRoutes);
-    app.use("/api/v1/admin/data-anonymization", logAction, validateCsrfToken, adminMiddleware, dataAnonymizationRoutes);
-    app.use("/api/v1/admin/platform-settings", logAction, validateCsrfToken, adminMiddleware, platformSettingsRoutes);
-    app.use("/api/v1/billing", logAction, validateCsrfToken, billingRoutes);
-    app.use("/api/v1/salon/appointments", logAction, validateCsrfToken, salonAppointmentRoutes);
-    app.use("/api/v1/salon/stations", logAction, validateCsrfToken, salonStationRoutes);
-    app.use("/api/v1/salon/services", logAction, validateCsrfToken, salonServiceRoutes);
-    app.use("/api/v1/salon/packages", logAction, validateCsrfToken, salonServicePackageRoutes);
-    app.use("/api/v1/salon/gift-cards", logAction, validateCsrfToken, salonGiftCardRoutes);
-    app.use("/api/v1/salon/referrals", logAction, validateCsrfToken, salonReferralRoutes);
-    app.use("/api/v1/salon/locations", logAction, validateCsrfToken, salonLocationRoutes);
-    app.use("/api/v1/salon/inventory", logAction, validateCsrfToken, salonInventoryRoutes);
-    app.use("/api/v1/salon/expenses", logAction, validateCsrfToken, salonExpensesRoutes);
-    app.use("/api/v1/salon/pricing", logAction, validateCsrfToken, salonPricingRulesRoutes);
-    app.use("/api/v1/salon/commissions", logAction, validateCsrfToken, salonCommissionRoutes);
-    app.use("/api/v1/salon/customer-portal", logAction, validateCsrfToken, salonCustomerPortalRoutes);
-    app.use("/api/v1/salon/reports", logAction, validateCsrfToken, salonReportsRoutes);
-    app.use("/api/v1/salon/recurring-appointments", logAction, validateCsrfToken, salonRecurringAppointmentRoutes);
-    app.use("/api/v1/salon/client-segmentation", logAction, validateCsrfToken, salonClientSegmentationRoutes);
-    app.use("/api/v1/salon/marketing-campaigns", logAction, validateCsrfToken, salonMarketingCampaignRoutes);
-    app.use("/api/v1/salon/gallery", logAction, validateCsrfToken, salonGalleryRoutes);
-    app.use("/api/v1/salon/dashboard", logAction, validateCsrfToken, salonDashboardRoutes);
-    app.use("/api/v1/salon/staff", logAction, validateCsrfToken, salonStaffRoutes);
-  }
-  app.use("/api/v1/customer-portal", logAction, validateCsrfToken, customerPortalRouter);
-  app.use("/api/v1/notifications", logAction, validateCsrfToken, notificationRouter);
-  app.use("/api/v1/email-templates", logAction, validateCsrfToken, emailTemplateRouter);
+  loadModules(app);
+  app.use(
+    "/api/v1/erpnext",
+    logAction,
+    validateCsrfToken,
+    generalLimiter,
+    erpnextAccountingRouter,
+    erpnextInventoryRouter,
+    erpnextHrRouter,
+    erpnextCrmRouter,
+    erpnextManufacturingRouter,
+    erpnextOnboardingRouter
+  );
+  app.use(
+    "/api/v1/admin/erpnext",
+    logAction,
+    validateCsrfToken,
+    adminActionLimiter,
+    adminMiddleware,
+    erpnextAdminRouter
+  );
+  app.use("/api/v1/notifications", generalLimiter, logAction, validateCsrfToken, notificationRouter);
+  app.use("/api/v1/email-templates", generalLimiter, logAction, validateCsrfToken, emailTemplateRouter);
   app.use("/api/v1/webhooks", logAction, webhookLimiter, webhookRouter);
-  app.use("/api/v1/whatsapp", logAction, generalLimiter, whatsappRouter);
-  app.use("/api/v1/deliveries", logAction, validateCsrfToken, ...(TENANT_MODE ? [requiresServiceMode("delivery")] : []), deliveryRouter);
   app.use("/api/v1/webhooks/shaqexpress", logAction, webhookLimiter, shaqexpressRouter);
-  app.use("/api/v1/sync", logAction, syncLimiter, require("../routes/sync.router"));
-  app.use("/api/v1/legal", legalRouter);
-  if (TENANT_MODE && publicDsarRoutes) {
-    app.use("/api/v1/public/dsar-request", publicDsarRoutes);
-  }
-  if (TENANT_MODE && publicTenantRoutes) {
-    app.use("/api/v1/public/tenants", publicTenantRoutes);
-  }
+  app.use("/api/v1/sync", generalLimiter, logAction, syncLimiter, require("../routes/sync.router"));
+  app.use("/api/v1/legal", generalLimiter, legalRouter);
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
   }
-  app.get("/api/v1/stats", tryCatchHandler(protect), (req, res, next) => {
+  app.get("/api/v1/stats", generalLimiter, tryCatchHandler(protect), (req, res, next) => {
     res.json({ success: true, stats: getStats() });
   });
   app.get("/robots.txt", (req, res) => {

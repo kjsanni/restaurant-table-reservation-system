@@ -7,7 +7,7 @@ const buildSyntheticEmail = (phone) => {
   return `wa_${digits}@rtrs.local`;
 };
 
-const getAllReservations = async (reservationDAO, filters = {}, pagination = {}, tenantId) => {
+const getAllReservations = async (reservationDAO, tenantId, filters = {}, pagination = {}) => {
   if (Object.keys(filters).length > 0) {
     return await reservationDAO.searchReservations(filters, pagination, tenantId);
   }
@@ -175,12 +175,7 @@ const cancelReservation = async (reservationId, reservationDAO, tenantId) => {
       message: "Reservation not found!",
     };
   }
-  if (["cancelled", "seated", "completed", "missed"].includes(reservation.resStatus)) {
-    const result = await reservationDAO.destroyReservation(reservation, tenantId);
-    webhookService.dispatch("reservation.cancelled", result, tenantId);
-    return result;
-  }
-  const result = await reservationDAO.deleteReservation(reservationId, tenantId);
+  const result = await reservationDAO.deleteReservation(reservation, tenantId);
   webhookService.dispatch("reservation.cancelled", result, tenantId);
   return result;
 };
@@ -266,7 +261,7 @@ const chooseTable = async (
 
 const paymentDAO = require("../DAOs/payment.dao");
 
-const getRevenueTimeSeries = async (from, to, granularity = "day", tenantId) => {
+const getRevenueTimeSeries = async (from, to, tenantId, granularity = "day") => {
   return await paymentDAO.getRevenueTimeSeries(from, to, granularity, tenantId);
 };
 
@@ -281,7 +276,7 @@ const getRecurringReservations = async (reservationDAO, customerId, tenantId) =>
   return await reservationDAO.getRecurringReservations(customerId, tenantId);
 };
 
-const recordStatusChange = async (reservationDAO, reservationId, fromStatus, toStatus, actorId, metadata = {}, tenantId) => {
+const recordStatusChange = async (reservationDAO, reservationId, fromStatus, toStatus, actorId, tenantId, metadata = {}) => {
   await reservationDAO.recordStatusChange(reservationId, fromStatus, toStatus, actorId, metadata, tenantId);
   return true;
 };

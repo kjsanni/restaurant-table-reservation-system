@@ -38,22 +38,22 @@ module.exports = {
       "roles",
     ];
 
+    const allowedTables = new Set(tables);
     for (const table of tables) {
+      if (!allowedTables.has(table)) continue;
       try {
-        await queryInterface.sequelize.query(
-          `UPDATE \`${table}\` SET tenantId = 1 WHERE tenantId IS NULL`
-        );
+        await queryInterface.bulkUpdate(table, { tenantId: 1 }, { tenantId: null });
       } catch (err) {
         console.log(`Skip backfill ${table}: ${err.message}`);
       }
     }
 
     const junctionTables = ["user_groups", "table_staff", "reservation_staff"];
+    const allowedJunctionTables = new Set(junctionTables);
     for (const jt of junctionTables) {
+      if (!allowedJunctionTables.has(jt)) continue;
       try {
-        await queryInterface.sequelize.query(
-          `UPDATE \`${jt}\` SET tenantId = 1 WHERE tenantId IS NULL`
-        );
+        await queryInterface.bulkUpdate(jt, { tenantId: 1 }, { tenantId: null });
       } catch (err) {
         console.log(`Skip backfill ${jt}: ${err.message}`);
       }

@@ -34,8 +34,8 @@ module.exports = {
   DURATION: parseInt(process.env.LOAD_DURATION || "20", 10),
   PIPELINING: parseInt(process.env.LOAD_PIPELINING || "1", 10),
 
-  // Whether the target server has TENANT_MODE=enabled. Purely informational —
-  // used to label output. The harness always sends X-Tenant-Id headers; a
-  // single-tenant server simply ignores them.
-  TENANT_MODE: process.env.LOAD_TENANT_MODE || process.env.TENANT_MODE || "unknown",
+  // System mode label. Purely informational — used to label output.
+  // The harness always sends X-Tenant-Id headers so multi-tenant isolation
+  // is exercised on every run.
+  MODE: process.env.LOAD_MODE || "always-tenant",
 };

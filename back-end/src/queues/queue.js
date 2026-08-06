@@ -21,8 +21,6 @@ const createQueue = (name) => {
   return queue;
 };
 
-// Shared retry policy with exponential backoff. Applied to every enqueued job
-// so failed jobs are retried automatically before landing in the DLQ.
 const defaultJobOptions = {
   attempts: 5,
   backoff: {
@@ -33,9 +31,6 @@ const defaultJobOptions = {
   removeOnFail: { age: 7 * 24 * 3600 },
 };
 
-// Centralized enqueue helper. Returns { enqueued: true, jobId } when the job is
-// accepted by BullMQ, or { enqueued: false } when Redis is unavailable or the
-// call throws. Callers MUST fall back to synchronous execution on false.
 const safeAdd = async (queue, name, data, opts = {}) => {
   if (!queue) {
     return { enqueued: false };
@@ -52,7 +47,6 @@ const safeAdd = async (queue, name, data, opts = {}) => {
   }
 };
 
-// True if a real Redis connection is configured and reachable.
 const isRedisAvailable = async () => {
   if (!shouldConnect || !connection) return false;
   if (typeof isConnected === "boolean") return isConnected;
@@ -88,6 +82,42 @@ const closeAllQueues = async () => {
   queues.length = 0;
 };
 
+const QUEUE_DEPTH_THRESHOLDS = {
+  notifications: 1000,
+  reports: 500,
+  backups: 200,
+  "erpnext-sync": 500,
+};
+
+const getQueueDepth = async (queue) => {
+  if (!queue) return 0;
+  try {
+    const [waiting, active, delayed, failed] = await Promise.all([
+      queue.getWaitingCount(),
+      queue.getActiveCount(),
+      queue.getDelayedCount(),
+      queue.getFailedCount(),
+    ]);
+    return waiting + active + delayed + failed;
+  } catch {
+    return 0;
+  }
+};
+
+const checkQueueDepths = async () => {
+  if (!queues.length) return [];
+  const alerts = [];
+  for (const queue of queues) {
+    const depth = await getQueueDepth(queue);
+    const threshold = QUEUE_DEPTH_THRESHOLDS[queue.name] || 1000;
+    if (depth > threshold) {
+      alerts.push({ queue: queue.name, depth, threshold });
+      console.warn(`[Queue] Depth alert: ${queue.name} has ${depth} jobs (threshold: ${threshold})`);
+    }
+  }
+  return alerts;
+};
+
 module.exports = {
   connection,
   notificationQueue,
@@ -99,4 +129,7 @@ module.exports = {
   safeAdd,
   defaultJobOptions,
   isRedisAvailable,
+  getQueueDepth,
+  checkQueueDepths,
+  QUEUE_DEPTH_THRESHOLDS,
 };

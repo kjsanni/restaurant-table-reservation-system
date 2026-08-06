@@ -4,7 +4,7 @@ Multi-tenant SaaS extension for the Restaurant Table Reservation System (RTRS).
 
 ## Activation
 
-Set `TENANT_MODE=enabled` in the backend environment. When disabled or unset, the module is completely inert and the system behaves as single-tenant.
+The multi-tenant module is always active. The system runs in multi-tenant mode at all times; there is no single-tenant mode.
 
 ## What it provides
 
@@ -52,14 +52,13 @@ back-end/src/tenant-platform/
 
 | Variable | Purpose |
 |---|---|
-| `TENANT_MODE` | Set to `enabled` to activate the module |
 | `PAYSTACK_SECRET_KEY` | Paystack secret key for API calls |
 | `PAYSTACK_WEBHOOK_SECRET` | Webhook signature verification secret |
 | `PAYSTACK_MODE` | `test` or `live` |
 
 ## Frontend
 
-Routes are only registered when `VITE_TENANT_MODE === 'enabled'`:
+Routes are always registered:
 - `/admin/tenants`
 - `/admin/tenants/:id`
 

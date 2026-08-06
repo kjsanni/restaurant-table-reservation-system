@@ -1,289 +1,227 @@
-<script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { Icon } from "@iconify/vue";
-import { useAuthStore } from "@/stores/auth";
-import erpnextAPI from "@/services/erpnextAPI";
-import { useTenantBranding } from "@/composables/useTenantBranding";
-
-const router = useRouter();
-const authStore = useAuthStore();
-const { branding } = useTenantBranding();
-
-const loading = ref(true);
-const error = ref<string | null>(null);
-const activeTab = ref<"overview" | "invoices" | "payments" | "customers">(
-  "overview"
-);
-
-const profitLoss = ref<any>(null);
-const invoices = ref<any[]>([]);
-const payments = ref<any[]>([]);
-const customers = ref<any[]>([]);
-
-const tenant = computed(() => authStore.currentTenant);
-const isAccountingEnabled = computed(() => {
-  const flags = tenant.value?.settings?.featureFlags || {};
-  return !!flags.erpnext_accounting;
-});
-
-const loadOverview = async () => {
-  try {
-    const [plRes, invRes, payRes, custRes] = await Promise.all([
-      erpnextAPI.getProfitLoss(),
-      erpnextAPI.getInvoices(),
-      erpnextAPI.getPayments(),
-      erpnextAPI.getCustomers(),
-    ]);
-    profitLoss.value = plRes.data;
-    invoices.value = invRes.data?.data || [];
-    payments.value = payRes.data?.data || [];
-    customers.value = custRes.data?.data || [];
-  } catch (err: any) {
-    error.value = err.message || "Failed to load ERPNext data";
-  } finally {
-    loading.value = false;
-  }
-};
-
-const syncCustomers = async () => {
-  try {
-    await erpnextAPI.syncCustomers();
-    await loadOverview();
-  } catch (err: any) {
-    error.value = err.message || "Failed to sync customers";
-  }
-};
-
-const syncInvoices = async () => {
-  try {
-    await erpnextAPI.syncInvoices();
-    await loadOverview();
-  } catch (err: any) {
-    error.value = err.message || "Failed to sync invoices";
-  }
-};
-
-const syncPayments = async () => {
-  try {
-    await erpnextAPI.syncPayments();
-    await loadOverview();
-  } catch (err: any) {
-    error.value = err.message || "Failed to sync payments";
-  }
-};
-
-onMounted(() => {
-  if (!isAccountingEnabled.value) return;
-  loadOverview();
-});
-</script>
-
 <template>
-  <div v-if="!isAccountingEnabled" class="erpnext-disabled">
-    <p>ERPNext Accounting is not enabled for this tenant.</p>
-  </div>
-
-  <div v-else-if="loading" class="erpnext-loading">
-    <p>Loading ERPNext accounting data...</p>
-  </div>
-
-  <div v-else-if="error" class="erpnext-error">
-    <p>{{ error }}</p>
-    <button @click="loadOverview">Retry</button>
-  </div>
-
-  <div v-else class="erpnext-accounting">
-    <h2>Accounting</h2>
-
-    <div class="erpnext-tabs">
-      <button
-        :class="{ active: activeTab === 'overview' }"
-        @click="activeTab = 'overview'"
-      >
-        Overview
-      </button>
-      <button
-        :class="{ active: activeTab === 'invoices' }"
-        @click="activeTab = 'invoices'"
-      >
-        Invoices
-      </button>
-      <button
-        :class="{ active: activeTab === 'payments' }"
-        @click="activeTab = 'payments'"
-      >
-        Payments
-      </button>
-      <button
-        :class="{ active: activeTab === 'customers' }"
-        @click="activeTab = 'customers'"
-      >
-        Customers
-      </button>
-    </div>
-
-    <div v-if="activeTab === 'overview'" class="erpnext-overview">
-      <div v-if="profitLoss" class="erpnext-card">
-        <h3>Profit & Loss</h3>
-        <pre>{{ JSON.stringify(profitLoss, null, 2) }}</pre>
+  <ErpnextBaseView
+    title="ERPNext Accounting"
+    subtitle="Financial reports and transaction history"
+    :tabs="tabs"
+    v-model:activeTab="activeTab"
+    :loading="loading"
+    :error="error"
+    loading-text="Loading accounting data..."
+    @retry="loadCurrentTab"
+  >
+    <template #tab-content="{ activeTab }">
+      <div v-if="activeTab === 'pnl'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Profit & Loss</h3>
+          <div class="filters">
+            <input v-model="pnlFrom" type="date" class="form-input" />
+            <span class="filter-sep">to</span>
+            <input v-model="pnlTo" type="date" class="form-input" />
+            <button class="btn-secondary" @click="loadPnL">Apply</button>
+          </div>
+        </div>
+        <div v-if="pnlData" class="report-block">
+          <pre class="report-json">{{ formatReport(pnlData) }}</pre>
+        </div>
+        <div v-else class="empty-state">No P&L data available.</div>
       </div>
 
-      <div class="erpnext-actions">
-        <button @click="syncCustomers">Sync Customers</button>
-        <button @click="syncInvoices">Sync Invoices</button>
-        <button @click="syncPayments">Sync Payments</button>
+      <div v-if="activeTab === 'balance-sheet'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Balance Sheet</h3>
+          <div class="filters">
+            <input v-model="bsFrom" type="date" class="form-input" />
+            <span class="filter-sep">to</span>
+            <input v-model="bsTo" type="date" class="form-input" />
+            <button class="btn-secondary" @click="loadBalanceSheet">
+              Apply
+            </button>
+          </div>
+        </div>
+        <div v-if="bsData" class="report-block">
+          <pre class="report-json">{{ formatReport(bsData) }}</pre>
+        </div>
+        <div v-else class="empty-state">No balance sheet data available.</div>
       </div>
-    </div>
 
-    <div v-if="activeTab === 'invoices'" class="erpnext-invoices">
-      <h3>Invoices</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Status</th>
-            <th>Total</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="inv in invoices" :key="inv.name">
-            <td>{{ inv.customer_name || inv.name }}</td>
-            <td>{{ inv.status }}</td>
-            <td>{{ inv.grand_total }}</td>
-            <td>{{ inv.posting_date }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <div v-if="activeTab === 'invoices'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Invoices</h3>
+          <div class="filters">
+            <select v-model="invoiceStatus" class="form-select">
+              <option value="">All statuses</option>
+              <option value="Draft">Draft</option>
+              <option value="Submitted">Submitted</option>
+              <option value="Paid">Paid</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <button class="btn-secondary" @click="loadInvoices">Apply</button>
+          </div>
+        </div>
+        <div v-if="invoices.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Invoice</th>
+                <th>Customer</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="inv in invoices" :key="inv.name">
+                <td>{{ inv.name }}</td>
+                <td>{{ inv.customer_name || inv.customer }}</td>
+                <td>{{ inv.status }}</td>
+                <td>{{ inv.grand_total }}</td>
+                <td>{{ inv.posting_date }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No invoices found.</div>
+      </div>
 
-    <div v-if="activeTab === 'payments'" class="erpnext-payments">
-      <h3>Payments</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Party</th>
-            <th>Amount</th>
-            <th>Date</th>
-            <th>Reference</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="pay in payments" :key="pay.name">
-            <td>{{ pay.party }}</td>
-            <td>{{ pay.received_amount }}</td>
-            <td>{{ pay.posting_date }}</td>
-            <td>{{ pay.reference_no }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div v-if="activeTab === 'customers'" class="erpnext-customers">
-      <h3>Customers</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Mobile</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="cust in customers" :key="cust.name">
-            <td>{{ cust.customer_name }}</td>
-            <td>{{ cust.email_id }}</td>
-            <td>{{ cust.mobile_no }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+      <div v-if="activeTab === 'payments'" class="tab-panel">
+        <div class="panel-header">
+          <h3>Payments</h3>
+          <div class="filters">
+            <input v-model="paymentFrom" type="date" class="form-input" />
+            <span class="filter-sep">to</span>
+            <input v-model="paymentTo" type="date" class="form-input" />
+            <button class="btn-secondary" @click="loadPayments">Apply</button>
+          </div>
+        </div>
+        <div v-if="payments.length" class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Payment</th>
+                <th>Customer</th>
+                <th>Mode</th>
+                <th>Amount</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="p in payments" :key="p.name">
+                <td>{{ p.name }}</td>
+                <td>{{ p.party_name || p.party }}</td>
+                <td>{{ p.mode_of_payment }}</td>
+                <td>{{ p.paid_amount }}</td>
+                <td>{{ p.posting_date }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="empty-state">No payments found.</div>
+      </div>
+    </template>
+  </ErpnextBaseView>
 </template>
 
-<style scoped>
-.erpnext-accounting {
-  padding: var(--space-lg);
-  max-width: 1200px;
-  margin: 0 auto;
-}
+<script setup>
+import { ref, onMounted } from "vue";
+import erpnextAPI from "@/services/erpnextAPI";
+import ErpnextBaseView from "@/components/erpnext/ErpnextBaseView.vue";
+import "@/components/erpnext/erpnext-view-shared.css";
 
-.erpnext-tabs {
-  display: flex;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
-  border-bottom: 2px solid var(--brand-200);
-  padding-bottom: var(--space-sm);
-}
+const loading = ref(true);
+const error = ref(null);
+const activeTab = ref("pnl");
 
-.erpnext-tabs button {
-  padding: var(--space-sm) var(--space-md);
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  font-size: 0.875rem;
-}
+const pnlFrom = ref("");
+const pnlTo = ref("");
+const pnlData = ref(null);
 
-.erpnext-tabs button.active {
-  color: var(--brand-600);
-  border-bottom-color: var(--brand-600);
-}
+const bsFrom = ref("");
+const bsTo = ref("");
+const bsData = ref(null);
 
-.erpnext-card {
-  background: var(--surface);
-  border: 1px solid var(--brand-200);
-  border-radius: var(--radius-md);
-  padding: var(--space-md);
-  margin-bottom: var(--space-md);
-}
+const invoiceStatus = ref("");
+const invoices = ref([]);
 
-.erpnext-actions {
-  display: flex;
-  gap: var(--space-sm);
-  margin-top: var(--space-md);
-}
+const paymentFrom = ref("");
+const paymentTo = ref("");
+const payments = ref([]);
 
-.erpnext-actions button {
-  padding: var(--space-sm) var(--space-md);
-  background: var(--brand-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
+const tabs = [
+  { key: "pnl", label: "Profit & Loss" },
+  { key: "balance-sheet", label: "Balance Sheet" },
+  { key: "invoices", label: "Invoices" },
+  { key: "payments", label: "Payments" },
+];
 
-.erpnext-disabled,
-.erpnext-loading,
-.erpnext-error {
-  padding: var(--space-xl);
-  text-align: center;
-  color: var(--text-secondary);
-}
+const loadPnL = async () => {
+  try {
+    const params = {};
+    if (pnlFrom.value) params.from = pnlFrom.value;
+    if (pnlTo.value) params.to = pnlTo.value;
+    const res = await erpnextAPI.getProfitLoss(params);
+    pnlData.value = res.data?.data || res.data;
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load P&L";
+  }
+};
 
-.erpnext-error {
-  color: var(--error);
-}
+const loadBalanceSheet = async () => {
+  try {
+    const params = {};
+    if (bsFrom.value) params.from = bsFrom.value;
+    if (bsTo.value) params.to = bsTo.value;
+    const res = await erpnextAPI.getBalanceSheet(params);
+    bsData.value = res.data?.data || res.data;
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load balance sheet";
+  }
+};
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+const loadInvoices = async () => {
+  try {
+    const params = {};
+    if (invoiceStatus.value) params.status = invoiceStatus.value;
+    const res = await erpnextAPI.getInvoices(params);
+    invoices.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load invoices";
+  }
+};
 
-th,
-td {
-  padding: var(--space-sm) var(--space-md);
-  text-align: left;
-  border-bottom: 1px solid var(--brand-200);
-}
+const loadPayments = async () => {
+  try {
+    const params = {};
+    if (paymentFrom.value) params.from = paymentFrom.value;
+    if (paymentTo.value) params.to = paymentTo.value;
+    const res = await erpnextAPI.getPayments(params);
+    payments.value = res.data?.data || [];
+  } catch (e) {
+    error.value = e.response?.data?.message || "Failed to load payments";
+  }
+};
 
-th {
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-</style>
+const loadCurrentTab = async () => {
+  error.value = null;
+  if (activeTab.value === "pnl") await loadPnL();
+  else if (activeTab.value === "balance-sheet") await loadBalanceSheet();
+  else if (activeTab.value === "invoices") await loadInvoices();
+  else if (activeTab.value === "payments") await loadPayments();
+};
+
+const formatReport = (data) => {
+  if (!data) return "No data";
+  return JSON.stringify(data, null, 2);
+};
+
+onMounted(async () => {
+  loading.value = true;
+  error.value = null;
+  await Promise.all([
+    loadPnL(),
+    loadBalanceSheet(),
+    loadInvoices(),
+    loadPayments(),
+  ]);
+  loading.value = false;
+});
+</script>

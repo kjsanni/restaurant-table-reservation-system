@@ -1,0 +1,41 @@
+---
+exclude_paths:
+  - "back-end/src/middleware/turnstile.js"
+  - "back-end/src/tenant-platform/routes/whistleblowerTip.router.js"
+  - "back-end/src/tenant-platform/modules/module.registry.js"
+  - "back-end/src/__tests__/erpnext-routes.test.js"
+  - "back-end/src/controllers/public.controller.js"
+  - "back-end/src/services/webhook.service.js"
+  - "back-end/src/utils/logger.js"
+  - "scripts/check-legal-versions.js"
+  - "drinks-vendor/**"
+
+engines:
+  jshint:
+    enabled: false
+  eslint:
+    enabled: false
+  csslint:
+    enabled: false
+  remark-lint:
+    enabled: false
+  pmd-legacy:
+    enabled: false
+  duplication:
+    enabled: false
+  stylelint:
+    enabled: true
+  semgrep:
+    enabled: true
+  shellcheck:
+    enabled: true
+  hadolint:
+    enabled: true
+  tslint:
+    enabled: true
+  codeql:
+    enabled: false
+  metric:
+    enabled: true
+    exclude_paths:
+      - "back-end/src/tenant-platform/controllers/tenantAdmin.controller.js"

@@ -2,8 +2,8 @@
 
 const express = require("express");
 const router = express.Router();
-const tryCatchHandler = require("../../middleware/tryCatch");
-const { protect, requireActiveTenant } = require("../../middleware/auth");
+const tryCatchHandler = require("../../../middleware/tryCatch");
+const { requireActiveTenant } = require("../../../middleware/auth");
 
 const checkErpnextHr = async (req, res, next) => {
   const tenant = req.tenant;
@@ -17,7 +17,7 @@ const checkErpnextHr = async (req, res, next) => {
   next();
 };
 
-router.get("/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
+router.get("/hr/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { search, page = 1, pageSize = 20 } = req.query;
@@ -33,7 +33,7 @@ router.get("/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr, as
   }
 }));
 
-router.get("/employees/:employeeId", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
+router.get("/hr/employees/:employeeId", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
   const tenant = req.tenant;
   const { employeeId } = req.params;
   const { getClient } = require("../client");
@@ -45,7 +45,41 @@ router.get("/employees/:employeeId", tryCatchHandler(requireActiveTenant, checkE
   }
 }));
 
-router.post("/sync/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
+router.get("/hr/employees/attendance", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
+  const tenant = req.tenant;
+  const { getClient } = require("../client");
+  const { from, to, page = 1, pageSize = 20 } = req.query;
+  const filters = { company: tenant.name };
+  if (from) filters.attendance_date = [">=", from];
+  if (to) filters.attendance_date = ["<=", to];
+  try {
+    const result = await getClient().get("/api/resource/Employee Attendance", {
+      params: { filters, page, page_length: parseInt(pageSize, 10) },
+    });
+    res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
+router.get("/hr/employees/payroll", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
+  const tenant = req.tenant;
+  const { getClient } = require("../client");
+  const { from, to, page = 1, pageSize = 20 } = req.query;
+  const filters = { company: tenant.name };
+  if (from) filters.start_date = [">=", from];
+  if (to) filters.end_date = ["<=", to];
+  try {
+    const result = await getClient().get("/api/resource/Salary Slip", {
+      params: { filters, page, page_length: parseInt(pageSize, 10) },
+    });
+    res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
+router.post("/hr/sync/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
   const tenant = req.tenant;
   const { staffIds } = req.body;
   const { syncEmployee, syncAllEmployees } = require("../sync/employee.sync");

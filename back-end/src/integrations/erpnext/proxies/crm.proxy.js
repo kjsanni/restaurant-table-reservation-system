@@ -2,8 +2,8 @@
 
 const express = require("express");
 const router = express.Router();
-const tryCatchHandler = require("../../middleware/tryCatch");
-const { protect, requireActiveTenant } = require("../../middleware/auth");
+const tryCatchHandler = require("../../../middleware/tryCatch");
+const { requireActiveTenant } = require("../../../middleware/auth");
 
 const checkErpnextCrm = async (req, res, next) => {
   const tenant = req.tenant;
@@ -17,7 +17,39 @@ const checkErpnextCrm = async (req, res, next) => {
   next();
 };
 
-router.get("/campaigns", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
+router.get("/crm/customers", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
+  const tenant = req.tenant;
+  const { getClient } = require("../client");
+  const { search, page = 1, pageSize = 20 } = req.query;
+  const filters = { company: tenant.name };
+  if (search) filters.customer_name = ["like", `%${search}%`];
+  try {
+    const result = await getClient().get("/api/resource/Customer", {
+      params: { filters, page, page_length: parseInt(pageSize, 10) },
+    });
+    res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
+router.get("/crm/leads", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
+  const tenant = req.tenant;
+  const { getClient } = require("../client");
+  const { search, page = 1, pageSize = 20 } = req.query;
+  const filters = { company: tenant.name };
+  if (search) filters.lead_name = ["like", `%${search}%`];
+  try {
+    const result = await getClient().get("/api/resource/Lead", {
+      params: { filters, page, page_length: parseInt(pageSize, 10) },
+    });
+    res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
+router.get("/crm/campaigns", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { search, page = 1, pageSize = 20 } = req.query;
@@ -33,7 +65,7 @@ router.get("/campaigns", tryCatchHandler(requireActiveTenant, checkErpnextCrm, a
   }
 }));
 
-router.get("/opportunities", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
+router.get("/crm/opportunities", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
   const { search, page = 1, pageSize = 20 } = req.query;
