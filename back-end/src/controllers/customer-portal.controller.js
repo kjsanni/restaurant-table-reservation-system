@@ -1,5 +1,4 @@
 const reservationDAO = require("../DAOs/reservation.dao");
-const { Op } = require("../db/models");
 
 const buildCustomerDetails = (user) => {
   const email = user?.email;
