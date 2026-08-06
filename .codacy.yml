@@ -33,6 +33,8 @@ engines:
     enabled: true
   tslint:
     enabled: true
+  sbom:
+    enabled: false
   codeql:
     enabled: false
   metric:

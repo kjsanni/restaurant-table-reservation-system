@@ -12,6 +12,7 @@ jest.mock("../tenant-platform/DAOs/platformAudit.dao", () => ({
 
 const db = require("../db/models");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
+const { createRes } = require("./utils/test-response");
 
 function createReq(user = { id: 1, platformRoles: ["platform_admin"] }) {
   return {
@@ -19,13 +20,6 @@ function createReq(user = { id: 1, platformRoles: ["platform_admin"] }) {
     tenant: { id: 1 },
     ip: "127.0.0.1",
   };
-}
-
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  return res;
 }
 
 describe("platform-role.controller", () => {

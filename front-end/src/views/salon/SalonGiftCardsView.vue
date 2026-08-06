@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import giftCardAPI from "@/services/giftCardAPI";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
+import { useSalonCrudView } from "@/composables/useSalonCrudView";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 
 const { t } = useI18n();
@@ -21,40 +22,20 @@ interface GiftCard {
   note?: string;
 }
 
-const cards = ref<GiftCard[]>([]);
-const loading = ref(true);
-const showForm = ref(false);
-const editingId = ref<number | null>(null);
-const form = ref({
-  code: "",
-  amount: 0,
-  balance: 0,
-  currency: "GHS",
-  status: "active",
-  expiresAt: "",
-  note: "",
-});
-
-const generateCode = () => {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-  form.value.code = `GIFT-${timestamp}-${random}`;
-};
-
-const loadCards = async () => {
-  loading.value = true;
-  try {
-    const res = await giftCardAPI.getCards({ limit: 100 });
-    cards.value = res.data.data || [];
-  } catch (err) {
-    logger.error("Failed to load gift cards", { error: err });
-  } finally {
-    loading.value = false;
-  }
-};
-
-const resetForm = () => {
-  form.value = {
+const {
+  list: cards,
+  loading,
+  showForm,
+  editingId,
+  form,
+  load: loadCards,
+  resetForm,
+  edit: editCard,
+  deleteItem: deleteCard,
+} = useSalonCrudView<GiftCard>({
+  api: giftCardAPI,
+  entityName: "Gift Card",
+  defaultForm: {
     code: "",
     amount: 0,
     balance: 0,
@@ -62,8 +43,22 @@ const resetForm = () => {
     status: "active",
     expiresAt: "",
     note: "",
-  };
-  editingId.value = null;
+  },
+  editMapper: (card) => ({
+    code: card.code,
+    amount: Number(card.amount),
+    balance: Number(card.balance),
+    currency: card.currency || "GHS",
+    status: card.status,
+    expiresAt: card.expiresAt ? card.expiresAt.slice(0, 10) : "",
+    note: card.note || "",
+  }),
+});
+
+const generateCode = () => {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  form.value.code = `GIFT-${timestamp}-${random}`;
 };
 
 const submitForm = async () => {
@@ -73,41 +68,17 @@ const submitForm = async () => {
       generateCode();
     }
     if (editingId.value) {
-      const res = await giftCardAPI.updateCard(editingId.value, payload);
+      const res = await giftCardAPI.update(editingId.value, payload);
       const idx = cards.value.findIndex((c) => c.id === editingId.value);
       if (idx !== -1) cards.value[idx] = res.data.data;
     } else {
-      const res = await giftCardAPI.createCard(payload);
+      const res = await giftCardAPI.create(payload);
       cards.value.push(res.data.data);
     }
     showForm.value = false;
     resetForm();
   } catch (err) {
     logger.error("Failed to save gift card", { error: err });
-  }
-};
-
-const editCard = (card: GiftCard) => {
-  editingId.value = card.id;
-  form.value = {
-    code: card.code,
-    amount: Number(card.amount),
-    balance: Number(card.balance),
-    currency: card.currency || "GHS",
-    status: card.status,
-    expiresAt: card.expiresAt ? card.expiresAt.slice(0, 10) : "",
-    note: card.note || "",
-  };
-  showForm.value = true;
-};
-
-const deleteCard = async (id: number) => {
-  if (!confirm(t("salon.confirmDelete", "Delete this gift card?"))) return;
-  try {
-    await giftCardAPI.deleteCard(id);
-    cards.value = cards.value.filter((c) => c.id !== id);
-  } catch (err) {
-    logger.error("Failed to delete gift card", { error: err });
   }
 };
 
@@ -147,7 +118,7 @@ onMounted(loadCards);
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading gift cards...</p>
+        <p>{{ t("salon.loadingGiftCards") }}</p>
       </div>
 
       <div v-else class="stack">
@@ -161,7 +132,7 @@ onMounted(loadCards);
           </h3>
           <div class="grid">
             <label class="full">
-              {{ t("salon.name", "Code") }}
+              {{ t("salon.code", "Code") }}
               <input
                 v-model="form.code"
                 class="field-input"
@@ -197,18 +168,18 @@ onMounted(loadCards);
             <label>
               {{ t("salon.status", "Status") }}
               <select v-model="form.status" class="field-input">
-                <option value="active">Active</option>
-                <option value="redeemed">Redeemed</option>
-                <option value="expired">Expired</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="active">{{ t("salon.active") }}</option>
+                <option value="redeemed">{{ t("salon.redeemed") }}</option>
+                <option value="expired">{{ t("salon.expired") }}</option>
+                <option value="cancelled">{{ t("salon.cancelled") }}</option>
               </select>
             </label>
             <label>
-              Expires At
+              {{ t("salon.expiresAt", "Expires At") }}
               <input v-model="form.expiresAt" class="field-input" type="date" />
             </label>
             <label class="full">
-              Note
+              {{ t("salon.notes", "Note") }}
               <textarea v-model="form.note" class="field-input" rows="2" />
             </label>
           </div>
@@ -235,7 +206,7 @@ onMounted(loadCards);
                 <th>{{ t("salon.amount", "Amount") }}</th>
                 <th>{{ t("salon.balance", "Balance") }}</th>
                 <th>{{ t("salon.status", "Status") }}</th>
-                <th>Expires</th>
+                <th>{{ t("salon.expires", "Expires") }}</th>
                 <th>{{ t("salon.actions", "Actions") }}</th>
               </tr>
             </thead>
@@ -255,7 +226,7 @@ onMounted(loadCards);
                   {{
                     card.expiresAt
                       ? new Date(card.expiresAt).toLocaleDateString()
-                      : "—"
+                      : t("salon.emDash")
                   }}
                 </td>
                 <td class="actions">

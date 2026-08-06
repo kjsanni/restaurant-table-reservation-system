@@ -41,7 +41,8 @@
             class="schedule-item shift-item"
           >
             <div class="item-title">
-              Shift: {{ shift.userName || `User #${shift.userId}` }}
+              {{ t("salon.shiftPrefix", "Shift: ")
+              }}{{ shift.userName || `User #${shift.userId}` }}
             </div>
             <div class="item-meta">{{ shift.dayOfWeek }}</div>
           </div>
@@ -51,7 +52,9 @@
             :key="holiday.id"
             class="schedule-item holiday-item"
           >
-            <div class="item-title">Holiday: {{ holiday.name }}</div>
+            <div class="item-title">
+              {{ t("salon.holidayPrefix", "Holiday: ") }}{{ holiday.name }}
+            </div>
             <div class="item-meta">{{ holiday.date }}</div>
           </div>
 
@@ -62,7 +65,11 @@
             :class="apt.status"
           >
             <div class="item-title">
-              {{ apt.startTime }} — {{ apt.service?.name || "Appointment" }}
+              {{ apt.startTime }} —
+              {{
+                apt.service?.name ||
+                t("salon.appointmentFallback", "Appointment")
+              }}
             </div>
             <div class="item-meta">
               {{ apt.customer?.firstName }} {{ apt.customer?.lastName }}

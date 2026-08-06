@@ -126,7 +126,7 @@ onMounted(loadServices);
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>Services</h1>
+        <h1>{{ t("salon.servicesTitle") }}</h1>
         <p>{{ t("salon.manageServiceCatalog") }}</p>
       </div>
       <div class="topbar-right">
@@ -193,10 +193,19 @@ onMounted(loadServices);
 
       <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
         <div class="modal">
-          <h2>{{ editingId ? "Edit Service" : "New Service" }}</h2>
+          <h2>
+            {{
+              editingId
+                ? t("salon.updateCampaign")
+                : t("salon.createAppointment")
+            }}
+          </h2>
           <div class="form-group">
             <label>Name</label>
-            <input v-model="form.name" placeholder="e.g. Classic Haircut" />
+            <input
+              v-model="form.name"
+              :placeholder="t('salon.appointmentIdPlaceholder')"
+            />
           </div>
           <div class="form-group">
             <label>Description</label>
@@ -243,7 +252,7 @@ onMounted(loadServices);
           <div class="form-group">
             <label>Category</label>
             <select v-model="form.categoryId">
-              <option :value="null">Uncategorised</option>
+              <option :value="null">{{ t("salon.uncategorised") }}</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">
                 {{ cat.name }}
               </option>
@@ -252,11 +261,11 @@ onMounted(loadServices);
           <div class="form-group">
             <label class="checkbox-label">
               <input v-model="form.isAvailable" type="checkbox" />
-              Available for booking
+              {{ t("salon.availableForBooking") }}
             </label>
             <label class="checkbox-label">
               <input v-model="form.whatsappBookable" type="checkbox" />
-              WhatsApp bookable
+              {{ t("salon.whatsappBookable") }}
             </label>
           </div>
           <div class="modal-actions">
@@ -267,9 +276,11 @@ onMounted(loadServices);
                 resetForm();
               "
             >
-              Cancel
+              {{ t("salon.cancelBtn") }}
             </button>
-            <button class="btn-primary" @click="submitForm">Save</button>
+            <button class="btn-primary" @click="submitForm">
+              {{ t("salon.save") }}
+            </button>
           </div>
         </div>
       </div>

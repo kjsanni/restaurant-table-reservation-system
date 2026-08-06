@@ -107,9 +107,9 @@ onMounted(loadHolidays);
         </div>
 
         <div class="list-card">
-          <h3>Upcoming Holidays</h3>
+          <h3>{{ t("salon.upcomingHolidays") }}</h3>
           <div v-if="!holidays.length" class="empty-state">
-            No holidays configured.
+            {{ t("salon.noHolidays") }}
           </div>
           <div v-else class="holiday-list">
             <div
@@ -120,7 +120,7 @@ onMounted(loadHolidays);
               <div class="holiday-name">{{ holiday.name }}</div>
               <div class="holiday-date">{{ holiday.date }}</div>
               <button class="btn-danger-sm" @click="removeHoliday(holiday.id)">
-                Remove
+                {{ t("salon.removeBtn") }}
               </button>
             </div>
           </div>

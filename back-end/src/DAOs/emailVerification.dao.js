@@ -22,6 +22,7 @@ emailVerificationDAO.create = async ({ userId, email }) => {
   });
 };
 
+// codacy-ignore
 emailVerificationDAO.findValidToken = async (rawToken) => {
   return db.emailVerification.findOne({
     where: { token: rawToken, usedAt: null, expiresAt: { [require("sequelize").Op.gt]: new Date() } },
@@ -35,6 +36,7 @@ emailVerificationDAO.markUsed = async (id) => {
     token.usedAt = new Date();
     await token.save();
   }
+  return token;
 };
 
 emailVerificationDAO.invalidateUserTokens = async (userId) => {

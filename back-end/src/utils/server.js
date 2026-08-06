@@ -115,6 +115,10 @@ const createServer = () => {
   runBackupCron();
   const backupCronInterval = setInterval(runBackupCron, 60 * 60 * 1000).unref();
 
+  const { runScheduledReportsCron } = require("../tenant-platform/utils/scheduledReports.cron");
+  runScheduledReportsCron().catch((err) => console.error("[ScheduledReportsCron] startup error:", err.message));
+  const scheduledReportsCronInterval = setInterval(() => runScheduledReportsCron().catch((err) => console.error("[ScheduledReportsCron] error:", err.message)), 60 * 60 * 1000).unref();
+
   const workers = [];
   try {
     const nw = startNotificationWorker();

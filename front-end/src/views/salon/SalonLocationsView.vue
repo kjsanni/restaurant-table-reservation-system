@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted } from "vue";
 import locationAPI from "@/services/locationAPI";
-import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
+import { useSalonCrudView } from "@/composables/useSalonCrudView";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 
 const { t } = useI18n();
@@ -21,37 +21,21 @@ interface Location {
   currency?: string;
 }
 
-const locations = ref<Location[]>([]);
-const loading = ref(true);
-const showForm = ref(false);
-const editingId = ref<number | null>(null);
-const form = ref({
-  name: "",
-  address: "",
-  city: "",
-  region: "",
-  phone: "",
-  email: "",
-  isPrimary: false,
-  isActive: true,
-  timezone: "Africa/Accra",
-  currency: "GHS",
-});
-
-const loadLocations = async () => {
-  loading.value = true;
-  try {
-    const res = await locationAPI.getLocations({ limit: 100 });
-    locations.value = res.data.data || [];
-  } catch (err) {
-    logger.error("Failed to load locations", { error: err });
-  } finally {
-    loading.value = false;
-  }
-};
-
-const resetForm = () => {
-  form.value = {
+const {
+  list: locations,
+  loading,
+  showForm,
+  editingId,
+  form,
+  load: loadLocations,
+  resetForm,
+  submitForm,
+  edit: editLocation,
+  deleteItem: deleteLocation,
+} = useSalonCrudView<Location>({
+  api: locationAPI,
+  entityName: "Location",
+  defaultForm: {
     name: "",
     address: "",
     city: "",
@@ -62,31 +46,8 @@ const resetForm = () => {
     isActive: true,
     timezone: "Africa/Accra",
     currency: "GHS",
-  };
-  editingId.value = null;
-};
-
-const submitForm = async () => {
-  try {
-    const payload = { ...form.value };
-    if (editingId.value) {
-      const res = await locationAPI.updateLocation(editingId.value, payload);
-      const idx = locations.value.findIndex((l) => l.id === editingId.value);
-      if (idx !== -1) locations.value[idx] = res.data.data;
-    } else {
-      const res = await locationAPI.createLocation(payload);
-      locations.value.push(res.data.data);
-    }
-    showForm.value = false;
-    resetForm();
-  } catch (err) {
-    logger.error("Failed to save location", { error: err });
-  }
-};
-
-const editLocation = (location: Location) => {
-  editingId.value = location.id;
-  form.value = {
+  },
+  editMapper: (location) => ({
     name: location.name,
     address: location.address || "",
     city: location.city || "",
@@ -97,19 +58,8 @@ const editLocation = (location: Location) => {
     isActive: location.isActive,
     timezone: location.timezone || "Africa/Accra",
     currency: location.currency || "GHS",
-  };
-  showForm.value = true;
-};
-
-const deleteLocation = async (id: number) => {
-  if (!confirm(t("salon.confirmDelete", "Delete this location?"))) return;
-  try {
-    await locationAPI.deleteLocation(id);
-    locations.value = locations.value.filter((l) => l.id !== id);
-  } catch (err) {
-    logger.error("Failed to delete location", { error: err });
-  }
-};
+  }),
+});
 
 onMounted(loadLocations);
 </script>
@@ -133,7 +83,7 @@ onMounted(loadLocations);
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading locations...</p>
+        <p>{{ t("salon.loadingLocations") }}</p>
       </div>
 
       <div v-else class="stack">
@@ -151,23 +101,23 @@ onMounted(loadLocations);
               <input v-model="form.name" class="field-input" />
             </label>
             <label class="full">
-              Address
+              {{ t("salon.address", "Address") }}
               <textarea v-model="form.address" class="field-input" rows="2" />
             </label>
             <label>
-              City
+              {{ t("salon.city", "City") }}
               <input v-model="form.city" class="field-input" />
             </label>
             <label>
-              Region
+              {{ t("salon.region", "Region") }}
               <input v-model="form.region" class="field-input" />
             </label>
             <label>
-              Phone
+              {{ t("salon.phone", "Phone") }}
               <input v-model="form.phone" class="field-input" />
             </label>
             <label>
-              Email
+              {{ t("salon.email", "Email") }}
               <input v-model="form.email" class="field-input" type="email" />
             </label>
             <label>
@@ -194,10 +144,10 @@ onMounted(loadLocations);
               </select>
             </label>
             <label>
-              Primary
+              {{ t("salon.primary", "Primary") }}
               <select v-model="form.isPrimary" class="field-input">
-                <option :value="false">No</option>
-                <option :value="true">Yes</option>
+                <option :value="false">{{ t("salon.no", "No") }}</option>
+                <option :value="true">{{ t("salon.yes", "Yes") }}</option>
               </select>
             </label>
           </div>
@@ -221,9 +171,9 @@ onMounted(loadLocations);
             <thead>
               <tr>
                 <th>{{ t("salon.name", "Name") }}</th>
-                <th>City</th>
-                <th>Region</th>
-                <th>Phone</th>
+                <th>{{ t("salon.city", "City") }}</th>
+                <th>{{ t("salon.region", "Region") }}</th>
+                <th>{{ t("salon.phone", "Phone") }}</th>
                 <th>{{ t("salon.currency", "Currency") }}</th>
                 <th>{{ t("salon.status", "Status") }}</th>
                 <th>{{ t("salon.actions", "Actions") }}</th>
@@ -233,7 +183,9 @@ onMounted(loadLocations);
               <tr v-for="location in locations" :key="location.id">
                 <td>
                   <strong>{{ location.name }}</strong>
-                  <div v-if="location.isPrimary" class="muted">Primary</div>
+                  <div v-if="location.isPrimary" class="muted">
+                    {{ t("salon.primary", "Primary") }}
+                  </div>
                 </td>
                 <td>{{ location.city || "—" }}</td>
                 <td>{{ location.region || "—" }}</td>

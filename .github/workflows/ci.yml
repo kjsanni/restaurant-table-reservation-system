@@ -61,9 +61,9 @@ jobs:
         env:
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
-      DB_NAME: rtrs_test
-      DB_NAME_TEST: rtrs_test
-      DB_USERNAME: rtrs_user
+          DB_NAME: rtrs_test
+          DB_NAME_TEST: rtrs_test
+          DB_USERNAME: rtrs_user
           DB_PASSWORD: testpass
       - name: Run backend tests
         working-directory: back-end

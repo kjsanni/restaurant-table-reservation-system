@@ -4,6 +4,17 @@ const emailService = require("../services/emailService");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 const logger = require("../utils/logger");
 
+const sendVerificationEmail = async (user, verifyUrl) => {
+  await emailService.sendEmail({
+    to: user.email,
+    subject: "Verify your email address",
+    html: `<p>Hi ${user.firstName || user.username},</p>
+           <p>Click the link below to verify your email address. This link expires in 24 hours.</p>
+           <p><a href="${verifyUrl}">Verify Email</a></p>
+           <p>If you didn't create an account, ignore this email.</p>`,
+  });
+};
+
 const requestVerificationHandler = async (req, res) => {
   const { email } = req.body;
   if (!email) {
@@ -35,14 +46,7 @@ const requestVerificationHandler = async (req, res) => {
   const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${record.token}`;
 
   try {
-    await emailService.sendEmail({
-      to: user.email,
-      subject: "Verify your email address",
-      html: `<p>Hi ${user.firstName || user.username},</p>
-             <p>Click the link below to verify your email address. This link expires in 24 hours.</p>
-             <p><a href="${verifyUrl}">Verify Email</a></p>
-             <p>If you didn't create an account, ignore this email.</p>`,
-    });
+    await sendVerificationEmail(user, verifyUrl);
   } catch (err) {
     logger.error("Verification email failed", { error: err.message, userId: user.id });
     return res.status(500).json({ success: false, message: "Failed to send verification email" });

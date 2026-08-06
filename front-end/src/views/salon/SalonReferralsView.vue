@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted } from "vue";
 import referralAPI from "@/services/referralAPI";
-import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
+import { useSalonCrudView } from "@/composables/useSalonCrudView";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 
 const { t } = useI18n();
@@ -32,41 +32,20 @@ interface Referral {
   appointment?: { id?: number; start?: string; status?: string };
 }
 
-const referrals = ref<Referral[]>([]);
-const loading = ref(true);
-const showForm = ref(false);
-const editingId = ref<number | null>(null);
-const form = ref({
-  code: "",
-  referrerCustomerId: "",
-  refereeCustomerId: "",
-  rewardType: "fixed_amount",
-  rewardValue: 0,
-  status: "pending",
-  expiresAt: "",
-  note: "",
-});
-
-const loadReferrals = async () => {
-  loading.value = true;
-  try {
-    const res = await referralAPI.getReferrals({ limit: 100 });
-    referrals.value = res.data.data || [];
-  } catch (err) {
-    logger.error("Failed to load referrals", { error: err });
-  } finally {
-    loading.value = false;
-  }
-};
-
-const generateCode = () => {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-  form.value.code = `REF-${timestamp}-${random}`;
-};
-
-const resetForm = () => {
-  form.value = {
+const {
+  list: referrals,
+  loading,
+  showForm,
+  editingId,
+  form,
+  load: loadReferrals,
+  resetForm,
+  edit: editReferral,
+  deleteItem: deleteReferral,
+} = useSalonCrudView<Referral>({
+  api: referralAPI,
+  entityName: "Referral",
+  defaultForm: {
     code: "",
     referrerCustomerId: "",
     refereeCustomerId: "",
@@ -75,8 +54,23 @@ const resetForm = () => {
     status: "pending",
     expiresAt: "",
     note: "",
-  };
-  editingId.value = null;
+  },
+  editMapper: (referral) => ({
+    code: referral.code,
+    referrerCustomerId: referral.referrer?.id?.toString() || "",
+    refereeCustomerId: referral.referee?.id?.toString() || "",
+    rewardType: referral.rewardType || "fixed_amount",
+    rewardValue: Number(referral.rewardValue),
+    status: referral.status,
+    expiresAt: referral.expiresAt ? referral.expiresAt.slice(0, 10) : "",
+    note: referral.note || "",
+  }),
+});
+
+const generateCode = () => {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  form.value.code = `REF-${timestamp}-${random}`;
 };
 
 const submitForm = async () => {
@@ -86,11 +80,11 @@ const submitForm = async () => {
       generateCode();
     }
     if (editingId.value) {
-      const res = await referralAPI.updateReferral(editingId.value, payload);
+      const res = await referralAPI.update(editingId.value, payload);
       const idx = referrals.value.findIndex((r) => r.id === editingId.value);
       if (idx !== -1) referrals.value[idx] = res.data.data;
     } else {
-      const res = await referralAPI.createReferral(payload);
+      const res = await referralAPI.create(payload);
       referrals.value.push(res.data.data);
     }
     showForm.value = false;
@@ -100,37 +94,12 @@ const submitForm = async () => {
   }
 };
 
-const editReferral = (referral: Referral) => {
-  editingId.value = referral.id;
-  form.value = {
-    code: referral.code,
-    referrerCustomerId: referral.referrer?.id?.toString() || "",
-    refereeCustomerId: referral.referee?.id?.toString() || "",
-    rewardType: referral.rewardType || "fixed_amount",
-    rewardValue: Number(referral.rewardValue),
-    status: referral.status,
-    expiresAt: referral.expiresAt ? referral.expiresAt.slice(0, 10) : "",
-    note: referral.note || "",
-  };
-  showForm.value = true;
-};
-
-const deleteReferral = async (id: number) => {
-  if (!confirm(t("salon.confirmDelete", "Delete this referral?"))) return;
-  try {
-    await referralAPI.deleteReferral(id);
-    referrals.value = referrals.value.filter((r) => r.id !== id);
-  } catch (err) {
-    logger.error("Failed to delete referral", { error: err });
-  }
-};
-
 const statusLabel = (status: string) => {
   const map: Record<string, string> = {
-    pending: "Pending",
-    completed: "Completed",
-    cancelled: "Cancelled",
-    expired: "Expired",
+    pending: t("salon.pending", "Pending"),
+    completed: t("salon.completed", "Completed"),
+    cancelled: t("salon.cancelled", "Cancelled"),
+    expired: t("salon.expired", "Expired"),
   };
   return map[status] || status;
 };
@@ -162,7 +131,7 @@ onMounted(loadReferrals);
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading referrals...</p>
+        <p>{{ t("salon.loadingReferrals") }}</p>
       </div>
 
       <div v-else class="stack">
@@ -176,7 +145,7 @@ onMounted(loadReferrals);
           </h3>
           <div class="grid">
             <label class="full">
-              Code
+              {{ t("salon.code", "Code") }}
               <input
                 v-model="form.code"
                 class="field-input"
@@ -184,7 +153,7 @@ onMounted(loadReferrals);
               />
             </label>
             <label>
-              Referrer Customer ID
+              {{ t("salon.referrerCustomerId", "Referrer Customer ID") }}
               <input
                 v-model="form.referrerCustomerId"
                 class="field-input"
@@ -193,7 +162,7 @@ onMounted(loadReferrals);
               />
             </label>
             <label>
-              Referee Customer ID
+              {{ t("salon.refereeCustomerId", "Referee Customer ID") }}
               <input
                 v-model="form.refereeCustomerId"
                 class="field-input"
@@ -232,11 +201,11 @@ onMounted(loadReferrals);
               </select>
             </label>
             <label>
-              Expires At
+              {{ t("salon.expiresAt", "Expires At") }}
               <input v-model="form.expiresAt" class="field-input" type="date" />
             </label>
             <label class="full">
-              Note
+              {{ t("salon.note", "Note") }}
               <textarea v-model="form.note" class="field-input" rows="2" />
             </label>
           </div>

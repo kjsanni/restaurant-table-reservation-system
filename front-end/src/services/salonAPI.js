@@ -1,8 +1,12 @@
 import API from "./API";
 
 class SalonAPI {
-  getStaff() {
-    return API.get("/salon/staff");
+  getServices(filters = {}) {
+    return API.get("/salon/services", { params: filters });
+  }
+
+  getService(id) {
+    return API.get(`/salon/services/${id}`);
   }
 }
 

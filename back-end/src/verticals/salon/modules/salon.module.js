@@ -21,6 +21,8 @@ const salonStaffRoutes = require("../routes/staff.router");
 const salonMarketingCampaignRoutes = require("../routes/marketing-campaign.router");
 const salonGalleryRoutes = require("../routes/gallery.router");
 const salonDashboardRoutes = require("../../../routes/salon-dashboard.router");
+const salonWhatsAppRoutes = require("../routes/salonWhatsApp.router");
+const salonScheduledReportRoutes = require("../routes/scheduledReport.router");
 
 const salonModule = {
   id: "salon",
@@ -48,6 +50,8 @@ const salonModule = {
     { path: "/api/v1/salon/marketing-campaigns", router: salonMarketingCampaignRoutes, middleware: [logAction, validateCsrfToken] },
     { path: "/api/v1/salon/gallery", router: salonGalleryRoutes, middleware: [logAction, validateCsrfToken] },
     { path: "/api/v1/salon/dashboard", router: salonDashboardRoutes, middleware: [logAction, validateCsrfToken] },
+    { path: "/api/v1/salon/whatsapp", router: salonWhatsAppRoutes, middleware: [logAction, validateCsrfToken] },
+    { path: "/api/v1/salon/scheduled-reports", router: salonScheduledReportRoutes, middleware: [logAction, validateCsrfToken] },
   ],
 };
 

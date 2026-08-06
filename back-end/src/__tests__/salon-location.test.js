@@ -4,24 +4,12 @@ jest.mock("../verticals/salon/DAOs/location.dao");
 jest.mock("../middleware/auditLog", () => ({ logAction: jest.fn() }));
 
 const locationController = require("../verticals/salon/controllers/location.controller");
+const { makeRes } = require("./utils/test-response");
 
 describe("location.controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-
-  function makeRes() {
-    const json = jest.fn();
-    const status = jest.fn(function () {
-      return { json: json };
-    });
-    return {
-      res: { status: status, json: json },
-      expectJson: function (expected) {
-        expect(json).toHaveBeenCalledWith(expected);
-      },
-    };
-  }
 
   it("getLocations returns data for tenant", async () => {
     require("../verticals/salon/DAOs/location.dao").findAll.mockResolvedValue([

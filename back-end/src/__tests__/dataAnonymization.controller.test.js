@@ -5,16 +5,10 @@ jest.mock("../tenant-platform/DAOs/dataAnonymization.dao", () => ({
 }));
 
 const dataAnonymizationDAO = require("../tenant-platform/DAOs/dataAnonymization.dao");
+const { createRes } = require("./utils/test-response");
 
 function createReq(user = { id: 1 }, params = { tenantId: "1" }) {
   return { user, params };
-}
-
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  return res;
 }
 
 describe("dataAnonymization.controller", () => {

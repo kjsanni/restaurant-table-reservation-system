@@ -75,7 +75,7 @@ const signupTenantHandler = async (req, res) => {
       password,
     }, tenant.id, "admin", { transaction: t });
 
-    const token = authService.generateToken(user.id, user.role);
+    const token = authService.generateToken(user.id, user.role, user.locale);
     const refreshToken = authService.generateRefreshToken();
 
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);

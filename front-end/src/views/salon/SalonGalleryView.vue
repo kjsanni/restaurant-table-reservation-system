@@ -90,7 +90,7 @@ onMounted(loadImages);
               <input
                 v-model="form.url"
                 class="field-input"
-                placeholder="https://..."
+                :placeholder="t('salon.imageUrlPlaceholder')"
               />
             </label>
             <label class="full">
@@ -107,12 +107,12 @@ onMounted(loadImages);
                 v-model="form.appointmentId"
                 class="field-input"
                 type="number"
-                placeholder="e.g. 42"
+                :placeholder="t('salon.appointmentIdPlaceholder')"
               />
             </label>
             <label class="checkbox">
               <input v-model="form.isPublic" type="checkbox" />
-              <span>Show on public profile</span>
+              {{ t("salon.showOnPublicProfile") }}
             </label>
           </div>
           <div class="form-actions">
@@ -121,14 +121,16 @@ onMounted(loadImages);
               :disabled="saving || !form.url.trim()"
               @click="uploadImage"
             >
-              {{ saving ? "Adding..." : "Add Image" }}
+              {{ saving ? t("salon.saving") : t("salon.addImageBtn") }}
             </button>
           </div>
         </div>
 
         <div class="settings-card">
-          <h3>Gallery</h3>
-          <div v-if="!images.length" class="empty-state">No images yet</div>
+          <h3>{{ t("salon.galleryTitle") }}</h3>
+          <div v-if="!images.length" class="empty-state">
+            {{ t("salon.galleryEmpty") }}
+          </div>
           <div class="gallery-grid">
             <div v-for="item in images" :key="item.id" class="gallery-item">
               <img
@@ -138,18 +140,22 @@ onMounted(loadImages);
               />
               <div class="gallery-meta">
                 <div class="gallery-caption">
-                  {{ item.caption || "Untitled" }}
+                  {{ item.caption || t("salon.untitled") }}
                 </div>
                 <div class="gallery-meta-row">
                   <span :class="['pill', item.isPublic ? 't-true' : 't-false']">
-                    {{ item.isPublic ? "Public" : "Private" }}
+                    {{
+                      item.isPublic
+                        ? t("salon.publicLabel")
+                        : t("salon.privateLabel")
+                    }}
                   </span>
                   <span class="gallery-date">{{
                     formatDate(item.createdAt)
                   }}</span>
                 </div>
                 <button class="btn-danger-sm" @click="deleteImage(item.id)">
-                  Delete
+                  {{ t("salon.deleteImage") }}
                 </button>
               </div>
             </div>

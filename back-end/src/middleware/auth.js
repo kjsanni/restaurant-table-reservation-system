@@ -3,18 +3,97 @@ const authDAO = require("../DAOs/auth.dao");
 const { isNoTenantRequired } = require("./noTenantPaths");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 
-const protect = async (req, res, next) => {
-  let token;
+const buildAuditContext = (req) => ({
+  actorUserId: req.user?.id || null,
+  tenantId: req.tenant?.id || null,
+  path: req.path,
+  method: req.method,
+  ipAddress: req.ip,
+});
 
+const logPlatformAudit = async (context, event, extra = {}) => {
+  await platformAuditDAO
+    .log(
+      context.actorUserId,
+      event,
+      "admin",
+      null,
+      context.tenantId,
+      { ...extra, path: context.path, method: context.method, ipAddress: context.ipAddress },
+      context.ipAddress
+    )
+    .catch(() => {});
+};
+
+const enforceTOTP = (req, res, context) => {
+  if (req.user.totpEnabled !== true) {
+    logPlatformAudit(context, "platform_role.access_denied_totp", { requiredRole: context.requiredRole }).catch(() => {});
+    return res.status(403).json({
+      success: false,
+      message: "TOTP is required for platform role access.",
+      code: "requires_totp",
+    });
+  }
+  logPlatformAudit(context, "platform_role.access_granted", { requiredRole: context.requiredRole }).catch(() => {});
+  return null;
+};
+
+const extractToken = (req) => {
   if (req.cookies && req.cookies.token) {
-    token = req.cookies.token;
-  } else if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
+    return req.cookies.token;
+  }
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+    return req.headers.authorization.split(" ")[1];
+  }
+  return null;
+};
+
+const authenticateUser = async (token) => {
+  const decoded = verifyToken(token);
+  const user = await authDAO.findUserById(decoded.userId);
+  if (!user) {
+    return { error: { status: 401, message: "User no longer exists!" } };
   }
 
+  const permissions = user.permissions || {};
+  if (!permissions || Object.keys(permissions).length === 0) {
+    try {
+      const roleDAO = require("../DAOs/role.dao");
+      const effective = await roleDAO.getRolePermissions(user.id);
+      user.permissions = effective && Object.keys(effective).length > 0 ? effective : {};
+    } catch (err) {
+      console.warn("RBAC lookup failed, denying implicit permissions:", err.message);
+      user.permissions = {};
+    }
+  }
+
+  return { user };
+};
+
+const resolveTenant = async (req, user) => {
+  if (user.tenantId) {
+    try {
+      const db = require("../db/models");
+      const tenant = await db.tenant.findByPk(user.tenantId);
+      if (tenant) {
+        req.tenant = tenant;
+      } else {
+        return { error: { status: 403, message: "Your account is not assigned to a tenant." } };
+      }
+    } catch (err) {
+      console.warn("Tenant load failed:", err.message);
+      return { error: { status: 500, message: "Failed to resolve tenant." } };
+    }
+  } else {
+    if (req.tenant && !isNoTenantRequired(req.path)) {
+      req.tenant = null;
+    }
+  }
+  return {};
+};
+
+const protect = async (req, res, next) => {
+  const token = extractToken(req);
   if (!token) {
     return res.status(401).json({
       success: false,
@@ -23,53 +102,22 @@ const protect = async (req, res, next) => {
   }
 
   try {
-    const decoded = verifyToken(token);
-    const user = await authDAO.findUserById(decoded.userId);
-
-    if (!user) {
-      return res.status(401).json({
+    const { user, error } = await authenticateUser(token);
+    if (error) {
+      return res.status(error.status).json({
         success: false,
-        message: "User no longer exists!",
+        message: error.message,
       });
-    }
-
-    const permissions = user.permissions || {};
-    if (!permissions || Object.keys(permissions).length === 0) {
-      try {
-        const roleDAO = require("../DAOs/role.dao");
-        const effective = await roleDAO.getRolePermissions(user.id);
-        user.permissions = effective && Object.keys(effective).length > 0 ? effective : {};
-      } catch (err) {
-        console.warn("RBAC lookup failed, denying implicit permissions:", err.message);
-        user.permissions = {};
-      }
     }
 
     req.user = user;
 
-    if (user.tenantId) {
-      try {
-        const db = require("../db/models");
-        const tenant = await db.tenant.findByPk(user.tenantId);
-        if (tenant) {
-          req.tenant = tenant;
-        } else {
-          return res.status(403).json({
-            success: false,
-            message: "Your account is not assigned to a tenant.",
-          });
-        }
-      } catch (err) {
-        console.warn("Tenant load failed:", err.message);
-        return res.status(500).json({
-          success: false,
-          message: "Failed to resolve tenant.",
-        });
-      }
-    } else {
-      if (req.tenant && !isNoTenantRequired(req.path)) {
-        req.tenant = null;
-      }
+    const tenantResult = await resolveTenant(req, user);
+    if (tenantResult.error) {
+      return res.status(tenantResult.error.status).json({
+        success: false,
+        message: tenantResult.error.message,
+      });
     }
 
     next();
@@ -82,77 +130,76 @@ const protect = async (req, res, next) => {
   }
 };
 
+const sendForbidden = (res, message) => {
+  return res.status(403).json({
+    success: false,
+    message,
+  });
+};
+
 const admin = (req, res, next) => {
   if (req.user && req.user.role === "admin") {
     next();
   } else {
-    return res.status(403).json({
-      success: false,
-      message: "Admin access required!",
-    });
+    return sendForbidden(res, "Admin access required!");
   }
 };
 
 const requireSuperAdmin = (req, res, next) => {
-  // Decision: platform_admin platform role is granted full super-admin access here.
-  // This is intentional for now because the existing platform portals do not yet
-  // distinguish between platform-admin-only routes and true super-admin routes.
-  // Revisit this block when finer-grained platform roles are required, and split
-  // requireSuperAdmin into dedicated middleware for any narrower scope.
-  const hasSuperAdmin = req.user && (
-    req.user.isSuperAdmin ||
-    (Array.isArray(req.user.platformRoles) && req.user.platformRoles.includes("platform_admin"))
-  );
+  if (req.user && req.user.isSuperAdmin) {
+    const context = buildAuditContext(req);
+    if (req.user.totpEnabled !== true) {
+      logPlatformAudit(context, "super_admin.access_denied_totp").catch(() => {});
+      return res.status(403).json({
+        success: false,
+        message: "TOTP is required for super-admin access.",
+        code: "requires_totp",
+      });
+    }
 
-  if (hasSuperAdmin) {
-    next();
-  } else {
-    const actorUserId = req.user?.id || null;
-    const tenantId = req.tenant?.id || null;
-    platformAuditDAO
-      .log(
-        actorUserId,
-        "super_admin.access_denied",
-        "admin",
-        null,
-        tenantId,
-        { path: req.path, method: req.method, ipAddress: req.ip },
-        req.ip
-      )
-      .catch(() => {});
-    return res.status(403).json({
-      success: false,
-      message: "Super admin access required!",
-    });
+    logPlatformAudit(context, "super_admin.access_granted").catch(() => {});
+    return next();
   }
+
+  const context = buildAuditContext(req);
+  logPlatformAudit(context, "super_admin.access_denied").catch(() => {});
+  return sendForbidden(res, "Super admin access required!");
+};
+
+const ROLE_HIERARCHY = {
+  platform_admin: 5,
+  platform_billing: 4,
+  platform_support: 3,
+  platform_technical: 2,
+  platform_compliance: 1,
 };
 
 const requirePlatformRole = (role) => {
   return (req, res, next) => {
+    const hasSuperAdmin = req.user?.isSuperAdmin === true;
     const userRoles = Array.isArray(req.user?.platformRoles) ? req.user.platformRoles : [];
-    const hasRole = req.user?.isSuperAdmin || userRoles.includes(role) || userRoles.includes("platform_admin");
+    const requiredLevel = ROLE_HIERARCHY[role];
 
-    if (hasRole) {
-      next();
-    } else {
-      const actorUserId = req.user?.id || null;
-      const tenantId = req.tenant?.id || null;
-      platformAuditDAO
-        .log(
-          actorUserId,
-          "platform_role.access_denied",
-          "admin",
-          null,
-          tenantId,
-          { path: req.path, method: req.method, requiredRole: role, ipAddress: req.ip },
-          req.ip
-        )
-        .catch(() => {});
-      return res.status(403).json({
-        success: false,
-        message: `Platform role '${role}' required!`,
-      });
+    if (requiredLevel === undefined) {
+      const context = buildAuditContext(req);
+      context.requiredRole = role;
+      logPlatformAudit(context, "platform_role.invalid_role", { requiredRole: role }).catch(() => {});
+      return sendForbidden(res, `Platform role '${role}' is not configured.`);
     }
+
+    const userMaxLevel = Math.max(0, ...userRoles.map((r) => ROLE_HIERARCHY[r] || 0));
+
+    if (hasSuperAdmin || userMaxLevel >= requiredLevel) {
+      const context = buildAuditContext(req);
+      context.requiredRole = role;
+      const rejection = enforceTOTP(req, res, context);
+      if (rejection) return rejection;
+      return next();
+    }
+
+    const context = buildAuditContext(req);
+    logPlatformAudit(context, "platform_role.access_denied", { requiredRole: role }).catch(() => {});
+    return sendForbidden(res, `Platform role '${role}' required!`);
   };
 };
 
@@ -160,10 +207,7 @@ const staff = (req, res, next) => {
   if (req.user && (req.user.role === "admin" || req.user.role === "staff")) {
     next();
   } else {
-    return res.status(403).json({
-      success: false,
-      message: "Staff access required!",
-    });
+    return sendForbidden(res, "Staff access required!");
   }
 };
 
@@ -171,10 +215,7 @@ const staffOnly = (req, res, next) => {
   if (req.user && req.user.role === "staff") {
     next();
   } else {
-    return res.status(403).json({
-      success: false,
-      message: "Staff-only access required!",
-    });
+    return sendForbidden(res, "Staff-only access required!");
   }
 };
 
@@ -182,10 +223,7 @@ const customer = (req, res, next) => {
   if (req.user && req.user.role === "customer") {
     next();
   } else {
-    return res.status(403).json({
-      success: false,
-      message: "Customer access required!",
-    });
+    return sendForbidden(res, "Customer access required!");
   }
 };
 
@@ -201,10 +239,7 @@ const requirePermission = (permission) => {
     if (userPermissions[permission] === true) {
       next();
     } else {
-      return res.status(403).json({
-        success: false,
-        message: `Permission denied: ${permission} required!`,
-      });
+      return sendForbidden(res, `Permission denied: ${permission} required!`);
     }
   };
 };

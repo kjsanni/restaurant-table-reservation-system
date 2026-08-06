@@ -1,5 +1,12 @@
 # Super-Admin Platform Settings Page — Implementation Plan
 
+## Status
+- **Implementation:** Complete
+- **Route:** `/super-admin/settings`
+- **Frontend:** `front-end/src/views/admin/PlatformSettingsView.vue`
+- **Backend:** `back-end/src/tenant-platform/controllers/platformSettings.controller.js` + `back-end/src/tenant-platform/routes/platformSettings.router.js`
+- **Tests:** `back-end/src/__tests__/platformSettings.controller.test.js`
+
 ## Context
 This is a **multi-tenant SaaS** where super-admin manages the **platform**, not individual tenants. Platform settings are authoritative defaults that flow down to tenants; tenants may have limited override capability or none at all. The current scattered views (`PasswordPolicyView.vue`, `MaintenanceModeView.vue`, `FeatureFlagsView.vue`, `PaystackConfigView.vue`, etc.) each manage isolated platform concerns with no unified view of the platform's configuration state.
 

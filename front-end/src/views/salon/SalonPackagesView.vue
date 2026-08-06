@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted } from "vue";
 import packageAPI from "@/services/packageAPI";
-import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
+import { useSalonCrudView } from "@/composables/useSalonCrudView";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 
 const { t } = useI18n();
@@ -24,34 +24,21 @@ interface ServicePackage {
   }[];
 }
 
-const packages = ref<ServicePackage[]>([]);
-const loading = ref(true);
-const showForm = ref(false);
-const editingId = ref<number | null>(null);
-const form = ref({
-  name: "",
-  description: "",
-  price: 0,
-  durationMinutes: 60,
-  depositAmount: 0,
-  isAvailable: true,
-  whatsappBookable: true,
-});
-
-const loadPackages = async () => {
-  loading.value = true;
-  try {
-    const res = await packageAPI.getPackages({ limit: 100 });
-    packages.value = res.data.data || [];
-  } catch (err) {
-    logger.error("Failed to load packages", { error: err });
-  } finally {
-    loading.value = false;
-  }
-};
-
-const resetForm = () => {
-  form.value = {
+const {
+  list: packages,
+  loading,
+  showForm,
+  editingId,
+  form,
+  load: loadPackages,
+  resetForm,
+  submitForm,
+  edit: editPackage,
+  deleteItem: deletePackage,
+} = useSalonCrudView<ServicePackage>({
+  api: packageAPI,
+  entityName: "Package",
+  defaultForm: {
     name: "",
     description: "",
     price: 0,
@@ -59,31 +46,8 @@ const resetForm = () => {
     depositAmount: 0,
     isAvailable: true,
     whatsappBookable: true,
-  };
-  editingId.value = null;
-};
-
-const submitForm = async () => {
-  try {
-    const payload = { ...form.value };
-    if (editingId.value) {
-      const res = await packageAPI.updatePackage(editingId.value, payload);
-      const idx = packages.value.findIndex((p) => p.id === editingId.value);
-      if (idx !== -1) packages.value[idx] = res.data.data;
-    } else {
-      const res = await packageAPI.createPackage(payload);
-      packages.value.push(res.data.data);
-    }
-    showForm.value = false;
-    resetForm();
-  } catch (err) {
-    logger.error("Failed to save package", { error: err });
-  }
-};
-
-const editPackage = (pkg: ServicePackage) => {
-  editingId.value = pkg.id;
-  form.value = {
+  },
+  editMapper: (pkg) => ({
     name: pkg.name,
     description: pkg.description || "",
     price: Number(pkg.price),
@@ -91,22 +55,11 @@ const editPackage = (pkg: ServicePackage) => {
     depositAmount: Number(pkg.depositAmount),
     isAvailable: pkg.isAvailable,
     whatsappBookable: pkg.whatsappBookable,
-  };
-  showForm.value = true;
-};
-
-const deletePackage = async (id: number) => {
-  if (!confirm(t("salon.confirmDelete", "Delete this package?"))) return;
-  try {
-    await packageAPI.deletePackage(id);
-    packages.value = packages.value.filter((p) => p.id !== id);
-  } catch (err) {
-    logger.error("Failed to delete package", { error: err });
-  }
-};
+  }),
+});
 
 const serviceSummary = (pkg: ServicePackage) => {
-  if (!pkg.services || !pkg.services.length) return "No services";
+  if (!pkg.services || !pkg.services.length) return t("salon.noServices");
   const names = pkg.services.map((s) => s.name).filter(Boolean);
   return names.length > 3
     ? `${names.slice(0, 3).join(", ")}...`
@@ -138,7 +91,7 @@ onMounted(loadPackages);
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading packages...</p>
+        <p>{{ t("salon.loadingPackages") }}</p>
       </div>
 
       <div v-else class="stack">
@@ -218,7 +171,7 @@ onMounted(loadPackages);
         </div>
 
         <div class="settings-card">
-          <h3>{{ t("salon.campaignsList", "Packages") }}</h3>
+          <h3>{{ t("salon.packageList", "Packages") }}</h3>
           <table class="report-table">
             <thead>
               <tr>

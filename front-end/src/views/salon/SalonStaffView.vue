@@ -33,7 +33,9 @@
                   :key="skill.serviceId"
                   class="badge"
                 >
-                  {{ skill.service?.name || `Service #${skill.serviceId}` }}
+                  {{ t("salon.serviceFallback", "Service") }} #{{
+                    skill.serviceId
+                  }}
                 </span>
               </td>
             </tr>

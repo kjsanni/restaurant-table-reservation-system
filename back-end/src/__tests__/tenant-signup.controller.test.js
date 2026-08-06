@@ -35,6 +35,7 @@ const authDAO = require("../DAOs/auth.dao");
 const tenantAdminDAO = require("../tenant-platform/DAOs/tenantAdmin.dao");
 const planDAO = require("../tenant-platform/DAOs/plan.dao");
 const db = require("../db/models");
+const { createRes } = require("./utils/test-response");
 
 function createReq(body = {}) {
   return {
@@ -44,14 +45,6 @@ function createReq(body = {}) {
     connection: { remoteAddress: "127.0.0.1" },
     socket: { remoteAddress: "127.0.0.1" },
   };
-}
-
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  res.cookie = jest.fn().mockReturnValue(res);
-  return res;
 }
 
 describe("tenant-signup.controller", () => {

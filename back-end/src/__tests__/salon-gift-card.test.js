@@ -4,24 +4,12 @@ jest.mock("../verticals/salon/DAOs/giftCard.dao");
 jest.mock("../middleware/auditLog", () => ({ logAction: jest.fn() }));
 
 const giftCardController = require("../verticals/salon/controllers/giftCard.controller");
+const { makeRes } = require("./utils/test-response");
 
 describe("giftCard.controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-
-  function makeRes() {
-    const json = jest.fn();
-    const status = jest.fn(function () {
-      return { json: json };
-    });
-    return {
-      res: { status: status, json: json },
-      expectJson: function (expected) {
-        expect(json).toHaveBeenCalledWith(expected);
-      },
-    };
-  }
 
   it("getGiftCards returns data for tenant", async () => {
     require("../verticals/salon/DAOs/giftCard.dao").findAll.mockResolvedValue([

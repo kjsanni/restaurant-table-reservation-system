@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted } from "vue";
 import pricingRuleAPI from "@/services/pricingRuleAPI";
-import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
+import { useSalonCrudView } from "@/composables/useSalonCrudView";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 
 const { t } = useI18n();
@@ -27,43 +27,20 @@ interface PricingRule {
   note?: string;
 }
 
-const rules = ref<PricingRule[]>([]);
-const loading = ref(true);
-const showForm = ref(false);
-const editingId = ref<number | null>(null);
-const form = ref({
-  name: "",
-  ruleType: "fixed_discount",
-  serviceId: "",
-  packageId: "",
-  value: 0,
-  currency: "GHS",
-  startDate: "",
-  endDate: "",
-  weekDays: "",
-  startTime: "",
-  endTime: "",
-  segmentKey: "",
-  segmentValue: "",
-  isActive: true,
-  priority: 0,
-  note: "",
-});
-
-const loadRules = async () => {
-  loading.value = true;
-  try {
-    const res = await pricingRuleAPI.getRules({ limit: 100 });
-    rules.value = res.data.data || [];
-  } catch (err) {
-    logger.error("Failed to load pricing rules", { error: err });
-  } finally {
-    loading.value = false;
-  }
-};
-
-const resetForm = () => {
-  form.value = {
+const {
+  list: rules,
+  loading,
+  showForm,
+  editingId,
+  form,
+  load: loadRules,
+  resetForm,
+  edit: editRule,
+  deleteItem: deleteRule,
+} = useSalonCrudView<PricingRule>({
+  api: pricingRuleAPI,
+  entityName: "Pricing Rule",
+  defaultForm: {
     name: "",
     ruleType: "fixed_discount",
     serviceId: "",
@@ -80,36 +57,8 @@ const resetForm = () => {
     isActive: true,
     priority: 0,
     note: "",
-  };
-  editingId.value = null;
-};
-
-const submitForm = async () => {
-  try {
-    const payload: any = { ...form.value };
-    if (!payload.serviceId) payload.serviceId = null;
-    else payload.serviceId = Number(payload.serviceId);
-    if (!payload.packageId) payload.packageId = null;
-    else payload.packageId = Number(payload.packageId);
-
-    if (editingId.value) {
-      const res = await pricingRuleAPI.updateRule(editingId.value, payload);
-      const idx = rules.value.findIndex((r) => r.id === editingId.value);
-      if (idx !== -1) rules.value[idx] = res.data.data;
-    } else {
-      const res = await pricingRuleAPI.createRule(payload);
-      rules.value.push(res.data.data);
-    }
-    showForm.value = false;
-    resetForm();
-  } catch (err) {
-    logger.error("Failed to save pricing rule", { error: err });
-  }
-};
-
-const editRule = (rule: PricingRule) => {
-  editingId.value = rule.id;
-  form.value = {
+  },
+  editMapper: (rule) => ({
     name: rule.name,
     ruleType: rule.ruleType,
     serviceId: rule.serviceId?.toString() || "",
@@ -126,17 +75,28 @@ const editRule = (rule: PricingRule) => {
     isActive: rule.isActive,
     priority: Number(rule.priority),
     note: rule.note || "",
-  };
-  showForm.value = true;
-};
+  }),
+});
 
-const deleteRule = async (id: number) => {
-  if (!confirm(t("salon.confirmDelete", "Delete this pricing rule?"))) return;
+const submitForm = async () => {
   try {
-    await pricingRuleAPI.deleteRule(id);
-    rules.value = rules.value.filter((r) => r.id !== id);
+    const payload: any = { ...form.value };
+    if (!payload.serviceId) payload.serviceId = null;
+    else payload.serviceId = Number(payload.serviceId);
+    if (!payload.packageId) payload.packageId = null;
+    else payload.packageId = Number(payload.packageId);
+    if (editingId.value) {
+      const res = await pricingRuleAPI.update(editingId.value, payload);
+      const idx = rules.value.findIndex((r) => r.id === editingId.value);
+      if (idx !== -1) rules.value[idx] = res.data.data;
+    } else {
+      const res = await pricingRuleAPI.create(payload);
+      rules.value.push(res.data.data);
+    }
+    showForm.value = false;
+    resetForm();
   } catch (err) {
-    logger.error("Failed to delete pricing rule", { error: err });
+    logger.error("Failed to save pricing rule", { error: err });
   }
 };
 
@@ -146,10 +106,10 @@ const formatCurrency = (value: number, currency = "GHS") => {
 
 const ruleTypeLabel = (type: string) => {
   const map: Record<string, string> = {
-    fixed_discount: "Fixed Discount",
-    percentage_discount: "Percentage Discount",
-    time_based: "Time Based",
-    customer_segment: "Customer Segment",
+    fixed_discount: t("salon.fixedDiscount", "Fixed Discount"),
+    percentage_discount: t("salon.percentageDiscount", "Percentage Discount"),
+    time_based: t("salon.timeBased", "Time Based"),
+    customer_segment: t("salon.customerSegment", "Customer Segment"),
   };
   return map[type] || type;
 };
@@ -179,7 +139,7 @@ onMounted(loadRules);
     <div class="content-wrapper">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading pricing rules...</p>
+        <p>{{ t("salon.loadingPricingRules") }}</p>
       </div>
 
       <div v-else class="stack">
@@ -197,16 +157,24 @@ onMounted(loadRules);
               <input v-model="form.name" class="field-input" />
             </label>
             <label>
-              Rule Type
+              {{ t("salon.ruleType", "Rule Type") }}
               <select v-model="form.ruleType" class="field-input">
-                <option value="fixed_discount">Fixed Discount</option>
-                <option value="percentage_discount">Percentage Discount</option>
-                <option value="time_based">Time Based</option>
-                <option value="customer_segment">Customer Segment</option>
+                <option value="fixed_discount">
+                  {{ t("salon.fixedDiscount", "Fixed Discount") }}
+                </option>
+                <option value="percentage_discount">
+                  {{ t("salon.percentageDiscount", "Percentage Discount") }}
+                </option>
+                <option value="time_based">
+                  {{ t("salon.timeBased", "Time Based") }}
+                </option>
+                <option value="customer_segment">
+                  {{ t("salon.customerSegment", "Customer Segment") }}
+                </option>
               </select>
             </label>
             <label>
-              Service ID
+              {{ t("salon.serviceId", "Service ID") }}
               <input
                 v-model.number="form.serviceId"
                 class="field-input"
@@ -215,7 +183,7 @@ onMounted(loadRules);
               />
             </label>
             <label>
-              Package ID
+              {{ t("salon.packageId", "Package ID") }}
               <input
                 v-model.number="form.packageId"
                 class="field-input"
@@ -224,7 +192,7 @@ onMounted(loadRules);
               />
             </label>
             <label>
-              Value
+              {{ t("salon.discountValue", "Discount Value") }}
               <input
                 v-model.number="form.value"
                 class="field-input"
@@ -241,15 +209,15 @@ onMounted(loadRules);
               </select>
             </label>
             <label>
-              Start Date
+              {{ t("salon.startDate", "Start Date") }}
               <input v-model="form.startDate" class="field-input" type="date" />
             </label>
             <label>
-              End Date
+              {{ t("salon.endDate", "End Date") }}
               <input v-model="form.endDate" class="field-input" type="date" />
             </label>
             <label>
-              Week Days
+              {{ t("salon.weekDays", "Week Days") }}
               <input
                 v-model="form.weekDays"
                 class="field-input"
@@ -257,23 +225,23 @@ onMounted(loadRules);
               />
             </label>
             <label>
-              Start Time
+              {{ t("salon.startTime", "Start Time") }}
               <input v-model="form.startTime" class="field-input" type="time" />
             </label>
             <label>
-              End Time
+              {{ t("salon.endTime", "End Time") }}
               <input v-model="form.endTime" class="field-input" type="time" />
             </label>
             <label>
-              Segment Key
+              {{ t("salon.segmentKey", "Segment Key") }}
               <input v-model="form.segmentKey" class="field-input" />
             </label>
             <label>
-              Segment Value
+              {{ t("salon.segmentValue", "Segment Value") }}
               <input v-model="form.segmentValue" class="field-input" />
             </label>
             <label>
-              Priority
+              {{ t("salon.priority", "Priority") }}
               <input
                 v-model.number="form.priority"
                 class="field-input"
@@ -292,7 +260,7 @@ onMounted(loadRules);
               </select>
             </label>
             <label class="full">
-              Note
+              {{ t("salon.note", "Note") }}
               <textarea v-model="form.note" class="field-input" rows="2" />
             </label>
           </div>
@@ -316,10 +284,10 @@ onMounted(loadRules);
             <thead>
               <tr>
                 <th>{{ t("salon.name", "Name") }}</th>
-                <th>Type</th>
-                <th>Value</th>
-                <th>Start</th>
-                <th>End</th>
+                <th>{{ t("salon.type", "Type") }}</th>
+                <th>{{ t("salon.value", "Value") }}</th>
+                <th>{{ t("salon.start", "Start") }}</th>
+                <th>{{ t("salon.end", "End") }}</th>
                 <th>{{ t("salon.status", "Status") }}</th>
                 <th>{{ t("salon.actions", "Actions") }}</th>
               </tr>

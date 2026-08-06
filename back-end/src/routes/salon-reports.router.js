@@ -17,4 +17,14 @@ router
   )
   .all(httpMethodError);
 
+router
+  .route("/reports/export/csv")
+  .get(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("view_appointments")),
+    tryCatchHandler(salonReportsController.exportSalonReportsHandler)
+  )
+  .all(httpMethodError);
+
 module.exports = router;

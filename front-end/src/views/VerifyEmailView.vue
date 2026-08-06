@@ -42,24 +42,30 @@ onMounted(async () => {
       message.value = res.data?.message || "Email verified successfully!";
     }
   } catch (err) {
-    message.value = err.response?.data?.message || "Verification failed. The link may be invalid or expired.";
+    message.value =
+      err.response?.data?.message ||
+      "Verification failed. The link may be invalid or expired.";
   }
 });
 
 const resend = async () => {
   const email = route.query.email;
   if (!email) {
-    message.value = "Email address is missing. Please request a new verification email from the login page.";
+    message.value =
+      "Email address is missing. Please request a new verification email from the login page.";
     return;
   }
 
   loading.value = true;
   try {
     const res = await authAPI.requestEmailVerification(email);
-    message.value = res.data?.message || "If an account exists, a verification email has been sent.";
+    message.value =
+      res.data?.message ||
+      "If an account exists, a verification email has been sent.";
     success.value = true;
   } catch (err) {
-    message.value = err.response?.data?.message || "Something went wrong. Please try again.";
+    message.value =
+      err.response?.data?.message || "Something went wrong. Please try again.";
   } finally {
     loading.value = false;
   }
@@ -71,7 +77,7 @@ const resend = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--auth-bg, #f3f4f6);
   padding: 1rem;
 }

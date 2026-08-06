@@ -192,7 +192,8 @@ const stripSensitiveSettingValue = (setting) => {
   if (!setting) return setting;
   const key = setting.key || (setting.get && setting.get("key"));
   if (key === "email_server" && setting.value && typeof setting.value === "object") {
-    const { pass, ...rest } = setting.value;
+    const { ...rest } = setting.value;
+    delete rest.pass;
     setting.value = rest;
   }
   if (key === "turnstile_secret_key" && setting.value) {

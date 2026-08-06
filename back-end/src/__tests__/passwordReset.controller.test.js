@@ -29,13 +29,7 @@ const passwordResetDAO = require("../DAOs/passwordReset.dao");
 const authDAO = require("../DAOs/auth.dao");
 const emailService = require("../services/emailService");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
-
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  return res;
-}
+const { createRes } = require("./utils/test-response");
 
 describe("Password Reset Controller", () => {
   beforeEach(() => jest.clearAllMocks());

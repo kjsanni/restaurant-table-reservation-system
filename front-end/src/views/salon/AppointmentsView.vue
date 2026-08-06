@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import appointmentAPI from "@/services/appointmentAPI";
 import serviceAPI from "@/services/serviceAPI";
 import stationAPI from "@/services/stationAPI";
@@ -7,8 +7,11 @@ import locationAPI from "@/services/locationAPI";
 import logger from "@/utils/logger";
 import { io, Socket } from "socket.io-client";
 import { useI18n } from "@/composables/useI18n";
+import { useOfflineAppointments } from "@/composables/useOfflineAppointments";
 
 const { t } = useI18n();
+const { drafts, isOnline, loadDrafts, createAppointment, replayDrafts } =
+  useOfflineAppointments();
 
 interface Appointment {
   id: number;
@@ -195,10 +198,11 @@ const submitForm = async () => {
       source: "web",
     };
 
-    await appointmentAPI.createAppointment(payload);
+    await createAppointment(payload);
     resetForm();
     showForm.value = false;
     await loadAppointments();
+    await loadDrafts();
   } catch (err) {
     generalError.value =
       err instanceof Error ? err.message : t("salon.failedCreateAppointment");
@@ -297,7 +301,7 @@ const bulkCancel = async () => {
 };
 
 onMounted(async () => {
-  await Promise.all([loadAppointments(), loadLocations()]);
+  await Promise.all([loadAppointments(), loadLocations(), loadDrafts()]);
   socket.value = io("", { path: "/socket.io" });
   socket.value.on("salon-appointment-created", async () => {
     await loadAppointments();
@@ -308,11 +312,15 @@ onMounted(async () => {
   socket.value.on("salon-appointment-deleted", async () => {
     await loadAppointments();
   });
+  window.addEventListener("online", () => {
+    replayDrafts().then(() => loadAppointments());
+  });
 });
 
 onUnmounted(() => {
   socket.value?.disconnect();
   socket.value = null;
+  window.removeEventListener("online", () => {});
 });
 
 const openForm = async () => {
@@ -351,7 +359,7 @@ const handleServiceChange = async () => {
             class="location-filter"
             @change="loadAppointments"
           >
-            <option value="">All Locations</option>
+            <option value="">{{ t("salon.allLocations") }}</option>
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">
               {{ loc.name }}
             </option>
@@ -359,6 +367,29 @@ const handleServiceChange = async () => {
           <button class="btn-primary" @click="openForm">
             {{ t("salon.newAppointment") }}
           </button>
+        </div>
+      </div>
+
+      <div v-if="drafts.length" class="drafts-panel">
+        <h3>{{ t("salon.pendingOfflineDrafts", "Pending offline drafts") }}</h3>
+        <p class="drafts-hint">
+          {{
+            t(
+              "salon.offlineDraftsHint",
+              "These will sync automatically when you reconnect."
+            )
+          }}
+        </p>
+        <div class="drafts-list">
+          <div v-for="draft in drafts" :key="draft.id" class="draft-item">
+            <span class="draft-service">{{
+              draft.serviceName || t("salon.service")
+            }}</span>
+            <span class="draft-date">{{ formatDate(draft.start) }}</span>
+            <span class="draft-status">{{
+              t("salon.draftStatus", "Draft")
+            }}</span>
+          </div>
         </div>
       </div>
 
@@ -886,5 +917,51 @@ const handleServiceChange = async () => {
 .checkbox-cell {
   width: 40px;
   text-align: center;
+}
+.drafts-panel {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.drafts-panel h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: #92400e;
+}
+.drafts-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #a16207;
+}
+.drafts-list {
+  display: grid;
+  gap: 8px;
+}
+.draft-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-md);
+}
+.draft-service {
+  font-weight: 600;
+  color: #78350f;
+}
+.draft-date {
+  flex: 1;
+  font-size: 13px;
+  color: #92400e;
+}
+.draft-status {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #d97706;
+  font-weight: 700;
 }
 </style>

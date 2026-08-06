@@ -8,16 +8,10 @@ jest.mock("../tenant-platform/DAOs/caseStudy.dao", () => ({
 }));
 
 const caseStudyDAO = require("../tenant-platform/DAOs/caseStudy.dao");
+const { createRes } = require("./utils/test-response");
 
 function createReq(body = {}, params = {}) {
   return { body, params, user: { id: 1 }, ip: "127.0.0.1" };
-}
-
-function createRes() {
-  const res = {};
-  res.status = jest.fn().mockReturnValue(res);
-  res.json = jest.fn().mockReturnValue(res);
-  return res;
 }
 
 describe("caseStudy.controller", () => {

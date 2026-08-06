@@ -74,7 +74,7 @@ const cancelSalonAppointmentHandler = async (req, res) => {
       req.tenant?.id
     );
 
-    if (appointment.customerId !== customer.id && req.user?.role !== "admin" && req.user?.role !== "staff") {
+    if (appointment.customerId !== customer.id && req.user?.role !== "admin") {
       return res.status(403).json({ success: false, message: "You do not have permission to cancel this appointment" });
     }
 
@@ -103,7 +103,7 @@ const rebookSalonAppointmentHandler = async (req, res) => {
       req.tenant?.id
     );
 
-    if (appointment.customerId !== customer.id && req.user?.role !== "admin" && req.user?.role !== "staff") {
+    if (appointment.customerId !== customer.id && req.user?.role !== "admin") {
       return res.status(403).json({ success: false, message: "You do not have permission to rebook this appointment" });
     }
 

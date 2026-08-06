@@ -4,24 +4,12 @@ jest.mock("../verticals/salon/DAOs/pricingRule.dao");
 jest.mock("../middleware/auditLog", () => ({ logAction: jest.fn() }));
 
 const pricingRuleController = require("../verticals/salon/controllers/pricingRule.controller");
+const { makeRes } = require("./utils/test-response");
 
 describe("pricingRule.controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-
-  function makeRes() {
-    const json = jest.fn();
-    const status = jest.fn(function () {
-      return { json: json };
-    });
-    return {
-      res: { status: status, json: json },
-      expectJson: function (expected) {
-        expect(json).toHaveBeenCalledWith(expected);
-      },
-    };
-  }
 
   it("getPricingRules returns data for tenant", async () => {
     require("../verticals/salon/DAOs/pricingRule.dao").findAll.mockResolvedValue([

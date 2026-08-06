@@ -26,12 +26,24 @@ const socket = ref<Socket | null>(null);
 const quickLinks = [
   {
     path: "/salon/appointments",
-    label: "New Appointment",
+    label: "salon.quickLinkNewAppointment",
     icon: "mdi:calendar-plus",
   },
-  { path: "/salon/walkins", label: "Walk-ins", icon: "mdi:account-clock" },
-  { path: "/salon/clients", label: "Clients", icon: "mdi:account-group" },
-  { path: "/salon/reports", label: "Reports", icon: "mdi:chart-bar" },
+  {
+    path: "/salon/walkins",
+    label: "salon.quickLinkWalkins",
+    icon: "mdi:account-clock",
+  },
+  {
+    path: "/salon/clients",
+    label: "salon.quickLinkClients",
+    icon: "mdi:account-group",
+  },
+  {
+    path: "/salon/reports",
+    label: "salon.quickLinkReports",
+    icon: "mdi:chart-bar",
+  },
 ];
 
 const loadDashboard = async () => {
@@ -117,7 +129,7 @@ onUnmounted(() => {
             @click="router.push(link.path)"
           >
             <span class="quick-link-icon">{{ link.icon }}</span>
-            <span class="quick-link-label">{{ link.label }}</span>
+            <span class="quick-link-label">{{ t(link.label) }}</span>
           </button>
         </div>
       </div>

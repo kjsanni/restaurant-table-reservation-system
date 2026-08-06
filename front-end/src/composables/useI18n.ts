@@ -1,4 +1,4 @@
-import { ref, computed } from "vue";
+import { ref, computed, type Ref } from "vue";
 import { messages, type Locale } from "@/locales";
 import localeAPI from "@/services/localeAPI";
 
@@ -23,9 +23,9 @@ const initLocale = (): Locale => {
   return "en";
 };
 
-const currentLocale = ref<Locale>(initLocale());
+const currentLocale: Ref<Locale> = ref<Locale>(initLocale());
 
-export const useI18n = () => {
+const createI18nInstance = () => {
   const t = (key: KeyPath, fallback = "") => {
     const keys = key.split(".");
     let value: any = messages[currentLocale.value];
@@ -77,4 +77,17 @@ export const useI18n = () => {
   };
 };
 
-export type UseI18nReturn = ReturnType<typeof useI18n>;
+let sharedInstance: ReturnType<typeof createI18nInstance> | null = null;
+
+export const useI18n = () => {
+  if (!sharedInstance) {
+    sharedInstance = createI18nInstance();
+  }
+  return sharedInstance;
+};
+
+export const useGlobalI18n = () => {
+  return useI18n();
+};
+
+export type UseI18nReturn = ReturnType<typeof createI18nInstance>;

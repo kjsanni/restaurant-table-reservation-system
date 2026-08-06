@@ -40,9 +40,14 @@ describe("Customer portal", () => {
   });
 
   it("cancelReservationHandler cancels reservation", async () => {
-    const req = { params: { reservationId: 1 }, tenant: { id: 1 } };
+    const req = {
+      user: { email: "alice@example.com", phone: "123" },
+      params: { reservationId: 1 },
+      tenant: { id: 1 },
+    };
     const res = { status: jest.fn(() => res), json: jest.fn() };
-    reservationDAO.findReservationById.mockResolvedValue({ id: 1, resStatus: "confirmed" });
+    reservationDAO.findReservationById.mockResolvedValue({ id: 1, resStatus: "confirmed", customerId: 1 });
+    reservationDAO.findOrCreateCustomer.mockResolvedValue({ id: 1 });
     reservationDAO.updateReservation.mockResolvedValue({ id: 1, resStatus: "cancelled" });
 
     await customerPortalController.cancelReservationHandler(req, res);

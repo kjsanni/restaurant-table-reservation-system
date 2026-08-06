@@ -49,8 +49,9 @@ const grouped = computed(() => {
     key: String(key),
     label:
       key === "unassigned"
-        ? "Unassigned"
-        : floorPlans.value.find((p) => p.id === key)?.name || `Floor ${key}`,
+        ? t("salon.unassigned", "Unassigned")
+        : floorPlans.value.find((p) => p.id === key)?.name ||
+          `${t("salon.floor", "Floor")} ${key}`,
     stations: items,
   }));
 });

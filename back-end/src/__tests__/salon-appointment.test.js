@@ -12,19 +12,12 @@ jest.mock("../verticals/salon/services/appointmentScheduling.service", () => ({
 const appointmentController = require("../verticals/salon/controllers/appointment.controller");
 const appointmentDao = require("../verticals/salon/DAOs/appointment.dao");
 const appointmentSchedulingService = require("../verticals/salon/services/appointmentScheduling.service");
+const { makeRes } = require("./utils/test-response");
 
 describe("appointment.controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-
-  function makeRes() {
-    const json = jest.fn();
-    const status = jest.fn(function () { return { json: json }; });
-    return { res: { status: status, json: json }, expectJson: function (expected) {
-      expect(json).toHaveBeenCalledWith(expected);
-    } };
-  }
 
   it("getAllAppointments passes tenantId to DAO and returns data", async () => {
     require("../verticals/salon/DAOs/appointment.dao").findAllForTenant.mockResolvedValue({
