@@ -11,14 +11,16 @@
     {
       "check_id": "javascript.express.disabled-cookie-httponly",
       "reason": "XSRF-TOKEN cookie must be readable by frontend JavaScript for the double-submit CSRF pattern. HttpOnly is intentionally disabled.",
-      "path": "back-end/src/middleware/csrf.js",
+      "file": "back-end/src/middleware/csrf.js",
+      "line": 17,
       "author": "kjsanni",
       "date": "2026-08-05"
     },
     {
       "check_id": "javascript.express.disabled-cookie-httponly",
       "reason": "XSRF-TOKEN cookie must be readable by frontend JavaScript for the double-submit CSRF pattern. HttpOnly is intentionally disabled.",
-      "path": "back-end/src/utils/server.js",
+      "file": "back-end/src/utils/server.js",
+      "line": 162,
       "author": "kjsanni",
       "date": "2026-08-05"
     }
