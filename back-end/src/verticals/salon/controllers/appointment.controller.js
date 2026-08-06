@@ -2,6 +2,7 @@
 const salonModels = require("../models");
 const appointmentDao = require("../DAOs/appointment.dao");
 const staffServiceSkillDao = require("../DAOs/staffServiceSkill.dao");
+const appointmentSchedulingService = require("../services/appointmentScheduling.service");
 const { logAction } = require("../../../middleware/auditLog");
 const { localizedResponse, localizedError } = require("../../../utils/localizedResponse");
 const { enqueueSalonAppointmentReminders, sendSalonConfirmation, sendSalonCancellation } = require("../../../services/notification.service");
@@ -121,9 +122,19 @@ const appointmentController = {
           updates[key] = req.body[key];
         }
       }
+
+      const existing = await appointmentDao.findById(req.params.id, tenantId);
       const appointment = await appointmentDao.update(req.params.id, tenantId, updates);
       if (!appointment) {
         return res.status(404).json({ success: false, message: "Appointment not found" });
+      }
+
+      if (existing && updates.status === "completed" && existing.status !== "completed") {
+        try {
+          await appointmentSchedulingService.createCommissionForAppointment(appointment);
+        } catch (commissionErr) {
+          console.error("Failed to create commission for appointment:", commissionErr.message);
+        }
       }
 
       await logAction(req, "appointment_updated", {

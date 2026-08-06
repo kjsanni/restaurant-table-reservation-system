@@ -429,7 +429,7 @@ const handleServiceChange = async () => {
             </select>
           </div>
           <div v-if="locations.length" class="field">
-            <label for="location">Location</label>
+            <label for="location">{{ t("salon.location") }}</label>
             <select id="location" v-model="selectedLocationId">
               <option value="">{{ t("salon.unassigned") }}</option>
               <option v-for="loc in locations" :key="loc.id" :value="loc.id">

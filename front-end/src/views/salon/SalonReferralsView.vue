@@ -202,15 +202,19 @@ onMounted(loadReferrals);
               />
             </label>
             <label>
-              Reward Type
+              {{ t("salon.rewardType") }}
               <select v-model="form.rewardType" class="field-input">
-                <option value="fixed_amount">Fixed Amount</option>
-                <option value="percentage">Percentage</option>
-                <option value="free_service">Free Service</option>
+                <option value="fixed_amount">
+                  {{ t("salon.fixedAmount") }}
+                </option>
+                <option value="percentage">{{ t("salon.percentage") }}</option>
+                <option value="free_service">
+                  {{ t("salon.freeService") }}
+                </option>
               </select>
             </label>
             <label>
-              Reward Value
+              {{ t("salon.rewardValue") }}
               <input
                 v-model.number="form.rewardValue"
                 class="field-input"
@@ -219,12 +223,12 @@ onMounted(loadReferrals);
               />
             </label>
             <label>
-              Status
+              {{ t("salon.status") }}
               <select v-model="form.status" class="field-input">
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="expired">Expired</option>
+                <option value="pending">{{ t("salon.pending") }}</option>
+                <option value="completed">{{ t("salon.completed") }}</option>
+                <option value="cancelled">{{ t("salon.cancelled") }}</option>
+                <option value="expired">{{ t("salon.expired") }}</option>
               </select>
             </label>
             <label>
@@ -255,12 +259,12 @@ onMounted(loadReferrals);
           <table class="report-table">
             <thead>
               <tr>
-                <th>Code</th>
-                <th>Referrer</th>
-                <th>Referee</th>
-                <th>Reward</th>
+                <th>{{ t("salon.code") }}</th>
+                <th>{{ t("salon.referrer") }}</th>
+                <th>{{ t("salon.referee") }}</th>
+                <th>{{ t("salon.reward") }}</th>
                 <th>{{ t("salon.status", "Status") }}</th>
-                <th>Expires</th>
+                <th>{{ t("salon.expires") }}</th>
                 <th>{{ t("salon.actions", "Actions") }}</th>
               </tr>
             </thead>

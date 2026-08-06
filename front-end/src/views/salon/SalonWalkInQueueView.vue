@@ -346,13 +346,13 @@ onMounted(async () => {
             </select>
           </div>
           <div class="field">
-            <label for="stylist">Stylist</label>
+            <label for="stylist">{{ t("salon.stylist") }}</label>
             <select
               id="stylist"
               v-model="form.stylistId"
               :disabled="!stylists.length"
             >
-              <option value="">Auto-assign</option>
+              <option value="">{{ t("salon.autoAssign") }}</option>
               <option
                 v-for="stylist in stylists"
                 :key="stylist.id"
@@ -363,13 +363,13 @@ onMounted(async () => {
               </option>
             </select>
             <div v-if="!stylists.length && form.serviceId" class="field-hint">
-              No stylists mapped for this service.
+              {{ t("salon.noStylistsMapped") }}
             </div>
           </div>
           <div class="field">
-            <label for="station">Station</label>
+            <label for="station">{{ t("salon.station") }}</label>
             <select id="station" v-model="form.stationId">
-              <option value="">Unassigned</option>
+              <option value="">{{ t("salon.unassigned") }}</option>
               <option
                 v-for="station in stations"
                 :key="station.id"
@@ -380,7 +380,7 @@ onMounted(async () => {
             </select>
           </div>
           <div class="field full">
-            <label for="notes">Notes</label>
+            <label for="notes">{{ t("salon.notes") }}</label>
             <textarea id="notes" v-model="form.notes" rows="3" />
           </div>
         </div>
