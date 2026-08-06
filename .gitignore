@@ -35,6 +35,9 @@ screenshots/
 test-results/
 playwright-report/
 
+# Generated module integrity checksums (not a secret)
+module-checksums.json
+
 # Tenant portal build output (untracked, not in version control)
 tenant/
 
