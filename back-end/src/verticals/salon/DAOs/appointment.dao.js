@@ -131,11 +131,12 @@ const appointmentDao = {
     });
   },
 
-  async getRevenueByService(tenantId, from, to) {
+  async getRevenueByService(tenantId, from, to, locationId) {
     const where = {
       tenantId,
       status: { [Op.notIn]: ["cancelled", "no_show"] },
     };
+    if (locationId) where.locationId = locationId;
     if (from || to) {
       where.start = {};
       if (from) where.start[Op.gte] = new Date(from);
@@ -167,11 +168,12 @@ const appointmentDao = {
     }));
   },
 
-  async getTopStylists(tenantId, from, to) {
+  async getTopStylists(tenantId, from, to, locationId) {
     const where = {
       tenantId,
       status: { [Op.notIn]: ["cancelled", "no_show"] },
     };
+    if (locationId) where.locationId = locationId;
     if (from || to) {
       where.start = {};
       if (from) where.start[Op.gte] = new Date(from);
@@ -205,10 +207,11 @@ const appointmentDao = {
     }));
   },
 
-  async getAppointmentsBySource(tenantId, from, to) {
+  async getAppointmentsBySource(tenantId, from, to, locationId) {
     const where = {
       tenantId,
     };
+    if (locationId) where.locationId = locationId;
     if (from || to) {
       where.start = {};
       if (from) where.start[Op.gte] = new Date(from);
@@ -233,11 +236,12 @@ const appointmentDao = {
     }));
   },
 
-  async getPeakHours(tenantId, from, to) {
+  async getPeakHours(tenantId, from, to, locationId) {
     const where = {
       tenantId,
       status: { [Op.notIn]: ["cancelled", "no_show"] },
     };
+    if (locationId) where.locationId = locationId;
     if (from || to) {
       where.start = {};
       if (from) where.start[Op.gte] = new Date(from);
