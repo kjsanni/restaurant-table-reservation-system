@@ -530,8 +530,6 @@ const setReservationTable = async (
     selected.push(...linked);
   }
 
-  const linkedTableIds = selected.filter((id) => id !== tableId);
-
   return await db.sequelize.transaction(async (t) => {
     const allFree = await Table.findAll({
       where: withTenant({ isOccupied: false }, tenantId),

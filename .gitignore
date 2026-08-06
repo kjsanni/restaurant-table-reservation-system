@@ -50,3 +50,5 @@ tenant/
 # Codacy
 .codacy/
 drinks-vendor/
+back-end/.eslintrc.cjs
+back-end/eslint.config.mjs

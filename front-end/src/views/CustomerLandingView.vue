@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import menuAPI from "@/services/menuAPI";
 import tableAPI from "@/services/tableAPI";
+import salonAPI from "@/services/salonAPI";
 import { useCartStore } from "@/stores/cart";
 import logger from "@/utils/logger";
 import LandingHero from "@/components/LandingHero.vue";
@@ -100,8 +101,8 @@ const loadTables = async () => {
 
 const loadServices = async () => {
   try {
-    await menuAPI.getAvailableMenu?.();
-    services.value = [];
+    const res = await salonAPI.getServices();
+    services.value = (res.data?.data || res.data || []).slice(0, 8);
   } catch (err) {
     services.value = [];
     apiError.value = true;
@@ -136,6 +137,14 @@ const goToCheckout = () => {
 
 const goToMenu = () => router.push("/menu");
 const goToReserve = () => {
+  if (isSalon.value) {
+    if (!isAuthenticated.value) {
+      router.push({ name: "login", query: { redirect: "/salon/calendar" } });
+    } else {
+      router.push("/salon/calendar");
+    }
+    return;
+  }
   if (!isAuthenticated.value) {
     router.push({ name: "login", query: { redirect: "/new-reservation" } });
   } else {
@@ -180,8 +189,16 @@ onMounted(() => {
           <span>Vibespot</span>
         </div>
         <div class="nav-actions">
-          <button class="nav-link" @click="goToMenu">Menu</button>
-          <button class="nav-link" @click="goToReserve">Reserve</button>
+          <button
+            v-if="!isSalon"
+            class="nav-link"
+            @click="goToMenu"
+          >
+            Menu
+          </button>
+          <button class="nav-link" @click="goToReserve">
+            {{ isSalon ? 'Book Appointment' : 'Reserve' }}
+          </button>
           <button class="nav-link" @click="router.push('/pricing')">
             Pricing
           </button>
@@ -256,7 +273,7 @@ onMounted(() => {
 
     <Transition name="cart-fly">
       <button
-        v-if="menuCount > 0"
+        v-if="!isSalon && menuCount > 0"
         class="floating-cart"
         @click="goToCheckout"
         aria-label="Open cart"

@@ -12,7 +12,6 @@ router
   .get(
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
-    tryCatchHandler(requirePermission("view_appointments")),
     tryCatchHandler(serviceController.getAllServices)
   )
   .post(
@@ -28,7 +27,6 @@ router
   .get(
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
-    tryCatchHandler(requirePermission("view_appointments")),
     tryCatchHandler(serviceController.getService)
   )
   .patch(

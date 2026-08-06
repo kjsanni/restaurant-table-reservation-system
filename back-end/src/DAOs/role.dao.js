@@ -1,6 +1,5 @@
 const db = require("../db/models");
 const Role = db.role;
-const { Op } = db.Sequelize;
 
 const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
