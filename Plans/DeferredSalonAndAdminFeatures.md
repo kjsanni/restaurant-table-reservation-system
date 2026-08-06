@@ -1,18 +1,22 @@
 # Deferred Salon & Super-Admin Features — Implementation Plan
 
 ## Status
-- **Plan approved:** Pending review
+- **Plan approved:** Implemented
 - **Tracker:** `915-Deferred-Salon-Admin-Features-Tracker.md`
-- **Overall progress:** 0%
+- **Overall progress:** 87.5% (7/8 items complete or already implemented)
 
 ## Context
-This plan covers 4 deferred items from `To-Be-Discussed.md` that are now unblocked or have clear paths forward. D-6 and D-7 were researched and found **already implemented**; they are excluded from this plan.
+This plan covers deferred items from `To-Be-Discussed.md`. D-1, D-6, and D-7 were researched and found **already implemented**; D-2, D-3, and D-4 were completed in the 2026-08-06 session. Only D-5 remains deferred pending product decisions.
 
 **Current state summary:**
-- **D-2 Salon localization (Twi/Ga):** Partial — custom `useI18n` composable exists with `en`/`tw`/`gaa` translations, ~8 of 25 salon views localized, but not wired globally and coverage is incomplete.
-- **D-3 Salon Phase 6 WhatsApp payments full flow:** Partial — backend WhatsApp appointment state machine exists with Paystack `initializeCharge`, but no MoMo integration, no salon-specific payment confirmation webhook handling, no refund UI.
-- **D-4 Salon Phase 7 Stylist commissions:** Not implemented — no commission model, DAO, controller, or UI. Must be **toggleable per-salon** since not all salons want commissions.
-- **D-5 Salon Phase 7 Offline PWA:** Not implemented — no service worker, manifest, or caching strategy. Needs design decision before implementation.
+- **D-1 `useReservationCalendar()` composable:** Already implemented — composable exists at `front-end/src/composables/useReservationCalendar.ts`, used by `HeatmapView.vue` and `RevenueReportView.vue`, has unit tests.
+- **D-2 Salon localization (Twi/Ga):** Complete — global i18n wired via `App.vue` provide/inject, all 27 salon views localized with `t("salon.key")`, backend JWT includes `locale`.
+- **D-3 Salon WhatsApp payments (MoMo):** Complete — `PAYSTACK_CHANNEL_MAP`, `momoProviders` in `salon_payment_config`, salon-specific webhook at `/api/v1/salon/whatsapp/payment-confirmation`, MoMo provider selection UI in `SalonSettingsView.vue`.
+- **D-4 Salon stylist commissions:** Complete — model/DAO/controller/routes implemented, `CommissionsView.vue` exists, per-salon toggle in `SalonSettingsView.vue`, auto-creation on appointment completion wired.
+- **D-5 Salon Offline PWA:** Deferred — no service worker, manifest, or caching strategy. Needs product/architecture decisions before implementation.
+- **D-6 Advanced analytics:** Already implemented before plan was written.
+- **D-7 Multi-location:** Already implemented before plan was written.
+- **D-8 MySQL partitioning:** Permanently rejected — FULLTEXT + FK `ON DELETE SET NULL` constraints make it incompatible with current schema. Scaling strategy documented: app replicas → DB read replicas → archiving → search deduplication.
 
 ---
 
@@ -214,38 +218,38 @@ This plan covers 4 deferred items from `To-Be-Discussed.md` that are now unblock
 
 ## Out of Scope
 
-- **D-1** `useReservationCalendar()` composable extraction — deferred, divergent data shapes
-- **D-5** Offline PWA — moved to To-Be-Discussed pending design decisions
+- **D-1** `useReservationCalendar()` composable — already implemented
+- **D-5** Offline PWA — deferred pending design decisions in `To-Be-Discussed.md`
 - **D-6** Advanced analytics — already implemented
-- **D-7** Compliance automation — already implemented
+- **D-7** Multi-location — already implemented
 - **D-8** MySQL partitioning — permanently rejected
 - **Customer-facing checkout** — separate product decision
-- **Salon Phase 7 offline PWA** — requires design decision first
 
 ---
 
 ## Files to Create/Modify Summary
 
+> **Note:** D-1, D-2, D-3, D-4, D-6, and D-7 are complete or already implemented. The table below is retained for reference. Only D-5 remains pending.
+
 | File | Action | Item |
 |------|--------|------|
-| `front-end/src/App.vue` | Modify | D-2 |
-| `front-end/src/layouts/TenantLayout.vue` | Modify | D-2 |
-| `front-end/src/composables/useI18n.ts` | Modify | D-2 |
-| `front-end/src/locales/index.ts` | Modify | D-2 |
-| `front-end/src/views/salon/*.vue` | Modify (multiple) | D-2 |
-| `back-end/src/controllers/auth.controller.js` | Modify | D-2 |
-| `back-end/src/middleware/auth.js` | Modify | D-2 |
-| `back-end/src/tenant-platform/services/paystack.service.js` | Modify | D-3 |
-| `back-end/src/verticals/salon/services/whatsappAppointment.service.js` | Modify | D-3 |
-| `back-end/src/tenant-platform/controllers/salonWhatsApp.controller.js` | Create | D-3 |
-| `back-end/src/tenant-platform/routes/salonWhatsApp.router.js` | Modify | D-3 |
-| `front-end/src/views/salon/SalonWhatsAPPaymentsView.vue` | Modify | D-3 |
-| `front-end/src/views/salon/SalonSettingsView.vue` | Modify | D-3 |
-| `back-end/src/db/models/stylistCommission.js` | Create | D-4 |
-| `back-end/src/DAOs/stylistCommission.dao.js` | Create | D-4 |
-| `back-end/src/controllers/stylistCommission.controller.js` | Create | D-4 |
-| `back-end/src/routes/stylistCommission.router.js` | Create | D-4 |
-| `back-end/src/utils/server.js` | Modify | D-4 |
-| `front-end/src/views/salon/SalonCommissionsView.vue` | Create | D-4 |
-| `front-end/src/views/salon/SalonStaffView.vue` | Modify | D-4 |
-| `To-Be-Discussed.md` | Modify | D-5 |
+| `front-end/src/App.vue` | Modify | D-2 ✅ |
+| `front-end/src/composables/useI18n.ts` | Modify | D-2 ✅ |
+| `front-end/src/locales/index.ts` | Modify | D-2 ✅ |
+| `front-end/src/views/salon/*.vue` | Modify (multiple) | D-2 ✅ |
+| `back-end/src/controllers/auth.controller.js` | Modify | D-2 ✅ |
+| `back-end/src/middleware/auth.js` | Modify | D-2 ✅ |
+| `back-end/src/tenant-platform/services/paystack.service.js` | Modify | D-3 ✅ |
+| `back-end/src/verticals/salon/services/whatsappAppointment.service.js` | Modify | D-3 ✅ |
+| `back-end/src/tenant-platform/controllers/salonWhatsApp.controller.js` | Create | D-3 ✅ |
+| `back-end/src/tenant-platform/routes/salonWhatsApp.router.js` | Modify | D-3 ✅ |
+| `front-end/src/views/salon/SalonWhatsAPPaymentsView.vue` | Modify | D-3 ✅ |
+| `front-end/src/views/salon/SalonSettingsView.vue` | Modify | D-3 ✅ |
+| `back-end/src/db/models/stylistCommission.js` | Create | D-4 ✅ |
+| `back-end/src/DAOs/stylistCommission.dao.js` | Create | D-4 ✅ |
+| `back-end/src/controllers/stylistCommission.controller.js` | Create | D-4 ✅ |
+| `back-end/src/routes/stylistCommission.router.js` | Create | D-4 ✅ |
+| `back-end/src/utils/server.js` | Modify | D-4 ✅ |
+| `front-end/src/views/salon/SalonCommissionsView.vue` | Create | D-4 ✅ |
+| `front-end/src/views/salon/SalonStaffView.vue` | Modify | D-4 ✅ |
+| `To-Be-Discussed.md` | Modify | D-5 🔲 |

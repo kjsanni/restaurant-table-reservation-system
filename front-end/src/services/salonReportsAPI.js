@@ -17,6 +17,26 @@ class SalonReportsAPI {
       responseType: "blob",
     });
   }
+
+  listScheduledReports() {
+    return API.get("/salon/scheduled-reports");
+  }
+
+  createScheduledReport(payload) {
+    return API.post("/salon/scheduled-reports", payload);
+  }
+
+  updateScheduledReport(id, payload) {
+    return API.patch(`/salon/scheduled-reports/${id}`, payload);
+  }
+
+  deleteScheduledReport(id) {
+    return API.delete(`/salon/scheduled-reports/${id}`);
+  }
+
+  runScheduledReport(id) {
+    return API.post(`/salon/scheduled-reports/${id}/run`);
+  }
 }
 
 export default new SalonReportsAPI();

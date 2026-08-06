@@ -3,6 +3,41 @@ const authDAO = require("../DAOs/auth.dao");
 const { isNoTenantRequired } = require("./noTenantPaths");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 
+const buildAuditContext = (req) => ({
+  actorUserId: req.user?.id || null,
+  tenantId: req.tenant?.id || null,
+  path: req.path,
+  method: req.method,
+  ipAddress: req.ip,
+});
+
+const logPlatformAudit = async (context, event, extra = {}) => {
+  await platformAuditDAO
+    .log(
+      context.actorUserId,
+      event,
+      "admin",
+      null,
+      context.tenantId,
+      { ...extra, path: context.path, method: context.method, ipAddress: context.ipAddress },
+      context.ipAddress
+    )
+    .catch(() => {});
+};
+
+const enforceTOTP = (req, res, context) => {
+  if (req.user.totpEnabled !== true) {
+    logPlatformAudit(context, "platform_role.access_denied_totp", { requiredRole: context.requiredRole }).catch(() => {});
+    return res.status(403).json({
+      success: false,
+      message: "TOTP is required for platform role access.",
+      code: "requires_totp",
+    });
+  }
+  logPlatformAudit(context, "platform_role.access_granted", { requiredRole: context.requiredRole }).catch(() => {});
+  return null;
+};
+
 const protect = async (req, res, next) => {
   let token;
 
@@ -95,18 +130,9 @@ const admin = (req, res, next) => {
 
 const requireSuperAdmin = (req, res, next) => {
   if (req.user && req.user.isSuperAdmin) {
+    const context = buildAuditContext(req);
     if (req.user.totpEnabled !== true) {
-      platformAuditDAO
-        .log(
-          req.user.id,
-          "super_admin.access_denied_totp",
-          "admin",
-          null,
-          req.tenant?.id || null,
-          { path: req.path, method: req.method, ipAddress: req.ip },
-          req.ip
-        )
-        .catch(() => {});
+      logPlatformAudit(context, "super_admin.access_denied_totp").catch(() => {});
       return res.status(403).json({
         success: false,
         message: "TOTP is required for super-admin access.",
@@ -114,33 +140,12 @@ const requireSuperAdmin = (req, res, next) => {
       });
     }
 
-    platformAuditDAO
-      .log(
-        req.user.id,
-        "super_admin.access_granted",
-        "admin",
-        null,
-        req.tenant?.id || null,
-        { path: req.path, method: req.method, ipAddress: req.ip },
-        req.ip
-      )
-      .catch(() => {});
+    logPlatformAudit(context, "super_admin.access_granted").catch(() => {});
     return next();
   }
 
-  const actorUserId = req.user?.id || null;
-  const tenantId = req.tenant?.id || null;
-  platformAuditDAO
-    .log(
-      actorUserId,
-      "super_admin.access_denied",
-      "admin",
-      null,
-      tenantId,
-      { path: req.path, method: req.method, ipAddress: req.ip },
-      req.ip
-    )
-    .catch(() => {});
+  const context = buildAuditContext(req);
+  logPlatformAudit(context, "super_admin.access_denied").catch(() => {});
   return res.status(403).json({
     success: false,
     message: "Super admin access required!",
@@ -162,17 +167,9 @@ const requirePlatformRole = (role) => {
     const requiredLevel = ROLE_HIERARCHY[role];
 
     if (requiredLevel === undefined) {
-      platformAuditDAO
-        .log(
-          actorUserId,
-          "platform_role.invalid_role",
-          "admin",
-          null,
-          tenantId,
-          { path: req.path, method: req.method, requiredRole: role, ipAddress: req.ip },
-          req.ip
-        )
-        .catch(() => {});
+      const context = buildAuditContext(req);
+      context.requiredRole = role;
+      logPlatformAudit(context, "platform_role.invalid_role", { requiredRole: role }).catch(() => {});
       return res.status(403).json({
         success: false,
         message: `Platform role '${role}' is not configured.`,
@@ -182,52 +179,15 @@ const requirePlatformRole = (role) => {
     const userMaxLevel = Math.max(0, ...userRoles.map((r) => ROLE_HIERARCHY[r] || 0));
 
     if (hasSuperAdmin || userMaxLevel >= requiredLevel) {
-      if (req.user.totpEnabled !== true) {
-        platformAuditDAO
-          .log(
-            req.user.id,
-            "platform_role.access_denied_totp",
-            "admin",
-            null,
-            req.tenant?.id || null,
-            { path: req.path, method: req.method, requiredRole: role, ipAddress: req.ip },
-            req.ip
-          )
-          .catch(() => {});
-        return res.status(403).json({
-          success: false,
-          message: "TOTP is required for platform role access.",
-          code: "requires_totp",
-        });
-      }
-
-      platformAuditDAO
-        .log(
-          req.user.id,
-          "platform_role.access_granted",
-          "admin",
-          null,
-          req.tenant?.id || null,
-          { path: req.path, method: req.method, requiredRole: role, ipAddress: req.ip },
-          req.ip
-        )
-        .catch(() => {});
+      const context = buildAuditContext(req);
+      context.requiredRole = role;
+      const rejection = enforceTOTP(req, res, context);
+      if (rejection) return rejection;
       return next();
     }
 
-    const actorUserId = req.user?.id || null;
-    const tenantId = req.tenant?.id || null;
-    platformAuditDAO
-      .log(
-        actorUserId,
-        "platform_role.access_denied",
-        "admin",
-        null,
-        tenantId,
-        { path: req.path, method: req.method, requiredRole: role, ipAddress: req.ip },
-        req.ip
-      )
-      .catch(() => {});
+    const context = buildAuditContext(req);
+    logPlatformAudit(context, "platform_role.access_denied", { requiredRole: role }).catch(() => {});
     return res.status(403).json({
       success: false,
       message: `Platform role '${role}' required!`,

@@ -6,26 +6,26 @@ const salonCustomerPortalController = require("../controllers/salon-customer-por
 jest.mock("../DAOs/reservation.dao");
 jest.mock("../verticals/salon/DAOs/appointment.dao");
 
-describe("customer-portal ownership", () => {
-  let req;
-  let res;
+const buildReq = (overrides = {}) => ({
+  user: {
+    id: 1,
+    email: "customer@test.com",
+    username: "Test Customer",
+    phone: "+233000000000",
+  },
+  tenant: { id: 10 },
+  params: {},
+  ip: "127.0.0.1",
+  ...overrides,
+});
 
+const buildRes = () => ({
+  status: jest.fn().mockReturnThis(),
+  json: jest.fn().mockReturnThis(),
+});
+
+describe("customer-portal ownership", () => {
   beforeEach(() => {
-    req = {
-      user: {
-        id: 1,
-        email: "customer@test.com",
-        username: "Test Customer",
-        phone: "+233000000000",
-      },
-      tenant: { id: 10 },
-      params: {},
-      ip: "127.0.0.1",
-    };
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-    };
     jest.clearAllMocks();
   });
 
@@ -42,7 +42,8 @@ describe("customer-portal ownership", () => {
         email: "customer@test.com",
       });
 
-      req.params.reservationId = "1";
+      const req = buildReq({ params: { reservationId: "1" } });
+      const res = buildRes();
       await customerPortalController.cancelReservationHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
@@ -61,7 +62,8 @@ describe("customer-portal ownership", () => {
         email: "customer@test.com",
       });
 
-      req.params.reservationId = "1";
+      const req = buildReq({ params: { reservationId: "1" } });
+      const res = buildRes();
       await customerPortalController.cancelReservationHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
@@ -75,25 +77,7 @@ describe("customer-portal ownership", () => {
 });
 
 describe("salon-customer-portal ownership", () => {
-  let req;
-  let res;
-
   beforeEach(() => {
-    req = {
-      user: {
-        id: 1,
-        email: "customer@test.com",
-        username: "Test Customer",
-        phone: "+233000000000",
-      },
-      tenant: { id: 10 },
-      params: {},
-      ip: "127.0.0.1",
-    };
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-    };
     jest.clearAllMocks();
   });
 
@@ -110,7 +94,8 @@ describe("salon-customer-portal ownership", () => {
         email: "customer@test.com",
       });
 
-      req.params.appointmentId = "1";
+      const req = buildReq({ params: { appointmentId: "1" } });
+      const res = buildRes();
       await salonCustomerPortalController.cancelSalonAppointmentHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
@@ -129,7 +114,8 @@ describe("salon-customer-portal ownership", () => {
         email: "customer@test.com",
       });
 
-      req.params.appointmentId = "1";
+      const req = buildReq({ params: { appointmentId: "1" } });
+      const res = buildRes();
       await salonCustomerPortalController.cancelSalonAppointmentHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
@@ -152,8 +138,8 @@ describe("salon-customer-portal ownership", () => {
         email: "customer@test.com",
       });
 
-      req.user.role = "admin";
-      req.params.appointmentId = "1";
+      const req = buildReq({ user: { ...buildReq().user, role: "admin" }, params: { appointmentId: "1" } });
+      const res = buildRes();
       await salonCustomerPortalController.cancelSalonAppointmentHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
@@ -172,8 +158,8 @@ describe("salon-customer-portal ownership", () => {
         email: "customer@test.com",
       });
 
-      req.user.role = "staff";
-      req.params.appointmentId = "1";
+      const req = buildReq({ user: { ...buildReq().user, role: "staff" }, params: { appointmentId: "1" } });
+      const res = buildRes();
       await salonCustomerPortalController.cancelSalonAppointmentHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
@@ -204,7 +190,8 @@ describe("salon-customer-portal ownership", () => {
       });
       appointmentDao.create.mockResolvedValue({ id: 2 });
 
-      req.params.appointmentId = "1";
+      const req = buildReq({ params: { appointmentId: "1" } });
+      const res = buildRes();
       await salonCustomerPortalController.rebookSalonAppointmentHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
@@ -223,7 +210,8 @@ describe("salon-customer-portal ownership", () => {
         email: "customer@test.com",
       });
 
-      req.params.appointmentId = "1";
+      const req = buildReq({ params: { appointmentId: "1" } });
+      const res = buildRes();
       await salonCustomerPortalController.rebookSalonAppointmentHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
@@ -252,8 +240,8 @@ describe("salon-customer-portal ownership", () => {
       });
       appointmentDao.create.mockResolvedValue({ id: 2 });
 
-      req.user.role = "admin";
-      req.params.appointmentId = "1";
+      const req = buildReq({ user: { ...buildReq().user, role: "admin" }, params: { appointmentId: "1" } });
+      const res = buildRes();
       await salonCustomerPortalController.rebookSalonAppointmentHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
@@ -272,8 +260,8 @@ describe("salon-customer-portal ownership", () => {
         email: "customer@test.com",
       });
 
-      req.user.role = "staff";
-      req.params.appointmentId = "1";
+      const req = buildReq({ user: { ...buildReq().user, role: "staff" }, params: { appointmentId: "1" } });
+      const res = buildRes();
       await salonCustomerPortalController.rebookSalonAppointmentHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
