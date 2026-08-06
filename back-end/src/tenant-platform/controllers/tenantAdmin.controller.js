@@ -316,6 +316,59 @@ const testShaqExpressHandler = async (req, res) => {
   }
 };
 
+const applyPaymentGatewaySettings = (tenant, paymentGateway, changes) => {
+  if (paymentGateway === undefined) return;
+  if (!["platform", "own"].includes(paymentGateway)) {
+    throw new Error("Invalid payment gateway mode");
+  }
+  if (tenant.paymentGateway !== paymentGateway) {
+    changes.push({ field: "paymentGateway", from: tenant.paymentGateway, to: paymentGateway });
+    tenant.paymentGateway = paymentGateway;
+  }
+};
+
+const applyDeliveryGatewaySettings = (tenant, deliveryGateway, changes) => {
+  if (deliveryGateway === undefined) return;
+  if (!["platform", "own"].includes(deliveryGateway)) {
+    throw new Error("Invalid delivery gateway mode");
+  }
+  if (tenant.deliveryGateway !== deliveryGateway) {
+    changes.push({ field: "deliveryGateway", from: tenant.deliveryGateway, to: deliveryGateway });
+    tenant.deliveryGateway = deliveryGateway;
+  }
+};
+
+const applyPaystackSettings = (tenant, paystackPublicKey, paystackSecretKey, changes) => {
+  if (paystackPublicKey !== undefined && tenant.paystackPublicKey !== paystackPublicKey) {
+    tenant.paystackPublicKey = paystackPublicKey;
+    changes.push({ field: "paystackPublicKey", changed: true });
+  }
+  if (paystackSecretKey !== undefined && paystackSecretKey !== null) {
+    tenant.paystackSecretKey = paystackSecretKey;
+    changes.push({ field: "paystackSecretKey", changed: true });
+  }
+};
+
+const applyShaqExpressSettings = (tenant, shaqexpressIdentifier, shaqexpressSecret, shaqexpressWebhookUrl, changes) => {
+  if (
+    shaqexpressIdentifier === undefined &&
+    shaqexpressSecret === undefined &&
+    shaqexpressWebhookUrl === undefined
+  ) {
+    return;
+  }
+  const settings = tenant.settings || {};
+  const shaqConfig = {
+    identifier: shaqexpressIdentifier ?? settings.shaqexpress_config?.identifier ?? null,
+    secret: shaqexpressSecret ?? settings.shaqexpress_config?.secret ?? null,
+    webhookUrl: shaqexpressWebhookUrl ?? settings.shaqexpress_config?.webhookUrl ?? null,
+    enabled: true,
+  };
+  settings.shaqexpress_config = shaqConfig;
+  tenant.settings = settings;
+  changes.push({ field: "shaqexpress_config", changed: true });
+};
+
 const updateGatewayHandler = async (req, res) => {
   const tenant = await tenantAdminDAO.findById(req.params.id);
   if (!tenant) {
@@ -334,55 +387,13 @@ const updateGatewayHandler = async (req, res) => {
 
   const changes = [];
 
-  if (paymentGateway !== undefined) {
-    if (!["platform", "own"].includes(paymentGateway)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid payment gateway mode" });
-    }
-    if (tenant.paymentGateway !== paymentGateway) {
-      changes.push({ field: "paymentGateway", from: tenant.paymentGateway, to: paymentGateway });
-      tenant.paymentGateway = paymentGateway;
-    }
-  }
-
-  if (deliveryGateway !== undefined) {
-    if (!["platform", "own"].includes(deliveryGateway)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid delivery gateway mode" });
-    }
-    if (tenant.deliveryGateway !== deliveryGateway) {
-      changes.push({ field: "deliveryGateway", from: tenant.deliveryGateway, to: deliveryGateway });
-      tenant.deliveryGateway = deliveryGateway;
-    }
-  }
-
-  if (paystackPublicKey !== undefined && tenant.paystackPublicKey !== paystackPublicKey) {
-    tenant.paystackPublicKey = paystackPublicKey;
-    changes.push({ field: "paystackPublicKey", changed: true });
-  }
-
-  if (paystackSecretKey !== undefined && paystackSecretKey !== null) {
-    tenant.paystackSecretKey = paystackSecretKey;
-    changes.push({ field: "paystackSecretKey", changed: true });
-  }
-
-  if (
-    shaqexpressIdentifier !== undefined ||
-    shaqexpressSecret !== undefined ||
-    shaqexpressWebhookUrl !== undefined
-  ) {
-    const settings = tenant.settings || {};
-    const shaqConfig = {
-      identifier: shaqexpressIdentifier ?? settings.shaqexpress_config?.identifier ?? null,
-      secret: shaqexpressSecret ?? settings.shaqexpress_config?.secret ?? null,
-      webhookUrl: shaqexpressWebhookUrl ?? settings.shaqexpress_config?.webhookUrl ?? null,
-      enabled: true,
-    };
-    settings.shaqexpress_config = shaqConfig;
-    tenant.settings = settings;
-    changes.push({ field: "shaqexpress_config", changed: true });
+  try {
+    applyPaymentGatewaySettings(tenant, paymentGateway, changes);
+    applyDeliveryGatewaySettings(tenant, deliveryGateway, changes);
+    applyPaystackSettings(tenant, paystackPublicKey, paystackSecretKey, changes);
+    applyShaqExpressSettings(tenant, shaqexpressIdentifier, shaqexpressSecret, shaqexpressWebhookUrl, changes);
+  } catch (err) {
+    return res.status(400).json({ success: false, message: err.message });
   }
 
   await tenant.save();
