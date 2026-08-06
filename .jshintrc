@@ -2,6 +2,11 @@
   "node": true,
   "esversion": 2020,
   "globals": {
-    "Set": true
-  }
+    "Set": true,
+    "Sequelize": true,
+    "queryInterface": true
+  },
+  "-W138": false,
+  "-W014": false,
+  "-W083": false
 }

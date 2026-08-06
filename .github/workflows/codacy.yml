@@ -50,9 +50,9 @@ jobs:
           format: sarif
           # Adjust severity of non-security issues
           gh-code-scanning-compat: true
-          # Force 0 exit code to allow SARIF file generation
-          # This will handover control about PR rejection to the GitHub side
-          max-allowed-issues: 2147483647
+          # Enforce quality gate: any Codacy finding blocks the build
+          max-allowed-issues: 0
+          fail-on-error: true
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file

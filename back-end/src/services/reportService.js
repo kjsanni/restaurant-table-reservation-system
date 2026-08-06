@@ -30,9 +30,9 @@ const getReservationReport = async (filters = {}, tenantId, pagination = {}) => 
 
   let reservations = totalReservations;
   let total = totalReservations.length;
-  let page = undefined;
-  let pageSize = undefined;
-  let totalPages = undefined;
+  let page;
+  let pageSize;
+  let totalPages;
 
   if (pagination.limit) {
     pageSize = parseInt(pagination.limit, 10);
@@ -99,9 +99,9 @@ const getTurnTimeReport = async (filters = {}, tenantId, pagination = {}) => {
     };
   });
 
-  let page = undefined;
-  let pageSize = undefined;
-  let totalPages = undefined;
+  let page;
+  let pageSize;
+  let totalPages;
   let paginatedTurnTimes = turnTimes;
 
   if (pagination.limit) {
@@ -173,7 +173,8 @@ const getTimeSeriesReport = async (filters = {}, tenantId) => {
 
   const payments = await paymentService.getRevenueStats(filters.from, filters.to, tenantId);
   const paymentByDate = {};
-  (payments.byMethod || []).forEach((m) => {
+  const methods = payments.byMethod || [];
+  methods.forEach((m) => {
     m.breakdown && m.breakdown.forEach((b) => {
       if (!paymentByDate[b.date]) paymentByDate[b.date] = 0;
       paymentByDate[b.date] += Number(b.amount || 0);

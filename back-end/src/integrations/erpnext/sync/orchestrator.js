@@ -62,7 +62,7 @@ const startErpnextWorker = () => {
   const worker = new (require("bullmq").Worker)(
     "erpnext-sync",
     async (job) => {
-      const { tenantId, customerId, reservationId, paymentId } = job.data;
+      const { tenantId, customerId, reservationId, paymentId, itemId, staffId } = job.data;
 
       switch (job.name) {
         case "sync-customer":
