@@ -15,6 +15,19 @@ jest.mock("../services/customerService", () => ({
   findOrCreateCustomer: jest.fn(),
 }));
 
+jest.mock("../DAOs/emailVerification.dao", () => ({
+  invalidateUserTokens: jest.fn(),
+  create: jest.fn().mockResolvedValue({ token: "verify-token-123" }),
+}));
+
+jest.mock("../services/emailService", () => ({
+  sendEmail: jest.fn(),
+}));
+
+jest.mock("../tenant-platform/DAOs/platformAudit.dao", () => ({
+  log: jest.fn(),
+}));
+
 jest.mock("../db/models", () => ({
   sequelize: {
     transaction: jest.fn(async (fn) => fn({})),
@@ -76,6 +89,9 @@ jest.mock("../db/models", () => ({
 const authService = require("../services/authService");
 const authDAO = require("../DAOs/auth.dao");
 const customerService = require("../services/customerService");
+const emailVerificationDAO = require("../DAOs/emailVerification.dao");
+const emailService = require("../services/emailService");
+const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 const db = require("../db/models");
 
 function createReq(body = {}, tenantId = 1) {
@@ -177,19 +193,31 @@ describe("auth.controller — registerCustomerHandler", () => {
       1
     );
     expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.cookie).toHaveBeenCalledWith("token", "token-10", expect.any(Object));
-    expect(res.cookie).toHaveBeenCalledWith("refreshToken", "refresh-token", expect.any(Object));
     expect(res.json).toHaveBeenCalledWith({
       success: true,
-      message: "Customer account created successfully!",
-      user: {
-        id: 10,
-        username: "janedoe",
-        email: "jane@test.com",
-        role: "customer",
-        permissions: {},
-      },
+      message: "Account created! Please check your email to verify your address before logging in.",
+      requiresVerification: true,
+      email: "jane@test.com",
     });
+    expect(emailVerificationDAO.create).toHaveBeenCalledWith({
+      userId: 10,
+      email: "jane@test.com",
+    });
+    expect(emailService.sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "jane@test.com",
+        subject: "Verify your email address",
+      })
+    );
+    expect(platformAuditDAO.log).toHaveBeenCalledWith(
+      10,
+      "auth.customer_registered",
+      "user",
+      10,
+      1,
+      { email: "jane@test.com" },
+      "127.0.0.1"
+    );
   });
 
   it("returns 500 when customer service fails inside transaction", async () => {

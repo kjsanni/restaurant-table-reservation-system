@@ -113,7 +113,7 @@ const handleRegister = async () => {
   }
 
   try {
-    await authStore.customerRegister(
+    const response = await authStore.customerRegister(
       form.value.email,
       form.value.password,
       form.value.firstName,
@@ -122,7 +122,14 @@ const handleRegister = async () => {
       cfTurnstileToken.value || undefined,
       tenantSlug.value || undefined
     );
-    router.push("/portal");
+    if (response?.data?.requiresVerification) {
+      router.push({
+        path: "/verify-email",
+        query: { email: response.data.email },
+      });
+    } else {
+      router.push("/portal");
+    }
   } catch (err) {
     generalError.value = getApiErrorMessage(err);
     validationErrors.value = getApiErrors(err);
@@ -133,6 +140,7 @@ const handleRegister = async () => {
 </script>
 
 <template>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="page">
     <aside class="brand-side" :style="brandSideStyle">
       <div class="orb orb-1" aria-hidden="true"></div>
@@ -143,7 +151,11 @@ const handleRegister = async () => {
           v-else
           :src="tenantBranding.logoUrl"
           class="brand-logo"
-          alt="Tenant logo"
+          :alt="
+            tenantBranding.brandName
+              ? `${tenantBranding.brandName} logo`
+              : 'Tenant logo'
+          "
         />
         <div class="brand-name">
           {{ tenantBranding.brandName || "Customer Portal" }}
@@ -161,7 +173,7 @@ const handleRegister = async () => {
       </div>
     </aside>
 
-    <main class="form-side">
+    <main id="main-content" class="form-side">
       <div class="form-card">
         <h2>Create your account</h2>
         <p class="form-subtitle">Get started in seconds</p>
@@ -315,7 +327,7 @@ const handleRegister = async () => {
 <style scoped>
 .page {
   display: flex;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 .brand-side {
   flex: 1;

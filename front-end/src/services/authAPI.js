@@ -76,6 +76,14 @@ const resetPassword = async (token, password) => {
   return await API.post("/auth/reset-password", { token, password });
 };
 
+const requestEmailVerification = async (email) => {
+  return await API.post("/auth/verify-email/request", { email });
+};
+
+const verifyEmail = async (token) => {
+  return await API.post("/auth/verify-email", { token });
+};
+
 const registerCustomer = async (
   email,
   password,
@@ -113,5 +121,7 @@ export default {
   deleteStaff,
   forgotPassword,
   resetPassword,
+  requestEmailVerification,
+  verifyEmail,
   registerCustomer,
 };

@@ -3,7 +3,11 @@ const authDAO = require("../DAOs/auth.dao");
 const roleDAO = require("../DAOs/role.dao");
 const { applyTypeDefaults, TYPE_DEFAULTS } = require("../tenant-platform/services/tenantTypeDefaults.service");
 const customerService = require("../services/customerService");
+const emailVerificationDAO = require("../DAOs/emailVerification.dao");
+const emailService = require("../services/emailService");
+const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 const db = require("../db/models");
+const logger = require("../utils/logger");
 
 const registerCustomerHandler = async (req, res) => {
   try {
@@ -52,33 +56,43 @@ const registerCustomerHandler = async (req, res) => {
       tenantId
     );
 
-    const token = authService.generateToken(user.id, user.role);
-    const refreshToken = authService.generateRefreshToken();
+    await emailVerificationDAO.invalidateUserTokens(user.id);
 
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    await authDAO.createRefreshToken(user.id, refreshToken, expiresAt, tenantId);
+    const record = await emailVerificationDAO.create({
+      userId: user.id,
+      email: user.email,
+    });
 
-    const isSecure = req.secure || false;
-    const cookieBase = {
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: isSecure ? "lax" : false,
-      path: "/",
-    };
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${record.token}`;
 
-    res.cookie("token", token, { ...cookieBase, maxAge: 30 * 60 * 1000 });
-    res.cookie("refreshToken", refreshToken, { ...cookieBase, maxAge: 30 * 24 * 60 * 60 * 1000 });
+    try {
+      await emailService.sendEmail({
+        to: user.email,
+        subject: "Verify your email address",
+        html: `<p>Hi ${firstName},</p>
+               <p>Click the link below to verify your email address. This link expires in 24 hours.</p>
+               <p><a href="${verifyUrl}">Verify Email</a></p>
+               <p>If you didn't create an account, ignore this email.</p>`,
+      });
+    } catch (err) {
+      logger.error("Verification email failed", { error: err.message, userId: user.id });
+    }
+
+    await platformAuditDAO.log(
+      user.id,
+      "auth.customer_registered",
+      "user",
+      user.id,
+      tenantId,
+      { email: user.email },
+      req.ip
+    );
 
     return res.status(201).json({
       success: true,
-      message: "Customer account created successfully!",
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        permissions: user.permissions || {},
-      },
+      message: "Account created! Please check your email to verify your address before logging in.",
+      requiresVerification: true,
+      email,
     });
   } catch (err) {
     console.error("registerCustomerHandler error:", err.message);
@@ -148,6 +162,15 @@ const loginHandler = async (req, res) => {
       pendingTOTP: true,
       message: "TOTP verification required",
       user: result.user,
+    });
+  }
+
+  if (!result.user.emailVerified) {
+    return res.status(200).json({
+      success: true,
+      requiresEmailVerification: true,
+      message: "Please verify your email address before logging in.",
+      email: result.user.email,
     });
   }
 

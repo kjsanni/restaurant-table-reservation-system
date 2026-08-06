@@ -18,15 +18,15 @@ revenueDAO.getMrrTrends = async (months = 12) => {
     const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
     const mrrResult = await db.sequelize.query(
-      `SELECT COALESCE(SUM(CASE plan WHEN :starter THEN :starterPrice WHEN :growth THEN :growthPrice WHEN :enterprise THEN :enterprisePrice ELSE 0 END), 0) AS mrr FROM tenants WHERE status IN ('active', 'past_due', 'trialing') AND createdAt <= :end`,
+      `SELECT COALESCE(SUM(CASE plan WHEN :starter THEN :starterPrice WHEN :growth THEN :growthPrice WHEN :scale THEN :scalePrice ELSE 0 END), 0) AS mrr FROM tenants WHERE status IN ('active', 'past_due', 'trialing') AND createdAt <= :end`,
       {
         replacements: {
           starter: "starter",
           starterPrice: planPriceMap.starter || 0,
           growth: "growth",
           growthPrice: planPriceMap.growth || 0,
-          enterprise: "enterprise",
-          enterprisePrice: planPriceMap.enterprise || 0,
+          scale: "scale",
+          scalePrice: planPriceMap.scale || 0,
           end,
         },
         type: db.Sequelize.QueryTypes.SELECT,
@@ -67,15 +67,15 @@ revenueDAO.getRevenueByPlan = async () => {
   }
 
   const rows = await db.sequelize.query(
-    `SELECT plan, COUNT(id) AS count, SUM(CASE plan WHEN :starter THEN :starterPrice WHEN :growth THEN :growthPrice WHEN :enterprise THEN :enterprisePrice ELSE 0 END) AS mrr FROM tenants WHERE status IN ('active', 'past_due', 'trialing') GROUP BY plan`,
+    `SELECT plan, COUNT(id) AS count, SUM(CASE plan WHEN :starter THEN :starterPrice WHEN :growth THEN :growthPrice WHEN :scale THEN :scalePrice ELSE 0 END) AS mrr FROM tenants WHERE status IN ('active', 'past_due', 'trialing') GROUP BY plan`,
     {
       replacements: {
         starter: "starter",
         starterPrice: planPriceMap.starter || 0,
         growth: "growth",
         growthPrice: planPriceMap.growth || 0,
-        enterprise: "enterprise",
-        enterprisePrice: planPriceMap.enterprise || 0,
+        scale: "scale",
+        scalePrice: planPriceMap.scale || 0,
       },
       type: db.Sequelize.QueryTypes.SELECT,
     }

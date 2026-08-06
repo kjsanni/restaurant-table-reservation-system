@@ -135,6 +135,7 @@ watch(
 </script>
 
 <template>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="tl-layout">
     <aside class="tl-sidebar" :style="{ width: sidebarWidth }">
       <div class="tl-sidebar-inner">
@@ -143,7 +144,7 @@ watch(
             <img
               class="tl-logo"
               src="@/assets/images/logo.jpg"
-              alt="Logo"
+              alt="RTRS logo"
               @click="router.push({ name: 'tenant-landing' })"
             />
             <span v-if="!collapsed" class="tl-brand">RTRS</span>
@@ -224,7 +225,7 @@ watch(
         </div>
       </header>
 
-      <main class="tl-content">
+      <main id="main-content" class="tl-content">
         <RouterView v-slot="{ Component }">
           <Transition name="tl-fade" mode="out-in">
             <component
@@ -364,8 +365,8 @@ watch(
   position: absolute;
   top: 18px;
   right: 12px;
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.08);
@@ -492,8 +493,8 @@ watch(
   align-items: center;
   justify-content: center;
   padding: 0;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   background: transparent;

@@ -1,9 +1,9 @@
 const db = require("../../db/models");
 
 const DEFAULT_PLANS = {
-  starter: { maxTables: 10, maxReservationsPerMonth: 500, price: 29, erpnextModules: [] },
-  growth: { maxTables: 30, maxReservationsPerMonth: 2000, price: 79, erpnextModules: ["erpnext_accounting", "erpnext_crm"] },
-  enterprise: { maxTables: Infinity, maxReservationsPerMonth: Infinity, price: null, erpnextModules: null },
+  starter: { maxTables: 10, maxReservationsPerMonth: 500, price: 299, currency: "GHS", name: "Starter", erpnextModules: [] },
+  growth: { maxTables: 25, maxReservationsPerMonth: 2000, price: 599, currency: "GHS", name: "Growth", erpnextModules: ["erpnext_accounting", "erpnext_crm"] },
+  scale: { maxTables: 100, maxReservationsPerMonth: 10000, price: 999, currency: "GHS", name: "Scale", erpnextModules: null },
 };
 
 const getPlans = async () => {

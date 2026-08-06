@@ -163,6 +163,7 @@ watch(
 </script>
 
 <template>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="sa-layout">
     <aside
       class="sa-sidebar"
@@ -236,6 +237,7 @@ watch(
     </aside>
 
     <div
+      id="main-content"
       class="sa-main"
       :style="{
         marginLeft: sidebarVisible ? (collapsed ? '72px' : '260px') : '0px',
@@ -339,8 +341,8 @@ watch(
   position: absolute;
   top: 18px;
   right: 12px;
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.08);
@@ -517,8 +519,8 @@ watch(
   align-items: center;
   justify-content: center;
   padding: 0;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   background: transparent;

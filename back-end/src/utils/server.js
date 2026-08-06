@@ -7,6 +7,7 @@ const errorHandler = require("../middleware/errorHandler");
 const { Sentry } = require("../middleware/monitoring");
 const authRouter = require("../routes/auth.router");
 const passwordResetRouter = require("../routes/passwordReset.router");
+const emailVerificationRouter = require("../routes/emailVerification.router");
 const auditLogRouter = require("../routes/auditLog.router");
 const rbacRouter = require("../routes/rbac.router");
 const adminRouter = require("../routes/admin.router");
@@ -209,6 +210,7 @@ const createServer = () => {
   app.use("/api/v1", generalLimiter, require("../routes"));
   app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
   app.use("/api/v1/auth", validateCsrfToken, authLimiter, passwordResetRouter);
+  app.use("/api/v1/auth", validateCsrfToken, authLimiter, emailVerificationRouter);
   app.use("/api/v1/audit-logs", generalLimiter, auditLogRouter);
   app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);

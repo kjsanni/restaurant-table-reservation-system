@@ -61,7 +61,9 @@ export const useAuthStore = defineStore("auth", () => {
     cfTurnstileToken?: string
   ) => {
     const response = await authAPI.login(email, password, cfTurnstileToken);
-    user.value = response.data.user;
+    if (!response.data.requiresEmailVerification) {
+      user.value = response.data.user;
+    }
     entryPoint.value = entryPointContext || null;
     return response.data;
   };
@@ -105,7 +107,7 @@ export const useAuthStore = defineStore("auth", () => {
       cfTurnstileToken,
       tenantSlug
     );
-    if (response?.data?.user) {
+    if (response?.data?.user && !response.data.requiresVerification) {
       user.value = response.data.user;
     }
     return response;

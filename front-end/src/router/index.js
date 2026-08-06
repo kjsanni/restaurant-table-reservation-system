@@ -61,6 +61,12 @@ const router = createRouter({
       meta: { standalone: true },
     },
     {
+      path: "/verify-email/:token",
+      name: "verify-email",
+      component: () => import("../views/VerifyEmailView.vue"),
+      meta: { standalone: true },
+    },
+    {
       path: "/pricing",
       name: "pricing",
       component: () => import("../views/PricingView.vue"),

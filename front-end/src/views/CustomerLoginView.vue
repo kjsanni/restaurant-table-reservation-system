@@ -40,6 +40,12 @@ const handleLogin = async () => {
       cfTurnstileToken.value || undefined
     );
 
+    if (response.requiresEmailVerification) {
+      generalError.value =
+        "Please verify your email address before logging in. Check your inbox for the verification link.";
+      return;
+    }
+
     const redirect = (route.query.redirect as string) || "/portal";
     router.push(redirect);
   } catch (err) {
@@ -52,6 +58,7 @@ const handleLogin = async () => {
 </script>
 
 <template>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="page">
     <aside class="brand-side">
       <div class="orb orb-1" aria-hidden="true"></div>
@@ -67,7 +74,7 @@ const handleLogin = async () => {
       <div class="brand-bottom">&copy; 2026 Vibespot Technologies Ltd</div>
     </aside>
 
-    <main class="form-side">
+    <main id="main-content" class="form-side">
       <div class="form-card">
         <h2>Sign in</h2>
         <p class="form-subtitle">Welcome back to your account</p>
@@ -143,7 +150,7 @@ const handleLogin = async () => {
 
 <style scoped>
 .page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 1fr 1fr;
 }

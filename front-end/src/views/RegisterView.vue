@@ -74,6 +74,7 @@ const handleRegister = async () => {
 </script>
 
 <template>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="page">
     <aside class="brand-side">
       <div class="orb orb-1" aria-hidden="true"></div>
@@ -92,7 +93,7 @@ const handleRegister = async () => {
       <div class="brand-bottom">&copy; 2026 Vibespot Technologies Ltd</div>
     </aside>
 
-    <main class="form-side">
+    <main id="main-content" class="form-side">
       <div class="form-card">
         <h2>Create account</h2>
         <p class="subtitle">Set up your restaurant workspace</p>
@@ -197,7 +198,7 @@ const handleRegister = async () => {
 
 <style scoped>
 .page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 1fr 1fr;
   position: relative;
