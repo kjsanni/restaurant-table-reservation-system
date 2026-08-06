@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@sentry/node": "^10.69.0",
-    "axios": "^1.18.1",
+    "axios": "^1.19.0",
     "axios-debug-log": "^1.0.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
