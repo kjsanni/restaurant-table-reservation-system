@@ -36,6 +36,50 @@ const exportAuditLog = (params = {}) => {
   });
 };
 
+const getPlatformAuditLog = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.action) query.set("action", params.action);
+  if (params.tenantId) query.set("tenantId", params.tenantId);
+  if (params.actorUserId) query.set("actorUserId", params.actorUserId);
+  if (params.limit) query.set("limit", params.limit);
+  if (params.offset) query.set("offset", params.offset);
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+  const qs = query.toString();
+  return API.get(`/admin/audit${qs ? `?${qs}` : ""}`);
+};
+
+const getPlatformAuditLogForUser = (userId, params = {}) => {
+  const query = new URLSearchParams();
+  if (params.action) query.set("action", params.action);
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+  if (params.limit) query.set("limit", params.limit);
+  if (params.offset) query.set("offset", params.offset);
+  const qs = query.toString();
+  return API.get(`/admin/audit/user/${userId}${qs ? `?${qs}` : ""}`);
+};
+
+const getPlatformAuditLogForTenant = (tenantId, params = {}) => {
+  const query = new URLSearchParams();
+  if (params.action) query.set("action", params.action);
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+  if (params.limit) query.set("limit", params.limit);
+  if (params.offset) query.set("offset", params.offset);
+  const qs = query.toString();
+  return API.get(`/admin/audit/tenant/${tenantId}${qs ? `?${qs}` : ""}`);
+};
+
+const getSuspiciousActivity = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.startDate) query.set("startDate", params.startDate);
+  if (params.endDate) query.set("endDate", params.endDate);
+  if (params.limit) query.set("limit", params.limit);
+  const qs = query.toString();
+  return API.get(`/admin/audit/suspicious${qs ? `?${qs}` : ""}`);
+};
+
 const listSupportTickets = (params = {}) => {
   const query = new URLSearchParams();
   if (params.status) query.set("status", params.status);
@@ -697,10 +741,6 @@ const forceLogoutTenant = (tenantId) => {
   return API.post(`/admin/incidents/${tenantId}/force-logout`);
 };
 
-const getSuspiciousActivity = () => {
-  return API.get("/admin/suspicious-activity");
-};
-
 const listSubProcessors = () => {
   return API.get("/admin/sub-processors");
 };
@@ -905,6 +945,10 @@ const listPlatformRoles = () => {
   return API.get("/admin/platform/roles");
 };
 
+const getUsers = () => {
+  return API.get("/auth/users");
+};
+
 const assignPlatformRole = (userId, role) => {
   return API.post("/admin/platform/roles/assign", { userId, role });
 };
@@ -913,11 +957,52 @@ const revokePlatformRole = (userId, role) => {
   return API.post("/admin/platform/roles/revoke", { userId, role });
 };
 
+const requestBreakGlass = (justification, durationMinutes) => {
+  return API.post("/admin/break-glass/request", {
+    justification,
+    durationMinutes,
+  });
+};
+
+const approveBreakGlass = (requestId, notes) => {
+  return API.post(`/admin/break-glass/approve/${requestId}`, { notes });
+};
+
+const denyBreakGlass = (requestId, notes) => {
+  return API.post(`/admin/break-glass/deny/${requestId}`, { notes });
+};
+
+const revokeBreakGlass = (requestId) => {
+  return API.post(`/admin/break-glass/revoke/${requestId}`);
+};
+
+const listBreakGlassRequests = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.status) query.set("status", params.status);
+  const qs = query.toString();
+  return API.get(`/admin/break-glass/requests${qs ? `?${qs}` : ""}`);
+};
+
+const listMyBreakGlassRequests = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.status) query.set("status", params.status);
+  const qs = query.toString();
+  return API.get(`/admin/break-glass/my-requests${qs ? `?${qs}` : ""}`);
+};
+
+const expireBreakGlass = () => {
+  return API.post("/admin/break-glass/expire");
+};
+
 export default {
   emailLogs,
   exportAuditLog,
   getAuditLogs,
   getRecentActivity,
+  getPlatformAuditLog,
+  getPlatformAuditLogForUser,
+  getPlatformAuditLogForTenant,
+  getSuspiciousActivity,
   listSupportTickets,
   listFailedPaymentAlerts,
   retryFailedPayment,
@@ -1109,8 +1194,16 @@ export default {
   updateComplianceEvidence,
   deleteComplianceEvidence,
   listPlatformRoles,
+  getUsers,
   assignPlatformRole,
   revokePlatformRole,
+  requestBreakGlass,
+  approveBreakGlass,
+  denyBreakGlass,
+  revokeBreakGlass,
+  listBreakGlassRequests,
+  listMyBreakGlassRequests,
+  expireBreakGlass,
   setupTOTP: () => API.post("/admin/totp/setup"),
   confirmTOTP: (token) => API.post("/admin/totp/confirm", { token }),
   disableTOTP: () => API.post("/admin/totp/disable"),

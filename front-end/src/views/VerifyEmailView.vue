@@ -77,7 +77,7 @@ const resend = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--auth-bg, #f3f4f6);
   padding: 1rem;
 }
