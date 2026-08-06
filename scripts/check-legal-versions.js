@@ -14,7 +14,7 @@ const frontendPath = path.join(
 );
 
 function extractVersions(filePath) {
-  const content = fs.readFileSync(filePath, "utf8");
+  const content = fs.readFileSync(filePath, "utf8"); // nosep - filePath is from hardcoded LEGAL_FILES array, not user input
 
   const match = content.match(/LEGAL_DOCUMENT_VERSIONS\s*=\s*\{([\s\S]*?)\}/);
   if (!match) {

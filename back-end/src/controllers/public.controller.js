@@ -21,7 +21,7 @@ const listPublicPlansHandler = async (req, res) => {
 const getChangelogHandler = async (req, res) => {
   const changelogPath = path.join(process.cwd(), "..", "CHANGELOG.md");
   try {
-    const content = fs.readFileSync(changelogPath, "utf8");
+    const content = fs.readFileSync(changelogPath, "utf8"); // nosep - changelogPath is built from process.cwd() and a static relative path, not user input
     return res.status(200).json({ success: true, content });
   } catch (err) {
     return res

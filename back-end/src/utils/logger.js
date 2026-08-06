@@ -53,7 +53,7 @@ const sanitizeLogArgs = (args) => {
 
 const createSanitizedLogger = (method) => {
   return (...args) => {
-    console[method](...sanitizeLogArgs(args));
+    console[method](...sanitizeLogArgs(args)); // nosep - method is restricted to valid console method names by createSanitizedLogger callers
   };
 };
 
