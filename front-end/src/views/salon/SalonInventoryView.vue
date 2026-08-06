@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import inventoryItemAPI from "@/services/inventoryItemAPI";
+import locationAPI from "@/services/locationAPI";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
 import { useToastStore } from "@/stores/toast";
@@ -24,9 +25,13 @@ interface InventoryItem {
   expiryDate?: string;
   isActive: boolean;
   note?: string;
+  locationId?: number | null;
+  location?: { id: number; name: string };
 }
 
 const alerts = ref<InventoryItem[]>([]);
+const locations = ref<Array<{ id: number; name: string }>>([]);
+const selectedLocationId = ref<number | "">("");
 
 const {
   list: items,
@@ -54,6 +59,7 @@ const {
     expiryDate: "",
     isActive: true,
     note: "",
+    locationId: null,
   },
   editMapper: (item) => ({
     name: item.name,
@@ -68,6 +74,7 @@ const {
     expiryDate: item.expiryDate ? item.expiryDate.slice(0, 10) : "",
     isActive: item.isActive,
     note: item.note || "",
+    locationId: item.locationId || null,
   }),
 });
 
@@ -95,9 +102,19 @@ const formatCurrency = (value: number, currency = "GHS") => {
   return `${currency} ${Number(value).toFixed(2)}`;
 };
 
+const loadLocations = async () => {
+  try {
+    const res = await locationAPI.list();
+    locations.value = res.data.data || [];
+  } catch (err) {
+    logger.error("Failed to load locations", { error: err });
+  }
+};
+
 onMounted(() => {
   loadItems();
   loadAlerts();
+  loadLocations();
 });
 </script>
 
@@ -164,6 +181,19 @@ onMounted(() => {
             <label>
               {{ t("salon.category", "Category") }}
               <input v-model="form.category" class="field-input" />
+            </label>
+            <label>
+              {{ t("salon.location", "Location") }}
+              <select v-model="form.locationId" class="field-input">
+                <option value="">{{ t("salon.selectLocation", "Select location") }}</option>
+                <option
+                  v-for="loc in locations"
+                  :key="loc.id"
+                  :value="loc.id"
+                >
+                  {{ loc.name }}
+                </option>
+              </select>
             </label>
             <label>
               {{ t("salon.qty", "Qty") }}
@@ -252,13 +282,32 @@ onMounted(() => {
         </div>
 
         <div class="settings-card">
-          <h3>{{ t("salon.campaignsList", "Inventory Items") }}</h3>
+          <div class="panel-head" style="margin-bottom: 12px">
+            <h3>{{ t("salon.campaignsList", "Inventory Items") }}</h3>
+            <select
+              v-if="locations.length"
+              v-model="selectedLocationId"
+              class="field-input"
+              style="width: auto"
+              @change="loadItems"
+            >
+              <option value="">{{ t("salon.allLocations", "All locations") }}</option>
+              <option
+                v-for="loc in locations"
+                :key="loc.id"
+                :value="loc.id"
+              >
+                {{ loc.name }}
+              </option>
+            </select>
+          </div>
           <table class="report-table">
             <thead>
               <tr>
                 <th>{{ t("salon.name", "Name") }}</th>
                 <th>{{ t("salon.sku", "SKU") }}</th>
                 <th>{{ t("salon.category", "Category") }}</th>
+                <th>{{ t("salon.location", "Location") }}</th>
                 <th>{{ t("salon.qty", "Qty") }}</th>
                 <th>{{ t("salon.cost", "Cost") }}</th>
                 <th>{{ t("salon.sell", "Sell") }}</th>
@@ -274,6 +323,7 @@ onMounted(() => {
                 </td>
                 <td>{{ item.sku || "—" }}</td>
                 <td>{{ item.category || "—" }}</td>
+                <td>{{ item.location?.name || (item.locationId ? `#${item.locationId}` : "—") }}</td>
                 <td>
                   <span
                     :class="{
@@ -316,7 +366,7 @@ onMounted(() => {
                 </td>
               </tr>
               <tr v-if="!items.length">
-                <td colspan="9" class="empty-state">
+                <td colspan="10" class="empty-state">
                   {{ t("salon.noCampaigns", "No inventory items yet") }}
                 </td>
               </tr>

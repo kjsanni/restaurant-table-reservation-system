@@ -6,11 +6,11 @@ const ALLOWED_METHODS = ["list", "get", "create", "update", "delete"] as const;
 
 type AllowedMethod = typeof ALLOWED_METHODS[number];
 
-const resolveMethod = (method?: string, fallback: AllowedMethod): AllowedMethod => {
+const resolveMethod = (method?: string, fallback?: AllowedMethod): AllowedMethod => {
   if (method && ALLOWED_METHODS.includes(method as AllowedMethod)) {
     return method as AllowedMethod;
   }
-  return fallback;
+  return fallback || "list";
 };
 
 export function useSalonCrudView<T>(config: {
