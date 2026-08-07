@@ -1,6 +1,5 @@
 "use strict";
 const db = require("../../../db/models");
-const Op = db.Sequelize.Op;
 
 const staffLocationAssignmentDAO = {
   async findAllForTenant(tenantId, filters = {}) {
