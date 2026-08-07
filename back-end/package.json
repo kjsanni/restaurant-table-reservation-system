@@ -19,6 +19,7 @@
     "migrate:up": "npx sequelize db:migrate",
     "migrate:undo": "npx sequelize db:migrate:undo",
     "seed:all": "npx sequelize db:seed:all",
+    "seed:e2e": "npx sequelize db:seed --seed 20260807000000-e2e-test-data.js",
     "seed:undo": "npx sequelize db:seed:undo:all",
     "loadtest:seed": "node load-tests/seed.js",
     "loadtest:seed:clean": "node load-tests/seed.js --clean",

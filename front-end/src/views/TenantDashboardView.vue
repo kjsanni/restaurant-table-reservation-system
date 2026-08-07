@@ -198,8 +198,11 @@ const kpis = computed(() => {
 });
 
 const erpnextModuleCards = computed(() => {
-  const flags = authStore.currentTenant?.settings?.featureFlags || {};
-  return ERP_NEXT_MODULES.filter((mod) => flags[mod.flag]);
+  const settings = authStore.currentTenant?.settings as
+    Record<string, unknown> | undefined;
+  const flags =
+    (settings?.featureFlags as Record<string, boolean> | undefined) || {};
+  return ERP_NEXT_MODULES.filter((mod) => Boolean(flags[mod.flag]));
 });
 
 const detail = (b: any) => {

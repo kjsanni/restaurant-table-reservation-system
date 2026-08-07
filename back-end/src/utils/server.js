@@ -104,16 +104,16 @@ const createServer = () => {
   app.set("io", io);
 
   const { runTenantCron } = require("../tenant-platform/utils/tenantCron");
-  runTenantCron();
-  const tenantCronInterval = setInterval(runTenantCron, 6 * 60 * 60 * 1000).unref();
+  runTenantCron().catch((err) => console.error("[TenantCron] startup error:", err.message));
+  const tenantCronInterval = setInterval(() => runTenantCron().catch((err) => console.error("[TenantCron] error:", err.message)), 6 * 60 * 60 * 1000).unref();
 
   const { runSalonCron } = require("../verticals/salon/utils/salonCron");
   runSalonCron().catch((err) => console.error("[SalonCron] startup error:", err.message));
   const salonCronInterval = setInterval(() => runSalonCron().catch((err) => console.error("[SalonCron] error:", err.message)), 60 * 60 * 1000).unref();
 
   const { runBackupCron } = require("../tenant-platform/utils/backupCron");
-  runBackupCron();
-  const backupCronInterval = setInterval(runBackupCron, 60 * 60 * 1000).unref();
+  runBackupCron().catch((err) => console.error("[BackupCron] startup error:", err.message));
+  const backupCronInterval = setInterval(() => runBackupCron().catch((err) => console.error("[BackupCron] error:", err.message)), 60 * 60 * 1000).unref();
 
   const { runScheduledReportsCron } = require("../tenant-platform/utils/scheduledReports.cron");
   runScheduledReportsCron().catch((err) => console.error("[ScheduledReportsCron] startup error:", err.message));

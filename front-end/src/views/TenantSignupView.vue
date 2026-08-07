@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
-import { getApiErrorMessage } from "@/utils/apiError";
 import TurnstileWidget from "@/components/TurnstileWidget.vue";
 import { useTurnstileConfig } from "@/composables/useTurnstileConfig";
 
@@ -83,9 +82,6 @@ const validationErrors = ref<Record<string, string[]> | null>(null);
 const cfTurnstileToken = ref("");
 
 const vertical = computed(() => form.value.businessVertical);
-const selectedPlan = computed(
-  () => PLANS.find((p) => p.slug === form.value.planSlug) || PLANS[0]
-);
 
 const onTurnstileSuccess = (token: string) => {
   cfTurnstileToken.value = token;
@@ -145,7 +141,6 @@ const handleSignup = async () => {
 
     if (data.user) {
       authStore.user = data.user;
-      authStore.isAuthenticated = true;
     }
 
     router.push("/dashboard");

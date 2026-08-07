@@ -24,7 +24,13 @@ const stations = ref<Station[]>([]);
 const loading = ref(true);
 const showForm = ref(false);
 const editingId = ref<number | null>(null);
-const form = ref({
+const form = ref<{
+  name: string;
+  type: string;
+  zone: string;
+  maintenanceNotes: string;
+  locationId: number | null;
+}>({
   name: "",
   type: "chair",
   zone: "",

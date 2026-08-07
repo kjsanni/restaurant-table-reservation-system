@@ -40,16 +40,18 @@ const resetError = () => {
 
 <template>
   <div v-if="hasError" class="error-boundary">
-    <div class="error-boundary-inner">
-      <h1>Something went wrong</h1>
-      <p>{{ errorMessage }}</p>
-      <button class="retry-btn" @click="resetError">Try again</button>
-    </div>
+    <main class="error-boundary-main">
+      <div class="error-boundary-inner">
+        <h1>Something went wrong</h1>
+        <p>{{ errorMessage }}</p>
+        <button class="retry-btn" @click="resetError">Try again</button>
+      </div>
+    </main>
   </div>
-  <div v-else class="app-shell">
+  <main v-else class="app-shell">
     <OfflineBanner />
     <RouterView />
-  </div>
+  </main>
 </template>
 
 <style scoped>
@@ -87,13 +89,13 @@ const resetError = () => {
   padding: 10px 24px;
   border-radius: var(--radius-lg);
   border: none;
-  background: var(--accent-500);
+  background: var(--accent-700);
   color: white;
   font-weight: 600;
   cursor: pointer;
   transition: background var(--duration-fast) var(--ease-out);
 }
 .retry-btn:hover {
-  background: var(--accent-600);
+  background: var(--accent-800, #78350f);
 }
 </style>

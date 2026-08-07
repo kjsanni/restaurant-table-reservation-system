@@ -27,7 +27,6 @@ const selectedLocationId = ref<number | "">("");
 const {
   list: expenses,
   loading,
-  showForm,
   editingId,
   form,
   load: loadExpenses,

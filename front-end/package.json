@@ -21,7 +21,7 @@
     "test:a11y": "playwright test tests/accessibility.spec.ts",
     "test:visual": "playwright test tests/visual.spec.ts",
     "test:e2e": "playwright test",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-pattern 'tests/*' --ignore-pattern 'dist/*'",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-pattern 'tests/*' --ignore-pattern 'dist/*' --ignore-pattern 'test-results/*' --ignore-pattern 'playwright-report/*'",
     "format": "prettier .  --write"
   },
   "dependencies": {

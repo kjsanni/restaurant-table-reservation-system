@@ -24,7 +24,6 @@ interface Location {
 const {
   list: locations,
   loading,
-  showForm,
   editingId,
   form,
   load: loadLocations,

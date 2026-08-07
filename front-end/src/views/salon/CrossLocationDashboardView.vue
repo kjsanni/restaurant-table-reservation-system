@@ -17,7 +17,15 @@ const summary = ref({
   appointmentsToday: 0,
   revenueToday: 0,
 });
-const locations = ref([]);
+const locations = ref<
+  Array<{
+    locationId: number;
+    locationName: string;
+    locationCity?: string;
+    appointmentCount: number;
+    revenue: number;
+  }>
+>([]);
 
 const loadDashboard = async () => {
   loading.value = true;

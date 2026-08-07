@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import pricingRuleAPI from "@/services/pricingRuleAPI";
+import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
 import { useSalonCrudView } from "@/composables/useSalonCrudView";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";

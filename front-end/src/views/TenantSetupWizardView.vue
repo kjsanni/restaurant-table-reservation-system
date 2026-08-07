@@ -82,7 +82,6 @@ const businessVertical = ref<"restaurant" | "salon">("restaurant");
 const erpnextCompanyName = ref("");
 const erpnextFiscalYearStart = ref("");
 const erpnextWarehouseName = ref("");
-const erpnextOnboardingStep = ref(1);
 
 const typeDefaults: Record<RestaurantType, string[]> = {
   full_service: ["dine_in", "takeaway", "delivery"],
@@ -226,7 +225,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="setup-wizard">
+  <main class="setup-wizard-main">
+    <div class="setup-wizard">
     <div class="wizard-card">
       <div class="wizard-header">
         <h1>Welcome! Let's set up your restaurant</h1>
@@ -474,10 +474,13 @@ onMounted(() => {
         </div>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <style scoped>
+.setup-wizard-main {
+  min-height: 100vh;
+}
 .setup-wizard {
   min-height: 100vh;
   display: flex;

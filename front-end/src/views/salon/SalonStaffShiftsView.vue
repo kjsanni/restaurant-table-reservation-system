@@ -89,6 +89,20 @@ const loadLocations = async () => {
   }
 };
 
+const groupedByDay = computed(() => {
+  const groups: Record<string, StaffShift[]> = {};
+  for (const day of weekDays) {
+    groups[day] = [];
+  }
+  for (const shift of shifts.value) {
+    const day = shift.dayOfWeek.toLowerCase();
+    if (groups[day]) {
+      groups[day].push(shift);
+    }
+  }
+  return groups;
+});
+
 const userId = ref("");
 const dayOfWeek = ref("monday");
 const startTime = ref("09:00");

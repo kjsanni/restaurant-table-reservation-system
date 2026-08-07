@@ -168,13 +168,15 @@ jobs:
         run: npm run build
       - name: Install Playwright browsers
         working-directory: front-end
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium firefox webkit
       - name: Run database migrations
         working-directory: back-end
         run: npx sequelize db:migrate
       - name: Seed database
         working-directory: back-end
-        run: npm run seed:all
+        run: |
+          npm run seed:all
+          npm run seed:e2e
       - name: Start backend server
         working-directory: back-end
         run: |

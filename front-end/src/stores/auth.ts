@@ -29,6 +29,7 @@ export const useAuthStore = defineStore("auth", () => {
     name: string;
     slug?: string;
     businessVertical?: string;
+    settings?: Record<string, unknown>;
   } | null>(null);
   const tenantModeEnabled = ref(false);
   const branding = ref({
