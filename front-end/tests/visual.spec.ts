@@ -15,9 +15,9 @@ const routes = [
 ];
 
 test.describe("Visual regression", () => {
-  test.beforeEach(({ project }) => {
+  test.beforeEach(() => {
     test.skip(
-      project.name !== "chromium",
+      test.info().project.name !== "chromium",
       "Visual baselines are captured on chromium only"
     );
   });

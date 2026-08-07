@@ -25,7 +25,9 @@ const completeTransferHandler = async (req, res) => {
 
     const updated = await inventoryTransferDao.update(id, tenantId, { status: "completed" });
 
-    const inventoryItem = await db.inventoryItem.findByPk(transfer.inventoryItemId);
+    const inventoryItem = await db.inventoryItem.findOne({
+      where: { id: transfer.inventoryItemId, tenantId },
+    });
     if (inventoryItem) {
       await inventoryItem.update({ quantity: inventoryItem.quantity + transfer.quantity });
     }

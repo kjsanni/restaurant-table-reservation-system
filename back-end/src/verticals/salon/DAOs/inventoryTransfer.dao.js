@@ -2,6 +2,10 @@
 const db = require("../../../db/models");
 
 const inventoryTransferDAO = {
+  async findAll(tenantId, filters = {}) {
+    return this.findAllForTenant(tenantId, filters);
+  },
+
   async findAllForTenant(tenantId, filters = {}) {
     const where = { tenantId };
 

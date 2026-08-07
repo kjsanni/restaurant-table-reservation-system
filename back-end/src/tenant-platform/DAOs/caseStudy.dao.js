@@ -21,15 +21,19 @@ caseStudyDAO.createCaseStudy = async (payload) => {
   return study.toJSON();
 };
 
-caseStudyDAO.updateCaseStudy = async (id, updates) => {
-  const study = await db.caseStudy.findByPk(id);
+caseStudyDAO.updateCaseStudy = async (id, updates, tenantId) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  const study = await db.caseStudy.findOne({ where });
   if (!study) return null;
   await study.update(updates);
   return study.toJSON();
 };
 
-caseStudyDAO.removeCaseStudy = async (id) => {
-  const study = await db.caseStudy.findByPk(id);
+caseStudyDAO.removeCaseStudy = async (id, tenantId) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  const study = await db.caseStudy.findOne({ where });
   if (!study) return false;
   await study.destroy();
   return true;

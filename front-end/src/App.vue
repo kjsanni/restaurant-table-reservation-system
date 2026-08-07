@@ -2,7 +2,7 @@
 import { ref, provide } from "vue";
 import { useTenantBranding } from "@/composables/useTenantBranding";
 import { getCurrentInstance } from "vue";
-import { useI18n, type UseI18nReturn } from "@/composables/useI18n";
+import { useI18n } from "@/composables/useI18n";
 import OfflineBanner from "@/components/OfflineBanner.vue";
 
 useTenantBranding();

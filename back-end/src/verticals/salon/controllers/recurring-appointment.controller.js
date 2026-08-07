@@ -1,6 +1,5 @@
 "use strict";
 const recurringAppointmentDao = require("../DAOs/recurringAppointment.dao");
-const _appointmentDao = require("../DAOs/appointment.dao");
 
 const createRecurringAppointmentHandler = async (req, res) => {
   try {

@@ -1,5 +1,4 @@
 "use strict";
-const _salonModels = require("../models");
 const appointmentDao = require("../DAOs/appointment.dao");
 const staffServiceSkillDao = require("../DAOs/staffServiceSkill.dao");
 const appointmentSchedulingService = require("../services/appointmentScheduling.service");

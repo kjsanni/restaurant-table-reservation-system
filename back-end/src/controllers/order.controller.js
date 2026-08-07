@@ -57,7 +57,10 @@ const searchOrdersHandler = async (req, res) => {
 };
 
 const getCustomerOrdersHandler = async (req, res) => {
-  const customerId = req.user?.customerId || req.query.customerId;
+  let customerId = req.user?.customerId;
+  if (!customerId && req.user?.permissions?.view_all_customers) {
+    customerId = req.query.customerId;
+  }
   if (!customerId) {
     return res.status(400).json({ success: false, message: "customerId is required" });
   }

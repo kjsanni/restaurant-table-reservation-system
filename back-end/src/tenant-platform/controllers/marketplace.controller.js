@@ -27,13 +27,15 @@ marketplaceController.updateListingHandler = async (req, res) => {
       updates[key] = req.body[key];
     }
   }
-  const listing = await marketplaceDAO.updateListing(req.params.id, updates);
+  const tenantId = req.tenant?.id;
+  const listing = await marketplaceDAO.updateListing(req.params.id, updates, tenantId);
   if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
   res.status(200).json({ success: true, item: listing });
 };
 
 marketplaceController.removeListingHandler = async (req, res) => {
-  const removed = await marketplaceDAO.removeListing(req.params.id);
+  const tenantId = req.tenant?.id;
+  const removed = await marketplaceDAO.removeListing(req.params.id, tenantId);
   if (!removed) return res.status(404).json({ success: false, message: "Listing not found" });
   res.status(200).json({ success: true });
 };

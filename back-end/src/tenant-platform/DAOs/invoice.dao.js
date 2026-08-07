@@ -25,19 +25,29 @@ invoiceDAO.list = (filters = {}) => {
   });
 };
 
-invoiceDAO.getById = (id) => db.invoice.findByPk(id);
+invoiceDAO.getById = (id, tenantId) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  return db.invoice.findOne({ where });
+};
 
-invoiceDAO.create = (data) => db.invoice.create(data);
+invoiceDAO.create = (data) => {
+  return db.invoice.create(data);
+};
 
-invoiceDAO.update = (id, updates) => {
-  return db.invoice.findByPk(id).then((inv) => {
+invoiceDAO.update = (id, updates, tenantId) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  return db.invoice.findOne({ where }).then((inv) => {
     if (!inv) return null;
     return inv.update(updates);
   });
 };
 
-invoiceDAO.remove = (id) => {
-  return db.invoice.findByPk(id).then((inv) => {
+invoiceDAO.remove = (id, tenantId) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  return db.invoice.findOne({ where }).then((inv) => {
     if (!inv) return null;
     return inv.destroy();
   });

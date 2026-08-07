@@ -178,7 +178,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
   let permissions = user.permissions || {};
   try {
     const roleDAO = require("../DAOs/role.dao");
-    const effective = await roleDAO.getRolePermissions(user.id);
+    const effective = await roleDAO.getRolePermissions(user.id, user.tenantId);
     if (effective && Object.keys(effective).length > 0) {
       permissions = effective;
     }
@@ -204,9 +204,14 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         edit_orders: true,
         view_appointments: true,
         edit_appointments: true,
+        manage_appointments: true,
         manage_stations: true,
         manage_services: true,
         manage_tenants: true,
+        view_commissions: true,
+        edit_commissions: true,
+        view_reports: true,
+        manage_platform: true,
       },
       manager: {
         view_reservations: true,
@@ -223,9 +228,14 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         edit_orders: true,
         view_appointments: true,
         edit_appointments: true,
+        manage_appointments: true,
         manage_stations: true,
         manage_services: true,
         manage_tenants: true,
+        view_commissions: true,
+        edit_commissions: true,
+        view_reports: true,
+        manage_platform: false,
       },
       staff: {
         view_reservations: true,
@@ -242,8 +252,13 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         edit_orders: true,
         view_appointments: true,
         edit_appointments: true,
+        manage_appointments: false,
         manage_stations: false,
         manage_services: false,
+        view_commissions: false,
+        edit_commissions: false,
+        view_reports: false,
+        manage_platform: false,
       },
     };
     permissions = defaults[user.role] || defaults.staff;

@@ -21,15 +21,19 @@ marketplaceDAO.createListing = async (payload) => {
   return listing.toJSON();
 };
 
-marketplaceDAO.updateListing = async (id, updates) => {
-  const listing = await db.marketplaceListing.findByPk(id);
+marketplaceDAO.updateListing = async (id, updates, tenantId) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  const listing = await db.marketplaceListing.findOne({ where });
   if (!listing) return null;
   await listing.update(updates);
   return listing.toJSON();
 };
 
-marketplaceDAO.removeListing = async (id) => {
-  const listing = await db.marketplaceListing.findByPk(id);
+marketplaceDAO.removeListing = async (id, tenantId) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  const listing = await db.marketplaceListing.findOne({ where });
   if (!listing) return false;
   await listing.destroy();
   return true;

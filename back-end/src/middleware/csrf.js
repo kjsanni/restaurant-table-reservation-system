@@ -16,7 +16,7 @@ const setCsrfCookie = (req, res, next) => {
       // nosemgrep: javascript.lang.security.audit.cookie-http-only-disabled - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
       httpOnly: false, // guardrails-disable-line - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
       secure: isProduction,
-      sameSite: isProduction ? "lax" : false,
+      sameSite: "lax",
       path: "/",
       maxAge: 24 * 60 * 60 * 1000,
     });

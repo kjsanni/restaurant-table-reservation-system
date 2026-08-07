@@ -1,5 +1,4 @@
 const db = require("../../db/models");
-const _platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const getTimelineHandler = async (req, res) => {
   const tenantId = parseInt(req.params.tenantId, 10);

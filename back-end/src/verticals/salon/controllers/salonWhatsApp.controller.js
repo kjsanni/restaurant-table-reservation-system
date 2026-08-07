@@ -30,9 +30,12 @@ const sendPaymentConfirmation = async (appointment) => {
 
 const handleChargeSuccess = async (data) => {
   const appointmentId = data.metadata?.appointmentId;
-  if (!appointmentId) return;
+  const tenantId = data.metadata?.tenantId || null;
+  if (!appointmentId || !tenantId) return;
 
-  const appointment = await db.appointment.findByPk(appointmentId);
+  const appointment = await db.appointment.findOne({
+    where: { id: appointmentId, tenantId },
+  });
   if (!appointment || appointment.paymentStatus === "paid") return;
 
   await appointment.update({

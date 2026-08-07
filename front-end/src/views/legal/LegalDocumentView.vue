@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
 import { legalDocuments, legalDocumentSlugs } from "@/config/legalDocuments";
+import DOMPurify from "dompurify";
 
 const route = useRoute();
 const router = useRouter();
@@ -15,6 +16,8 @@ const availableDocs = computed(() =>
     title: legalDocuments[s].title,
   }))
 );
+
+const sanitizedBody = (body: string) => DOMPurify.sanitize(body);
 
 function goTo(target: string) {
   router.push({ name: "legal-document", params: { slug: target } });
@@ -55,7 +58,10 @@ function goTo(target: string) {
           class="legal-section"
         >
           <h2 class="legal-section-title">{{ section.heading }}</h2>
-          <p class="legal-section-body" v-html="section.body"></p>
+          <p
+            class="legal-section-body"
+            v-html="sanitizedBody(section.body)"
+          ></p>
         </section>
 
         <footer class="legal-footer">

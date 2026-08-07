@@ -54,8 +54,13 @@ const sendTemplate = async (phone, templateName, variables = {}, tenantId) => {
 };
 
 const resolveTenant = async () => {
-  const tenant = await db.tenant.findOne({ where: { isActive: true } });
-  return tenant ? tenant.id : null;
+  const tenant = await db.tenant.findOne({
+    where: { isActive: true },
+    order: [["id", "ASC"]],
+  });
+  if (!tenant) return null;
+  console.warn("[whatsapp-order] resolveTenant fallback used; tenantId was not provided. Routing to tenant", tenant.id);
+  return tenant.id;
 };
 
 const ensureCustomer = async (phone, tenantId) => {

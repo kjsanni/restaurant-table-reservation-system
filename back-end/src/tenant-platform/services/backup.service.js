@@ -1,18 +1,7 @@
-const { exec } = require("child_process");
+const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
-
-const escapeShellArg = (value) => {
-  if (value === null || value === undefined) {
-    return '""';
-  }
-  const str = String(value);
-  if (str.length === 0) {
-    return '""';
-  }
-  return `'${str.replace(/'/g, "'\\''")}'`;
-};
 
 const runBackup = async (options = {}) => {
   const {
@@ -42,13 +31,18 @@ const runBackup = async (options = {}) => {
   const env = { ...process.env };
   if (dbPass) env.MYSQL_PWD = dbPass;
 
-  const command = `mysqldump -h ${escapeShellArg(dbHost)} -P ${escapeShellArg(dbPort)} -u ${escapeShellArg(dbUser)} ${escapeShellArg(dbName)} > ${escapeShellArg(outputPath)}`;
-
   return new Promise((resolve, reject) => {
-    exec(command, { env }, (error, _stdout, _stderr) => {
-      if (error) {
-        return reject({ status: 500, message: `Backup failed: ${error.message}` });
-      }
+    const child = spawn("mysqldump", [
+      "-h", dbHost,
+      "-P", dbPort,
+      "-u", dbUser,
+      dbName,
+    ], { env });
+
+    const writeStream = fs.createWriteStream(outputPath);
+    child.stdout.pipe(writeStream);
+
+    writeStream.on("finish", () => {
       const stats = fs.statSync(outputPath);
       resolve({
         path: outputPath,
@@ -57,6 +51,16 @@ const runBackup = async (options = {}) => {
         type,
       });
     });
+
+    writeStream.on("error", (err) => {
+      reject({ status: 500, message: `Backup failed: ${err.message}` });
+    });
+
+    child.on("error", (err) => {
+      reject({ status: 500, message: `Backup failed: ${err.message}` });
+    });
+
+    child.stderr.on("data", () => {});
   });
 };
 
@@ -95,14 +99,27 @@ const runRestore = async (options = {}) => {
   const env = { ...process.env };
   if (dbPass) env.MYSQL_PWD = dbPass;
 
-  const command = `mysql -h ${escapeShellArg(dbHost)} -P ${escapeShellArg(dbPort)} -u ${escapeShellArg(dbUser)} ${escapeShellArg(dbName)} < ${escapeShellArg(resolvedPath)}`;
-
   return new Promise((resolve, reject) => {
-    exec(command, { env }, (error, _stdout, _stderr) => {
-      if (error) {
-        return reject({ status: 500, message: `Restore failed: ${error.message}` });
+    const child = spawn("mysql", [
+      "-h", dbHost,
+      "-P", dbPort,
+      "-u", dbUser,
+      dbName,
+    ], { env });
+
+    const sqlContent = fs.readFileSync(resolvedPath, "utf8");
+    child.stdin.write(sqlContent);
+    child.stdin.end();
+
+    child.on("close", (code) => {
+      if (code !== 0) {
+        return reject({ status: 500, message: `Restore failed with exit code ${code}` });
       }
       resolve({ success: true, restoredAt: new Date().toISOString() });
+    });
+
+    child.on("error", (err) => {
+      reject({ status: 500, message: `Restore failed: ${err.message}` });
     });
   });
 };

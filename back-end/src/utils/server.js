@@ -21,20 +21,19 @@ const statusRouter = require("../routes/status.router");
 const docsRouter = require("../routes/docs.router");
 const { setCsrfCookie, generateCsrfToken, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
-  const { requestLogger, logStream } = require("../middleware/requestLogger");
+const { requestLogger, logStream } = require("../middleware/requestLogger");
 const { logAction } = require("../middleware/auditLog");
 const { cspHeaders } = require("../middleware/csp");
 const { getCurrentSecret } = require("../utils/jwtRotation");
 const { Server } = require("socket.io");
 const tryCatchHandler = require("../middleware/tryCatch");
 const { protect, _requireSuperAdmin } = require("../middleware/auth");
-const _ipAllowlist = require("../middleware/ipAllowlist");
 const { authLimiter, generalLimiter, adminActionLimiter, syncLimiter, webhookLimiter } = require("../middleware/rateLimit");
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
 const { startBackupWorker } = require("../queues/backup.queue");
-  const { client: redisClient } = require("./cache");
-  const { checkQueueDepths } = require("../queues/queue");
+const { client: redisClient, getConnectionStatus } = require("./cache");
+const { checkQueueDepths } = require("../queues/queue");
 const { resolveTenant } = require("../tenant-platform/middleware/resolveTenant");
 const { requireActiveTenant } = require("../tenant-platform/middleware/tenantStatus");
 const { loadModules } = require("../tenant-platform/modules/module.loader");
@@ -201,10 +200,12 @@ const createServer = () => {
 
   app.get("/api/v1/health", tryCatchHandler(async (req, res) => {
     const queueAlerts = await checkQueueDepths();
+    const redisStatus = redisClient ? (getConnectionStatus() ? "connected" : "disconnected") : "not_configured";
     res.json({
       success: true,
       status: "healthy",
       timestamp: new Date().toISOString(),
+      redis: redisStatus,
       queueAlerts: queueAlerts.length ? queueAlerts : undefined,
     });
   }));

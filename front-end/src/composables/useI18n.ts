@@ -1,4 +1,4 @@
-import { ref, computed, type Ref } from "vue";
+import { ref, computed } from "vue";
 import { messages, type Locale } from "@/locales";
 import localeAPI from "@/services/localeAPI";
 

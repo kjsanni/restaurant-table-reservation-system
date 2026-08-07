@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const _db = require("../db/models");
 const planDAO = require("../tenant-platform/DAOs/plan.dao");
 
 const listPublicPlansHandler = async (req, res) => {

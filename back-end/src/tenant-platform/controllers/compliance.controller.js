@@ -1,5 +1,4 @@
 const db = require("../../db/models");
-const _authDAO = require("../../DAOs/auth.dao");
 const legalAcceptanceDAO = require("../DAOs/legalAcceptance.dao");
 const dsarRequestDAO = require("../DAOs/dsarRequest.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");

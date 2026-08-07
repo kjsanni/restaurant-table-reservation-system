@@ -1,7 +1,5 @@
 const axios = require("axios");
-const _deliveryDAO = require("../DAOs/delivery.dao");
 const db = require("../db/models");
-const _logger = require("../utils/logger");
 const { normalizeSettingValue } = require("../utils/settings");
 
 const SHAQ_BASE_URL = "https://public-api.shaqexpress.com/api/v1";

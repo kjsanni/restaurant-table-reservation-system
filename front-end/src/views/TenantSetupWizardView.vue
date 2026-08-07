@@ -7,6 +7,11 @@ import { useAuthStore } from "@/stores/auth";
 const router = useRouter();
 const authStore = useAuthStore();
 
+const getXsrfToken = () => {
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : "";
+};
+
 type RestaurantType =
   | "full_service"
   | "quick_service"
@@ -136,7 +141,10 @@ const submitSetup = async () => {
   try {
     const response = await fetch("/api/v1/auth/tenant/setup", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-xsrf-token": getXsrfToken(),
+      },
       credentials: "include",
       body: JSON.stringify({
         businessVertical: businessVertical.value,

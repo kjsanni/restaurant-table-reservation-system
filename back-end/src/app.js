@@ -9,7 +9,9 @@ const init = async () => {
   try {
     if (redisClient) {
       await redisClient.connect().catch((err) => {
-        logger.warn("Redis connection failed, caching disabled:", err.message);
+        logger.error("Redis connection failed:", err.message);
+        console.error("Redis connection failed:", err.message);
+        process.exit(1);
       });
     }
     await connect.connectDatabase();

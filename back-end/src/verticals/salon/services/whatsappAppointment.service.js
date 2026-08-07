@@ -6,7 +6,6 @@ const salonModels = require("../models");
 const { cache } = require("../../../utils/cache");
 const { sendWithSmsFallback } = require("../../../services/notification.service");
 const customerService = require("../../../services/customerService");
-const _messageTemplates = require("../../../services/messageTemplates.service");
 const { withRetry } = require("../../../utils/retry");
 const whatsappService = require("../../../services/whatsapp.service");
 const db = require("../../../db/models");

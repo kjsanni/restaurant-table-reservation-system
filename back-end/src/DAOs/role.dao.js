@@ -71,7 +71,7 @@ const deleteRole = async (id, tenantId) => {
   return true;
 };
 
-const getRolePermissions = async (userId) => {
+const getRolePermissions = async (userId, tenantId) => {
   const user = await db.user.findByPk(userId, {
     include: [
       {
@@ -85,7 +85,7 @@ const getRolePermissions = async (userId) => {
 
   const mergedPermissions = {};
 
-  const role = await findRoleByName(user.role);
+  const role = await findRoleByName(user.role, tenantId);
   if (role && role.permissions) {
     Object.assign(mergedPermissions, role.permissions);
   }
