@@ -177,11 +177,26 @@ jobs:
         run: npm run seed:all
       - name: Start backend server
         working-directory: back-end
-        run: npm run start:dev &
+        run: |
+          echo "PORT=$PORT"
+          echo "NODE_ENV=$NODE_ENV"
+          echo "REDIS_HOST=$REDIS_HOST"
+          echo "REDIS_PORT=$REDIS_PORT"
+          node -v
+          npm -v
+          ls -la node_modules/.bin/nodemon || true
+          nohup node ./src/app.js > /tmp/backend.log 2>&1 &
+          echo $! > /tmp/backend.pid
+          echo "Server started with PID: $!"
       - name: Wait for backend
-        run: sleep 30 && npx wait-on http://localhost:8000/api/v1/health --timeout 300000
+        run: |
+          sleep 30
+          ps aux | grep node || true
+          netstat -tlnp 2>/dev/null || ss -tlnp 2>/dev/null || true
+          curl -v http://localhost:8000/api/v1/health || true
+          npx wait-on http://localhost:8000/api/v1/health --timeout 300000
       - name: Show backend logs
-        if: failure()
+        if: always()
         run: cat /tmp/backend.log || true
       - name: Run API contract tests
         working-directory: back-end
