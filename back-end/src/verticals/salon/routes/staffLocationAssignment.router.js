@@ -1,7 +1,8 @@
 "use strict";
 const router = require("express").Router();
 const staffLocationAssignmentController = require("../controllers/staffLocationAssignment.controller");
-const { protect, requireVertical, requirePermission } = require("../../../middleware/auth");
+const { protect, requirePermission } = require("../../../middleware/auth");
+const { requireVertical } = require("../../../middleware/requireVertical");
 
 router.use(protect, requireVertical("salon"), requirePermission("manage_staff"));
 
