@@ -48,6 +48,7 @@ for (const route of publicRoutes) {
 for (const route of protectedRoutes) {
   test.describe(`Accessibility - ${route.name}`, () => {
     test.beforeEach(async ({ page }) => {
+      // codeql[js/invariant-nonfunction-return] - false positive: loginAsTenantStaff is a regular exported function
       await loginAsTenantStaff(page);
       await page.goto(route.path);
     });

@@ -3,8 +3,9 @@ const router = require("express").Router();
 const inventoryTransferController = require("../controllers/inventoryTransfer.controller");
 const { protect, requirePermission } = require("../../../middleware/auth");
 const { requireVertical } = require("../../../middleware/requireVertical");
+const { generalLimiter } = require("../../../middleware/rateLimit");
 
-router.use(protect, requireVertical("salon"), requirePermission("edit_appointments"));
+router.use(generalLimiter, protect, requireVertical("salon"), requirePermission("edit_appointments"));
 
 router.route("/").get(inventoryTransferController.getInventoryTransfersHandler).post(inventoryTransferController.createInventoryTransferHandler);
 
