@@ -64,7 +64,6 @@ describe("anomalyDetection.service", () => {
       const req = createReq({ id: 1 }, {});
       const next = jest.fn();
 
-      const originalHour = new Date().getUTCHours();
       const frozenDate = new Date();
       frozenDate.setUTCHours(3, 0, 0, 0);
       jest.useFakeTimers().setSystemTime(frozenDate);

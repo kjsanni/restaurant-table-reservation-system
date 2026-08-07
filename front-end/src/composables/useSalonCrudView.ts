@@ -1,4 +1,4 @@
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
 

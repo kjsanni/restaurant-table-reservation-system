@@ -1,5 +1,3 @@
-const { Sequelize } = require("sequelize");
-
 jest.mock("../db/models", () => {
   const SequelizeLib = require("sequelize");
   const mockFn = jest.fn(() => "COUNT");
