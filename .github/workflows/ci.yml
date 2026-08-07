@@ -42,7 +42,7 @@ jobs:
       DB_PASSWORD: testpass
       REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
-      JWT_SECRET: test-secret-key-for-ci-only
+      JWT_SECRET: test-secret-key-for-ci-only-12345
       CORS_ORIGINS: http://localhost:8080
       PORT: 8000
     steps:
@@ -142,7 +142,7 @@ jobs:
       DB_PASSWORD: testpass
       REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
-      JWT_SECRET: test-secret-key-for-ci-only
+      JWT_SECRET: test-secret-key-for-ci-only-12345
       CORS_ORIGINS: http://localhost:8080
     steps:
       - uses: actions/checkout@v4
