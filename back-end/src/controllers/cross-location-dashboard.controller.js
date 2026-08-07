@@ -13,7 +13,6 @@ const getCrossLocationDashboardHandler = async (req, res) => {
 
     const { from, to } = req.query;
     const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
     const [locations, locationSummary, staffCount, stationCount, todayStats] = await Promise.all([
       locationDao.findAllForTenant(tenantId),
