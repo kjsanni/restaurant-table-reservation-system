@@ -1,4 +1,4 @@
-const db = require("../../db/models");
+const _db = require("../../db/models");
 const paystackService = require("../services/paystack.service");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 

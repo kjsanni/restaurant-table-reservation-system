@@ -1,6 +1,6 @@
 const { exec } = require("child_process");
 const { promisify } = require("util");
-const execAsync = promisify(exec);
+const _execAsync = promisify(exec);
 
 const getDeploymentStatusHandler = async (req, res) => {
   const status = {

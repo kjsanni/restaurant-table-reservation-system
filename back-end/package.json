@@ -32,7 +32,8 @@
     "test:postman": "bash scripts/smoke-test.sh",
     "test:postman:prod": "BASE_URL=http://192.168.88.10 bash scripts/smoke-test.sh",
     "audit": "npm audit --omit=dev --audit-level=moderate",
-    "audit:fix": "npm audit --omit=dev --audit-level=moderate --fix"
+    "audit:fix": "npm audit --omit=dev --audit-level=moderate --fix",
+    "lint": "eslint . --ext .js --ignore-pattern 'src/__tests__/*' --ignore-pattern 'load-tests/*' --ignore-pattern 'scripts/*'"
   },
   "author": "Slavyan Hristov",
   "license": "ISC",

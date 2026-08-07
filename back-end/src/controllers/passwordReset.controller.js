@@ -1,7 +1,7 @@
 const passwordResetDAO = require("../DAOs/passwordReset.dao");
 const authDAO = require("../DAOs/auth.dao");
 const emailService = require("../services/emailService");
-const { generateToken: generateAuthToken } = require("../services/authService");
+const { generateToken: _generateAuthToken } = require("../services/authService");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 const logger = require("../utils/logger");
 
@@ -21,7 +21,7 @@ const forgotPasswordHandler = async (req, res) => {
 
   await passwordResetDAO.invalidateUserTokens(user.id);
 
-  const { raw, expiresAt } = await passwordResetDAO.create({
+  const { raw, _expiresAt } = await passwordResetDAO.create({
     userId: user.id,
     ipAddress: req.ip || req.connection?.remoteAddress || null,
     userAgent: req.get("user-agent") || null,

@@ -256,7 +256,7 @@ const loginTOTPHandler = async (req, res) => {
         isSuperAdmin: !!user.isSuperAdmin,
       },
     });
-  } catch (err) {
+  } catch {
     return res.status(400).json({ success: false, message: "Invalid or expired temporary token" });
   }
 };
@@ -577,7 +577,7 @@ const getAllUsersHandler = async (req, res) => {
 
 const VALID_USER_ROLES = ["admin", "manager", "staff"];
 
-const createStaffHandler = async (req, res) => {
+const _createStaffHandler = async (req, res) => {
   const { username, email, password, role, permissions } = req.body;
   const normalizedRole = VALID_USER_ROLES.includes(role) ? role : "staff";
   const user = await authDAO.createStaffUser({

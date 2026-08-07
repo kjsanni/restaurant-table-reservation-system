@@ -206,6 +206,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         edit_appointments: true,
         manage_stations: true,
         manage_services: true,
+        manage_tenants: true,
       },
       manager: {
         view_reservations: true,
@@ -224,6 +225,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
         edit_appointments: true,
         manage_stations: true,
         manage_services: true,
+        manage_tenants: true,
       },
       staff: {
         view_reservations: true,

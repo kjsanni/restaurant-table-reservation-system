@@ -27,8 +27,8 @@ const { cspHeaders } = require("../middleware/csp");
 const { getCurrentSecret } = require("../utils/jwtRotation");
 const { Server } = require("socket.io");
 const tryCatchHandler = require("../middleware/tryCatch");
-const { protect, requireSuperAdmin } = require("../middleware/auth");
-const ipAllowlist = require("../middleware/ipAllowlist");
+const { protect, _requireSuperAdmin } = require("../middleware/auth");
+const _ipAllowlist = require("../middleware/ipAllowlist");
 const { authLimiter, generalLimiter, adminActionLimiter, syncLimiter, webhookLimiter } = require("../middleware/rateLimit");
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
@@ -92,7 +92,7 @@ const createServer = () => {
       }
       socket.user = user;
       next();
-    } catch (err) {
+    } catch {
       next(new Error("Authentication error: invalid token"));
     }
   });

@@ -45,7 +45,7 @@ const runBackup = async (options = {}) => {
   const command = `mysqldump -h ${escapeShellArg(dbHost)} -P ${escapeShellArg(dbPort)} -u ${escapeShellArg(dbUser)} ${escapeShellArg(dbName)} > ${escapeShellArg(outputPath)}`;
 
   return new Promise((resolve, reject) => {
-    exec(command, { env }, (error, stdout, stderr) => {
+    exec(command, { env }, (error, _stdout, _stderr) => {
       if (error) {
         return reject({ status: 500, message: `Backup failed: ${error.message}` });
       }
@@ -98,7 +98,7 @@ const runRestore = async (options = {}) => {
   const command = `mysql -h ${escapeShellArg(dbHost)} -P ${escapeShellArg(dbPort)} -u ${escapeShellArg(dbUser)} ${escapeShellArg(dbName)} < ${escapeShellArg(resolvedPath)}`;
 
   return new Promise((resolve, reject) => {
-    exec(command, { env }, (error, stdout, stderr) => {
+    exec(command, { env }, (error, _stdout, _stderr) => {
       if (error) {
         return reject({ status: 500, message: `Restore failed: ${error.message}` });
       }

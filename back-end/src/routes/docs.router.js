@@ -10,7 +10,7 @@ router.get("/openapi.json", (req, res) => {
     const spec = fs.readFileSync(openApiPath, "utf-8");
     res.setHeader("Content-Type", "application/json");
     res.send(spec);
-  } catch (err) {
+  } catch {
     res.status(500).json({ success: false, message: "Failed to load API spec" });
   }
 });

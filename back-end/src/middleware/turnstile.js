@@ -40,7 +40,7 @@ const verifyTurnstileToken = async (token, remoteIp) => {
     });
 
     return response.data.success === true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
@@ -68,7 +68,7 @@ const validateTurnstile = async (req, res, next) => {
       success: false,
       message: "Turnstile verification failed. Please try again.",
     });
-  } catch (error) {
+  } catch {
     return res.status(403).json({
       success: false,
       message: "Turnstile verification failed. Please try again.",

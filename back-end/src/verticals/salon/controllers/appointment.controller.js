@@ -1,5 +1,5 @@
 "use strict";
-const salonModels = require("../models");
+const _salonModels = require("../models");
 const appointmentDao = require("../DAOs/appointment.dao");
 const staffServiceSkillDao = require("../DAOs/staffServiceSkill.dao");
 const appointmentSchedulingService = require("../services/appointmentScheduling.service");
@@ -219,7 +219,7 @@ const appointmentController = {
 
       emitSalonAppointmentEvent(req, "salon-appointment-refunded", updated);
       return localizedResponse(req, res, 200, "salon.refundSuccess", { id: updated.id });
-    } catch (error) {
+    } catch {
       return localizedError(req, res, 500, "common.internalError");
     }
   },

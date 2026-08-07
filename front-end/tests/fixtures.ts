@@ -13,7 +13,7 @@ async function loginAsPlatformAdmin(page) {
   await page.goto("/super-admin/login");
   await page.fill("#email", E2E_SUPER_ADMIN_EMAIL);
   await page.fill("#password", E2E_SUPER_ADMIN_PASSWORD);
-  await page.click('button[type="submit"]');
+  await page.press("#password", "Enter");
   await page.waitForURL((url) => !url.pathname.includes("/login"), {
     timeout: 60000,
   });
@@ -24,7 +24,7 @@ async function loginAsTenantStaff(page) {
   await page.waitForTimeout(500);
   await page.fill("#email", E2E_TENANT_EMAIL);
   await page.fill("#password", E2E_TENANT_PASSWORD);
-  await page.click('button[type="submit"]');
+  await page.press("#password", "Enter");
   await page.waitForURL((url) => !url.pathname.includes("/login"), {
     timeout: 60000,
   });

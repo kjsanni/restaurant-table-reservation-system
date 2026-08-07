@@ -14,7 +14,7 @@ const computeFileChecksum = (filePath) => {
   try {
     const content = fs.readFileSync(filePath, "utf8"); // nosep - filePath is derived from internally-registered module paths, not user input
     return crypto.createHash("sha256").update(content).digest("hex");
-  } catch (err) {
+  } catch {
     return null;
   }
 };
@@ -119,7 +119,7 @@ class ModuleRegistry {
         if (module.enabled && module.enabled() === false) {
           continue;
         }
-      } catch (err) {
+      } catch {
         continue;
       }
       enabled.push(module);

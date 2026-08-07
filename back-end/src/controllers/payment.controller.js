@@ -55,7 +55,7 @@ const initializePaymentHandler = async (req, res) => {
       accessCode: result.access_code,
       reference: result.reference,
     });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ success: false, message: "Payment initialization failed" });
   }
 };

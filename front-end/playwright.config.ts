@@ -7,8 +7,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
-  globalSetup: "./tests/global-setup.ts",
-  globalTeardown: "./tests/global-teardown.ts",
+  globalSetup: "./tests/global-setup.js",
+  globalTeardown: "./tests/global-teardown.js",
   use: {
     baseURL: "http://localhost:8080",
     trace: "on-first-retry",
@@ -36,7 +36,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    command: "npm run preview -- --port 8080",
     url: "http://localhost:8080",
     reuseExistingServer: !process.env.CI,
   },

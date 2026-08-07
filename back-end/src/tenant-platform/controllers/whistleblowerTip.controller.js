@@ -1,4 +1,4 @@
-const db = require("../../db/models");
+const _db = require("../../db/models");
 const tipDAO = require("../../DAOs/whistleblowerTip.dao");
 
 const createTipHandler = async (req, res) => {

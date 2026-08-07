@@ -34,7 +34,7 @@ router.get("/hr/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr,
 }));
 
 router.get("/hr/employees/:employeeId", tryCatchHandler(requireActiveTenant, checkErpnextHr, async (req, res) => {
-  const tenant = req.tenant;
+  const _tenant = req.tenant;
   const { employeeId } = req.params;
   const { getClient } = require("../client");
   try {

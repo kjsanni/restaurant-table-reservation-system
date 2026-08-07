@@ -109,7 +109,7 @@ const initializeOrderPaymentHandler = async (req, res) => {
       accessCode: result.access_code,
       reference: result.reference,
     });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ success: false, message: "Payment initialization failed" });
   }
 };
@@ -194,7 +194,7 @@ const trackOrderHandler = async (req, res) => {
     };
 
     return res.status(200).json({ success: true, order: publicOrder });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ success: false, message: "Failed to track order" });
   }
 };

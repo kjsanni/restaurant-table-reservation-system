@@ -6,7 +6,7 @@ const salonModels = require("../models");
 const { cache } = require("../../../utils/cache");
 const { sendWithSmsFallback } = require("../../../services/notification.service");
 const customerService = require("../../../services/customerService");
-const messageTemplates = require("../../../services/messageTemplates.service");
+const _messageTemplates = require("../../../services/messageTemplates.service");
 const { withRetry } = require("../../../utils/retry");
 const whatsappService = require("../../../services/whatsapp.service");
 const db = require("../../../db/models");
@@ -27,7 +27,7 @@ const getSalonPaymentConfig = async (tenantId) => {
   return {};
 };
 
-const getSession = async (phone) => {
+const _getSession = async (phone) => {
   const key = SESSION_PREFIX + phone;
   const data = await cache.get(key);
   return data || { state: "idle", tenantId: null };
@@ -73,7 +73,7 @@ const formatServices = async (tenantId) => {
   }));
 };
 
-const formatStylists = async (tenantId, serviceId) => {
+const formatStylists = async (tenantId, _serviceId) => {
   const stylists = await salonModels.sequelize.models.user.findAll({
     where: { tenantId, role: "staff" },
     attributes: ["id", "name"],
@@ -178,7 +178,7 @@ const handleSalonAppointmentState = async (phone, normalized, rawMessage, sessio
   }
 
   if (session.state === "salon_customer_details") {
-    const parts = rawMessage.trim().split(" ");
+    const _parts = rawMessage.trim().split(" ");
     session.customerName = rawMessage.trim();
     session.customerPhone = phone;
     await setSession(phone, { ...session, state: "salon_confirm" });
@@ -300,7 +300,7 @@ const handleSalonAppointmentState = async (phone, normalized, rawMessage, sessio
         }
         const status = appointment.paymentStatus === "paid" ? "Payment confirmed! ✅" : `Payment status: ${appointment.paymentStatus}. Your slot is held temporarily.`;
         await sendText(phone, `${status}\nAppointment #${appointment.id} on ${new Date(appointment.start).toISOString().slice(0, 10)} at ${new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`, tenantId);
-      } catch (err) {
+      } catch {
         await sendText(phone, "Could not check payment status right now. Please try again later.", tenantId);
       }
       return;
