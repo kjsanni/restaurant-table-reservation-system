@@ -1,5 +1,4 @@
 "use strict";
-const { Model } = require("sequelize");
 
 const defineBreakGlassRequest = (sequelize, DataTypes) => {
   const BreakGlassRequest = sequelize.define(

@@ -6,6 +6,9 @@ const tryCatchHandler = require("../middleware/tryCatch");
 const salonReportsController = require("../controllers/salon-reports.controller");
 const { protect, requirePermission } = require("../middleware/auth");
 const { requireVertical } = require("../middleware/requireVertical");
+const { generalLimiter } = require("../middleware/rateLimit");
+
+router.use(generalLimiter);
 
 router
   .route("/reports")

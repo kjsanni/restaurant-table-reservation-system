@@ -136,6 +136,7 @@ const createServer = () => {
     clearInterval(tenantCronInterval);
     clearInterval(salonCronInterval);
     clearInterval(backupCronInterval);
+  clearInterval(scheduledReportsCronInterval);
     if (io) io.close();
     if (logStream && typeof logStream.end === "function") {
       logStream.end();
