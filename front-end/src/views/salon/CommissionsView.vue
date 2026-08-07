@@ -42,11 +42,7 @@
         @change="loadData"
       >
         <option value="">{{ t("salon.allLocations", "All locations") }}</option>
-        <option
-          v-for="loc in locations"
-          :key="loc.id"
-          :value="loc.id"
-        >
+        <option v-for="loc in locations" :key="loc.id" :value="loc.id">
           {{ loc.name }}
         </option>
       </select>
@@ -80,7 +76,9 @@
         <div class="field">
           <label for="location">{{ t("salon.location", "Location") }}</label>
           <select id="location" v-model="form.locationId">
-            <option value="">{{ t("salon.selectLocation", "Select location") }}</option>
+            <option value="">
+              {{ t("salon.selectLocation", "Select location") }}
+            </option>
             <option
               v-for="loc in locations"
               :key="loc.id"

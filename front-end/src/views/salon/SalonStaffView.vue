@@ -42,7 +42,7 @@
               </td>
               <td>
                 <span
-                  v-for="loc in (person.locations || [])"
+                  v-for="loc in person.locations || []"
                   :key="loc.id"
                   class="badge badge-location"
                 >
@@ -60,19 +60,23 @@
       </div>
     </div>
 
-    <div v-if="showAssignModal" class="modal-overlay" @click.self="showAssignModal = false">
+    <div
+      v-if="showAssignModal"
+      class="modal-overlay"
+      @click.self="showAssignModal = false"
+    >
       <div class="modal">
-        <h2>{{ t("salon.assignStaffToLocation", "Assign Staff to Location") }}</h2>
+        <h2>
+          {{ t("salon.assignStaffToLocation", "Assign Staff to Location") }}
+        </h2>
         <p class="modal-subtitle">{{ selectedStaff?.username }}</p>
         <div class="form-group">
           <label>{{ t("salon.location", "Location") }}</label>
           <select v-model="assignmentForm.locationId" class="field-input">
-            <option value="">{{ t("salon.selectLocation", "Select location") }}</option>
-            <option
-              v-for="loc in locations"
-              :key="loc.id"
-              :value="loc.id"
-            >
+            <option value="">
+              {{ t("salon.selectLocation", "Select location") }}
+            </option>
+            <option v-for="loc in locations" :key="loc.id" :value="loc.id">
               {{ loc.name }}
             </option>
           </select>
@@ -87,7 +91,11 @@
           <button class="btn-secondary" @click="showAssignModal = false">
             {{ t("salon.cancelBtn", "Cancel") }}
           </button>
-          <button class="btn-primary" @click="submitAssignment" :disabled="submittingAssignment">
+          <button
+            class="btn-primary"
+            @click="submitAssignment"
+            :disabled="submittingAssignment"
+          >
             {{ t("salon.assign", "Assign") }}
           </button>
         </div>
@@ -147,9 +155,15 @@ const submitAssignment = async () => {
     showAssignModal.value = false;
     selectedStaff.value = null;
     await load();
-    toastStore.add(t("salon.assignmentCreated", "Location assigned"), "success");
+    toastStore.add(
+      t("salon.assignmentCreated", "Location assigned"),
+      "success"
+    );
   } catch (err) {
-    toastStore.add(t("salon.assignmentFailed", "Failed to assign location"), "error");
+    toastStore.add(
+      t("salon.assignmentFailed", "Failed to assign location"),
+      "error"
+    );
   } finally {
     submittingAssignment.value = false;
   }

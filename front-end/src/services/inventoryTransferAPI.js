@@ -10,7 +10,10 @@ export default createSalonCrudAPI({
     delete: (id) => `/salon/inventory-transfers/${id}`,
   },
   extra: {
-    complete: { method: "patch", path: "/salon/inventory-transfers/:id/complete" },
+    complete: {
+      method: "patch",
+      path: "/salon/inventory-transfers/:id/complete",
+    },
     cancel: { method: "patch", path: "/salon/inventory-transfers/:id/cancel" },
   },
 });

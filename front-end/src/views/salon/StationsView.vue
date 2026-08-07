@@ -24,7 +24,13 @@ const stations = ref<Station[]>([]);
 const loading = ref(true);
 const showForm = ref(false);
 const editingId = ref<number | null>(null);
-const form = ref({ name: "", type: "chair", zone: "", maintenanceNotes: "", locationId: null });
+const form = ref({
+  name: "",
+  type: "chair",
+  zone: "",
+  maintenanceNotes: "",
+  locationId: null,
+});
 const socket = ref<Socket | null>(null);
 const locations = ref<Array<{ id: number; name: string }>>([]);
 const selectedLocationId = ref<number | "">("");
@@ -57,7 +63,13 @@ const loadLocations = async () => {
 };
 
 const resetForm = () => {
-  form.value = { name: "", type: "chair", zone: "", maintenanceNotes: "", locationId: null };
+  form.value = {
+    name: "",
+    type: "chair",
+    zone: "",
+    maintenanceNotes: "",
+    locationId: null,
+  };
   editingId.value = null;
 };
 
@@ -75,7 +87,11 @@ const editStation = (station: Station) => {
 
 const submitForm = async () => {
   try {
-    const payload = { ...form.value, zone: form.value.zone || null, locationId: form.value.locationId || null };
+    const payload = {
+      ...form.value,
+      zone: form.value.zone || null,
+      locationId: form.value.locationId || null,
+    };
     if (editingId.value) {
       const res = await stationAPI.updateStation(editingId.value, payload);
       const idx = stations.value.findIndex((s) => s.id === editingId.value);
@@ -149,12 +165,10 @@ onUnmounted(() => {
             class="field-input"
             @change="loadStations"
           >
-            <option value="">{{ t("salon.allLocations", "All locations") }}</option>
-            <option
-              v-for="loc in locations"
-              :key="loc.id"
-              :value="loc.id"
-            >
+            <option value="">
+              {{ t("salon.allLocations", "All locations") }}
+            </option>
+            <option v-for="loc in locations" :key="loc.id" :value="loc.id">
               {{ loc.name }}
             </option>
           </select>
@@ -237,12 +251,10 @@ onUnmounted(() => {
           <div class="form-group">
             <label>{{ t("salon.location", "Location") }}</label>
             <select v-model="form.locationId">
-              <option value="">{{ t("salon.selectLocation", "Select location") }}</option>
-              <option
-                v-for="loc in locations"
-                :key="loc.id"
-                :value="loc.id"
-              >
+              <option value="">
+                {{ t("salon.selectLocation", "Select location") }}
+              </option>
+              <option v-for="loc in locations" :key="loc.id" :value="loc.id">
                 {{ loc.name }}
               </option>
             </select>

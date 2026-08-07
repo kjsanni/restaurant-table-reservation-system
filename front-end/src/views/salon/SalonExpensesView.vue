@@ -123,12 +123,10 @@ onMounted(async () => {
             class="field-input"
             @change="filteredLoad"
           >
-            <option value="">{{ t("salon.allLocations", "All locations") }}</option>
-            <option
-              v-for="loc in locations"
-              :key="loc.id"
-              :value="loc.id"
-            >
+            <option value="">
+              {{ t("salon.allLocations", "All locations") }}
+            </option>
+            <option v-for="loc in locations" :key="loc.id" :value="loc.id">
               {{ loc.name }}
             </option>
           </select>
@@ -183,12 +181,10 @@ onMounted(async () => {
             <label>
               {{ t("salon.location", "Location") }}
               <select v-model="form.locationId" class="field-input">
-                <option value="">{{ t("salon.selectLocation", "Select location") }}</option>
-                <option
-                  v-for="loc in locations"
-                  :key="loc.id"
-                  :value="loc.id"
-                >
+                <option value="">
+                  {{ t("salon.selectLocation", "Select location") }}
+                </option>
+                <option v-for="loc in locations" :key="loc.id" :value="loc.id">
                   {{ loc.name }}
                 </option>
               </select>

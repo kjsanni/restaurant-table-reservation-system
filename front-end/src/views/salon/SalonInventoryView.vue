@@ -124,7 +124,12 @@ const openTransfer = (item: InventoryItem) => {
 };
 
 const submitTransfer = async () => {
-  if (!transferItem.value || !transferForm.value.toLocationId || !transferForm.value.quantity) return;
+  if (
+    !transferItem.value ||
+    !transferForm.value.toLocationId ||
+    !transferForm.value.quantity
+  )
+    return;
   submittingTransfer.value = true;
   try {
     await inventoryTransferAPI.create({
@@ -140,7 +145,10 @@ const submitTransfer = async () => {
     toastStore.add(t("salon.transferCreated", "Transfer created"), "success");
   } catch (err) {
     logger.error("Failed to create transfer", { error: err });
-    toastStore.add(t("salon.transferFailed", "Failed to create transfer"), "error");
+    toastStore.add(
+      t("salon.transferFailed", "Failed to create transfer"),
+      "error"
+    );
   } finally {
     submittingTransfer.value = false;
   }
@@ -220,12 +228,10 @@ onMounted(() => {
             <label>
               {{ t("salon.location", "Location") }}
               <select v-model="form.locationId" class="field-input">
-                <option value="">{{ t("salon.selectLocation", "Select location") }}</option>
-                <option
-                  v-for="loc in locations"
-                  :key="loc.id"
-                  :value="loc.id"
-                >
+                <option value="">
+                  {{ t("salon.selectLocation", "Select location") }}
+                </option>
+                <option v-for="loc in locations" :key="loc.id" :value="loc.id">
                   {{ loc.name }}
                 </option>
               </select>
@@ -326,12 +332,10 @@ onMounted(() => {
               style="width: auto"
               @change="loadItems"
             >
-              <option value="">{{ t("salon.allLocations", "All locations") }}</option>
-              <option
-                v-for="loc in locations"
-                :key="loc.id"
-                :value="loc.id"
-              >
+              <option value="">
+                {{ t("salon.allLocations", "All locations") }}
+              </option>
+              <option v-for="loc in locations" :key="loc.id" :value="loc.id">
                 {{ loc.name }}
               </option>
             </select>
@@ -358,7 +362,12 @@ onMounted(() => {
                 </td>
                 <td>{{ item.sku || "—" }}</td>
                 <td>{{ item.category || "—" }}</td>
-                <td>{{ item.location?.name || (item.locationId ? `#${item.locationId}` : "—") }}</td>
+                <td>
+                  {{
+                    item.location?.name ||
+                    (item.locationId ? `#${item.locationId}` : "—")
+                  }}
+                </td>
                 <td>
                   <span
                     :class="{
@@ -415,40 +424,62 @@ onMounted(() => {
     </div>
   </div>
 
-  <div v-if="showTransfer" class="modal-overlay" @click.self="showTransfer = false">
+  <div
+    v-if="showTransfer"
+    class="modal-overlay"
+    @click.self="showTransfer = false"
+  >
     <div class="modal">
       <h2>{{ t("salon.transferItem", "Transfer Item") }}</h2>
       <p class="transfer-item-name">{{ transferItem?.name }}</p>
       <div class="form-group">
         <label>{{ t("salon.fromLocation", "From Location") }}</label>
-        <input :value="transferItem?.location?.name || t('salon.unassigned', 'Unassigned')" disabled class="field-input" />
+        <input
+          :value="
+            transferItem?.location?.name || t('salon.unassigned', 'Unassigned')
+          "
+          disabled
+          class="field-input"
+        />
       </div>
       <div class="form-group">
         <label>{{ t("salon.toLocation", "To Location") }}</label>
         <select v-model="transferForm.toLocationId" class="field-input">
-          <option value="">{{ t("salon.selectLocation", "Select location") }}</option>
-          <option
-            v-for="loc in locations"
-            :key="loc.id"
-            :value="loc.id"
-          >
+          <option value="">
+            {{ t("salon.selectLocation", "Select location") }}
+          </option>
+          <option v-for="loc in locations" :key="loc.id" :value="loc.id">
             {{ loc.name }}
           </option>
         </select>
       </div>
       <div class="form-group">
         <label>{{ t("salon.quantity", "Quantity") }}</label>
-        <input v-model.number="transferForm.quantity" type="number" min="1" :max="transferItem?.quantity || 0" class="field-input" />
+        <input
+          v-model.number="transferForm.quantity"
+          type="number"
+          min="1"
+          :max="transferItem?.quantity || 0"
+          class="field-input"
+        />
       </div>
       <div class="form-group">
         <label>{{ t("salon.notes", "Notes") }}</label>
-        <textarea v-model="transferForm.notes" class="field-input" rows="2"></textarea>
+        <textarea
+          v-model="transferForm.notes"
+          class="field-input"
+          rows="2"
+        ></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn-secondary" @click="showTransfer = false">
           {{ t("salon.cancelBtn", "Cancel") }}
         </button>
-        <button class="btn-primary" @click="submitTransfer" :disabled="submittingTransfer">
+        <button
+          class="btn-primary"
+          @click="submitTransfer"
+          :disabled="submittingTransfer"
+        >
           {{ t("salon.transfer", "Transfer") }}
         </button>
       </div>
