@@ -25,6 +25,7 @@ const salonWhatsAppRoutes = require("../routes/salonWhatsApp.router");
 const salonScheduledReportRoutes = require("../routes/scheduledReport.router");
 const salonInventoryTransferRoutes = require("../routes/inventoryTransfer.router");
 const salonStaffLocationAssignmentRoutes = require("../routes/staffLocationAssignment.router");
+const crossLocationDashboardRoutes = require("../../../routes/cross-location-dashboard.router");
 
 const salonModule = {
   id: "salon",
@@ -56,7 +57,8 @@ const salonModule = {
     { path: "/api/v1/salon/scheduled-reports", router: salonScheduledReportRoutes, middleware: [logAction, validateCsrfToken] },
     { path: "/api/v1/salon/inventory-transfers", router: salonInventoryTransferRoutes, middleware: [logAction, validateCsrfToken] },
     { path: "/api/v1/salon/staff-location-assignments", router: salonStaffLocationAssignmentRoutes, middleware: [logAction, validateCsrfToken] },
-    ],
+    { path: "/api/v1/salon/cross-location-dashboard", router: crossLocationDashboardRoutes, middleware: [logAction, validateCsrfToken] },
+  ],
 };
 
 module.exports = { salonModule };

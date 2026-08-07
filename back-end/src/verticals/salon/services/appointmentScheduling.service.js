@@ -18,9 +18,11 @@ const isHoliday = async (tenantId, date) => {
   }
 };
 
-const isWithinShift = async (tenantId, userId, datetime) => {
+const isWithinShift = async (tenantId, userId, datetime, locationId) => {
   try {
-    const shift = await StaffShift.findOne({ where: { userId } });
+    const where = { userId };
+    if (locationId) where.locationId = locationId;
+    const shift = await StaffShift.findOne({ where });
     return !!shift;
   } catch {
     return false;
@@ -28,7 +30,7 @@ const isWithinShift = async (tenantId, userId, datetime) => {
 };
 
 const appointmentSchedulingService = {
-  async checkConflicts(tenantId, stationId, stylistId, start, durationMinutes, bufferMinutes = 0, excludeId = null) {
+  async checkConflicts(tenantId, stationId, stylistId, start, durationMinutes, bufferMinutes = 0, excludeId = null, locationId) {
     const extendedEnd = buildExtendedEnd(start, durationMinutes, bufferMinutes);
     const { Op } = require("sequelize");
     const conflicts = {
@@ -45,6 +47,7 @@ const appointmentSchedulingService = {
       status: { [Op.notIn]: ["cancelled", "no_show"] },
       start: { [Op.lt]: extendedEnd },
     };
+    if (locationId) appointmentWhere.locationId = locationId;
 
     const includeClause = [
       {
@@ -88,7 +91,7 @@ const appointmentSchedulingService = {
     }
 
     if (stylistId) {
-      const withinShift = await isWithinShift(tenantId, stylistId, new Date(start));
+      const withinShift = await isWithinShift(tenantId, stylistId, new Date(start), locationId);
       if (!withinShift) {
         conflicts.stylist.push({
           _shiftViolation: true,
@@ -111,7 +114,7 @@ const appointmentSchedulingService = {
     };
   },
 
-  async findAvailableSlots(tenantId, serviceId, date, stylistId = null, stationId = null) {
+  async findAvailableSlots(tenantId, serviceId, date, stylistId = null, stationId = null, locationId = null) {
     const service = await salonModels.sequelize.models.service.findByPk(serviceId);
     if (!service) throw new Error("Service not found");
 
@@ -130,6 +133,7 @@ const appointmentSchedulingService = {
       status: { [Op.notIn]: ["cancelled", "no_show"] },
       start: { [Op.gte]: startOfWork, [Op.lt]: endOfWork },
     };
+    if (locationId) appointmentWhere.locationId = locationId;
 
     const includeClause = [
       {

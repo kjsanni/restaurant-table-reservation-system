@@ -327,6 +327,44 @@ const appointmentDao = {
       revenueToday: totalRevenue,
     };
   },
+
+  async getLocationSummary(tenantId, from, to) {
+    const where = {
+      tenantId,
+      status: { [Op.notIn]: ["cancelled", "no_show"] },
+    };
+    if (from || to) {
+      where.start = {};
+      if (from) where.start[Op.gte] = new Date(from);
+      if (to) where.start[Op.lte] = new Date(to);
+    }
+
+    const results = await salonModels.sequelize.models.appointment.findAll({
+      where,
+      include: [
+        { model: salonModels.sequelize.models.location, as: "location", attributes: ["id", "name", "city", "region"], required: false },
+        { model: salonModels.sequelize.models.service, as: "service", attributes: ["price"], required: true },
+      ],
+      attributes: [
+        [salonModels.sequelize.col("location.id"), "locationId"],
+        [salonModels.sequelize.col("location.name"), "locationName"],
+        [salonModels.sequelize.col("location.city"), "locationCity"],
+        [salonModels.sequelize.fn("COUNT", salonModels.sequelize.col("appointment.id")), "appointmentCount"],
+        [salonModels.sequelize.fn("SUM", salonModels.sequelize.col("service.price")), "revenue"],
+      ],
+      group: ["location.id", "location.name", "location.city"],
+      order: [[salonModels.sequelize.fn("SUM", salonModels.sequelize.col("service.price")), "DESC"]],
+      raw: true,
+    });
+
+    return results.map((row) => ({
+      locationId: row.get("locationId"),
+      locationName: row.get("locationName"),
+      locationCity: row.get("locationCity"),
+      appointmentCount: Number(row.get("appointmentCount") || 0),
+      revenue: Number(row.get("revenue") || 0),
+    }));
+  },
 };
 
 module.exports = appointmentDao;
