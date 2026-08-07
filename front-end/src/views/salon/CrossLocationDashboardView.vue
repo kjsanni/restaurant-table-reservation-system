@@ -29,7 +29,13 @@ const loadDashboard = async () => {
       locations.value = data.locations || [];
     }
   } catch (err) {
-    toastStore.add(t("salon.crossLocationLoadFailed", "Failed to load cross-location dashboard"), "error");
+    toastStore.add(
+      t(
+        "salon.crossLocationLoadFailed",
+        "Failed to load cross-location dashboard"
+      ),
+      "error"
+    );
   } finally {
     loading.value = false;
   }
@@ -44,8 +50,17 @@ onMounted(() => {
   <div class="main-wrapper">
     <div class="topbar">
       <div class="topbar-left">
-        <h1>{{ t("salon.crossLocationDashboard", "Cross-Location Dashboard") }}</h1>
-        <p>{{ t("salon.crossLocationSubtitle", "Consolidated view across all locations") }}</p>
+        <h1>
+          {{ t("salon.crossLocationDashboard", "Cross-Location Dashboard") }}
+        </h1>
+        <p>
+          {{
+            t(
+              "salon.crossLocationSubtitle",
+              "Consolidated view across all locations"
+            )
+          }}
+        </p>
       </div>
     </div>
 
@@ -73,14 +88,22 @@ onMounted(() => {
         </div>
         <div class="kpi-card">
           <div class="kpi-label">{{ t("salon.revenueToday") }}</div>
-          <div class="kpi-value">GHS {{ summary.revenueToday.toLocaleString() }}</div>
+          <div class="kpi-value">
+            GHS {{ summary.revenueToday.toLocaleString() }}
+          </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">{{ t("salon.totalRevenue", "Total Revenue") }}</div>
-          <div class="kpi-value">GHS {{ summary.totalRevenue.toLocaleString() }}</div>
+          <div class="kpi-label">
+            {{ t("salon.totalRevenue", "Total Revenue") }}
+          </div>
+          <div class="kpi-value">
+            GHS {{ summary.totalRevenue.toLocaleString() }}
+          </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">{{ t("salon.totalAppointments", "Total Appointments") }}</div>
+          <div class="kpi-label">
+            {{ t("salon.totalAppointments", "Total Appointments") }}
+          </div>
           <div class="kpi-value">{{ summary.totalAppointments }}</div>
         </div>
       </div>
