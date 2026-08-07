@@ -267,6 +267,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
       permissions,
       isSuperAdmin: !!user.isSuperAdmin,
       platformRoles: user.platformRoles || [],
+      emailVerified: !!user.emailVerified,
     },
   };
 };

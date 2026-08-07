@@ -19,6 +19,7 @@ export const brandColors = {
   brand50: "#faf6f3",
   accent600: "#b45309",
   accent700: "#92400e",
+  accent800: "#78350f",
   accent500: "#d97706",
   accent400: "#f59e0b",
   accent300: "#fbbf24",

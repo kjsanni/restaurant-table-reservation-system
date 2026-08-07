@@ -16,21 +16,29 @@ const routes = [
 
 test.describe("Visual regression", () => {
   test.beforeEach(({ project }) => {
-    test.skip(project.name !== "chromium", "Visual baselines are captured on chromium only");
+    test.skip(
+      project.name !== "chromium",
+      "Visual baselines are captured on chromium only"
+    );
   });
 
   for (const route of routes) {
     for (const viewport of viewports) {
       test.describe(`${route.name} (${viewport.name})`, () => {
-        test.use({ viewport: { width: viewport.width, height: viewport.height } });
+        test.use({
+          viewport: { width: viewport.width, height: viewport.height },
+        });
 
         test("should match baseline screenshot", async ({ page }) => {
           await page.goto(route.path);
           await page.waitForLoadState("networkidle");
-          await expect(page).toHaveScreenshot(`${route.name.toLowerCase().replace(/\s+/g, "-")}-${viewport.name.toLowerCase()}.png`, {
-            fullPage: true,
-            maxDiffPixels: 100,
-          });
+          await expect(page).toHaveScreenshot(
+            `${route.name.toLowerCase().replace(/\s+/g, "-")}-${viewport.name.toLowerCase()}.png`,
+            {
+              fullPage: true,
+              maxDiffPixels: 100,
+            }
+          );
         });
       });
     }

@@ -34,7 +34,9 @@
           >
             {{ loading ? "Resetting..." : "Reset Password" }}
           </button>
-          <p v-if="message" class="message" :class="messageType">{{ message }}</p>
+          <p v-if="message" class="message" :class="messageType">
+            {{ message }}
+          </p>
         </form>
         <p class="footer-link">
           <router-link to="/login">Back to login</router-link>

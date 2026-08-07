@@ -28,7 +28,7 @@ module.exports = {
 
     if (existingAdmin) {
       await queryInterface.sequelize.query(
-        "UPDATE users SET password = :password, isSuperAdmin = true, totpEnabled = false, totpConfirmed = false, updatedAt = :now WHERE id = :id",
+        "UPDATE users SET password = :password, isSuperAdmin = true, totpEnabled = false, totpConfirmed = false, emailVerified = true, updatedAt = :now WHERE id = :id",
         { replacements: { password: adminPasswordHash, now, id: existingAdmin.id } }
       );
     } else {
@@ -42,6 +42,7 @@ module.exports = {
           isSuperAdmin: true,
           totpEnabled: false,
           totpConfirmed: false,
+          emailVerified: true,
           createdAt: now,
           updatedAt: now,
         },
@@ -55,7 +56,7 @@ module.exports = {
 
     if (existingStaff) {
       await queryInterface.sequelize.query(
-        "UPDATE users SET password = :password, updatedAt = :now WHERE id = :id",
+        "UPDATE users SET password = :password, emailVerified = true, updatedAt = :now WHERE id = :id",
         { replacements: { password: staffPasswordHash, now, id: existingStaff.id } }
       );
     } else {
@@ -66,6 +67,7 @@ module.exports = {
           password: staffPasswordHash,
           role: "staff",
           tenantId,
+          emailVerified: true,
           permissions: JSON.stringify({
             view_reservations: true,
             edit_reservations: true,
@@ -90,7 +92,7 @@ module.exports = {
 
     if (existingCustomer) {
       await queryInterface.sequelize.query(
-        "UPDATE users SET password = :password, updatedAt = :now WHERE id = :id",
+        "UPDATE users SET password = :password, emailVerified = true, updatedAt = :now WHERE id = :id",
         { replacements: { password: customerPasswordHash, now, id: existingCustomer.id } }
       );
     } else {
@@ -101,6 +103,7 @@ module.exports = {
           password: customerPasswordHash,
           role: "customer",
           tenantId,
+          emailVerified: true,
           createdAt: now,
           updatedAt: now,
         },
