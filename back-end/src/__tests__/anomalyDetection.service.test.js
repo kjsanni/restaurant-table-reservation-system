@@ -20,6 +20,16 @@ describe("anomalyDetection.service", () => {
   });
 
   describe("evaluate", () => {
+    beforeEach(() => {
+      const frozenDate = new Date();
+      frozenDate.setUTCHours(12, 0, 0, 0);
+      jest.useFakeTimers().setSystemTime(frozenDate);
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
     it("calls next() without anomalies when no rules match", async () => {
       platformAuditDAO.findAllForUser.mockResolvedValue([]);
       const req = createReq();
