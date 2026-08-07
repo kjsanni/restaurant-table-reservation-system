@@ -177,9 +177,9 @@ jobs:
         run: npm run seed:all
       - name: Start backend server
         working-directory: back-end
-        run: nohup node ./src/app.js > /tmp/backend.log 2>&1 &
+        run: npm run start:dev &
       - name: Wait for backend
-        run: npx wait-on http://localhost:8000/api/v1/health --timeout 180000
+        run: sleep 30 && npx wait-on http://localhost:8000/api/v1/health --timeout 300000
       - name: Show backend logs
         if: failure()
         run: cat /tmp/backend.log || true
