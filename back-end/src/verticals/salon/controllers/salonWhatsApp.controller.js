@@ -1,5 +1,5 @@
 "use strict";
-const db = require("../../db/models");
+const db = require("../../../db/models");
 const { verifyWebhookSignature } = require("../../tenant-platform/services/paystack.service");
 const { sendWithSmsFallback } = require("../../services/notification.service");
 const messageTemplates = require("../../services/messageTemplates.service");
