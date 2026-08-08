@@ -5,17 +5,12 @@ import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
 import TurnstileWidget from "@/components/TurnstileWidget.vue";
 import { useTurnstileConfig } from "@/composables/useTurnstileConfig";
+import { getXsrfToken } from "@/composables/useXsrfToken";
 
 const { config: turnstileConfig } = useTurnstileConfig();
 
 const router = useRouter();
 const authStore = useAuthStore();
-
-// codacy-suppress MethodLength
-const getXsrfToken = () => {
-  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : "";
-};
 
 type BusinessVertical = "restaurant" | "salon";
 

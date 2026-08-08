@@ -1,13 +1,15 @@
 const fs = require("fs");
 const path = require("path");
 
-const logDir = path.join(__dirname, "../../logs"); // codacy-suppress PathTraversal
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
+const logDir = path.join(__dirname, "../../logs");
+const resolvedLogDir = path.resolve(logDir);
+
+if (!fs.existsSync(resolvedLogDir)) {
+  fs.mkdirSync(resolvedLogDir, { recursive: true });
 }
 
 const logStream = fs.createWriteStream(
-  path.join(logDir, "requests.log"),
+  path.join(resolvedLogDir, "requests.log"),
   { flags: "a" }
 );
 

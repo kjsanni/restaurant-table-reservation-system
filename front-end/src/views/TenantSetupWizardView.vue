@@ -3,15 +3,10 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
+import { getXsrfToken } from "@/composables/useXsrfToken";
 
 const router = useRouter();
 const authStore = useAuthStore();
-
-// codacy-suppress MethodLength
-const getXsrfToken = () => {
-  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : "";
-};
 
 type RestaurantType =
   | "full_service"

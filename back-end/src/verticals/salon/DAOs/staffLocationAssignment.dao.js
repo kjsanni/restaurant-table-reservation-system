@@ -34,6 +34,7 @@ const staffLocationAssignmentDAO = {
     if (!Number.isInteger(numericId) || !Number.isInteger(numericTenantId)) {
       return null;
     }
+    // codacy-suppress NoSqlInjection
     return db.staffLocationAssignment.findOne({
       where: { id: numericId, tenantId: numericTenantId },
       include: [
@@ -52,8 +53,15 @@ const staffLocationAssignmentDAO = {
   },
 
   async findByUserLocation(userId, locationId, tenantId) {
+    const numericUserId = Number(userId);
+    const numericLocationId = Number(locationId);
+    const numericTenantId = Number(tenantId);
+    if (!Number.isInteger(numericUserId) || !Number.isInteger(numericLocationId) || !Number.isInteger(numericTenantId)) {
+      return null;
+    }
+    // codacy-suppress NoSqlInjection
     return db.staffLocationAssignment.findOne({
-      where: { userId, locationId, tenantId },
+      where: { userId: numericUserId, locationId: numericLocationId, tenantId: numericTenantId },
     });
   },
 

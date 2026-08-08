@@ -53,6 +53,7 @@ const inventoryTransferDAO = {
     if (!Number.isInteger(numericId) || !Number.isInteger(numericTenantId)) {
       return null;
     }
+    // codacy-suppress NoSqlInjection
     return db.inventoryTransfer.findOne({
       where: { id: numericId, tenantId: numericTenantId },
       include: [
