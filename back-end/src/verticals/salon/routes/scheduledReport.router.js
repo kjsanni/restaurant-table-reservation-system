@@ -1,11 +1,11 @@
 "use strict";
 const express = require("express");
 const router = express.Router();
-const tryCatchHandler = require("../../middleware/tryCatch");
-const httpMethodError = require("../../middleware/httpMethodError");
+const tryCatchHandler = require("../../../middleware/tryCatch");
+const httpMethodError = require("../../../middleware/httpMethodError");
 const scheduledReportController = require("../controllers/scheduledReport.controller");
-const { protect, requirePermission } = require("../../middleware/auth");
-const { requireVertical } = require("../../middleware/requireVertical");
+const { protect, requirePermission } = require("../../../middleware/auth");
+const { requireVertical } = require("../../../middleware/requireVertical");
 
 router
   .route("/scheduled-reports")
