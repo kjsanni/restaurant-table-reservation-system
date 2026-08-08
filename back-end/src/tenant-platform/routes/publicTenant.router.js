@@ -6,7 +6,7 @@ const { authLimiter, generalLimiter } = require("../../middleware/rateLimit");
 const { validateCsrfToken } = require("../../middleware/csrf");
 const enforcePasswordPolicy = require("../../middleware/passwordPolicy");
 const publicTenantController = require("../controllers/publicTenant.controller");
-const tenantSignupController = require("../controllers/tenant-signup.controller");
+const tenantSignupController = require("../../controllers/tenant-signup.controller");
 
 router
   .route("/signup")
