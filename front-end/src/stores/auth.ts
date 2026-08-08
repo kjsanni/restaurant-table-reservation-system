@@ -61,12 +61,17 @@ export const useAuthStore = defineStore("auth", () => {
     entryPointContext?: "platform" | "tenant",
     cfTurnstileToken?: string
   ) => {
-    const response = await authAPI.login(email, password, cfTurnstileToken);
-    if (!response.data.requiresEmailVerification) {
-      user.value = response.data.user;
+    try {
+      const response = await authAPI.login(email, password, cfTurnstileToken);
+      if (!response.data.requiresEmailVerification) {
+        user.value = response.data.user;
+      }
+      entryPoint.value = entryPointContext || null;
+      return response.data;
+    } catch (err) {
+      console.error("[e2e-debug] login failed", err);
+      throw err;
     }
-    entryPoint.value = entryPointContext || null;
-    return response.data;
   };
 
   const loginWithTOTP = async (tempToken: string, token: string) => {
