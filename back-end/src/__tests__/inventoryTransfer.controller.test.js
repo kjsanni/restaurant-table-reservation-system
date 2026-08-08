@@ -196,17 +196,25 @@ describe("inventoryTransfer.controller", () => {
     it("should complete a pending transfer and update inventory", async () => {
       const db = require("../db/models");
       const dao = require("../verticals/salon/DAOs/inventoryTransfer.dao");
-      db.inventoryItem.findOne.mockResolvedValue({
-        id: 1,
-        quantity: 100,
-        update: jest.fn().mockResolvedValue(true),
-      });
+      db.inventoryItem.findOne
+        .mockResolvedValueOnce({
+          id: 1,
+          name: "Shampoo",
+          sku: "SH-001",
+          category: "Hair",
+          quantity: 100,
+          update: jest.fn().mockResolvedValue(true),
+        })
+        .mockResolvedValueOnce(null);
+      db.inventoryItem.create = jest.fn().mockResolvedValue({ id: 2, quantity: 10 });
       dao.findById.mockResolvedValue({
         id: 1,
         tenantId: 1,
         status: "pending",
         inventoryItemId: 1,
         quantity: 10,
+        fromLocationId: 2,
+        toLocationId: 3,
       });
       dao.update.mockResolvedValue({ id: 1, status: "completed" });
 

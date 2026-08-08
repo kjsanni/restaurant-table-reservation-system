@@ -88,20 +88,27 @@ class ModuleRegistry {
         continue;
       }
 
+      const fileChecksums = [];
       for (const filePath of files) {
         const currentChecksum = computeFileChecksum(filePath);
         if (!currentChecksum) {
           violations.push({ moduleId: id, reason: "file_unreadable", path: filePath });
           continue;
         }
-
-        const stored = this.checksums[id];
-        if (stored && stored !== currentChecksum) {
-          violations.push({ moduleId: id, reason: "checksum_mismatch", path: filePath, stored, current: currentChecksum });
-        }
-
-        updated[id] = currentChecksum;
+        fileChecksums.push(currentChecksum);
       }
+
+      const combinedChecksum = crypto
+        .createHash("sha256")
+        .update(fileChecksums.join("|"))
+        .digest("hex");
+
+      const stored = this.checksums[id];
+      if (stored && stored !== combinedChecksum) {
+        violations.push({ moduleId: id, reason: "checksum_mismatch", path: files.join(", "), stored, current: combinedChecksum });
+      }
+
+      updated[id] = combinedChecksum;
     }
 
     if (violations.length === 0) {

@@ -23,7 +23,16 @@ const isWithinShift = async (tenantId, userId, datetime, locationId) => {
     const where = { userId };
     if (locationId) where.locationId = locationId;
     const shift = await StaffShift.findOne({ where });
-    return !!shift;
+    if (!shift) return false;
+
+    const appointmentDate = new Date(datetime);
+    const appointmentDay = appointmentDate.toLocaleString("en-US", { weekday: "long" }).toLowerCase();
+    if (shift.dayOfWeek !== appointmentDay) return false;
+
+    const appointmentTime = appointmentDate.toTimeString().slice(0, 8);
+    if (appointmentTime < shift.startTime || appointmentTime >= shift.endTime) return false;
+
+    return true;
   } catch {
     return false;
   }

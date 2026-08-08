@@ -48,11 +48,27 @@ const completeTransferHandler = async (req, res) => {
 
   const updated = await inventoryTransferDao.update(numericId, tenantId, { status: "completed" }); // codacy-suppress NoSqlInjection
 
-  const inventoryItem = await db.inventoryItem.findOne({ // codacy-suppress NoSqlInjection
+  const sourceItem = await db.inventoryItem.findOne({
     where: { id: transfer.inventoryItemId, tenantId },
   });
-  if (inventoryItem) {
-    await inventoryItem.update({ quantity: inventoryItem.quantity + transfer.quantity });
+  if (sourceItem) {
+    await sourceItem.update({ quantity: Math.max(0, sourceItem.quantity - transfer.quantity) });
+  }
+
+  const targetItem = await db.inventoryItem.findOne({
+    where: { name: sourceItem?.name, sku: sourceItem?.sku, locationId: transfer.toLocationId, tenantId },
+  });
+  if (targetItem) {
+    await targetItem.update({ quantity: targetItem.quantity + transfer.quantity });
+  } else if (sourceItem) {
+    await db.inventoryItem.create({
+      tenantId,
+      locationId: transfer.toLocationId,
+      name: sourceItem.name,
+      sku: sourceItem.sku,
+      category: sourceItem.category,
+      quantity: transfer.quantity,
+    });
   }
 
   return res.status(200).json({ success: true, data: updated });

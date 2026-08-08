@@ -200,7 +200,7 @@ export const useAuthStore = defineStore("auth", () => {
     return response.data.enabled;
   };
 
-  onMounted(async () => {
+  const init = async () => {
     if (sessionInitialized.value) return;
     sessionInitialized.value = true;
     try {
@@ -219,6 +219,10 @@ export const useAuthStore = defineStore("auth", () => {
     } finally {
       isLoading.value = false;
     }
+  };
+
+  onMounted(() => {
+    init();
   });
 
   return {
@@ -247,5 +251,6 @@ export const useAuthStore = defineStore("auth", () => {
     setTenant,
     clearTenant,
     refreshToken,
+    init,
   };
 });

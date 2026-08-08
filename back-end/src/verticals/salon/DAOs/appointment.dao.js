@@ -358,11 +358,11 @@ const appointmentDao = {
     });
 
     return results.map((row) => ({
-      locationId: row.get("locationId"),
-      locationName: row.get("locationName"),
-      locationCity: row.get("locationCity"),
-      appointmentCount: Number(row.get("appointmentCount") || 0),
-      revenue: Number(row.get("revenue") || 0),
+      locationId: row.locationId,
+      locationName: row.locationName,
+      locationCity: row.locationCity,
+      appointmentCount: Number(row.appointmentCount || 0),
+      revenue: Number(row.revenue || 0),
     }));
   },
 };
