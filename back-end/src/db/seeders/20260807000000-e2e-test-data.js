@@ -21,13 +21,22 @@ const ensureUser = async (queryInterface, tenantId, email, role, extra = {}) => 
   );
 
   if (existing) {
-    const setClause = Object.keys(extra)
-      .map((k) => `${k} = :${k}`)
-      .join(", ");
-    await queryInterface.sequelize.query(
-      `UPDATE users SET ${setClause}, updatedAt = :now WHERE id = :id`,
-      { replacements: { ...extra, now: new Date(), id: existing.id } }
-    );
+    if (email === "admin@rtrs.com") {
+      await queryInterface.sequelize.query(
+        "UPDATE users SET password = :password, isSuperAdmin = true, totpEnabled = false, totpConfirmed = false, emailVerified = true, updatedAt = :now WHERE id = :id",
+        { replacements: { password: extra.password, now: new Date(), id: existing.id } }
+      );
+    } else if (email === "akua@demo.test") {
+      await queryInterface.sequelize.query(
+        "UPDATE users SET password = :password, emailVerified = true, updatedAt = :now WHERE id = :id",
+        { replacements: { password: extra.password, now: new Date(), id: existing.id } }
+      );
+    } else {
+      await queryInterface.sequelize.query(
+        "UPDATE users SET password = :password, emailVerified = true, updatedAt = :now WHERE id = :id",
+        { replacements: { password: extra.password, now: new Date(), id: existing.id } }
+      );
+    }
   } else {
     await queryInterface.bulkInsert("users", [
       {
