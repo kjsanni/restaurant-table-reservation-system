@@ -31,7 +31,7 @@ test.describe("Visual regression", () => {
 
         test("should match baseline screenshot", async ({ page }) => {
           await page.goto(route.path);
-          await page.waitForLoadState("networkidle");
+          await page.waitForLoadState("domcontentloaded");
           await expect(page).toHaveScreenshot(
             `${route.name.toLowerCase().replace(/\s+/g, "-")}-${viewport.name.toLowerCase()}.png`,
             {

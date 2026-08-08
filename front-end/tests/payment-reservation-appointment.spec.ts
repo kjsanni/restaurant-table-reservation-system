@@ -14,7 +14,7 @@ test.describe("Payment, reservation, and salon appointment flows", () => {
     test("tenant staff can navigate to reservations and see the reservations page", async ({ page }) => {
       await loginAsTenantStaff(page);
       await page.goto("/reservations");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       await expect(page).toHaveURL(/\/reservations/);
       const heading = page.getByRole("heading", { name: /reservations/i });
@@ -24,7 +24,7 @@ test.describe("Payment, reservation, and salon appointment flows", () => {
     test("tenant staff can access new reservation form", async ({ page }) => {
       await loginAsTenantStaff(page);
       await page.goto("/new-reservation");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       await expect(page).toHaveURL(/\/new-reservation/);
       const formHeading = page.getByRole("heading", { name: /new reservation|book a table/i });
@@ -36,7 +36,7 @@ test.describe("Payment, reservation, and salon appointment flows", () => {
     test("tenant staff can navigate to payments dashboard", async ({ page }) => {
       await loginAsTenantStaff(page);
       await page.goto("/payments");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       await expect(page).toHaveURL(/\/payments/);
       const heading = page.getByRole("heading", { name: /payments/i });
@@ -46,7 +46,7 @@ test.describe("Payment, reservation, and salon appointment flows", () => {
     test("platform admin can access financial settings", async ({ page }) => {
       await loginAsPlatformAdmin(page);
       await page.goto("/admin/settings");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       await expect(page).toHaveURL(/\/admin\/settings/);
       const paymentSection = page.getByText(/payment|paystack|billing/i);
@@ -65,7 +65,7 @@ test.describe("Payment, reservation, and salon appointment flows", () => {
 
       await loginAsTenantStaff(page);
       await page.goto("/appointments");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       await expect(page).toHaveURL(/\/appointments/);
       const heading = page.getByRole("heading", { name: /appointments/i });
@@ -82,7 +82,7 @@ test.describe("Payment, reservation, and salon appointment flows", () => {
 
       await loginAsTenantStaff(page);
       await page.goto("/salon/services");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       await expect(page).toHaveURL(/\/salon\/services/);
       const heading = page.getByRole("heading", { name: /services/i });
