@@ -61,17 +61,12 @@ export const useAuthStore = defineStore("auth", () => {
     entryPointContext?: "platform" | "tenant",
     cfTurnstileToken?: string
   ) => {
-    try {
-      const response = await authAPI.login(email, password, cfTurnstileToken);
-      if (!response.data.requiresEmailVerification) {
-        user.value = response.data.user;
-      }
-      entryPoint.value = entryPointContext || null;
-      return response.data;
-    } catch (err) {
-      console.error("[e2e-debug] login failed", err);
-      throw err;
+    const response = await authAPI.login(email, password, cfTurnstileToken);
+    if (!response.data.requiresEmailVerification) {
+      user.value = response.data.user;
     }
+    entryPoint.value = entryPointContext || null;
+    return response.data;
   };
 
   const loginWithTOTP = async (tempToken: string, token: string) => {
@@ -205,29 +200,18 @@ export const useAuthStore = defineStore("auth", () => {
     return response.data.enabled;
   };
 
-  const init = async () => {
+  onMounted(async () => {
     if (sessionInitialized.value) return;
     sessionInitialized.value = true;
     try {
-      await getMe();
-      await fetchTenantMode();
-      await fetchCapabilities();
-    } catch (err) {
-      const error = err as { response?: { status?: number } };
-      if (error.response?.status === 401) {
-        authError.value = "Session expired. Please log in again.";
-      } else {
-        authError.value =
-          "Session expired or unreachable. Please log in again.";
-      }
-      user.value = null;
+      await Promise.all([
+        getMe().catch(() => {}),
+        fetchTenantMode().catch(() => {}),
+        fetchCapabilities().catch(() => {}),
+      ]);
     } finally {
       isLoading.value = false;
     }
-  };
-
-  onMounted(() => {
-    init();
   });
 
   return {
@@ -256,6 +240,5 @@ export const useAuthStore = defineStore("auth", () => {
     setTenant,
     clearTenant,
     refreshToken,
-    init,
   };
 });

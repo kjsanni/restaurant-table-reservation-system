@@ -87,14 +87,13 @@ const handleLogin = async () => {
   validationErrors.value = null;
   generalError.value = null;
   try {
-    console.debug("[e2e-debug] submitting login", resolvedMode.value, credentials.value.email);
     const response = await authStore.login(
       credentials.value.email,
       credentials.value.password,
       resolvedMode.value === "super-admin" ? "platform" : "tenant",
       cfTurnstileToken.value || undefined
     );
-    console.debug("[e2e-debug] login response", response);
+
     if (response?.pendingTOTP) {
       pendingTOTP.value = true;
       tempToken.value = response.tempToken || "";
@@ -110,7 +109,6 @@ const handleLogin = async () => {
       router.push("/dashboard");
     }
   } catch (err) {
-    console.error("[e2e-debug] login error", err);
     generalError.value = getApiErrorMessage(err);
     validationErrors.value = getApiErrors(err);
     const error = err as {
