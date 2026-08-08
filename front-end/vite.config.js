@@ -14,6 +14,15 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: 8080,
+    proxy: {
+      "/api": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+      },
+    },
+  },
   define: {
     __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
   },

@@ -214,9 +214,9 @@ const createServer = () => {
   app.use(tryCatchHandler(requireActiveTenant));
 
   app.use("/api/v1", generalLimiter, require("../routes"));
-  app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
-  app.use("/api/v1/auth", validateCsrfToken, authLimiter, passwordResetRouter);
-  app.use("/api/v1/auth", validateCsrfToken, authLimiter, emailVerificationRouter);
+  app.use("/api/v1/auth", authLimiter, authRouter);
+  app.use("/api/v1/auth", authLimiter, passwordResetRouter);
+  app.use("/api/v1/auth", authLimiter, emailVerificationRouter);
   app.use("/api/v1/audit-logs", generalLimiter, auditLogRouter);
   app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
