@@ -65,6 +65,7 @@ import "./assets/settings.css";
 
   app.use(router);
   app.mount("#app");
+  console.debug("[e2e-debug] app mounted");
 
   if ("serviceWorker" in navigator) {
     const isSecure =
