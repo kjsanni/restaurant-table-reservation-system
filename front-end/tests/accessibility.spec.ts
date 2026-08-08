@@ -36,6 +36,7 @@ for (const route of publicRoutes) {
   test.describe(`Accessibility - ${route.name}`, () => {
     test.beforeEach(async ({ page }) => {
       await page.goto(route.path);
+      await page.waitForLoadState("domcontentloaded");
     });
 
     test("should not have any automatically detectable accessibility issues", async ({ page }) => {
@@ -50,6 +51,7 @@ for (const route of protectedRoutes) {
     test.beforeEach(async ({ page }) => {
       await loginAsTenantStaff(page);
       await page.goto(route.path);
+      await page.waitForLoadState("domcontentloaded");
     });
 
     test("should not have any automatically detectable accessibility issues", async ({ page }) => {
