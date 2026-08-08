@@ -70,12 +70,12 @@ const inventoryTransferDAO = {
     return db.inventoryTransfer.create({ ...data, tenantId });
   },
 
-  async update(id, tenantId, updates) {
+  async update(id, tenantId, updates, transaction) {
     const transfer = await db.inventoryTransfer.findOne({
       where: { id, tenantId },
     });
     if (!transfer) return null;
-    await transfer.update(updates);
+    await transfer.update(updates, { transaction });
     return transfer;
   },
 

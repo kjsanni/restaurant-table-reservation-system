@@ -23,14 +23,56 @@ const completeTransferHandler = async (req, res) => {
       return res.status(400).json({ success: false, message: "Transfer cannot be completed in its current status" });
     }
 
-    const updated = await inventoryTransferDao.update(id, tenantId, { status: "completed" });
+    const t = await db.sequelize.transaction();
+    try {
+      const sourceItem = await db.inventoryItem.findOne({
+        where: { id: transfer.inventoryItemId, tenantId },
+        transaction: t,
+      });
+      if (!sourceItem || sourceItem.quantity < transfer.quantity) {
+        await t.rollback();
+        return res.status(400).json({ success: false, message: "Insufficient stock at source location" });
+      }
 
-    const inventoryItem = await db.inventoryItem.findByPk(transfer.inventoryItemId);
-    if (inventoryItem) {
-      await inventoryItem.update({ quantity: inventoryItem.quantity + transfer.quantity });
+      await sourceItem.update({ quantity: sourceItem.quantity - transfer.quantity }, { transaction: t });
+
+      const targetItem = await db.inventoryItem.findOne({
+        where: { sku: sourceItem.sku, name: sourceItem.name, locationId: transfer.toLocationId, tenantId },
+        transaction: t,
+      });
+
+      if (targetItem) {
+        await targetItem.update({ quantity: targetItem.quantity + transfer.quantity }, { transaction: t });
+      } else {
+        await db.inventoryItem.create(
+          {
+            tenantId,
+            name: sourceItem.name,
+            sku: sourceItem.sku,
+            category: sourceItem.category,
+            quantity: transfer.quantity,
+            unit: sourceItem.unit,
+            costPrice: sourceItem.costPrice,
+            sellingPrice: sourceItem.sellingPrice,
+            currency: sourceItem.currency,
+            reorderLevel: sourceItem.reorderLevel,
+            expiryDate: sourceItem.expiryDate,
+            isActive: sourceItem.isActive,
+            note: sourceItem.note,
+            locationId: transfer.toLocationId,
+          },
+          { transaction: t }
+        );
+      }
+
+      const updated = await inventoryTransferDao.update(id, tenantId, { status: "completed" }, t);
+
+      await t.commit();
+      return res.status(200).json({ success: true, data: updated });
+    } catch (err) {
+      await t.rollback();
+      throw err;
     }
-
-    return res.status(200).json({ success: true, data: updated });
   } catch (err) {
     console.error("completeTransferHandler error:", err.message);
     return res.status(500).json({ success: false, message: "Failed to complete transfer" });

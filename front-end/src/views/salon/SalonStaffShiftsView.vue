@@ -131,6 +131,22 @@ const removeShift = async (id: number) => {
   }
 };
 
+const groupedByDay = computed(() => {
+  const groups: Record<string, StaffShift[]> = {};
+  for (const day of weekDays) {
+    groups[day] = [];
+  }
+  for (const shift of shifts.value) {
+    const day = weekDays.find(
+      (d) => d.toLowerCase() === shift.dayOfWeek.toLowerCase()
+    );
+    if (day && groups[day]) {
+      groups[day].push(shift);
+    }
+  }
+  return groups;
+});
+
 onMounted(async () => {
   await loadLocations();
   await loadData();

@@ -20,10 +20,14 @@ const isHoliday = async (tenantId, date) => {
 
 const isWithinShift = async (tenantId, userId, datetime, locationId) => {
   try {
-    const where = { userId };
+    const date = new Date(datetime);
+    const dayOfWeek = date.toLocaleLowerCase("en-US", { weekday: "long" });
+    const timeOnly = date.toTimeString().slice(0, 8);
+    const where = { userId, dayOfWeek };
     if (locationId) where.locationId = locationId;
     const shift = await StaffShift.findOne({ where });
-    return !!shift;
+    if (!shift) return false;
+    return timeOnly >= shift.startTime && timeOnly <= shift.endTime;
   } catch {
     return false;
   }
