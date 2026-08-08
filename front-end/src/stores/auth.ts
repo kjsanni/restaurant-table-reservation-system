@@ -200,7 +200,7 @@ export const useAuthStore = defineStore("auth", () => {
     return response.data.enabled;
   };
 
-  onMounted(async () => {
+  const init = async () => {
     if (sessionInitialized.value) return;
     sessionInitialized.value = true;
     try {
@@ -209,9 +209,22 @@ export const useAuthStore = defineStore("auth", () => {
         fetchTenantMode().catch(() => {}),
         fetchCapabilities().catch(() => {}),
       ]);
+    } catch (err) {
+      const error = err as { response?: { status?: number } };
+      if (error.response?.status === 401) {
+        authError.value = "Session expired. Please log in again.";
+      } else {
+        authError.value =
+          "Session expired or unreachable. Please log in again.";
+      }
+      user.value = null;
     } finally {
       isLoading.value = false;
     }
+  };
+
+  onMounted(() => {
+    init();
   });
 
   return {
@@ -240,5 +253,6 @@ export const useAuthStore = defineStore("auth", () => {
     setTenant,
     clearTenant,
     refreshToken,
+    init,
   };
 });
