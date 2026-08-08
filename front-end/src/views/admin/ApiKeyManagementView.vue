@@ -98,9 +98,18 @@
           </div>
           <div v-if="rawKey" class="raw-key-box">
             <label>Raw Key (save it now)</label>
-            <code class="raw-key">{{ rawKey }}</code>
+            <code class="raw-key">{{
+              showRawKey ? rawKey : "•".repeat(Math.min(rawKey.length, 32))
+            }}</code>
             <button type="button" class="btn-copy" @click="copyKey">
               {{ copied ? "Copied" : "Copy" }}
+            </button>
+            <button
+              type="button"
+              class="btn-toggle"
+              @click="showRawKey = !showRawKey"
+            >
+              {{ showRawKey ? "Hide" : "Reveal" }}
             </button>
           </div>
           <div class="modal-actions">
@@ -135,6 +144,8 @@ const showModal = ref(false);
 const editingKey = ref(null);
 const rawKey = ref("");
 const copied = ref(false);
+const showRawKey = ref(false);
+let rawKeyTimeout = null;
 const availableScopes = ["read", "write", "reservations", "billing"];
 const form = ref({
   name: "",
@@ -169,6 +180,11 @@ const closeModal = () => {
   showModal.value = false;
   editingKey.value = null;
   rawKey.value = "";
+  showRawKey.value = false;
+  if (rawKeyTimeout) {
+    clearTimeout(rawKeyTimeout);
+    rawKeyTimeout = null;
+  }
 };
 
 const submitKey = async () => {
@@ -182,7 +198,11 @@ const submitKey = async () => {
     };
     const response = await apiKeyAPI.createApiKey(route.params.id, payload);
     rawKey.value = response.data.rawKey || response.data.key || "";
+    showRawKey.value = true;
     await loadKeys();
+    rawKeyTimeout = setTimeout(() => {
+      showRawKey.value = false;
+    }, 30000);
   } catch (err) {
     toastStore.add(
       err.response?.data?.message || "Failed to create API key",

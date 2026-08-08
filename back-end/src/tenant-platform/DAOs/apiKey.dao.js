@@ -35,8 +35,10 @@ apiKeyDAO.revoke = (id, tenantId) => {
   });
 };
 
-apiKeyDAO.recordUsage = (id) => {
-  return db.apiKey.update({ lastUsedAt: new Date() }, { where: { id } });
+apiKeyDAO.recordUsage = (id, tenantId) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  return db.apiKey.update({ lastUsedAt: new Date() }, { where });
 };
 
 module.exports = apiKeyDAO;

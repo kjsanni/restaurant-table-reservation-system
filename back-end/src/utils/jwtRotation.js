@@ -25,14 +25,14 @@ const verifyTokenWithFallback = (token) => {
     if (previousSecret && err.name === "TokenExpiredError") {
       try {
         return jwt.verify(token, previousSecret, { clockTolerance: 30 });
-      } catch (fallbackErr) {
+      } catch {
         throw err;
       }
     }
     if (previousSecret && (err.name === "JsonWebTokenError" || err.name === "NotBeforeError")) {
       try {
         return jwt.verify(token, previousSecret, { clockTolerance: 30 });
-      } catch (fallbackErr) {
+      } catch {
         throw err;
       }
     }

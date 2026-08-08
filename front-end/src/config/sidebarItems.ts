@@ -333,6 +333,13 @@ export const authenticatedNavItems: NavItem[] = [
     requiresVertical: "salon",
   },
   {
+    routeName: "salon-cross-location-dashboard",
+    text: "Cross-Location",
+    icon: "mdi:map-marker-radius",
+    requiresAuth: true,
+    requiresVertical: "salon",
+  },
+  {
     routeName: "salon-staff",
     text: "Staff",
     icon: "mdi:account-star",

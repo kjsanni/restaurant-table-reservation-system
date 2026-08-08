@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { Icon } from "@iconify/vue";
 
 const status = ref<any>(null);
 const loading = ref(true);

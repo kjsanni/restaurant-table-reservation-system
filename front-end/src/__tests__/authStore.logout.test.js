@@ -2,15 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 
+vi.mock("@/services/authAPI", () => ({
+  default: {
+    logout: vi.fn().mockResolvedValue({}),
+  },
+}));
+
 describe("auth store logout", () => {
   beforeEach(() => {
     vi.resetModules();
     setActivePinia(createPinia());
-    vi.mock("@/services/authAPI", () => ({
-      default: {
-        logout: vi.fn().mockResolvedValue({}),
-      },
-    }));
   });
 
   it("clears currentTenant on logout", async () => {

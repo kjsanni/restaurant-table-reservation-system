@@ -1,6 +1,4 @@
 const db = require("../../db/models");
-const refundDAO = require("../../DAOs/refund.dao");
-const paymentDAO = require("../../DAOs/payment.dao");
 
 const listRefundsHandler = async (req, res) => {
   const { status, tenantId, from, to } = req.query;

@@ -1,8 +1,8 @@
 "use strict";
-const db = require("../../db/models");
-const { verifyWebhookSignature } = require("../../tenant-platform/services/paystack.service");
-const { sendWithSmsFallback } = require("../../services/notification.service");
-const messageTemplates = require("../../services/messageTemplates.service");
+const db = require("../../../db/models");
+const { verifyWebhookSignature } = require("../../../tenant-platform/services/paystack.service");
+const { sendWithSmsFallback } = require("../../../services/notification.service");
+const messageTemplates = require("../../../services/messageTemplates.service");
 
 const ALLOWED_TEMPLATES = ["salon_payment_confirmed"];
 
@@ -29,10 +29,13 @@ const sendPaymentConfirmation = async (appointment) => {
 };
 
 const handleChargeSuccess = async (data) => {
-  const appointmentId = data.metadata?.appointmentId;
-  if (!appointmentId) return;
+  const appointmentId = Number(data.metadata?.appointmentId);
+  const tenantId = data.metadata?.tenantId || null;
+  if (!appointmentId || !Number.isInteger(appointmentId) || !tenantId) return;
 
-  const appointment = await db.appointment.findByPk(appointmentId);
+  const appointment = await db.appointment.findOne({
+    where: { id: appointmentId, tenantId },
+  });
   if (!appointment || appointment.paymentStatus === "paid") return;
 
   await appointment.update({

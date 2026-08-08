@@ -131,11 +131,12 @@ const appointmentDao = {
     });
   },
 
-  async getRevenueByService(tenantId, from, to) {
+  async getRevenueByService(tenantId, from, to, locationId) {
     const where = {
       tenantId,
       status: { [Op.notIn]: ["cancelled", "no_show"] },
     };
+    if (locationId) where.locationId = locationId;
     if (from || to) {
       where.start = {};
       if (from) where.start[Op.gte] = new Date(from);
@@ -167,11 +168,12 @@ const appointmentDao = {
     }));
   },
 
-  async getTopStylists(tenantId, from, to) {
+  async getTopStylists(tenantId, from, to, locationId) {
     const where = {
       tenantId,
       status: { [Op.notIn]: ["cancelled", "no_show"] },
     };
+    if (locationId) where.locationId = locationId;
     if (from || to) {
       where.start = {};
       if (from) where.start[Op.gte] = new Date(from);
@@ -205,10 +207,11 @@ const appointmentDao = {
     }));
   },
 
-  async getAppointmentsBySource(tenantId, from, to) {
+  async getAppointmentsBySource(tenantId, from, to, locationId) {
     const where = {
       tenantId,
     };
+    if (locationId) where.locationId = locationId;
     if (from || to) {
       where.start = {};
       if (from) where.start[Op.gte] = new Date(from);
@@ -233,11 +236,12 @@ const appointmentDao = {
     }));
   },
 
-  async getPeakHours(tenantId, from, to) {
+  async getPeakHours(tenantId, from, to, locationId) {
     const where = {
       tenantId,
       status: { [Op.notIn]: ["cancelled", "no_show"] },
     };
+    if (locationId) where.locationId = locationId;
     if (from || to) {
       where.start = {};
       if (from) where.start[Op.gte] = new Date(from);
@@ -322,6 +326,44 @@ const appointmentDao = {
       clientsToday: Number(clientsToday || 0),
       revenueToday: totalRevenue,
     };
+  },
+
+  async getLocationSummary(tenantId, from, to) {
+    const where = {
+      tenantId,
+      status: { [Op.notIn]: ["cancelled", "no_show"] },
+    };
+    if (from || to) {
+      where.start = {};
+      if (from) where.start[Op.gte] = new Date(from);
+      if (to) where.start[Op.lte] = new Date(to);
+    }
+
+    const results = await salonModels.sequelize.models.appointment.findAll({
+      where,
+      include: [
+        { model: salonModels.sequelize.models.location, as: "location", attributes: ["id", "name", "city", "region"], required: false },
+        { model: salonModels.sequelize.models.service, as: "service", attributes: ["price"], required: true },
+      ],
+      attributes: [
+        [salonModels.sequelize.col("location.id"), "locationId"],
+        [salonModels.sequelize.col("location.name"), "locationName"],
+        [salonModels.sequelize.col("location.city"), "locationCity"],
+        [salonModels.sequelize.fn("COUNT", salonModels.sequelize.col("appointment.id")), "appointmentCount"],
+        [salonModels.sequelize.fn("SUM", salonModels.sequelize.col("service.price")), "revenue"],
+      ],
+      group: ["location.id", "location.name", "location.city"],
+      order: [[salonModels.sequelize.fn("SUM", salonModels.sequelize.col("service.price")), "DESC"]],
+      raw: true,
+    });
+
+    return results.map((row) => ({
+      locationId: row.locationId,
+      locationName: row.locationName,
+      locationCity: row.locationCity,
+      appointmentCount: Number(row.appointmentCount || 0),
+      revenue: Number(row.revenue || 0),
+    }));
   },
 };
 

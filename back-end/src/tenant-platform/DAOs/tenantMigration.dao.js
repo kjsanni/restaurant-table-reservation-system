@@ -54,7 +54,7 @@ tenantMigrationDAO.exportTenant = async (tenantId) => {
 
 tenantMigrationDAO.importTenant = async (payload, options = {}) => {
   const { targetTenantId, mode = "create" } = options;
-  const { tenant: sourceTenant, settings, notes, legalAcceptances, reservations, customers, users } = payload;
+  const { tenant: sourceTenant, settings, _notes, _legalAcceptances, reservations, customers, users } = payload;
 
   if (mode === "create") {
     const newTenant = await db.tenant.create({
@@ -97,7 +97,7 @@ tenantMigrationDAO.importTenant = async (payload, options = {}) => {
   }
 
   for (const reservation of reservations || []) {
-    const r = await db.reservation.create({ ...reservation, tenantId: targetTenantId });
+    const _r = await db.reservation.create({ ...reservation, tenantId: targetTenantId });
     results.importedReservations++;
   }
 

@@ -4,11 +4,19 @@ module.exports = (sequelize, DataTypes) => {
   class InventoryItem extends Model {
     static associate(models) {
       InventoryItem.belongsTo(models.tenant, { foreignKey: "tenantId" });
+      InventoryItem.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
     }
   }
   InventoryItem.init(
     {
       tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      locationId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },

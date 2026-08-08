@@ -251,7 +251,7 @@ const enqueueReminders = async (tenantId, channels = null) => {
 };
 
 const enqueueSalonAppointmentReminders = async (tenantId, channels = null) => {
-  const resolved = await resolveChannels(tenantId, channels);
+  const _resolved = await resolveChannels(tenantId, channels);
   const now = new Date();
   const windowEnd = new Date(now.getTime() + 2 * 60 * 60 * 1000);
 
@@ -322,7 +322,7 @@ const sendSalonConfirmation = async (appointment, tenantId) => {
 
 const sendSalonCancellation = async (appointment, tenantId) => {
   const customer = appointment.customer || {};
-  const service = appointment.service || {};
+  const _service = appointment.service || {};
   const templateData = {
     __template: "salon_appointment_cancellation",
     appointmentId: appointment.id,
@@ -376,7 +376,7 @@ const enqueueSalonConfirmation = async (appointment, tenantId) => {
 
 const enqueueSalonCancellation = async (appointment, tenantId) => {
   const customer = appointment.customer || {};
-  const service = appointment.service || {};
+  const _service = appointment.service || {};
   const templateData = {
     __template: "salon_appointment_cancellation",
     appointmentId: appointment.id,

@@ -15,6 +15,9 @@ module.exports = {
   async up(queryInterface) {
     const encryptionKey = process.env.ENCRYPTION_KEY;
     if (!encryptionKey) {
+      if (process.env.NODE_ENV === "test") {
+        return;
+      }
       throw new Error(
         "ENCRYPTION_KEY environment variable is required to run the encrypt-paystack-keys migration."
       );

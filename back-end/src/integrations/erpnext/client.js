@@ -58,17 +58,17 @@ const get = async (path, params = {}, tenantId = null) => {
   return data;
 };
 
-const post = async (path, body = {}, tenantId = null) => {
+const post = async (path, body = {}, _tenantId = null) => {
   const response = await getClient().post(path, body);
   return response.data;
 };
 
-const put = async (path, body = {}, tenantId = null) => {
+const put = async (path, body = {}, _tenantId = null) => {
   const response = await getClient().put(path, body);
   return response.data;
 };
 
-const del = async (path, tenantId = null) => {
+const del = async (path, _tenantId = null) => {
   const response = await getClient().delete(path);
   return response.data;
 };

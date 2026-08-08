@@ -1,19 +1,21 @@
 <template>
-  <div class="verify-email-view">
-    <div class="auth-card">
-      <h1>Verify your email</h1>
-      <p class="subtitle">{{ message }}</p>
-      <div v-if="success" class="success-actions">
-        <RouterLink to="/login" class="btn-primary">Go to login</RouterLink>
-      </div>
-      <div v-else class="error-actions">
-        <button @click="resend" class="btn-secondary" :disabled="loading">
-          {{ loading ? "Sending..." : "Resend verification email" }}
-        </button>
-        <RouterLink to="/login" class="link">Back to login</RouterLink>
+  <main class="verify-email-main">
+    <div class="verify-email-view">
+      <div class="auth-card">
+        <h1>Verify your email</h1>
+        <p class="subtitle">{{ message }}</p>
+        <div v-if="success" class="success-actions">
+          <RouterLink to="/login" class="btn-primary">Go to login</RouterLink>
+        </div>
+        <div v-else class="error-actions">
+          <button @click="resend" class="btn-secondary" :disabled="loading">
+            {{ loading ? "Sending..." : "Resend verification email" }}
+          </button>
+          <RouterLink to="/login" class="link">Back to login</RouterLink>
+        </div>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup>
@@ -73,6 +75,9 @@ const resend = async () => {
 </script>
 
 <style scoped>
+.verify-email-main {
+  min-height: 100dvh;
+}
 .verify-email-view {
   display: flex;
   align-items: center;

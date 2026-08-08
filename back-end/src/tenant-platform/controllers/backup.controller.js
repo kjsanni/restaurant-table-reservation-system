@@ -156,7 +156,7 @@ const scheduleBackupHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Backup record not found" });
   }
 
-  const { frequency, nextRunAt } = req.body;
+  const { _frequency, _nextRunAt } = req.body;
   const allowed = ["frequency", "nextRunAt", "lastRunAt"];
   const updates = {};
   for (const key of allowed) {

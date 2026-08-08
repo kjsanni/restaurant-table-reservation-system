@@ -3,7 +3,7 @@ const router = express.Router();
 const tryCatchHandler = require("../middleware/tryCatch");
 const httpMethodError = require("../middleware/httpMethodError");
 const waitlistController = require("../controllers/waitlist.controller");
-const { protect, staff, requirePermission } = require("../middleware/auth");
+const { protect, staff, _requirePermission } = require("../middleware/auth");
 const { validateCsrfToken } = require("../middleware/csrf");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 

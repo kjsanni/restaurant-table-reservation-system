@@ -182,7 +182,7 @@ const processScheduledReport = async (report) => {
   });
 };
 
-const sendReportToRecipients = async (report, subject, html, from, csv) => {
+const sendReportToRecipients = async (report, subject, html, _from, _csv) => {
   for (const recipient of report.recipients) {
     await sendEmail({
       to: recipient,

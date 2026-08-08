@@ -1,5 +1,4 @@
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import { io } from "socket.io-client";
+import { ref, onMounted, onUnmounted, watch } from "vue";
 import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
 import dateNavigator from "@/utils/dateNavigator";

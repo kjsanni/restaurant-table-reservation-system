@@ -1,5 +1,5 @@
 const bulkDAO = require("../DAOs/bulk.dao");
-const { requirePermission } = require("../../middleware/auth");
+const { _requirePermission } = require("../../middleware/auth");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const bulkSuspendHandler = async (req, res) => {

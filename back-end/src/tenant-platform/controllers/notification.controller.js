@@ -24,7 +24,8 @@ const createNotificationHandler = async (req, res) => {
 };
 
 const markReadHandler = async (req, res) => {
-  await notificationDAO.markRead(req.params.id, req.user?.id);
+  const tenantId = req.tenant?.id;
+  await notificationDAO.markRead(req.params.id, req.user?.id, tenantId);
   res.status(200).json({ success: true });
 };
 

@@ -37,7 +37,7 @@ const resolveTenantId = async (payload) => {
     });
 
     return delivery?.tenantId || null;
-  } catch (err) {
+  } catch {
     return null;
   }
 };

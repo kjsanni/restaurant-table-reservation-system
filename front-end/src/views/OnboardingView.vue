@@ -121,8 +121,6 @@ const verifyOtp = async () => {
     const res = await customerAPI.verifyOtp(phone.value, otp.value);
     if (res.data?.success) {
       if (res.data.token && res.data.user) {
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
         authStore.user = res.data.user as any;
       }
 

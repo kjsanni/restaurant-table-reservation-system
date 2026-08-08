@@ -7,11 +7,19 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "userId",
         onDelete: "CASCADE",
       });
+      StaffShift.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
     }
   }
   StaffShift.init(
     {
       tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      locationId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },

@@ -14,10 +14,22 @@ const inventoryItemDAO = {
     if (filters.search) {
       where.name = { [Op.like]: `%${filters.search}%` };
     }
+    if (filters.locationId) {
+      where.locationId = filters.locationId;
+    }
 
     return db.inventoryItem.findAll({
       where,
       order: [["name", "ASC"]],
+      include: filters.locationId
+        ? undefined
+        : [
+            {
+              model: db.location,
+              as: "location",
+              attributes: ["id", "name"],
+            },
+          ],
     });
   },
 

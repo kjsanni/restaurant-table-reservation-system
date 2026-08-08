@@ -1612,6 +1612,22 @@ router.addRoute({
   ],
 });
 router.addRoute({
+  path: "/salon/cross-location-dashboard",
+  component: () => import("../layouts/TenantLayout.vue"),
+  children: [
+    {
+      path: "",
+      name: "salon-cross-location-dashboard",
+      component: () => import("../views/salon/CrossLocationDashboardView.vue"),
+      meta: {
+        requiresAuth: true,
+        requiresVertical: "salon",
+        requiresPermission: "view_reports",
+      },
+    },
+  ],
+});
+router.addRoute({
   path: "/salon/staff",
   component: () => import("../layouts/TenantLayout.vue"),
   children: [

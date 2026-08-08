@@ -186,8 +186,17 @@ const findOrCreateCustomer = async (customerDetails, t = null, tenantId) => {
     try {
       customer = await createCustomer(customerDetails, t, tenantId);
     } catch (err) {
-      console.error("findOrCreateCustomer create failed:", err.message);
-      return null;
+      const isUniqueViolation = err?.name === "SequelizeUniqueConstraintError" || err?.original?.code === "ER_DUP_ENTRY";
+      if (isUniqueViolation) {
+        customer = await findCustomerByEmail(email, tenantId);
+        if (customer) {
+          await customer.increment("visitCount", { by: 1 });
+          await customer.update({ lastVisitDate: new Date() });
+        }
+      } else {
+        console.error("findOrCreateCustomer create failed:", err.message);
+        throw err;
+      }
     }
   } else {
     await customer.increment("visitCount", { by: 1 });
@@ -357,6 +366,23 @@ const getCustomerStats = async (customerId, tenantId) => {
 const createReservation = async (resDetails, tenantId) => {
   const { resDate, resTime, people, notes, customerId, ...rest } = resDetails;
   const result = await db.sequelize.transaction(async (t) => {
+    const existing = await Reservation.findOne({
+      where: withTenant(
+        {
+          resDate,
+          resTime,
+          resStatus: "pending",
+        },
+        tenantId
+      ),
+      transaction: t,
+      lock: true,
+    });
+
+    if (existing) {
+      throw { status: 409, message: "This time slot is already booked. Please choose another time." };
+    }
+
     let finalCustomerId = customerId;
 
     if (!finalCustomerId) {

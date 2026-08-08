@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { Icon } from "@iconify/vue";
 import CardSkeleton from "@/components/CardSkeleton.vue";
 

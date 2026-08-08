@@ -24,9 +24,16 @@ describe("anomalyDetection.service", () => {
       platformAuditDAO.findAllForUser.mockResolvedValue([]);
       const req = createReq();
       const next = jest.fn();
+
+      const frozenDate = new Date();
+      frozenDate.setUTCHours(12, 0, 0, 0);
+      jest.useFakeTimers().setSystemTime(frozenDate);
+
       await anomalyDetectionService.evaluate(req, null, next);
       expect(next).toHaveBeenCalled();
       expect(req.anomalies).toBeUndefined();
+
+      jest.useRealTimers();
     });
 
     it("detects new IP login anomaly", async () => {
@@ -54,7 +61,6 @@ describe("anomalyDetection.service", () => {
       const req = createReq({ id: 1 }, {});
       const next = jest.fn();
 
-      const originalHour = new Date().getUTCHours();
       const frozenDate = new Date();
       frozenDate.setUTCHours(3, 0, 0, 0);
       jest.useFakeTimers().setSystemTime(frozenDate);

@@ -13,6 +13,8 @@ import CtaStrip from "@/components/CtaStrip.vue";
 import MarqueeStrip from "@/components/MarqueeStrip.vue";
 import FeaturesStrip from "@/components/FeaturesStrip.vue";
 import LandingFooter from "@/components/LandingFooter.vue";
+import { useCurrency } from "@/composables/useCurrency";
+import { Icon } from "@iconify/vue";
 
 const router = useRouter();
 const authStore = useAuthStore();

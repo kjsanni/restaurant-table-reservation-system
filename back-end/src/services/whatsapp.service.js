@@ -18,7 +18,7 @@ const resolveConfig = async (tenantId) => {
       if (cfg.token) token = cfg.token;
       if (cfg.phoneNumberId) phoneNumberId = cfg.phoneNumberId;
     }
-  } catch (err) {
+  } catch {
     // fall back to env values on any read error
   }
   return { token, phoneNumberId, enabled: Boolean(token && phoneNumberId) };

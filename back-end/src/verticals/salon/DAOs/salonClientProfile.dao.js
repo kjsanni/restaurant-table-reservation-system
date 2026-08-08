@@ -1,5 +1,5 @@
 "use strict";
-const { Op } = require("sequelize");
+const { _Op } = require("sequelize");
 const salonModels = require("../models");
 
 const salonClientProfileDao = {

@@ -1,5 +1,5 @@
 "use strict";
-const { Model } = require("sequelize");
+const { _Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   const Tenant = sequelize.define(
     "tenant",

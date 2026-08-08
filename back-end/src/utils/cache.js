@@ -71,6 +71,8 @@ const cache = {
   },
 };
 
+const getConnectionStatus = () => isConnected;
+
 const getCacheStats = () => ({ ...cacheStats });
 
 const resetCacheStats = () => {
@@ -94,4 +96,4 @@ const closeClient = async () => {
   }
 };
 
-module.exports = { cache, client, closeClient, getCacheStats, resetCacheStats };
+module.exports = { cache, client, closeClient, getCacheStats, resetCacheStats, getConnectionStatus };

@@ -11,6 +11,9 @@ const expenseDAO = {
     if (filters.category) {
       where.category = filters.category;
     }
+    if (filters.locationId) {
+      where.locationId = filters.locationId;
+    }
     if (filters.startDate || filters.endDate) {
       where.date = {};
       if (filters.startDate) {
@@ -23,6 +26,15 @@ const expenseDAO = {
 
     return db.expense.findAll({
       where,
+      include: filters.locationId
+        ? undefined
+        : [
+            {
+              model: db.location,
+              as: "location",
+              attributes: ["id", "name"],
+            },
+          ],
       order: [["date", "DESC"]],
     });
   },

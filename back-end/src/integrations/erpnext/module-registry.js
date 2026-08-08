@@ -45,7 +45,7 @@ const getModuleMetadata = (flag) => {
 
 const getEnabledModules = (featureFlags) => {
   const enabled = [];
-  for (const [flag, metadata] of Object.entries(MODULE_METADATA)) {
+  for (const [flag, _metadata] of Object.entries(MODULE_METADATA)) {
     if (featureFlags[flag]) {
       enabled.push(flag);
     }

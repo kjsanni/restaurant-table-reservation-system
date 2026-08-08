@@ -7,13 +7,11 @@ const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 router
   .route("/categories")
   .get(protectedRoute("view_menu", menuController.getCategoriesHandler))
-  .post(writeRoute("manage_menu", menuController.getCategoriesHandler))
   .all(httpMethodError);
 
 router
   .route("/items")
   .get(protectedRoute("view_menu", menuController.getMenuItemsHandler))
-  .post(writeRoute("manage_menu", menuController.getMenuItemsHandler))
   .all(httpMethodError);
 
 router
@@ -24,8 +22,6 @@ router
 router
   .route("/items/:id")
   .get(protectedRoute("view_menu", menuController.getMenuItemDetailHandler))
-  .patch(writeRoute("manage_menu", menuController.getMenuItemDetailHandler))
-  .delete(writeRoute("manage_menu", menuController.getMenuItemDetailHandler))
   .all(httpMethodError);
 
 module.exports = router;

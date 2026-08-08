@@ -127,8 +127,8 @@ const getPaymentHistory = async (filters = {}, tenantId, pagination = {}) => {
   return await paymentDAO.getPaymentHistory(filters, tenantId, pagination);
 };
 
-const getRevenueStats = async (from, to, tenantId) => {
-  return await paymentDAO.getRevenueStats(from, to, tenantId);
+const getRevenueStats = async (from, to, tenantId, locationId) => {
+  return await paymentDAO.getRevenueStats(from, to, tenantId, locationId);
 };
 
 module.exports = {

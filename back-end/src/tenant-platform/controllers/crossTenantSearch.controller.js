@@ -10,6 +10,7 @@ crossTenantSearchController.searchHandler = async (req, res) => {
 
   const data = await crossTenantSearchDAO.search(q.trim(), {
     tenantId: tenantId ? parseInt(tenantId, 10) : undefined,
+    allowAllTenants: true,
   });
 
   res.status(200).json({

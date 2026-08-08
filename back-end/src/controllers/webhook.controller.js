@@ -28,7 +28,7 @@ const updateSubscriptionsHandler = async (req, res) => {
     }
   }
   const authDAO = require("../DAOs/auth.dao");
-  const updated = await authDAO.updateSettings(
+  const updated = await authDAO.updateSetting(
     "webhooks",
     { enabled: true, subscriptions }
   );
@@ -84,9 +84,17 @@ const paystackEventHandler = async (req, res) => {
   }
 
   if (event === "charge.success") {
+    let tenantId = null;
+    if (data.metadata?.tenantId) {
+      const tenant = await db.tenant.findByPk(data.metadata.tenantId);
+      if (tenant) tenantId = tenant.id;
+    }
+
     const appointmentId = data.metadata?.appointmentId;
-    if (appointmentId) {
-      const appointment = await db.appointment.findByPk(appointmentId);
+    if (appointmentId && tenantId) {
+      const appointment = await db.appointment.findOne({
+        where: { id: appointmentId, tenantId },
+      });
       if (appointment && appointment.paymentStatus !== "paid") {
         await appointment.update({
           paymentStatus: "paid",

@@ -59,7 +59,7 @@ const authenticateUser = async (token) => {
   if (!permissions || Object.keys(permissions).length === 0) {
     try {
       const roleDAO = require("../DAOs/role.dao");
-      const effective = await roleDAO.getRolePermissions(user.id);
+      const effective = await roleDAO.getRolePermissions(user.id, user.tenantId);
       user.permissions = effective && Object.keys(effective).length > 0 ? effective : {};
     } catch (err) {
       console.warn("RBAC lookup failed, denying implicit permissions:", err.message);

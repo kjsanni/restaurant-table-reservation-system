@@ -1,11 +1,18 @@
 import API from "./API";
 
 class ShiftAPI {
-  getShifts(dayOfWeek) {
-    return API.get("/shifts" + (dayOfWeek ? "?dayOfWeek=" + dayOfWeek : ""));
+  getShifts(params = {}) {
+    const query = new URLSearchParams();
+    if (params.dayOfWeek) query.set("dayOfWeek", params.dayOfWeek);
+    if (params.locationId) query.set("locationId", params.locationId);
+    const qs = query.toString();
+    return API.get("/shifts" + (qs ? "?" + qs : ""));
   }
-  getStaff() {
-    return API.get("/shifts/staff");
+  getStaff(params = {}) {
+    const query = new URLSearchParams();
+    if (params.locationId) query.set("locationId", params.locationId);
+    const qs = query.toString();
+    return API.get("/shifts/staff" + (qs ? "?" + qs : ""));
   }
   createShift(payload) {
     return API.post("/shifts", payload);

@@ -50,8 +50,8 @@ const getPublicStatusHandler = async (req, res) => {
   }));
 
   const uptimeSeconds = process.uptime();
-  const uptimeDays = Math.floor(uptimeSeconds / 86400);
-  const uptimeHours = Math.floor((uptimeSeconds % 86400) / 3600);
+  const _uptimeDays = Math.floor(uptimeSeconds / 86400);
+  const _uptimeHours = Math.floor((uptimeSeconds % 86400) / 3600);
   const uptimePercent = overall === "operational" ? 99.9 : 99.5;
 
   return res.status(200).json({

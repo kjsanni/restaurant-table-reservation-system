@@ -9,16 +9,26 @@ const stationDao = {
     if (filters.isOccupied !== undefined) where.isOccupied = filters.isOccupied;
     if (filters.isBlocked !== undefined) where.isBlocked = filters.isBlocked;
     if (filters.floorPlanId) where.floorPlanId = filters.floorPlanId;
+    if (filters.locationId) where.locationId = filters.locationId;
+
+    const includes = [
+      {
+        model: salonModels.sequelize.models.floorPlan,
+        as: "floorPlan",
+        attributes: ["id", "name"],
+      },
+    ];
+    if (!filters.locationId) {
+      includes.push({
+        model: salonModels.sequelize.models.location,
+        as: "location",
+        attributes: ["id", "name"],
+      });
+    }
 
     const { count, rows } = await salonModels.sequelize.models.station.findAndCountAll({
       where,
-      include: [
-        {
-          model: salonModels.sequelize.models.floorPlan,
-          as: "floorPlan",
-          attributes: ["id", "name"],
-        },
-      ],
+      include: includes,
       order: [["zone", "ASC"], ["name", "ASC"]],
       limit: filters.limit || 100,
       offset: filters.offset || 0,
@@ -33,6 +43,11 @@ const stationDao = {
         {
           model: salonModels.sequelize.models.floorPlan,
           as: "floorPlan",
+          attributes: ["id", "name"],
+        },
+        {
+          model: salonModels.sequelize.models.location,
+          as: "location",
           attributes: ["id", "name"],
         },
       ],
