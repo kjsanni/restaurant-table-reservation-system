@@ -48,8 +48,13 @@ const inventoryTransferDAO = {
   },
 
   async findById(id, tenantId) {
+    const numericId = Number(id);
+    const numericTenantId = Number(tenantId);
+    if (!Number.isInteger(numericId) || !Number.isInteger(numericTenantId)) {
+      return null;
+    }
     return db.inventoryTransfer.findOne({
-      where: { id, tenantId },
+      where: { id: numericId, tenantId: numericTenantId },
       include: [
         {
           model: db.location,

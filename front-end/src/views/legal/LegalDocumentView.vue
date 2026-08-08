@@ -19,6 +19,14 @@ const availableDocs = computed(() =>
 
 const sanitizedBody = (body: string) => DOMPurify.sanitize(body);
 
+const sanitizedSections = computed(
+  () =>
+    doc.value?.sections?.map((section: any) => ({
+      ...section,
+      body: sanitizedBody(section.body),
+    })) || []
+);
+
 function goTo(target: string) {
   router.push({ name: "legal-document", params: { slug: target } });
 }
@@ -53,15 +61,12 @@ function goTo(target: string) {
         </header>
 
         <section
-          v-for="(section, index) in doc.sections"
+          v-for="(section, index) in sanitizedSections"
           :key="index"
           class="legal-section"
         >
           <h2 class="legal-section-title">{{ section.heading }}</h2>
-          <p
-            class="legal-section-body"
-            v-html="sanitizedBody(section.body)"
-          ></p>
+          <p class="legal-section-body" v-html="section.body"></p>
         </section>
 
         <footer class="legal-footer">

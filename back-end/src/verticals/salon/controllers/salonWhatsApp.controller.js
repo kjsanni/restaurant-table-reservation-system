@@ -29,9 +29,9 @@ const sendPaymentConfirmation = async (appointment) => {
 };
 
 const handleChargeSuccess = async (data) => {
-  const appointmentId = data.metadata?.appointmentId;
+  const appointmentId = Number(data.metadata?.appointmentId);
   const tenantId = data.metadata?.tenantId || null;
-  if (!appointmentId || !tenantId) return;
+  if (!appointmentId || !Number.isInteger(appointmentId) || !tenantId) return;
 
   const appointment = await db.appointment.findOne({
     where: { id: appointmentId, tenantId },

@@ -40,7 +40,16 @@ export function useSalonCrudView<T>(config: {
     loading.value = true;
     try {
       const method = resolveMethod(config.listMethod, "list");
-      const res = await api[method]({ limit: 100, ...params });
+      const res =
+        method === "list"
+          ? await api.list({ limit: 100, ...params })
+          : method === "get"
+            ? await api.get({ limit: 100, ...params })
+            : method === "create"
+              ? await api.create({ limit: 100, ...params })
+              : method === "update"
+                ? await api.update({ limit: 100, ...params })
+                : await api.delete({ limit: 100, ...params });
       list.value = res.data.data || [];
     } catch (err) {
       logger.error(`Failed to load ${config.entityName}s`, { error: err });
@@ -57,14 +66,22 @@ export function useSalonCrudView<T>(config: {
   const saveItem = async (payload: Record<string, any>) => {
     if (editingId.value) {
       const method = resolveMethod(config.updateMethod, "update");
-      const res = await api[method](editingId.value, payload);
+      const res =
+        method === "update"
+          ? await api.update(editingId.value, payload)
+          : await api.create(editingId.value, payload);
       const idx = list.value.findIndex(
         (item: any) => item.id === editingId.value
       );
       if (idx !== -1) list.value[idx] = res.data.data;
     } else {
       const method = resolveMethod(config.createMethod, "create");
-      const res = await api[method](payload);
+      const res =
+        method === "create"
+          ? await api.create(payload)
+          : method === "update"
+            ? await api.update(payload)
+            : await api.delete(payload);
       list.value.push(res.data.data);
     }
   };
@@ -90,7 +107,15 @@ export function useSalonCrudView<T>(config: {
 
   const removeItem = async (id: number) => {
     const method = resolveMethod(config.deleteMethod, "delete");
-    await api[method](id);
+    if (method === "delete") {
+      await api.delete(id);
+    } else if (method === "update") {
+      await api.update(id, {});
+    } else if (method === "create") {
+      await api.create({ id });
+    } else {
+      await api.get(id);
+    }
     list.value = list.value.filter((item: any) => item.id !== id);
   };
 

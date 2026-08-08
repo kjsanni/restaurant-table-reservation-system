@@ -215,7 +215,7 @@ describe("inventoryTransfer.controller", () => {
 
       await inventoryTransferController.completeTransferHandler(req, res);
 
-      expect(dao.update).toHaveBeenCalledWith("1", 1, { status: "completed" });
+      expect(dao.update).toHaveBeenCalledWith(1, 1, { status: "completed" });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
@@ -275,7 +275,7 @@ describe("inventoryTransfer.controller", () => {
 
       await inventoryTransferController.cancelTransferHandler(req, res);
 
-      expect(dao.update).toHaveBeenCalledWith("1", 1, { status: "cancelled" });
+      expect(dao.update).toHaveBeenCalledWith(1, 1, { status: "cancelled" });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,

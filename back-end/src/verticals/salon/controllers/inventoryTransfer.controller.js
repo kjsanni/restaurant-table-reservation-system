@@ -15,7 +15,11 @@ const completeTransferHandler = async (req, res) => {
   try {
     const tenantId = req.tenant?.id;
     const { id } = req.params;
-    const transfer = await inventoryTransferDao.findById(id, tenantId);
+    const numericId = Number(id);
+    if (!Number.isInteger(numericId)) {
+      return res.status(400).json({ success: false, message: "Invalid transfer id" });
+    }
+    const transfer = await inventoryTransferDao.findById(numericId, tenantId);
     if (!transfer) {
       return res.status(404).json({ success: false, message: "Transfer not found" });
     }
@@ -23,7 +27,7 @@ const completeTransferHandler = async (req, res) => {
       return res.status(400).json({ success: false, message: "Transfer cannot be completed in its current status" });
     }
 
-    const updated = await inventoryTransferDao.update(id, tenantId, { status: "completed" });
+    const updated = await inventoryTransferDao.update(numericId, tenantId, { status: "completed" });
 
     const inventoryItem = await db.inventoryItem.findOne({
       where: { id: transfer.inventoryItemId, tenantId },
@@ -43,7 +47,11 @@ const cancelTransferHandler = async (req, res) => {
   try {
     const tenantId = req.tenant?.id;
     const { id } = req.params;
-    const transfer = await inventoryTransferDao.findById(id, tenantId);
+    const numericId = Number(id);
+    if (!Number.isInteger(numericId)) {
+      return res.status(400).json({ success: false, message: "Invalid transfer id" });
+    }
+    const transfer = await inventoryTransferDao.findById(numericId, tenantId);
     if (!transfer) {
       return res.status(404).json({ success: false, message: "Transfer not found" });
     }
@@ -51,7 +59,7 @@ const cancelTransferHandler = async (req, res) => {
       return res.status(400).json({ success: false, message: "Transfer cannot be cancelled in its current status" });
     }
 
-    const updated = await inventoryTransferDao.update(id, tenantId, { status: "cancelled" });
+    const updated = await inventoryTransferDao.update(numericId, tenantId, { status: "cancelled" });
     return res.status(200).json({ success: true, data: updated });
   } catch (err) {
     console.error("cancelTransferHandler error:", err.message);

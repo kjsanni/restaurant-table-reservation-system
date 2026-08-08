@@ -29,8 +29,13 @@ const staffLocationAssignmentDAO = {
   },
 
   async findById(id, tenantId) {
+    const numericId = Number(id);
+    const numericTenantId = Number(tenantId);
+    if (!Number.isInteger(numericId) || !Number.isInteger(numericTenantId)) {
+      return null;
+    }
     return db.staffLocationAssignment.findOne({
-      where: { id, tenantId },
+      where: { id: numericId, tenantId: numericTenantId },
       include: [
         {
           model: db.user,
@@ -57,8 +62,13 @@ const staffLocationAssignmentDAO = {
   },
 
   async update(id, tenantId, updates) {
+    const numericId = Number(id);
+    const numericTenantId = Number(tenantId);
+    if (!Number.isInteger(numericId) || !Number.isInteger(numericTenantId)) {
+      return null;
+    }
     const assignment = await db.staffLocationAssignment.findOne({
-      where: { id, tenantId },
+      where: { id: numericId, tenantId: numericTenantId },
     });
     if (!assignment) return null;
     await assignment.update(updates);
@@ -66,8 +76,13 @@ const staffLocationAssignmentDAO = {
   },
 
   async delete(id, tenantId) {
+    const numericId = Number(id);
+    const numericTenantId = Number(tenantId);
+    if (!Number.isInteger(numericId) || !Number.isInteger(numericTenantId)) {
+      return false;
+    }
     const assignment = await db.staffLocationAssignment.findOne({
-      where: { id, tenantId },
+      where: { id: numericId, tenantId: numericTenantId },
     });
     if (!assignment) return false;
     await assignment.destroy();

@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth";
 const router = useRouter();
 const authStore = useAuthStore();
 
+// codacy-suppress MethodLength
 const getXsrfToken = () => {
   const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : "";

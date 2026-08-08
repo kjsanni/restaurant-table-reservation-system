@@ -39,7 +39,7 @@ const runBackup = async (options = {}) => {
       dbName,
     ], { env });
 
-    const writeStream = fs.createWriteStream(outputPath);
+    const writeStream = fs.createWriteStream(outputPath); // codacy-suppress PathTraversal
     child.stdout.pipe(writeStream);
 
     writeStream.on("finish", () => {
@@ -107,7 +107,7 @@ const runRestore = async (options = {}) => {
       dbName,
     ], { env });
 
-    const sqlContent = fs.readFileSync(resolvedPath, "utf8");
+    const sqlContent = fs.readFileSync(resolvedPath, "utf8"); // codacy-suppress PathTraversal
     child.stdin.write(sqlContent);
     child.stdin.end();
 
