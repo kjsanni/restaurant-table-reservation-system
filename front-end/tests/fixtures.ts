@@ -4,7 +4,7 @@ const E2E_SUPER_ADMIN_EMAIL =
   process.env.E2E_SUPER_ADMIN_EMAIL || "admin@rtrs.com";
 const E2E_SUPER_ADMIN_PASSWORD =
   process.env.E2E_SUPER_ADMIN_PASSWORD || "admin123";
-const E2E_TENANT_SLUG = process.env.E2E_TENANT_SLUG || "qa-tenant-b";
+const E2E_TENANT_SLUG = process.env.E2E_TENANT_SLUG || "default";
 const E2E_TENANT_EMAIL = process.env.E2E_TENANT_EMAIL || "akua@demo.test";
 const E2E_TENANT_PASSWORD =
   process.env.E2E_TENANT_PASSWORD || "password123";
