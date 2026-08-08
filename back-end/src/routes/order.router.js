@@ -61,7 +61,7 @@ router
 
 router
   .route("/track/:orderId")
-  .get(protectedRoute("view_orders", orderController.trackOrderHandler))
+  .get(generalLimiter, protectedRoute("view_orders", orderController.trackOrderHandler))
   .all(httpMethodError);
 
 module.exports = router;
