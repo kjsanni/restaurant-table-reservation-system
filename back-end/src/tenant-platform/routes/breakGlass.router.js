@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
-const breakGlassController = require("../../controllers/breakGlass.controller");
+const breakGlassController = require("../controllers/breakGlass.controller");
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
 const { adminActionLimiter } = require("../../middleware/rateLimit");
 
