@@ -12,11 +12,11 @@ const setCsrfCookie = (req, res, next) => {
   if (!existingToken) {
     const token = generateCsrfToken();
     const isProduction = process.env.NODE_ENV === "production";
+    const isTest = process.env.NODE_ENV === "test";
     res.cookie(CSRF_COOKIE_NAME, token, {
-      // nosemgrep: javascript.lang.security.audit.cookie-http-only-disabled - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
-      httpOnly: false, // guardrails-disable-line - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
+      httpOnly: false,
       secure: isProduction,
-      sameSite: "lax",
+      sameSite: isTest ? false : isProduction ? "lax" : false,
       path: "/",
       maxAge: 24 * 60 * 60 * 1000,
     });
