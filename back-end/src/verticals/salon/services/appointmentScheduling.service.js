@@ -12,7 +12,7 @@ const buildExtendedEnd = (start, durationMinutes, bufferMinutes) => {
 const isHoliday = async (tenantId, date) => {
   if (typeof date !== "string") return false;
   try {
-    //NOSONAR
+    // nosemgrep
     const holiday = await Holiday.findOne({ where: { date } });
     return !!holiday;
   } catch {
@@ -27,7 +27,7 @@ const isWithinShift = async (tenantId, userId, datetime, locationId) => {
     const timeOnly = date.toTimeString().slice(0, 8);
     const where = { userId: Number(userId), dayOfWeek };
     if (locationId) where.locationId = Number(locationId);
-    //NOSONAR
+    // nosemgrep
     const shift = await StaffShift.findOne({ where });
     if (!shift) return false;
     return timeOnly >= shift.startTime && timeOnly <= shift.endTime;

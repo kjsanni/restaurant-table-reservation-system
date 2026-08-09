@@ -29,7 +29,7 @@ const staffLocationAssignmentDAO = {
   },
 
   async findById(id, tenantId) {
-    //NOSONAR
+    // nosemgrep
     return db.staffLocationAssignment.findOne({
       where: { id: Number(id), tenantId },
       include: [

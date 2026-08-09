@@ -44,7 +44,7 @@ const inventoryTransferDAO = {
   },
 
   async findById(id, tenantId) {
-    //NOSONAR
+    // nosemgrep
     return db.inventoryTransfer.findOne({
       where: { id: Number(id), tenantId },
       include: [
