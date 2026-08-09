@@ -79,7 +79,10 @@ const runRestore = async (options = {}) => {
   }
 
   const resolvedPath = path.resolve(filePath);
-  if (!resolvedPath.startsWith(path.resolve(os.tmpdir())) && !resolvedPath.startsWith("/var/backups")) {
+  const baseTmpDir = path.resolve(os.tmpdir());
+  const allowedBaseDirs = [baseTmpDir, "/var/backups"];
+  const isAllowed = allowedBaseDirs.some((dir) => resolvedPath === dir || resolvedPath.startsWith(dir + path.sep));
+  if (!isAllowed) {
     throw { status: 403, message: "Backup file path is not allowed" };
   }
 
