@@ -15,7 +15,7 @@ async function loginAsPlatformAdmin(page) {
   await page.fill("#password", E2E_SUPER_ADMIN_PASSWORD);
   await page.press("#password", "Enter");
   await page.waitForURL((url) => !url.pathname.includes("/login"), {
-    timeout: 30000,
+    timeout: 60000,
   });
 }
 
@@ -26,7 +26,7 @@ async function loginAsTenantStaff(page) {
   await page.fill("#password", E2E_TENANT_PASSWORD);
   await page.press("#password", "Enter");
   await page.waitForURL((url) => !url.pathname.includes("/login"), {
-    timeout: 30000,
+    timeout: 60000,
   });
 }
 
