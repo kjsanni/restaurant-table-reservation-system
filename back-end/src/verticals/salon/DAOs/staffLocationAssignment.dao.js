@@ -34,7 +34,7 @@ const staffLocationAssignmentDAO = {
     if (!Number.isInteger(numericId) || !Number.isInteger(numericTenantId)) {
       return null;
     }
-    // codacy-suppress NoSqlInjection
+    // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; numericId and numericTenantId are validated integers
     return db.staffLocationAssignment.findOne({
       where: { id: numericId, tenantId: numericTenantId },
       include: [
@@ -59,7 +59,7 @@ const staffLocationAssignmentDAO = {
     if (!Number.isInteger(numericUserId) || !Number.isInteger(numericLocationId) || !Number.isInteger(numericTenantId)) {
       return null;
     }
-    // codacy-suppress NoSqlInjection
+    // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; all IDs are validated integers
     return db.staffLocationAssignment.findOne({
       where: { userId: numericUserId, locationId: numericLocationId, tenantId: numericTenantId },
     });

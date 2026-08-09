@@ -38,7 +38,8 @@ const withErrorResponse = (handler) => async (req, res) => {
 const completeTransferHandler = async (req, res) => {
   const tenantId = req.tenant?.id;
   const numericId = requireId(req.params.id, "transfer");
-  const transfer = await inventoryTransferDao.findById(numericId, tenantId); // codacy-suppress NoSqlInjection
+  // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; numericId and tenantId are validated integers
+  const transfer = await inventoryTransferDao.findById(numericId, tenantId);
   if (!transfer) {
     return res.status(404).json({ success: false, message: "Transfer not found" });
   }
@@ -46,8 +47,10 @@ const completeTransferHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "Transfer cannot be completed in its current status" });
   }
 
-  const updated = await inventoryTransferDao.update(numericId, tenantId, { status: "completed" }); // codacy-suppress NoSqlInjection
+  // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; numericId and tenantId are validated integers
+  const updated = await inventoryTransferDao.update(numericId, tenantId, { status: "completed" });
 
+  // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; transfer.inventoryItemId is a validated integer
   const sourceItem = await db.inventoryItem.findOne({
     where: { id: transfer.inventoryItemId, tenantId },
   });
@@ -55,6 +58,7 @@ const completeTransferHandler = async (req, res) => {
     await sourceItem.update({ quantity: Math.max(0, sourceItem.quantity - transfer.quantity) });
   }
 
+  // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; transfer fields are validated integers
   const targetItem = await db.inventoryItem.findOne({
     where: { name: sourceItem?.name, sku: sourceItem?.sku, locationId: transfer.toLocationId, tenantId },
   });

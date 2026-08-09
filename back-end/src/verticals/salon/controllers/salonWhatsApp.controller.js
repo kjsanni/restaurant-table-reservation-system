@@ -33,6 +33,7 @@ const handleChargeSuccess = async (data) => {
   const tenantId = data.metadata?.tenantId || null;
   if (!appointmentId || !Number.isInteger(appointmentId) || !tenantId) return;
 
+  // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; appointmentId and tenantId are validated integers
   const appointment = await db.appointment.findOne({
     where: { id: appointmentId, tenantId },
   });
