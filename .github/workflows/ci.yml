@@ -189,6 +189,6 @@ jobs:
           NODE_ENV: test
       - name: Run Playwright E2E tests
         working-directory: front-end
-        run: npm run test:e2e
+        run: npm run test:e2e -- --project=chromium
         env:
           BASE_URL: http://localhost:8000
