@@ -1,10 +1,14 @@
 const fs = require("fs");
 const path = require("path");
 
-const logStream = fs.createWriteStream(
-  path.join(__dirname, "../../logs/requests.log"),
-  { flags: "a" }
-);
+const logDir = path.join(__dirname, "../../logs");
+const logPath = path.join(logDir, "requests.log");
+
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
+
+const logStream = fs.createWriteStream(logPath, { flags: "a" });
 
 const closeLogStream = () => {
   if (typeof logStream.end === "function") {
