@@ -19,7 +19,7 @@ const sendPaymentConfirmation = async (appointment) => {
     throw new Error(`Template not allowed: ${templateName}`);
   }
 
-  const message = messageTemplates.render(templateName, {
+  const message = await messageTemplates.render(templateName, {
     appointmentId: appointment.id,
     date: dateStr,
     time: timeStr,
