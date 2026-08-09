@@ -29,7 +29,7 @@ const staffLocationAssignmentDAO = {
   },
 
   async findById(id, tenantId) {
-    // codacy-ignore
+    //NOSONAR
     return db.staffLocationAssignment.findOne({
       where: { id: Number(id), tenantId },
       include: [

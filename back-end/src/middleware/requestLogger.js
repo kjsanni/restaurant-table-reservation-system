@@ -4,12 +4,12 @@ const path = require("path");
 const logDir = path.join(__dirname, "../../logs");
 const logPath = path.join(logDir, "requests.log");
 
-// codacy-ignore
+//NOSONAR
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }
 
-// codacy-ignore
+//NOSONAR
 const logStream = fs.createWriteStream(logPath, { flags: "a" });
 
 const closeLogStream = () => {

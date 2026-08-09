@@ -12,7 +12,7 @@ const inventoryTransferHandlers = createCrudHandlers(
 );
 
 const findSourceItem = async (transfer, tenantId, t) => {
-  // codacy-ignore
+  //NOSONAR
   return db.inventoryItem.findOne({
     where: { id: Number(transfer.inventoryItemId), tenantId },
     transaction: t,

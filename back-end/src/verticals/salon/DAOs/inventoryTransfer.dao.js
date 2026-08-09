@@ -44,7 +44,7 @@ const inventoryTransferDAO = {
   },
 
   async findById(id, tenantId) {
-    // codacy-ignore
+    //NOSONAR
     return db.inventoryTransfer.findOne({
       where: { id: Number(id), tenantId },
       include: [
