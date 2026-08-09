@@ -44,8 +44,7 @@ const inventoryTransferDAO = {
   },
 
   async findById(id, tenantId) {
-    // codacy-suppress NoSqlInjection
-    return db.inventoryTransfer.findOne({
+    return db.inventoryTransfer.findOne({ // codacy-suppress NoSqlInjection
       where: { id: Number(id), tenantId },
       include: [
         {
