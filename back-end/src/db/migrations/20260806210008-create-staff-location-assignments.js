@@ -12,12 +12,12 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: true,
       },
-      userId: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: { model: "users", key: "id" },
-        onDelete: "CASCADE",
-      },
+        userId: {
+          type: Sequelize.INTEGER,
+          allowNull: false,
+          references: { model: "users", key: "id" },
+          onDelete: "CASCADE",
+        },
       locationId: {
         type: Sequelize.INTEGER,
         allowNull: true,

@@ -5,6 +5,8 @@ const { protect, requirePermission } = require("../../../middleware/auth");
 const { requireVertical } = require("../../../middleware/requireVertical");
 const { generalLimiter } = require("../../../middleware/rateLimit");
 
+router.use(generalLimiter);
+
 router.use(generalLimiter, protect, requireVertical("salon"), requirePermission("manage_staff"));
 
 router.route("/").get(staffLocationAssignmentController.getStaffLocationAssignmentsHandler).post(staffLocationAssignmentController.createStaffLocationAssignmentHandler);

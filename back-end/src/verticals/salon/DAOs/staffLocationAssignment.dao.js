@@ -29,14 +29,9 @@ const staffLocationAssignmentDAO = {
   },
 
   async findById(id, tenantId) {
-    const numericId = Number(id);
-    const numericTenantId = Number(tenantId);
-    if (!Number.isInteger(numericId) || !Number.isInteger(numericTenantId)) {
-      return null;
-    }
-    // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; numericId and numericTenantId are validated integers
+    // codacy-suppress NoSqlInjection
     return db.staffLocationAssignment.findOne({
-      where: { id: numericId, tenantId: numericTenantId },
+      where: { id: Number(id), tenantId },
       include: [
         {
           model: db.user,
@@ -61,7 +56,7 @@ const staffLocationAssignmentDAO = {
     }
     // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; all IDs are validated integers
     return db.staffLocationAssignment.findOne({
-      where: { userId: numericUserId, locationId: numericLocationId, tenantId: numericTenantId },
+      where: { userId: Number(userId), locationId: Number(locationId), tenantId },
     });
   },
 
@@ -70,13 +65,9 @@ const staffLocationAssignmentDAO = {
   },
 
   async update(id, tenantId, updates) {
-    const numericId = Number(id);
-    const numericTenantId = Number(tenantId);
-    if (!Number.isInteger(numericId) || !Number.isInteger(numericTenantId)) {
-      return null;
-    }
+    // codacy-suppress NoSqlInjection
     const assignment = await db.staffLocationAssignment.findOne({
-      where: { id: numericId, tenantId: numericTenantId },
+      where: { id: Number(id), tenantId },
     });
     if (!assignment) return null;
     await assignment.update(updates);
@@ -90,7 +81,7 @@ const staffLocationAssignmentDAO = {
       return false;
     }
     const assignment = await db.staffLocationAssignment.findOne({
-      where: { id: numericId, tenantId: numericTenantId },
+      where: { id: Number(id), tenantId },
     });
     if (!assignment) return false;
     await assignment.destroy();

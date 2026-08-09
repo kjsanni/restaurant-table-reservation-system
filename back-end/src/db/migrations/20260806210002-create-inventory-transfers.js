@@ -1,17 +1,6 @@
 "use strict";
 
-const inventoryTransferColumns = (Sequelize) => ({
-  id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  tenantId: {
-    type: Sequelize.INTEGER,
-    allowNull: true,
-  },
-  ...inventoryTransferLocationColumns(Sequelize),
-  ...inventoryTransferItemColumns(Sequelize),
+const addInventoryTransfersTimestamps = (Sequelize) => ({
   createdAt: {
     type: Sequelize.DATE,
     allowNull: false,
@@ -24,47 +13,52 @@ const inventoryTransferColumns = (Sequelize) => ({
   },
 });
 
-const inventoryTransferLocationColumns = (Sequelize) => ({
-  fromLocationId: {
-    type: Sequelize.INTEGER,
-    allowNull: true,
-    references: { model: "locations", key: "id" },
-    onDelete: "SET NULL",
-  },
-  toLocationId: {
-    type: Sequelize.INTEGER,
-    allowNull: true,
-    references: { model: "locations", key: "id" },
-    onDelete: "SET NULL",
-  },
-});
-
-const inventoryTransferItemColumns = (Sequelize) => ({
-  inventoryItemId: {
-    type: Sequelize.INTEGER,
-    allowNull: false,
-    references: { model: "inventory_items", key: "id" },
-    onDelete: "CASCADE",
-  },
-  quantity: {
-    type: Sequelize.INTEGER,
-    allowNull: false,
-defaultValue: 1,
-    validate: { min: 1 },
-  },
-  status: {
-    type: Sequelize.ENUM("pending", "in_transit", "completed", "cancelled"),
-    allowNull: false,
-    defaultValue: "pending",
-  },
-  notes: {
-    type: Sequelize.TEXT,
-    allowNull: true,
-  },
-});
-
 const createInventoryTransfersTable = async (queryInterface, Sequelize) => {
-  await queryInterface.createTable("inventory_transfers", inventoryTransferColumns(Sequelize));
+  await queryInterface.createTable("inventory_transfers", {
+    id: {
+      type: Sequelize.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    tenantId: {
+      type: Sequelize.INTEGER,
+      allowNull: true,
+    },
+    fromLocationId: {
+      type: Sequelize.INTEGER,
+      allowNull: true,
+      references: { model: "locations", key: "id" },
+      onDelete: "SET NULL",
+    },
+    toLocationId: {
+      type: Sequelize.INTEGER,
+      allowNull: true,
+      references: { model: "locations", key: "id" },
+      onDelete: "SET NULL",
+    },
+    inventoryItemId: {
+      type: Sequelize.INTEGER,
+      allowNull: false,
+      references: { model: "inventory_items", key: "id" },
+      onDelete: "CASCADE",
+    },
+    quantity: {
+      type: Sequelize.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: { min: 1 },
+    },
+    status: {
+      type: Sequelize.ENUM("pending", "in_transit", "completed", "cancelled"),
+      allowNull: false,
+      defaultValue: "pending",
+    },
+    notes: {
+      type: Sequelize.TEXT,
+      allowNull: true,
+    },
+    ...addInventoryTransfersTimestamps(Sequelize),
+  });
 };
 
 const addInventoryTransfersIndexes = async (queryInterface) => {

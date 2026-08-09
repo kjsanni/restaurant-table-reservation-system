@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const httpMethodError = require("../middleware/httpMethodError");
 const menuController = require("../controllers/menu.controller");
-const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
+const { protectedRoute } = require("../utils/routeHelpers");
 
 router
   .route("/categories")

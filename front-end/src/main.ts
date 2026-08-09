@@ -52,7 +52,16 @@ const vuesticConfig = {
   } as any,
 };
 
-const registerServiceWorker = () => {
+const pinia = createPinia();
+const app = createApp(App);
+
+app.use(pinia);
+app.use(router);
+app.use(createVuestic(vuesticConfig));
+
+app.mount("#app");
+
+function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
     const isSecure =
       window.location.protocol === "https:" ||
@@ -64,21 +73,6 @@ const registerServiceWorker = () => {
       });
     }
   }
-};
+}
 
-(async () => {
-  const pinia = createPinia();
-  setActivePinia(pinia);
-  const app = createApp(App);
-
-  app.use(pinia);
-  app.use(createVuestic(vuesticConfig));
-
-  const authStore = useAuthStore();
-  await authStore.init();
-
-  app.use(router);
-  app.mount("#app");
-
-  registerServiceWorker();
-})();
+registerServiceWorker();

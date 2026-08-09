@@ -12,14 +12,14 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: true,
       },
-      customerId: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        unique: "unique_salon_client_per_tenant",
-        references: { model: "Customers", key: "id" },
-        onUpdate: "cascade",
-        onDelete: "cascade",
-      },
+        customerId: {
+          type: Sequelize.INTEGER,
+          allowNull: false,
+          unique: "unique_salon_client_per_tenant",
+          references: { model: "Customers", key: "id" },
+          onUpdate: "cascade",
+          onDelete: "cascade",
+        },
       hairType: {
         type: Sequelize.ENUM(
           "straight",

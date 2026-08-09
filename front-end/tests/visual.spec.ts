@@ -14,31 +14,15 @@ const routes = [
   { name: "Settings", path: "/settings" },
 ];
 
-test.describe("Visual regression", () => {
-  test.beforeEach(() => {
-    test.skip(
-      test.info().project.name !== "chromium",
-      "Visual baselines are captured on chromium only"
-    );
-  });
-
-  for (const route of routes) {
-    for (const viewport of viewports) {
-      test.describe(`${route.name} (${viewport.name})`, () => {
-        test.use({
-          viewport: { width: viewport.width, height: viewport.height },
-        });
-
-        test("should match baseline screenshot", async ({ page }) => {
-          await page.goto(route.path);
-          await page.waitForLoadState("domcontentloaded");
-          await expect(page).toHaveScreenshot(
-            `${route.name.toLowerCase().replace(/\s+/g, "-")}-${viewport.name.toLowerCase()}.png`,
-            {
-              fullPage: true,
-              maxDiffPixels: 100,
-            }
-          );
+for (const route of routes) {
+  for (const viewport of viewports) {
+    test.describe(`Visual - ${route.name} (${viewport.name})`, () => {
+      test("should match baseline screenshot", async ({ page }) => {
+        await page.setViewportSize({ width: viewport.width, height: viewport.height });
+        await page.goto(route.path);
+        await page.waitForLoadState("load");
+        await expect(page).toHaveScreenshot(`${route.name.toLowerCase().replace(/\s+/g, "-")}-${viewport.name.toLowerCase()}.png`, {
+          fullPage: true,
         });
       });
     }

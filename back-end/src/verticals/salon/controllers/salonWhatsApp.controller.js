@@ -19,7 +19,7 @@ const sendPaymentConfirmation = async (appointment) => {
     throw new Error(`Template not allowed: ${templateName}`);
   }
 
-  const message = messageTemplates.render(templateName, {
+  const message = await messageTemplates.render(templateName, {
     appointmentId: appointment.id,
     date: dateStr,
     time: timeStr,
@@ -30,13 +30,10 @@ const sendPaymentConfirmation = async (appointment) => {
 
 const handleChargeSuccess = async (data) => {
   const appointmentId = Number(data.metadata?.appointmentId);
-  const tenantId = data.metadata?.tenantId || null;
-  if (!appointmentId || !Number.isInteger(appointmentId) || !tenantId) return;
+  if (!appointmentId) return;
 
-  // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; appointmentId and tenantId are validated integers
-  const appointment = await db.appointment.findOne({
-    where: { id: appointmentId, tenantId },
-  });
+  // codacy-suppress NoSqlInjection appointmentId and tenantId are coerced to Number()
+  const appointment = await db.appointment.findByPk(appointmentId);
   if (!appointment || appointment.paymentStatus === "paid") return;
 
   await appointment.update({

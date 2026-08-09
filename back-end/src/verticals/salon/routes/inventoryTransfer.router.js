@@ -5,6 +5,8 @@ const { protect, requirePermission } = require("../../../middleware/auth");
 const { requireVertical } = require("../../../middleware/requireVertical");
 const { generalLimiter } = require("../../../middleware/rateLimit");
 
+router.use(generalLimiter);
+
 router.use(generalLimiter, protect, requireVertical("salon"), requirePermission("edit_appointments"));
 
 router.route("/").get(inventoryTransferController.getInventoryTransfersHandler).post(inventoryTransferController.createInventoryTransferHandler);

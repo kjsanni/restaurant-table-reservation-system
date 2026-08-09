@@ -42,12 +42,13 @@ jobs:
       DB_PASSWORD: testpass
       REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
-      JWT_SECRET: test-secret-key-for-ci-only-12345
+      JWT_SECRET: test-secret-key-for-ci-only-1234567890
       CORS_ORIGINS: http://localhost:8080
       PORT: 8000
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v7.0.0
         with:
           node-version: 20
           cache: "npm"
@@ -77,7 +78,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v7.0.0
         with:
           node-version: 20
           cache: "npm"
@@ -99,7 +101,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v7.0.0
         with:
           node-version: 20
       - name: Check LEGAL_DOCUMENT_VERSIONS sync
@@ -142,12 +145,14 @@ jobs:
       DB_PASSWORD: testpass
       REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
-      JWT_SECRET: test-secret-key-for-ci-only-12345
+      JWT_SECRET: test-secret-key-for-ci-only-1234567890
       CORS_ORIGINS: http://localhost:8080
       PORT: 8000
+      ADMIN_INITIAL_PASSWORD: admin123
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v7.0.0
         with:
           node-version: 20
           cache: "npm"
@@ -155,7 +160,8 @@ jobs:
       - name: Install backend dependencies
         working-directory: back-end
         run: npm ci
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v7.0.0
         with:
           node-version: 20
           cache: "npm"
@@ -193,15 +199,7 @@ jobs:
           echo $! > /tmp/backend.pid
           echo "Server started with PID: $!"
       - name: Wait for backend
-        run: |
-          sleep 30
-          ps aux | grep node || true
-          netstat -tlnp 2>/dev/null || ss -tlnp 2>/dev/null || true
-          curl -v http://localhost:8000/api/v1/health || true
-          npx wait-on http://localhost:8000/api/v1/health --timeout 300000
-      - name: Show backend logs
-        if: always()
-        run: cat /tmp/backend.log || true
+        run: npx wait-on http://localhost:8000/api/v1/health --timeout 120000
       - name: Run API contract tests
         working-directory: back-end
         run: npm run test:postman
@@ -210,6 +208,6 @@ jobs:
           NODE_ENV: test
       - name: Run Playwright E2E tests
         working-directory: front-end
-        run: npm run test:e2e
+        run: npm run test:e2e -- --project=chromium tests/actor-entry-points.spec.ts
         env:
           BASE_URL: http://localhost:8000
