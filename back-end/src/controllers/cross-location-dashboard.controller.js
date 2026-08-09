@@ -1,5 +1,5 @@
 "use strict";
-const db = require("../../db/models");
+const db = require("../db/models");
 const appointmentDao = require("../verticals/salon/DAOs/appointment.dao");
 const locationDao = require("../verticals/salon/DAOs/location.dao");
 const stationDao = require("../verticals/salon/DAOs/station.dao");
