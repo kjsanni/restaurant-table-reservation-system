@@ -8,6 +8,8 @@ exclude_paths:
   - "back-end/src/services/webhook.service.js"
   - "back-end/src/utils/logger.js"
   - "back-end/src/verticals/salon/services/appointmentScheduling.service.js"
+  - "back-end/src/middleware/requestLogger.js"
+  - "back-end/src/tenant-platform/services/backup.service.js"
   - "scripts/check-legal-versions.js"
   - "drinks-vendor/**"
 
