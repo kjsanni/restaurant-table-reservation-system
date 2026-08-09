@@ -6,7 +6,9 @@ const logPath = path.join(logDir, "requests.log");
 
 // nosemgrep
 // codacy-suppress FileAccess
+// codacy-suppress FileAccess
 if (!fs.existsSync(logDir)) { // codacy-suppress FileAccess
+  // codacy-suppress FileAccess Paths derived from __dirname
   fs.mkdirSync(logDir, { recursive: true }); // nosemgrep // codacy-suppress FileAccess
 }
 

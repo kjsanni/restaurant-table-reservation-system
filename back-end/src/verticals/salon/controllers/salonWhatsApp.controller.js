@@ -32,6 +32,7 @@ const handleChargeSuccess = async (data) => {
   const appointmentId = Number(data.metadata?.appointmentId);
   if (!appointmentId) return;
 
+  // codacy-suppress NoSqlInjection appointmentId and tenantId are coerced to Number()
   const appointment = await db.appointment.findByPk(appointmentId);
   if (!appointment || appointment.paymentStatus === "paid") return;
 

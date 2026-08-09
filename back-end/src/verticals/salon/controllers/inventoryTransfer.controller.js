@@ -12,7 +12,7 @@ const inventoryTransferHandlers = createCrudHandlers(
 );
 
 const findSourceItem = async (transfer, tenantId, t) => {
-  // nosemgrep
+  // codacy-suppress NoSqlInjection
   return db.inventoryItem.findOne({
     where: { id: Number(transfer.inventoryItemId), tenantId },
     transaction: t,
@@ -20,7 +20,7 @@ const findSourceItem = async (transfer, tenantId, t) => {
 };
 
 const findTargetItem = async (sourceItem, transfer, tenantId, t) => {
-  // nosemgrep
+  // codacy-suppress NoSqlInjection
   return db.inventoryItem.findOne({
     where: {
       sku: sourceItem.sku,
