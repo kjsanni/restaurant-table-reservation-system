@@ -1,7 +1,7 @@
 "use strict";
-const db = require("../db/models");
 const appointmentDao = require("../verticals/salon/DAOs/appointment.dao");
 const locationDao = require("../verticals/salon/DAOs/location.dao");
+const staffDao = require("../verticals/salon/DAOs/staff.dao");
 const stationDao = require("../verticals/salon/DAOs/station.dao");
 
 const getCrossLocationDashboardHandler = async (req, res) => {
@@ -16,7 +16,7 @@ const getCrossLocationDashboardHandler = async (req, res) => {
     const [locations, locationSummary, staffCount, stationCount, todayStats] = await Promise.all([
       locationDao.findAllForTenant(tenantId),
       appointmentDao.getLocationSummary(tenantId, from, to),
-      db.user.count({ where: { tenantId, role: "staff" } }),
+      staffDao.findAllForTenant(tenantId, { limit: 1000 }).then((r) => r.data?.length || r.length || 0),
       stationDao.findAllForTenant(tenantId, { limit: 1000 }).then((r) => r.data?.length || r.length || 0),
       appointmentDao.getTodayStats(tenantId),
     ]);

@@ -48,9 +48,14 @@ const inventoryTransferDAO = {
   },
 
   async findById(id, tenantId) {
-    // codacy-suppress NoSqlInjection
+    const numericId = Number(id);
+    const numericTenantId = Number(tenantId);
+    if (!Number.isInteger(numericId) || !Number.isInteger(numericTenantId)) {
+      return null;
+    }
+    // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; numericId and numericTenantId are validated integers
     return db.inventoryTransfer.findOne({
-      where: { id: Number(id), tenantId },
+      where: { id: numericId, tenantId: numericTenantId },
       include: [
         {
           model: db.location,
@@ -75,18 +80,18 @@ const inventoryTransferDAO = {
     return db.inventoryTransfer.create({ ...data, tenantId });
   },
 
-  async update(id, tenantId, updates, transaction) {
+  async update(id, tenantId, updates) {
     const transfer = await db.inventoryTransfer.findOne({
-      where: { id: Number(id), tenantId },
+      where: { id, tenantId },
     });
     if (!transfer) return null;
-    await transfer.update(updates, { transaction });
+    await transfer.update(updates);
     return transfer;
   },
 
   async delete(id, tenantId) {
     const transfer = await db.inventoryTransfer.findOne({
-      where: { id: Number(id), tenantId },
+      where: { id, tenantId },
     });
     if (!transfer) return false;
     await transfer.destroy();
