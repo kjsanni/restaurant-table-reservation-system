@@ -3,6 +3,8 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 
+const BACKUP_BASE_DIR = path.resolve(os.tmpdir(), "backups");
+
 const escapeShellArg = (value) => {
   if (value === null || value === undefined) {
     return '""';
@@ -14,10 +16,18 @@ const escapeShellArg = (value) => {
   return `'${str.replace(/'/g, "'\\''")}'`;
 };
 
+const validateOutputDir = (outputDir) => {
+  const resolved = path.resolve(outputDir);
+  if (!resolved.startsWith(BACKUP_BASE_DIR)) {
+    throw { status: 403, message: "Output directory is not within allowed backup path" };
+  }
+  return resolved;
+};
+
 const runBackup = async (options = {}) => {
   const {
     type = "full",
-    outputDir = path.join(os.tmpdir(), "backups"),
+    outputDir = BACKUP_BASE_DIR,
   } = options;
 
   const sanitizedType = String(type).replace(/[^a-zA-Z0-9_-]/g, "");
@@ -25,12 +35,13 @@ const runBackup = async (options = {}) => {
     throw { status: 400, message: "Invalid backup type" };
   }
 
+  const resolvedOutputDir = validateOutputDir(outputDir);
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const fileName = `backup-${sanitizedType}-${timestamp}.sql`;
-  const outputPath = path.join(outputDir, fileName);
+  const outputPath = path.join(resolvedOutputDir, fileName);
 
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+  if (!fs.existsSync(resolvedOutputDir)) {
+    fs.mkdirSync(resolvedOutputDir, { recursive: true });
   }
 
   const dbName = process.env.DB_NAME || "restaurant_reservation";

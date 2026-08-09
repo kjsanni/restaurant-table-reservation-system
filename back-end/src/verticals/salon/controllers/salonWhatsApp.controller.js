@@ -29,7 +29,7 @@ const sendPaymentConfirmation = async (appointment) => {
 };
 
 const handleChargeSuccess = async (data) => {
-  const appointmentId = data.metadata?.appointmentId;
+  const appointmentId = Number(data.metadata?.appointmentId);
   if (!appointmentId) return;
 
   const appointment = await db.appointment.findByPk(appointmentId);
