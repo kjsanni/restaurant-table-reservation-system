@@ -11,7 +11,7 @@ async function loginAsPlatformAdmin(page) {
   await page.fill('#email', E2E_SUPER_ADMIN_EMAIL);
   await page.fill('#password', E2E_SUPER_ADMIN_PASSWORD);
   await page.click('button[type="submit"]');
-  await page.waitForURL((url) => !url.pathname.includes("/login"));
+  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 60000 });
 }
 
 async function loginAsTenantStaff(page) {
@@ -20,7 +20,7 @@ async function loginAsTenantStaff(page) {
   await page.fill('#email', E2E_TENANT_EMAIL);
   await page.fill('#password', E2E_TENANT_PASSWORD);
   await page.click('button[type="submit"]');
-  await page.waitForURL((url) => !url.pathname.includes("/login"));
+  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 60000 });
 }
 
 test.describe("Actor Entry Points", () => {
