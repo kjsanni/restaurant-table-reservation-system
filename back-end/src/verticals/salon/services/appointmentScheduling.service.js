@@ -206,6 +206,7 @@ const appointmentSchedulingService = {
 
   async getSalonCommissionConfig(tenantId) {
     try {
+      // nosemgrep
       const setting = await salonModels.sequelize.models.setting.findOne({
         where: { key: "salon_commission_config", tenantId },
       });

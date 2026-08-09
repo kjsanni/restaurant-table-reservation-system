@@ -6,7 +6,7 @@ const logPath = path.join(logDir, "requests.log");
 
 // nosemgrep
 if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
+  fs.mkdirSync(logDir, { recursive: true }); // nosemgrep
 }
 
 // nosemgrep

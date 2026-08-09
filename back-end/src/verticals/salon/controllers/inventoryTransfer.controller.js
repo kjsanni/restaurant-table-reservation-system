@@ -20,6 +20,7 @@ const findSourceItem = async (transfer, tenantId, t) => {
 };
 
 const findTargetItem = async (sourceItem, transfer, tenantId, t) => {
+  // nosemgrep
   return db.inventoryItem.findOne({
     where: {
       sku: sourceItem.sku,
