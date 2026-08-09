@@ -18,7 +18,7 @@ const escapeShellArg = (value) => {
 
 const validateOutputDir = (outputDir) => {
   const resolved = path.resolve(outputDir);
-  if (!resolved.startsWith(BACKUP_BASE_DIR)) {
+  if (resolved !== BACKUP_BASE_DIR && !resolved.startsWith(BACKUP_BASE_DIR + path.sep)) {
     throw { status: 403, message: "Output directory is not within allowed backup path" };
   }
   return resolved;
