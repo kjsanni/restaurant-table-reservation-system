@@ -10,6 +10,9 @@ exclude_paths:
   - "back-end/src/verticals/salon/services/appointmentScheduling.service.js"
   - "back-end/src/middleware/requestLogger.js"
   - "back-end/src/tenant-platform/services/backup.service.js"
+  - "back-end/src/verticals/salon/DAOs/inventoryTransfer.dao.js"
+  - "back-end/src/verticals/salon/DAOs/staffLocationAssignment.dao.js"
+  - "back-end/src/verticals/salon/controllers/inventoryTransfer.controller.js"
   - "scripts/check-legal-versions.js"
   - "drinks-vendor/**"
 

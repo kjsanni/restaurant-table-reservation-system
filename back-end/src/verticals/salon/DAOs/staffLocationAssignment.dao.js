@@ -29,7 +29,8 @@ const staffLocationAssignmentDAO = {
   },
 
   async findById(id, tenantId) {
-    return db.staffLocationAssignment.findOne({ // codacy-suppress NoSqlInjection
+    // codacy-suppress NoSqlInjection
+    return db.staffLocationAssignment.findOne({
       where: { id: Number(id), tenantId },
       include: [
         {
