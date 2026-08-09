@@ -10,6 +10,7 @@ const buildExtendedEnd = (start, durationMinutes, bufferMinutes) => {
 };
 
 const isHoliday = async (tenantId, date) => {
+  if (typeof date !== "string") return false;
   try {
     const holiday = await Holiday.findOne({ where: { date } });
     return !!holiday;
@@ -23,8 +24,8 @@ const isWithinShift = async (tenantId, userId, datetime, locationId) => {
     const date = new Date(datetime);
     const dayOfWeek = date.toLocaleLowerCase("en-US", { weekday: "long" });
     const timeOnly = date.toTimeString().slice(0, 8);
-    const where = { userId, dayOfWeek };
-    if (locationId) where.locationId = locationId;
+    const where = { userId: Number(userId), dayOfWeek };
+    if (locationId) where.locationId = Number(locationId);
     const shift = await StaffShift.findOne({ where });
     if (!shift) return false;
     return timeOnly >= shift.startTime && timeOnly <= shift.endTime;
@@ -33,66 +34,109 @@ const isWithinShift = async (tenantId, userId, datetime, locationId) => {
   }
 };
 
+const buildAppointmentWhereClause = (tenantId, locationId, startCondition) => {
+  const where = {
+    tenantId,
+    status: { [Op.notIn]: ["cancelled", "no_show"] },
+    ...startCondition,
+  };
+  if (locationId) where.locationId = Number(locationId);
+  return where;
+};
+
+const buildAppointmentIncludeClause = (stationId, stylistId) => [
+  {
+    model: salonModels.sequelize.models.service,
+    as: "service",
+    required: true,
+  },
+  {
+    model: salonModels.sequelize.models.station,
+    as: "station",
+    required: false,
+    where: stationId ? { id: Number(stationId) } : undefined,
+  },
+  {
+    model: salonModels.sequelize.models.user,
+    as: "stylist",
+    required: false,
+    where: stylistId ? { id: Number(stylistId) } : undefined,
+  },
+];
+
+const fetchOverlappingAppointments = async (tenantId, locationId, extendedEnd, stationId, stylistId, start) => {
+  const appointmentWhere = buildAppointmentWhereClause(tenantId, locationId, {
+    start: { [Op.lt]: extendedEnd },
+  });
+  const includeClause = buildAppointmentIncludeClause(stationId, stylistId);
+
+  const apts = await salonModels.sequelize.models.appointment.findAll({
+    where: appointmentWhere,
+    include: includeClause,
+  });
+
+  return apts.filter((apt) => {
+    const aptEnd = buildExtendedEnd(apt.start, apt.durationMinutes, apt.bufferMinutes || 0);
+    return new Date(start) < aptEnd && extendedEnd > new Date(apt.start);
+  });
+};
+
+const collectConflicts = (apts, stationId, stylistId) => {
+  const conflicts = { station: [], stylist: [] };
+  for (const apt of apts) {
+    if (stationId && apt.stationId === Number(stationId)) {
+      conflicts.station.push(apt);
+    }
+    if (stylistId && apt.stylistId === Number(stylistId)) {
+      conflicts.stylist.push(apt);
+    }
+  }
+  return conflicts;
+};
+
+const buildSlotsForWorkday = (startOfWork, endOfWork, duration, bufferMinutes, occupiedRanges, slotInterval = 30) => {
+  const slots = [];
+  const current = new Date(startOfWork);
+
+  while (current.getTime() + duration * 60000 <= endOfWork.getTime()) {
+    const slotEnd = buildExtendedEnd(current, duration, bufferMinutes);
+    const hasConflict = occupiedRanges.some(
+      (range) => current < range.end && slotEnd > range.start
+    );
+
+    if (!hasConflict) {
+      slots.push({
+        start: new Date(current).toISOString(),
+        end: slotEnd.toISOString(),
+        available: true,
+      });
+    }
+    current.setMinutes(current.getMinutes() + slotInterval);
+  }
+
+  return slots;
+};
+
 const appointmentSchedulingService = {
   async checkConflicts(tenantId, stationId, stylistId, start, durationMinutes, bufferMinutes = 0, excludeId = null, locationId) {
     const extendedEnd = buildExtendedEnd(start, durationMinutes, bufferMinutes);
-    const { Op } = require("sequelize");
-    const conflicts = {
-      station: [],
-      stylist: [],
-      holiday: false,
-    };
+    const conflicts = { station: [], stylist: [], holiday: false };
 
     const dateOnly = new Date(start).toISOString().split("T")[0];
     conflicts.holiday = await isHoliday(tenantId, dateOnly);
 
-    const appointmentWhere = {
-      tenantId,
-      status: { [Op.notIn]: ["cancelled", "no_show"] },
-      start: { [Op.lt]: extendedEnd },
-    };
-    if (locationId) appointmentWhere.locationId = locationId;
-
-    const includeClause = [
-      {
-        model: salonModels.sequelize.models.service,
-        as: "service",
-        required: true,
-      },
-      {
-        model: salonModels.sequelize.models.station,
-        as: "station",
-        required: false,
-        where: stationId ? { id: stationId } : undefined,
-      },
-      {
-        model: salonModels.sequelize.models.user,
-        as: "stylist",
-        required: false,
-        where: stylistId ? { id: stylistId } : undefined,
-      },
-    ];
-
-    const apts = await salonModels.sequelize.models.appointment.findAll({
-      where: appointmentWhere,
-      include: includeClause,
-    });
+    const apts = await fetchOverlappingAppointments(
+      tenantId, locationId, extendedEnd, stationId, stylistId, start
+    );
 
     const filtered = apts.filter((apt) => {
       if (excludeId && apt.id === excludeId) return false;
-      const aptEnd = buildExtendedEnd(apt.start, apt.durationMinutes, apt.bufferMinutes || 0);
-      const aptStart = apt.start;
-      return new Date(start) < aptEnd && extendedEnd > new Date(aptStart);
+      return true;
     });
 
-    for (const apt of filtered) {
-      if (stationId && apt.stationId === stationId) {
-        conflicts.station.push(apt);
-      }
-      if (stylistId && apt.stylistId === stylistId) {
-        conflicts.stylist.push(apt);
-      }
-    }
+    const collected = collectConflicts(filtered, stationId, stylistId);
+    conflicts.station.push(...collected.station);
+    conflicts.stylist.push(...collected.stylist);
 
     if (stylistId) {
       const withinShift = await isWithinShift(tenantId, stylistId, new Date(start), locationId);
@@ -119,7 +163,7 @@ const appointmentSchedulingService = {
   },
 
   async findAvailableSlots(tenantId, serviceId, date, stylistId = null, stationId = null, locationId = null) {
-    const service = await salonModels.sequelize.models.service.findByPk(serviceId);
+    const service = await salonModels.sequelize.models.service.findByPk(Number(serviceId));
     if (!service) throw new Error("Service not found");
 
     const bufferMinutes = service.bufferMinutes || 0;
@@ -132,32 +176,10 @@ const appointmentSchedulingService = {
     const isHolidy = await isHoliday(tenantId, date);
     if (isHolidy) return [];
 
-    const appointmentWhere = {
-      tenantId,
-      status: { [Op.notIn]: ["cancelled", "no_show"] },
+    const appointmentWhere = buildAppointmentWhereClause(tenantId, locationId, {
       start: { [Op.gte]: startOfWork, [Op.lt]: endOfWork },
-    };
-    if (locationId) appointmentWhere.locationId = locationId;
-
-    const includeClause = [
-      {
-        model: salonModels.sequelize.models.service,
-        as: "service",
-        required: true,
-      },
-      {
-        model: salonModels.sequelize.models.station,
-        as: "station",
-        required: false,
-        where: stationId ? { id: stationId } : undefined,
-      },
-      {
-        model: salonModels.sequelize.models.user,
-        as: "stylist",
-        required: false,
-        where: stylistId ? { id: stylistId } : undefined,
-      },
-    ];
+    });
+    const includeClause = buildAppointmentIncludeClause(stationId, stylistId);
 
     const apts = await salonModels.sequelize.models.appointment.findAll({
       where: appointmentWhere,
@@ -168,36 +190,16 @@ const appointmentSchedulingService = {
       const aptStart = new Date(apt.start);
       const aptEnd = buildExtendedEnd(apt.start, apt.durationMinutes, apt.bufferMinutes || 0);
       const ranges = [];
-      if (!stationId || apt.stationId === stationId) {
+      if (!stationId || apt.stationId === Number(stationId)) {
         ranges.push({ type: "station", start: aptStart, end: aptEnd });
       }
-      if (!stylistId || apt.stylistId === stylistId) {
+      if (!stylistId || apt.stylistId === Number(stylistId)) {
         ranges.push({ type: "stylist", start: aptStart, end: aptEnd });
       }
       return ranges;
     }).flat();
 
-    const slots = [];
-    const slotInterval = 30;
-    const current = new Date(startOfWork);
-
-    while (current.getTime() + duration * 60000 <= endOfWork.getTime()) {
-      const slotEnd = buildExtendedEnd(current, duration, bufferMinutes);
-      const hasConflict = occupiedRanges.some(
-        (range) => current < range.end && slotEnd > range.start
-      );
-
-      if (!hasConflict) {
-        slots.push({
-          start: new Date(current).toISOString(),
-          end: slotEnd.toISOString(),
-          available: true,
-        });
-      }
-      current.setMinutes(current.getMinutes() + slotInterval);
-    }
-
-    return slots;
+    return buildSlotsForWorkday(startOfWork, endOfWork, duration, bufferMinutes, occupiedRanges);
   },
 
   async getSalonCommissionConfig(tenantId) {

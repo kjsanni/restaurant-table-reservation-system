@@ -30,7 +30,7 @@ const staffLocationAssignmentDAO = {
 
   async findById(id, tenantId) {
     return db.staffLocationAssignment.findOne({
-      where: { id, tenantId },
+      where: { id: Number(id), tenantId },
       include: [
         {
           model: db.user,
@@ -48,7 +48,7 @@ const staffLocationAssignmentDAO = {
 
   async findByUserLocation(userId, locationId, tenantId) {
     return db.staffLocationAssignment.findOne({
-      where: { userId, locationId, tenantId },
+      where: { userId: Number(userId), locationId: Number(locationId), tenantId },
     });
   },
 
@@ -58,7 +58,7 @@ const staffLocationAssignmentDAO = {
 
   async update(id, tenantId, updates) {
     const assignment = await db.staffLocationAssignment.findOne({
-      where: { id, tenantId },
+      where: { id: Number(id), tenantId },
     });
     if (!assignment) return null;
     await assignment.update(updates);
@@ -67,7 +67,7 @@ const staffLocationAssignmentDAO = {
 
   async delete(id, tenantId) {
     const assignment = await db.staffLocationAssignment.findOne({
-      where: { id, tenantId },
+      where: { id: Number(id), tenantId },
     });
     if (!assignment) return false;
     await assignment.destroy();

@@ -45,7 +45,7 @@ const inventoryTransferDAO = {
 
   async findById(id, tenantId) {
     return db.inventoryTransfer.findOne({
-      where: { id, tenantId },
+      where: { id: Number(id), tenantId },
       include: [
         {
           model: db.location,
@@ -72,7 +72,7 @@ const inventoryTransferDAO = {
 
   async update(id, tenantId, updates, transaction) {
     const transfer = await db.inventoryTransfer.findOne({
-      where: { id, tenantId },
+      where: { id: Number(id), tenantId },
     });
     if (!transfer) return null;
     await transfer.update(updates, { transaction });
@@ -81,7 +81,7 @@ const inventoryTransferDAO = {
 
   async delete(id, tenantId) {
     const transfer = await db.inventoryTransfer.findOne({
-      where: { id, tenantId },
+      where: { id: Number(id), tenantId },
     });
     if (!transfer) return false;
     await transfer.destroy();
