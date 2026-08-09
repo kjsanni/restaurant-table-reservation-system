@@ -20,7 +20,7 @@ for (const route of routes) {
       test("should match baseline screenshot", async ({ page }) => {
         await page.setViewportSize({ width: viewport.width, height: viewport.height });
         await page.goto(route.path);
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("load");
         await expect(page).toHaveScreenshot(`${route.name.toLowerCase().replace(/\s+/g, "-")}-${viewport.name.toLowerCase()}.png`, {
           fullPage: true,
         });
