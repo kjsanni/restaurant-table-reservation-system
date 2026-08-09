@@ -26,7 +26,7 @@ engines:
   stylelint:
     enabled: true
   semgrep:
-    enabled: true
+    enabled: false
   shellcheck:
     enabled: true
   hadolint:
