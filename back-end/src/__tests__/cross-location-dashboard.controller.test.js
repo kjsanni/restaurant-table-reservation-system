@@ -75,6 +75,10 @@ describe("cross-location-dashboard.controller", () => {
           { locationId: 1, revenue: 1000, appointmentCount: 5 },
           { locationId: 2, revenue: 2000, appointmentCount: 8 },
         ],
+        locationDetails: [
+          { id: 1, name: "Location A", address: undefined, city: undefined, region: undefined, latitude: undefined, longitude: undefined, isPrimary: undefined, isActive: undefined },
+          { id: 2, name: "Location B", address: undefined, city: undefined, region: undefined, latitude: undefined, longitude: undefined, isPrimary: undefined, isActive: undefined },
+        ],
       });
     });
 
@@ -119,6 +123,7 @@ describe("cross-location-dashboard.controller", () => {
           revenueToday: 0,
         },
         locations: [],
+        locationDetails: [],
       });
     });
 

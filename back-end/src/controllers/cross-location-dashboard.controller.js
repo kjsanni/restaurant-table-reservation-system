@@ -37,6 +37,17 @@ const getCrossLocationDashboardHandler = async (req, res) => {
         revenueToday: todayStats.revenueToday,
       },
       locations: locationSummary,
+      locationDetails: locations.map((loc) => ({
+        id: loc.id,
+        name: loc.name,
+        address: loc.address,
+        city: loc.city,
+        region: loc.region,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        isPrimary: loc.isPrimary,
+        isActive: loc.isActive,
+      })),
     });
   } catch (err) {
     console.error("getCrossLocationDashboardHandler error:", err.message);

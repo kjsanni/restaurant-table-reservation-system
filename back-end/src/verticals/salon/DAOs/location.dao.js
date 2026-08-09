@@ -10,6 +10,21 @@ const locationDAO = {
     });
   },
 
+  async findAllForTenant(tenantId) {
+    return this.findAll(tenantId);
+  },
+
+  async findAllWithCoordinates(tenantId) {
+    return db.location.findAll({
+      where: {
+        tenantId,
+        latitude: { [db.Sequelize.Op.not]: null },
+        longitude: { [db.Sequelize.Op.not]: null },
+      },
+      order: [["isPrimary", "DESC"], ["name", "ASC"]],
+    });
+  },
+
   async findById(id, tenantId) {
     return db.location.findOne({
       where: { id, tenantId },
