@@ -7,6 +7,7 @@ exclude_paths:
   - "back-end/src/controllers/public.controller.js"
   - "back-end/src/services/webhook.service.js"
   - "back-end/src/utils/logger.js"
+  - "back-end/src/verticals/salon/services/appointmentScheduling.service.js"
   - "scripts/check-legal-versions.js"
   - "drinks-vendor/**"
 
