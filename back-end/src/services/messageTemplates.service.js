@@ -77,7 +77,7 @@ const loadTemplates = async (tenantId) => {
     } else if (typeof stored === "string") {
       customTemplates = JSON.parse(stored);
     }
-  } catch (err) {
+  } catch {
     // fall back to defaults
   }
 

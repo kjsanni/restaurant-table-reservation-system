@@ -37,7 +37,6 @@ const selectedLocationId = ref<number | "">("");
 const {
   list: items,
   loading,
-  showForm,
   editingId,
   form,
   load: loadItems,
@@ -81,7 +80,7 @@ const {
 
 const loadAlerts = async () => {
   try {
-    const res = await inventoryItemAPI.getLowStock();
+    const res = await (inventoryItemAPI as any).getLowStock();
     alerts.value = res.data.data || [];
   } catch (err) {
     logger.error("Failed to load low stock alerts", { error: err });

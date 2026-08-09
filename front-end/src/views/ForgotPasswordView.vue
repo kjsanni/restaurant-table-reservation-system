@@ -1,29 +1,35 @@
 <template>
-  <div class="forgot-password-view">
-    <div class="auth-card">
-      <h1>Forgot Password</h1>
-      <p class="subtitle">Enter your email and we'll send you a reset link.</p>
-      <form @submit.prevent="submit">
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="you@example.com"
-            required
-          />
-        </div>
-        <button type="submit" class="btn-primary" :disabled="loading">
-          {{ loading ? "Sending..." : "Send Reset Link" }}
-        </button>
-        <p v-if="message" class="message" :class="messageType">{{ message }}</p>
-      </form>
-      <p class="footer-link">
-        <router-link to="/login">Back to login</router-link>
-      </p>
+  <main class="forgot-password-main">
+    <div class="forgot-password-view">
+      <div class="auth-card">
+        <h1>Forgot Password</h1>
+        <p class="subtitle">
+          Enter your email and we'll send you a reset link.
+        </p>
+        <form @submit.prevent="submit">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              v-model="email"
+              type="email"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+          <button type="submit" class="btn-primary" :disabled="loading">
+            {{ loading ? "Sending..." : "Send Reset Link" }}
+          </button>
+          <p v-if="message" class="message" :class="messageType">
+            {{ message }}
+          </p>
+        </form>
+        <p class="footer-link">
+          <router-link to="/login">Back to login</router-link>
+        </p>
+      </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup>
@@ -56,6 +62,9 @@ const submit = async () => {
 </script>
 
 <style scoped>
+.forgot-password-main {
+  min-height: 100vh;
+}
 .forgot-password-view {
   display: flex;
   align-items: center;

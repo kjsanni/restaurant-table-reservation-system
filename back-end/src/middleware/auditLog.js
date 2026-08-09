@@ -24,7 +24,7 @@ const logAction = async (req, res, next) => {
   const originalSend = res.send;
   const originalJson = res.json;
 
-  const log = async (data) => {
+  const log = async (_unused) => {
     const route = req.route ? req.route.path : req.path;
     let action = "unknown";
     if (req.method === "POST") action = "create";

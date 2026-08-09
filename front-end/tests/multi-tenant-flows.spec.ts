@@ -18,7 +18,7 @@ test.describe("Multi-tenant flows", () => {
       await page.waitForURL((url) => !url.pathname.includes("/login"));
 
       await page.goto("/checkout");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const orderIds = await page.evaluate(() => {
         return Array.from(document.querySelectorAll("[data-order-id]"))
@@ -43,7 +43,7 @@ test.describe("Multi-tenant flows", () => {
       await page.waitForURL((url) => !url.pathname.includes("/login"));
 
       await page.goto("/checkout");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const tenantBOrderIds = await page.evaluate(() => {
         return Array.from(document.querySelectorAll("[data-order-id]"))
@@ -63,7 +63,7 @@ test.describe("Multi-tenant flows", () => {
       await page.waitForURL((url) => !url.pathname.includes("/login"));
 
       await page.goto("/menu");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const addButtons = page.locator(".add-btn").first();
       if (await addButtons.count() > 0) {
@@ -74,7 +74,7 @@ test.describe("Multi-tenant flows", () => {
         expect(cartCount).not.toBe("0");
 
         await page.goto("/checkout");
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
 
         const checkoutCartCount = await page.locator(".cart-count").textContent();
         expect(checkoutCartCount).toBe(cartCount);
@@ -109,7 +109,7 @@ test.describe("Multi-tenant flows", () => {
   test.describe("Customer portal vertical branding", () => {
     test("customer register page applies tenant branding from public API", async ({ page }) => {
       await page.goto("/customer/register/tenant-a-slug");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const brandName = await page
         .locator(".brand-name")
@@ -121,7 +121,7 @@ test.describe("Multi-tenant flows", () => {
 
     test("customer register page falls back to default when branding fetch fails", async ({ page }) => {
       await page.goto("/customer/register/invalid-tenant-slug");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const brandName = await page
         .locator(".brand-name")

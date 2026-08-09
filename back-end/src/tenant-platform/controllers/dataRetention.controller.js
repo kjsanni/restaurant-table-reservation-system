@@ -1,6 +1,14 @@
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
+const getTenantConversationIds = async (tenantId) => {
+  const conversations = await db.supportConversation.findAll({
+    where: { tenantId },
+    attributes: ["id"],
+  });
+  return conversations.map((c) => c.id);
+};
+
 const listRetentionPoliciesHandler = async (req, res) => {
   const policies = await db.dataRetentionPolicy.findAll({
     order: [["dataCategory", "ASC"]],
@@ -93,19 +101,40 @@ const executeRetentionHandler = async (req, res) => {
     try {
       const cutoff = new Date(Date.now() - policy.retentionDays * 24 * 60 * 60 * 1000);
       let affectedCount = 0;
+      const tenantId = req.tenant?.id;
 
       switch (policy.dataCategory) {
         case "platform_audit_logs":
-          affectedCount = await db.platformAuditLog.destroy({ where: { createdAt: { [db.Sequelize.Op.lt]: cutoff } } });
+          affectedCount = await db.platformAuditLog.destroy({
+            where: {
+              createdAt: { [db.Sequelize.Op.lt]: cutoff },
+              ...(tenantId ? { tenantId } : {}),
+            },
+          });
           break;
         case "support_messages":
-          affectedCount = await db.supportMessage.destroy({ where: { createdAt: { [db.Sequelize.Op.lt]: cutoff } } });
+          affectedCount = await db.supportMessage.destroy({
+            where: {
+              createdAt: { [db.Sequelize.Op.lt]: cutoff },
+              ...(tenantId ? { conversationId: { [db.Sequelize.Op.in]: await getTenantConversationIds(tenantId) } } : {}),
+            },
+          });
           break;
         case "support_conversations":
-          affectedCount = await db.supportConversation.destroy({ where: { createdAt: { [db.Sequelize.Op.lt]: cutoff } } });
+          affectedCount = await db.supportConversation.destroy({
+            where: {
+              createdAt: { [db.Sequelize.Op.lt]: cutoff },
+              ...(tenantId ? { tenantId } : {}),
+            },
+          });
           break;
         case "support_tickets":
-          affectedCount = await db.supportTicket.destroy({ where: { createdAt: { [db.Sequelize.Op.lt]: cutoff } } });
+          affectedCount = await db.supportTicket.destroy({
+            where: {
+              createdAt: { [db.Sequelize.Op.lt]: cutoff },
+              ...(tenantId ? { tenantId } : {}),
+            },
+          });
           break;
         default:
           results.push({ policyId: policy.id, dataCategory: policy.dataCategory, status: "skipped", reason: "Unknown category" });

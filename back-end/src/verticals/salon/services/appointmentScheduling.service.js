@@ -184,8 +184,8 @@ const appointmentSchedulingService = {
     const includeClause = buildAppointmentIncludeClause(stationId, stylistId);
 
     const apts = await salonModels.sequelize.models.appointment.findAll({
-      where: appointmentWhere,
-      include: includeClause,
+      where: buildAppointmentWhere(tenantId, endOfWork, locationId),
+      include: buildIncludeClause(stationId, stylistId),
     });
 
     const occupiedRanges = apts.map((apt) => {

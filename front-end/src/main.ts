@@ -1,8 +1,9 @@
 import { createApp } from "vue";
-import { createPinia } from "pinia";
+import { createPinia, setActivePinia } from "pinia";
 import { createVuestic } from "vuestic-ui";
 import "vuestic-ui/css";
 import App from "./App.vue";
+import { useAuthStore } from "./stores/auth";
 import router from "./router";
 import "./assets/design-system.css";
 import "./assets/main.css";

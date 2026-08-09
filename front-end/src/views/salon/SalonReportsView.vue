@@ -342,10 +342,13 @@ const scheduleForm = ref({
 const runningId = ref<number | null>(null);
 const saving = ref(false);
 
-const withLoading = async (loadingRef, action) => {
+const withLoading = async <T,>(
+  loadingRef: { value: boolean },
+  action: () => Promise<T>
+): Promise<T> => {
   loadingRef.value = true;
   try {
-    await action();
+    return await action();
   } finally {
     loadingRef.value = false;
   }

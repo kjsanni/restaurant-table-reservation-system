@@ -98,12 +98,12 @@ router
 
 router
   .route("/refresh-token")
-  .post(authLimiter, tryCatchHandler(authController.refreshTokenHandler))
+  .post(authLimiter, validateCsrfToken, tryCatchHandler(authController.refreshTokenHandler))
   .all(httpMethodError);
 
 router
   .route("/revoke-token")
-  .post(...protectedRoute("", authController.revokeTokenHandler))
+  .post(tryCatchHandler(protect), validateCsrfToken, tryCatchHandler(authController.revokeTokenHandler))
   .all(httpMethodError);
 
 router

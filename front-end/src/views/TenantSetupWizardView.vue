@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
+import { getXsrfToken } from "@/composables/useXsrfToken";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -82,7 +83,6 @@ const businessVertical = ref<"restaurant" | "salon">("restaurant");
 const erpnextCompanyName = ref("");
 const erpnextFiscalYearStart = ref("");
 const erpnextWarehouseName = ref("");
-const erpnextOnboardingStep = ref(1);
 
 const typeDefaults: Record<RestaurantType, string[]> = {
   full_service: ["dine_in", "takeaway", "delivery"],
@@ -137,7 +137,10 @@ const submitSetup = async () => {
   try {
     const response = await fetch("/api/v1/auth/tenant/setup", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-xsrf-token": getXsrfToken(),
+      },
       credentials: "include",
       body: JSON.stringify({
         businessVertical: businessVertical.value,
@@ -226,258 +229,264 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="setup-wizard">
-    <div class="wizard-card">
-      <div class="wizard-header">
-        <h1>Welcome! Let's set up your restaurant</h1>
-        <p class="wizard-subtitle">
-          Tell us about your business so we can tailor the experience.
-        </p>
-      </div>
-
-      <div class="stepper">
-        <div :class="['step', step >= 1 && 'active']">
-          <span class="step-num">1</span>
-          <span class="step-label">Type</span>
-        </div>
-        <div :class="['step', step >= 2 && 'active']">
-          <span class="step-num">2</span>
-          <span class="step-label">Services</span>
-        </div>
-        <div :class="['step', step >= 3 && 'active']">
-          <span class="step-num">3</span>
-          <span class="step-label">Confirm</span>
-        </div>
-        <template v-if="isErpnextEnabled">
-          <div :class="['step', step >= 4 && 'active']">
-            <span class="step-num">4</span>
-            <span class="step-label">ERPNext</span>
-          </div>
-        </template>
-      </div>
-
-      <div v-if="step === 1" class="step-content">
-        <div class="vertical-toggle">
-          <button
-            :class="[
-              'vertical-option',
-              businessVertical === 'restaurant' && 'selected',
-            ]"
-            @click="businessVertical = 'restaurant'"
-          >
-            <Icon icon="mdi:silverware-fork-knife" width="28" height="28" />
-            <span class="vertical-label">Restaurant</span>
-          </button>
-          <button
-            :class="[
-              'vertical-option',
-              businessVertical === 'salon' && 'selected',
-            ]"
-            @click="businessVertical = 'salon'"
-          >
-            <Icon icon="mdi:content-cut" width="28" height="28" />
-            <span class="vertical-label">Salon</span>
-          </button>
-        </div>
-
-        <div v-if="businessVertical === 'restaurant'" class="type-grid">
-          <button
-            v-for="t in RESTAURANT_TYPES"
-            :key="t.value"
-            :class="['type-card', selectedType === t.value && 'selected']"
-            @click="selectType(t.value)"
-          >
-            <Icon :icon="t.icon" width="28" height="28" />
-            <span class="type-label">{{ t.label }}</span>
-            <span class="type-desc">{{ t.description }}</span>
-          </button>
-        </div>
-        <div v-else class="salon-step-1">
-          <p class="salon-hint">
-            You're setting up a <strong>salon</strong> business. Continue to
-            configure services and staff availability.
+  <main class="setup-wizard-main">
+    <div class="setup-wizard">
+      <div class="wizard-card">
+        <div class="wizard-header">
+          <h1>Welcome! Let's set up your restaurant</h1>
+          <p class="wizard-subtitle">
+            Tell us about your business so we can tailor the experience.
           </p>
         </div>
-        <div class="wizard-actions">
-          <button
-            class="btn-primary"
-            :disabled="businessVertical === 'restaurant' && !isTypeComplete"
-            @click="step = 2"
-          >
-            Continue
-          </button>
-        </div>
-      </div>
 
-      <div v-if="step === 2" class="step-content">
-        <div class="modes-list">
-          <button
-            v-for="m in SERVICE_MODES"
-            :key="m.value"
-            :class="[
-              'mode-card',
-              selectedModes.includes(m.value) && 'selected',
-            ]"
-            @click="toggleMode(m.value)"
-          >
-            <div class="mode-text">
-              <span class="mode-label">{{ m.label }}</span>
-              <span class="mode-desc">{{ m.description }}</span>
+        <div class="stepper">
+          <div :class="['step', step >= 1 && 'active']">
+            <span class="step-num">1</span>
+            <span class="step-label">Type</span>
+          </div>
+          <div :class="['step', step >= 2 && 'active']">
+            <span class="step-num">2</span>
+            <span class="step-label">Services</span>
+          </div>
+          <div :class="['step', step >= 3 && 'active']">
+            <span class="step-num">3</span>
+            <span class="step-label">Confirm</span>
+          </div>
+          <template v-if="isErpnextEnabled">
+            <div :class="['step', step >= 4 && 'active']">
+              <span class="step-num">4</span>
+              <span class="step-label">ERPNext</span>
             </div>
-            <div class="mode-check">
-              <Icon
-                v-if="selectedModes.includes(m.value)"
-                icon="mdi:check-circle"
-                width="22"
-                height="22"
+          </template>
+        </div>
+
+        <div v-if="step === 1" class="step-content">
+          <div class="vertical-toggle">
+            <button
+              :class="[
+                'vertical-option',
+                businessVertical === 'restaurant' && 'selected',
+              ]"
+              @click="businessVertical = 'restaurant'"
+            >
+              <Icon icon="mdi:silverware-fork-knife" width="28" height="28" />
+              <span class="vertical-label">Restaurant</span>
+            </button>
+            <button
+              :class="[
+                'vertical-option',
+                businessVertical === 'salon' && 'selected',
+              ]"
+              @click="businessVertical = 'salon'"
+            >
+              <Icon icon="mdi:content-cut" width="28" height="28" />
+              <span class="vertical-label">Salon</span>
+            </button>
+          </div>
+
+          <div v-if="businessVertical === 'restaurant'" class="type-grid">
+            <button
+              v-for="t in RESTAURANT_TYPES"
+              :key="t.value"
+              :class="['type-card', selectedType === t.value && 'selected']"
+              @click="selectType(t.value)"
+            >
+              <Icon :icon="t.icon" width="28" height="28" />
+              <span class="type-label">{{ t.label }}</span>
+              <span class="type-desc">{{ t.description }}</span>
+            </button>
+          </div>
+          <div v-else class="salon-step-1">
+            <p class="salon-hint">
+              You're setting up a <strong>salon</strong> business. Continue to
+              configure services and staff availability.
+            </p>
+          </div>
+          <div class="wizard-actions">
+            <button
+              class="btn-primary"
+              :disabled="businessVertical === 'restaurant' && !isTypeComplete"
+              @click="step = 2"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+
+        <div v-if="step === 2" class="step-content">
+          <div class="modes-list">
+            <button
+              v-for="m in SERVICE_MODES"
+              :key="m.value"
+              :class="[
+                'mode-card',
+                selectedModes.includes(m.value) && 'selected',
+              ]"
+              @click="toggleMode(m.value)"
+            >
+              <div class="mode-text">
+                <span class="mode-label">{{ m.label }}</span>
+                <span class="mode-desc">{{ m.description }}</span>
+              </div>
+              <div class="mode-check">
+                <Icon
+                  v-if="selectedModes.includes(m.value)"
+                  icon="mdi:check-circle"
+                  width="22"
+                  height="22"
+                />
+              </div>
+            </button>
+          </div>
+          <div class="wizard-actions">
+            <button class="btn-secondary" @click="step = 1">Back</button>
+            <button
+              class="btn-primary"
+              :disabled="!isModeComplete"
+              @click="step = 3"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+
+        <div v-if="step === 3" class="step-content">
+          <div class="summary">
+            <div class="summary-row">
+              <span class="summary-label">Business type</span>
+              <span class="summary-value">{{
+                businessVertical === "salon" ? "Salon" : "Restaurant"
+              }}</span>
+            </div>
+            <div v-if="businessVertical === 'restaurant'" class="summary-row">
+              <span class="summary-label">Restaurant type</span>
+              <span class="summary-value">{{
+                RESTAURANT_TYPES.find((t) => t.value === selectedType)?.label
+              }}</span>
+            </div>
+            <div v-if="businessVertical === 'restaurant'" class="summary-row">
+              <span class="summary-label">Service modes</span>
+              <span class="summary-value">{{
+                selectedModes
+                  .map((m) => SERVICE_MODES.find((s) => s.value === m)?.label)
+                  .join(", ")
+              }}</span>
+            </div>
+            <div v-else class="summary-row">
+              <span class="summary-label">Salon setup</span>
+              <span class="summary-value"
+                >Configure services and stations after setup</span
+              >
+            </div>
+          </div>
+          <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
+          <div class="wizard-actions">
+            <button
+              class="btn-secondary"
+              @click="step = 2"
+              :disabled="submitting"
+            >
+              Back
+            </button>
+            <button
+              class="btn-primary"
+              :disabled="submitting"
+              @click="submitSetup"
+            >
+              <span v-if="!submitting">Finish Setup</span>
+              <span v-else>Saving…</span>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="step === 4 && isErpnextEnabled" class="step-content">
+          <h2 style="text-align: center; margin-bottom: 16px">ERPNext Setup</h2>
+          <p style="text-align: center; color: #666; margin-bottom: 20px">
+            Complete the ERPNext onboarding steps to enable accounting,
+            inventory, and other back-office features.
+          </p>
+
+          <div
+            v-if="
+              erpnextModules.includes('erpnext_accounting') ||
+              erpnextModules.includes('erpnext_stock')
+            "
+            class="erpnext-onboarding-step"
+          >
+            <h3>Step 1 — Set up your ERP company</h3>
+            <div class="form-group">
+              <label>Company Name</label>
+              <input
+                v-model="erpnextCompanyName"
+                type="text"
+                :placeholder="
+                  businessVertical === 'salon' ? 'My Salon' : 'My Restaurant'
+                "
               />
             </div>
-          </button>
-        </div>
-        <div class="wizard-actions">
-          <button class="btn-secondary" @click="step = 1">Back</button>
-          <button
-            class="btn-primary"
-            :disabled="!isModeComplete"
-            @click="step = 3"
-          >
-            Continue
-          </button>
-        </div>
-      </div>
+            <div class="form-group">
+              <label>Fiscal Year Start</label>
+              <input v-model="erpnextFiscalYearStart" type="date" />
+            </div>
+          </div>
 
-      <div v-if="step === 3" class="step-content">
-        <div class="summary">
-          <div class="summary-row">
-            <span class="summary-label">Business type</span>
-            <span class="summary-value">{{
-              businessVertical === "salon" ? "Salon" : "Restaurant"
-            }}</span>
+          <div
+            v-if="erpnextModules.includes('erpnext_stock')"
+            class="erpnext-onboarding-step"
+          >
+            <h3>Step 2 — Set up your warehouse</h3>
+            <div class="form-group">
+              <label>Warehouse Name</label>
+              <input
+                v-model="erpnextWarehouseName"
+                type="text"
+                :placeholder="'Main Warehouse'"
+              />
+            </div>
           </div>
-          <div v-if="businessVertical === 'restaurant'" class="summary-row">
-            <span class="summary-label">Restaurant type</span>
-            <span class="summary-value">{{
-              RESTAURANT_TYPES.find((t) => t.value === selectedType)?.label
-            }}</span>
+
+          <div
+            v-if="erpnextModules.includes('erpnext_hr')"
+            class="erpnext-onboarding-step"
+          >
+            <h3>Step 3 — Import staff records</h3>
+            <p style="color: #666">
+              Your existing staff will be imported into ERPNext as employees.
+            </p>
           </div>
-          <div v-if="businessVertical === 'restaurant'" class="summary-row">
-            <span class="summary-label">Service modes</span>
-            <span class="summary-value">{{
-              selectedModes
-                .map((m) => SERVICE_MODES.find((s) => s.value === m)?.label)
-                .join(", ")
-            }}</span>
+
+          <div
+            v-if="erpnextModules.includes('erpnext_manufacturing')"
+            class="erpnext-onboarding-step"
+          >
+            <h3>Step 4 — Set up recipes / BOM</h3>
+            <p style="color: #666">
+              Item groups and bill of materials will be created for your
+              products.
+            </p>
           </div>
-          <div v-else class="summary-row">
-            <span class="summary-label">Salon setup</span>
-            <span class="summary-value"
-              >Configure services and stations after setup</span
+
+          <div class="wizard-actions">
+            <button class="btn-secondary" @click="step = 3">Back</button>
+            <button
+              class="btn-primary"
+              :disabled="!isErpnextStepComplete"
+              @click="submitErpnextOnboarding"
             >
+              <span v-if="!submitting">Complete ERPNext Setup</span>
+              <span v-else>Saving…</span>
+            </button>
           </div>
-        </div>
-        <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
-        <div class="wizard-actions">
-          <button
-            class="btn-secondary"
-            @click="step = 2"
-            :disabled="submitting"
-          >
-            Back
-          </button>
-          <button
-            class="btn-primary"
-            :disabled="submitting"
-            @click="submitSetup"
-          >
-            <span v-if="!submitting">Finish Setup</span>
-            <span v-else>Saving…</span>
-          </button>
-        </div>
-      </div>
-
-      <div v-if="step === 4 && isErpnextEnabled" class="step-content">
-        <h2 style="text-align: center; margin-bottom: 16px">ERPNext Setup</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 20px">
-          Complete the ERPNext onboarding steps to enable accounting, inventory,
-          and other back-office features.
-        </p>
-
-        <div
-          v-if="
-            erpnextModules.includes('erpnext_accounting') ||
-            erpnextModules.includes('erpnext_stock')
-          "
-          class="erpnext-onboarding-step"
-        >
-          <h3>Step 1 — Set up your ERP company</h3>
-          <div class="form-group">
-            <label>Company Name</label>
-            <input
-              v-model="erpnextCompanyName"
-              type="text"
-              :placeholder="
-                businessVertical === 'salon' ? 'My Salon' : 'My Restaurant'
-              "
-            />
-          </div>
-          <div class="form-group">
-            <label>Fiscal Year Start</label>
-            <input v-model="erpnextFiscalYearStart" type="date" />
-          </div>
-        </div>
-
-        <div
-          v-if="erpnextModules.includes('erpnext_stock')"
-          class="erpnext-onboarding-step"
-        >
-          <h3>Step 2 — Set up your warehouse</h3>
-          <div class="form-group">
-            <label>Warehouse Name</label>
-            <input
-              v-model="erpnextWarehouseName"
-              type="text"
-              :placeholder="'Main Warehouse'"
-            />
-          </div>
-        </div>
-
-        <div
-          v-if="erpnextModules.includes('erpnext_hr')"
-          class="erpnext-onboarding-step"
-        >
-          <h3>Step 3 — Import staff records</h3>
-          <p style="color: #666">
-            Your existing staff will be imported into ERPNext as employees.
-          </p>
-        </div>
-
-        <div
-          v-if="erpnextModules.includes('erpnext_manufacturing')"
-          class="erpnext-onboarding-step"
-        >
-          <h3>Step 4 — Set up recipes / BOM</h3>
-          <p style="color: #666">
-            Item groups and bill of materials will be created for your products.
-          </p>
-        </div>
-
-        <div class="wizard-actions">
-          <button class="btn-secondary" @click="step = 3">Back</button>
-          <button
-            class="btn-primary"
-            :disabled="!isErpnextStepComplete"
-            @click="submitErpnextOnboarding"
-          >
-            <span v-if="!submitting">Complete ERPNext Setup</span>
-            <span v-else>Saving…</span>
-          </button>
         </div>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <style scoped>
+.setup-wizard-main {
+  min-height: 100vh;
+}
 .setup-wizard {
   min-height: 100vh;
   display: flex;

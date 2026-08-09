@@ -25,6 +25,6 @@ for (const route of routes) {
           fullPage: true,
         });
       });
-    });
+    }
   }
-}
+});

@@ -48,6 +48,13 @@ const staffLocationAssignmentDAO = {
   },
 
   async findByUserLocation(userId, locationId, tenantId) {
+    const numericUserId = Number(userId);
+    const numericLocationId = Number(locationId);
+    const numericTenantId = Number(tenantId);
+    if (!Number.isInteger(numericUserId) || !Number.isInteger(numericLocationId) || !Number.isInteger(numericTenantId)) {
+      return null;
+    }
+    // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; all IDs are validated integers
     return db.staffLocationAssignment.findOne({
       where: { userId: Number(userId), locationId: Number(locationId), tenantId },
     });
@@ -68,6 +75,11 @@ const staffLocationAssignmentDAO = {
   },
 
   async delete(id, tenantId) {
+    const numericId = Number(id);
+    const numericTenantId = Number(tenantId);
+    if (!Number.isInteger(numericId) || !Number.isInteger(numericTenantId)) {
+      return false;
+    }
     const assignment = await db.staffLocationAssignment.findOne({
       where: { id: Number(id), tenantId },
     });

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
-import { VaModal } from "vuestic-ui";
 import reservationAPI from "@/services/reservationAPI";
 import dateNavigator from "@/utils/dateNavigator";
 

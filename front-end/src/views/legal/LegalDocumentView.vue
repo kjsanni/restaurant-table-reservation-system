@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
 import { legalDocuments, legalDocumentSlugs } from "@/config/legalDocuments";
+import DOMPurify from "dompurify";
 
 const route = useRoute();
 const router = useRouter();
@@ -14,6 +15,16 @@ const availableDocs = computed(() =>
     slug: s,
     title: legalDocuments[s].title,
   }))
+);
+
+const sanitizedBody = (body: string) => DOMPurify.sanitize(body);
+
+const sanitizedSections = computed(
+  () =>
+    doc.value?.sections?.map((section: any) => ({
+      ...section,
+      body: sanitizedBody(section.body),
+    })) || []
 );
 
 function goTo(target: string) {
@@ -50,7 +61,7 @@ function goTo(target: string) {
         </header>
 
         <section
-          v-for="(section, index) in doc.sections"
+          v-for="(section, index) in sanitizedSections"
           :key="index"
           class="legal-section"
         >

@@ -172,18 +172,32 @@ jobs:
       - name: Build frontend
         working-directory: front-end
         run: npm run build
+        env:
+          VITE_API_URL: http://localhost:8000/api/v1
       - name: Install Playwright browsers
         working-directory: front-end
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium firefox webkit
       - name: Run database migrations
         working-directory: back-end
         run: npx sequelize db:migrate
       - name: Seed database
         working-directory: back-end
-        run: npm run seed:all
+        run: |
+          npm run seed:all
+          npm run seed:e2e
       - name: Start backend server
         working-directory: back-end
-        run: npm run start:dev &
+        run: |
+          echo "PORT=$PORT"
+          echo "NODE_ENV=$NODE_ENV"
+          echo "REDIS_HOST=$REDIS_HOST"
+          echo "REDIS_PORT=$REDIS_PORT"
+          node -v
+          npm -v
+          ls -la node_modules/.bin/nodemon || true
+          nohup node ./src/app.js > /tmp/backend.log 2>&1 &
+          echo $! > /tmp/backend.pid
+          echo "Server started with PID: $!"
       - name: Wait for backend
         run: npx wait-on http://localhost:8000/api/v1/health --timeout 120000
       - name: Run API contract tests

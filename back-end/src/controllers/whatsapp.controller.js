@@ -2,7 +2,7 @@ const whatsappOrderService = require("../services/whatsapp-order.service");
 const { verifyWebhookSignature } = require("../services/whatsapp.service");
 const whatsappAppointmentService = require("../verticals/salon/services/whatsappAppointment.service");
 const logger = require("../utils/logger");
-const { Op } = require("sequelize");
+const { _Op } = require("sequelize");
 const db = require("../db/models");
 
 const inboundHandler = async (req, res) => {
@@ -101,7 +101,7 @@ const resolveTenantId = async (metadata) => {
         return cfg.tenantId || null;
       }
     }
-  } catch (err) {
+  } catch {
     // ignore
   }
   return null;

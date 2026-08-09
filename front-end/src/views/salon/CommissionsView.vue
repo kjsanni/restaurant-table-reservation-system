@@ -202,7 +202,21 @@ const { t } = useI18n();
 
 const loading = ref(false);
 const submitting = ref(false);
-const items = ref([]);
+const items = ref<
+  Array<{
+    id: number;
+    userId: number;
+    serviceId?: number;
+    rateType: string;
+    rateValue: number;
+    amount: number;
+    status: string;
+    notes?: string;
+    locationId?: number | null;
+    stylist?: { id: number; username: string };
+    service?: { id: number; name: string };
+  }>
+>([]);
 const stylists = ref([]);
 const services = ref([]);
 const locations = ref<Array<{ id: number; name: string }>>([]);

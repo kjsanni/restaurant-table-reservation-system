@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted } from "vue";
 import giftCardAPI from "@/services/giftCardAPI";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";

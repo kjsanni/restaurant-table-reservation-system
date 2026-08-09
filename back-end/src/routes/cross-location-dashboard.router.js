@@ -7,6 +7,7 @@ const httpMethodError = require("../middleware/httpMethodError");
 const crossLocationDashboardController = require("../controllers/cross-location-dashboard.controller");
 const { protect, requirePermission } = require("../middleware/auth");
 const { requireVertical } = require("../middleware/requireVertical");
+const { generalLimiter } = require("../middleware/rateLimit");
 
 const crossLocationDashboardRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

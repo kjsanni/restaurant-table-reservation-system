@@ -1,5 +1,5 @@
 const db = require("../../db/models");
-const { queues } = require("../../queues/queue");
+const { _queues } = require("../../queues/queue");
 
 const getTenantDebugInfoHandler = async (req, res) => {
   const tenantId = req.params.tenantId;

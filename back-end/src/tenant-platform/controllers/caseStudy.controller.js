@@ -32,13 +32,15 @@ caseStudyController.updateCaseStudyHandler = async (req, res) => {
       updates[key] = req.body[key];
     }
   }
-  const study = await caseStudyDAO.updateCaseStudy(req.params.id, updates);
+  const tenantId = req.tenant?.id;
+  const study = await caseStudyDAO.updateCaseStudy(req.params.id, updates, tenantId);
   if (!study) return res.status(404).json({ success: false, message: "Case study not found" });
   res.status(200).json({ success: true, item: study });
 };
 
 caseStudyController.removeCaseStudyHandler = async (req, res) => {
-  const removed = await caseStudyDAO.removeCaseStudy(req.params.id);
+  const tenantId = req.tenant?.id;
+  const removed = await caseStudyDAO.removeCaseStudy(req.params.id, tenantId);
   if (!removed) return res.status(404).json({ success: false, message: "Case study not found" });
   res.status(200).json({ success: true });
 };

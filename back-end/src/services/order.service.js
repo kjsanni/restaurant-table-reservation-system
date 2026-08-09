@@ -24,6 +24,9 @@ const createOrder = async (tenantId, payload) => {
     if (!reservation) {
       throw { status: 404, message: "Linked reservation not found." };
     }
+    if (tenantId && reservation.tenantId !== tenantId) {
+      throw { status: 403, message: "Reservation does not belong to this tenant." };
+    }
   }
 
   return await orderDAO.createOrder(tenantId, payload);

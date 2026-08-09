@@ -8,7 +8,7 @@ const updateCustomerTags = async (customerId, tags, tenantId) => {
   return await reservationDAO.updateCustomerTags(customerId, tags, tenantId);
 };
 
-const updateCustomer = async (customerId, updates, tenantId) => {
+const _updateCustomer = async (customerId, updates, tenantId) => {
   const allowedFields = ["firstName", "lastName", "email", "phone", "address", "city", "notes"];
   const filteredUpdates = {};
   for (const key of allowedFields) {

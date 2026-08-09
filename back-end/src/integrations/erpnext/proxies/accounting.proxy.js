@@ -32,7 +32,7 @@ router.get("/accounting/company", tryCatchHandler(requireActiveTenant, checkErpn
   try {
     const result = await getClient().get(`/api/resource/Company/${tenant.name}`);
     res.status(200).json({ success: true, data: result.data });
-  } catch (err) {
+  } catch {
     res.status(404).json({ success: false, message: "ERPNext company not found. Complete ERPNext onboarding first." });
   }
 }));
@@ -103,7 +103,7 @@ router.get("/accounting/invoices", tryCatchHandler(requireActiveTenant, checkErp
 }));
 
 router.get("/accounting/invoices/:invoiceId", tryCatchHandler(requireActiveTenant, checkErpnextFeature, async (req, res) => {
-  const tenant = req.tenant;
+  const _tenant = req.tenant;
   const { invoiceId } = req.params;
   const { getClient } = require("../client");
   try {

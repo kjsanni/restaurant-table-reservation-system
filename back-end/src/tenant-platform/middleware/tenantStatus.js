@@ -18,6 +18,7 @@ const requireActiveTenant = async (req, res, next) => {
     "/api/v1/admin/notifications",
     "/api/v1/billing",
     "/api/v1/public/dsar-request",
+    "/api/v1/public/tenants",
     "/api/v1/health",
     "/api/v1/auth/login",
     "/api/v1/auth/register",

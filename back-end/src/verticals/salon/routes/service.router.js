@@ -30,6 +30,7 @@ router
   .get(
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("view_services")),
     tryCatchHandler(serviceController.getService)
   )
   .patch(

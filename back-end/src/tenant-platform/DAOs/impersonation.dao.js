@@ -1,6 +1,5 @@
 const db = require("../../db/models");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 
 const JWT_SECRET = process.env.JWT_SECRET || require("crypto").randomBytes(64).toString("hex");
 

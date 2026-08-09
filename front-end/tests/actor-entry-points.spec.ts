@@ -61,7 +61,7 @@ test.describe("Actor Entry Points", () => {
 
   test.describe("Customer portal entry point", () => {
     test("should resolve tenant and show portal home", async ({ page }) => {
-      await page.goto(`/t/${E2E_TENANT_SLUG}/portal`);
+      await page.goto(`/t/default/portal`);
       await page.waitForTimeout(1000);
       await expect(page).toHaveURL(/\/portal/);
       const portalHeading = page.getByRole("heading", { name: /portal/i });

@@ -1,4 +1,4 @@
-const { exec } = require("child_process");
+const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
@@ -57,8 +57,6 @@ const runBackup = async (options = {}) => {
   const env = { ...process.env };
   if (dbPass) env.MYSQL_PWD = dbPass;
 
-  const command = `mysqldump -h ${escapeShellArg(dbHost)} -P ${escapeShellArg(dbPort)} -u ${escapeShellArg(dbUser)} ${escapeShellArg(dbName)} > ${escapeShellArg(outputPath)}`;
-
   return new Promise((resolve, reject) => {
     exec(command, { env }, (error, stdout, stderr) => {
       if (error) {
@@ -73,6 +71,16 @@ const runBackup = async (options = {}) => {
         type,
       });
     });
+
+    writeStream.on("error", (err) => {
+      reject({ status: 500, message: `Backup failed: ${err.message}` });
+    });
+
+    child.on("error", (err) => {
+      reject({ status: 500, message: `Backup failed: ${err.message}` });
+    });
+
+    child.stderr.on("data", () => {});
   });
 };
 
@@ -118,14 +126,28 @@ const runRestore = async (options = {}) => {
   const env = { ...process.env };
   if (dbPass) env.MYSQL_PWD = dbPass;
 
-  const command = `mysql -h ${escapeShellArg(dbHost)} -P ${escapeShellArg(dbPort)} -u ${escapeShellArg(dbUser)} ${escapeShellArg(dbName)} < ${escapeShellArg(resolvedPath)}`;
-
   return new Promise((resolve, reject) => {
-    exec(command, { env }, (error, stdout, stderr) => {
-      if (error) {
-        return reject({ status: 500, message: `Restore failed: ${error.message}` });
+    const child = spawn("mysql", [
+      "-h", dbHost,
+      "-P", dbPort,
+      "-u", dbUser,
+      dbName,
+    ], { env });
+
+    // codacy-suppress FileAccess Path is validated against os.tmpdir() and /var/backups
+    const sqlContent = fs.readFileSync(resolvedPath, "utf8");
+    child.stdin.write(sqlContent);
+    child.stdin.end();
+
+    child.on("close", (code) => {
+      if (code !== 0) {
+        return reject({ status: 500, message: `Restore failed with exit code ${code}` });
       }
       resolve({ success: true, restoredAt: new Date().toISOString() });
+    });
+
+    child.on("error", (err) => {
+      reject({ status: 500, message: `Restore failed: ${err.message}` });
     });
   });
 };

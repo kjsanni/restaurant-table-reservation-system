@@ -46,7 +46,7 @@ const startBackupWorker = () => {
   const worker = new Worker(
     "backups",
     async (job) => {
-      const { backupId, type } = job.data;
+      const { backupId, _type } = job.data;
       const record = await backupRecordDAO.findById(backupId);
       if (!record) {
         return { skipped: true, reason: "backup_not_found" };

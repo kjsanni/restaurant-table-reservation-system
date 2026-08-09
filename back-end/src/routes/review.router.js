@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const httpMethodError = require("../middleware/httpMethodError");
 const reviewController = require("../controllers/review.controller");
-const { protect, staff } = require("../middleware/auth");
+const { _protect, _staff } = require("../middleware/auth");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 const { validateCsrfToken } = require("../middleware/csrf");
 

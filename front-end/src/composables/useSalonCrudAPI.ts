@@ -7,7 +7,10 @@ interface ExtraMethod {
   path: string;
 }
 
-export function createSalonCrudAPI<T = any>(config: {
+export function createSalonCrudAPI<
+  T = any,
+  E extends Record<string, ExtraMethod> = {},
+>(config: {
   basePath: string;
   methods?: {
     list?: string;
@@ -15,7 +18,7 @@ export function createSalonCrudAPI<T = any>(config: {
     create?: string;
     update?: string;
     delete?: string;
-    extra?: Record<string, ExtraMethod>;
+    extra?: E;
   };
 }) {
   const { basePath, methods = {}, extra = {} } = config;
@@ -88,5 +91,7 @@ export function createSalonCrudAPI<T = any>(config: {
     };
   }
 
-  return service;
+  return service as typeof service & {
+    [K in keyof E]: (...args: any[]) => any;
+  };
 }

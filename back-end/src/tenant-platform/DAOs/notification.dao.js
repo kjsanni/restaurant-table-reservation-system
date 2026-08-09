@@ -15,8 +15,10 @@ notificationDAO.list = (userId, tenantId) => {
 
 notificationDAO.create = (data) => db.notification.create(data);
 
-notificationDAO.markRead = (id, userId) => {
-  return db.notification.update({ readAt: new Date() }, { where: { id, userId } });
+notificationDAO.markRead = (id, userId, tenantId) => {
+  const where = { id, userId };
+  if (tenantId) where.tenantId = tenantId;
+  return db.notification.update({ readAt: new Date() }, { where });
 };
 
 module.exports = notificationDAO;

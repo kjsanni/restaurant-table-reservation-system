@@ -1,7 +1,7 @@
 import { ref, computed } from "vue";
 import { useOnlineStatus } from "@/composables/useOnlineStatus";
 import { offlineDB } from "@/utils/offlineDB";
-import { syncEngine, type PendingMutation } from "@/utils/syncEngine";
+import { syncEngine } from "@/utils/syncEngine";
 import appointmentAPI from "@/services/appointmentAPI";
 
 export interface DraftAppointment {

@@ -68,7 +68,7 @@ const reverseGeocode = async (lat, lng) => {
     };
     await cache.set(cacheKey, result, GEOCODE_CACHE_TTL);
     return result;
-  } catch (err) {
+  } catch {
     const region = resolveRegionFromCoords(latitude, longitude);
     return {
       address: null,
@@ -107,7 +107,7 @@ const geocodeAddress = async (address) => {
     };
     await cache.set(cacheKey, result, GEOCODE_CACHE_TTL);
     return result;
-  } catch (err) {
+  } catch {
     return null;
   }
 };

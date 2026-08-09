@@ -14,7 +14,7 @@ const computeFileChecksum = (filePath) => {
   try {
     const content = fs.readFileSync(filePath, "utf8"); // nosep - filePath is derived from internally-registered module paths, not user input
     return crypto.createHash("sha256").update(content).digest("hex");
-  } catch (err) {
+  } catch {
     return null;
   }
 };
@@ -88,20 +88,27 @@ class ModuleRegistry {
         continue;
       }
 
+      const fileChecksums = [];
       for (const filePath of files) {
         const currentChecksum = computeFileChecksum(filePath);
         if (!currentChecksum) {
           violations.push({ moduleId: id, reason: "file_unreadable", path: filePath });
           continue;
         }
-
-        const stored = this.checksums[id];
-        if (stored && stored !== currentChecksum) {
-          violations.push({ moduleId: id, reason: "checksum_mismatch", path: filePath, stored, current: currentChecksum });
-        }
-
-        updated[id] = currentChecksum;
+        fileChecksums.push(currentChecksum);
       }
+
+      const combinedChecksum = crypto
+        .createHash("sha256")
+        .update(fileChecksums.join("|"))
+        .digest("hex");
+
+      const stored = this.checksums[id];
+      if (stored && stored !== combinedChecksum) {
+        violations.push({ moduleId: id, reason: "checksum_mismatch", path: files.join(", "), stored, current: combinedChecksum });
+      }
+
+      updated[id] = combinedChecksum;
     }
 
     if (violations.length === 0) {
@@ -119,7 +126,7 @@ class ModuleRegistry {
         if (module.enabled && module.enabled() === false) {
           continue;
         }
-      } catch (err) {
+      } catch {
         continue;
       }
       enabled.push(module);

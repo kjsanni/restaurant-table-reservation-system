@@ -5,7 +5,7 @@ const { syncCustomer, syncAllCustomers } = require("./sync/customer.sync");
 const { syncInvoice, syncAllInvoices } = require("./sync/invoice.sync");
 const { syncPayment, syncAllPayments } = require("./sync/payment.sync");
 const { syncItem, syncAllItems } = require("./sync/item.sync");
-const { syncStockEntry, syncStockAdjustments } = require("./sync/stock-entry.sync");
+const { _syncStockEntry, syncStockAdjustments } = require("./sync/stock-entry.sync");
 const { syncEmployee, syncAllEmployees } = require("./sync/employee.sync");
 const { syncCrmLead, syncAllCrmLeads, syncCrmCustomer, syncAllCrmCustomers } = require("./sync/crm.sync");
 
@@ -119,7 +119,7 @@ const startErpnextWorker = () => {
     { connection: require("../../utils/cache").client ? { host: process.env.REDIS_HOST, port: parseInt(process.env.REDIS_PORT, 10) } : undefined }
   );
 
-  worker.on("completed", (job, result) => {
+  worker.on("completed", (job, _result) => {
     console.log(`[ERPNext Sync] Job ${job.id} (${job.name}) completed for tenant ${job.data.tenantId}`);
   });
 

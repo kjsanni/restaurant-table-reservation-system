@@ -27,7 +27,6 @@ interface ServicePackage {
 const {
   list: packages,
   loading,
-  showForm,
   editingId,
   form,
   load: loadPackages,

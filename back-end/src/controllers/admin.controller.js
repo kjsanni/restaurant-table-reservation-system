@@ -22,7 +22,7 @@ const healthCheckHandler = async (req, res) => {
     const db = require("../db/models");
     await db.sequelize.authenticate();
     checks.database = "healthy";
-  } catch (err) {
+  } catch {
     checks.database = "unhealthy";
   }
 

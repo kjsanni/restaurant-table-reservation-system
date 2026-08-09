@@ -91,7 +91,6 @@ const startImpersonation = async () => {
     });
     const token = res.data?.token;
     if (token) {
-      localStorage.setItem("impersonation_token", token);
       window.location.reload();
     }
   } finally {

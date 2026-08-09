@@ -2,13 +2,14 @@ const invoiceDAO = require("../DAOs/invoice.dao");
 
 const listInvoicesHandler = async (req, res) => {
   const { status, limit, locationId } = req.query;
-  const tenantId = parseInt(req.params.tenantId, 10);
+  const tenantId = req.tenant?.id;
   const data = await invoiceDAO.list({ tenantId, status, locationId, limit: limit ? parseInt(limit, 10) : 100 });
   res.status(200).json({ success: true, collection: data });
 };
 
 const getInvoiceHandler = async (req, res) => {
-  const inv = await invoiceDAO.getById(req.params.id);
+  const tenantId = req.tenant?.id;
+  const inv = await invoiceDAO.getById(req.params.id, tenantId);
   if (!inv) {
     return res.status(404).json({ success: false, message: "Invoice not found" });
   }
@@ -17,7 +18,7 @@ const getInvoiceHandler = async (req, res) => {
 
 const createInvoiceHandler = async (req, res) => {
   const { amount, currency, dueDate, lineItems, notes, locationId } = req.body;
-  const tenantId = parseInt(req.params.tenantId, 10);
+  const tenantId = req.tenant?.id;
   if (!tenantId || !amount) {
     return res.status(400).json({ success: false, message: "tenantId and amount are required" });
   }
@@ -50,7 +51,8 @@ const updateInvoiceHandler = async (req, res) => {
   if (updates.status === "paid" && !updates.paidAt) {
     updates.paidAt = new Date();
   }
-  const inv = await invoiceDAO.update(req.params.id, updates);
+  const tenantId = req.tenant?.id;
+  const inv = await invoiceDAO.update(req.params.id, updates, tenantId);
   if (!inv) {
     return res.status(404).json({ success: false, message: "Invoice not found" });
   }
@@ -58,7 +60,8 @@ const updateInvoiceHandler = async (req, res) => {
 };
 
 const deleteInvoiceHandler = async (req, res) => {
-  const inv = await invoiceDAO.remove(req.params.id);
+  const tenantId = req.tenant?.id;
+  const inv = await invoiceDAO.remove(req.params.id, tenantId);
   if (!inv) {
     return res.status(404).json({ success: false, message: "Invoice not found" });
   }

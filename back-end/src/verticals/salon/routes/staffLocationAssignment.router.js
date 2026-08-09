@@ -7,7 +7,7 @@ const { generalLimiter } = require("../../../middleware/rateLimit");
 
 router.use(generalLimiter);
 
-router.use(protect, requireVertical("salon"), requirePermission("manage_staff"));
+router.use(generalLimiter, protect, requireVertical("salon"), requirePermission("manage_staff"));
 
 router.route("/").get(staffLocationAssignmentController.getStaffLocationAssignmentsHandler).post(staffLocationAssignmentController.createStaffLocationAssignmentHandler);
 

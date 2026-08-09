@@ -2,7 +2,7 @@
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class ServiceCategory extends Model {
-    static associate(models) {}
+    static associate(_unused) {}
   }
   ServiceCategory.init(
     {

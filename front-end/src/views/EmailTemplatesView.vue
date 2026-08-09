@@ -4,6 +4,7 @@ import emailTemplateAPI from "@/services/emailTemplateAPI";
 import { getApiErrorMessage } from "@/utils/apiError";
 import logger from "@/utils/logger";
 import { useAuthStore } from "@/stores/auth";
+import DOMPurify from "dompurify";
 
 interface Template {
   subject: string;
@@ -165,7 +166,7 @@ const buildPreviewHtml = (type: string) => {
     theme.logoUrl && isSafeImageUrl(theme.logoUrl)
       ? `<img src="${theme.logoUrl}" alt="" style="max-height:40px;margin-bottom:8px;" />`
       : "";
-  return `<!doctype html><html><head><meta charset="utf-8"></head><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;">
+  const raw = `<!doctype html><html><head><meta charset="utf-8"></head><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;">
     ${logo}
     <h2 style="color:${color}">${theme.brandName || "Restaurant"}</h2>
     ${body}
@@ -177,6 +178,7 @@ const buildPreviewHtml = (type: string) => {
       ) || "&nbsp;"
     }</small>
   </body></html>`;
+  return DOMPurify.sanitize(raw);
 };
 
 // Sanitized, sandboxed preview content (never injected via v-html).
