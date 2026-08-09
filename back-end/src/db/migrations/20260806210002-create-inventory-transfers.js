@@ -49,7 +49,7 @@ const inventoryTransferItemColumns = (Sequelize) => ({
   quantity: {
     type: Sequelize.INTEGER,
     allowNull: false,
-    defaultValue: 0,
+defaultValue: 1,
     validate: { min: 1 },
   },
   status: {
