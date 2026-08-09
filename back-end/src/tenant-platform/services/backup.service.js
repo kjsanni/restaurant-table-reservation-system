@@ -5,17 +5,6 @@ const os = require("os");
 
 const BACKUP_BASE_DIR = path.resolve(os.tmpdir(), "backups");
 
-const escapeShellArg = (value) => {
-  if (value === null || value === undefined) {
-    return '""';
-  }
-  const str = String(value);
-  if (str.length === 0) {
-    return '""';
-  }
-  return `'${str.replace(/'/g, "'\\''")}'`;
-};
-
 const validateOutputDir = (outputDir) => {
   // codacy-suppress path-traversal Output dir validated against os.tmpdir()
   const resolved = path.resolve(outputDir); // codacy-suppress path-traversal
