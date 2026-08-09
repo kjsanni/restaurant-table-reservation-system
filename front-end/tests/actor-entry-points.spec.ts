@@ -25,23 +25,23 @@ async function loginAsTenantStaff(page) {
 
 test.describe("Actor Entry Points", () => {
   test.describe("Super admin entry point", () => {
-    test("should show platform-branded login and redirect to /admin/overview", async ({ page }) => {
+    test("should show platform-branded login and redirect to /super-admin/overview", async ({ page }) => {
       await loginAsPlatformAdmin(page);
-      await expect(page).toHaveURL("/admin/overview");
+      await expect(page).toHaveURL("/super-admin/overview");
       const heading = page.getByRole("heading", { name: /platform overview/i });
       await expect(heading).toBeVisible();
     });
 
     test("sidebar should show platform nav items, not tenant nav items", async ({ page }) => {
       await loginAsPlatformAdmin(page);
-      await expect(page).toHaveURL("/admin/overview");
+      await expect(page).toHaveURL("/super-admin/overview");
       await expect(page.getByRole("heading", { name: "Platform Overview" })).toBeVisible();
       await expect(page.getByText(/Tenants/i).first()).toBeVisible();
     });
 
     test("should not see salon-specific tenant routes", async ({ page }) => {
       await loginAsPlatformAdmin(page);
-      await expect(page).toHaveURL("/admin/overview");
+      await expect(page).toHaveURL("/super-admin/overview");
       const salonAppointments = page.getByText("Appointments", { exact: true });
       await expect(salonAppointments).toHaveCount(0);
     });
