@@ -3,6 +3,9 @@ const router = require("express").Router();
 const staffLocationAssignmentController = require("../controllers/staffLocationAssignment.controller");
 const { protect, requirePermission } = require("../../../middleware/auth");
 const { requireVertical } = require("../../../middleware/requireVertical");
+const { generalLimiter } = require("../../../middleware/rateLimit");
+
+router.use(generalLimiter);
 
 router.use(protect, requireVertical("salon"), requirePermission("manage_staff"));
 
