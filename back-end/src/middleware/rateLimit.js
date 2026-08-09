@@ -1,9 +1,9 @@
 const rateLimit = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
-const { client } = require("../utils/cache");
+const { client, getConnectionStatus } = require("../utils/cache");
 
 const createRedisStore = (prefix) => {
-  if (!client) return undefined;
+  if (!client || !getConnectionStatus()) return undefined;
   return new RedisStore({
     sendCommand: (...args) => client.sendCommand(args),
     prefix,

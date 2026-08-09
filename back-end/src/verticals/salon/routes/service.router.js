@@ -6,6 +6,9 @@ const httpMethodError = require("../../../middleware/httpMethodError");
 const serviceController = require("../controllers/service.controller");
 const { protect, requirePermission } = require("../../../middleware/auth");
 const { requireVertical } = require("../../../middleware/requireVertical");
+const { generalLimiter } = require("../../../middleware/rateLimit");
+
+router.use(generalLimiter);
 
 router
   .route("/")
@@ -27,6 +30,7 @@ router
   .get(
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("view_services")),
     tryCatchHandler(serviceController.getService)
   )
   .patch(

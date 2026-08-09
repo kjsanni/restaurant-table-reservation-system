@@ -31,7 +31,7 @@ router
   .post(
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
-    tryCatchHandler(requirePermission("manage_appointments")),
+    tryCatchHandler(requirePermission("edit_appointments")),
     tryCatchHandler(salonCustomerPortalController.cancelSalonAppointmentHandler)
   )
   .all(httpMethodError);
@@ -41,7 +41,7 @@ router
   .post(
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
-    tryCatchHandler(requirePermission("manage_appointments")),
+    tryCatchHandler(requirePermission("edit_appointments")),
     tryCatchHandler(salonCustomerPortalController.rebookSalonAppointmentHandler)
   )
   .all(httpMethodError);

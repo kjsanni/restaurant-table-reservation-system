@@ -57,7 +57,10 @@ const searchOrdersHandler = async (req, res) => {
 };
 
 const getCustomerOrdersHandler = async (req, res) => {
-  const customerId = req.user?.customerId || req.query.customerId;
+  let customerId = req.user?.customerId;
+  if (!customerId && req.user?.permissions?.view_all_customers) {
+    customerId = req.query.customerId;
+  }
   if (!customerId) {
     return res.status(400).json({ success: false, message: "customerId is required" });
   }
@@ -109,7 +112,7 @@ const initializeOrderPaymentHandler = async (req, res) => {
       accessCode: result.access_code,
       reference: result.reference,
     });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ success: false, message: "Payment initialization failed" });
   }
 };
@@ -194,7 +197,7 @@ const trackOrderHandler = async (req, res) => {
     };
 
     return res.status(200).json({ success: true, order: publicOrder });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ success: false, message: "Failed to track order" });
   }
 };

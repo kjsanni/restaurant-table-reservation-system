@@ -15,7 +15,7 @@ module.exports = {
       customerId: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: "customers", key: "id" },
+        references: { model: "Customers", key: "id" },
         onUpdate: "cascade",
         onDelete: "cascade",
       },

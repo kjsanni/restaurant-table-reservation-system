@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
 import stationAPI from "@/services/stationAPI";
+import locationAPI from "@/services/locationAPI";
 import logger from "@/utils/logger";
 import { io, Socket } from "socket.io-client";
 import { useI18n } from "@/composables/useI18n";
@@ -15,21 +16,41 @@ interface Station {
   isOccupied: boolean;
   isBlocked: boolean;
   maintenanceNotes?: string;
+  locationId?: number | null;
+  location?: { id: number; name: string };
 }
 
 const stations = ref<Station[]>([]);
 const loading = ref(true);
 const showForm = ref(false);
 const editingId = ref<number | null>(null);
-const form = ref({ name: "", type: "chair", zone: "", maintenanceNotes: "" });
+const form = ref<{
+  name: string;
+  type: string;
+  zone: string;
+  maintenanceNotes: string;
+  locationId: number | null;
+}>({
+  name: "",
+  type: "chair",
+  zone: "",
+  maintenanceNotes: "",
+  locationId: null,
+});
 const socket = ref<Socket | null>(null);
+const locations = ref<Array<{ id: number; name: string }>>([]);
+const selectedLocationId = ref<number | "">("");
 
 const typeOptions = ["chair", "wash", "color", "nail", "therapy"];
 
 const loadStations = async () => {
   loading.value = true;
   try {
-    const res = await stationAPI.getStations({ limit: 100 });
+    const params: any = { limit: 100 };
+    if (selectedLocationId.value) {
+      params.locationId = selectedLocationId.value;
+    }
+    const res = await stationAPI.getStations(params);
     stations.value = res.data.data || [];
   } catch (err) {
     logger.error("Failed to load stations", { error: err });
@@ -38,8 +59,23 @@ const loadStations = async () => {
   }
 };
 
+const loadLocations = async () => {
+  try {
+    const res = await locationAPI.list();
+    locations.value = res.data.data || [];
+  } catch (err) {
+    logger.error("Failed to load locations", { error: err });
+  }
+};
+
 const resetForm = () => {
-  form.value = { name: "", type: "chair", zone: "", maintenanceNotes: "" };
+  form.value = {
+    name: "",
+    type: "chair",
+    zone: "",
+    maintenanceNotes: "",
+    locationId: null,
+  };
   editingId.value = null;
 };
 
@@ -50,13 +86,18 @@ const editStation = (station: Station) => {
     type: station.type,
     zone: station.zone || "",
     maintenanceNotes: station.maintenanceNotes || "",
+    locationId: station.locationId || null,
   };
   showForm.value = true;
 };
 
 const submitForm = async () => {
   try {
-    const payload = { ...form.value, zone: form.value.zone || null };
+    const payload = {
+      ...form.value,
+      zone: form.value.zone || null,
+      locationId: form.value.locationId || null,
+    };
     if (editingId.value) {
       const res = await stationAPI.updateStation(editingId.value, payload);
       const idx = stations.value.findIndex((s) => s.id === editingId.value);
@@ -83,7 +124,7 @@ const deleteStation = async (id: number) => {
 };
 
 onMounted(async () => {
-  await loadStations();
+  await Promise.all([loadStations(), loadLocations()]);
   socket.value = io("", { path: "/socket.io" });
   socket.value.on("salon-appointment-created", loadStations);
   socket.value.on("salon-appointment-updated", loadStations);
@@ -123,6 +164,21 @@ onUnmounted(() => {
       </div>
 
       <div v-else class="stations-grid">
+        <div v-if="locations.length" class="location-filter-bar">
+          <label>{{ t("salon.location", "Location") }}</label>
+          <select
+            v-model="selectedLocationId"
+            class="field-input"
+            @change="loadStations"
+          >
+            <option value="">
+              {{ t("salon.allLocations", "All locations") }}
+            </option>
+            <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+              {{ loc.name }}
+            </option>
+          </select>
+        </div>
         <div v-for="station in stations" :key="station.id" class="station-card">
           <div class="station-head">
             <div>
@@ -131,6 +187,9 @@ onUnmounted(() => {
               <span v-if="station.zone" class="station-zone">{{
                 station.zone
               }}</span>
+              <span v-if="station.location" class="station-location">
+                {{ station.location.name }}
+              </span>
             </div>
             <div class="station-actions">
               <button class="btn-sm" @click="editStation(station)">
@@ -194,6 +253,17 @@ onUnmounted(() => {
               v-model="form.zone"
               :placeholder="t('salon.zonePlaceholder')"
             />
+          </div>
+          <div class="form-group">
+            <label>{{ t("salon.location", "Location") }}</label>
+            <select v-model="form.locationId">
+              <option value="">
+                {{ t("salon.selectLocation", "Select location") }}
+              </option>
+              <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+                {{ loc.name }}
+              </option>
+            </select>
           </div>
           <div class="form-group">
             <label>{{ t("salon.maintenanceNotes") }}</label>
@@ -352,6 +422,31 @@ onUnmounted(() => {
 .status-badge.free {
   background: #dbeafe;
   color: #1e40af;
+}
+.location-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+}
+.location-filter-bar label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--neutral-700);
+}
+.station-location {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-md);
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 600;
 }
 .station-notes {
   margin-top: 10px;

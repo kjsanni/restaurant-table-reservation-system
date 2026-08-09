@@ -19,21 +19,31 @@ const findAllForTenant = async (tenantId, filters = {}) => {
   if (filters.status) where.status = filters.status;
   if (filters.serviceId) where.serviceId = filters.serviceId;
   if (filters.appointmentId) where.appointmentId = filters.appointmentId;
+  if (filters.locationId) where.locationId = filters.locationId;
+
+  const includes = [
+    {
+      model: db.user,
+      as: "stylist",
+      attributes: ["id", "username", "email"],
+    },
+    {
+      model: db.service,
+      as: "service",
+      attributes: ["id", "name"],
+    },
+  ];
+  if (!filters.locationId) {
+    includes.push({
+      model: db.location,
+      as: "location",
+      attributes: ["id", "name"],
+    });
+  }
 
   const { rows: data, count: total } = await db.commission.findAndCountAll({
     where,
-    include: [
-      {
-        model: db.user,
-        as: "stylist",
-        attributes: ["id", "username", "email"],
-      },
-      {
-        model: db.service,
-        as: "service",
-        attributes: ["id", "name"],
-      },
-    ],
+    include: includes,
     order: [["createdAt", "DESC"]],
     limit: filters.limit ? Number(filters.limit) : 50,
     offset: filters.offset ? Number(filters.offset) : 0,
@@ -72,9 +82,10 @@ const markAsPaid = async (id, tenantId) => {
   return commission;
 };
 
-const getPendingTotal = async (tenantId, userId = null) => {
+const getPendingTotal = async (tenantId, userId = null, locationId = null) => {
   const where = { tenantId, status: "pending" };
   if (userId) where.userId = userId;
+  if (locationId) where.locationId = locationId;
 
   const result = await db.commission.findOne({
     where,

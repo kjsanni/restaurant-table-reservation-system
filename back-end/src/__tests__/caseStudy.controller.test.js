@@ -10,8 +10,8 @@ jest.mock("../tenant-platform/DAOs/caseStudy.dao", () => ({
 const caseStudyDAO = require("../tenant-platform/DAOs/caseStudy.dao");
 const { createRes } = require("./utils/test-response");
 
-function createReq(body = {}, params = {}) {
-  return { body, params, user: { id: 1 }, ip: "127.0.0.1" };
+function createReq(body = {}, params = {}, tenant = null) {
+  return { body, params, user: { id: 1, tenant }, ip: "127.0.0.1" };
 }
 
 describe("caseStudy.controller", () => {
@@ -42,7 +42,7 @@ describe("caseStudy.controller", () => {
 
   it("update returns 404 when missing", async () => {
     caseStudyDAO.updateCaseStudy.mockResolvedValue(null);
-    const req = createReq({ title: "New" }, { id: "5" });
+    const req = createReq({ title: "New" }, { id: "5" }, { id: 1 });
     const res = createRes();
     await updateCaseStudyHandler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
@@ -50,7 +50,7 @@ describe("caseStudy.controller", () => {
 
   it("delete returns 404 when missing", async () => {
     caseStudyDAO.removeCaseStudy.mockResolvedValue(false);
-    const req = createReq({}, { id: "5" });
+    const req = createReq({}, { id: "5" }, { id: 1 });
     const res = createRes();
     await removeCaseStudyHandler(req, res);
     expect(res.status).toHaveBeenCalledWith(404);

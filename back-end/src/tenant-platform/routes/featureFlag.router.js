@@ -3,7 +3,7 @@ const router = express.Router();
 const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const featureFlagController = require("../controllers/featureFlag.controller");
-const { protect, requireSuperAdmin, requirePermission } = require("../../middleware/auth");
+const { protect, requireSuperAdmin, _requirePermission } = require("../../middleware/auth");
 const { logAction } = require("../../middleware/auditLog");
 const { adminActionLimiter } = require("../../middleware/rateLimit");
 

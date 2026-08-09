@@ -9,7 +9,7 @@ const getPaystackTransactionsHandler = async (req, res) => {
       params: { perPage: 20, page: 1 },
     });
     res.status(200).json({ success: true, collection: response.data.data || [] });
-  } catch (err) {
+  } catch {
     res.status(500).json({ success: false, message: "Failed to fetch transactions" });
   }
 };
@@ -21,7 +21,7 @@ const getPaystackSettlementsHandler = async (req, res) => {
       params: { perPage: 20, page: 1 },
     });
     res.status(200).json({ success: true, collection: response.data.data || [] });
-  } catch (err) {
+  } catch {
     res.status(500).json({ success: false, message: "Failed to fetch settlements" });
   }
 };
@@ -33,7 +33,7 @@ const getPaystackDisputesHandler = async (req, res) => {
       params: { perPage: 20, page: 1 },
     });
     res.status(200).json({ success: true, collection: response.data.data || [] });
-  } catch (err) {
+  } catch {
     res.status(500).json({ success: false, message: "Failed to fetch disputes" });
   }
 };
@@ -70,7 +70,7 @@ const getPaystackFeeAnalysisHandler = async (req, res) => {
       },
       collection: fees,
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ success: false, message: "Failed to fetch fee analysis" });
   }
 };

@@ -1,5 +1,4 @@
 const db = require("../../db/models");
-const loginAttemptDAO = require("../../DAOs/loginAttempt.dao");
 
 const getBruteForceAggregationHandler = async (req, res) => {
   const { from, to } = req.query;

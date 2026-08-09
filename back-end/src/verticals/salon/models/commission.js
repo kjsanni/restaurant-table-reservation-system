@@ -15,11 +15,19 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "serviceId",
         as: "service",
       });
+      Commission.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
     }
   }
   Commission.init(
     {
       tenantId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      locationId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },

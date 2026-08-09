@@ -1,45 +1,49 @@
 <template>
-  <div class="reset-password-view">
-    <div class="auth-card">
-      <h1>Reset Password</h1>
-      <p class="subtitle">Enter your new password below.</p>
-      <form @submit.prevent="submit">
-        <div class="form-group">
-          <label for="password">New Password</label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            placeholder="••••••••"
-            required
-            minlength="8"
-          />
-        </div>
-        <div class="form-group">
-          <label for="confirmPassword">Confirm Password</label>
-          <input
-            id="confirmPassword"
-            v-model="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            required
-            minlength="8"
-          />
-        </div>
-        <button
-          type="submit"
-          class="btn-primary"
-          :disabled="loading || !passwordsMatch"
-        >
-          {{ loading ? "Resetting..." : "Reset Password" }}
-        </button>
-        <p v-if="message" class="message" :class="messageType">{{ message }}</p>
-      </form>
-      <p class="footer-link">
-        <router-link to="/login">Back to login</router-link>
-      </p>
+  <main class="reset-password-main">
+    <div class="reset-password-view">
+      <div class="auth-card">
+        <h1>Reset Password</h1>
+        <p class="subtitle">Enter your new password below.</p>
+        <form @submit.prevent="submit">
+          <div class="form-group">
+            <label for="password">New Password</label>
+            <input
+              id="password"
+              v-model="password"
+              type="password"
+              placeholder="••••••••"
+              required
+              minlength="8"
+            />
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <input
+              id="confirmPassword"
+              v-model="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              required
+              minlength="8"
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn-primary"
+            :disabled="loading || !passwordsMatch"
+          >
+            {{ loading ? "Resetting..." : "Reset Password" }}
+          </button>
+          <p v-if="message" class="message" :class="messageType">
+            {{ message }}
+          </p>
+        </form>
+        <p class="footer-link">
+          <router-link to="/login">Back to login</router-link>
+        </p>
+      </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup>
@@ -85,6 +89,9 @@ const submit = async () => {
 </script>
 
 <style scoped>
+.reset-password-main {
+  min-height: 100vh;
+}
 .reset-password-view {
   display: flex;
   align-items: center;

@@ -13,7 +13,6 @@ jest.mock("../tenant-platform/DAOs/platformAudit.dao", () => ({
 }));
 
 const encryptionKeyDAO = require("../tenant-platform/DAOs/encryptionKey.dao");
-const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 const { createRes } = require("./utils/test-response");
 
 function createReq(user = { id: 1 }, body = {}, params = {}) {

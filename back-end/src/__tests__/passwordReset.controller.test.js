@@ -28,7 +28,6 @@ jest.mock("../tenant-platform/DAOs/platformAudit.dao", () => ({
 const passwordResetDAO = require("../DAOs/passwordReset.dao");
 const authDAO = require("../DAOs/auth.dao");
 const emailService = require("../services/emailService");
-const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 const { createRes } = require("./utils/test-response");
 
 describe("Password Reset Controller", () => {

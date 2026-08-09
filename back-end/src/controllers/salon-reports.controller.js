@@ -9,12 +9,12 @@ const escapeCsv = (value) => {
   return str;
 };
 
-const fetchSalonReportData = async (tenantId, from, to) => {
+const fetchSalonReportData = async (tenantId, from, to, locationId) => {
   const [revenueByService, topStylists, appointmentsBySource, peakHours] = await Promise.all([
-    appointmentDao.getRevenueByService(tenantId, from, to),
-    appointmentDao.getTopStylists(tenantId, from, to),
-    appointmentDao.getAppointmentsBySource(tenantId, from, to),
-    appointmentDao.getPeakHours(tenantId, from, to),
+    appointmentDao.getRevenueByService(tenantId, from, to, locationId),
+    appointmentDao.getTopStylists(tenantId, from, to, locationId),
+    appointmentDao.getAppointmentsBySource(tenantId, from, to, locationId),
+    appointmentDao.getPeakHours(tenantId, from, to, locationId),
   ]);
 
   const totalRevenue = revenueByService.reduce((sum, item) => sum + item.revenue, 0);
@@ -26,7 +26,7 @@ const fetchSalonReportData = async (tenantId, from, to) => {
 const getSalonReportsHandler = async (req, res) => {
   try {
     const { revenueByService, topStylists, appointmentsBySource, peakHours, totalRevenue, totalAppointments } =
-      await fetchSalonReportData(req.tenant?.id, req.query.from, req.query.to);
+      await fetchSalonReportData(req.tenant?.id, req.query.from, req.query.to, req.query.locationId);
 
     return res.status(200).json({
       success: true,
@@ -49,7 +49,7 @@ const getSalonReportsHandler = async (req, res) => {
 const exportSalonReportsHandler = async (req, res) => {
   try {
     const { revenueByService, topStylists, appointmentsBySource, peakHours, totalRevenue, totalAppointments } =
-      await fetchSalonReportData(req.tenant?.id, req.query.from, req.query.to);
+      await fetchSalonReportData(req.tenant?.id, req.query.from, req.query.to, req.query.locationId);
 
     const rows = [
       ["Salon Reports Export"],

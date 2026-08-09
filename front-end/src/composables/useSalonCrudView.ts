@@ -1,16 +1,19 @@
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
 
 const ALLOWED_METHODS = ["list", "get", "create", "update", "delete"] as const;
 
-type AllowedMethod = typeof ALLOWED_METHODS[number];
+type AllowedMethod = (typeof ALLOWED_METHODS)[number];
 
-const resolveMethod = (method?: string, fallback: AllowedMethod): AllowedMethod => {
+const resolveMethod = (
+  method?: string,
+  fallback?: AllowedMethod
+): AllowedMethod => {
   if (method && ALLOWED_METHODS.includes(method as AllowedMethod)) {
     return method as AllowedMethod;
   }
-  return fallback;
+  return fallback || "list";
 };
 
 export function useSalonCrudView<T>(config: {
@@ -33,11 +36,20 @@ export function useSalonCrudView<T>(config: {
   const form = ref<Record<string, any>>({ ...config.defaultForm });
   const extra = ref<Record<string, any>>({ ...(config.extra || {}) });
 
-  const load = async () => {
+  const load = async (params = {}) => {
     loading.value = true;
     try {
       const method = resolveMethod(config.listMethod, "list");
-      const res = await api[method]({ limit: 100 });
+      const res =
+        method === "list"
+          ? await api.list({ limit: 100, ...params })
+          : method === "get"
+            ? await api.get({ limit: 100, ...params })
+            : method === "create"
+              ? await api.create({ limit: 100, ...params })
+              : method === "update"
+                ? await api.update({ limit: 100, ...params })
+                : await api.delete({ limit: 100, ...params });
       list.value = res.data.data || [];
     } catch (err) {
       logger.error(`Failed to load ${config.entityName}s`, { error: err });
@@ -54,14 +66,22 @@ export function useSalonCrudView<T>(config: {
   const saveItem = async (payload: Record<string, any>) => {
     if (editingId.value) {
       const method = resolveMethod(config.updateMethod, "update");
-      const res = await api[method](editingId.value, payload);
+      const res =
+        method === "update"
+          ? await api.update(editingId.value, payload)
+          : await api.create(editingId.value, payload);
       const idx = list.value.findIndex(
         (item: any) => item.id === editingId.value
       );
       if (idx !== -1) list.value[idx] = res.data.data;
     } else {
       const method = resolveMethod(config.createMethod, "create");
-      const res = await api[method](payload);
+      const res =
+        method === "create"
+          ? await api.create(payload)
+          : method === "update"
+            ? await api.update(payload)
+            : await api.delete(payload);
       list.value.push(res.data.data);
     }
   };
@@ -87,7 +107,15 @@ export function useSalonCrudView<T>(config: {
 
   const removeItem = async (id: number) => {
     const method = resolveMethod(config.deleteMethod, "delete");
-    await api[method](id);
+    if (method === "delete") {
+      await api.delete(id);
+    } else if (method === "update") {
+      await api.update(id, {});
+    } else if (method === "create") {
+      await api.create({ id });
+    } else {
+      await api.get(id);
+    }
     list.value = list.value.filter((item: any) => item.id !== id);
   };
 

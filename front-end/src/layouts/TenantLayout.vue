@@ -222,7 +222,10 @@ watch(
           <span v-else-if="status === 'syncing'" class="sync-indicator syncing">
             Syncing...
           </span>
-          <span v-else-if="status === 'sync-failed'" class="sync-indicator sync-failed">
+          <span
+            v-else-if="status === 'sync-failed'"
+            class="sync-indicator sync-failed"
+          >
             Sync failed
           </span>
           <span v-else-if="pendingCount > 0" class="sync-indicator pending">

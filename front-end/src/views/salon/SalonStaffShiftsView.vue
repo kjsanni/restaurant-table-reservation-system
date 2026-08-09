@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import shiftAPI from "@/services/shiftAPI";
+import locationAPI from "@/services/locationAPI";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
 
@@ -13,6 +14,8 @@ interface StaffShift {
   endTime: string;
   role?: string;
   userId: number;
+  locationId?: number | null;
+  location?: { id: number; name: string };
   user?: { username?: string; role?: string };
 }
 
@@ -21,6 +24,8 @@ const staff = ref<{ id: number; username: string; role?: string }[]>([]);
 const loading = ref(true);
 const submitting = ref(false);
 const errorMsg = ref("");
+const locations = ref<Array<{ id: number; name: string }>>([]);
+const selectedLocationId = ref<number | "">("");
 
 const weekDays = [
   "monday",
@@ -48,15 +53,21 @@ const formatTime = (time: string) => {
 const loadData = async () => {
   loading.value = true;
   try {
+    const params: any = {};
+    if (selectedLocationId.value) {
+      params.locationId = selectedLocationId.value;
+    }
     const [shiftsRes, staffRes] = await Promise.all([
-      shiftAPI.getShifts(),
-      shiftAPI.getStaff(),
+      shiftAPI.getShifts(params),
+      shiftAPI.getStaff(params),
     ]);
     const rawShifts = Array.isArray(shiftsRes.data)
       ? shiftsRes.data
       : shiftsRes.data?.shifts || shiftsRes.data?.data || [];
     shifts.value = rawShifts.map((s: any) => ({
       ...s,
+      locationId: s.locationId || null,
+      location: s.location || {},
       user: s.user || {},
     }));
     staff.value = Array.isArray(staffRes.data)
@@ -69,11 +80,35 @@ const loadData = async () => {
   }
 };
 
+const loadLocations = async () => {
+  try {
+    const res = await locationAPI.list();
+    locations.value = res.data.data || [];
+  } catch (err) {
+    logger.error("Failed to load locations", { error: err });
+  }
+};
+
+const groupedByDay = computed(() => {
+  const groups: Record<string, StaffShift[]> = {};
+  for (const day of weekDays) {
+    groups[day] = [];
+  }
+  for (const shift of shifts.value) {
+    const day = shift.dayOfWeek.toLowerCase();
+    if (groups[day]) {
+      groups[day].push(shift);
+    }
+  }
+  return groups;
+});
+
 const userId = ref("");
 const dayOfWeek = ref("monday");
 const startTime = ref("09:00");
 const endTime = ref("17:00");
 const role = ref("");
+const locationId = ref("");
 
 const submitShift = async () => {
   submitting.value = true;
@@ -85,10 +120,12 @@ const submitShift = async () => {
       startTime: startTime.value,
       endTime: endTime.value,
       role: role.value || null,
+      locationId: locationId.value ? Number(locationId.value) : null,
     };
     await shiftAPI.createShift(payload);
     userId.value = "";
     role.value = "";
+    locationId.value = "";
     await loadData();
   } catch (err) {
     errorMsg.value =
@@ -108,15 +145,10 @@ const removeShift = async (id: number) => {
   }
 };
 
-const groupedByDay = computed(() => {
-  const map: Record<string, StaffShift[]> = {};
-  weekDays.forEach((day) => {
-    map[day] = shifts.value.filter((s) => s.dayOfWeek.toLowerCase() === day);
-  });
-  return map;
+onMounted(async () => {
+  await loadLocations();
+  await loadData();
 });
-
-onMounted(loadData);
 </script>
 
 <template>
@@ -135,6 +167,21 @@ onMounted(loadData);
       </div>
 
       <div v-else>
+        <div v-if="locations.length" class="location-filter-bar">
+          <label>{{ t("salon.location", "Location") }}</label>
+          <select
+            v-model="selectedLocationId"
+            class="field-input"
+            @change="loadData"
+          >
+            <option value="">
+              {{ t("salon.allLocations", "All locations") }}
+            </option>
+            <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+              {{ loc.name }}
+            </option>
+          </select>
+        </div>
         <div class="form-panel">
           <h2>{{ t("salon.addShift") }}</h2>
           <div class="form-grid">
@@ -171,6 +218,23 @@ onMounted(loadData);
                 :placeholder="t('salon.rolePlaceholder')"
               />
             </div>
+            <div class="field">
+              <label for="location">{{
+                t("salon.location", "Location")
+              }}</label>
+              <select id="location" v-model="locationId">
+                <option value="">
+                  {{ t("salon.selectLocation", "Select location") }}
+                </option>
+                <option
+                  v-for="loc in locations"
+                  :key="loc.id"
+                  :value="String(loc.id)"
+                >
+                  {{ loc.name }}
+                </option>
+              </select>
+            </div>
             <div class="field-actions">
               <button
                 class="btn-primary"
@@ -203,6 +267,9 @@ onMounted(loadData);
                 <div class="shift-time">
                   {{ formatTime(shift.startTime) }} —
                   {{ formatTime(shift.endTime) }}
+                </div>
+                <div v-if="shift.location?.name" class="shift-location">
+                  {{ shift.location.name }}
                 </div>
                 <div v-if="shift.role" class="shift-role">{{ shift.role }}</div>
                 <button class="btn-danger-sm" @click="removeShift(shift.id)">
@@ -405,6 +472,30 @@ onMounted(loadData);
   font-size: 11px;
   color: var(--neutral-600);
   margin-bottom: 6px;
+}
+.shift-location {
+  font-size: 11px;
+  color: #92400e;
+  background: #fef3c7;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+.location-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+}
+.location-filter-bar label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--neutral-700);
 }
 .btn-danger-sm {
   background: #fee2e2;

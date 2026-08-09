@@ -34,6 +34,20 @@
       </div>
     </div>
 
+    <div v-if="locations.length" class="location-filter-bar">
+      <label>{{ t("salon.location", "Location") }}</label>
+      <select
+        v-model="selectedLocationId"
+        class="field-input"
+        @change="loadData"
+      >
+        <option value="">{{ t("salon.allLocations", "All locations") }}</option>
+        <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+          {{ loc.name }}
+        </option>
+      </select>
+    </div>
+
     <div v-if="showForm" class="form-panel">
       <h3>
         {{
@@ -56,6 +70,21 @@
             <option value="">{{ t("salon.selectService") }}</option>
             <option v-for="s in services" :key="s.id" :value="String(s.id)">
               {{ s.name }}
+            </option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="location">{{ t("salon.location", "Location") }}</label>
+          <select id="location" v-model="form.locationId">
+            <option value="">
+              {{ t("salon.selectLocation", "Select location") }}
+            </option>
+            <option
+              v-for="loc in locations"
+              :key="loc.id"
+              :value="String(loc.id)"
+            >
+              {{ loc.name }}
             </option>
           </select>
         </div>
@@ -167,14 +196,31 @@ import commissionAPI from "@/services/commissionAPI";
 import { useI18n } from "@/composables/useI18n";
 import serviceAPI from "@/services/serviceAPI";
 import authAPI from "@/services/authAPI";
+import locationAPI from "@/services/locationAPI";
 
 const { t } = useI18n();
 
 const loading = ref(false);
 const submitting = ref(false);
-const items = ref([]);
+const items = ref<
+  Array<{
+    id: number;
+    userId: number;
+    serviceId?: number;
+    rateType: string;
+    rateValue: number;
+    amount: number;
+    status: string;
+    notes?: string;
+    locationId?: number | null;
+    stylist?: { id: number; username: string };
+    service?: { id: number; name: string };
+  }>
+>([]);
 const stylists = ref([]);
 const services = ref([]);
+const locations = ref<Array<{ id: number; name: string }>>([]);
+const selectedLocationId = ref<number | "">("");
 const editingId = ref<number | null>(null);
 const generalError = ref("");
 
@@ -188,6 +234,7 @@ const form = ref({
   amount: 0,
   status: "pending",
   notes: "",
+  locationId: null,
 });
 
 const pendingTotal = computed(() =>
@@ -214,8 +261,12 @@ const formatMoney = (val: number) => {
 const loadData = async () => {
   loading.value = true;
   try {
+    const params: any = { limit: 100 };
+    if (selectedLocationId.value) {
+      params.locationId = selectedLocationId.value;
+    }
     const [commissionsRes, stylistsRes, servicesRes] = await Promise.all([
-      commissionAPI.getCommissions({ limit: 100 }),
+      commissionAPI.getCommissions(params),
       authAPI.getUsers({ limit: 100 }),
       serviceAPI.getServices({ limit: 100 }),
     ]);
@@ -230,6 +281,15 @@ const loadData = async () => {
   }
 };
 
+const loadLocations = async () => {
+  try {
+    const res = await locationAPI.list();
+    locations.value = res.data.data || [];
+  } catch (err) {
+    console.error("Failed to load locations", err);
+  }
+};
+
 const openCreateForm = () => {
   editingId.value = null;
   form.value = {
@@ -240,6 +300,7 @@ const openCreateForm = () => {
     amount: 0,
     status: "pending",
     notes: "",
+    locationId: null,
   };
   showForm.value = true;
 };
@@ -254,6 +315,7 @@ const editCommission = (c) => {
     amount: Number(c.amount),
     status: c.status,
     notes: c.notes || "",
+    locationId: c.locationId || null,
   };
   showForm.value = true;
 };
@@ -311,8 +373,9 @@ const deleteCommission = async (id: number) => {
   }
 };
 
-onMounted(() => {
-  loadData();
+onMounted(async () => {
+  await loadLocations();
+  await loadData();
 });
 </script>
 

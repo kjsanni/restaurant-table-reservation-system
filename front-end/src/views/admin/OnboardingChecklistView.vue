@@ -103,7 +103,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import { Icon } from "@iconify/vue";
 import { useToastStore } from "@/stores/toast";
 import logger from "@/utils/logger";
 import onboardingAPI from "@/services/onboardingAPI";

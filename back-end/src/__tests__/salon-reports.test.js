@@ -58,9 +58,9 @@ describe("salon-reports.controller", () => {
 
     await salonReportsController.getSalonReportsHandler(req, res);
 
-    expect(appointmentDao.getRevenueByService).toHaveBeenCalledWith(1, "2026-01-01", "2026-01-31");
-    expect(appointmentDao.getTopStylists).toHaveBeenCalledWith(1, "2026-01-01", "2026-01-31");
-    expect(appointmentDao.getAppointmentsBySource).toHaveBeenCalledWith(1, "2026-01-01", "2026-01-31");
+    expect(appointmentDao.getRevenueByService).toHaveBeenCalledWith(1, "2026-01-01", "2026-01-31", undefined);
+    expect(appointmentDao.getTopStylists).toHaveBeenCalledWith(1, "2026-01-01", "2026-01-31", undefined);
+    expect(appointmentDao.getAppointmentsBySource).toHaveBeenCalledWith(1, "2026-01-01", "2026-01-31", undefined);
   });
 
   it("exports salon reports as csv", async () => {

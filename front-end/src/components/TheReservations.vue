@@ -1,7 +1,5 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import { io } from "socket.io-client";
-import scheduleAPI from "@/services/scheduleAPI";
 import reservationAPI from "@/services/reservationAPI";
 import tableAPI from "@/services/tableAPI";
 import groupAPI from "@/services/groupAPI";
@@ -12,7 +10,6 @@ import ReservationInfo from "@/components/ReservationInfo.vue";
 import ButtonAction from "@/components/ButtonAction.vue";
 import GridContainer from "@/components/GridContainer.vue";
 import RestaurantTable from "@/components/RestaurantTable.vue";
-import { statusColor, shortName } from "@/utils/reservationDisplay";
 import EditReservation from "@/components/EditReservation.vue";
 import {
   ACTIVE_STATUSES,

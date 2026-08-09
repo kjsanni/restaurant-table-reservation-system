@@ -33,7 +33,7 @@ const form = ref({
 const loadCampaigns = async () => {
   loading.value = true;
   try {
-    const res = await marketingCampaignsAPI.getAll({ limit: 100 });
+    const res = await marketingCampaignsAPI.list({ limit: 100 });
     campaigns.value = res.data.data || [];
   } catch (err) {
     logger.error("Failed to load campaigns", { error: err });
@@ -120,7 +120,7 @@ const deleteCampaign = async (id: number) => {
 const sendCampaign = async (campaign: any) => {
   sending.value = true;
   try {
-    const res = await marketingCampaignsAPI.send(campaign.id);
+    const res = await (marketingCampaignsAPI as any).send(campaign.id);
     toastStore.add(
       t("salon.campaignSent", `Sent to {sent} of {total} recipients`)
         .replace("{sent}", res.data.sentCount)

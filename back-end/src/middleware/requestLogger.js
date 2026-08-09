@@ -1,10 +1,22 @@
 const fs = require("fs");
 const path = require("path");
 
+// codacy-suppress path-traversal Path is derived from __dirname, not user input
+const logDir = path.join(__dirname, "../../logs");
+const resolvedLogDir = path.resolve(logDir);
+
+// codacy-suppress FileAccess Path is derived from __dirname, not user input
+if (!fs.existsSync(resolvedLogDir)) {
+  // codacy-suppress FileAccess Path is derived from __dirname, not user input
+  fs.mkdirSync(resolvedLogDir, { recursive: true });
+}
+
+// codacy-suppress FileAccess Path is derived from __dirname, not user input
 const logStream = fs.createWriteStream(
-  path.join(__dirname, "../../logs/requests.log"),
+  path.join(resolvedLogDir, "requests.log"),
   { flags: "a" }
 );
+/* codacy-suppress-end */
 
 const closeLogStream = () => {
   if (typeof logStream.end === "function") {

@@ -121,7 +121,6 @@ const anomalyDetectionService = {
       if (!userId) return next();
 
       const userIp = req.ip || req.connection?.remoteAddress || null;
-      const userAgent = req.get("user-agent") || null;
       const now = new Date();
       const hour = now.getUTCHours();
 

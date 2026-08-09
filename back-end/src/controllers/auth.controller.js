@@ -256,7 +256,7 @@ const loginTOTPHandler = async (req, res) => {
         isSuperAdmin: !!user.isSuperAdmin,
       },
     });
-  } catch (err) {
+  } catch {
     return res.status(400).json({ success: false, message: "Invalid or expired temporary token" });
   }
 };
@@ -265,7 +265,7 @@ const getMeHandler = async (req, res) => {
   const user = await authDAO.findUserById(req.user.id, req.tenant?.id);
   let effectivePermissions = user.permissions || {};
   try {
-    const rbacPermissions = await roleDAO.getRolePermissions(req.user.id);
+    const rbacPermissions = await roleDAO.getRolePermissions(req.user.id, req.user.tenantId);
     if (rbacPermissions && Object.keys(rbacPermissions).length > 0) {
       effectivePermissions = rbacPermissions;
     }
@@ -287,8 +287,13 @@ const getMeHandler = async (req, res) => {
         manage_settings: true,
         view_appointments: true,
         edit_appointments: true,
+        manage_appointments: true,
         manage_stations: true,
         manage_services: true,
+        view_commissions: true,
+        edit_commissions: true,
+        view_reports: true,
+        manage_platform: true,
       },
       manager: {
         view_reservations: true,
@@ -301,8 +306,13 @@ const getMeHandler = async (req, res) => {
         view_audit_logs: true,
         view_appointments: true,
         edit_appointments: true,
+        manage_appointments: true,
         manage_stations: true,
         manage_services: true,
+        view_commissions: true,
+        edit_commissions: true,
+        view_reports: true,
+        manage_platform: false,
       },
       staff: {
         view_reservations: true,
@@ -315,8 +325,13 @@ const getMeHandler = async (req, res) => {
         view_audit_logs: false,
         view_appointments: true,
         edit_appointments: true,
+        manage_appointments: false,
         manage_stations: false,
         manage_services: false,
+        view_commissions: false,
+        edit_commissions: false,
+        view_reports: false,
+        manage_platform: false,
       },
     };
     effectivePermissions = defaults[user.role] || defaults.staff;
@@ -577,7 +592,7 @@ const getAllUsersHandler = async (req, res) => {
 
 const VALID_USER_ROLES = ["admin", "manager", "staff"];
 
-const createStaffHandler = async (req, res) => {
+const _createStaffHandler = async (req, res) => {
   const { username, email, password, role, permissions } = req.body;
   const normalizedRole = VALID_USER_ROLES.includes(role) ? role : "staff";
   const user = await authDAO.createStaffUser({

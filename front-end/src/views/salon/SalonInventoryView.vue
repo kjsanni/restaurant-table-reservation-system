@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import inventoryItemAPI from "@/services/inventoryItemAPI";
+import inventoryTransferAPI from "@/services/inventoryTransferAPI";
+import locationAPI from "@/services/locationAPI";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
 import { useToastStore } from "@/stores/toast";
@@ -24,14 +26,17 @@ interface InventoryItem {
   expiryDate?: string;
   isActive: boolean;
   note?: string;
+  locationId?: number | null;
+  location?: { id: number; name: string };
 }
 
 const alerts = ref<InventoryItem[]>([]);
+const locations = ref<Array<{ id: number; name: string }>>([]);
+const selectedLocationId = ref<number | "">("");
 
 const {
   list: items,
   loading,
-  showForm,
   editingId,
   form,
   load: loadItems,
@@ -54,6 +59,7 @@ const {
     expiryDate: "",
     isActive: true,
     note: "",
+    locationId: null,
   },
   editMapper: (item) => ({
     name: item.name,
@@ -68,12 +74,13 @@ const {
     expiryDate: item.expiryDate ? item.expiryDate.slice(0, 10) : "",
     isActive: item.isActive,
     note: item.note || "",
+    locationId: item.locationId || null,
   }),
 });
 
 const loadAlerts = async () => {
   try {
-    const res = await inventoryItemAPI.getLowStock();
+    const res = await (inventoryItemAPI as any).getLowStock();
     alerts.value = res.data.data || [];
   } catch (err) {
     logger.error("Failed to load low stock alerts", { error: err });
@@ -95,9 +102,61 @@ const formatCurrency = (value: number, currency = "GHS") => {
   return `${currency} ${Number(value).toFixed(2)}`;
 };
 
+const loadLocations = async () => {
+  try {
+    const res = await locationAPI.list();
+    locations.value = res.data.data || [];
+  } catch (err) {
+    logger.error("Failed to load locations", { error: err });
+  }
+};
+
+const showTransfer = ref(false);
+const transferItem = ref<InventoryItem | null>(null);
+const transferForm = ref({ toLocationId: null, quantity: 0, notes: "" });
+const submittingTransfer = ref(false);
+
+const openTransfer = (item: InventoryItem) => {
+  transferItem.value = item;
+  transferForm.value = { toLocationId: null, quantity: 0, notes: "" };
+  showTransfer.value = true;
+};
+
+const submitTransfer = async () => {
+  if (
+    !transferItem.value ||
+    !transferForm.value.toLocationId ||
+    !transferForm.value.quantity
+  )
+    return;
+  submittingTransfer.value = true;
+  try {
+    await inventoryTransferAPI.create({
+      inventoryItemId: transferItem.value.id,
+      fromLocationId: transferItem.value.locationId,
+      toLocationId: transferForm.value.toLocationId,
+      quantity: transferForm.value.quantity,
+      notes: transferForm.value.notes,
+    });
+    showTransfer.value = false;
+    transferItem.value = null;
+    await loadItems();
+    toastStore.add(t("salon.transferCreated", "Transfer created"), "success");
+  } catch (err) {
+    logger.error("Failed to create transfer", { error: err });
+    toastStore.add(
+      t("salon.transferFailed", "Failed to create transfer"),
+      "error"
+    );
+  } finally {
+    submittingTransfer.value = false;
+  }
+};
+
 onMounted(() => {
   loadItems();
   loadAlerts();
+  loadLocations();
 });
 </script>
 
@@ -164,6 +223,17 @@ onMounted(() => {
             <label>
               {{ t("salon.category", "Category") }}
               <input v-model="form.category" class="field-input" />
+            </label>
+            <label>
+              {{ t("salon.location", "Location") }}
+              <select v-model="form.locationId" class="field-input">
+                <option value="">
+                  {{ t("salon.selectLocation", "Select location") }}
+                </option>
+                <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+                  {{ loc.name }}
+                </option>
+              </select>
             </label>
             <label>
               {{ t("salon.qty", "Qty") }}
@@ -252,13 +322,30 @@ onMounted(() => {
         </div>
 
         <div class="settings-card">
-          <h3>{{ t("salon.campaignsList", "Inventory Items") }}</h3>
+          <div class="panel-head" style="margin-bottom: 12px">
+            <h3>{{ t("salon.campaignsList", "Inventory Items") }}</h3>
+            <select
+              v-if="locations.length"
+              v-model="selectedLocationId"
+              class="field-input"
+              style="width: auto"
+              @change="loadItems"
+            >
+              <option value="">
+                {{ t("salon.allLocations", "All locations") }}
+              </option>
+              <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+                {{ loc.name }}
+              </option>
+            </select>
+          </div>
           <table class="report-table">
             <thead>
               <tr>
                 <th>{{ t("salon.name", "Name") }}</th>
                 <th>{{ t("salon.sku", "SKU") }}</th>
                 <th>{{ t("salon.category", "Category") }}</th>
+                <th>{{ t("salon.location", "Location") }}</th>
                 <th>{{ t("salon.qty", "Qty") }}</th>
                 <th>{{ t("salon.cost", "Cost") }}</th>
                 <th>{{ t("salon.sell", "Sell") }}</th>
@@ -274,6 +361,12 @@ onMounted(() => {
                 </td>
                 <td>{{ item.sku || "—" }}</td>
                 <td>{{ item.category || "—" }}</td>
+                <td>
+                  {{
+                    item.location?.name ||
+                    (item.locationId ? `#${item.locationId}` : "—")
+                  }}
+                </td>
                 <td>
                   <span
                     :class="{
@@ -313,16 +406,81 @@ onMounted(() => {
                   <button class="btn-danger-sm" @click="deleteItem(item.id)">
                     {{ t("salon.delete", "Delete") }}
                   </button>
+                  <button class="btn-primary-sm" @click="openTransfer(item)">
+                    {{ t("salon.transfer", "Transfer") }}
+                  </button>
                 </td>
               </tr>
               <tr v-if="!items.length">
-                <td colspan="9" class="empty-state">
+                <td colspan="10" class="empty-state">
                   {{ t("salon.noCampaigns", "No inventory items yet") }}
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    v-if="showTransfer"
+    class="modal-overlay"
+    @click.self="showTransfer = false"
+  >
+    <div class="modal">
+      <h2>{{ t("salon.transferItem", "Transfer Item") }}</h2>
+      <p class="transfer-item-name">{{ transferItem?.name }}</p>
+      <div class="form-group">
+        <label>{{ t("salon.fromLocation", "From Location") }}</label>
+        <input
+          :value="
+            transferItem?.location?.name || t('salon.unassigned', 'Unassigned')
+          "
+          disabled
+          class="field-input"
+        />
+      </div>
+      <div class="form-group">
+        <label>{{ t("salon.toLocation", "To Location") }}</label>
+        <select v-model="transferForm.toLocationId" class="field-input">
+          <option value="">
+            {{ t("salon.selectLocation", "Select location") }}
+          </option>
+          <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+            {{ loc.name }}
+          </option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>{{ t("salon.quantity", "Quantity") }}</label>
+        <input
+          v-model.number="transferForm.quantity"
+          type="number"
+          min="1"
+          :max="transferItem?.quantity || 0"
+          class="field-input"
+        />
+      </div>
+      <div class="form-group">
+        <label>{{ t("salon.notes", "Notes") }}</label>
+        <textarea
+          v-model="transferForm.notes"
+          class="field-input"
+          rows="2"
+        ></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" @click="showTransfer = false">
+          {{ t("salon.cancelBtn", "Cancel") }}
+        </button>
+        <button
+          class="btn-primary"
+          @click="submitTransfer"
+          :disabled="submittingTransfer"
+        >
+          {{ t("salon.transfer", "Transfer") }}
+        </button>
       </div>
     </div>
   </div>

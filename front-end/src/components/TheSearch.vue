@@ -1,5 +1,4 @@
 <script setup>
-import { ref, computed } from "vue";
 import SearchIcon from "~icons/fluent/search-16-regular";
 import ClearIcon from "~icons/fluent/dismiss-16-regular";
 

@@ -18,17 +18,61 @@ const isHoliday = async (tenantId, date) => {
   }
 };
 
-const isWithinShift = async (tenantId, userId, datetime) => {
+const isWithinShift = async (tenantId, userId, datetime, locationId) => {
   try {
-    const shift = await StaffShift.findOne({ where: { userId } });
-    return !!shift;
+    const where = { userId };
+    if (locationId) where.locationId = locationId;
+    const shift = await StaffShift.findOne({ where });
+    if (!shift) return false;
+
+    const appointmentDate = new Date(datetime);
+    const appointmentDay = appointmentDate.toLocaleString("en-US", { weekday: "long" }).toLowerCase();
+    if (shift.dayOfWeek !== appointmentDay) return false;
+
+    const appointmentTime = appointmentDate.toTimeString().slice(0, 8);
+    if (appointmentTime < shift.startTime || appointmentTime >= shift.endTime) return false;
+
+    return true;
   } catch {
     return false;
   }
 };
 
+const buildAppointmentWhere = (tenantId, extendedEnd, locationId) => {
+  const where = {
+    tenantId,
+    status: { [Op.notIn]: ["cancelled", "no_show"] },
+    start: { [Op.lt]: extendedEnd },
+  };
+  if (locationId) where.locationId = locationId;
+  return where;
+};
+
+const buildIncludeClause = (stationId, stylistId) => {
+  const includeClause = [
+    {
+      model: salonModels.sequelize.models.service,
+      as: "service",
+      required: true,
+    },
+    {
+      model: salonModels.sequelize.models.station,
+      as: "station",
+      required: false,
+      where: stationId ? { id: stationId } : undefined,
+    },
+    {
+      model: salonModels.sequelize.models.user,
+      as: "stylist",
+      required: false,
+      where: stylistId ? { id: stylistId } : undefined,
+    },
+  ];
+  return includeClause;
+};
+
 const appointmentSchedulingService = {
-  async checkConflicts(tenantId, stationId, stylistId, start, durationMinutes, bufferMinutes = 0, excludeId = null) {
+  async checkConflicts(tenantId, stationId, stylistId, start, durationMinutes, bufferMinutes = 0, excludeId = null, locationId) {
     const extendedEnd = buildExtendedEnd(start, durationMinutes, bufferMinutes);
     const { Op } = require("sequelize");
     const conflicts = {
@@ -40,35 +84,9 @@ const appointmentSchedulingService = {
     const dateOnly = new Date(start).toISOString().split("T")[0];
     conflicts.holiday = await isHoliday(tenantId, dateOnly);
 
-    const appointmentWhere = {
-      tenantId,
-      status: { [Op.notIn]: ["cancelled", "no_show"] },
-      start: { [Op.lt]: extendedEnd },
-    };
-
-    const includeClause = [
-      {
-        model: salonModels.sequelize.models.service,
-        as: "service",
-        required: true,
-      },
-      {
-        model: salonModels.sequelize.models.station,
-        as: "station",
-        required: false,
-        where: stationId ? { id: stationId } : undefined,
-      },
-      {
-        model: salonModels.sequelize.models.user,
-        as: "stylist",
-        required: false,
-        where: stylistId ? { id: stylistId } : undefined,
-      },
-    ];
-
     const apts = await salonModels.sequelize.models.appointment.findAll({
-      where: appointmentWhere,
-      include: includeClause,
+      where: buildAppointmentWhere(tenantId, extendedEnd, locationId),
+      include: buildIncludeClause(stationId, stylistId),
     });
 
     const filtered = apts.filter((apt) => {
@@ -88,7 +106,7 @@ const appointmentSchedulingService = {
     }
 
     if (stylistId) {
-      const withinShift = await isWithinShift(tenantId, stylistId, new Date(start));
+      const withinShift = await isWithinShift(tenantId, stylistId, new Date(start), locationId);
       if (!withinShift) {
         conflicts.stylist.push({
           _shiftViolation: true,
@@ -111,7 +129,7 @@ const appointmentSchedulingService = {
     };
   },
 
-  async findAvailableSlots(tenantId, serviceId, date, stylistId = null, stationId = null) {
+  async findAvailableSlots(tenantId, serviceId, date, stylistId = null, stationId = null, locationId = null) {
     const service = await salonModels.sequelize.models.service.findByPk(serviceId);
     if (!service) throw new Error("Service not found");
 
@@ -125,35 +143,9 @@ const appointmentSchedulingService = {
     const isHolidy = await isHoliday(tenantId, date);
     if (isHolidy) return [];
 
-    const appointmentWhere = {
-      tenantId,
-      status: { [Op.notIn]: ["cancelled", "no_show"] },
-      start: { [Op.gte]: startOfWork, [Op.lt]: endOfWork },
-    };
-
-    const includeClause = [
-      {
-        model: salonModels.sequelize.models.service,
-        as: "service",
-        required: true,
-      },
-      {
-        model: salonModels.sequelize.models.station,
-        as: "station",
-        required: false,
-        where: stationId ? { id: stationId } : undefined,
-      },
-      {
-        model: salonModels.sequelize.models.user,
-        as: "stylist",
-        required: false,
-        where: stylistId ? { id: stylistId } : undefined,
-      },
-    ];
-
     const apts = await salonModels.sequelize.models.appointment.findAll({
-      where: appointmentWhere,
-      include: includeClause,
+      where: buildAppointmentWhere(tenantId, endOfWork, locationId),
+      include: buildIncludeClause(stationId, stylistId),
     });
 
     const occupiedRanges = apts.map((apt) => {

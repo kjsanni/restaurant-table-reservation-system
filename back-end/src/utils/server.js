@@ -21,20 +21,19 @@ const statusRouter = require("../routes/status.router");
 const docsRouter = require("../routes/docs.router");
 const { setCsrfCookie, generateCsrfToken, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
-  const { requestLogger, logStream } = require("../middleware/requestLogger");
+const { requestLogger, logStream } = require("../middleware/requestLogger");
 const { logAction } = require("../middleware/auditLog");
 const { cspHeaders } = require("../middleware/csp");
 const { getCurrentSecret } = require("../utils/jwtRotation");
 const { Server } = require("socket.io");
 const tryCatchHandler = require("../middleware/tryCatch");
-const { protect, requireSuperAdmin } = require("../middleware/auth");
-const ipAllowlist = require("../middleware/ipAllowlist");
+const { protect, _requireSuperAdmin } = require("../middleware/auth");
 const { authLimiter, generalLimiter, adminActionLimiter, syncLimiter, webhookLimiter } = require("../middleware/rateLimit");
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
 const { startBackupWorker } = require("../queues/backup.queue");
-  const { client: redisClient } = require("./cache");
-  const { checkQueueDepths } = require("../queues/queue");
+const { client: redisClient, getConnectionStatus } = require("./cache");
+const { checkQueueDepths } = require("../queues/queue");
 const { resolveTenant } = require("../tenant-platform/middleware/resolveTenant");
 const { requireActiveTenant } = require("../tenant-platform/middleware/tenantStatus");
 const { loadModules } = require("../tenant-platform/modules/module.loader");
@@ -92,7 +91,7 @@ const createServer = () => {
       }
       socket.user = user;
       next();
-    } catch (err) {
+    } catch {
       next(new Error("Authentication error: invalid token"));
     }
   });
@@ -104,16 +103,16 @@ const createServer = () => {
   app.set("io", io);
 
   const { runTenantCron } = require("../tenant-platform/utils/tenantCron");
-  runTenantCron();
-  const tenantCronInterval = setInterval(runTenantCron, 6 * 60 * 60 * 1000).unref();
+  runTenantCron().catch((err) => console.error("[TenantCron] startup error:", err.message));
+  const tenantCronInterval = setInterval(() => runTenantCron().catch((err) => console.error("[TenantCron] error:", err.message)), 6 * 60 * 60 * 1000).unref();
 
   const { runSalonCron } = require("../verticals/salon/utils/salonCron");
   runSalonCron().catch((err) => console.error("[SalonCron] startup error:", err.message));
   const salonCronInterval = setInterval(() => runSalonCron().catch((err) => console.error("[SalonCron] error:", err.message)), 60 * 60 * 1000).unref();
 
   const { runBackupCron } = require("../tenant-platform/utils/backupCron");
-  runBackupCron();
-  const backupCronInterval = setInterval(runBackupCron, 60 * 60 * 1000).unref();
+  runBackupCron().catch((err) => console.error("[BackupCron] startup error:", err.message));
+  const backupCronInterval = setInterval(() => runBackupCron().catch((err) => console.error("[BackupCron] error:", err.message)), 60 * 60 * 1000).unref();
 
   const { runScheduledReportsCron } = require("../tenant-platform/utils/scheduledReports.cron");
   runScheduledReportsCron().catch((err) => console.error("[ScheduledReportsCron] startup error:", err.message));
@@ -136,6 +135,7 @@ const createServer = () => {
     clearInterval(tenantCronInterval);
     clearInterval(salonCronInterval);
     clearInterval(backupCronInterval);
+  clearInterval(scheduledReportsCronInterval);
     if (io) io.close();
     if (logStream && typeof logStream.end === "function") {
       logStream.end();
@@ -200,10 +200,12 @@ const createServer = () => {
 
   app.get("/api/v1/health", tryCatchHandler(async (req, res) => {
     const queueAlerts = await checkQueueDepths();
+    const redisStatus = redisClient ? (getConnectionStatus() ? "connected" : "disconnected") : "not_configured";
     res.json({
       success: true,
       status: "healthy",
       timestamp: new Date().toISOString(),
+      redis: redisStatus,
       queueAlerts: queueAlerts.length ? queueAlerts : undefined,
     });
   }));
@@ -212,9 +214,9 @@ const createServer = () => {
   app.use(tryCatchHandler(requireActiveTenant));
 
   app.use("/api/v1", generalLimiter, require("../routes"));
-  app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
-  app.use("/api/v1/auth", validateCsrfToken, authLimiter, passwordResetRouter);
-  app.use("/api/v1/auth", validateCsrfToken, authLimiter, emailVerificationRouter);
+app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
+  app.use("/api/v1/auth", authLimiter, passwordResetRouter);
+  app.use("/api/v1/auth", authLimiter, emailVerificationRouter);
   app.use("/api/v1/audit-logs", generalLimiter, auditLogRouter);
   app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);

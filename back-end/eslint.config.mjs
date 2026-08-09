@@ -1,5 +1,18 @@
 export default [
   {
+    ignores: [
+      'node_modules/',
+      'dist/',
+      'coverage/',
+      '__tests__/',
+      'load-tests/',
+      'scripts/',
+      'src/db/migrations/',
+      'src/db/seeders/',
+      'src/db/models/',
+    ],
+  },
+  {
     files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 2021,
@@ -20,7 +33,7 @@ export default [
       },
     },
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_|^next$' }],
+      'no-unused-vars': ['warn', { varsIgnorePattern: '^_', argsIgnorePattern: '^_|^next$' }],
       'no-console': 'off',
       'no-process-env': 'off',
     },

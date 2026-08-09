@@ -6,26 +6,48 @@ invoiceDAO.list = (filters = {}) => {
   const where = {};
   if (filters.tenantId) where.tenantId = filters.tenantId;
   if (filters.status) where.status = filters.status;
+  if (filters.locationId) where.locationId = filters.locationId;
+
+  const include = [];
+  if (!filters.locationId) {
+    include.push({
+      model: db.location,
+      as: "location",
+      attributes: ["id", "name"],
+    });
+  }
+
   return db.invoice.findAll({
     where,
+    include,
     order: [["createdAt", "DESC"]],
     limit: filters.limit || 100,
   });
 };
 
-invoiceDAO.getById = (id) => db.invoice.findByPk(id);
+invoiceDAO.getById = (id, tenantId) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  return db.invoice.findOne({ where });
+};
 
-invoiceDAO.create = (data) => db.invoice.create(data);
+invoiceDAO.create = (data) => {
+  return db.invoice.create(data);
+};
 
-invoiceDAO.update = (id, updates) => {
-  return db.invoice.findByPk(id).then((inv) => {
+invoiceDAO.update = (id, updates, tenantId) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  return db.invoice.findOne({ where }).then((inv) => {
     if (!inv) return null;
     return inv.update(updates);
   });
 };
 
-invoiceDAO.remove = (id) => {
-  return db.invoice.findByPk(id).then((inv) => {
+invoiceDAO.remove = (id, tenantId) => {
+  const where = { id };
+  if (tenantId) where.tenantId = tenantId;
+  return db.invoice.findOne({ where }).then((inv) => {
     if (!inv) return null;
     return inv.destroy();
   });

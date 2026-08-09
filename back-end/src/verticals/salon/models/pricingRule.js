@@ -2,7 +2,7 @@
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class PricingRule extends Model {
-    static associate(models) {}
+    static associate(_unused) {}
   }
   PricingRule.init(
     {

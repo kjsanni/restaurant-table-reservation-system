@@ -92,11 +92,12 @@ const QUEUE_DEPTH_THRESHOLDS = {
 const getQueueDepth = async (queue) => {
   if (!queue) return 0;
   try {
+    const timeout = new Promise((resolve) => setTimeout(() => resolve(0), 3000));
     const [waiting, active, delayed, failed] = await Promise.all([
-      queue.getWaitingCount(),
-      queue.getActiveCount(),
-      queue.getDelayedCount(),
-      queue.getFailedCount(),
+      Promise.race([queue.getWaitingCount(), timeout]),
+      Promise.race([queue.getActiveCount(), timeout]),
+      Promise.race([queue.getDelayedCount(), timeout]),
+      Promise.race([queue.getFailedCount(), timeout]),
     ]);
     return waiting + active + delayed + failed;
   } catch {

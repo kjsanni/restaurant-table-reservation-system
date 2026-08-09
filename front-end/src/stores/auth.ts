@@ -29,6 +29,7 @@ export const useAuthStore = defineStore("auth", () => {
     name: string;
     slug?: string;
     businessVertical?: string;
+    settings?: Record<string, unknown>;
   } | null>(null);
   const tenantModeEnabled = ref(false);
   const branding = ref({
@@ -199,13 +200,15 @@ export const useAuthStore = defineStore("auth", () => {
     return response.data.enabled;
   };
 
-  onMounted(async () => {
+  const init = async () => {
     if (sessionInitialized.value) return;
     sessionInitialized.value = true;
     try {
-      await getMe();
-      await fetchTenantMode();
-      await fetchCapabilities();
+      await Promise.all([
+        getMe().catch(() => {}),
+        fetchTenantMode().catch(() => {}),
+        fetchCapabilities().catch(() => {}),
+      ]);
     } catch (err) {
       const error = err as { response?: { status?: number } };
       if (error.response?.status === 401) {
@@ -218,6 +221,10 @@ export const useAuthStore = defineStore("auth", () => {
     } finally {
       isLoading.value = false;
     }
+  };
+
+  onMounted(() => {
+    init();
   });
 
   return {
@@ -246,5 +253,6 @@ export const useAuthStore = defineStore("auth", () => {
     setTenant,
     clearTenant,
     refreshToken,
+    init,
   };
 });
