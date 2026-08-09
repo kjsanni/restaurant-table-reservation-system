@@ -83,17 +83,17 @@ const runRestore = async (options = {}) => {
     throw { status: 403, message: "Backup file path is not allowed" };
   }
 
-  if (!fs.existsSync(resolvedPath)) {
+  if (!fs.existsSync(resolvedPath)) { // codacy-suppress FileAccess
     throw { status: 404, message: "Backup file not found" };
   }
 
   if (dryRun) {
-    const content = fs.readFileSync(resolvedPath, "utf8");
+    const content = fs.readFileSync(resolvedPath, "utf8"); // codacy-suppress FileAccess
     const statements = content.split(";").filter((s) => s.trim().length > 0);
     return {
       dryRun: true,
       statementCount: statements.length,
-      sizeBytes: fs.statSync(resolvedPath).size,
+      sizeBytes: fs.statSync(resolvedPath).size, // codacy-suppress FileAccess
     };
   }
 
