@@ -554,6 +554,12 @@ const processLocationMessage = async (phone, location, tenantId) => {
   }
   session.tenantId = tenantId;
 
+  if (session.state === "store_locator_awaiting") {
+    const storeLocatorService = require("../verticals/salon/services/storeLocator.service");
+    await storeLocatorService.handleStoreLocatorLocation(phone, location, tenantId);
+    return;
+  }
+
   const { latitude, longitude, address } = location;
   const lat = parseFloat(latitude);
   const lng = parseFloat(longitude);

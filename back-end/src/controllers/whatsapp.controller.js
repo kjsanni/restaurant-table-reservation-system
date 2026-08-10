@@ -1,6 +1,7 @@
 const whatsappOrderService = require("../services/whatsapp-order.service");
 const { verifyWebhookSignature } = require("../services/whatsapp.service");
 const whatsappAppointmentService = require("../verticals/salon/services/whatsappAppointment.service");
+const storeLocatorService = require("../verticals/salon/services/storeLocator.service");
 const logger = require("../utils/logger");
 const { _Op } = require("sequelize");
 const db = require("../db/models");
@@ -39,12 +40,14 @@ const inboundHandler = async (req, res) => {
 
     let isSalon = false;
     let salonBookingEnabled = false;
+    let storeLocatorEnabled = false;
     if (tenantId) {
       const tenant = await db.tenant.findByPk(tenantId);
       isSalon = tenant?.businessVertical === "salon";
       if (isSalon) {
         const flags = tenant?.settings?.featureFlags || {};
         salonBookingEnabled = flags.salon_whatsapp_booking !== false;
+        storeLocatorEnabled = flags.store_locator_whatsapp !== false;
       }
     }
 
@@ -54,6 +57,19 @@ const inboundHandler = async (req, res) => {
       message.type === "text" &&
       message.text &&
       message.text.body;
+
+    const isStoreLocatorQuery =
+      isSalon &&
+      storeLocatorEnabled &&
+      message.type === "text" &&
+      message.text &&
+      message.text.body &&
+      ["location", "where", "directions", "find us", "address"].includes(message.text.body.trim().toLowerCase());
+
+    if (isStoreLocatorQuery) {
+      await storeLocatorService.handleStoreLocationQuery(phone, tenantId);
+      return res.status(200).json({ success: true });
+    }
 
     if (!isSalonBookingMessage) {
       if (message.type === "text" && message.text && message.text.body) {

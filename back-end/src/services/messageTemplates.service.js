@@ -55,6 +55,10 @@ const DEFAULT_TEMPLATES = {
     "Your appointment #{{appointmentId}} at {{salonName}} on {{date}} at {{time}} has been cancelled. Reply to book again.",
   salon_payment_confirmed:
     "Payment confirmed for appointment #{{appointmentId}} at {{salonName}} on {{date}} at {{time}}. We look forward to seeing you!",
+  store_locator_multi:
+    "We have multiple locations. Please share your location (attachment → Location) so we can find the nearest one.",
+  store_locator_no_locations: "We don't have any locations listed yet. Please contact us directly.",
+  store_locator_no_coords: "We don't have any locations with coordinates yet. Please contact us directly.",
 };
 
 let templateCache = {};
