@@ -1,4 +1,4 @@
-import { ref, computed } from "vue";
+import { ref, computed, type Ref } from "vue";
 import { messages, type Locale } from "@/locales";
 import localeAPI from "@/services/localeAPI";
 
@@ -28,10 +28,14 @@ const currentLocale: Ref<Locale> = ref<Locale>(initLocale());
 const createI18nInstance = () => {
   const t = (key: KeyPath, fallback = "") => {
     const keys = key.split(".");
-    let value: any = messages[currentLocale.value];
+    let value: any = messages[currentLocale.value as Locale];
     for (const k of keys) {
-      if (value && typeof value === "object" && k in value) {
-        value = value[k];
+      if (
+        value &&
+        typeof value === "object" &&
+        k in (value as Record<string, any>)
+      ) {
+        value = (value as Record<string, any>)[k];
       } else {
         return fallback || key;
       }
@@ -43,7 +47,7 @@ const createI18nInstance = () => {
   };
 
   const locale = computed(() => currentLocale.value);
-  const localeName = computed(() => localeNames[currentLocale.value]);
+  const localeName = computed(() => localeNames[currentLocale.value as Locale]);
   const availableLocales = computed(() =>
     supportedLocales.map((l) => ({
       code: l,

@@ -1,4 +1,5 @@
 const Sentry = require("@sentry/node");
+const { getCacheStats } = require("../utils/cache");
 
 // Initialize Sentry only if DSN is provided
 if (process.env.SENTRY_DSN) {
@@ -44,10 +45,17 @@ const errorHandler = (err, req, res, next) => {
 };
 
 const getStats = () => {
+  const cacheStats = getCacheStats();
+  const cacheHitRate = cacheStats.gets ? cacheStats.hits / cacheStats.gets : 0;
+
   return {
     ...metrics,
     avgResponseTime: metrics.requests ? Math.round(metrics.totalDuration / metrics.requests) : 0,
     uptime: process.uptime(),
+    cache: {
+      ...cacheStats,
+      hitRate: cacheHitRate,
+    },
   };
 };
 

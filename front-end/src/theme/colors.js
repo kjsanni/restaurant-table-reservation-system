@@ -115,3 +115,19 @@ export const tableStatusColors = {
   reserved: { bg: brandColors.sky100, text: brandColors.sky600 },
   blocked: { bg: brandColors.neutral200, text: brandColors.neutral700 },
 };
+
+// Animation tokens (easing + duration) aligned with brand motion
+export const motionTokens = {
+  duration: {
+    fast: 150,
+    base: 250,
+    slow: 400,
+    slower: 600,
+  },
+  easing: {
+    easeOut: "power2.out",
+    easeInOut: "power2.inOut",
+    bounce: "back.out(1.2)",
+    spring: "elastic.out(1, 0.6)",
+  },
+};

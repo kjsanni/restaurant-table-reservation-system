@@ -11,7 +11,7 @@ const props = defineProps<{
   menuItems: any[];
   tables: any[];
   services: any[];
-  addingToCart: string | null;
+  addingToCart: number | string | null;
 }>();
 
 const emit = defineEmits<{

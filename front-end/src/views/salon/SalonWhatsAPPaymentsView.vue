@@ -138,7 +138,10 @@ const canRefund = (apt) => {
 };
 
 const canVerify = (apt) => {
-  return ["unpaid", "deposit", "partial"].includes(apt.paymentStatus) && apt.paymentReference;
+  return (
+    ["unpaid", "deposit", "partial"].includes(apt.paymentStatus) &&
+    apt.paymentReference
+  );
 };
 
 const verifyAppointment = async (apt) => {
@@ -154,7 +157,8 @@ const verifyAppointment = async (apt) => {
     }
   } catch (e) {
     alert(
-      e?.response?.data?.message || t("salon.verificationFailed", "Verification failed")
+      e?.response?.data?.message ||
+        t("salon.verificationFailed", "Verification failed")
     );
   }
 };

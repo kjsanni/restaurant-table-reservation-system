@@ -26,6 +26,14 @@ const enhanceConfig = ref({
     email_confirmation_subject: "",
     email_confirmation_body: "",
   },
+  sms: {
+    provider: "africastalking",
+    username: "",
+    apiKey: "",
+    accountSid: "",
+    authToken: "",
+    senderId: "",
+  },
 });
 
 const whatsappTestTo = ref("");
@@ -74,6 +82,14 @@ const load = () => {
       email_confirmation_body:
         get("message_templates", {}).email_confirmation_body || "",
     },
+    sms: get("africastalking_config", {
+      provider: "africastalking",
+      username: "",
+      apiKey: "",
+      accountSid: "",
+      authToken: "",
+      senderId: "",
+    }),
   };
 };
 
@@ -153,6 +169,10 @@ const saveEnhancements = async () => {
       email_confirmation_body:
         enhanceConfig.value.templates.email_confirmation_body,
     });
+    await authStore.updateSettings(
+      "africastalking_config",
+      enhanceConfig.value.sms
+    );
     enhanceSaved.value = true;
     setTimeout(() => (enhanceSaved.value = false), 2000);
   } catch (e: any) {
@@ -187,6 +207,33 @@ const sendTestWhatsApp = async () => {
       e?.response?.data?.message || "Failed to send test WhatsApp.";
   } finally {
     sendingWhatsApp.value = false;
+  }
+};
+
+const smsTesting = ref(false);
+const smsTestResult = ref<{ success: boolean; message: string } | null>(null);
+
+const testSms = async () => {
+  smsTesting.value = true;
+  smsTestResult.value = null;
+  try {
+    const phone = prompt("Enter phone number to test (e.g. +233241234567):");
+    if (!phone) return;
+    const res = await notificationAPI.sendTestSms(
+      phone,
+      "Test SMS from your reservation system."
+    );
+    smsTestResult.value = {
+      success: true,
+      message: `Test SMS sent via ${res.data?.provider || "SMS"}`,
+    };
+  } catch (e: any) {
+    smsTestResult.value = {
+      success: false,
+      message: e?.response?.data?.message || "Failed to send test SMS",
+    };
+  } finally {
+    smsTesting.value = false;
   }
 };
 
@@ -346,6 +393,88 @@ onMounted(() => {
           rows="3"
           placeholder="Hi {{customer_name}}, your reservation is confirmed..."
         ></textarea>
+      </div>
+    </section>
+
+    <section class="integration-section">
+      <h3 class="integration-title">SMS Provider (Platform)</h3>
+      <p class="setting-description" style="margin-bottom: 12px">
+        Configure the platform-wide SMS provider for fallback notifications.
+      </p>
+      <div class="email-grid">
+        <div class="email-field">
+          <label>Provider</label>
+          <select v-model="enhanceConfig.sms.provider" class="field-input">
+            <option value="africastalking">Africa's Talking</option>
+            <option value="twilio">Twilio</option>
+          </select>
+        </div>
+        <div
+          class="email-field"
+          v-if="enhanceConfig.sms.provider === 'africastalking'"
+        >
+          <label>Username</label>
+          <input
+            v-model="enhanceConfig.sms.username"
+            class="field-input"
+            placeholder="Username"
+          />
+        </div>
+        <div
+          class="email-field"
+          v-if="enhanceConfig.sms.provider === 'africastalking'"
+        >
+          <label>API Key</label>
+          <input
+            v-model="enhanceConfig.sms.apiKey"
+            type="password"
+            class="field-input"
+            placeholder="API Key"
+          />
+        </div>
+        <div class="email-field" v-if="enhanceConfig.sms.provider === 'twilio'">
+          <label>Account SID</label>
+          <input
+            v-model="enhanceConfig.sms.accountSid"
+            class="field-input"
+            placeholder="AC..."
+          />
+        </div>
+        <div class="email-field" v-if="enhanceConfig.sms.provider === 'twilio'">
+          <label>Auth Token</label>
+          <input
+            v-model="enhanceConfig.sms.authToken"
+            type="password"
+            class="field-input"
+            placeholder="Auth Token"
+          />
+        </div>
+        <div class="email-field full-width">
+          <label>Sender ID / From Number</label>
+          <input
+            v-model="enhanceConfig.sms.senderId"
+            class="field-input"
+            :placeholder="
+              enhanceConfig.sms.provider === 'twilio' ? '+1234567890' : 'RTRS'
+            "
+          />
+        </div>
+        <div class="email-field full-width">
+          <button
+            class="btn btn-secondary"
+            @click="testSms"
+            :disabled="smsTesting"
+          >
+            {{ smsTesting ? "Sending..." : "Test SMS" }}
+          </button>
+          <span
+            v-if="smsTestResult"
+            class="status-text"
+            :class="smsTestResult.success ? 'saved' : 'error'"
+          >
+            {{ smsTestResult.message }}
+          </span>
+        </div>
       </div>
     </section>
 

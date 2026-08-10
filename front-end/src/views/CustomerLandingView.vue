@@ -42,13 +42,13 @@ const menuTotal = computed(() => cartStore.total);
 const menuCount = computed(() => cartStore.count);
 const capabilities = computed(() => authStore.capabilities);
 const hasDineIn = computed(() =>
-  capabilities.value?.serviceModes?.includes("dine_in")
+  Boolean(capabilities.value?.serviceModes?.includes("dine_in"))
 );
 const hasDelivery = computed(() =>
-  capabilities.value?.serviceModes?.includes("delivery")
+  Boolean(capabilities.value?.serviceModes?.includes("delivery"))
 );
-const hasTableManagement = computed(
-  () => capabilities.value?.featureFlags?.table_management
+const hasTableManagement = computed(() =>
+  Boolean(capabilities.value?.featureFlags?.table_management)
 );
 
 onMounted(async () => {

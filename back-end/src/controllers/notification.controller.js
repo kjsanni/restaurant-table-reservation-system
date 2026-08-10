@@ -96,7 +96,7 @@ const testSmsHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "Recipient phone is required." });
   }
   try {
-    const status = await smsService.getProviderStatus(req.tenant?.id);
+    const status = await smsService.getProviderStatus();
     if (!status.configured) {
       return res.status(400).json({
         success: false,
@@ -106,7 +106,7 @@ const testSmsHandler = async (req, res) => {
       });
     }
     const text = message || "This is a test SMS from your reservation system.";
-    const result = await smsService.sendSMS({ to, message: text }, req.tenant?.id);
+    const result = await smsService.sendSMS({ to, message: text });
     return res.status(200).json({ success: true, result, provider: status.provider });
   } catch (err) {
     return res.status(400).json({ success: false, message: err.message });

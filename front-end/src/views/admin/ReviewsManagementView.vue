@@ -2,7 +2,6 @@
 import { ref, onMounted } from "vue";
 import reviewAPI from "@/services/reviewAPI";
 import logger from "@/utils/logger";
-import { useCurrency } from "@/composables/useCurrency";
 
 interface Review {
   id: number;
@@ -16,8 +15,6 @@ interface Review {
   customer?: { firstName?: string; lastName?: string; email?: string };
   createdAt: string;
 }
-
-const { format: fmt } = useCurrency();
 
 const reviews = ref<Review[]>([]);
 const loading = ref(true);
@@ -202,10 +199,18 @@ onMounted(() => {
             </div>
 
             <div class="review-footer">
-              <button v-if="!review.flagged" class="btn-link btn-warn" @click="flagReview(review.id)">
+              <button
+                v-if="!review.flagged"
+                class="btn-link btn-warn"
+                @click="flagReview(review.id)"
+              >
                 Flag
               </button>
-              <button v-else class="btn-link btn-warn" @click="unflagReview(review.id)">
+              <button
+                v-else
+                class="btn-link btn-warn"
+                @click="unflagReview(review.id)"
+              >
                 Unflag
               </button>
               <button class="btn-link" @click="deleteReview(review.id)">

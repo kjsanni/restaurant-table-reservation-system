@@ -6,10 +6,14 @@ import { VaSidebarItem } from "vuestic-ui";
 import { useAuthStore } from "@/stores/auth";
 import type { User } from "@/stores/auth";
 import { superAdminNavItems } from "@/config/sidebarItems";
+import type { NavItem } from "@/config/sidebarItems";
+import { useAnimations } from "@/composables/useAnimations";
+import gsap from "gsap";
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const { fadeIn } = useAnimations();
 
 const collapsed = ref(false);
 const sidebarVisible = ref(true);
@@ -154,7 +158,7 @@ watch(
   (vertical) => {
     if (typeof document !== "undefined") {
       const allowed = ["restaurant", "salon"];
-      const safe = allowed.includes(vertical) ? vertical : "";
+      const safe = allowed.includes(vertical || "") ? vertical || "" : "";
       document.documentElement.setAttribute("data-vertical", safe);
     }
   },
@@ -271,7 +275,13 @@ watch(
 
       <main class="sa-content">
         <RouterView v-slot="{ Component }">
-          <Transition name="sa-fade" mode="out-in">
+          <Transition
+            name="sa-fade"
+            mode="out-in"
+            @before-enter="(el) => gsap.set(el, { opacity: 0, y: 8 })"
+            @enter="(el, done) => fadeIn(el, { duration: 'base' }).then(done)"
+            @leave="(el, done) => gsap.to(el, { opacity: 0, y: -8, duration: 0.2, ease: 'power2.in', onComplete: done })"
+          >
             <component v-if="Component" :is="Component" :key="$route.name" />
           </Transition>
         </RouterView>
@@ -593,15 +603,5 @@ watch(
   .sa-content {
     padding: var(--space-6) var(--space-4);
   }
-}
-
-.sa-fade-enter-active,
-.sa-fade-leave-active {
-  transition: opacity 0.2s var(--ease-in-out);
-}
-
-.sa-fade-enter-from,
-.sa-fade-leave-to {
-  opacity: 0;
 }
 </style>

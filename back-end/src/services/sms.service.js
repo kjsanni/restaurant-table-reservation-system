@@ -4,7 +4,3 @@ module.exports = {
   sendSMS,
   getProviderStatus,
 };
-
-module.exports = {
-  sendSMS,
-};

@@ -3,15 +3,22 @@ const reservationDAO = require("../DAOs/reservation.dao");
 const { sendEmail } = require("../services/emailService");
 const db = require("../db/models");
 
+const escapeHtml = (str) => {
+  if (!str) return "";
+  return String(str).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+};
+
 const sendReviewResponseNotification = async (review, tenant) => {
   try {
     const customer = await db.customer.findByPk(review.customerId);
     if (!customer?.email) return;
     const brandName = tenant?.name || "Vibespot";
+    const safeComment = escapeHtml(review.comment || "(no comment)");
+    const safeResponse = escapeHtml(review.response || "");
     await sendEmail({
       to: customer.email,
       subject: `We responded to your review of ${brandName}`,
-      html: `<p>Hi ${customer.firstName || "there"},</p><p>We've just responded to your review of <strong>${brandName}</strong>. Thank you for your feedback!</p><p>Your review:</p><blockquote>${review.comment || "(no comment)"}</blockquote><p>Our response:</p><blockquote>${review.response}</blockquote><p>— ${brandName} Team</p>`,
+      html: `<p>Hi ${escapeHtml(customer.firstName || "there")},</p><p>We've just responded to your review of <strong>${escapeHtml(brandName)}</strong>. Thank you for your feedback!</p><p>Your review:</p><blockquote>${safeComment}</blockquote><p>Our response:</p><blockquote>${safeResponse}</blockquote><p>— ${escapeHtml(brandName)} Team</p>`,
     });
   } catch (err) {
     console.error("sendReviewResponseNotification error:", err.message);

@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useAuthStore } from "@/stores/auth";
-import { useCapabilities } from "@/composables/useCapabilities";
 import customerPortalAPI from "@/services/customerPortalAPI";
 import logger from "@/utils/logger";
 
@@ -12,9 +10,6 @@ interface LoyaltyData {
   tier: string;
 }
 
-const authStore = useAuthStore();
-const { businessVertical } = useCapabilities();
-const isSalon = computed(() => businessVertical.value === "salon");
 const loyalty = ref<LoyaltyData | null>(null);
 const loading = ref(true);
 const redeemPoints = ref(50);

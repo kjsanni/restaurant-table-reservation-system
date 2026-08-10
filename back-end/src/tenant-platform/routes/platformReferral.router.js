@@ -3,17 +3,17 @@ const router = express.Router();
 const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const platformReferralController = require("../controllers/platformReferral.controller");
-const { protect, requireSuperAdmin } = require("../../middleware/auth");
+const { protect, requirePlatformRole } = require("../../middleware/auth");
 
 router
   .route("/")
-  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(platformReferralController.listReferralsHandler))
-  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(platformReferralController.createReferralHandler))
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePlatformRole("platform_admin")), tryCatchHandler(platformReferralController.listReferralsHandler))
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePlatformRole("platform_admin")), tryCatchHandler(platformReferralController.createReferralHandler))
   .all(httpMethodError);
 
 router
   .route("/:id")
-  .patch(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(platformReferralController.updateReferralHandler))
+  .patch(tryCatchHandler(protect), tryCatchHandler(requirePlatformRole("platform_admin")), tryCatchHandler(platformReferralController.updateReferralHandler))
   .all(httpMethodError);
 
 module.exports = router;

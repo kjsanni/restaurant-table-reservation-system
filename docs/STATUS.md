@@ -100,6 +100,20 @@ related:
 
 ---
 
+## 5a. Platform Admin / Super-Admin Status
+
+| Item | Status | Notes |
+|---|---|---|
+| **ADR-0002** | ✅ Accepted | `Specs/ADR-0002-super-admin-role-hierarchy.md` status updated from Proposed to Accepted. |
+| **Role hierarchy** | ✅ Implemented | `isSuperAdmin` + 5 platform roles (`platform_admin`, `platform_billing`, `platform_support`, `platform_technical`, `platform_compliance`). `requireSuperAdmin` and `requirePlatformRole` middleware enforce hierarchy with TOTP. |
+| **Route audit** | ✅ Complete | 18 platform route files downgraded from `requireSuperAdmin` to `requirePlatformRole`. Remaining `requireSuperAdmin` routes: `platformAudit`, `debug`, `tenantAdmin.router.js` (anonymization), and super-admin-only entry points. |
+| **Platform role management UI** | ✅ Implemented | `PlatformRoleManagementView.vue` with assign/revoke; backend controller + routes operational. |
+| **Advanced analytics** | ⏸️ Blocked | Depends on Phase 2 data collection. Controllers/routes exist; waiting for sufficient tenant operational data. |
+| **Compliance automation** | ⏸️ Blocked | Pending legal/DSAR policy decisions. Backend DSAR/compliance controllers exist; awaiting finalized rules. |
+| **Multi-super-admin invitation** | 🚫 Deferred | Explicitly YAGNI. No named requirement for >1 super admin; single `admin@rtrs.com` remains. |
+
+---
+
 ## 6. Documentation Drift (resolved earlier this session)
 
 1. **Vault `IMPLEMENTATION-PLAN.md`** — Feature 7 (Customer Profile) & 8 (Search Notes) were marked `🔲 NOT STARTED`; **corrected to ✅ COMPLETE** (2026-07-15).

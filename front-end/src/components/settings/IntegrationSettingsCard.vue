@@ -3,7 +3,6 @@ import { ref } from "vue";
 import { VaSwitch } from "vuestic-ui";
 import { useAuthStore } from "@/stores/auth";
 import { useToastStore } from "@/stores/toast";
-import { sendTestSms } from "@/services/notificationAPI";
 import logger from "@/utils/logger";
 
 const props = defineProps<{
@@ -15,21 +14,11 @@ const toastStore = useToastStore();
 
 const integrationSaving = ref(false);
 const integrationSaved = ref(false);
-const smsTesting = ref(false);
-const smsTestResult = ref<{ success: boolean; message: string } | null>(null);
 const integrationConfig = ref({
   whatsapp: { enabled: false, token: "", phoneNumberId: "" },
   channels: { email: true, whatsapp: false },
   paystack: { mode: "test", secretKey: "", webhookSecret: "" },
   tenantMode: false,
-  sms: {
-    provider: "africastalking",
-    username: "",
-    apiKey: "",
-    accountSid: "",
-    authToken: "",
-    senderId: "",
-  },
 });
 
 const load = () => {
@@ -52,14 +41,6 @@ const load = () => {
       webhookSecret: "",
     }),
     tenantMode: Boolean(get("tenant_mode_enabled", false)),
-    sms: get("africastalking_config", {
-      provider: "africastalking",
-      username: "",
-      apiKey: "",
-      accountSid: "",
-      authToken: "",
-      senderId: "",
-    }),
   };
 };
 
@@ -78,10 +59,6 @@ const saveAllIntegrations = async () => {
     await authStore.updateSettings(
       "paystack_config",
       integrationConfig.value.paystack
-    );
-    await authStore.updateSettings(
-      "africastalking_config",
-      integrationConfig.value.sms
     );
     integrationSaved.value = true;
     setTimeout(() => (integrationSaved.value = false), 2000);
@@ -106,27 +83,6 @@ const saveIntegration = async (key: string, value: any) => {
       "error"
     );
     logger.error("Failed to save integration setting", { error: e?.message });
-  }
-};
-
-const testSms = async () => {
-  smsTesting.value = true;
-  smsTestResult.value = null;
-  try {
-    const phone = prompt("Enter phone number to test (e.g. +233241234567):");
-    if (!phone) return;
-    const res = await sendTestSms(phone, "Test SMS from your reservation system.");
-    smsTestResult.value = {
-      success: true,
-      message: `Test SMS sent via ${res.data?.provider || "SMS"}`,
-    };
-  } catch (e: any) {
-    smsTestResult.value = {
-      success: false,
-      message: e?.response?.data?.message || "Failed to send test SMS",
-    };
-  } finally {
-    smsTesting.value = false;
   }
 };
 
@@ -230,47 +186,6 @@ load();
             class="field-input"
             placeholder="whsec_..."
           />
-        </div>
-      </div>
-    </section>
-
-    <section class="integration-section">
-      <h3 class="integration-title">SMS Provider</h3>
-      <div class="email-grid">
-        <div class="email-field">
-          <label>Provider</label>
-          <select v-model="integrationConfig.sms.provider" class="field-input">
-            <option value="africastalking">Africa's Talking</option>
-            <option value="twilio">Twilio</option>
-          </select>
-        </div>
-        <div class="email-field" v-if="integrationConfig.sms.provider === 'africastalking'">
-          <label>Username</label>
-          <input v-model="integrationConfig.sms.username" class="field-input" placeholder="Username" />
-        </div>
-        <div class="email-field" v-if="integrationConfig.sms.provider === 'africastalking'">
-          <label>API Key</label>
-          <input v-model="integrationConfig.sms.apiKey" type="password" class="field-input" placeholder="API Key" />
-        </div>
-        <div class="email-field" v-if="integrationConfig.sms.provider === 'twilio'">
-          <label>Account SID</label>
-          <input v-model="integrationConfig.sms.accountSid" class="field-input" placeholder="AC..." />
-        </div>
-        <div class="email-field" v-if="integrationConfig.sms.provider === 'twilio'">
-          <label>Auth Token</label>
-          <input v-model="integrationConfig.sms.authToken" type="password" class="field-input" placeholder="Auth Token" />
-        </div>
-        <div class="email-field full-width">
-          <label>Sender ID / From Number</label>
-          <input v-model="integrationConfig.sms.senderId" class="field-input" :placeholder="integrationConfig.sms.provider === 'twilio' ? '+1234567890' : 'RTRS'" />
-        </div>
-        <div class="email-field full-width">
-          <button class="btn btn-secondary" @click="testSms" :disabled="smsTesting">
-            {{ smsTesting ? "Sending..." : "Test SMS" }}
-          </button>
-          <span v-if="smsTestResult" class="status-text" :class="smsTestResult.success ? 'saved' : 'error'">
-            {{ smsTestResult.message }}
-          </span>
         </div>
       </div>
     </section>

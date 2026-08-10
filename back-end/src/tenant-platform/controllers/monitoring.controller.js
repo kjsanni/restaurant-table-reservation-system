@@ -1,7 +1,8 @@
 const db = require("../../db/models");
 const { queues, isRedisAvailable } = require("../../utils/cache");
+const redisLock = require("../../utils/redis");
 
-const getQueueStatsHandler = async (req, res) => {
+const getQueueStats = async () => {
   const queueNames = ["notifications", "reports"];
   const stats = [];
 
@@ -34,14 +35,10 @@ const getQueueStatsHandler = async (req, res) => {
   }
 
   const redisAvailable = await isRedisAvailable();
-  res.status(200).json({
-    success: true,
-    redisAvailable,
-    queues: stats,
-  });
+  return { success: true, redisAvailable, queues: stats };
 };
 
-const getDatabaseStatsHandler = async (req, res) => {
+const getDatabaseStats = async () => {
   try {
     const connection = db.sequelize.connectionManager?.pool?.size || 0;
     const available = db.sequelize.connectionManager?.pool?.available || 0;
@@ -57,71 +54,18 @@ const getDatabaseStatsHandler = async (req, res) => {
       // MySQL user may not have PROCESS privilege
     }
 
-    res.status(200).json({
+    return {
       success: true,
-      connection: {
-        total: connection,
-        available,
-        waiting,
-      },
+      connection: { total: connection, available, waiting },
       slowQueries,
       status: "healthy",
-    });
+    };
   } catch {
-    res.status(500).json({ success: false, message: "Failed to fetch database stats" });
+    return { success: false, message: "Failed to fetch database stats" };
   }
 };
 
-const getErrorRateHandler = async (req, res) => {
-  const fs = require("fs");
-  const path = require("path");
-  const logPath = path.join(process.cwd(), "logs", "requests.log");
-
-  let errorStats = {
-    total: 0,
-    errors4xx: 0,
-    errors5xx: 0,
-    byTenant: {},
-  };
-
-  if (!fs.existsSync(logPath)) {
-    return res.status(200).json({ success: true, ...errorStats, note: "No request log file found" });
-  }
-
-  try {
-    const content = fs.readFileSync(logPath, "utf8");
-    const lines = content.split("\n").filter((line) => line.trim());
-    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-
-    for (const line of lines) {
-      try {
-        const entry = JSON.parse(line);
-        if (entry.timestamp && new Date(entry.timestamp).getTime() < oneDayAgo) continue;
-        errorStats.total++;
-        if (entry.status >= 400 && entry.status < 500) {
-          errorStats.errors4xx++;
-        } else if (entry.status >= 500) {
-          errorStats.errors5xx++;
-        }
-        const tenantId = entry.tenantId || "unknown";
-        if (!errorStats.byTenant[tenantId]) {
-          errorStats.byTenant[tenantId] = { total: 0, errors4xx: 0, errors5xx: 0 };
-        }
-        errorStats.byTenant[tenantId].total++;
-        if (entry.status >= 400 && entry.status < 500) errorStats.byTenant[tenantId].errors4xx++;
-        if (entry.status >= 500) errorStats.byTenant[tenantId].errors5xx++;
-      } catch {
-        // skip unparseable lines
-      }
-    }
-  } catch {
-    // skip read errors
-  }
-
-  res.status(200).json({ success: true, ...errorStats });
-};
-
-const getIntegrationLatencyHandler = async (req, res) => {
+const getIntegrationLatency = async () => {
   const integrations = {
     paystack: { name: "Paystack", latencyMs: null, status: "unknown", lastCheck: null },
     whatsapp: { name: "WhatsApp", latencyMs: null, status: "unknown", lastCheck: null },
@@ -155,24 +99,94 @@ const getIntegrationLatencyHandler = async (req, res) => {
     }
   }
 
-  res.status(200).json({ success: true, integrations });
+  return { success: true, integrations };
+};
+
+const getErrorRate = async () => {
+  const fs = require("fs");
+  const path = require("path");
+  const logPath = path.join(process.cwd(), "logs", "requests.log");
+
+  let errorStats = {
+    total: 0,
+    errors4xx: 0,
+    errors5xx: 0,
+    byTenant: {},
+  };
+
+  if (!fs.existsSync(logPath)) {
+    return { success: true, ...errorStats, note: "No request log file found" };
+  }
+
+  try {
+    const content = fs.readFileSync(logPath, "utf8");
+    const lines = content.split("\n").filter((line) => line.trim());
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+
+    for (const line of lines) {
+      try {
+        const entry = JSON.parse(line);
+        if (entry.timestamp && new Date(entry.timestamp).getTime() < oneDayAgo) continue;
+        errorStats.total++;
+        if (entry.status >= 400 && entry.status < 500) {
+          errorStats.errors4xx++;
+        } else if (entry.status >= 500) {
+          errorStats.errors5xx++;
+        }
+        const tenantId = entry.tenantId || "unknown";
+        if (!errorStats.byTenant[tenantId]) {
+          errorStats.byTenant[tenantId] = { total: 0, errors4xx: 0, errors5xx: 0 };
+        }
+        errorStats.byTenant[tenantId].total++;
+        if (entry.status >= 400 && entry.status < 500) errorStats.byTenant[tenantId].errors4xx++;
+        if (entry.status >= 500) errorStats.byTenant[tenantId].errors5xx++;
+      } catch {
+        // skip unparseable lines
+      }
+    }
+  } catch {
+    // skip read errors
+  }
+
+  return { success: true, ...errorStats };
+};
+
+const getQueueStatsHandler = async (req, res) => {
+  const data = await getQueueStats();
+  res.status(200).json(data);
+};
+
+const getDatabaseStatsHandler = async (req, res) => {
+  const data = await getDatabaseStats();
+  const status = data.success ? 200 : 500;
+  res.status(status).json(data);
+};
+
+const getErrorRateHandler = async (req, res) => {
+  const data = await getErrorRate();
+  res.status(200).json(data);
+};
+
+const getIntegrationLatencyHandler = async (req, res) => {
+  const data = await getIntegrationLatency();
+  res.status(200).json(data);
 };
 
 const getHealthHandler = async (req, res) => {
   try {
     const [queueStats, dbStats, integrationLatency] = await Promise.all([
-      Promise.resolve(getQueueStatsHandler(req, res)),
-      Promise.resolve(getDatabaseStatsHandler(req, res)),
-      Promise.resolve(getIntegrationLatencyHandler(req, res)),
+      getQueueStats(),
+      getDatabaseStats(),
+      getIntegrationLatency(),
     ]);
 
     const checks = {
       database: dbStats?.success ? "healthy" : "unhealthy",
       redis: queueStats?.redisAvailable ? "healthy" : "unhealthy",
       queues: queueStats?.queues?.some((q) => q.failed > 0) ? "degraded" : "healthy",
-      integrations: integrationLatency?.integrations?.every((i) => i.status === "healthy")
+      integrations: (integrationLatency?.integrations && Object.values(integrationLatency.integrations).every((i) => i.status === "healthy"))
         ? "healthy"
-        : integrationLatency?.integrations?.some((i) => i.status === "degraded")
+        : (integrationLatency?.integrations && Object.values(integrationLatency.integrations).some((i) => i.status === "degraded"))
         ? "degraded"
         : "unhealthy",
     };
@@ -184,6 +198,18 @@ const getHealthHandler = async (req, res) => {
         ? "healthy"
         : "degraded";
 
+    let cronStatus = { lockAvailable: false, lockReason: "redis_unavailable" };
+    if (isRedisAvailable()) {
+      const lockResult = await redisLock.acquireLock("tenant:cron:lock", redisLock.CRON_LOCK_TTL);
+      cronStatus = {
+        lockAvailable: lockResult.acquired,
+        lockReason: lockResult.reason,
+      };
+      if (lockResult.acquired) {
+        await redisLock.releaseLock("tenant:cron:lock");
+      }
+    }
+
     res.status(200).json({
       success: true,
       status: overall,
@@ -191,8 +217,10 @@ const getHealthHandler = async (req, res) => {
       memory: process.memoryUsage(),
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
+      cron: cronStatus,
     });
-  } catch {
+  } catch (err) {
+    console.error("getHealthHandler error:", err.message);
     res.status(500).json({ success: false, status: "unhealthy", message: "Something went wrong. Please try again later." });
   }
 };

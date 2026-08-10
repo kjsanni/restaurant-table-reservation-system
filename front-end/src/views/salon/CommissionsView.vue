@@ -60,7 +60,7 @@
           <select id="stylist" v-model="form.userId" :disabled="!!editingId">
             <option value="">{{ t("salon.selectStylist") }}</option>
             <option v-for="s in stylists" :key="s.id" :value="String(s.id)">
-              {{ s.name }}
+              {{ s.username }}
             </option>
           </select>
         </div>
@@ -152,7 +152,7 @@
           </thead>
           <tbody>
             <tr v-for="c in items" :key="c.id">
-              <td>{{ c.stylist?.name || "—" }}</td>
+              <td>{{ c.stylist?.username || "—" }}</td>
               <td>{{ c.service?.name || "—" }}</td>
               <td>{{ c.rateType }}</td>
               <td>
@@ -217,8 +217,8 @@ const items = ref<
     service?: { id: number; name: string };
   }>
 >([]);
-const stylists = ref([]);
-const services = ref([]);
+const stylists = ref<Array<{ id: number; username: string }>>([]);
+const services = ref<Array<{ id: number; name: string }>>([]);
 const locations = ref<Array<{ id: number; name: string }>>([]);
 const selectedLocationId = ref<number | "">("");
 const editingId = ref<number | null>(null);
@@ -226,7 +226,16 @@ const generalError = ref("");
 
 const showForm = ref(false);
 
-const form = ref({
+const form = ref<{
+  userId: string;
+  serviceId: string;
+  rateType: string;
+  rateValue: number;
+  amount: number;
+  status: string;
+  notes: string;
+  locationId: number | null;
+}>({
   userId: "",
   serviceId: "",
   rateType: "percentage",
@@ -267,7 +276,7 @@ const loadData = async () => {
     }
     const [commissionsRes, stylistsRes, servicesRes] = await Promise.all([
       commissionAPI.getCommissions(params),
-      authAPI.getUsers({ limit: 100 }),
+      authAPI.getUsers(),
       serviceAPI.getServices({ limit: 100 }),
     ]);
     items.value = commissionsRes.data?.data || [];
@@ -305,7 +314,17 @@ const openCreateForm = () => {
   showForm.value = true;
 };
 
-const editCommission = (c) => {
+const editCommission = (c: {
+  id: number;
+  userId: number;
+  serviceId?: number;
+  rateType: string;
+  rateValue: number;
+  amount: number;
+  status: string;
+  notes?: string;
+  locationId?: number | null;
+}) => {
   editingId.value = c.id;
   form.value = {
     userId: String(c.userId),
@@ -352,7 +371,7 @@ const submitForm = async () => {
   }
 };
 
-const markPaid = async (c) => {
+const markPaid = async (c: { id: number }) => {
   try {
     await commissionAPI.markCommissionPaid(c.id);
     await loadData();

@@ -3,8 +3,7 @@ import { useI18n } from "@/composables/useI18n";
 import { useOnlineStatus } from "@/composables/useOnlineStatus";
 
 const { t } = useI18n();
-const { status, pendingCount, syncError, setStatus, setSyncError } =
-  useOnlineStatus();
+const { status, pendingCount, setStatus, setSyncError } = useOnlineStatus();
 </script>
 
 <template>

@@ -104,40 +104,56 @@ describe("tenantAdminController.deleteTenantHandler", () => {
     );
   });
 
-  describe("exportTenantDataHandler", () => {
-    it("returns 404 when tenant does not exist", async () => {
-      tenantAdminDAO.export.mockResolvedValue(null);
-
-      await tenantAdminController.exportTenantDataHandler(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ success: false, message: "Tenant not found" });
-    });
-
-    it("exports tenant data with related records", async () => {
-      const tenant = {
-        id: 1,
-        name: "Acme",
-        slug: "acme",
-        toJSON: jest.fn().mockReturnValue({ id: 1, name: "Acme", slug: "acme" }),
-      };
-      tenantAdminDAO.export.mockResolvedValue({
-        tenant,
-        settings: [{ key: "theme", value: "dark", updatedAt: "2026-01-01" }],
-        notes: [{ id: 1, note: "test", createdAt: "2026-01-01", updatedAt: "2026-01-01" }],
-        legalAcceptances: [{ id: 1, documentVersion: "1.0", acceptedAt: "2026-01-01", ipAddress: "1.2.3.4", userAgent: "test" }],
+  describe("getTenantsHandler", () => {
+    it("passes search query to DAO and returns paginated tenants", async () => {
+      req.query = { page: "1", pageSize: "20", search: "acme" };
+      tenantAdminDAO.list.mockResolvedValue({
+        rows: [{ id: 1, name: "Acme", slug: "acme" }],
+        count: 1,
       });
 
-      await tenantAdminController.exportTenantDataHandler(req, res);
+      await tenantAdminController.getTenantsHandler(req, res);
 
+      expect(tenantAdminDAO.list).toHaveBeenCalledWith({
+        status: undefined,
+        plan: undefined,
+        search: "acme",
+        page: "1",
+        pageSize: "20",
+      });
       expect(res.status).toHaveBeenCalledWith(200);
-      const responseArg = res.json.mock.calls[0][0];
-      expect(responseArg.success).toBe(true);
-      expect(responseArg.data.tenant).toEqual({ id: 1, name: "Acme", slug: "acme" });
-      expect(responseArg.data.settings).toEqual([{ key: "theme", value: "dark", updatedAt: "2026-01-01" }]);
-      expect(responseArg.data.notes).toEqual([{ id: 1, note: "test", createdAt: "2026-01-01", updatedAt: "2026-01-01" }]);
-      expect(responseArg.data.legalAcceptances).toEqual([{ id: 1, documentVersion: "1.0", acceptedAt: "2026-01-01", ipAddress: "1.2.3.4", userAgent: "test" }]);
-      expect(responseArg.data.exportedAt).toBeDefined();
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        collection: [{ id: 1, name: "Acme", slug: "acme" }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+      });
+    });
+
+    it("returns empty collection when search matches nothing", async () => {
+      req.query = { page: "1", pageSize: "20", search: "nonexistent" };
+      tenantAdminDAO.list.mockResolvedValue({
+        rows: [],
+        count: 0,
+      });
+
+      await tenantAdminController.getTenantsHandler(req, res);
+
+      expect(tenantAdminDAO.list).toHaveBeenCalledWith({
+        status: undefined,
+        plan: undefined,
+        search: "nonexistent",
+        page: "1",
+        pageSize: "20",
+      });
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        collection: [],
+        total: 0,
+        page: 1,
+        pageSize: 20,
+      });
     });
   });
 });

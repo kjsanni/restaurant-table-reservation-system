@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useCapabilities } from "@/composables/useCapabilities";
 import customerPortalAPI from "@/services/customerPortalAPI";
@@ -21,6 +22,7 @@ interface Profile {
 }
 
 const authStore = useAuthStore();
+const router = useRouter();
 const { businessVertical } = useCapabilities();
 const isSalon = computed(() => businessVertical.value === "salon");
 const reservations = ref<Reservation[]>([]);

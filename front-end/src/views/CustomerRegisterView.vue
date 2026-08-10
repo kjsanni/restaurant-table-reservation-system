@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
-import { getApiErrorMessage } from "@/utils/apiError";
+import { getApiErrorMessage, getApiErrors } from "@/utils/apiError";
 import TurnstileWidget from "@/components/TurnstileWidget.vue";
 import { useTurnstileConfig } from "@/composables/useTurnstileConfig";
 import { getBySlug as getPublicTenant } from "@/services/tenantPublicAPI";

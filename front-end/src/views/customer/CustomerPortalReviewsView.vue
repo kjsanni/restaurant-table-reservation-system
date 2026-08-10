@@ -1,27 +1,28 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import { useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useCapabilities } from "@/composables/useCapabilities";
 import customerPortalAPI from "@/services/customerPortalAPI";
 import { useToastStore } from "@/stores/toast";
 import logger from "@/utils/logger";
 
-const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const { businessVertical } = useCapabilities();
 const toastStore = useToastStore();
 const isSalon = computed(() => businessVertical.value === "salon");
 
-const reviews = ref<Array<{
-  id: number;
-  reservationId: number;
-  rating: number;
-  comment: string;
-  channel: string;
-  createdAt: string;
-}>>([]);
+const reviews = ref<
+  Array<{
+    id: number;
+    reservationId: number;
+    rating: number;
+    comment: string;
+    channel: string;
+    createdAt: string;
+  }>
+>([]);
 const loading = ref(true);
 const showForm = ref(false);
 const selectedReservationId = ref<number | null>(null);
@@ -29,7 +30,8 @@ const rating = ref(5);
 const comment = ref("");
 
 const tenantName = computed(
-  () => authStore.currentTenant?.name || (isSalon.value ? "Salon" : "Restaurant")
+  () =>
+    authStore.currentTenant?.name || (isSalon.value ? "Salon" : "Restaurant")
 );
 
 const loadReviews = async () => {
@@ -63,13 +65,6 @@ const submitReview = async () => {
     const msg = err?.response?.data?.message || "Failed to submit review";
     toastStore.add(msg, "error");
   }
-};
-
-const openReviewForm = (reservationId: number) => {
-  selectedReservationId.value = reservationId;
-  rating.value = 5;
-  comment.value = "";
-  showForm.value = true;
 };
 
 const cancelForm = () => {
@@ -164,7 +159,9 @@ onMounted(() => {
         </div>
         <div class="form-actions">
           <button class="btn-secondary" @click="cancelForm">Cancel</button>
-          <button class="btn-primary" @click="submitReview">Submit Review</button>
+          <button class="btn-primary" @click="submitReview">
+            Submit Review
+          </button>
         </div>
       </div>
     </div>

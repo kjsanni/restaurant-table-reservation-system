@@ -1739,8 +1739,7 @@ const customerPortalRoutes = [
   {
     path: "/portal/reviews",
     name: "customer-reviews",
-    component: () =>
-      import("../views/customer/CustomerPortalReviewsView.vue"),
+    component: () => import("../views/customer/CustomerPortalReviewsView.vue"),
     meta: { requiresAuth: true, standalone: true },
   },
   {

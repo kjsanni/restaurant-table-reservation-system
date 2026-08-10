@@ -77,41 +77,15 @@ const resolveProvider = (config = {}) => {
   return sender;
 };
 
-const sendSMS = async ({ to, message, senderId }, tenantId = null) => {
-  let config = {};
-  if (tenantId) {
-    try {
-      const db = require("../db/models");
-      const setting = await db.setting.findOne({
-        where: { key: "africastalking_config", tenantId },
-      });
-      if (setting && setting.value) {
-        config = normalizeSettingValue(setting.value);
-      }
-    } catch {
-      // ignore and fall back to env values
-    }
-  }
+const sendSMS = async ({ to, message, senderId }) => {
+  const config = await loadPlatformSmsConfig();
 
   const sender = resolveProvider(config);
   return sender({ to, message, senderId, config });
 };
 
-const getProviderStatus = async (tenantId = null) => {
-  let config = {};
-  if (tenantId) {
-    try {
-      const db = require("../db/models");
-      const setting = await db.setting.findOne({
-        where: { key: "africastalking_config", tenantId },
-      });
-      if (setting && setting.value) {
-        config = normalizeSettingValue(setting.value);
-      }
-    } catch {
-      // ignore
-    }
-  }
+const getProviderStatus = async () => {
+  const config = await loadPlatformSmsConfig();
 
   const provider = config.provider || process.env.SMS_PROVIDER || "africastalking";
   const hasUsername = !!(config.username || process.env.AFRICASTALKING_USERNAME);
@@ -141,6 +115,21 @@ const getProviderStatus = async (tenantId = null) => {
       ? []
       : fields.filter((f) => !(config[f] || process.env[prefix + "_" + f.toUpperCase()])),
   };
+};
+
+const loadPlatformSmsConfig = async () => {
+  try {
+    const db = require("../db/models");
+    const setting = await db.setting.findOne({
+      where: { key: "africastalking_config", tenantId: null },
+    });
+    if (setting && setting.value) {
+      return normalizeSettingValue(setting.value);
+    }
+  } catch {
+    // ignore and fall back to env values
+  }
+  return {};
 };
 
 module.exports = {
