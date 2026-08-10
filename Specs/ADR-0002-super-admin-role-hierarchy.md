@@ -1,7 +1,7 @@
 ---
 title: "ADR-0002: Super-admin role hierarchy and platform role separation"
-status: "Proposed"
-date: "2026-08-06"
+  status: "Accepted"
+  date: "2026-08-06"
 authors: "Engineering"
 tags: ["architecture", "rbac", "multi-tenant", "auth"]
 supersedes: ""
@@ -12,7 +12,7 @@ superseded_by: ""
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -117,6 +117,8 @@ super_admin (isSuperAdmin=true)
 - **IMP-004**: Add tests for each middleware combination: super-admin accessing all routes, platform_admin accessing admin but not super-admin routes, platform_billing accessing only billing routes, and unauthorized access returning 403.
 - **IMP-005**: Update `adminMiddleware.js` to use `requireSuperAdmin` only for truly privileged operations.
 - **IMP-006**: Frontend sidebar items must be gated by `platformRoles` in addition to `isSuperAdmin`.
+- **IMP-007**: Route audit complete — all functional-area platform routes use `requirePlatformRole`; only super-admin-only routes retain `requireSuperAdmin`.
+- **IMP-008**: ADR-0002 status updated from Proposed to Accepted.
 
 ## References
 

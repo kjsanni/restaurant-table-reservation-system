@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
 import adminAPI from "@/services/adminAPI";
 
-const router = useRouter();
 const loading = ref(true);
 const error = ref<string | null>(null);
 const roles = ref<any[]>([]);

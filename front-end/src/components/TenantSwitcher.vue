@@ -1,5 +1,12 @@
 <template>
   <div class="tenant-switcher">
+    <input
+      v-model="searchQuery"
+      type="text"
+      placeholder="Search tenants..."
+      class="tenant-search"
+      @input="onSearchInput"
+    />
     <select :value="modelValue" @change="onChange" class="tenant-select">
       <option value="">Platform Admin</option>
       <option v-for="tenant in tenants" :key="tenant.id" :value="tenant.id">
@@ -9,6 +16,7 @@
     <button v-if="hasMore" @click="loadMore" class="tenant-load-more">
       Load more
     </button>
+    <span v-if="total > 0" class="tenant-total">{{ total }} venues</span>
   </div>
 </template>
 
@@ -31,10 +39,17 @@ const tenants = ref([]);
 const page = ref(1);
 const pageSize = 20;
 const hasMore = ref(false);
+const total = ref(0);
+const searchQuery = ref("");
+let searchDebounce = null;
 
-const loadTenants = async (pageNum = 1) => {
+const loadTenants = async (pageNum = 1, search = "") => {
   try {
-    const response = await tenantAdminAPI.getAll({ page: pageNum, pageSize });
+    const response = await tenantAdminAPI.getAll({
+      page: pageNum,
+      pageSize,
+      search: search || undefined,
+    });
     const data = response.data;
     if (pageNum === 1) {
       tenants.value = data.collection || [];
@@ -42,6 +57,7 @@ const loadTenants = async (pageNum = 1) => {
       tenants.value = [...tenants.value, ...(data.collection || [])];
     }
     hasMore.value = (data.collection?.length || 0) >= pageSize;
+    total.value = data.total || 0;
     page.value = pageNum;
   } catch {
     // ignore
@@ -49,7 +65,14 @@ const loadTenants = async (pageNum = 1) => {
 };
 
 const loadMore = () => {
-  loadTenants(page.value + 1);
+  loadTenants(page.value + 1, searchQuery.value);
+};
+
+const onSearchInput = () => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => {
+    loadTenants(1, searchQuery.value);
+  }, 300);
 };
 
 const onChange = (event) => {
@@ -77,6 +100,19 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
 }
+.tenant-search {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle, #e3e8ee);
+  background: #ffffff;
+  font-size: 13px;
+  color: var(--ink, #0d253d);
+  min-width: 160px;
+}
+.tenant-search:focus {
+  outline: 2px solid var(--accent, #d97706);
+  outline-offset: 1px;
+}
 .tenant-select {
   padding: 6px 12px;
   border-radius: 6px;
@@ -101,5 +137,10 @@ onMounted(() => {
 }
 .tenant-load-more:hover {
   background: #e2e8f0;
+}
+.tenant-total {
+  font-size: 12px;
+  color: var(--ink-muted, #64748b);
+  white-space: nowrap;
 }
 </style>

@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useAuthStore } from "@/stores/auth";
-import { useCapabilities } from "@/composables/useCapabilities";
 import customerPortalAPI from "@/services/customerPortalAPI";
 import logger from "@/utils/logger";
 
@@ -17,9 +15,6 @@ interface WaitlistEntry {
   createdAt: string;
 }
 
-const authStore = useAuthStore();
-const { businessVertical } = useCapabilities();
-const isSalon = computed(() => businessVertical.value === "salon");
 const entries = ref<WaitlistEntry[]>([]);
 const loading = ref(true);
 const showJoinForm = ref(false);

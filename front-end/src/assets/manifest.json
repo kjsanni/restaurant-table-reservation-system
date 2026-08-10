@@ -1,0 +1,31 @@
+{
+  "portals": {
+    "super-admin": {
+      "hero": {
+        "path": "portal/super-admin-hero.png",
+        "alt": "Super admin dashboard hero",
+        "width": 1440,
+        "height": 560,
+        "variants": ["@1x", "@2x"]
+      }
+    },
+    "tenant": {
+      "onboarding": {
+        "path": "portal/tenant-onboarding-hero.png",
+        "alt": "Tenant onboarding hero",
+        "width": 1440,
+        "height": 560,
+        "variants": ["@1x", "@2x"]
+      }
+    },
+    "customer": {
+      "landing": {
+        "path": "portal/customer-landing-hero.png",
+        "alt": "Customer landing hero",
+        "width": 1440,
+        "height": 560,
+        "variants": ["@1x", "@2x"]
+      }
+    }
+  }
+}

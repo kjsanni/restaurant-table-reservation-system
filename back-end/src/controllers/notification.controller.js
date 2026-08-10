@@ -1,6 +1,7 @@
 const notificationService = require("../services/notification.service");
 const whatsappService = require("../services/whatsapp.service");
 const emailService = require("../services/emailService");
+const smsService = require("../services/sms.service");
 const authDAO = require("../DAOs/auth.dao");
 const db = require("../db/models");
 
@@ -89,9 +90,33 @@ const testEmailHandler = async (req, res) => {
   }
 };
 
+const testSmsHandler = async (req, res) => {
+  const { to, message } = req.body;
+  if (!to) {
+    return res.status(400).json({ success: false, message: "Recipient phone is required." });
+  }
+  try {
+    const status = await smsService.getProviderStatus();
+    if (!status.configured) {
+      return res.status(400).json({
+        success: false,
+        message: `SMS provider (${status.provider}) is not configured. Missing: ${status.missingFields.join(", ")}`,
+        provider: status.provider,
+        missingFields: status.missingFields,
+      });
+    }
+    const text = message || "This is a test SMS from your reservation system.";
+    const result = await smsService.sendSMS({ to, message: text });
+    return res.status(200).json({ success: true, result, provider: status.provider });
+  } catch (err) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   scheduleRemindersHandler,
   testWhatsAppHandler,
   testEmailHandler,
+  testSmsHandler,
   paystackWebhookInfoHandler,
 };

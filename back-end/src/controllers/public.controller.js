@@ -13,6 +13,7 @@ const listPublicPlansHandler = async (req, res) => {
     maxTables: plan.maxTables,
     maxReservationsPerMonth: plan.maxReservationsPerMonth,
     sortOrder: plan.sortOrder,
+    features: plan.features || null,
   }));
   return res.status(200).json({ success: true, plans: sanitized });
 };

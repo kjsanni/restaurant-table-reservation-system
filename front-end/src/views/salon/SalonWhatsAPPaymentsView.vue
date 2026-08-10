@@ -48,6 +48,7 @@
               <th>{{ t("salon.amount") }}</th>
               <th>{{ t("salon.deposit") }}</th>
               <th>{{ t("salon.paymentStatus") }}</th>
+              <th>Ref</th>
             </tr>
           </thead>
           <tbody>
@@ -64,6 +65,13 @@
                   {{ apt.paymentStatus }}
                 </span>
                 <button
+                  v-if="canVerify(apt)"
+                  class="btn-verify"
+                  @click="verifyAppointment(apt)"
+                >
+                  {{ t("salon.verify", "Verify") }}
+                </button>
+                <button
                   v-if="canRefund(apt)"
                   class="btn-refund"
                   @click="refundAppointment(apt)"
@@ -71,6 +79,7 @@
                   {{ t("salon.refund", "Refund") }}
                 </button>
               </td>
+              <td class="text-mono">{{ apt.paymentReference || "—" }}</td>
             </tr>
           </tbody>
         </table>
@@ -126,6 +135,32 @@ const canRefund = (apt) => {
     ["paid", "deposit", "partial"].includes(apt.paymentStatus) &&
     !apt.refundedAt
   );
+};
+
+const canVerify = (apt) => {
+  return (
+    ["unpaid", "deposit", "partial"].includes(apt.paymentStatus) &&
+    apt.paymentReference
+  );
+};
+
+const verifyAppointment = async (apt) => {
+  try {
+    const res = await appointmentAPI.verifyAppointmentPayment(apt.id);
+    const updated = res.data?.appointment;
+    if (updated) {
+      apt.paymentStatus = updated.paymentStatus;
+      apt.depositAmount = updated.depositAmount;
+      alert(
+        `Payment verified: ${updated.paymentStatus}\nAmount: ${formatMoney(updated.amount || 0)}\nChannel: ${updated.channel || "N/A"}`
+      );
+    }
+  } catch (e) {
+    alert(
+      e?.response?.data?.message ||
+        t("salon.verificationFailed", "Verification failed")
+    );
+  }
 };
 
 const refundAppointment = async (apt) => {
@@ -266,6 +301,11 @@ onMounted(() => {
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide);
 }
+.text-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
 .badge {
   display: inline-block;
   padding: var(--space-1) var(--space-2);
@@ -287,6 +327,23 @@ onMounted(() => {
   background: var(--amber-100);
   color: var(--amber-700);
 }
+.btn-verify {
+  margin-left: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-verify:hover {
+  background: var(--sky-50);
+  color: var(--sky-700);
+  border-color: var(--sky-200);
+}
+
 .btn-refund {
   margin-left: var(--space-2);
   padding: var(--space-1) var(--space-2);

@@ -1,5 +1,6 @@
 const db = require("../../db/models");
 const platformAuditDAO = require("./platformAudit.dao");
+const { Op } = require("sequelize");
 
 const tenantAdminDAO = {};
 
@@ -15,6 +16,15 @@ tenantAdminDAO.list = async (filters = {}) => {
   const where = {};
   if (filters.status) where.status = filters.status;
   if (filters.plan) where.plan = filters.plan;
+  if (filters.search) {
+    const search = String(filters.search).trim();
+    if (search) {
+      where[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { slug: { [Op.like]: `%${search}%` } },
+      ];
+    }
+  }
 
   const limit = filters.limit ? parseInt(filters.limit, 10) : 20;
   const offset = filters.page && filters.pageSize ? (parseInt(filters.page, 10) - 1) * parseInt(filters.pageSize, 10) : undefined;

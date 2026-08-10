@@ -49,6 +49,12 @@ router
     tryCatchHandler(requirePermission("edit_appointments")),
     tryCatchHandler(appointmentController.refundAppointment)
   )
+  .post(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("view_appointments")),
+    tryCatchHandler(appointmentController.verifyAppointmentPayment)
+  )
   .all(httpMethodError);
 
 router

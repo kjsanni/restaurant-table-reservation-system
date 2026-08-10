@@ -6,6 +6,11 @@ Ghana locale (GHS), Paystack payments, WhatsApp ordering, ShaQ Express delivery,
 Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` with vertical modules under `back-end/src/verticals/restaurant/` and `back-end/src/verticals/salon/`.
 
 **Current session additions:**
+- OSM Store Locator feature (Phases 1–4 merged):
+  - Backend: `latitude`/`longitude` columns on `locations`, auto-geocoding service, WhatsApp store locator flow with haversine nearest-store lookup, feature flag `store_locator_whatsapp`.
+  - Frontend: Leaflet map tab in `CrossLocationDashboardView.vue` with OSM markers and popups.
+- CodeQL unused-variable fixes merged.
+- OSV-Scanner workflow merged.
 - Platform roles, webhook endpoints/notifications, reviews, custom reports, customer loyalty/marketing/waitlist, status/docs, tenant signup.
 - Postman/Newman API testing integration.
 - PWA manifest + service worker baseline.
@@ -59,6 +64,7 @@ Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` w
 - Tenant signup/public: `/tenant/signup`, `/api/v1/tenant-signup`
 - Customer portal: `/portal`, `/portal/profile`, `/portal/reservations`, `/portal/orders`, `/portal/appointments` (salon), `/portal/gift-cards` (salon), `/portal/referrals` (salon), `/portal/packages` (salon), `/portal/loyalty`, `/portal/promotions`, `/portal/waitlist`
 - Salon vertical: `/appointments`, `/stations`, `/station-map`, `/services`, `/packages`, `/gift-cards`, `/referrals`, `/locations`, `/inventory`, `/expenses`, `/pricing`, `/salon/*` (settings, walkins, calendar, shifts, schedule, holidays, reports, recurring, clients, marketing, gallery, unified-schedule, whatsapp-bookings, whatsapp-payments, dashboard, staff)
+- WhatsApp store locator: Inbound keywords `location`, `where`, `directions`, `find us`, `address` trigger store locator flow; multi-location asks for customer location and finds nearest via haversine.
 - Tenant login by slug: `/t/:tenantSlug/login`
 - Customer portal by slug: `/t/:tenantSlug/portal`
 
@@ -112,7 +118,7 @@ npm run test:e2e                      # Playwright E2E
 
 ## Verification Gates
 
-- **Backend**: `cd back-end && npm test` — 736 Jest tests across 116 suites; must stay green (catches cross-tenant leaks and RBAC regressions).
+- **Backend**: `cd back-end && npm test` — 841 Jest tests across 126 suites; must stay green (catches cross-tenant leaks and RBAC regressions).
 - **Frontend**: `cd front-end && npm run lint && npm run build && npm run test:unit` — lint, build, and 22 Vitest unit tests must pass.
 - **API integration**: Postman collection + Newman for smoke and regression testing of `/api/v1/*` endpoints.
 - **Migrations**: `npm run migrate:up` — replays from earliest unapplied migration; keep `up()` idempotent.

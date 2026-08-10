@@ -20,6 +20,11 @@ router
   .all(httpMethodError);
 
 router
+  .route("/sms/test")
+  .post(...writeRoute("manage_settings", notificationController.testSmsHandler))
+  .all(httpMethodError);
+
+router
   .route("/paystack/webhook-info")
   .get(
     ...protectedRoute("manage_settings", notificationController.paystackWebhookInfoHandler)

@@ -21,19 +21,22 @@ export function createSalonCrudAPI<
     extra?: E;
   };
 }) {
-  const { basePath, methods = {}, extra = {} } = config;
+  const basePath = config.basePath;
+  const methods = config.methods || {};
+  const extra = (config.methods && config.methods.extra) || ({} as E);
 
   const applyOverride = <K extends keyof typeof methods>(
     key: K,
     mapper: (value: string) => (...args: any[]) => any
   ) => {
-    if (methods[key]) {
-      return mapper(methods[key] as string);
+    const value = methods[key];
+    if (value) {
+      return mapper(value as string);
     }
     return null;
   };
 
-  const service = {
+  const service: Record<string, (...args: any[]) => any> = {
     list(params = {}) {
       return API.get(basePath, { params });
     },
@@ -61,7 +64,7 @@ export function createSalonCrudAPI<
 
   const getOverride = applyOverride(
     "get",
-    (path) => (id: number | string) => API.get(path(id))
+    (path) => (id: number | string) => API.get(path.replace(/:id/g, String(id)))
   );
   if (getOverride) service.get = getOverride;
 
@@ -74,20 +77,24 @@ export function createSalonCrudAPI<
   const updateOverride = applyOverride(
     "update",
     (path) => (id: number | string, payload: Partial<T>) =>
-      API.patch(path(id), payload)
+      API.patch(path.replace(/:id/g, String(id)), payload)
   );
   if (updateOverride) service.update = updateOverride;
 
   const deleteOverride = applyOverride(
     "delete",
-    (path) => (id: number | string) => API.delete(path(id))
+    (path) => (id: number | string) =>
+      API.delete(path.replace(/:id/g, String(id)))
   );
   if (deleteOverride) service.delete = deleteOverride;
 
-  for (const [name, { method, path }] of Object.entries(extra)) {
+  const extraMethods = extra as Record<string, ExtraMethod>;
+  for (const [name, def] of Object.entries(extraMethods)) {
+    const method = def.method;
+    const path = def.path;
     service[name] = (...args: any[]) => {
       const url = path.replace(/:id/g, String(args[0]));
-      return API[method](url, args[1]);
+      return (API as any)[method](url, args[1]);
     };
   }
 

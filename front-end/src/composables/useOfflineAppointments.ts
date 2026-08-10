@@ -74,7 +74,7 @@ export const useOfflineAppointments = () => {
       try {
         if (mutation.mutationType === "create") {
           const draft = mutation.payload as DraftAppointment;
-          const cleanPayload = { ...draft };
+          const cleanPayload: Record<string, any> = { ...draft };
           delete cleanPayload.id;
           delete cleanPayload.isDraft;
 

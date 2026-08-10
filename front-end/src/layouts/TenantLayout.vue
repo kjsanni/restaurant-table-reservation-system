@@ -9,10 +9,13 @@ import { tenantNavItems } from "@/config/sidebarItems";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 import TenantSwitcher from "@/components/TenantSwitcher.vue";
 import { useOnlineStatus } from "@/composables/useOnlineStatus";
+import gsap from "gsap";
+import { useAnimations } from "@/composables/useAnimations";
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const { fadeIn } = useAnimations();
 const { status, pendingCount } = useOnlineStatus();
 
 const collapsed = ref(false);
@@ -128,7 +131,7 @@ watch(
   (vertical) => {
     if (typeof document !== "undefined") {
       const allowed = ["restaurant", "salon"];
-      const safe = allowed.includes(vertical) ? vertical : "";
+      const safe = allowed.includes(vertical || "") ? vertical || "" : "";
       document.documentElement.setAttribute("data-vertical", safe);
     }
   },
@@ -244,11 +247,17 @@ watch(
 
       <main id="main-content" class="tl-content">
         <RouterView v-slot="{ Component }">
-          <Transition name="tl-fade" mode="out-in">
+          <Transition
+            name="tl-fade"
+            mode="out-in"
+            @before-enter="(el) => gsap.set(el, { opacity: 0, y: 8 })"
+            @enter="(el, done) => fadeIn(el, { duration: 'base' }).then(done)"
+            @leave="(el, done) => gsap.to(el, { opacity: 0, y: -8, duration: 0.2, ease: 'power2.in', onComplete: done })"
+          >
             <component
               v-if="Component"
               :is="Component"
-              :key="`${$route.name}-${authStore.currentTenant?.id ?? 'platform'}`"
+              :key="`${String($route.name)}-${authStore.currentTenant?.id ?? 'platform'}`"
             />
           </Transition>
         </RouterView>
@@ -630,16 +639,6 @@ watch(
   .tl-content {
     padding: var(--space-6) var(--space-4);
   }
-}
-
-.tl-fade-enter-active,
-.tl-fade-leave-active {
-  transition: opacity 0.2s var(--ease-in-out);
-}
-
-.tl-fade-enter-from,
-.tl-fade-leave-to {
-  opacity: 0;
 }
 
 .sync-indicator {

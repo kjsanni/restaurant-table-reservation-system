@@ -10,7 +10,7 @@ import { useI18n } from "@/composables/useI18n";
 import { useOfflineAppointments } from "@/composables/useOfflineAppointments";
 
 const { t } = useI18n();
-const { drafts, isOnline, loadDrafts, createAppointment, replayDrafts } =
+const { drafts, loadDrafts, createAppointment, replayDrafts } =
   useOfflineAppointments();
 
 interface Appointment {
@@ -166,7 +166,7 @@ const loadStylists = async (serviceId: number) => {
 
 const loadLocations = async () => {
   try {
-    const res = await locationAPI.getLocations({ limit: 100 });
+    const res = await locationAPI.list({ limit: 100 });
     locations.value = res.data.data || [];
   } catch (err) {
     logger.error("Failed to load locations", { error: err });

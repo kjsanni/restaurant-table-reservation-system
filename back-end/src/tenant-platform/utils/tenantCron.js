@@ -1,24 +1,19 @@
 const { checkPastDue } = require("../../tenant-platform/services/tenantSubscription.service");
-const { client } = require("../../utils/cache");
+const redisLock = require("../../utils/redis");
 
 const CRON_LOCK_KEY = "tenant:cron:lock";
-const CRON_LOCK_TTL = 300;
 
 const runTenantCron = async () => {
-  let lockAcquired = false;
+  const lockResult = await redisLock.acquireLock(CRON_LOCK_KEY, redisLock.CRON_LOCK_TTL);
+
+  if (!lockResult.acquired) {
+    console.log(`[TenantCron] Skipped: ${lockResult.reason}`);
+    return;
+  }
+
+  console.log("[TenantCron] Lock acquired, running suspension check");
+
   try {
-    if (client && client.isReady) {
-      const result = await client.set(CRON_LOCK_KEY, "1", {
-        EX: CRON_LOCK_TTL,
-        NX: true,
-      });
-      lockAcquired = result === "OK";
-    }
-
-    if (!lockAcquired) {
-      return;
-    }
-
     const suspendedCount = await checkPastDue();
     if (suspendedCount > 0) {
       console.log(`[TenantCron] Suspended ${suspendedCount} past-due tenants`);
@@ -26,12 +21,9 @@ const runTenantCron = async () => {
   } catch (err) {
     console.error("[TenantCron] Error:", err.message);
   } finally {
-    if (lockAcquired && client && client.isReady) {
-      try {
-        await client.del(CRON_LOCK_KEY);
-      } catch (err) {
-        console.error("[TenantCron] Lock release error:", err.message);
-      }
+    const releaseResult = await redisLock.releaseLock(CRON_LOCK_KEY);
+    if (!releaseResult.released) {
+      console.error("[TenantCron] Lock release failed:", releaseResult.reason);
     }
   }
 };

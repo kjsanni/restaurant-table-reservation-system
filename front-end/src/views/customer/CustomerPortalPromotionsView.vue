@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useAuthStore } from "@/stores/auth";
-import { useCapabilities } from "@/composables/useCapabilities";
 import customerPortalAPI from "@/services/customerPortalAPI";
 import logger from "@/utils/logger";
 
@@ -17,9 +15,6 @@ interface Promotion {
   validUntil?: string;
 }
 
-const authStore = useAuthStore();
-const { businessVertical } = useCapabilities();
-const isSalon = computed(() => businessVertical.value === "salon");
 const promotions = ref<Promotion[]>([]);
 const loading = ref(true);
 const selected = ref<Promotion | null>(null);

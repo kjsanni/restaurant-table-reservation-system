@@ -1,7 +1,7 @@
 "use strict";
 const appointmentSchedulingService = require("./appointmentScheduling.service");
 const appointmentDao = require("../DAOs/appointment.dao");
-const { initializeCharge } = require("../../../tenant-platform/services/paystack.service");
+const { initializeCharge, verifyPayment } = require("../../../tenant-platform/services/paystack.service");
 const salonModels = require("../models");
 const { cache } = require("../../../utils/cache");
 const { sendWithSmsFallback } = require("../../../services/notification.service");
@@ -297,8 +297,23 @@ const handleSalonAppointmentState = async (phone, normalized, rawMessage, sessio
           await setSession(phone, { state: "idle", tenantId });
           return;
         }
-        const status = appointment.paymentStatus === "paid" ? "Payment confirmed! ✅" : `Payment status: ${appointment.paymentStatus}. Your slot is held temporarily.`;
-        await sendText(phone, `${status}\nAppointment #${appointment.id} on ${new Date(appointment.start).toISOString().slice(0, 10)} at ${new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`, tenantId);
+        let status = appointment.paymentStatus;
+        if (status !== "paid" && appointment.paymentReference) {
+          try {
+            const verification = await verifyPayment(appointment.paymentReference);
+            if (verification?.data?.status === "success") {
+              await appointmentDao.update(appointment.id, tenantId, {
+                paymentStatus: "paid",
+                depositAmount: (verification.data.amount || 0) / 100,
+              });
+              status = "paid";
+            }
+          } catch {
+            // fallback to local status if verification fails
+          }
+        }
+        const message = status === "paid" ? "Payment confirmed! ✅" : `Payment status: ${status}. Your slot is held temporarily.`;
+        await sendText(phone, `${message}\nAppointment #${appointment.id} on ${new Date(appointment.start).toISOString().slice(0, 10)} at ${new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`, tenantId);
       } catch {
         await sendText(phone, "Could not check payment status right now. Please try again later.", tenantId);
       }

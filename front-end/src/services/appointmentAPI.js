@@ -22,6 +22,9 @@ class AppointmentAPI {
   refundAppointment(id) {
     return API.post("/salon/appointments/" + id + "/refund");
   }
+  verifyAppointmentPayment(id) {
+    return API.post("/salon/appointments/" + id + "/verify-payment");
+  }
 }
 
 export default new AppointmentAPI();

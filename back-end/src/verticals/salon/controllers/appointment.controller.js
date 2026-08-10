@@ -190,6 +190,12 @@ const appointmentController = {
         return localizedError(req, res, 400, "salon.appointmentAlreadyRefunded");
       }
 
+      const start = new Date(appointment.start);
+      const now = new Date();
+      if (now >= start) {
+        return localizedError(req, res, 400, "salon.refundNotAllowedAfterAppointmentStart");
+      }
+
       let refundResult = null;
       if (appointment.paymentReference) {
         try {
@@ -218,6 +224,45 @@ const appointmentController = {
 
       emitSalonAppointmentEvent(req, "salon-appointment-refunded", updated);
       return localizedResponse(req, res, 200, "salon.refundSuccess", { id: updated.id });
+    } catch {
+      return localizedError(req, res, 500, "common.internalError");
+    }
+  },
+
+  async verifyAppointmentPayment(req, res) {
+    try {
+      const tenantId = req.tenant?.id;
+      const appointment = await appointmentDao.findById(req.params.id, tenantId);
+      if (!appointment) {
+        return localizedError(req, res, 404, "salon.appointmentNotFound");
+      }
+      if (!appointment.paymentReference) {
+        return localizedError(req, res, 400, "salon.noPaymentReference");
+      }
+
+      const { verifyPayment } = require("../../../tenant-platform/services/paystack.service");
+      const verification = await verifyPayment(appointment.paymentReference);
+
+      let updated = appointment;
+      if (verification?.data?.status === "success" && appointment.paymentStatus !== "paid") {
+        updated = await appointmentDao.update(appointment.id, tenantId, {
+          paymentStatus: "paid",
+          depositAmount: (verification.data.amount || 0) / 100,
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        appointment: {
+          id: updated.id,
+          paymentStatus: updated.paymentStatus,
+          depositAmount: updated.depositAmount,
+          paystackStatus: verification?.data?.status || null,
+          amount: verification?.data?.amount || null,
+          channel: verification?.data?.channel || null,
+          paidAt: verification?.data?.paid_at || null,
+        },
+      });
     } catch {
       return localizedError(req, res, 500, "common.internalError");
     }

@@ -1,5 +1,29 @@
 const reviewDAO = require("../DAOs/review.dao");
 const reservationDAO = require("../DAOs/reservation.dao");
+const { sendEmail } = require("../services/emailService");
+const db = require("../db/models");
+
+const escapeHtml = (str) => {
+  if (!str) return "";
+  return String(str).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+};
+
+const sendReviewResponseNotification = async (review, tenant) => {
+  try {
+    const customer = await db.customer.findByPk(review.customerId);
+    if (!customer?.email) return;
+    const brandName = tenant?.name || "Vibespot";
+    const safeComment = escapeHtml(review.comment || "(no comment)");
+    const safeResponse = escapeHtml(review.response || "");
+    await sendEmail({
+      to: customer.email,
+      subject: `We responded to your review of ${brandName}`,
+      html: `<p>Hi ${escapeHtml(customer.firstName || "there")},</p><p>We've just responded to your review of <strong>${escapeHtml(brandName)}</strong>. Thank you for your feedback!</p><p>Your review:</p><blockquote>${safeComment}</blockquote><p>Our response:</p><blockquote>${safeResponse}</blockquote><p>— ${escapeHtml(brandName)} Team</p>`,
+    });
+  } catch (err) {
+    console.error("sendReviewResponseNotification error:", err.message);
+  }
+};
 
 const createReviewHandler = async (req, res) => {
   try {
@@ -95,6 +119,10 @@ const respondToReviewHandler = async (req, res) => {
     if (!updated) {
       return res.status(404).json({ success: false, message: "Review not found" });
     }
+
+    const tenant = await db.tenant.findByPk(req.tenant?.id);
+    sendReviewResponseNotification(updated, tenant);
+
     return res.status(200).json({ success: true, review: updated });
   } catch (err) {
     console.error("respondToReviewHandler error:", err.message);
@@ -125,6 +153,96 @@ const getAverageRatingHandler = async (req, res) => {
   }
 };
 
+const getCustomerReviewsHandler = async (req, res) => {
+  try {
+    const customerId = req.user?.id;
+    if (!customerId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    const reviews = await reviewDAO.findByCustomer(customerId, req.tenant?.id, 50);
+    return res.status(200).json({ success: true, reviews });
+  } catch (err) {
+    console.error("getCustomerReviewsHandler error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to load reviews" });
+  }
+};
+
+const createCustomerReviewHandler = async (req, res) => {
+  try {
+    const customerId = req.user?.id;
+    if (!customerId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const { reservationId, rating, comment } = req.body;
+    if (!reservationId || !rating) {
+      return res.status(400).json({ success: false, message: "reservationId and rating are required" });
+    }
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: "Rating must be between 1 and 5" });
+    }
+
+    const reservation = await reservationDAO.findReservationById(reservationId, req.tenant?.id);
+    if (!reservation) {
+      return res.status(404).json({ success: false, message: "Reservation not found" });
+    }
+
+    if (reservation.customerId !== customerId) {
+      return res.status(403).json({ success: false, message: "Not authorized to review this reservation" });
+    }
+
+    const resStatus = reservation.resStatus || reservation.reservationStatus;
+    if (resStatus !== "completed" && resStatus !== "seated") {
+      return res.status(400).json({ success: false, message: "Can only review completed reservations" });
+    }
+
+    const existing = await reviewDAO.findByReservation(reservationId, req.tenant?.id);
+    if (existing) {
+      return res.status(400).json({ success: false, message: "Review already submitted for this reservation" });
+    }
+
+    const review = await reviewDAO.createReview({
+      reservationId,
+      customerId,
+      rating,
+      comment: comment || null,
+      channel: "customer_portal",
+    }, req.tenant?.id);
+
+    return res.status(201).json({ success: true, review });
+  } catch (err) {
+    console.error("createCustomerReviewHandler error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to submit review" });
+  }
+};
+
+const flagReviewHandler = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const updated = await reviewDAO.flagReview(req.params.id, req.tenant?.id, reason);
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Review not found" });
+    }
+    return res.status(200).json({ success: true, review: updated });
+  } catch (err) {
+    console.error("flagReviewHandler error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to flag review" });
+  }
+};
+
+const unflagReviewHandler = async (req, res) => {
+  try {
+    const updated = await reviewDAO.unflagReview(req.params.id, req.tenant?.id);
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Review not found" });
+    }
+    return res.status(200).json({ success: true, review: updated });
+  } catch (err) {
+    console.error("unflagReviewHandler error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to unflag review" });
+  }
+};
+
 module.exports = {
   createReviewHandler,
   getReviewsHandler,
@@ -132,4 +250,8 @@ module.exports = {
   respondToReviewHandler,
   deleteReviewHandler,
   getAverageRatingHandler,
+  getCustomerReviewsHandler,
+  createCustomerReviewHandler,
+  flagReviewHandler,
+  unflagReviewHandler,
 };

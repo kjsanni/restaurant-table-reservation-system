@@ -63,16 +63,12 @@ const createTenantHandler = async (req, res) => {
 };
 
 const getTenantsHandler = async (req, res) => {
-  const { status, plan, page = 1, pageSize = 20 } = req.query;
-  const where = {};
+  const { status, plan, search, page = 1, pageSize = 20 } = req.query;
 
-  if (status) where.status = status;
-  if (plan) where.plan = plan;
-
-  const _offset = (parseInt(page, 10) - 1) * parseInt(pageSize, 10);
   const { rows, count } = await tenantAdminDAO.list({
     status,
     plan,
+    search,
     page,
     pageSize,
   });

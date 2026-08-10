@@ -30,6 +30,7 @@ const portalLinks = computed(() => {
     { name: "Promotions", path: "/portal/promotions", icon: "mdi:tag" },
     { name: "Loyalty", path: "/portal/loyalty", icon: "mdi:star" },
     { name: "Orders", path: "/portal/orders", icon: "mdi:food" },
+    { name: "Reviews", path: "/portal/reviews", icon: "mdi:star-outline" },
   ];
   if (isSalon.value) {
     links.splice(

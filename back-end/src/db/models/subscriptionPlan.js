@@ -54,6 +54,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         defaultValue: null,
       },
+      features: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: null,
+      },
     },
     {
       sequelize,

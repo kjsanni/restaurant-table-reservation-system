@@ -24,6 +24,14 @@ class ReviewAPI {
   getAverageRating(params = {}) {
     return API.get("/reviews/average", { params });
   }
+
+  flagReview(id, reason) {
+    return API.post(`/reviews/${id}`, { reason });
+  }
+
+  unflagReview(id) {
+    return API.post(`/reviews/${id}/unflag`);
+  }
 }
 
 export default new ReviewAPI();
