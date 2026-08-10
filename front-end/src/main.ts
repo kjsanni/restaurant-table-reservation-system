@@ -4,6 +4,7 @@ import { createVuestic } from "vuestic-ui";
 import "vuestic-ui/css";
 import App from "./App.vue";
 import router from "./router";
+import { useAuthStore } from "@/stores/auth";
 import "./assets/design-system.css";
 import "./assets/main.css";
 import "./assets/settings.css";
@@ -51,14 +52,22 @@ const vuesticConfig = {
   } as any,
 };
 
-const pinia = createPinia();
-const app = createApp(App);
+async function bootstrap() {
+  const pinia = createPinia();
+  const app = createApp(App);
 
-app.use(pinia);
-app.use(router);
-app.use(createVuestic(vuesticConfig));
+  app.use(pinia);
 
-app.mount("#app");
+  const authStore = useAuthStore();
+  await authStore.init();
+
+  app.use(router);
+  app.use(createVuestic(vuesticConfig));
+
+  app.mount("#app");
+}
+
+bootstrap();
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {

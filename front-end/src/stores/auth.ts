@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 import authAPI from "@/services/authAPI";
 
 export interface User {
@@ -222,10 +222,6 @@ export const useAuthStore = defineStore("auth", () => {
       isLoading.value = false;
     }
   };
-
-  onMounted(() => {
-    init();
-  });
 
   return {
     user,
