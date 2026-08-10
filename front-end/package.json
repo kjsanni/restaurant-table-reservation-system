@@ -30,7 +30,7 @@
     "@iconify/vue": "^4.0.0",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "@vue/compiler-sfc": "^3.2.41",
-    "axios": "^1.18.1",
+    "axios": "^1.19.0",
     "chart.js": "^4.5.1",
     "dompurify": "^3.4.13",
     "gsap": "^3.15.0",
