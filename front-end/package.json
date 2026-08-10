@@ -51,7 +51,7 @@
     "eslint": "^10.8.0",
     "eslint-plugin-vue": "^10.10.0",
     "jsdom": "^20.0.1",
-    "playwright": "^1.61.1",
+    "playwright": "^1.62.1",
     "prettier": "^3.9.6",
     "rollup": "^4.62.3",
     "rollup-plugin-visualizer": "^7.0.1",
