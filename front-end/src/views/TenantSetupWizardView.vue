@@ -493,7 +493,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: #f5f5f5;
+  background: var(--background-warm);
 }
 .wizard-card {
   width: 100%;

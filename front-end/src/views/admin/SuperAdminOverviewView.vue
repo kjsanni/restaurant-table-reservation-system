@@ -442,7 +442,12 @@
         <section class="panel activity-feed">
           <div v-for="(item, idx) in activity" :key="idx" class="feed-item">
             <div class="feed-icon" :style="{ background: item.iconBg }">
-              <span v-html="item.icon"></span>
+              <Icon
+                :icon="item.icon"
+                width="16"
+                height="16"
+                :style="{ color: item.iconColor }"
+              />
             </div>
             <div class="feed-text">
               <b>{{ item.title }}</b>
@@ -459,6 +464,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { Icon } from "@iconify/vue";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import planAPI from "@/services/planAPI";
 import adminAPI from "@/services/adminAPI";
@@ -649,27 +655,27 @@ const ACTION_ICON_MAP = {
   tenant: {
     bg: "var(--earth-100)",
     color: "var(--earth-600)",
-    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+    icon: "mdi:check",
   },
   payment: {
     bg: "var(--sky-100)",
     color: "var(--sky-600)",
-    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>',
+    icon: "mdi:credit-card",
   },
   audit: {
     bg: "var(--accent-100)",
     color: "var(--accent-600)",
-    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    icon: "mdi:shield-check",
   },
   user: {
     bg: "var(--brand-100)",
     color: "var(--brand-700)",
-    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    icon: "mdi:account",
   },
   default: {
     bg: "var(--neutral-100)",
     color: "var(--neutral-600)",
-    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>',
+    icon: "mdi:circle-outline",
   },
 };
 
@@ -701,7 +707,8 @@ const loadActivity = async () => {
         detail,
         time: timeAgo,
         iconBg: style.bg,
-        icon: style.icon.replace("currentColor", style.color),
+        icon: style.icon,
+        iconColor: style.color,
       };
     });
   } catch (e) {

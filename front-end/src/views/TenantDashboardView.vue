@@ -992,6 +992,12 @@ watch(
   }
 }
 
+@media (max-width: 860px) {
+  .kpi-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 760px) {
   .quick-grid {
     grid-template-columns: 1fr;

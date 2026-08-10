@@ -52,9 +52,21 @@ const loadReservations = async () => {
 };
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
+let pollErrorCount = 0;
+const MAX_POLL_ERRORS = 3;
+
 const startPolling = () => {
-  pollTimer = setInterval(() => {
-    loadReservations();
+  pollTimer = setInterval(async () => {
+    try {
+      await loadReservations();
+      pollErrorCount = 0;
+    } catch {
+      pollErrorCount += 1;
+      if (pollErrorCount >= MAX_POLL_ERRORS && pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }
   }, 30000);
 };
 

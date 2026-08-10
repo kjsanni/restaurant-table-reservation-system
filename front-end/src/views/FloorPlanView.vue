@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import tableAPI from "@/services/tableAPI";
 import logger from "@/utils/logger";
@@ -8,11 +8,42 @@ interface Table {
   id: number;
   status: string;
   isOccupied?: boolean;
+  section?: string;
+  capacity?: number;
+  seats?: number;
+  isBlocked?: boolean;
+  reservationId?: number;
+  name?: string;
+  Customer?: { name?: string };
+  reservation?: { Customer?: { name?: string }; resTime?: string };
 }
 
 const router = useRouter();
 const tables = ref<Table[]>([]);
 const loading = ref(true);
+const activeSection = ref("all");
+
+const sections = computed(() => {
+  const s = new Set<string>();
+  tables.value.forEach((t) => s.add((t.section || "main").toLowerCase()));
+  return Array.from(s).sort();
+});
+
+const filteredTables = computed(() => {
+  if (activeSection.value === "all") return tables.value;
+  return tables.value.filter(
+    (t) => (t.section || "main").toLowerCase() === activeSection.value
+  );
+});
+
+const statusCounts = computed(() => {
+  const counts: Record<string, number> = { all: filteredTables.value.length };
+  filteredTables.value.forEach((t) => {
+    const s = (t.status || (t.isOccupied ? "occupied" : "free")).toLowerCase();
+    counts[s] = (counts[s] || 0) + 1;
+  });
+  return counts;
+});
 
 const statusClass = (status: string) => {
   const s = (status || "free").toLowerCase();
@@ -81,42 +112,64 @@ onMounted(loadTables);
     </div>
 
     <div class="content-wrapper">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading floor plan...</p>
-      </div>
-
-      <div v-else class="floor">
+      <div class="floor-controls">
         <div class="legend">
           <span class="legend-pill"
             ><span
               class="legend-dot"
               style="background: var(--earth-500)"
             ></span>
-            Free</span
+            Free ({{ statusCounts.free || 0 }})</span
           >
           <span class="legend-pill"
             ><span
               class="legend-dot"
               style="background: var(--accent-500)"
             ></span>
-            Occupied</span
+            Occupied ({{ statusCounts.occupied || 0 }})</span
           >
           <span class="legend-pill"
             ><span class="legend-dot" style="background: var(--sky-500)"></span>
-            Reserved</span
+            Reserved ({{ statusCounts.reserved || 0 }})</span
           >
           <span class="legend-pill"
             ><span
               class="legend-dot"
               style="background: var(--neutral-500)"
             ></span>
-            Blocked</span
+            Blocked ({{ statusCounts.blocked || 0 }})</span
           >
         </div>
+        <select
+          v-if="sections.length > 1"
+          v-model="activeSection"
+          class="section-select"
+        >
+          <option value="all">All Sections</option>
+          <option v-for="section in sections" :key="section" :value="section">
+            {{ sectionLabel(section) }}
+          </option>
+        </select>
+      </div>
 
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading floor plan...</p>
+      </div>
+
+      <div v-else-if="!filteredTables.length" class="empty-state">
+        <div class="empty-icon">🗺️</div>
+        <p>No tables in this section</p>
+      </div>
+
+      <div v-else class="floor">
         <div class="plan">
-          <div v-for="table in tables" :key="table.id" class="tbl">
+          <div
+            v-for="table in filteredTables"
+            :key="table.id"
+            class="tbl"
+            :title="tableMeta(table)"
+          >
             <div class="tbl-head">
               <div class="tbl-name">Table {{ table.id }}</div>
               <span
@@ -136,7 +189,6 @@ onMounted(loadTables);
             </div>
             <div class="tbl-meta">{{ tableMeta(table) }}</div>
           </div>
-          <div v-if="!tables.length" class="empty-state">No tables found.</div>
         </div>
       </div>
     </div>
@@ -200,6 +252,32 @@ onMounted(loadTables);
   border-radius: var(--radius-xl);
   padding: 28px;
   box-shadow: 0 10px 30px rgba(26, 20, 16, 0.05);
+}
+
+.floor-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.section-select {
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--neutral-200);
+  background: var(--white);
+  color: var(--neutral-800);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.section-select:focus {
+  outline: none;
+  border-color: var(--brand-400);
+  box-shadow: 0 0 0 3px var(--brand-100);
 }
 
 .legend {
@@ -336,10 +414,21 @@ onMounted(loadTables);
 
 .empty-state {
   text-align: center;
-  padding: var(--space-10);
+  padding: var(--space-16) var(--space-6);
   color: var(--ink-secondary);
   font-family: var(--font-sans);
   grid-column: 1 / -1;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-4);
+  opacity: 0.6;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 15px;
 }
 
 .btn-primary {

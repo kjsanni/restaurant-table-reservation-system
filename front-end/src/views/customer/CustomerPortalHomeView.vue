@@ -11,12 +11,30 @@ const authStore = useAuthStore();
 const { businessVertical } = useCapabilities();
 const { apply: applyBranding } = useTenantBranding();
 
-const tenantName = computed(
-  () =>
-    authStore.currentTenant?.name ||
-    (isSalon.value ? "Salon Portal" : "Restaurant Portal")
-);
 const isSalon = computed(() => businessVertical.value === "salon");
+
+const firstName = computed(() => {
+  const name =
+    authStore.user?.username ||
+    (authStore.user as any)?.name ||
+    "Guest";
+  return String(name).split(" ")[0];
+});
+
+const greeting = computed(() => {
+  const hour = new Date().getHours();
+  const timeGreeting =
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  return `${timeGreeting}, ${firstName.value}`;
+});
+
+const portalSubtitle = computed(() => {
+  const tenant = authStore.currentTenant?.name || (isSalon.value ? "your salon" : "your restaurant");
+  if (isSalon.value) {
+    return `Manage your appointments and services at ${tenant}`;
+  }
+  return `Manage your reservations and orders at ${tenant}`;
+});
 
 const portalLinks = computed(() => {
   const links = [
@@ -72,8 +90,8 @@ onMounted(async () => {
 <template>
   <div class="portal-home">
     <div class="portal-header">
-      <h1>{{ tenantName }} Portal</h1>
-      <p>Welcome back! Ready for today's bookings?</p>
+      <h1>{{ greeting }}</h1>
+      <p>{{ portalSubtitle }}</p>
     </div>
     <div class="portal-links">
       <button

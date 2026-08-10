@@ -13,6 +13,8 @@ const canvasRef = ref(null);
 const CARD = 150;
 const GAP = 24;
 const STEP = CARD + GAP;
+const SNAP = 12;
+let tableShape = ref<"rectangle" | "circle">("rectangle");
 
 const statusOf = (t) =>
   t.isBlocked ? "blocked" : t.isOccupied ? "occupied" : "free";
@@ -148,11 +150,14 @@ const load = async () => {
     const lay = {};
     list.forEach((t, i) => {
       if (t.posX != null && t.posY != null) {
-        lay[t.id] = { x: t.posX, y: t.posY };
+        lay[t.id] = {
+          x: Math.round(t.posX / SNAP) * SNAP,
+          y: Math.round(t.posY / SNAP) * SNAP,
+        };
       } else {
         lay[t.id] = {
-          x: 24 + (i % 6) * STEP,
-          y: 24 + Math.floor(i / 6) * STEP,
+          x: Math.round((24 + (i % 6) * STEP) / SNAP) * SNAP,
+          y: Math.round((24 + Math.floor(i / 6) * STEP) / SNAP) * SNAP,
         };
       }
     });
@@ -185,9 +190,9 @@ const onPointerMove = (e) => {
   const rect = canvasRef.value.getBoundingClientRect();
   let x = e.clientX - rect.left - drag.offsetX;
   let y = e.clientY - rect.top - drag.offsetY;
-  x = Math.max(0, Math.round(x));
-  y = Math.max(0, Math.round(y));
-  layout.value[drag.id] = { x, y };
+  const snappedX = Math.max(0, Math.round(x / SNAP) * SNAP);
+  const snappedY = Math.max(0, Math.round(y / SNAP) * SNAP);
+  layout.value[drag.id] = { x: snappedX, y: snappedY };
 };
 
 const onPointerUp = async () => {
@@ -249,42 +254,62 @@ onUnmounted(() => {
         <p class="topbar-subtitle">Design and customize table layout</p>
       </div>
     </div>
-    <div class="content-wrapper">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <p class="hint">
-            Drag tables to set their permanent positions on the floor plan.
-          </p>
-          <select
-            v-if="floorPlans.length"
-            v-model="selectedFloorPlanId"
-            class="form-select"
-            style="width: auto; min-width: 180px"
-            @change="loadZones"
-          >
-            <option v-for="plan in floorPlans" :key="plan.id" :value="plan.id">
-              {{ plan.name }}
-            </option>
-          </select>
+      <div class="content-wrapper">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <p class="hint">
+              Drag tables to set their permanent positions on the floor plan.
+            </p>
+            <div class="toolbar-options">
+              <select
+                v-if="floorPlans.length"
+                v-model="selectedFloorPlanId"
+                class="form-select"
+                style="width: auto; min-width: 180px"
+                @change="loadZones"
+              >
+                <option v-for="plan in floorPlans" :key="plan.id" :value="plan.id">
+                  {{ plan.name }}
+                </option>
+              </select>
+              <div class="shape-toggle">
+                <button
+                  class="shape-btn"
+                  :class="tableShape === 'rectangle' ? 'shape-btn--active' : ''"
+                  @click="tableShape = 'rectangle'"
+                  title="Rectangle tables"
+                >
+                  ▭
+                </button>
+                <button
+                  class="shape-btn"
+                  :class="tableShape === 'circle' ? 'shape-btn--active' : ''"
+                  @click="tableShape = 'circle'"
+                  title="Circle tables"
+                >
+                  ○
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <button
+              class="btn"
+              :class="drawingZone ? 'btn-primary' : 'btn-secondary'"
+              @click="toggleDrawZone"
+              :disabled="loading"
+            >
+              {{ drawingZone ? "Drawing Zone..." : "Draw Zone" }}
+            </button>
+            <button
+              class="btn btn-secondary"
+              @click="autoArrange"
+              :disabled="loading"
+            >
+              Auto-arrange grid
+            </button>
+          </div>
         </div>
-        <div class="toolbar-right">
-          <button
-            class="btn"
-            :class="drawingZone ? 'btn-primary' : 'btn-secondary'"
-            @click="toggleDrawZone"
-            :disabled="loading"
-          >
-            {{ drawingZone ? "Drawing Zone..." : "Draw Zone" }}
-          </button>
-          <button
-            class="btn btn-secondary"
-            @click="autoArrange"
-            :disabled="loading"
-          >
-            Auto-arrange grid
-          </button>
-        </div>
-      </div>
 
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -295,14 +320,14 @@ onUnmounted(() => {
         <p>{{ errorMsg }}</p>
       </div>
       <div v-else class="canvas" ref="canvasRef" @mousedown="startZoneDraw">
-        <div
-          v-for="t in tables"
-          :key="t.id"
-          class="table-card"
-          :class="[statusOf(t), { saving: savingId === t.id }]"
-          :style="{ left: layout[t.id].x + 'px', top: layout[t.id].y + 'px' }"
-          @pointerdown="onPointerDown($event, t)"
-        >
+          <div
+            v-for="t in tables"
+            :key="t.id"
+            class="table-card"
+            :class="[statusOf(t), { saving: savingId === t.id, 'shape-circle': tableShape === 'circle' }]"
+            :style="{ left: layout[t.id].x + 'px', top: layout[t.id].y + 'px' }"
+            @pointerdown="onPointerDown($event, t)"
+          >
           <span class="table-name">{{ t.name }}</span>
           <span class="table-meta">{{ t.capacity }} seats</span>
           <span class="table-status">{{ statusOf(t) }}</span>
@@ -416,6 +441,10 @@ onUnmounted(() => {
   border: 1px solid var(--border-subtle);
   border-radius: var(--card-radius);
   background: var(--surface-sunken);
+  background-image:
+    linear-gradient(var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+  background-size: 24px 24px;
   box-shadow: var(--card-shadow, none);
   overflow: hidden;
 }
@@ -440,6 +469,16 @@ onUnmounted(() => {
   transition:
     box-shadow var(--duration-150) var(--ease-in-out),
     transform var(--duration-150) var(--ease-in-out);
+}
+.table-card.shape-circle {
+  border-radius: var(--radius-full);
+  border-left: 4px solid var(--earth-600);
+}
+.table-card.shape-circle.occupied {
+  border-left-color: var(--rose-600);
+}
+.table-card.shape-circle.blocked {
+  border-left-color: var(--neutral-500);
 }
 .table-card:hover {
   box-shadow: var(--shadow-md);
@@ -554,6 +593,37 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+.toolbar-options {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.shape-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.shape-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--white);
+  color: var(--neutral-600);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.shape-btn:hover {
+  background: var(--neutral-50);
+}
+.shape-btn--active {
+  background: var(--brand-700);
+  color: var(--white);
 }
 .zone-rect {
   position: absolute;

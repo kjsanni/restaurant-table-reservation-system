@@ -102,7 +102,8 @@ onMounted(loadReservations);
       </div>
 
       <div v-else class="table-wrap">
-        <table>
+        <div class="table-scroll">
+          <table>
           <thead>
             <tr>
               <th>Guest</th>
@@ -149,6 +150,7 @@ onMounted(loadReservations);
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   </div>
@@ -243,10 +245,16 @@ onMounted(loadReservations);
   overflow: hidden;
 }
 
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  min-width: 720px;
 }
 
 thead {
