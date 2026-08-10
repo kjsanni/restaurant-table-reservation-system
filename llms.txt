@@ -6,6 +6,10 @@ Ghana locale (GHS), Paystack payments, WhatsApp ordering, ShaQ Express delivery,
 Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` with vertical modules under `back-end/src/verticals/restaurant/` and `back-end/src/verticals/salon/`.
 
 **Current session additions:**
+- Multi-tenant platform hardening, pagination, caching, and frontend polish (PR #78 merged):
+  - Backend: distributed Redis cron lock (`back-end/src/utils/redis.js`) for tenant suspension, tenant search/pagination in `tenantAdmin.controller.js`, tenant-aware cache wrapper (`back-end/src/utils/tenantCache.js`) with prefix isolation, CSRF token endpoint fix (`back-end/src/utils/server.js`), schedule/holiday/setting DAO cache integration, monitoring controller refactor with extracted data-gathering functions, review controller XSS sanitization in email notifications, SMS provider service (Twilio), idempotent migration guards.
+  - Frontend: TenantSwitcher search + pagination, table/floor-plan UI polish (status filters, section filters, shape toggle, snap-to-grid), GSAP animation composable (`front-end/src/composables/useAnimations.ts`), motion tokens in `front-end/src/theme/colors.js`, image-gen asset manifest (`front-end/src/assets/manifest.json`).
+  - Docs: design-review, UI audit, retrospective, DX onboarding, canary rollout, tenant on/offboarding runbooks.
 - OSM Store Locator feature (Phases 1–4 merged):
   - Backend: `latitude`/`longitude` columns on `locations`, auto-geocoding service, WhatsApp store locator flow with haversine nearest-store lookup, feature flag `store_locator_whatsapp`.
   - Frontend: Leaflet map tab in `CrossLocationDashboardView.vue` with OSM markers and popups.
@@ -33,6 +37,18 @@ Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` w
 - [SESSION_NOTES.md](SESSION_NOTES.md): Recent development session notes and status.
 - [SKIN.md](SKIN.md): Skin workflow specification — design tokens, motion strategy, vertical differentiation, and 7-phase implementation checklist for portals and vertical markets.
 - [docs/README.md](docs/README.md): In-repo documentation index (architecture, security, RBAC, payments, features).
+- [docs/900-Session-Summary.md](docs/900-Session-Summary.md): Development session summary — narrative from genesis through multi-tenant platform hardening.
+- [docs/902-Improvement-Recommendations.md](docs/902-Improvement-Recommendations.md): Full audit recommendations (security, correctness, compliance, frontend, backend).
+- [docs/903-Tenant-Platform-Module.md](docs/903-Tenant-Platform-Module.md): Feature tracker for the multi-tenant SaaS platform module.
+- [docs/910-Legal-Compliance-System.md](docs/910-Legal-Compliance-System.md): Legal/compliance system design and document versions.
+- [docs/911-Legal-Acceptance-Audit-Trail.md](docs/911-Legal-Acceptance-Audit-Trail.md): Tamper-evident legal acceptance audit trail implementation.
+- [docs/design-review-multi-tenant.md](docs/design-review-multi-tenant.md): Design review findings for super-admin, tenant, and customer portals.
+- [docs/ui-audit-multi-tenant.md](docs/ui-audit-multi-tenant.md): UI audit findings and P0/P1 remediation status.
+- [docs/retro-multi-tenant.md](docs/retro-multi-tenant.md): Engineering retrospective for multi-tenant implementation.
+- [docs/tenant-platform-onboarding.md](docs/tenant-platform-onboarding.md): Developer onboarding guide for tenant-platform contributors.
+- [docs/canary-rollout.md](docs/canary-rollout.md): Staged rollout strategy, feature flag promotion, and rollback runbook.
+- [docs/runbooks/tenant-onboarding.md](docs/runbooks/tenant-onboarding.md): End-to-end tenant provisioning runbook.
+- [docs/runbooks/tenant-offboarding.md](docs/runbooks/tenant-offboarding.md): Tenant offboarding, data export, suspension, and archival runbook.
 - [back-end/src/tenant-platform/README.md](back-end/src/tenant-platform/README.md): Multi-tenant module overview, activation, tenant resolution, subscription plans, and platform admin API.
 
 ## Architecture
@@ -55,6 +71,8 @@ Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` w
 - **Toast system**: `AppToast.vue` + `stores/toast.js` provides glassmorphism toast notifications with SVG icons, auto-dismiss progress bars, and slide-scale transitions.
 - **Security hardening**: Tenant-platform controllers use explicit field allowlists to prevent mass assignment (`alertRule`, `autoScalingTrigger`, `caseStudy`, `complianceEvidence`, `incident`, `subProcessor`, `dataRetentionPolicy`, `platformReferral`, `marketplace`, `encryptionKey`). `sync.service.js` validates POS sync URLs against private/loopback IPs to prevent SSRF. `monitoring.controller.js` returns generic error messages to avoid information disclosure. `platformAudit.router.js` `/recent` requires `manage_tenants` permission.
 - **Post-landing audit fixes (2026-08-06)**: Replaced clickable div logout controls with `<button>` in layouts. Added `aria-describedby`, `aria-invalid`, and `role="alert"` to auth form errors. Sanitized tenant branding CSS variables with `isValidHexColor()` and `isValidUrl()` before DOM injection. Allowlisted `data-vertical` attribute to `restaurant` | `salon`. Wrapped `backdrop-filter` in `@supports` with solid fallbacks and added `will-change: transform` for compositor promotion. Removed noise texture from toast to reduce repaint cost. Added Playwright `multi-tenant-flows.spec.ts` for checkout isolation, cart preservation, feature-toggle nav, and branding fallback.
+- **Scale hardening (2026-08-10)**: Distributed Redis cron lock (`back-end/src/utils/redis.js`) prevents duplicate tenant-suspension runs across PM2 cluster. Tenant-aware cache wrapper (`back-end/src/utils/tenantCache.js`) prefixes keys with `tenant:{id}:` and is integrated into `schedule.dao.js`, `holiday.dao.js`, and `setting.dao.js`. Monitoring controller refactored to extract pure data-gathering functions, eliminating double-send response bugs.
+- **Frontend polish (2026-08-10)**: Table/floor-plan views now have status/section filters, per-card actions, snap-to-grid editor, shape toggle, and hover tooltips. Tenant dashboard gains responsive breakpoints. Customer portal uses time-of-day greeting. Super-admin activity feed uses `<Icon>` component instead of `v-html` SVG injection.
 
 ## Key Routes
 
@@ -118,7 +136,7 @@ npm run test:e2e                      # Playwright E2E
 
 ## Verification Gates
 
-- **Backend**: `cd back-end && npm test` — 841 Jest tests across 126 suites; must stay green (catches cross-tenant leaks and RBAC regressions).
+- **Backend**: `cd back-end && npm test` — 877 Jest tests across 132 suites; must stay green (catches cross-tenant leaks and RBAC regressions).
 - **Frontend**: `cd front-end && npm run lint && npm run build && npm run test:unit` — lint, build, and 22 Vitest unit tests must pass.
 - **API integration**: Postman collection + Newman for smoke and regression testing of `/api/v1/*` endpoints.
 - **Migrations**: `npm run migrate:up` — replays from earliest unapplied migration; keep `up()` idempotent.

@@ -9,7 +9,8 @@ export interface TransitionConfig {
   easing?: MotionEasing;
 }
 
-const getDuration = (key: MotionDuration = "base") => motionTokens.duration[key];
+const getDuration = (key: MotionDuration = "base") =>
+  motionTokens.duration[key];
 const getEasing = (key: MotionEasing = "easeOut") => motionTokens.easing[key];
 
 export const useAnimations = () => {

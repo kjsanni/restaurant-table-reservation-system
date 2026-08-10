@@ -254,62 +254,66 @@ onUnmounted(() => {
         <p class="topbar-subtitle">Design and customize table layout</p>
       </div>
     </div>
-      <div class="content-wrapper">
-        <div class="toolbar">
-          <div class="toolbar-left">
-            <p class="hint">
-              Drag tables to set their permanent positions on the floor plan.
-            </p>
-            <div class="toolbar-options">
-              <select
-                v-if="floorPlans.length"
-                v-model="selectedFloorPlanId"
-                class="form-select"
-                style="width: auto; min-width: 180px"
-                @change="loadZones"
+    <div class="content-wrapper">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <p class="hint">
+            Drag tables to set their permanent positions on the floor plan.
+          </p>
+          <div class="toolbar-options">
+            <select
+              v-if="floorPlans.length"
+              v-model="selectedFloorPlanId"
+              class="form-select"
+              style="width: auto; min-width: 180px"
+              @change="loadZones"
+            >
+              <option
+                v-for="plan in floorPlans"
+                :key="plan.id"
+                :value="plan.id"
               >
-                <option v-for="plan in floorPlans" :key="plan.id" :value="plan.id">
-                  {{ plan.name }}
-                </option>
-              </select>
-              <div class="shape-toggle">
-                <button
-                  class="shape-btn"
-                  :class="tableShape === 'rectangle' ? 'shape-btn--active' : ''"
-                  @click="tableShape = 'rectangle'"
-                  title="Rectangle tables"
-                >
-                  ▭
-                </button>
-                <button
-                  class="shape-btn"
-                  :class="tableShape === 'circle' ? 'shape-btn--active' : ''"
-                  @click="tableShape = 'circle'"
-                  title="Circle tables"
-                >
-                  ○
-                </button>
-              </div>
+                {{ plan.name }}
+              </option>
+            </select>
+            <div class="shape-toggle">
+              <button
+                class="shape-btn"
+                :class="tableShape === 'rectangle' ? 'shape-btn--active' : ''"
+                @click="tableShape = 'rectangle'"
+                title="Rectangle tables"
+              >
+                ▭
+              </button>
+              <button
+                class="shape-btn"
+                :class="tableShape === 'circle' ? 'shape-btn--active' : ''"
+                @click="tableShape = 'circle'"
+                title="Circle tables"
+              >
+                ○
+              </button>
             </div>
           </div>
-          <div class="toolbar-right">
-            <button
-              class="btn"
-              :class="drawingZone ? 'btn-primary' : 'btn-secondary'"
-              @click="toggleDrawZone"
-              :disabled="loading"
-            >
-              {{ drawingZone ? "Drawing Zone..." : "Draw Zone" }}
-            </button>
-            <button
-              class="btn btn-secondary"
-              @click="autoArrange"
-              :disabled="loading"
-            >
-              Auto-arrange grid
-            </button>
-          </div>
         </div>
+        <div class="toolbar-right">
+          <button
+            class="btn"
+            :class="drawingZone ? 'btn-primary' : 'btn-secondary'"
+            @click="toggleDrawZone"
+            :disabled="loading"
+          >
+            {{ drawingZone ? "Drawing Zone..." : "Draw Zone" }}
+          </button>
+          <button
+            class="btn btn-secondary"
+            @click="autoArrange"
+            :disabled="loading"
+          >
+            Auto-arrange grid
+          </button>
+        </div>
+      </div>
 
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -320,14 +324,20 @@ onUnmounted(() => {
         <p>{{ errorMsg }}</p>
       </div>
       <div v-else class="canvas" ref="canvasRef" @mousedown="startZoneDraw">
-          <div
-            v-for="t in tables"
-            :key="t.id"
-            class="table-card"
-            :class="[statusOf(t), { saving: savingId === t.id, 'shape-circle': tableShape === 'circle' }]"
-            :style="{ left: layout[t.id].x + 'px', top: layout[t.id].y + 'px' }"
-            @pointerdown="onPointerDown($event, t)"
-          >
+        <div
+          v-for="t in tables"
+          :key="t.id"
+          class="table-card"
+          :class="[
+            statusOf(t),
+            {
+              saving: savingId === t.id,
+              'shape-circle': tableShape === 'circle',
+            },
+          ]"
+          :style="{ left: layout[t.id].x + 'px', top: layout[t.id].y + 'px' }"
+          @pointerdown="onPointerDown($event, t)"
+        >
           <span class="table-name">{{ t.name }}</span>
           <span class="table-meta">{{ t.capacity }} seats</span>
           <span class="table-status">{{ statusOf(t) }}</span>

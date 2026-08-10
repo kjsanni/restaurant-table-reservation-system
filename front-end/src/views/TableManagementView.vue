@@ -34,10 +34,14 @@ const sections = computed(() => {
 
 const filteredTables = computed(() => {
   return tables.value.filter((t) => {
-    const status = (t.status || (t.isOccupied ? "occupied" : "free")).toLowerCase();
+    const status = (
+      t.status || (t.isOccupied ? "occupied" : "free")
+    ).toLowerCase();
     const section = (t.section || "main").toLowerCase();
-    const matchStatus = activeStatus.value === "all" || status === activeStatus.value;
-    const matchSection = activeSection.value === "all" || section === activeSection.value;
+    const matchStatus =
+      activeStatus.value === "all" || status === activeStatus.value;
+    const matchSection =
+      activeSection.value === "all" || section === activeSection.value;
     return matchStatus && matchSection;
   });
 });
@@ -121,11 +125,11 @@ onMounted(loadTables);
             class="filter-chip"
             :class="[
               activeStatus === status ? 'filter-chip--active' : '',
-              status !== 'all' ? `filter-chip--${status}` : ''
+              status !== 'all' ? `filter-chip--${status}` : '',
             ]"
             @click="activeStatus = status"
           >
-            {{ status === 'all' ? 'All' : statusLabel(status) }}
+            {{ status === "all" ? "All" : statusLabel(status) }}
             <span class="filter-count">{{ statusCounts[status] || 0 }}</span>
           </button>
         </div>
@@ -149,7 +153,10 @@ onMounted(loadTables);
       <div v-else-if="!filteredTables.length" class="empty-state">
         <div class="empty-icon">🪑</div>
         <p>No tables found</p>
-        <button class="btn-primary" @click="router.push('/table-management/add')">
+        <button
+          class="btn-primary"
+          @click="router.push('/table-management/add')"
+        >
           + Add Table
         </button>
       </div>
@@ -181,11 +188,16 @@ onMounted(loadTables);
               </span>
               <span class="meta-item">
                 <span class="meta-icon">📍</span>
-                 {{ sectionLabel(table.section || "main") }}
+                {{ sectionLabel(table.section || "main") }}
               </span>
             </div>
-            <div v-if="table.isBlocked" class="table-blocked-note">Maintenance</div>
-            <div v-else-if="table.reservationId || table.isOccupied" class="table-occupied-note">
+            <div v-if="table.isBlocked" class="table-blocked-note">
+              Maintenance
+            </div>
+            <div
+              v-else-if="table.reservationId || table.isOccupied"
+              class="table-occupied-note"
+            >
               Guest seated
             </div>
             <div v-else class="table-available-note">Available now</div>

@@ -104,52 +104,54 @@ onMounted(loadReservations);
       <div v-else class="table-wrap">
         <div class="table-scroll">
           <table>
-          <thead>
-            <tr>
-              <th>Guest</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Party</th>
-              <th>Table</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="res in filteredReservations" :key="res.id">
-              <td>
-                <b>{{ res.Customer?.name || "Guest" }}</b>
-                <br />
-                <span class="guest-phone">{{ res.Customer?.phone || "" }}</span>
-              </td>
-              <td>{{ formatDate(res.resDate) }}</td>
-              <td>{{ formatTime(res.resTime) }}</td>
-              <td>{{ res.people }}</td>
-              <td>{{ res.tableName || res.tableId || "—" }}</td>
-              <td>
-                <span
-                  :class="[
-                    'pill',
-                    getStatusColor(res.resStatus || res.status || 'pending'),
-                  ]"
-                >
-                  {{ res.resStatus || res.status }}
-                </span>
-              </td>
-              <td>
-                <button
-                  class="link"
-                  @click="router.push(`/reservations/${res.id}`)"
-                >
-                  View
-                </button>
-              </td>
-            </tr>
-            <tr v-if="!filteredReservations.length">
-              <td colspan="7" class="empty-row">No reservations found.</td>
-            </tr>
-          </tbody>
-        </table>
+            <thead>
+              <tr>
+                <th>Guest</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Party</th>
+                <th>Table</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="res in filteredReservations" :key="res.id">
+                <td>
+                  <b>{{ res.Customer?.name || "Guest" }}</b>
+                  <br />
+                  <span class="guest-phone">{{
+                    res.Customer?.phone || ""
+                  }}</span>
+                </td>
+                <td>{{ formatDate(res.resDate) }}</td>
+                <td>{{ formatTime(res.resTime) }}</td>
+                <td>{{ res.people }}</td>
+                <td>{{ res.tableName || res.tableId || "—" }}</td>
+                <td>
+                  <span
+                    :class="[
+                      'pill',
+                      getStatusColor(res.resStatus || res.status || 'pending'),
+                    ]"
+                  >
+                    {{ res.resStatus || res.status }}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    class="link"
+                    @click="router.push(`/reservations/${res.id}`)"
+                  >
+                    View
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="!filteredReservations.length">
+                <td colspan="7" class="empty-row">No reservations found.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

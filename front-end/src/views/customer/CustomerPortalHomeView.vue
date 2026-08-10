@@ -15,9 +15,7 @@ const isSalon = computed(() => businessVertical.value === "salon");
 
 const firstName = computed(() => {
   const name =
-    authStore.user?.username ||
-    (authStore.user as any)?.name ||
-    "Guest";
+    authStore.user?.username || (authStore.user as any)?.name || "Guest";
   return String(name).split(" ")[0];
 });
 
@@ -29,7 +27,9 @@ const greeting = computed(() => {
 });
 
 const portalSubtitle = computed(() => {
-  const tenant = authStore.currentTenant?.name || (isSalon.value ? "your salon" : "your restaurant");
+  const tenant =
+    authStore.currentTenant?.name ||
+    (isSalon.value ? "your salon" : "your restaurant");
   if (isSalon.value) {
     return `Manage your appointments and services at ${tenant}`;
   }
