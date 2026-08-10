@@ -11,6 +11,8 @@ interface Review {
   channel?: string;
   response?: string;
   respondedAt?: string;
+  flagged?: boolean;
+  flagReason?: string;
   customer?: { firstName?: string; lastName?: string; email?: string };
   createdAt: string;
 }
@@ -71,6 +73,32 @@ const deleteReview = async (id: number) => {
     reviews.value = reviews.value.filter((r) => r.id !== id);
   } catch (err) {
     logger.error("Failed to delete review", { error: err });
+  }
+};
+
+const flagReview = async (id: number) => {
+  const reason = prompt("Flag reason (optional):");
+  if (reason === null) return;
+  try {
+    const res = await reviewAPI.flagReview(id, reason || undefined);
+    const idx = reviews.value.findIndex((r) => r.id === id);
+    if (idx !== -1 && res.data?.review) {
+      reviews.value[idx] = res.data.review as Review;
+    }
+  } catch (err) {
+    logger.error("Failed to flag review", { error: err });
+  }
+};
+
+const unflagReview = async (id: number) => {
+  try {
+    const res = await reviewAPI.unflagReview(id);
+    const idx = reviews.value.findIndex((r) => r.id === id);
+    if (idx !== -1 && res.data?.review) {
+      reviews.value[idx] = res.data.review as Review;
+    }
+  } catch (err) {
+    logger.error("Failed to unflag review", { error: err });
   }
 };
 
@@ -174,6 +202,12 @@ onMounted(() => {
             </div>
 
             <div class="review-footer">
+              <button v-if="!review.flagged" class="btn-link btn-warn" @click="flagReview(review.id)">
+                Flag
+              </button>
+              <button v-else class="btn-link btn-warn" @click="unflagReview(review.id)">
+                Unflag
+              </button>
               <button class="btn-link" @click="deleteReview(review.id)">
                 Delete
               </button>
@@ -409,5 +443,13 @@ onMounted(() => {
 
 .btn-link:hover {
   background: #fef2f2;
+}
+
+.btn-warn {
+  color: #b45309;
+}
+
+.btn-warn:hover {
+  background: #fffbeb;
 }
 </style>

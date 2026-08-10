@@ -103,6 +103,22 @@ const getAverageRating = async (tenantId) => {
   };
 };
 
+const flagReview = async (id, tenantId, reason) => {
+  const review = await Review.findOne({
+    where: withTenant({ id }, tenantId),
+  });
+  if (!review) return null;
+  return await review.update({ flagged: true, flagReason: reason || null });
+};
+
+const unflagReview = async (id, tenantId) => {
+  const review = await Review.findOne({
+    where: withTenant({ id }, tenantId),
+  });
+  if (!review) return null;
+  return await review.update({ flagged: false, flagReason: null });
+};
+
 module.exports = {
   createReview,
   findById,
@@ -112,4 +128,6 @@ module.exports = {
   updateReview,
   deleteReview,
   getAverageRating,
+  flagReview,
+  unflagReview,
 };

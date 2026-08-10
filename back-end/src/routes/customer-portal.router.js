@@ -5,6 +5,7 @@ const customerPortalController = require("../controllers/customer-portal.control
 const customerWaitlistController = require("../controllers/customer-waitlist.controller");
 const customerLoyaltyController = require("../controllers/customer-loyalty.controller");
 const customerMarketingController = require("../controllers/customer-marketing.controller");
+const reviewController = require("../controllers/review.controller");
 const { protect } = require("../middleware/auth");
 const { validateCsrfToken } = require("../middleware/csrf");
 
@@ -53,6 +54,16 @@ router
 router
   .route("/promotions/:promotionId")
   .get(protect, customerMarketingController.getPromotionHandler)
+  .all(httpMethodError);
+
+router
+  .route("/reviews")
+  .get(protect, reviewController.getCustomerReviewsHandler)
+  .all(httpMethodError);
+
+router
+  .route("/reviews")
+  .post(protect, validateCsrfToken, reviewController.createCustomerReviewHandler)
   .all(httpMethodError);
 
 module.exports = router;

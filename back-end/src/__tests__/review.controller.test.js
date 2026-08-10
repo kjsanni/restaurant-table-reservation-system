@@ -2,12 +2,19 @@ const reviewController = require("../controllers/review.controller");
 
 jest.mock("../DAOs/review.dao");
 jest.mock("../DAOs/reservation.dao");
+jest.mock("../services/emailService", () => ({
+  sendEmail: jest.fn().mockResolvedValue({}),
+}));
 
 const reviewDAO = require("../DAOs/review.dao");
 const reservationDAO = require("../DAOs/reservation.dao");
+const db = require("../db/models");
 
 describe("Review controller", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    db.tenant.findByPk = jest.fn().mockResolvedValue({ id: 1, name: "Test Venue" });
+  });
 
   it("createReviewHandler creates review", async () => {
     const req = {

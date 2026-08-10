@@ -12,9 +12,19 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const billingPeriod = ref<"monthly" | "yearly">("monthly");
 
+const defaultFeatures = [
+  "Table management",
+  "Reservation scheduling",
+  "Customer profiles",
+  "Menu management",
+  "Reports & analytics",
+  "WhatsApp integration",
+  "Paystack payments",
+  "Email support",
+];
+
 const goToRegister = () => {
-  window.location.href =
-    "mailto:admin@vibespot.gh?subject=New%20Venue%20Signup%20Request";
+  router.push("/register");
 };
 
 onMounted(async () => {
@@ -37,16 +47,12 @@ const formatPrice = (price: number, currency: string) => {
   return `${symbol}${Number(price).toLocaleString()}`;
 };
 
-const features = [
-  "Table management",
-  "Reservation scheduling",
-  "Customer profiles",
-  "Menu management",
-  "Reports & analytics",
-  "WhatsApp integration",
-  "Paystack payments",
-  "Email support",
-];
+const planFeatures = (plan: any) => {
+  if (plan.features && Array.isArray(plan.features) && plan.features.length) {
+    return plan.features;
+  }
+  return defaultFeatures;
+};
 </script>
 
 <template>
@@ -128,7 +134,7 @@ const features = [
               {{ plan.maxReservationsPerMonth.toLocaleString() }}
               reservations/month
             </li>
-            <li v-for="feature in features" :key="feature">
+            <li v-for="feature in planFeatures(plan)" :key="feature">
               <Icon icon="mdi:check" width="18" /> {{ feature }}
             </li>
           </ul>
@@ -166,7 +172,7 @@ const features = [
         <div class="faq-item">
           <h4>Is my data secure?</h4>
           <p>
-            Yes. We comply with Ghana’s Data Protection Act 2012 and use
+            Yes. We comply with Ghana's Data Protection Act 2012 and use
             encrypted storage with daily backups.
           </p>
         </div>
@@ -182,13 +188,13 @@ const features = [
 <style scoped>
 .pricing-root {
   min-height: 100vh;
-  background: #faf9f7;
-  color: #312e2a;
+  background: var(--neutral-50, #faf9f7);
+  color: var(--neutral-900, #312e2a);
   font-family: inherit;
 }
 .pricing-nav {
-  background: #ffffff;
-  border-bottom: 1px solid #e7e4de;
+  background: var(--white, #ffffff);
+  border-bottom: 1px solid var(--neutral-200, #e7e4de);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -208,7 +214,7 @@ const features = [
   font-weight: 700;
   font-size: 1.15rem;
   cursor: pointer;
-  color: #1a1410;
+  color: var(--brand-900, #1a1410);
 }
 .nav-actions {
   display: flex;
@@ -218,18 +224,18 @@ const features = [
 .nav-link {
   background: transparent;
   border: none;
-  color: #4a4540;
+  color: var(--neutral-800, #4a4540);
   font-size: 0.95rem;
   cursor: pointer;
   padding: 0.4rem 0.6rem;
   border-radius: 0.4rem;
 }
 .nav-link:hover {
-  background: #f3f1ed;
+  background: var(--neutral-100, #f3f1ed);
 }
 .nav-btn {
-  background: #1a1410;
-  color: #fff;
+  background: var(--brand-900, #1a1410);
+  color: var(--white, #fff);
   border: none;
   padding: 0.55rem 1rem;
   border-radius: 0.5rem;
@@ -243,18 +249,18 @@ const features = [
 .pricing-hero h1 {
   font-size: 2.5rem;
   margin: 0 0 0.75rem;
-  color: #1a1410;
+  color: var(--brand-900, #1a1410);
 }
 .pricing-hero p {
-  color: #645d54;
+  color: var(--neutral-700, #645d54);
   font-size: 1.1rem;
   max-width: 600px;
   margin: 0 auto 1.5rem;
 }
 .billing-toggle {
   display: inline-flex;
-  background: #ffffff;
-  border: 1px solid #d6d1c9;
+  background: var(--white, #ffffff);
+  border: 1px solid var(--neutral-300, #d6d1c9);
   border-radius: 0.5rem;
   padding: 0.25rem;
   gap: 0.25rem;
@@ -266,18 +272,18 @@ const features = [
   border-radius: 0.4rem;
   cursor: pointer;
   font-weight: 500;
-  color: #4a4540;
+  color: var(--neutral-800, #4a4540);
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
 }
 .toggle-btn.active {
-  background: #1a1410;
-  color: #fff;
+  background: var(--brand-900, #1a1410);
+  color: var(--white, #fff);
 }
 .save-badge {
-  background: #d97706;
-  color: #fff;
+  background: var(--accent-600, #b45309);
+  color: var(--white, #fff);
   font-size: 0.7rem;
   padding: 0.15rem 0.4rem;
   border-radius: 999px;
@@ -293,10 +299,10 @@ const features = [
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #645d54;
+  color: var(--neutral-700, #645d54);
 }
 .error-state {
-  color: #e11d48;
+  color: var(--rose-600, #e11d48);
 }
 .cards-grid {
   display: grid;
@@ -304,8 +310,8 @@ const features = [
   gap: 1.5rem;
 }
 .plan-card {
-  background: #ffffff;
-  border: 1px solid #e7e4de;
+  background: var(--white, #ffffff);
+  border: 1px solid var(--neutral-200, #e7e4de);
   border-radius: 0.75rem;
   padding: 1.75rem;
   display: flex;
@@ -324,7 +330,7 @@ const features = [
 .plan-header h3 {
   margin: 0 0 0.5rem;
   font-size: 1.25rem;
-  color: #1a1410;
+  color: var(--brand-900, #1a1410);
 }
 .plan-price {
   display: flex;
@@ -334,10 +340,10 @@ const features = [
 .price-amount {
   font-size: 2rem;
   font-weight: 700;
-  color: #1a1410;
+  color: var(--brand-900, #1a1410);
 }
 .price-period {
-  color: #645d54;
+  color: var(--neutral-700, #645d54);
   font-size: 0.95rem;
 }
 .plan-features {
@@ -351,24 +357,24 @@ const features = [
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
-  color: #4a4540;
+  color: var(--neutral-800, #4a4540);
   font-size: 0.95rem;
 }
 .plan-features li :deep(svg) {
-  color: #4d7c0f;
+  color: var(--earth-600, #365314);
 }
 .plan-cta {
   width: 100%;
   padding: 0.7rem;
-  background: #1a1410;
-  color: #fff;
+  background: var(--brand-900, #1a1410);
+  color: var(--white, #fff);
   border: none;
   border-radius: 0.5rem;
   font-weight: 600;
   cursor: pointer;
 }
 .plan-cta:hover {
-  background: #2d221c;
+  background: var(--brand-800, #2d221c);
 }
 .pricing-faq {
   max-width: 800px;
@@ -378,7 +384,7 @@ const features = [
 .pricing-faq h2 {
   text-align: center;
   margin: 0 0 2rem;
-  color: #1a1410;
+  color: var(--brand-900, #1a1410);
 }
 .faq-list {
   display: flex;
@@ -386,27 +392,27 @@ const features = [
   gap: 1.25rem;
 }
 .faq-item {
-  background: #ffffff;
-  border: 1px solid #e7e4de;
+  background: var(--white, #ffffff);
+  border: 1px solid var(--neutral-200, #e7e4de);
   border-radius: 0.6rem;
   padding: 1.25rem;
 }
 .faq-item h4 {
   margin: 0 0 0.4rem;
   font-size: 1rem;
-  color: #1a1410;
+  color: var(--brand-900, #1a1410);
 }
 .faq-item p {
   margin: 0;
-  color: #645d54;
+  color: var(--neutral-700, #645d54);
   font-size: 0.95rem;
   line-height: 1.5;
 }
 .pricing-footer {
   text-align: center;
   padding: 2rem;
-  color: #9a9389;
+  color: var(--neutral-500, #9a9389);
   font-size: 0.9rem;
-  border-top: 1px solid #e7e4de;
+  border-top: 1px solid var(--neutral-200, #e7e4de);
 }
 </style>

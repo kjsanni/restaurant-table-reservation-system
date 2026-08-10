@@ -109,6 +109,10 @@ const statusClass = (s: string) => {
   return "t-past";
 };
 
+const goToReview = (reservationId: number) => {
+  router.push(`/portal/reviews?reservationId=${reservationId}`);
+};
+
 onMounted(async () => {
   await Promise.all([loadProfile(), loadReservations()]);
   startPolling();
@@ -170,6 +174,13 @@ onUnmounted(() => {
             <span :class="['pill', statusClass(r.resStatus)]">
               {{ statusLabel(r.resStatus) }}
             </span>
+            <button
+              v-if="r.resStatus === 'completed' || r.resStatus === 'seated'"
+              class="review-btn"
+              @click="goToReview(r.id)"
+            >
+              Review
+            </button>
           </div>
         </template>
       </div>
@@ -374,6 +385,23 @@ onUnmounted(() => {
 .t-past {
   background: var(--neutral-100);
   color: var(--neutral-600);
+}
+
+.review-btn {
+  margin-left: 8px;
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--brand-600);
+  background: var(--white);
+  color: var(--brand-600);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.review-btn:hover {
+  background: var(--brand-50);
 }
 
 .state {

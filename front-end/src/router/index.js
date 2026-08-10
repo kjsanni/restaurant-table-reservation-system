@@ -1737,10 +1737,10 @@ const customerPortalRoutes = [
     meta: { requiresAuth: true, standalone: true },
   },
   {
-    path: "/portal/reservations",
-    name: "customer-reservations",
+    path: "/portal/reviews",
+    name: "customer-reviews",
     component: () =>
-      import("../views/customer/CustomerPortalReservationsView.vue"),
+      import("../views/customer/CustomerPortalReviewsView.vue"),
     meta: { requiresAuth: true, standalone: true },
   },
   {

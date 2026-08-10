@@ -44,6 +44,14 @@ class CustomerPortalAPI {
   getPromotion(promotionId) {
     return API.get(`/customer-portal/promotions/${promotionId}`);
   }
+
+  getReviews() {
+    return API.get("/customer-portal/reviews");
+  }
+
+  createReview(data) {
+    return API.post("/customer-portal/reviews", data);
+  }
 }
 
 export default new CustomerPortalAPI();

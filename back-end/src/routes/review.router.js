@@ -22,6 +22,12 @@ router
   .get(protectedRoute("manage_settings", reviewController.getReviewHandler))
   .patch(writeRoute("manage_settings", reviewController.respondToReviewHandler), validateCsrfToken)
   .delete(writeRoute("manage_settings", reviewController.deleteReviewHandler))
+  .post(writeRoute("manage_settings", reviewController.flagReviewHandler), validateCsrfToken)
+  .all(httpMethodError);
+
+router
+  .route("/:id/unflag")
+  .post(writeRoute("manage_settings", reviewController.unflagReviewHandler), validateCsrfToken)
   .all(httpMethodError);
 
 module.exports = router;
