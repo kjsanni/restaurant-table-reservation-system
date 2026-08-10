@@ -36,6 +36,8 @@ export const markRead = (id) => adminClient.post(`/${id}/read`);
 export const sendTestWhatsApp = (to, message) =>
   client.post("/whatsapp/test", { to, message });
 export const sendTestEmail = (to) => client.post("/email/test", { to });
+export const sendTestSms = (to, message) =>
+  client.post("/sms/test", { to, message });
 export const getPaystackWebhookInfo = () =>
   client.get("/paystack/webhook-info");
 
@@ -45,5 +47,6 @@ export default {
   markRead,
   sendTestWhatsApp,
   sendTestEmail,
+  sendTestSms,
   getPaystackWebhookInfo,
 };

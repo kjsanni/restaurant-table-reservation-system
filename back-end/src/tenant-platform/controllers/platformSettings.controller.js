@@ -38,6 +38,7 @@ const DOMAIN_ALLOWLISTS = {
     "whatsapp_config",
     "shaqexpress_enabled",
     "notification_channels",
+    "africastalking_config",
   ],
   branding: [
     "platform_brand_name",

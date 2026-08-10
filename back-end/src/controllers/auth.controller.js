@@ -554,6 +554,7 @@ const updateSettingsHandler = async (req, res) => {
     "salon_sms_fallback_enabled",
     "salon_feature_flags",
     "password_policy",
+    "africastalking_config",
   ];
   if (!allowedKeys.includes(key)) {
     return res.status(400).json({ success: false, message: "Unknown or protected setting key." });
