@@ -14,7 +14,7 @@ const CARD = 150;
 const GAP = 24;
 const STEP = CARD + GAP;
 const SNAP = 12;
-let tableShape = ref<"rectangle" | "circle">("rectangle");
+let tableShape = (ref < "rectangle") | ("circle" > "rectangle");
 
 const statusOf = (t) =>
   t.isBlocked ? "blocked" : t.isOccupied ? "occupied" : "free";
