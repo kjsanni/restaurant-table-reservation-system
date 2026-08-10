@@ -1,88 +1,237 @@
 "use strict";
 
 jest.mock("../verticals/salon/DAOs/location.dao");
-jest.mock("../middleware/auditLog", () => ({ logAction: jest.fn() }));
+jest.mock("../services/geocoding.service");
 
-const locationController = require("../verticals/salon/controllers/location.controller");
-const { makeRes } = require("./utils/test-response");
+const locationService = require("../verticals/salon/services/location.service");
+const locationDao = require("../verticals/salon/DAOs/location.dao");
+const geocodingService = require("../services/geocoding.service");
 
-describe("location.controller", () => {
+describe("location.service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("getLocations returns data for tenant", async () => {
-    require("../verticals/salon/DAOs/location.dao").findAll.mockResolvedValue([
-      { id: 1, name: "Main", isPrimary: true },
-    ]);
+  describe("create", () => {
+    it("geocodes when address is present and coords are missing", async () => {
+      geocodingService.geocodeAddress.mockResolvedValue({
+        latitude: 5.6037,
+        longitude: -0.187,
+      });
 
-    const ref = makeRes();
-    const req = { tenant: { id: 1 }, query: {} };
+      locationDao.create.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+        latitude: 5.6037,
+        longitude: -0.187,
+      });
 
-    await locationController.getLocationsHandler(req, ref.res);
+      const result = await locationService.create(
+        { name: "Branch", address: "Accra Mall" },
+        1
+      );
 
-    expect(require("../verticals/salon/DAOs/location.dao").findAll).toHaveBeenCalledWith(1);
-    ref.expectJson({
-      success: true,
-      data: [{ id: 1, name: "Main", isPrimary: true }],
+      expect(geocodingService.geocodeAddress).toHaveBeenCalledWith("Accra Mall");
+      expect(locationDao.create).toHaveBeenCalledWith(
+        { name: "Branch", address: "Accra Mall", latitude: 5.6037, longitude: -0.187 },
+        1
+      );
+      expect(result.latitude).toBe(5.6037);
+    });
+
+    it("skips geocoding when coords are already present", async () => {
+      locationDao.create.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+        latitude: 5.6037,
+        longitude: -0.187,
+      });
+
+      await locationService.create(
+        { name: "Branch", latitude: 5.6037, longitude: -0.187 },
+        1
+      );
+
+      expect(geocodingService.geocodeAddress).not.toHaveBeenCalled();
+      expect(locationDao.create).toHaveBeenCalledWith(
+        { name: "Branch", latitude: 5.6037, longitude: -0.187 },
+        1
+      );
+    });
+
+    it("skips geocoding when address is missing", async () => {
+      locationDao.create.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+      });
+
+      await locationService.create({ name: "Branch" }, 1);
+
+      expect(geocodingService.geocodeAddress).not.toHaveBeenCalled();
+      expect(locationDao.create).toHaveBeenCalledWith({ name: "Branch" }, 1);
+    });
+
+    it("leaves coords NULL when geocoding fails", async () => {
+      geocodingService.geocodeAddress.mockResolvedValue(null);
+
+      locationDao.create.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+      });
+
+      const result = await locationService.create(
+        { name: "Branch", address: "Unknown Place" },
+        1
+      );
+
+      expect(geocodingService.geocodeAddress).toHaveBeenCalledWith("Unknown Place");
+      expect(locationDao.create).toHaveBeenCalledWith({ name: "Branch", address: "Unknown Place" }, 1);
+      expect(result.latitude).toBeUndefined();
     });
   });
 
-  it("createLocation returns 201", async () => {
-    require("../verticals/salon/DAOs/location.dao").create.mockResolvedValue({
-      id: 1,
-      name: "Branch",
-      isPrimary: false,
+  describe("update", () => {
+    it("geocodes when address is present and coords are missing", async () => {
+      locationDao.findById.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+        address: "Old Address",
+        latitude: null,
+        longitude: null,
+      });
+
+      geocodingService.geocodeAddress.mockResolvedValue({
+        latitude: 5.6037,
+        longitude: -0.187,
+      });
+
+      locationDao.update.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+        address: "New Address",
+        latitude: 5.6037,
+        longitude: -0.187,
+      });
+
+      const result = await locationService.update(1, 1, {
+        name: "Branch",
+        address: "New Address",
+      });
+
+      expect(geocodingService.geocodeAddress).toHaveBeenCalledWith("New Address");
+      expect(locationDao.update).toHaveBeenCalledWith(1, 1, {
+        name: "Branch",
+        address: "New Address",
+        latitude: 5.6037,
+        longitude: -0.187,
+      });
+      expect(result.latitude).toBe(5.6037);
     });
 
-    const ref = makeRes();
-    const req = {
-      tenant: { id: 1 },
-      body: { name: "Branch", isPrimary: false },
-    };
+    it("geocodes using current address when update has no address", async () => {
+      locationDao.findById.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+        address: "Accra Mall",
+        latitude: null,
+        longitude: null,
+      });
 
-    await locationController.createLocationHandler(req, ref.res);
+      geocodingService.geocodeAddress.mockResolvedValue({
+        latitude: 5.6037,
+        longitude: -0.187,
+      });
 
-    expect(ref.res.status).toHaveBeenCalledWith(201);
-    ref.expectJson({
-      success: true,
-      data: { id: 1, name: "Branch", isPrimary: false },
+      locationDao.update.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+        latitude: 5.6037,
+        longitude: -0.187,
+      });
+
+      await locationService.update(1, 1, { name: "Branch" });
+
+      expect(geocodingService.geocodeAddress).toHaveBeenCalledWith("Accra Mall");
+    });
+
+    it("skips geocoding when coords are already present in update", async () => {
+      locationDao.findById.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+        latitude: null,
+        longitude: null,
+      });
+
+      locationDao.update.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+        latitude: 5.6037,
+        longitude: -0.187,
+      });
+
+      await locationService.update(1, 1, {
+        name: "Branch",
+        latitude: 5.6037,
+        longitude: -0.187,
+      });
+
+      expect(geocodingService.geocodeAddress).not.toHaveBeenCalled();
+    });
+
+    it("returns null when location not found", async () => {
+      locationDao.findById.mockResolvedValue(null);
+
+      const result = await locationService.update(999, 1, { name: "X" });
+
+      expect(result).toBeNull();
+      expect(locationDao.update).not.toHaveBeenCalled();
+    });
+
+    it("leaves coords NULL when geocoding throws", async () => {
+      locationDao.findById.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+        address: "Accra Mall",
+        latitude: null,
+        longitude: null,
+      });
+
+      geocodingService.geocodeAddress.mockRejectedValue(new Error("Network error"));
+
+      locationDao.update.mockResolvedValue({
+        id: 1,
+        name: "Branch",
+        address: "Accra Mall",
+      });
+
+      const result = await locationService.update(1, 1, { name: "Branch" });
+
+      expect(geocodingService.geocodeAddress).toHaveBeenCalled();
+      expect(locationDao.update).toHaveBeenCalledWith(1, 1, { name: "Branch" });
+      expect(result.latitude).toBeUndefined();
     });
   });
 
-  it("getLocation returns 404 when not found", async () => {
-    require("../verticals/salon/DAOs/location.dao").findById.mockResolvedValue(null);
+  describe("pass-through methods", () => {
+    it("findAll delegates to DAO", async () => {
+      locationDao.findAll.mockResolvedValue([{ id: 1 }]);
+      const result = await locationService.findAll(1);
+      expect(locationDao.findAll).toHaveBeenCalledWith(1);
+      expect(result).toEqual([{ id: 1 }]);
+    });
 
-    const ref = makeRes();
-    const req = { tenant: { id: 1 }, params: { id: 999 } };
+    it("findById delegates to DAO", async () => {
+      locationDao.findById.mockResolvedValue({ id: 1 });
+      const result = await locationService.findById(1, 1);
+      expect(locationDao.findById).toHaveBeenCalledWith(1, 1);
+      expect(result).toEqual({ id: 1 });
+    });
 
-    await locationController.getLocationHandler(req, ref.res);
-
-    expect(ref.res.status).toHaveBeenCalledWith(404);
-    ref.expectJson({ success: false, message: "Location not found" });
-  });
-
-  it("updateLocation returns 404 when DAO returns null", async () => {
-    require("../verticals/salon/DAOs/location.dao").update.mockResolvedValue(null);
-
-    const ref = makeRes();
-    const req = { tenant: { id: 1 }, params: { id: 999 }, body: { name: "New" } };
-
-    await locationController.updateLocationHandler(req, ref.res);
-
-    expect(ref.res.status).toHaveBeenCalledWith(404);
-    ref.expectJson({ success: false, message: "Location not found" });
-  });
-
-  it("deleteLocation returns 404 when DAO returns false", async () => {
-    require("../verticals/salon/DAOs/location.dao").delete.mockResolvedValue(false);
-
-    const ref = makeRes();
-    const req = { tenant: { id: 1 }, params: { id: 999 } };
-
-    await locationController.deleteLocationHandler(req, ref.res);
-
-    expect(ref.res.status).toHaveBeenCalledWith(404);
-    ref.expectJson({ success: false, message: "Location not found" });
+    it("delete delegates to DAO", async () => {
+      locationDao.delete.mockResolvedValue(true);
+      const result = await locationService.delete(1, 1);
+      expect(locationDao.delete).toHaveBeenCalledWith(1, 1);
+      expect(result).toBe(true);
+    });
   });
 });
