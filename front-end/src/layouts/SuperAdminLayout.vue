@@ -275,24 +275,7 @@ watch(
 
       <main class="sa-content">
         <RouterView v-slot="{ Component }">
-          <Transition
-            name="sa-fade"
-            mode="out-in"
-            @before-enter="(el) => gsap.set(el, { opacity: 0, y: 8 })"
-            @enter="(el, done) => fadeIn(el, { duration: 'base' }).then(done)"
-            @leave="
-              (el, done) =>
-                gsap.to(el, {
-                  opacity: 0,
-                  y: -8,
-                  duration: 0.2,
-                  ease: 'power2.in',
-                  onComplete: done,
-                })
-            "
-          >
-            <component v-if="Component" :is="Component" :key="$route.name" />
-          </Transition>
+          <component v-if="Component" :is="Component" :key="$route.name" />
         </RouterView>
       </main>
     </div>

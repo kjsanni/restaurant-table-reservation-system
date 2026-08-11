@@ -938,12 +938,12 @@ router.addRoute({
       component: () => import("../views/admin/SupportTemplatesView.vue"),
       meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
     },
-    {
-      path: "support-chat",
-      name: "platform-support-chat",
-      component: () => import("../views/admin/SupportChatView.vue"),
-      meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-    },
+    // {
+    //   path: "support-chat",
+    //   name: "platform-support-chat",
+    //   component: () => import("../views/admin/SupportChatView.vue"),
+    //   meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+    // },
     {
       path: "monitoring",
       name: "platform-monitoring",

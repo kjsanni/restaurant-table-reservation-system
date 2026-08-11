@@ -52,6 +52,52 @@ class CustomerPortalAPI {
   createReview(data) {
     return API.post("/customer-portal/reviews", data);
   }
+
+  listSupportTickets(params = {}) {
+    return API.get(
+      `/customer-portal/support-tickets${buildQueryString(params)}`
+    );
+  }
+
+  getSupportTicket(id) {
+    return API.get(`/customer-portal/support-tickets/${id}`);
+  }
+
+  createSupportTicket(data) {
+    return API.post("/customer-portal/support-tickets", data);
+  }
+
+  listTicketMessages(ticketId) {
+    return API.get(`/customer-portal/support-tickets/${ticketId}/messages`);
+  }
+
+  sendTicketMessage(ticketId, body) {
+    return API.post(`/customer-portal/support-tickets/${ticketId}/messages`, {
+      body,
+    });
+  }
+
+  listTicketAttachments(ticketId) {
+    return API.get(`/customer-portal/support-tickets/${ticketId}/attachments`);
+  }
+
+  createTicketAttachment(ticketId, data) {
+    return API.post(
+      `/customer-portal/support-tickets/${ticketId}/attachments`,
+      data
+    );
+  }
+}
+
+function buildQueryString(params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, value);
+    }
+  });
+  const qs = query.toString();
+  return qs ? `?${qs}` : "";
 }
 
 export default new CustomerPortalAPI();

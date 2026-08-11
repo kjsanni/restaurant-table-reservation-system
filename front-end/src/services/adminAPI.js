@@ -7,6 +7,7 @@ import * as monitoring from "./admin/monitoringAPI";
 import * as integration from "./admin/integrationAPI";
 import * as vertical from "./admin/verticalAPI";
 import * as platformAdmin from "./admin/platformAdminAPI";
+import * as encryptionKey from "./admin/encryptionKeyAPI";
 
 export default {
   ...audit,
@@ -18,4 +19,5 @@ export default {
   ...integration,
   ...vertical,
   ...platformAdmin,
+  ...encryptionKey,
 };

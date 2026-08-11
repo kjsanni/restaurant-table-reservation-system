@@ -314,7 +314,7 @@ const goToDashboard = () => router.push("/super-admin/overview");
   margin-bottom: 24px;
   opacity: 0;
   transform: translateY(20px);
-  animation: fadeInUp 0.6s ease 0.2s forwards;
+  animation: fadeInUp 0.3s ease 0.05s forwards;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
@@ -329,7 +329,7 @@ const goToDashboard = () => router.push("/super-admin/overview");
   margin: 0 0 20px;
   opacity: 0;
   transform: translateY(30px);
-  animation: fadeInUp 0.7s ease 0.35s forwards;
+  animation: fadeInUp 0.35s ease 0.1s forwards;
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
 }
 
@@ -348,7 +348,7 @@ const goToDashboard = () => router.push("/super-admin/overview");
   line-height: 1.6;
   opacity: 0;
   transform: translateY(30px);
-  animation: fadeInUp 0.7s ease 0.5s forwards;
+  animation: fadeInUp 0.35s ease 0.15s forwards;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.3);
 }
 
@@ -359,7 +359,7 @@ const goToDashboard = () => router.push("/super-admin/overview");
   flex-wrap: wrap;
   opacity: 0;
   transform: translateY(30px);
-  animation: fadeInUp 0.7s ease 0.65s forwards;
+  animation: fadeInUp 0.35s ease 0.2s forwards;
 }
 
 .btn-primary-lg {
