@@ -8,7 +8,6 @@ const customerMarketingController = require("../controllers/customer-marketing.c
 const reviewController = require("../controllers/review.controller");
 const { protect } = require("../middleware/auth");
 const { validateCsrfToken } = require("../middleware/csrf");
-const upload = require("../tenant-platform/middleware/supportAttachmentUpload");
 
 router
   .route("/profile")
@@ -65,34 +64,6 @@ router
 router
   .route("/reviews")
   .post(protect, validateCsrfToken, reviewController.createCustomerReviewHandler)
-  .all(httpMethodError);
-
-router
-  .route("/support-tickets")
-  .get(protect, customerPortalController.listCustomerTicketsHandler)
-  .post(protect, validateCsrfToken, customerPortalController.createCustomerTicketHandler)
-  .all(httpMethodError);
-
-router
-  .route("/support-tickets/:id")
-  .get(protect, customerPortalController.getCustomerTicketHandler)
-  .all(httpMethodError);
-
-router
-  .route("/support-tickets/:id/messages")
-  .get(protect, customerPortalController.listCustomerMessagesHandler)
-  .post(protect, validateCsrfToken, customerPortalController.sendCustomerMessageHandler)
-  .all(httpMethodError);
-
-router
-  .route("/support-tickets/:id/attachments")
-  .get(protect, customerPortalController.listCustomerAttachmentsHandler)
-  .post(protect, validateCsrfToken, upload.single("file"), customerPortalController.createCustomerAttachmentHandler)
-  .all(httpMethodError);
-
-router
-  .route("/support-tickets/:id/attachments/download/:filename")
-  .get(protect, customerPortalController.downloadCustomerAttachmentHandler)
   .all(httpMethodError);
 
 module.exports = router;
