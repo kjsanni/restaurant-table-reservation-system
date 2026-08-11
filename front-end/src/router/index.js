@@ -1643,18 +1643,6 @@ router.addRoute({
     },
   ],
 });
-router.addRoute({
-  path: "/tenant/support",
-  component: () => import("../layouts/TenantLayout.vue"),
-  children: [
-    {
-      path: "",
-      name: "tenant-support",
-      component: () => import("../views/tenant/TenantSupportView.vue"),
-      meta: { requiresAuth: true },
-    },
-  ],
-});
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
@@ -1799,12 +1787,6 @@ const customerPortalRoutes = [
     name: "customer-packages",
     component: () => import("../views/customer/CustomerPortalPackagesView.vue"),
     meta: { requiresAuth: true, requiresVertical: "salon", standalone: true },
-  },
-  {
-    path: "/portal/support",
-    name: "customer-support",
-    component: () => import("../views/customer/CustomerPortalSupportView.vue"),
-    meta: { requiresAuth: true, standalone: true },
   },
 ];
 

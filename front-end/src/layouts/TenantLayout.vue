@@ -11,7 +11,6 @@ import TenantSwitcher from "@/components/TenantSwitcher.vue";
 import { useOnlineStatus } from "@/composables/useOnlineStatus";
 import gsap from "gsap";
 import { useAnimations } from "@/composables/useAnimations";
-import NotificationDropdown from "@/components/NotificationDropdown.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -220,7 +219,6 @@ watch(
           }}</span>
         </div>
         <div class="tl-topbar-right">
-          <NotificationDropdown />
           <span v-if="status === 'offline'" class="sync-indicator offline">
             Offline
           </span>

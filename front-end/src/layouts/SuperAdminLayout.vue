@@ -9,7 +9,6 @@ import { superAdminNavItems } from "@/config/sidebarItems";
 import type { NavItem } from "@/config/sidebarItems";
 import { useAnimations } from "@/composables/useAnimations";
 import gsap from "gsap";
-import NotificationDropdown from "@/components/NotificationDropdown.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -268,7 +267,6 @@ watch(
           }}</span>
         </div>
         <div class="sa-topbar-right">
-          <NotificationDropdown />
           <div v-if="user" class="sa-user-chip">
             {{ user.username?.charAt(0)?.toUpperCase() }}
           </div>
