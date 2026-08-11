@@ -3,7 +3,7 @@ const router = express.Router();
 const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const supportTicketController = require("../controllers/supportTicket.controller");
-const { protect, requireSuperAdmin, requirePlatformRole } = require("../../middleware/auth");
+const { protect, requireSuperAdmin } = require("../../middleware/auth");
 
 router
   .route("/")

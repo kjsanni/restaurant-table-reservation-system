@@ -4,7 +4,10 @@ const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const supportAttachmentController = require("../controllers/supportAttachment.controller");
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
+const { adminActionLimiter } = require("../../middleware/rateLimit");
 const upload = require("../middleware/supportAttachmentUpload");
+
+router.use(adminActionLimiter);
 
 router
   .route("/")

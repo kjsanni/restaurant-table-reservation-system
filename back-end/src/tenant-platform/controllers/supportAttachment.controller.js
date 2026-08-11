@@ -25,7 +25,6 @@ const createAttachmentHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "File is required" });
   }
 
-  const relativePath = path.join("support-attachments", file.filename);
   const attachment = await supportAttachmentDAO.create({
     tenantId: req.tenant?.id || null,
     conversationId: conversationId ? parseInt(conversationId, 10) : null,
@@ -53,7 +52,7 @@ const createAttachmentHandler = async (req, res) => {
 };
 
 const downloadAttachmentHandler = async (req, res) => {
-  const filename = req.params.filename;
+  const filename = path.basename(req.params.filename);
   const filePath = path.join(UPLOAD_DIR, filename);
 
   if (!fs.existsSync(filePath)) {
