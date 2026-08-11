@@ -1,6 +1,7 @@
 const supportTicketController = require("../tenant-platform/controllers/supportTicket.controller");
 
 jest.mock("../tenant-platform/DAOs/supportTicket.dao");
+jest.mock("../tenant-platform/DAOs/supportTicketMessage.dao");
 jest.mock("../tenant-platform/DAOs/platformAudit.dao");
 
 describe("supportTicket.controller", () => {
@@ -18,7 +19,9 @@ describe("supportTicket.controller", () => {
 
   it("createSupportTicketHandler creates ticket and logs audit", async () => {
     const ticketDAO = require("../tenant-platform/DAOs/supportTicket.dao");
+    const messageDAO = require("../tenant-platform/DAOs/supportTicketMessage.dao");
     ticketDAO.create.mockResolvedValue({ id: 1 });
+    messageDAO.create.mockResolvedValue({ id: 1 });
 
     req.body = { subject: "Test", message: "Issue", priority: "medium" };
     await supportTicketController.createSupportTicketHandler(req, res);
@@ -28,6 +31,7 @@ describe("supportTicket.controller", () => {
 
   it("updateSupportTicketHandler updates ticket and logs audit", async () => {
     const ticketDAO = require("../tenant-platform/DAOs/supportTicket.dao");
+    ticketDAO.findById.mockResolvedValue({ id: 1, status: "open" });
     ticketDAO.update.mockResolvedValue({ id: 1, status: "resolved" });
 
     req.params.id = 1;

@@ -13,6 +13,7 @@ supportTicketDAO.list = (filters = {}) => {
   if (filters.priority) where.priority = filters.priority;
   if (filters.userId) where.userId = filters.userId;
   if (filters.assignedTo) where.assignedTo = filters.assignedTo;
+  if (filters.category) where.category = filters.category;
 
   return db.supportTicket.findAll({
     where,
@@ -24,7 +25,16 @@ supportTicketDAO.list = (filters = {}) => {
 supportTicketDAO.findById = (id, tenantId) => {
   const where = { id };
   if (tenantId) where.tenantId = tenantId;
-  return db.supportTicket.findOne({ where });
+  return db.supportTicket.findOne({
+    where,
+    include: [
+      { model: db.user, as: "submitter", required: false },
+      { model: db.user, as: "assignee", required: false },
+      { model: db.supportTicketMessage, as: "messages", order: [["createdAt", "ASC"]] },
+      { model: db.supportNote, as: "notes", required: false },
+      { model: db.supportAttachment, as: "attachments", required: false },
+    ],
+  });
 };
 
 supportTicketDAO.update = async (id, updates, tenantId) => {

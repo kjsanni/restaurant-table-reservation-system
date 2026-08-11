@@ -1,5 +1,9 @@
 const supportAttachmentDAO = require("../DAOs/supportAttachment.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const path = require("path");
+const fs = require("fs");
+
+const UPLOAD_DIR = path.join(__dirname, "../../../uploads/support-attachments");
 
 const listAttachmentsHandler = async (req, res) => {
   const { conversationId, ticketId, messageId } = req.query;
@@ -15,22 +19,24 @@ const listAttachmentsHandler = async (req, res) => {
 };
 
 const createAttachmentHandler = async (req, res) => {
-  const { conversationId, ticketId, messageId, filename, originalName, mimeType, size, url } = req.body;
-  if (!filename || !originalName) {
-    return res.status(400).json({ success: false, message: "Filename and originalName are required" });
+  const file = req.file;
+  const { conversationId, ticketId, messageId } = req.body;
+  if (!file) {
+    return res.status(400).json({ success: false, message: "File is required" });
   }
 
+  const relativePath = path.join("support-attachments", file.filename);
   const attachment = await supportAttachmentDAO.create({
     tenantId: req.tenant?.id || null,
     conversationId: conversationId ? parseInt(conversationId, 10) : null,
     ticketId: ticketId ? parseInt(ticketId, 10) : null,
     messageId: messageId ? parseInt(messageId, 10) : null,
     userId: req.user.id,
-    filename,
-    originalName,
-    mimeType: mimeType || null,
-    size: size || null,
-    url: url || null,
+    filename: file.filename,
+    originalName: file.originalname,
+    mimeType: file.mimetype,
+    size: file.size,
+    url: `/api/v1/admin/support-attachments/download/${file.filename}`,
   });
 
   await platformAuditDAO.log(
@@ -39,17 +45,37 @@ const createAttachmentHandler = async (req, res) => {
     "support_attachment",
     attachment.id,
     req.tenant?.id || null,
-    { conversationId, ticketId, filename },
+    { conversationId, ticketId, filename: file.filename },
     req.ip
   );
 
   res.status(201).json({ success: true, item: attachment });
 };
 
+const downloadAttachmentHandler = async (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(UPLOAD_DIR, filename);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ success: false, message: "File not found" });
+  }
+
+  res.download(filePath, filename, (err) => {
+    if (err) {
+      console.error("Attachment download error:", err.message);
+    }
+  });
+};
+
 const deleteAttachmentHandler = async (req, res) => {
   const attachment = await supportAttachmentDAO.remove(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!attachment) {
     return res.status(404).json({ success: false, message: "Attachment not found" });
+  }
+
+  const filePath = path.join(UPLOAD_DIR, path.basename(attachment.filename || ""));
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
   }
 
   await platformAuditDAO.log(
@@ -68,5 +94,6 @@ const deleteAttachmentHandler = async (req, res) => {
 module.exports = {
   listAttachmentsHandler,
   createAttachmentHandler,
+  downloadAttachmentHandler,
   deleteAttachmentHandler,
 };

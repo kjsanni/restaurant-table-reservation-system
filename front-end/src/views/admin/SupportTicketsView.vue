@@ -68,10 +68,14 @@
         <option value="high">High</option>
         <option value="critical">Critical</option>
       </select>
-      <select v-model="filterSla" class="filter-select" @change="load">
-        <option value="">All SLA</option>
-        <option value="overdue">Overdue</option>
-        <option value="ok">On Track</option>
+      <select v-model="filterCategory" class="filter-select" @change="load">
+        <option value="">All Categories</option>
+        <option value="general">General</option>
+        <option value="billing">Billing</option>
+        <option value="technical">Technical</option>
+        <option value="onboarding">Onboarding</option>
+        <option value="salon">Salon</option>
+        <option value="restaurant">Restaurant</option>
       </select>
       <input
         v-model="searchQuery"
@@ -95,11 +99,11 @@
             <tr>
               <th>ID</th>
               <th>Subject</th>
+              <th>Category</th>
               <th>Status</th>
               <th>Priority</th>
               <th>SLA</th>
-              <th>CSAT</th>
-              <th>Assigned To</th>
+              <th>Assignee</th>
               <th>Created</th>
               <th>Actions</th>
             </tr>
@@ -108,6 +112,14 @@
             <tr v-for="ticket in items" :key="ticket.id">
               <td>#{{ ticket.id }}</td>
               <td>{{ ticket.subject }}</td>
+              <td>
+                <span
+                  class="category-badge"
+                  :class="categoryClass(ticket.category)"
+                >
+                  {{ ticket.category }}
+                </span>
+              </td>
               <td>
                 <select
                   :value="ticket.status"
@@ -138,24 +150,20 @@
                 </span>
               </td>
               <td>
-                <div v-if="ticket.csatRating" class="csat-display">
-                  <span class="csat-stars">{{ stars(ticket.csatRating) }}</span>
-                  <span class="csat-feedback" v-if="ticket.csatFeedback"
-                    >"{{ ticket.csatFeedback }}"</span
-                  >
-                </div>
-                <button v-else class="btn-sm" @click="openCsat(ticket)">
-                  Rate
-                </button>
-              </td>
-              <td>
-                <input
+                <select
                   :value="ticket.assignedTo || ''"
-                  type="number"
-                  placeholder="User ID"
-                  class="filter-select"
+                  class="filter-select assignee-select"
                   @change="assignTicket(ticket.id, $event.target.value)"
-                />
+                >
+                  <option value="">Unassigned</option>
+                  <option
+                    v-for="agent in agents"
+                    :key="agent.id"
+                    :value="agent.id"
+                  >
+                    {{ agent.username }}
+                  </option>
+                </select>
               </td>
               <td>{{ formatDate(ticket.createdAt) }}</td>
               <td class="actions-cell">
@@ -169,6 +177,13 @@
                 >
                   Escalate
                 </button>
+                <button
+                  class="btn-sm"
+                  @click="autoAssignTicket(ticket.id)"
+                  :disabled="ticket.assignedTo"
+                >
+                  Auto-Assign
+                </button>
               </td>
             </tr>
           </tbody>
@@ -176,60 +191,287 @@
       </div>
     </div>
 
-    <div
-      v-if="selectedTicket"
-      class="modal-overlay"
-      @click.self="selectedTicket = null"
-    >
-      <div class="modal">
+    <div v-if="selectedTicket" class="modal-overlay" @click.self="closeDetail">
+      <div class="detail-modal">
         <div class="modal-header">
-          <h3>Ticket #{{ selectedTicket.id }}</h3>
-          <button class="btn-close" @click="selectedTicket = null">×</button>
+          <div>
+            <h3>Ticket #{{ selectedTicket.id }}</h3>
+            <span class="ticket-meta">
+              {{ selectedTicket.subject }} • {{ selectedTicket.category }} •
+              Created {{ formatDateTime(selectedTicket.createdAt) }}
+            </span>
+          </div>
+          <button class="btn-close" @click="closeDetail">×</button>
         </div>
+
         <div class="modal-body">
-          <p><b>Subject:</b> {{ selectedTicket.subject }}</p>
-          <p><b>Status:</b> {{ selectedTicket.status }}</p>
-          <p><b>Priority:</b> {{ selectedTicket.priority }}</p>
-          <p>
-            <b>Assigned To:</b> {{ selectedTicket.assignedTo || "Unassigned" }}
-          </p>
-          <p><b>Created:</b> {{ formatDateTime(selectedTicket.createdAt) }}</p>
-          <p v-if="selectedTicket.resolvedAt">
-            <b>Resolved:</b> {{ formatDateTime(selectedTicket.resolvedAt) }}
-          </p>
-          <p><b>Message:</b></p>
-          <p class="ticket-message">{{ selectedTicket.message }}</p>
-          <div class="attachments-section">
-            <h4>Attachments</h4>
-            <div v-if="attachments.length === 0" class="attachments-empty">
-              No attachments yet.
-            </div>
-            <div v-else class="attachments-list">
+          <div class="thread-section">
+            <h4>Thread</h4>
+            <div class="thread">
+              <div class="thread-item original">
+                <div class="thread-header">
+                  <span class="thread-author">{{
+                    selectedTicket.submitter?.username || "Customer"
+                  }}</span>
+                  <span class="thread-time">{{
+                    formatDateTime(selectedTicket.createdAt)
+                  }}</span>
+                </div>
+                <p class="thread-body">{{ selectedTicket.message }}</p>
+              </div>
               <div
-                v-for="file in attachments"
-                :key="file.id"
-                class="attachment-item"
+                v-for="msg in selectedTicket.messages"
+                :key="msg.id"
+                class="thread-item"
+                :class="msg.senderType"
               >
-                <span class="attachment-name">{{ file.originalName }}</span>
-                <span class="attachment-meta">{{ formatSize(file.size) }}</span>
+                <div class="thread-header">
+                  <span class="thread-author">{{
+                    msg.sender?.username ||
+                    (msg.senderType === "agent" ? "Agent" : "Customer")
+                  }}</span>
+                  <span class="thread-time">{{
+                    formatDateTime(msg.createdAt)
+                  }}</span>
+                </div>
+                <p class="thread-body">{{ msg.body }}</p>
+              </div>
+            </div>
+            <div class="reply-box">
+              <div class="template-select">
+                <select v-model="selectedTemplateId" class="filter-select">
+                  <option value="">Insert template...</option>
+                  <option
+                    v-for="template in templates"
+                    :key="template.id"
+                    :value="template.id"
+                  >
+                    {{ template.title }}
+                  </option>
+                </select>
                 <button
-                  class="btn-sm btn-danger"
-                  @click="removeAttachment(file.id)"
+                  class="btn-secondary"
+                  @click="insertTemplate"
+                  :disabled="!selectedTemplateId"
                 >
-                  Delete
+                  Insert
+                </button>
+              </div>
+              <textarea
+                v-model="replyBody"
+                rows="2"
+                placeholder="Write a reply..."
+                class="reply-input"
+                @keydown.enter.exact.prevent="sendReply"
+              ></textarea>
+              <button
+                class="btn-primary"
+                @click="sendReply"
+                :disabled="!replyBody.trim() || sendingReply"
+              >
+                {{ sendingReply ? "Sending..." : "Send" }}
+              </button>
+            </div>
+          </div>
+
+          <div class="side-panels">
+            <div class="panel notes-panel">
+              <h4>Internal Notes</h4>
+              <div class="notes-list">
+                <div v-if="notes.length === 0" class="notes-empty">
+                  No internal notes yet.
+                </div>
+                <div v-for="note in notes" :key="note.id" class="note-item">
+                  <div class="note-body">
+                    <p class="note-text">{{ note.body }}</p>
+                    <span class="note-meta">
+                      #{{ note.id }} • {{ formatDate(note.createdAt) }}
+                    </span>
+                  </div>
+                  <button
+                    class="btn-sm btn-danger"
+                    @click="removeNote(note.id)"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+              <div class="note-form">
+                <textarea
+                  v-model="newNote"
+                  rows="2"
+                  placeholder="Add an internal note..."
+                  class="note-input"
+                ></textarea>
+                <button
+                  class="btn-primary"
+                  @click="addNote"
+                  :disabled="addingNote || !newNote.trim()"
+                >
+                  {{ addingNote ? "Adding..." : "Add" }}
                 </button>
               </div>
             </div>
-            <div class="attachment-upload">
-              <input type="file" @change="onFileSelected" class="file-input" />
-              <button
-                class="btn-primary"
-                @click="uploadAttachment"
-                :disabled="!selectedFile || uploading"
-              >
-                Upload
-              </button>
+
+            <div class="panel attachments-panel">
+              <h4>Attachments</h4>
+              <div v-if="attachments.length === 0" class="attachments-empty">
+                No attachments yet.
+              </div>
+              <div v-else class="attachments-list">
+                <div
+                  v-for="file in attachments"
+                  :key="file.id"
+                  class="attachment-item"
+                >
+                  <div class="attachment-info">
+                    <span class="attachment-name">{{ file.originalName }}</span>
+                    <span class="attachment-meta">{{
+                      formatSize(file.size)
+                    }}</span>
+                  </div>
+                  <div class="attachment-actions">
+                    <a
+                      v-if="file.url"
+                      :href="file.url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="btn-sm btn-link"
+                    >
+                      Download
+                    </a>
+                    <button
+                      class="btn-sm btn-danger"
+                      @click="removeAttachment(file.id)"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="attachment-upload">
+                <input
+                  type="file"
+                  @change="onFileSelected"
+                  class="file-input"
+                />
+                <button
+                  class="btn-primary"
+                  @click="uploadAttachment"
+                  :disabled="!selectedFile || uploading"
+                >
+                  {{ uploading ? "Uploading..." : "Upload" }}
+                </button>
+              </div>
             </div>
+
+            <div class="panel actions-panel">
+              <h4>Actions</h4>
+              <div class="action-group">
+                <label class="field-label">Status</label>
+                <select
+                  :value="selectedTicket.status"
+                  class="filter-select"
+                  @change="updateStatus(selectedTicket.id, $event.target.value)"
+                >
+                  <option value="open">Open</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+              <div class="action-group">
+                <label class="field-label">Priority</label>
+                <select
+                  :value="selectedTicket.priority"
+                  class="filter-select"
+                  @change="
+                    updatePriority(selectedTicket.id, $event.target.value)
+                  "
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+              <div class="action-group">
+                <label class="field-label">CSAT</label>
+                <div v-if="selectedTicket.csat" class="csat-display">
+                  <span class="csat-stars">{{
+                    stars(selectedTicket.csat)
+                  }}</span>
+                </div>
+                <button v-else class="btn-secondary" @click="openCsat">
+                  Rate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showCreate"
+      class="modal-overlay"
+      @click.self="showCreate = false"
+    >
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Create Support Ticket</h3>
+          <button class="btn-close" @click="showCreate = false">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="field">
+            <label>Subject</label>
+            <input
+              v-model="createForm.subject"
+              type="text"
+              class="field-input"
+              placeholder="Brief summary of the issue"
+            />
+          </div>
+          <div class="field">
+            <label>Category</label>
+            <select v-model="createForm.category" class="field-input">
+              <option value="general">General</option>
+              <option value="billing">Billing</option>
+              <option value="technical">Technical</option>
+              <option value="onboarding">Onboarding</option>
+              <option value="salon">Salon</option>
+              <option value="restaurant">Restaurant</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Priority</label>
+            <select v-model="createForm.priority" class="field-input">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Initial Message</label>
+            <textarea
+              v-model="createForm.message"
+              rows="4"
+              class="field-input"
+              placeholder="Describe the issue in detail"
+            ></textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-secondary" @click="showCreate = false">
+              Cancel
+            </button>
+            <button
+              class="btn-primary"
+              @click="submitCreate"
+              :disabled="creating || !createForm.subject || !createForm.message"
+            >
+              {{ creating ? "Creating..." : "Create Ticket" }}
+            </button>
           </div>
         </div>
       </div>
@@ -281,44 +523,6 @@
         </div>
       </div>
     </div>
-
-    <div v-if="selectedTicket" class="notes-panel">
-      <div class="notes-header">
-        <h3>Internal Notes</h3>
-      </div>
-      <div class="notes-list">
-        <div v-if="notes.length === 0" class="notes-empty">
-          No internal notes yet.
-        </div>
-        <div v-for="note in notes" :key="note.id" class="note-item">
-          <div class="note-body">
-            <p class="note-text">{{ note.body }}</p>
-            <span class="note-meta"
-              >#{{ note.id }} by {{ note.author?.username || "system" }} •
-              {{ formatDate(note.createdAt) }}</span
-            >
-          </div>
-          <button class="btn-sm btn-danger" @click="removeNote(note.id)">
-            Delete
-          </button>
-        </div>
-      </div>
-      <div class="note-form">
-        <textarea
-          v-model="newNote"
-          rows="2"
-          placeholder="Add an internal note..."
-          class="note-input"
-        ></textarea>
-        <button
-          class="btn-primary"
-          @click="addNote"
-          :disabled="addingNote || !newNote.trim()"
-        >
-          Add
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -334,16 +538,28 @@ const selectedTicket = ref(null);
 const showCreate = ref(false);
 const filterStatus = ref("");
 const filterPriority = ref("");
-const filterSla = ref("");
+const filterCategory = ref("");
 const searchQuery = ref("");
 const csatTicket = ref(null);
 const csatForm = ref({ rating: 0, feedback: "" });
 const notes = ref([]);
 const newNote = ref("");
+const sendingReply = ref(false);
 const addingNote = ref(false);
+const agents = ref([]);
+const templates = ref([]);
+const selectedTemplateId = ref("");
+const replyBody = ref("");
 const attachments = ref([]);
 const selectedFile = ref(null);
 const uploading = ref(false);
+const creating = ref(false);
+const createForm = ref({
+  subject: "",
+  category: "general",
+  priority: "medium",
+  message: "",
+});
 
 const SLA_THRESHOLDS = {
   critical: 60 * 60 * 1000,
@@ -431,6 +647,28 @@ const slaLabel = (ticket) => {
   return "On Track";
 };
 
+const categoryClass = (category) => {
+  const map = {
+    general: "cat-general",
+    billing: "cat-billing",
+    technical: "cat-technical",
+    onboarding: "cat-onboarding",
+    salon: "cat-salon",
+    restaurant: "cat-restaurant",
+  };
+  return map[category] || "cat-general";
+};
+
+const statusClass = (status) => {
+  const map = {
+    open: "status-open",
+    in_progress: "status-progress",
+    resolved: "status-resolved",
+    closed: "status-closed",
+  };
+  return map[status] || "status-open";
+};
+
 const formatDuration = (ms) => {
   const hours = Math.floor(ms / (1000 * 60 * 60));
   const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
@@ -462,10 +700,8 @@ const load = async () => {
       const q = searchQuery.value.toLowerCase();
       data = data.filter((t) => t.subject.toLowerCase().includes(q));
     }
-    if (filterSla.value === "overdue") {
-      data = data.filter((t) => isOverdue(t));
-    } else if (filterSla.value === "ok") {
-      data = data.filter((t) => !isOverdue(t));
+    if (filterCategory.value) {
+      data = data.filter((t) => t.category === filterCategory.value);
     }
     items.value = data;
   } finally {
@@ -512,14 +748,6 @@ const submitCsat = async () => {
   });
   csatTicket.value = null;
   await load();
-};
-
-const viewTicket = async (id) => {
-  const res = await adminAPI.getSupportTicket(id);
-  selectedTicket.value = res.data?.item || null;
-  if (selectedTicket.value) {
-    loadNotes(selectedTicket.value.id);
-  }
 };
 
 const loadNotes = async (ticketId) => {
@@ -576,14 +804,14 @@ const uploadAttachment = async () => {
   try {
     const form = new FormData();
     form.append("file", selectedFile.value);
-    await adminAPI.createSupportAttachment({
-      ticketId: selectedTicket.value.id,
-      conversationId: selectedTicket.value.conversationId || null,
-      filename: selectedFile.value.name,
-      originalName: selectedFile.value.name,
-      mimeType: selectedFile.value.type,
-      size: selectedFile.value.size,
-    });
+    form.append("ticketId", String(selectedTicket.value.id));
+    if (selectedTicket.value.conversationId) {
+      form.append(
+        "conversationId",
+        String(selectedTicket.value.conversationId)
+      );
+    }
+    await adminAPI.createSupportAttachment(form);
     selectedFile.value = null;
     await loadAttachments(selectedTicket.value.id);
   } finally {
@@ -610,6 +838,7 @@ const exportCSV = () => {
   const headers = [
     "ID",
     "Subject",
+    "Category",
     "Status",
     "Priority",
     "SLA",
@@ -620,6 +849,7 @@ const exportCSV = () => {
   const rows = items.value.map((t) => [
     t.id,
     t.subject,
+    t.category,
     t.status,
     t.priority,
     slaLabel(t),
@@ -639,8 +869,123 @@ const exportCSV = () => {
   URL.revokeObjectURL(url);
 };
 
+const loadAgents = async () => {
+  try {
+    const res = await adminAPI.getUsers?.();
+    const payload = res?.data;
+    const list = payload?.collection || payload?.items || payload?.users || [];
+    agents.value = list;
+  } catch {
+    agents.value = [];
+  }
+};
+
+const loadTemplates = async () => {
+  try {
+    const res = await adminAPI.listSupportTemplates?.();
+    templates.value = res?.data?.collection || [];
+  } catch {
+    templates.value = [];
+  }
+};
+
+const openCreateModal = () => {
+  createForm.value = {
+    subject: "",
+    category: "general",
+    priority: "medium",
+    message: "",
+  };
+  showCreate.value = true;
+};
+
+const submitCreate = async () => {
+  if (!createForm.value.subject || !createForm.value.message) return;
+  creating.value = true;
+  try {
+    await adminAPI.createSupportTicket(createForm.value);
+    showCreate.value = false;
+    await load();
+  } finally {
+    creating.value = false;
+  }
+};
+
+const closeDetail = () => {
+  selectedTicket.value = null;
+  notes.value = [];
+  attachments.value = [];
+  replyBody.value = "";
+  selectedTemplateId.value = "";
+};
+
+const viewTicket = async (id) => {
+  const res = await adminAPI.getSupportTicket(id);
+  selectedTicket.value = res.data?.item || null;
+  if (selectedTicket.value) {
+    replyBody.value = "";
+    selectedTemplateId.value = "";
+    await loadMessages(selectedTicket.value.id);
+    await loadNotes(selectedTicket.value.id);
+    await loadAttachments(selectedTicket.value.id);
+  }
+};
+
+const loadMessages = async (ticketId) => {
+  try {
+    const res = await adminAPI.listTicketMessages(ticketId);
+    const messages = res.data?.collection || [];
+    if (selectedTicket.value) {
+      selectedTicket.value.messages = messages;
+    }
+  } catch {
+    if (selectedTicket.value) {
+      selectedTicket.value.messages = [];
+    }
+  }
+};
+
+const sendReply = async () => {
+  if (!replyBody.value.trim() || !selectedTicket.value) return;
+  sendingReply.value = true;
+  try {
+    const res = await adminAPI.sendTicketMessage(
+      selectedTicket.value.id,
+      replyBody.value.trim()
+    );
+    const msg = res.data?.item;
+    if (msg && selectedTicket.value) {
+      selectedTicket.value.messages = selectedTicket.value.messages || [];
+      selectedTicket.value.messages.push(msg);
+      replyBody.value = "";
+    }
+  } finally {
+    sendingReply.value = false;
+  }
+};
+
+const insertTemplate = async () => {
+  if (!selectedTemplateId.value || !selectedTicket.value) return;
+  const template = templates.value.find(
+    (t) => t.id === selectedTemplateId.value
+  );
+  if (!template) return;
+  replyBody.value = template.body || replyBody.value;
+};
+
+const autoAssignTicket = async (id) => {
+  await adminAPI.autoAssignTicket(id);
+  await load();
+  if (selectedTicket.value?.id === id) {
+    const res = await adminAPI.getSupportTicket(id);
+    selectedTicket.value = res.data?.item || selectedTicket.value;
+  }
+};
+
 onMounted(() => {
   load();
+  loadAgents();
+  loadTemplates();
 });
 </script>
 
@@ -1019,6 +1364,26 @@ onMounted(() => {
   border-radius: var(--radius-lg);
   background: var(--surface);
 }
+.attachment-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.attachment-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.btn-link {
+  text-decoration: none;
+  color: var(--brand-700);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-link:hover {
+  text-decoration: underline;
+}
 .attachment-name {
   font-size: var(--text-sm);
   color: var(--ink);
@@ -1035,5 +1400,235 @@ onMounted(() => {
 .file-input {
   flex: 1;
   font-size: var(--text-sm);
+}
+.category-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+.cat-general {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+.cat-billing {
+  background: var(--amber-100);
+  color: var(--amber-700);
+}
+.cat-technical {
+  background: var(--rose-100);
+  color: var(--rose-700);
+}
+.cat-onboarding {
+  background: var(--sky-100);
+  color: var(--sky-700);
+}
+.cat-salon {
+  background: var(--violet-100);
+  color: var(--violet-700);
+}
+.cat-restaurant {
+  background: var(--orange-100);
+  color: var(--orange-700);
+}
+.status-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+.status-open {
+  background: var(--sky-100);
+  color: var(--sky-700);
+}
+.status-progress {
+  background: var(--amber-100);
+  color: var(--amber-700);
+}
+.status-resolved {
+  background: var(--earth-100);
+  color: var(--earth-700);
+}
+.status-closed {
+  background: var(--ink-100);
+  color: var(--ink-muted);
+}
+.ticket-row {
+  cursor: pointer;
+}
+.ticket-row:hover {
+  background: var(--surface-hover);
+}
+.subject-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.subject-text {
+  font-weight: 600;
+  color: var(--ink);
+}
+.reply-count {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+.assignee-select {
+  width: 120px;
+}
+.detail-modal {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+.ticket-meta {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+.thread-section {
+  margin-bottom: var(--space-5);
+}
+.thread-section h4 {
+  margin: 0 0 var(--space-3) 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--ink-muted);
+}
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.thread-item {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+}
+.thread-item.original {
+  background: var(--surface-hover);
+}
+.thread-item.agent {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+}
+.thread-item.customer {
+  background: var(--surface);
+}
+.thread-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+.thread-author {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+.thread-time {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+.thread-body {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+.reply-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.template-select {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+.template-select .filter-select {
+  flex: 1;
+}
+.reply-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  background: var(--surface);
+  color: var(--ink);
+  resize: vertical;
+}
+.side-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+.panel h4 {
+  margin: 0 0 var(--space-3) 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--ink-muted);
+}
+.action-group {
+  margin-bottom: var(--space-3);
+}
+.field-label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--ink-muted);
+  margin-bottom: var(--space-1);
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.field {
+  margin-bottom: var(--space-3);
+}
+.field label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: var(--space-1);
+}
+.field-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+.btn-danger {
+  border-color: var(--rose-300);
+  color: var(--rose-700);
 }
 </style>

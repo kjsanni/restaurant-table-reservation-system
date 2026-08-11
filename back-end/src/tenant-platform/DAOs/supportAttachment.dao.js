@@ -12,6 +12,7 @@ supportAttachmentDAO.list = (filters = {}) => {
   if (filters.conversationId) where.conversationId = filters.conversationId;
   if (filters.ticketId) where.ticketId = filters.ticketId;
   if (filters.messageId) where.messageId = filters.messageId;
+  if (filters.filename) where.filename = filters.filename;
 
   return db.supportAttachment.findAll({
     where,

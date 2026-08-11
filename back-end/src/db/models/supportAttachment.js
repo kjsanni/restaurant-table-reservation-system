@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: "supportAttachment",
       tableName: "support_attachments",
+      timestamps: false,
       indexes: [
         { fields: ["tenantId"] },
         { fields: ["conversationId"] },
