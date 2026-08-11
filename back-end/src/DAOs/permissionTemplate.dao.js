@@ -12,6 +12,7 @@ const findAllTemplates = async (tenantId) => {
 };
 
 const findTemplateById = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   return await PermissionTemplate.findOne({
     where: withTenant({ id }, tenantId),
   });

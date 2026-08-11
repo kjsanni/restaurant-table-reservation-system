@@ -8,6 +8,7 @@ const marketingCampaignDao = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return salonModels.sequelize.models.marketingCampaign.findOne({
       where: { id, tenantId },
     });

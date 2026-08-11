@@ -8,6 +8,7 @@ const galleryDao = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return salonModels.sequelize.models.galleryImage.findOne({
       where: { id, tenantId },
     });

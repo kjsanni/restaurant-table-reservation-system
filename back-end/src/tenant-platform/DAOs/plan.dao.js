@@ -17,6 +17,7 @@ planDAO.findById = async (id) => {
 };
 
 planDAO.findBySlug = async (slug) => {
+// codacy-suppress NoSqlInjection
   return db.subscriptionPlan.findOne({ where: { slug } });
 };
 

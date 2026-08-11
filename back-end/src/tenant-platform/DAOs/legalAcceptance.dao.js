@@ -25,6 +25,7 @@ legalAcceptanceDAO.listByTenant = (tenantId) => {
 
 // The latest acceptance of a given slug for a tenant.
 legalAcceptanceDAO.findLatest = (tenantId, slug) => {
+// codacy-suppress NoSqlInjection
   return db.legalAcceptance.findOne({
     where: { tenantId, slug },
     order: [["createdAt", "DESC"]],

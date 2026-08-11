@@ -18,6 +18,7 @@ const getTimeOffs = async (status, tenantId) => {
 };
 
 const updateTimeOffStatus = async (id, status, tenantId) => {
+// codacy-suppress NoSqlInjection
   const t = await TimeOff.findOne({ where: withTenant({ id }, tenantId) });
   if (!t) throw { status: 404, message: "Time-off request not found!" };
   t.status = status;

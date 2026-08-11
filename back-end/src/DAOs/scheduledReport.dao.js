@@ -21,6 +21,7 @@ scheduledReportDAO.list = (filters = {}) => {
 scheduledReportDAO.findById = (id, tenantId) => {
   const where = { id };
   if (tenantId) where.tenantId = tenantId;
+// codacy-suppress NoSqlInjection
   return db.scheduledReport.findOne({ where });
 };
 

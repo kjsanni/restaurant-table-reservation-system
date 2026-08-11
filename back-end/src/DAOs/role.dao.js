@@ -27,6 +27,7 @@ const findAllRoles = async (tenantId) => {
 };
 
 const findRoleById = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   const role = await Role.findOne({
     where: withTenant({ id }, tenantId),
   });

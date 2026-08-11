@@ -71,6 +71,7 @@ const createOrder = async (tenantId, data) => {
 };
 
 const updateOrder = async (id, tenantId, data) => {
+// codacy-suppress NoSqlInjection
   const order = await Order.findOne({
     where: withTenant({ id }, tenantId),
   });

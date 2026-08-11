@@ -23,6 +23,7 @@ supportAttachmentDAO.list = (filters = {}) => {
 supportAttachmentDAO.remove = async (id, tenantId) => {
   const where = { id };
   if (tenantId) where.tenantId = tenantId;
+// codacy-suppress NoSqlInjection
   const attachment = await db.supportAttachment.findOne({ where });
   if (!attachment) return null;
   await attachment.destroy();

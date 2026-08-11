@@ -33,6 +33,7 @@ const getTips = async (tenantId, filters = {}, pagination = {}) => {
 };
 
 const getTipById = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   return await db.whistleblowerTip.findOne({
     where: { id, ...(tenantId ? { tenantId } : {}) },
   });

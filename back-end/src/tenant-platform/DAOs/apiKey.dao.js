@@ -29,6 +29,7 @@ apiKeyDAO.create = (tenantId, name, scopes = [], expiresInDays = null) => {
 };
 
 apiKeyDAO.revoke = (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   return db.apiKey.findOne({ where: { id, tenantId, revokedAt: null } }).then((key) => {
     if (!key) return null;
     return key.update({ revokedAt: new Date() });

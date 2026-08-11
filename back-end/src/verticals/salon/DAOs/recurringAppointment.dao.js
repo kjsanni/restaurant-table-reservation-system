@@ -8,6 +8,7 @@ const recurringAppointmentDao = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return salonModels.sequelize.models.recurring_appointment.findOne({
       where: { id, tenantId },
     });

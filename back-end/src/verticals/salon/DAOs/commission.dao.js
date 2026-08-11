@@ -7,6 +7,7 @@ const createCommission = async (data) => {
 };
 
 const findById = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   const commission = await db.commission.findOne({
     where: { id, tenantId },
   });

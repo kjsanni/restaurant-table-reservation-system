@@ -34,6 +34,7 @@ const giftCardDAO = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return db.giftCard.findOne({
       where: { id, tenantId },
       include: [

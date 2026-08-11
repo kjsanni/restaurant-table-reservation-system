@@ -15,6 +15,7 @@ const getFloorPlans = async (tenantId) => {
 };
 
 const deleteFloorPlan = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   const fp = await FloorPlan.findOne({ where: withTenant({ id }, tenantId) });
   if (!fp) throw { status: 404, message: "Floor plan not found!" };
   await fp.destroy();

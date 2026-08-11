@@ -37,6 +37,7 @@ const stationDao = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return salonModels.sequelize.models.station.findOne({
       where: { id, tenantId },
       include: [

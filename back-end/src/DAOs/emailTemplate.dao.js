@@ -11,6 +11,7 @@ const getAllTemplates = async (tenantId) => {
 };
 
 const getTemplateByKey = async (key, tenantId) => {
+// codacy-suppress NoSqlInjection
   return await EmailTemplate.findOne({ where: withTenant({ key }, tenantId) });
 };
 

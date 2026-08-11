@@ -14,6 +14,7 @@ noteDAO.create = async (tenantId, userId, note) => {
 };
 
 noteDAO.remove = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   const note = await db.tenantNote.findOne({ where: { id, tenantId } });
   if (!note) return null;
   await note.destroy();

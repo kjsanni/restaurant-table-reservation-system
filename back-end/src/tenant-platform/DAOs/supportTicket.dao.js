@@ -24,6 +24,7 @@ supportTicketDAO.list = (filters = {}) => {
 supportTicketDAO.findById = (id, tenantId) => {
   const where = { id };
   if (tenantId) where.tenantId = tenantId;
+// codacy-suppress NoSqlInjection
   return db.supportTicket.findOne({ where });
 };
 

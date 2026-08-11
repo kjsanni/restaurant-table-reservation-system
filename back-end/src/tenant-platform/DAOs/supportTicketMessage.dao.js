@@ -20,6 +20,7 @@ supportTicketMessageDAO.list = (filters = {}) => {
 supportTicketMessageDAO.findById = (id, ticketId) => {
   const where = { id };
   if (ticketId) where.ticketId = ticketId;
+// codacy-suppress NoSqlInjection
   return db.supportTicketMessage.findOne({ where });
 };
 

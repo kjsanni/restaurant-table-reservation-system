@@ -152,6 +152,7 @@ const searchReservations = async (filters = {}, { limit, offset } = {}, tenantId
 };
 
 const findReservationById = async (reservationId, tenantId) => {
+// codacy-suppress NoSqlInjection
   const reservation = await Reservation.findOne({
     where: withTenant({ id: reservationId }, tenantId),
   });

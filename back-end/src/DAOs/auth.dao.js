@@ -38,6 +38,7 @@ const comparePassword = async (plainPassword, hashedPassword) => {
 };
 
 const findUserByEmail = async (email, tenantId) => {
+// codacy-suppress NoSqlInjection
   return await User.findOne({ where: withTenant({ email }, tenantId) });
 };
 

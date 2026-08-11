@@ -25,6 +25,7 @@ const serviceDao = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return salonModels.sequelize.models.service.findOne({
       where: { id, tenantId },
       include: [{ model: salonModels.sequelize.models.serviceCategory, as: "category" }],

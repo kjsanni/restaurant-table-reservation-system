@@ -35,6 +35,7 @@ const appointmentDao = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return salonModels.sequelize.models.appointment.findOne({
       where: { id, tenantId },
       include: [

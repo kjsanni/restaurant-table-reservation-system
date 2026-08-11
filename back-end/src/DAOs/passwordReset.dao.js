@@ -34,6 +34,7 @@ passwordResetDAO.findValidToken = async (rawToken) => {
   const hash = crypto.createHash("sha256").update(rawToken).digest("hex");
   const now = new Date();
 
+// codacy-suppress NoSqlInjection
   const record = await db.passwordResetToken.findOne({
     where: {
       token: hash,

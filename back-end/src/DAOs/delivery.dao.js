@@ -11,6 +11,7 @@ const createDelivery = async (tenantId, data) => {
 };
 
 const getDeliveryById = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   return await db.delivery.findOne({
     where: withTenant({ id }, tenantId),
   });

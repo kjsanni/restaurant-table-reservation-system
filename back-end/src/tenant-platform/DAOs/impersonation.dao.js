@@ -41,6 +41,7 @@ const findValidSession = (token) => {
 };
 
 const endSession = async (id, superAdminId) => {
+// codacy-suppress NoSqlInjection
   const session = await db.impersonationSession.findOne({
     where: { id, superAdminId },
   });

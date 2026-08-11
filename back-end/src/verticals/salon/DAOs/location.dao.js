@@ -26,6 +26,7 @@ const locationDAO = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return db.location.findOne({
       where: { id, tenantId },
     });

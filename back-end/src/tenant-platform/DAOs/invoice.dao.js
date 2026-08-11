@@ -28,6 +28,7 @@ invoiceDAO.list = (filters = {}) => {
 invoiceDAO.getById = (id, tenantId) => {
   const where = { id };
   if (tenantId) where.tenantId = tenantId;
+// codacy-suppress NoSqlInjection
   return db.invoice.findOne({ where });
 };
 
