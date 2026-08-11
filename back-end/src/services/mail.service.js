@@ -39,6 +39,10 @@ const getDefaultTemplates = () => ({
     subject: "Your reservation has been cancelled",
     body: `Hi {{name}},\n\nYour reservation for {{date}} at {{time}} has been cancelled.\nIf this was a mistake, please contact us.\n{{restaurantName}}`,
   },
+  support_notification: {
+    subject: "{{subject}}",
+    body: `Hi {{name}},\n\n{{body}}\n\nIf you have any questions, please contact our support team.\n\nBest regards,\n{{restaurantName}}`,
+  },
   billing_notification: {
     subject: "{{subject}}",
     body: `Hi {{tenantName}},\n\n{{body}}\n\nIf you have any questions, please contact our support team.\n\nBest regards,\n{{restaurantName}}`,

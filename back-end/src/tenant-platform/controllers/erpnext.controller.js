@@ -131,7 +131,7 @@ const listErpnextTenantsHandler = async (req, res) => {
 
   const { count, rows } = await db.tenant.findAndCountAll({
     where,
-    attributes: ["id", "name", "slug", "plan", "settings"],
+    attributes: ["id", "name", "slug", "plan", "settings", "createdAt"],
     include: [
       {
         model: db.user,

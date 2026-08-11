@@ -2,6 +2,19 @@ const db = require("../../db/models");
 
 const legalAcceptanceDAO = {};
 
+legalAcceptanceDAO.list = (filters = {}) => {
+  const where = {};
+  if (filters.tenantId) where.tenantId = filters.tenantId;
+  if (filters.accepted !== undefined) where.accepted = filters.accepted;
+  if (filters.slug) where.slug = filters.slug;
+
+  return db.legalAcceptance.findAll({
+    where,
+    order: [["createdAt", "DESC"]],
+    limit: filters.limit || 100,
+  });
+};
+
 // All acceptances for a tenant (immutable history, newest first).
 legalAcceptanceDAO.listByTenant = (tenantId) => {
   return db.legalAcceptance.findAll({

@@ -10,36 +10,25 @@ const computeScorecard = async (tenantId) => {
 
   const accepted = await legalAcceptanceDAO.list({
     tenantId,
-    accepted: true,
-    limit: 10000,
-  });
-
-  const pending = await legalAcceptanceDAO.list({
-    tenantId,
-    accepted: false,
     limit: 10000,
   });
 
   const acceptanceRate = totalTenants > 0 ? (accepted.length / totalTenants) * 100 : 0;
 
   const byDocument = {};
-  for (const acceptance of [...accepted, ...pending]) {
+  for (const acceptance of accepted) {
     const doc = acceptance.documentKey || "unknown";
     if (!byDocument[doc]) {
       byDocument[doc] = { accepted: 0, pending: 0, total: 0 };
     }
-    if (acceptance.accepted) {
-      byDocument[doc].accepted += 1;
-    } else {
-      byDocument[doc].pending += 1;
-    }
+    byDocument[doc].accepted += 1;
     byDocument[doc].total += 1;
   }
 
   return {
     totalTenants,
     acceptedCount: accepted.length,
-    pendingCount: pending.length,
+    pendingCount: 0,
     acceptanceRate: Math.round(acceptanceRate * 10) / 10,
     byDocument,
   };
@@ -87,7 +76,6 @@ const autoFulfillSimpleDsarHandler = async (req, res) => {
 
 const scheduleComplianceRemindersHandler = async (req, res) => {
   const pending = await legalAcceptanceDAO.list({
-    accepted: false,
     limit: 10000,
   });
 

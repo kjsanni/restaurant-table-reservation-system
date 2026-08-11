@@ -1,3 +1,4 @@
+const db = require("../../db/models");
 const tenantAdminDAO = require("../DAOs/tenantAdmin.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const {
