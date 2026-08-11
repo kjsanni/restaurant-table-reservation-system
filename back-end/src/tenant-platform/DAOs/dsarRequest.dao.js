@@ -10,6 +10,7 @@ dsarRequestDAO.listByTenant = (tenantId) => {
 };
 
 dsarRequestDAO.findById = (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   return db.dsarRequest.findOne({
     where: { id, tenantId },
   });

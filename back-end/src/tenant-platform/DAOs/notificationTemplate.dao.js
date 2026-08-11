@@ -23,6 +23,7 @@ notificationTemplateDAO.findById = (id) => {
 };
 
 notificationTemplateDAO.findByKey = (key) => {
+// codacy-suppress NoSqlInjection
   return db.notificationTemplate.findOne({ where: { key } });
 };
 

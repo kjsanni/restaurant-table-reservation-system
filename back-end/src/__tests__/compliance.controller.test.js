@@ -40,8 +40,6 @@ describe("compliance.controller", () => {
     legalAcceptanceDAO.list.mockResolvedValueOnce([
       { documentKey: "privacy_policy", accepted: true },
       { documentKey: "terms_of_service", accepted: true },
-    ]).mockResolvedValueOnce([
-      { documentKey: "privacy_policy", accepted: false },
     ]);
     await complianceController.getComplianceScorecardHandler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);

@@ -6,7 +6,7 @@ const benchmarkController = require("../controllers/benchmark.controller");
 const { protect, requirePermission } = require("../../middleware/auth");
 
 router
-  .route("/benchmarks")
+  .route("/")
   .get(
     tryCatchHandler(protect),
     tryCatchHandler(requirePermission("manage_tenants")),

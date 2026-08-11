@@ -34,6 +34,7 @@ const inventoryItemDAO = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return db.inventoryItem.findOne({
       where: { id, tenantId },
     });

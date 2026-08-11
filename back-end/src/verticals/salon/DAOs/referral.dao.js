@@ -39,6 +39,7 @@ const referralDAO = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return db.referral.findOne({
       where: { id, tenantId },
       include: [

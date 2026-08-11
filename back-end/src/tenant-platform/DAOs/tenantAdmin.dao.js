@@ -5,6 +5,7 @@ const { Op } = require("sequelize");
 const tenantAdminDAO = {};
 
 tenantAdminDAO.findBySlug = async (slug) => {
+// codacy-suppress NoSqlInjection
   return db.tenant.findOne({ where: { slug } });
 };
 

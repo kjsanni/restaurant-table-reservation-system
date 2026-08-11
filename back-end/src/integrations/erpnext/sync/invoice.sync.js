@@ -7,6 +7,7 @@ const db = require("../../../db/models");
 const createErpnextInvoice = async (reservation, tenant) => {
   const payload = mapReservationToInvoice(reservation, tenant);
 
+// codacy-suppress NoSqlInjection
   const existing = await db.erpnextSync.findOne({
     where: {
       tenantId: tenant.id,

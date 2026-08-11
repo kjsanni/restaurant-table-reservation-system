@@ -3,7 +3,7 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.query(
-      `UPDATE users SET isSuperAdmin = true, totpEnabled = true, totpConfirmed = true WHERE email = 'admin@rtrs.com' AND role = 'admin'`
+      `UPDATE users SET isSuperAdmin = true, platformRoles = JSON_ARRAY('platform_admin'), totpEnabled = true, totpConfirmed = true WHERE email = 'admin@rtrs.com' AND role = 'admin'`
     );
   },
 

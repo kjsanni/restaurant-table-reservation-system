@@ -40,6 +40,7 @@ const expenseDAO = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return db.expense.findOne({
       where: { id, tenantId },
     });

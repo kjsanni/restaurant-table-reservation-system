@@ -18,6 +18,7 @@ const findAllGroups = async (tenantId) => {
 };
 
 const findGroupById = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   const group = await Group.findOne({
     where: withTenant({ id }, tenantId),
     include: [

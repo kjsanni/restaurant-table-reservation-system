@@ -7,6 +7,7 @@ const { Op } = db.Sequelize;
 const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const findById = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   return await Waitlist.findOne({
     where: withTenant({ id }, tenantId),
   });

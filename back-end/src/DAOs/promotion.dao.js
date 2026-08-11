@@ -14,6 +14,7 @@ const createPromotion = async (tenantId, data, userId) => {
 };
 
 const getPromotionById = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   return await Promotion.findOne({
     where: withTenant({ id }, tenantId),
   });

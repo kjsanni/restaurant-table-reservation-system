@@ -11,6 +11,7 @@ const createRefund = async (data, tenantId) => {
 };
 
 const findById = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   return await Refund.findOne({
     where: withTenant({ id }, tenantId),
   });

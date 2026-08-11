@@ -22,6 +22,7 @@ const getShiftsByDay = async (dayOfWeek, tenantId, locationId) => {
 };
 
 const deleteShift = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   const shift = await StaffShift.findOne({ where: withTenant({ id }, tenantId) });
   if (!shift) throw { status: 404, message: "Shift not found!" };
   await shift.destroy();

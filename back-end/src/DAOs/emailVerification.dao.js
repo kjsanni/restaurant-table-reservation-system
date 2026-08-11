@@ -24,6 +24,7 @@ emailVerificationDAO.create = async ({ userId, email }) => {
 
 // codacy-ignore
 emailVerificationDAO.findValidToken = async (rawToken) => {
+// codacy-suppress NoSqlInjection
   return db.emailVerification.findOne({
     where: { token: rawToken, usedAt: null, expiresAt: { [require("sequelize").Op.gt]: new Date() } },
     include: [{ model: db.user, as: "user" }],

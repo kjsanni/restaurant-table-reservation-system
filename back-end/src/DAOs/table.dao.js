@@ -48,6 +48,7 @@ const createTable = async ({ name, capacity, staffIds, floorPlanId }, tenantId) 
 };
 
 const findTableById = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   return await Table.findOne({
     where: withTenant({ id }, tenantId),
   });

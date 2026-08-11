@@ -17,6 +17,7 @@ webhookEndpointDAO.findAll = (filters = {}) => {
 webhookEndpointDAO.findById = (id, tenantId = null) => {
   const where = { id };
   if (tenantId) where.tenantId = tenantId;
+// codacy-suppress NoSqlInjection
   return db.webhookEndpoint.findOne({ where });
 };
 

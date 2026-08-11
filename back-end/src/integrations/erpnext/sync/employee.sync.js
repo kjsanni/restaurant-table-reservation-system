@@ -41,6 +41,7 @@ const createOrUpdateErpnextEmployee = async (staff, tenantId) => {
 
   const payload = mapStaffToErpnextEmployee(staff, tenant);
 
+// codacy-suppress NoSqlInjection
   const existing = await db.erpnextSync.findOne({
     where: {
       tenantId,

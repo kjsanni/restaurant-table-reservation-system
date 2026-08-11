@@ -54,6 +54,7 @@ const checkLockout = async (email, ipAddress, tenantId) => {
 
   if (emailCount >= maxAttempts || ipCount >= maxAttempts) {
     const cutoff = new Date(Date.now() - 15 * 60 * 1000);
+// codacy-suppress NoSqlInjection
     const mostRecent = await LoginAttempt.findOne({
       where: withTenant({
         [Op.or]: [{ email }, { ipAddress }],

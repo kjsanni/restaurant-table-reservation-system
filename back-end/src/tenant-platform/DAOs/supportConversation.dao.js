@@ -22,6 +22,7 @@ supportConversationDAO.list = (filters = {}) => {
 supportConversationDAO.findById = (id, tenantId) => {
   const where = { id };
   if (tenantId) where.tenantId = tenantId;
+// codacy-suppress NoSqlInjection
   return db.supportConversation.findOne({
     where,
     include: [

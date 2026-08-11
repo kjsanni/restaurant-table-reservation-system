@@ -31,9 +31,10 @@ const backupRoutes = require("../routes/backup.router");
 const deploymentRoutes = require("../routes/deployment.router");
 const securityRoutes = require("../routes/security.router");
 const complianceRoutes = require("../routes/compliance.router");
-const supportChatRoutes = require("../routes/supportChat.router");
+// const supportChatRoutes = require("../routes/supportChat.router");
 const supportTemplateRoutes = require("../routes/supportTemplate.router");
 const featureFlagRoutes = require("../routes/featureFlag.router");
+const tenantSupportRoutes = require("../routes/tenantSupport.router");
 const financialManagementRoutes = require("../routes/financialManagement.router");
 const whistleblowerTipRoutes = require("../routes/whistleblowerTip.router");
 const integrationAnalyticsRoutes = require("../routes/integrationAnalytics.router");
@@ -114,6 +115,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/notifications", router: notificationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/support-tickets", router: supportTicketAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/support-tickets", router: supportTicketRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/support-tickets/tenant", router: tenantSupportRoutes, middleware: [logAction, validateCsrfToken] },
     { path: "/api/v1/admin/totp", router: totpRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/sessions", router: sessionRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/incidents", router: incidentRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
@@ -122,7 +124,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/deployment", router: deploymentRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/security", router: securityRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/compliance", router: complianceRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/support-chat", router: supportChatRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    // { path: "/api/v1/admin/support-chat", router: supportChatRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/support-notes", router: supportNoteRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/support-attachments", router: supportAttachmentRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/compliance-rules", router: complianceRuleRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },

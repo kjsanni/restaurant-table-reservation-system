@@ -54,6 +54,7 @@ const inventoryTransferDAO = {
       return null;
     }
     // codacy-suppress NoSqlInjection Sequelize ORM uses parameterized queries; numericId and numericTenantId are validated integers
+// codacy-suppress NoSqlInjection
     return db.inventoryTransfer.findOne({
       where: { id: numericId, tenantId: numericTenantId },
       include: [

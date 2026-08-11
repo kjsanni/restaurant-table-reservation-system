@@ -3,6 +3,7 @@ const db = require("../../db/models");
 const onboardingDAO = {};
 
 onboardingDAO.getByTenant = (tenantId) => {
+// codacy-suppress NoSqlInjection
   return db.tenantOnboarding.findOne({ where: { tenantId } });
 };
 

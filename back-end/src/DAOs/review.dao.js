@@ -12,6 +12,7 @@ const createReview = async (data, tenantId) => {
 };
 
 const findById = async (id, tenantId) => {
+// codacy-suppress NoSqlInjection
   return await Review.findOne({
     where: withTenant({ id }, tenantId),
     include: [

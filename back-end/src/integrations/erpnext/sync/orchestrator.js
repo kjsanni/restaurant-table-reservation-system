@@ -1,13 +1,13 @@
 "use strict";
 
 const { createQueue } = require("../../../queues/queue");
-const { syncCustomer, syncAllCustomers } = require("./sync/customer.sync");
-const { syncInvoice, syncAllInvoices } = require("./sync/invoice.sync");
-const { syncPayment, syncAllPayments } = require("./sync/payment.sync");
-const { syncItem, syncAllItems } = require("./sync/item.sync");
-const { _syncStockEntry, syncStockAdjustments } = require("./sync/stock-entry.sync");
-const { syncEmployee, syncAllEmployees } = require("./sync/employee.sync");
-const { syncCrmLead, syncAllCrmLeads, syncCrmCustomer, syncAllCrmCustomers } = require("./sync/crm.sync");
+const { syncCustomer, syncAllCustomers } = require("./customer.sync");
+const { syncInvoice, syncAllInvoices } = require("./invoice.sync");
+const { syncPayment, syncAllPayments } = require("./payment.sync");
+const { syncItem, syncAllItems } = require("./item.sync");
+const { _syncStockEntry, syncStockAdjustments } = require("./stock-entry.sync");
+const { syncEmployee, syncAllEmployees } = require("./employee.sync");
+const { syncCrmLead, syncAllCrmLeads, syncCrmCustomer, syncAllCrmCustomers } = require("./crm.sync");
 
 const erpnextQueue = createQueue("erpnext-sync");
 

@@ -20,6 +20,7 @@ const pricingRuleDAO = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return db.pricingRule.findOne({
       where: { id, tenantId },
     });

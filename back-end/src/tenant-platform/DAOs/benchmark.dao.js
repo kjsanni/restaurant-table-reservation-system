@@ -38,21 +38,21 @@ benchmarkDAO.getPlatformBenchmarks = async (planFilter = null) => {
         [
           db.sequelize.fn(
             "SUM",
-            db.sequelize.literal(`CASE WHEN "resStatus" = 'missed' THEN 1 ELSE 0 END`)
+            db.sequelize.literal(`CASE WHEN resStatus = 'missed' THEN 1 ELSE 0 END`)
           ),
           "missed",
         ],
         [
           db.sequelize.fn(
             "SUM",
-            db.sequelize.literal(`CASE WHEN "resStatus" IN ('completed','seated') THEN 1 ELSE 0 END`)
+            db.sequelize.literal(`CASE WHEN resStatus IN ('completed','seated') THEN 1 ELSE 0 END`)
           ),
           "fulfilled",
         ],
         [
           db.sequelize.fn(
             "SUM",
-            db.sequelize.literal(`CASE WHEN "resStatus" = 'cancelled' THEN 1 ELSE 0 END`)
+            db.sequelize.literal(`CASE WHEN resStatus = 'cancelled' THEN 1 ELSE 0 END`)
           ),
           "cancelled",
         ],

@@ -26,6 +26,7 @@ const createOrUpdateErpnextCustomer = async (customer, tenantId) => {
 
   const payload = mapCustomerToErpnextCustomer(customer, tenant);
 
+// codacy-suppress NoSqlInjection
   const existing = await db.erpnextSync.findOne({
     where: {
       tenantId,

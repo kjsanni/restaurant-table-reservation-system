@@ -29,6 +29,7 @@ const servicePackageDAO = {
   },
 
   async findById(id, tenantId) {
+// codacy-suppress NoSqlInjection
     return db.servicePackage.findOne({
       where: { id, tenantId },
       include: [

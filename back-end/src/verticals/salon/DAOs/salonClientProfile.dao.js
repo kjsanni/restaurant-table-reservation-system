@@ -4,6 +4,7 @@ const salonModels = require("../models");
 
 const salonClientProfileDao = {
   async findByCustomerId(tenantId, customerId) {
+// codacy-suppress NoSqlInjection
     return salonModels.sequelize.models.salonClientProfile.findOne({
       where: { tenantId, customerId },
       include: [

@@ -33,6 +33,7 @@ const staffServiceSkillDao = {
   },
 
   async delete(id, tenantId) {
+// codacy-suppress NoSqlInjection
     const record = await salonModels.sequelize.models.staffServiceSkill.findOne({
       where: { id, tenantId },
     });

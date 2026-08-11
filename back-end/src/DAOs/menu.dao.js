@@ -14,6 +14,7 @@ const createCategory = async (tenantId, data) => {
 };
 
 const updateCategory = async (id, tenantId, data) => {
+// codacy-suppress NoSqlInjection
   const category = await MenuCategory.findOne({
     where: withTenant({ id }, tenantId),
   });

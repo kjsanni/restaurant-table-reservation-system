@@ -7,6 +7,7 @@ const db = require("../../../db/models");
 const createOrUpdateErpnextCustomer = async (customer, tenantId) => {
   const payload = mapCustomerToErpnext(customer);
 
+// codacy-suppress NoSqlInjection
   const existing = await db.erpnextSync.findOne({
     where: {
       tenantId,

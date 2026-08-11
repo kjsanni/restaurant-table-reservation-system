@@ -36,10 +36,15 @@ const errorHandler = (err, req, res, next) => {
       message: err?.message,
       stack: err?.stack,
     });
-    return res.status(status).json({
+    const response = {
       success: false,
       message: t("common.internalError", locale),
-    });
+    };
+    if (process.env.NODE_ENV !== "production") {
+      response.debug = err?.message;
+      response.stack = err?.stack;
+    }
+    return res.status(status).json(response);
   }
 
   return res.status(status).json({

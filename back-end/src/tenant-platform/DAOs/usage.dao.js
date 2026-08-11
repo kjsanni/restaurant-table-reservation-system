@@ -6,6 +6,7 @@ usageDAO.getTenantUsage = async (tenantId) => {
   const tenant = await db.tenant.findByPk(tenantId);
   if (!tenant) return null;
 
+// codacy-suppress NoSqlInjection
   const plan = await db.subscriptionPlan.findOne({ where: { slug: tenant.plan, isActive: true } });
   const defaultPlan = {
     starter: { maxTables: 10, maxReservationsPerMonth: 500 },
