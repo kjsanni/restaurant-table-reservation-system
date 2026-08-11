@@ -1,3 +1,6 @@
+const TEST_PASSWORD = `test-password-${Math.random().toString(36).slice(2)}`;
+const TEST_TOKEN = `test-token-${Math.random().toString(36).slice(2)}`;
+
 const {
   forgotPasswordHandler,
   resetPasswordHandler,
@@ -105,7 +108,7 @@ describe("Password Reset Controller", () => {
       passwordResetDAO.markUsed.mockResolvedValue({ id: 1 });
       passwordResetDAO.invalidateUserTokens.mockResolvedValue(undefined);
 
-      const req = { body: { token: "validtoken", password: "newpass123" }, ip: "127.0.0.1", tenant: null };
+      const req = { body: { token: TEST_TOKEN, password: TEST_PASSWORD }, ip: "127.0.0.1", tenant: null };
       const res = createRes();
 
       await resetPasswordHandler(req, res);
@@ -122,7 +125,7 @@ describe("Password Reset Controller", () => {
     it("returns 400 for invalid or expired token", async () => {
       passwordResetDAO.findValidToken.mockResolvedValue(null);
 
-      const req = { body: { token: "badtoken", password: "newpass123" }, ip: "127.0.0.1", tenant: null };
+      const req = { body: { token: TEST_TOKEN, password: TEST_PASSWORD }, ip: "127.0.0.1", tenant: null };
       const res = createRes();
 
       await resetPasswordHandler(req, res);

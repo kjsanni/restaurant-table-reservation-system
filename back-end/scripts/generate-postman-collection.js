@@ -103,7 +103,7 @@ function requestFor(route) {
 function getSampleBody(fullPath) {
   if (fullPath === "/api/v1/auth/login") {
     return JSON.stringify(
-      { email: "admin@rtrs.com", password: "password123" },
+      { email: "admin@rtrs.com", password: "{{testPassword}}" },
       null,
       2
     );
@@ -114,7 +114,7 @@ function getSampleBody(fullPath) {
         name: "New Tenant",
         slug: "new-tenant",
         email: "tenant@example.com",
-        password: "password123",
+        password: "{{testPassword}}",
         businessVertical: "restaurant",
       },
       null,
@@ -125,7 +125,7 @@ function getSampleBody(fullPath) {
     return JSON.stringify(
       {
         email: "customer@example.com",
-        password: "password123",
+        password: "{{testPassword}}",
         firstName: "John",
         lastName: "Doe",
         phone: "0241234567",
@@ -225,7 +225,7 @@ const setupFolder = {
         ],
         body: {
           mode: "raw",
-          raw: JSON.stringify({ email: "admin@rtrs.com", password: "password123" }, null, 2),
+          raw: JSON.stringify({ email: "admin@rtrs.com", password: "{{testPassword}}" }, null, 2),
           options: { raw: { language: "json" } },
         },
         url: { raw: "{{baseUrl}}/api/v1/auth/login", host: ["{{baseUrl}}"], path: ["api", "v1", "auth", "login"] },
@@ -280,6 +280,7 @@ const collection = {
     { key: "csrfToken", value: "" },
     { key: "reservationId", value: "1" },
     { key: "tableId", value: "1" },
+    { key: "testPassword", value: "password123" },
   ],
   item: [setupFolder, routesFolder],
 };

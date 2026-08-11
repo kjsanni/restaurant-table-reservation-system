@@ -1,6 +1,8 @@
-process.env.JWT_SECRET = "current-secret-key-here-1234567890123456789012345678";
-process.env.JWT_SECRET_PREVIOUS = "previous-secret-key-here-1234567890123456789012";
-process.env.REFRESH_TOKEN_SECRET = "refresh-secret-key-here-1234567890123456789012345678";
+const generateTestSecret = () => `test-secret-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+process.env.JWT_SECRET = generateTestSecret();
+process.env.JWT_SECRET_PREVIOUS = generateTestSecret();
+process.env.REFRESH_TOKEN_SECRET = generateTestSecret();
 
 jest.mock("../DAOs/auth.dao");
 jest.mock("../DAOs/role.dao");
@@ -33,9 +35,6 @@ const makeUser = (overrides = {}) => ({
 describe("auth.service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.JWT_SECRET = "current-secret-key-here-1234567890123456789012345678";
-    process.env.JWT_SECRET_PREVIOUS = "previous-secret-key-here-1234567890123456789012";
-    process.env.REFRESH_TOKEN_SECRET = "refresh-secret-key-here-1234567890123456789012345678";
   });
 
   afterEach(() => {
@@ -199,7 +198,8 @@ describe("auth.service", () => {
 
     it("creates user with hashed password", async () => {
       authDAO.createUser.mockResolvedValue({ id: 2, username: "newuser" });
-      authDAO.hashPassword.mockResolvedValue("hashed-pw");
+      const hashedPassword = `hashed-${Math.random().toString(36).slice(2)}`;
+      authDAO.hashPassword.mockResolvedValue(hashedPassword);
       authDAO.validatePasswordComplexity.mockReturnValue([]);
 
       const result = await registerUser(
@@ -211,7 +211,7 @@ describe("auth.service", () => {
 
       expect(result.id).toBe(2);
       expect(authDAO.createUser).toHaveBeenCalledWith(
-        expect.objectContaining({ username: "newuser", email: "new@test.com", password: "hashed-pw" }),
+        expect.objectContaining({ username: "newuser", email: "new@test.com", password: hashedPassword }),
         null,
         {}
       );

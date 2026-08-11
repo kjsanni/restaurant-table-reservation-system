@@ -12,8 +12,8 @@ describe("jwtRotation", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.resetModules();
-    currentSecret = "current-secret-key-here-1234567890123456789012345678";
-    previousSecret = "previous-secret-key-here-1234567890123456789012";
+    currentSecret = process.env.TEST_JWT_SECRET || `current-secret-key-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    previousSecret = process.env.TEST_JWT_SECRET_PREVIOUS || `previous-secret-key-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     process.env.JWT_SECRET = currentSecret;
     process.env.JWT_SECRET_PREVIOUS = previousSecret;
   });
