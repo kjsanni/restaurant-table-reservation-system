@@ -11,6 +11,18 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "assignedTo",
         as: "assignee",
       });
+      SupportTicket.hasMany(models.supportTicketMessage, {
+        foreignKey: "ticketId",
+        as: "messages",
+      });
+      SupportTicket.hasMany(models.supportNote, {
+        foreignKey: "ticketId",
+        as: "notes",
+      });
+      SupportTicket.hasMany(models.supportAttachment, {
+        foreignKey: "ticketId",
+        as: "attachments",
+      });
     }
   }
   SupportTicket.init(
@@ -38,6 +50,11 @@ module.exports = (sequelize, DataTypes) => {
       },
       csat: { type: DataTypes.INTEGER, allowNull: true },
       firstResponseAt: { type: DataTypes.DATE, allowNull: true },
+      category: {
+        type: DataTypes.ENUM("general", "billing", "technical", "onboarding", "salon", "restaurant"),
+        allowNull: false,
+        defaultValue: "general",
+      },
     },
     {
       sequelize,
@@ -50,6 +67,7 @@ module.exports = (sequelize, DataTypes) => {
         { fields: ["createdAt"] },
         { fields: ["source"] },
         { fields: ["resolvedAt"] },
+        { fields: ["category"] },
       ],
     }
   );

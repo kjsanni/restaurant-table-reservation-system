@@ -15,6 +15,34 @@ export const listSupportTickets = (params = {}) => {
   return API.get(`/admin/support-tickets${buildQueryString(params)}`);
 };
 
+export const getSupportTicket = (id) => {
+  return API.get(`/admin/support-tickets/${id}`);
+};
+
+export const createSupportTicket = (data) => {
+  return API.post("/admin/support-tickets", data);
+};
+
+export const updateSupportTicket = (id, data) => {
+  return API.patch(`/admin/support-tickets/${id}`, data);
+};
+
+export const deleteSupportTicket = (id) => {
+  return API.delete(`/admin/support-tickets/${id}`);
+};
+
+export const listTicketMessages = (ticketId) => {
+  return API.get(`/admin/support-tickets/${ticketId}/messages`);
+};
+
+export const sendTicketMessage = (ticketId, body) => {
+  return API.post(`/admin/support-tickets/${ticketId}/messages`, { body });
+};
+
+export const autoAssignTicket = (ticketId) => {
+  return API.post(`/admin/support-tickets/${ticketId}/auto-assign`);
+};
+
 export const listFailedPaymentAlerts = (params = {}) => {
   return API.get(`/admin/payment-alerts${buildQueryString(params)}`);
 };
@@ -25,49 +53,6 @@ export const retryFailedPayment = (id) => {
 
 export const resolveFailedPayment = (id) => {
   return API.post(`/admin/payment-alerts/${id}/resolve`);
-};
-
-export const listSupportConversations = (params = {}) => {
-  return API.get(
-    `/admin/support-chat/conversations${buildQueryString(params)}`
-  );
-};
-
-export const getSupportConversation = (id) => {
-  return API.get(`/admin/support-chat/conversations/${id}`);
-};
-
-export const createSupportConversation = (data) => {
-  return API.post("/admin/support-chat/conversations", data);
-};
-
-export const updateSupportConversation = (id, data) => {
-  return API.patch(`/admin/support-chat/conversations/${id}`, data);
-};
-
-export const listSupportMessages = (conversationId) => {
-  return API.get(
-    `/admin/support-chat/conversations/${conversationId}/messages`
-  );
-};
-
-export const sendSupportMessage = (conversationId, body) => {
-  return API.post(
-    `/admin/support-chat/conversations/${conversationId}/messages`,
-    { body }
-  );
-};
-
-export const deleteSupportConversation = (id) => {
-  return API.delete(`/admin/support-chat/conversations/${id}`);
-};
-
-export const autoAssignConversation = (id) => {
-  return API.post(`/admin/support-chat/conversations/${id}/auto-assign`);
-};
-
-export const submitCsat = (id, data) => {
-  return API.post(`/admin/support-chat/conversations/${id}/csat`, data);
 };
 
 export const listSupportNotes = (conversationId, ticketId) => {

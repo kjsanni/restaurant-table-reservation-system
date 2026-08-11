@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: "supportNote",
       tableName: "support_notes",
+      timestamps: false,
       indexes: [
         { fields: ["tenantId"] },
         { fields: ["conversationId"] },

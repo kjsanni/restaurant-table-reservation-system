@@ -1,12 +1,12 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class SupportMessage extends Model {
+  class SupportTicketMessage extends Model {
     static associate(models) {}
   }
-  SupportMessage.init(
+  SupportTicketMessage.init(
     {
-      conversationId: { type: DataTypes.INTEGER, allowNull: false },
+      ticketId: { type: DataTypes.INTEGER, allowNull: false },
       senderId: { type: DataTypes.INTEGER, allowNull: true },
       senderType: {
         type: DataTypes.ENUM("customer", "agent", "system"),
@@ -18,14 +18,14 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: "supportMessage",
-      tableName: "support_messages",
-      timestamps: { createdAt: true, updatedAt: false },
+      modelName: "supportTicketMessage",
+      tableName: "support_ticket_messages",
+      timestamps: false,
       indexes: [
-        { fields: ["conversationId"] },
+        { fields: ["ticketId"] },
         { fields: ["createdAt"] },
       ],
     }
   );
-  return SupportMessage;
+  return SupportTicketMessage;
 };
