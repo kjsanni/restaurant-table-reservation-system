@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const customerService = require("../services/customerService");
 const reservationDAO = require("../DAOs/reservation.dao");
 const { sendWhatsAppText } = require("../services/whatsapp.service");
@@ -128,7 +129,7 @@ const sendOtpHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "Phone is required" });
   }
 
-  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const code = String(crypto.randomInt(100000, 1000000));
   let customerId = null;
 
   if (firstName || email) {

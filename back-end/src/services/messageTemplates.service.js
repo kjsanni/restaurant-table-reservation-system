@@ -85,7 +85,14 @@ const loadTemplates = async (tenantId) => {
     // fall back to defaults
   }
 
-  const merged = { ...DEFAULT_TEMPLATES, ...customTemplates };
+  const sanitizedCustomTemplates = {};
+  for (const [key, value] of Object.entries(customTemplates)) {
+    if (!["__proto__", "constructor", "prototype"].includes(key)) {
+      sanitizedCustomTemplates[key] = value;
+    }
+  }
+
+  const merged = { ...DEFAULT_TEMPLATES, ...sanitizedCustomTemplates };
   const safeKey = ["__proto__", "constructor", "prototype"].includes(cacheKey) ? null : cacheKey;
   if (safeKey) {
     templateCache[safeKey] = merged;
@@ -97,7 +104,8 @@ const loadTemplates = async (tenantId) => {
 const substitute = (template, variables = {}) => {
   let result = template;
   for (const [key, value] of Object.entries(variables)) {
-    const regex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, "g");
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`\\{\\{\\s*${escapedKey}\\s*\\}\\}`, "g");
     result = result.replace(regex, String(value ?? ""));
   }
   result = result.replace(/\{\{\s*\w+\s*\}\}/g, "");

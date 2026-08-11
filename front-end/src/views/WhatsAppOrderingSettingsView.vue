@@ -228,7 +228,7 @@ const resetTemplate = (name: string, defaultBody: string) => {
               <h3>Message Templates</h3>
               <p class="settings-hint">
                 Customize the WhatsApp messages customers receive. Variables use
-                <code class="code-sample" v-html="'{{variableName}}'"></code>
+                <code class="code-sample">{{ '{{variableName}}' }}</code>
                 syntax.
               </p>
             </div>
@@ -261,7 +261,7 @@ const resetTemplate = (name: string, defaultBody: string) => {
                   v-for="v in tpl.variables"
                   :key="v"
                   class="var-chip"
-                  v-html="'{{' + v + '}}'"
+                  {{ '{{' + v + '}}' }}
                 ></code>
                 <button
                   class="reset-btn"

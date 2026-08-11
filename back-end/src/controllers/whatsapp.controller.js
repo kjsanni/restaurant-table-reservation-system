@@ -1,10 +1,22 @@
+const crypto = require("crypto");
 const whatsappOrderService = require("../services/whatsapp-order.service");
 const { verifyWebhookSignature } = require("../services/whatsapp.service");
 const whatsappAppointmentService = require("../verticals/salon/services/whatsappAppointment.service");
 const storeLocatorService = require("../verticals/salon/services/storeLocator.service");
 const logger = require("../utils/logger");
-const { _Op } = require("sequelize");
+const _Op = require("sequelize");
 const db = require("../db/models");
+
+const timingSafeEqual = (a, b) => {
+  const bufA = Buffer.from(String(a));
+  const bufB = Buffer.from(String(b));
+  if (bufA.length !== bufB.length) {
+    const dummy = Buffer.alloc(bufA.length, 0);
+    crypto.timingSafeEqual(dummy, dummy);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+};
 
 const inboundHandler = async (req, res) => {
   try {
@@ -132,7 +144,7 @@ const verifyTokenHandler = (req, res) => {
     return res.status(403).send("Forbidden");
   }
 
-  if (mode === "subscribe" && token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
+  if (mode === "subscribe" && timingSafeEqual(token, process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN)) {
     return res.status(200).type("text/plain").send(challenge);
   }
   return res.status(403).send("Forbidden");

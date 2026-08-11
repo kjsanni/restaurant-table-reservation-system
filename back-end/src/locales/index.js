@@ -307,7 +307,8 @@ function getTranslation(locale, key, values = {}) {
   }
   let result = value;
   for (const [placeholder, replacement] of Object.entries(values)) {
-    result = result.replace(new RegExp(`\\{${placeholder}\\}`, "g"), replacement);
+    const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    result = result.replace(new RegExp(`\\{${escapedPlaceholder}\\}`, "g"), replacement);
   }
   return result;
 }

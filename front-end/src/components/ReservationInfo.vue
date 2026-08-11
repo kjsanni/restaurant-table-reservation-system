@@ -24,21 +24,28 @@ const tableNames = computed(() => {
   return tables.map((t) => t.name || `T${t.id}`).join(" + ");
 });
 
-const highlightedNotes = computed(() => {
-  if (!props.reservation?.notes) return "";
+const highlightedParts = computed(() => {
+  if (!props.reservation?.notes) return [];
   const notes = props.reservation.notes;
-  const escaped = notes
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
   if (!props.searchQuery) {
-    return escaped;
+    return [{ text: notes, highlight: false }];
   }
   const queryEscaped = props.searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const regex = new RegExp(`(${queryEscaped})`, "gi");
-  return escaped.replace(regex, "<mark>$1</mark>");
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+  while ((match = regex.exec(notes)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ text: notes.slice(lastIndex, match.index), highlight: false });
+    }
+    parts.push({ text: match[1], highlight: true });
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < notes.length) {
+    parts.push({ text: notes.slice(lastIndex), highlight: false });
+  }
+  return parts;
 });
 
 const customerLink = computed(() => {
@@ -102,7 +109,12 @@ const customerLink = computed(() => {
     </div>
     <div v-if="props.reservation.notes" class="notes-wrapper">
       <p class="notes-label">Notes:</p>
-      <p class="notes-text" v-html="highlightedNotes"></p>
+      <p class="notes-text">
+        <template v-for="(part, index) in highlightedParts" :key="index">
+          <mark v-if="part.highlight">{{ part.text }}</mark>
+          <span v-else>{{ part.text }}</span>
+        </template>
+      </p>
     </div>
   </div>
 </template>
