@@ -11,6 +11,7 @@ import TenantSwitcher from "@/components/TenantSwitcher.vue";
 import { useOnlineStatus } from "@/composables/useOnlineStatus";
 import gsap from "gsap";
 import { useAnimations } from "@/composables/useAnimations";
+import NotificationDropdown from "@/components/NotificationDropdown.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -219,6 +220,7 @@ watch(
           }}</span>
         </div>
         <div class="tl-topbar-right">
+          <NotificationDropdown />
           <span v-if="status === 'offline'" class="sync-indicator offline">
             Offline
           </span>
@@ -247,28 +249,11 @@ watch(
 
       <main id="main-content" class="tl-content">
         <RouterView v-slot="{ Component }">
-          <Transition
-            name="tl-fade"
-            mode="out-in"
-            @before-enter="(el) => gsap.set(el, { opacity: 0, y: 8 })"
-            @enter="(el, done) => fadeIn(el, { duration: 'base' }).then(done)"
-            @leave="
-              (el, done) =>
-                gsap.to(el, {
-                  opacity: 0,
-                  y: -8,
-                  duration: 0.2,
-                  ease: 'power2.in',
-                  onComplete: done,
-                })
-            "
-          >
-            <component
-              v-if="Component"
-              :is="Component"
-              :key="`${String($route.name)}-${authStore.currentTenant?.id ?? 'platform'}`"
-            />
-          </Transition>
+          <component
+            v-if="Component"
+            :is="Component"
+            :key="`${String($route.name)}-${authStore.currentTenant?.id ?? 'platform'}`"
+          />
         </RouterView>
       </main>
 

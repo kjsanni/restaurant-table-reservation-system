@@ -10,32 +10,32 @@
     <div class="summary-cards">
       <div class="card">
         <div class="card-label">Total Venues</div>
-        <div class="card-value">{{ dashboard.total }}</div>
+        <div class="card-value">{{ dashboard?.total }}</div>
       </div>
       <div class="card">
         <div class="card-label">Active</div>
-        <div class="card-value success">{{ dashboard.active }}</div>
+        <div class="card-value success">{{ dashboard?.active }}</div>
       </div>
       <div class="card">
         <div class="card-label">Inactive</div>
         <div class="card-value muted">
           {{
-            dashboard.inactive ||
-            dashboard.suspended + dashboard.cancelled + dashboard.trialing
+            dashboard?.inactive ||
+            dashboard?.suspended + dashboard?.cancelled + dashboard?.trialing
           }}
         </div>
       </div>
       <div class="card">
         <div class="card-label">Past Due</div>
-        <div class="card-value warning">{{ dashboard.pastDue }}</div>
+        <div class="card-value warning">{{ dashboard?.pastDue }}</div>
       </div>
       <div class="card">
         <div class="card-label">Suspended</div>
-        <div class="card-value danger">{{ dashboard.suspended }}</div>
+        <div class="card-value danger">{{ dashboard?.suspended }}</div>
       </div>
       <div class="card">
         <div class="card-label">Venue Revenue (GHS)</div>
-        <div class="card-value">{{ formatMrr(dashboard.mrr) }}</div>
+        <div class="card-value">{{ formatMrr(dashboard?.mrr) }}</div>
       </div>
     </div>
 
@@ -136,14 +136,15 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Restaurant Type</label>
+              <label>{{ venueTypeLabel }}</label>
               <select v-model="form.restaurantType">
-                <option value="full_service">Full Service Restaurant</option>
-                <option value="quick_service">Quick Service</option>
-                <option value="cloud_kitchen">Cloud Kitchen</option>
-                <option value="dine_in_only">Dine-In Only</option>
-                <option value="cafe">Cafe</option>
-                <option value="bar">Bar / Lounge</option>
+                <option
+                  v-for="type in venueTypeOptions"
+                  :key="type.value"
+                  :value="type.value"
+                >
+                  {{ type.label }}
+                </option>
               </select>
             </div>
           </div>
@@ -327,7 +328,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useToastStore } from "@/stores/toast";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
@@ -335,7 +336,12 @@ import planAPI from "@/services/planAPI";
 import { useAuthStore } from "@/stores/auth";
 import { generateSlug } from "@/utils/slug";
 
-const toastStore = useToastStore();
+let toastStore = null;
+try {
+  toastStore = useToastStore();
+} catch {
+  toastStore = null;
+}
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -377,6 +383,43 @@ const wizardSteps = [
   { key: 2, label: "Configuration" },
   { key: 3, label: "Billing" },
 ];
+
+const RESTAURANT_TYPES = [
+  { value: "full_service", label: "Full Service Restaurant" },
+  { value: "quick_service", label: "Quick Service" },
+  { value: "cloud_kitchen", label: "Cloud Kitchen" },
+  { value: "dine_in_only", label: "Dine-In Only" },
+  { value: "cafe", label: "Cafe" },
+  { value: "bar", label: "Bar / Lounge" },
+];
+
+const SALON_TYPES = [
+  { value: "hair-dressers", label: "Hair Dressers" },
+  { value: "barbers-unisex", label: "Unisex Barbers" },
+  { value: "barbers-male", label: "Men's Barbers" },
+  { value: "barbers-female", label: "Ladies' Barbers" },
+  { value: "nail-salon", label: "Nail Salon" },
+  { value: "spa", label: "Spa & Wellness" },
+  { value: "dreadlocks", label: "Dreadlocks & Braids" },
+];
+
+const venueTypeOptions = computed(() =>
+  form.value.businessVertical === "salon" ? SALON_TYPES : RESTAURANT_TYPES
+);
+
+const venueTypeLabel = computed(() =>
+  form.value.businessVertical === "salon" ? "Salon Type" : "Restaurant Type"
+);
+
+watch(
+  () => form.value.businessVertical,
+  (vertical) => {
+    const defaults = vertical === "salon" ? "hair-dressers" : "full_service";
+    if (form.value.restaurantType !== defaults) {
+      form.value.restaurantType = defaults;
+    }
+  }
+);
 
 const filteredTenants = computed(() => {
   return tenants.value.filter((t) => {
@@ -481,9 +524,9 @@ const changeVertical = async () => {
     await loadDashboard();
     closeVerticalModal();
     selectedTenants.value = [];
-    toastStore.add("Vertical updated successfully", "success");
+    toastStore?.add("Vertical updated successfully", "success");
   } catch (err) {
-    toastStore.add(
+    toastStore?.add(
       err.response?.data?.message || "Failed to update vertical",
       "error"
     );
@@ -497,7 +540,7 @@ const createTenant = async () => {
     await loadDashboard();
     closeCreateModal();
   } catch (err) {
-    toastStore.add(
+    toastStore?.add(
       err.response?.data?.message || "Failed to create tenant",
       "error",
       4000

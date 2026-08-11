@@ -7,166 +7,230 @@
       </div>
     </div>
 
-    <div class="bulk-card">
-      <div class="bulk-header">
-        <h2>Select Tenants</h2>
-        <div class="bulk-header-actions">
-          <button @click="selectAll" class="btn-small">Select All</button>
-          <button @click="clearSelection" class="btn-small">Clear</button>
-        </div>
-      </div>
-
-      <div class="search-row">
-        <input
-          v-model="searchQuery"
-          placeholder="Search venues..."
-          class="search-input"
-        />
-      </div>
-
-      <div class="tenant-grid">
-        <label
-          v-for="tenant in filteredTenants"
-          :key="tenant.id"
-          :class="[
-            'tenant-option',
-            { selected: selectedTenants.includes(tenant.id) },
-          ]"
-        >
-          <input type="checkbox" :value="tenant.id" v-model="selectedTenants" />
-          <div class="tenant-option-info">
-            <span class="tenant-option-name">{{ tenant.name }}</span>
-            <span class="tenant-option-meta"
-              >{{ tenant.plan }} · {{ tenant.status }}</span
-            >
-          </div>
-        </label>
-      </div>
-
-      <div v-if="!filteredTenants.length" class="empty-state">
-        <p>No tenants found.</p>
-      </div>
-
-      <div class="selection-bar" v-if="selectedTenants.length">
-        <span class="selection-count"
-          >{{ selectedTenants.length }} tenant{{
-            selectedTenants.length > 1 ? "s" : ""
-          }}
-          selected</span
-        >
-      </div>
+    <div
+      v-if="loading"
+      class="loading-state"
+      aria-busy="true"
+      aria-label="Loading tenants"
+    >
+      <div class="spinner"></div>
+      <p>Loading tenants…</p>
     </div>
 
-    <div class="actions-grid">
-      <div class="action-card">
-        <h3>Bulk Suspend</h3>
-        <p class="action-desc">Suspend selected tenants immediately.</p>
-        <button
-          :disabled="!selectedTenants.length || actionLoading.suspend"
-          class="btn-danger"
-          @click="handleBulkSuspend"
-        >
-          {{ actionLoading.suspend ? "Suspending..." : "Bulk Suspend" }}
-        </button>
-      </div>
-
-      <div class="action-card">
-        <h3>Bulk Change Plan</h3>
-        <p class="action-desc">Move selected tenants to another plan.</p>
-        <select
-          v-model="bulkPlan"
-          class="filter-select"
-          :disabled="!selectedTenants.length || actionLoading.plan"
-        >
-          <option value="">Select a plan</option>
-          <option v-for="plan in plans" :key="plan.slug" :value="plan.slug">
-            {{ plan.name }} — {{ plan.currency }} {{ plan.price }} / mo
-          </option>
-        </select>
-        <button
-          :disabled="!selectedTenants.length || !bulkPlan || actionLoading.plan"
-          class="btn-primary"
-          @click="handleBulkChangePlan"
-          style="margin-top: var(--space-3)"
-        >
-          {{ actionLoading.plan ? "Updating..." : "Change Plan" }}
-        </button>
-      </div>
-
-      <div class="action-card">
-        <h3>Bulk Send Email</h3>
-        <p class="action-desc">Send an email to all selected tenants.</p>
-        <div class="form-group">
+    <template v-else>
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <label class="select-all-label">
+            <input
+              type="checkbox"
+              :checked="isAllSelected"
+              :indeterminate="isIndeterminate"
+              @change="toggleSelectAll"
+            />
+            <span>Select all</span>
+          </label>
+          <span v-if="selectedTenants.length" class="selection-count">
+            {{ selectedTenants.length }} selected
+          </span>
+        </div>
+        <div class="toolbar-right">
           <input
-            v-model="emailSubject"
-            placeholder="Subject"
-            class="filter-select"
-            :disabled="!selectedTenants.length || actionLoading.email"
+            v-model="searchQuery"
+            type="search"
+            placeholder="Search venues..."
+            class="search-input"
+            aria-label="Search tenants"
           />
-        </div>
-        <div class="form-group">
-          <textarea
-            v-model="emailBody"
-            placeholder="Message body..."
-            rows="3"
+          <select
+            v-model="filterStatus"
             class="filter-select"
-            :disabled="!selectedTenants.length || actionLoading.email"
-          ></textarea>
+            aria-label="Filter by status"
+          >
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="past_due">Past due</option>
+            <option value="suspended">Suspended</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="trialing">Trialing</option>
+          </select>
+          <button
+            v-if="selectedTenants.length"
+            @click="clearSelection"
+            class="btn-small"
+            type="button"
+          >
+            Clear selection
+          </button>
         </div>
-        <button
-          :disabled="
-            !selectedTenants.length ||
-            !emailSubject.trim() ||
-            !emailBody.trim() ||
-            actionLoading.email
-          "
-          class="btn-primary"
-          @click="handleBulkSendEmail"
-        >
-          {{ actionLoading.email ? "Sending..." : "Send Email" }}
-        </button>
       </div>
 
-      <div class="action-card">
-        <h3>Bulk Enable</h3>
-        <p class="action-desc">Re-enable suspended tenants.</p>
-        <button
-          :disabled="!selectedTenants.length || actionLoading.enable"
-          class="btn-primary"
-          @click="handleBulkEnable"
-        >
-          {{ actionLoading.enable ? "Enabling..." : "Bulk Enable" }}
-        </button>
+      <div class="table-wrapper">
+        <div class="table-inner">
+          <table class="tenant-table">
+            <caption class="sr-only">
+              Select tenants and apply bulk operations
+            </caption>
+            <thead>
+              <tr>
+                <th class="checkbox-cell" scope="col" aria-label="Select row">
+                  <input
+                    type="checkbox"
+                    :checked="isAllSelected"
+                    :indeterminate="isIndeterminate"
+                    @change="toggleSelectAll"
+                    aria-label="Select all tenants"
+                  />
+                </th>
+                <th scope="col">Name</th>
+                <th scope="col">Slug</th>
+                <th scope="col">Plan</th>
+                <th scope="col">Vertical</th>
+                <th scope="col">Status</th>
+                <th scope="col">Subscription</th>
+                <th scope="col">Next billing</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="tenant in filteredTenants" :key="tenant.id">
+                <td class="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    :value="tenant.id"
+                    v-model="selectedTenants"
+                    aria-label="Select tenant"
+                  />
+                </td>
+                <td>{{ tenant.name }}</td>
+                <td class="mono">{{ tenant.slug }}</td>
+                <td>{{ tenant.plan }}</td>
+                <td>{{ tenant.businessVertical || "—" }}</td>
+                <td>
+                  <span class="status-chip" :class="statusClass(tenant.status)">
+                    {{ tenant.status || "—" }}
+                  </span>
+                </td>
+                <td>{{ tenant.subscriptionStatus || "—" }}</td>
+                <td>{{ formatDate(tenant.currentPeriodEnd) }}</td>
+              </tr>
+              <tr v-if="!filteredTenants.length">
+                <td colspan="8" class="empty-row">No tenants found.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div class="action-card">
-        <h3>Bulk Export</h3>
-        <p class="action-desc">Export selected tenant data (JSON).</p>
-        <button
-          :disabled="!selectedTenants.length || actionLoading.export"
-          class="btn-primary"
-          @click="handleBulkExport"
-        >
-          {{ actionLoading.export ? "Exporting..." : "Export Tenants" }}
-        </button>
+      <div class="actions-panel" v-if="selectedTenants.length">
+        <section class="action-group">
+          <h3 class="action-group-title">Lifecycle</h3>
+          <div class="action-row">
+            <button
+              :disabled="actionLoading.suspend"
+              class="btn-danger"
+              @click="handleBulkSuspend"
+              type="button"
+            >
+              {{ actionLoading.suspend ? "Suspending…" : "Bulk suspend" }}
+            </button>
+            <button
+              :disabled="actionLoading.enable"
+              class="btn-primary"
+              @click="handleBulkEnable"
+              type="button"
+            >
+              {{ actionLoading.enable ? "Enabling…" : "Bulk enable" }}
+            </button>
+            <button
+              :disabled="actionLoading.delete"
+              class="btn-danger"
+              @click="handleBulkDelete"
+              type="button"
+            >
+              {{ actionLoading.delete ? "Deleting…" : "Bulk delete" }}
+            </button>
+          </div>
+        </section>
+
+        <section class="action-group">
+          <h3 class="action-group-title">Billing</h3>
+          <div class="action-row">
+            <select
+              v-model="bulkPlan"
+              class="filter-select"
+              :disabled="actionLoading.plan"
+              aria-label="Select plan"
+            >
+              <option value="">Select a plan</option>
+              <option v-for="plan in plans" :key="plan.slug" :value="plan.slug">
+                {{ plan.name }} — {{ plan.currency }} {{ plan.price }} / mo
+              </option>
+            </select>
+            <button
+              :disabled="!bulkPlan || actionLoading.plan"
+              class="btn-primary"
+              @click="handleBulkChangePlan"
+              type="button"
+            >
+              {{ actionLoading.plan ? "Updating…" : "Change plan" }}
+            </button>
+          </div>
+        </section>
+
+        <section class="action-group">
+          <h3 class="action-group-title">Communication</h3>
+          <div class="action-row">
+            <input
+              v-model="emailSubject"
+              type="text"
+              placeholder="Subject"
+              class="filter-select"
+              :disabled="actionLoading.email"
+              aria-label="Email subject"
+            />
+            <textarea
+              v-model="emailBody"
+              placeholder="Message body"
+              rows="3"
+              class="filter-select"
+              :disabled="actionLoading.email"
+              aria-label="Email body"
+            ></textarea>
+            <button
+              :disabled="
+                !emailSubject.trim() || !emailBody.trim() || actionLoading.email
+              "
+              class="btn-primary"
+              @click="handleBulkSendEmail"
+              type="button"
+            >
+              {{ actionLoading.email ? "Sending…" : "Send email" }}
+            </button>
+          </div>
+        </section>
+
+        <section class="action-group">
+          <h3 class="action-group-title">Data</h3>
+          <div class="action-row">
+            <button
+              :disabled="actionLoading.export"
+              class="btn-secondary"
+              @click="handleBulkExport"
+              type="button"
+            >
+              {{ actionLoading.export ? "Exporting…" : "Export tenants" }}
+            </button>
+          </div>
+        </section>
       </div>
 
-      <div class="action-card">
-        <h3>Bulk Delete</h3>
-        <p class="action-desc">Cancel selected tenants (soft delete).</p>
-        <button
-          :disabled="!selectedTenants.length || actionLoading.delete"
-          class="btn-danger"
-          @click="handleBulkDelete"
-        >
-          {{ actionLoading.delete ? "Deleting..." : "Bulk Delete" }}
-        </button>
+      <div
+        v-if="resultMessage"
+        :class="['result-banner', resultType]"
+        role="status"
+      >
+        {{ resultMessage }}
       </div>
-    </div>
-
-    <div v-if="resultMessage" :class="['result-banner', resultType]">
-      {{ resultMessage }}
-    </div>
+    </template>
   </div>
 </template>
 
@@ -176,9 +240,11 @@ import bulkAPI from "@/services/bulkAPI";
 import planAPI from "@/services/planAPI";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 
+const loading = ref(true);
 const tenants = ref([]);
 const plans = ref([]);
 const searchQuery = ref("");
+const filterStatus = ref("");
 const selectedTenants = ref([]);
 const bulkPlan = ref("");
 const emailSubject = ref("");
@@ -195,15 +261,37 @@ const resultMessage = ref("");
 const resultType = ref("");
 
 const filteredTenants = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
   return tenants.value.filter((t) => {
-    const q = searchQuery.value.toLowerCase();
-    return (
+    const matchesQuery =
       !q ||
       t.name?.toLowerCase().includes(q) ||
-      t.slug?.toLowerCase().includes(q)
-    );
+      t.slug?.toLowerCase().includes(q);
+    const matchesStatus =
+      !filterStatus.value || t.status === filterStatus.value;
+    return matchesQuery && matchesStatus;
   });
 });
+
+const isAllSelected = computed(() => {
+  return (
+    filteredTenants.value.length > 0 &&
+    selectedTenants.value.length === filteredTenants.value.length
+  );
+});
+
+const isIndeterminate = computed(() => {
+  const count = selectedTenants.value.length;
+  return count > 0 && count < filteredTenants.value.length;
+});
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    selectedTenants.value = [];
+  } else {
+    selectedTenants.value = filteredTenants.value.map((t) => t.id);
+  }
+};
 
 const loadTenants = async () => {
   try {
@@ -211,6 +299,8 @@ const loadTenants = async () => {
     tenants.value = response.data.collection || response.data || [];
   } catch {
     tenants.value = [];
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -223,17 +313,36 @@ const loadPlans = async () => {
   }
 };
 
-const selectAll = () => {
-  selectedTenants.value = filteredTenants.value.map((t) => t.id);
-};
-
 const clearSelection = () => {
   selectedTenants.value = [];
+  resultMessage.value = "";
 };
 
 const setResult = (message, type = "success") => {
   resultMessage.value = message;
   resultType.value = type;
+};
+
+const statusClass = (status) => {
+  const map = {
+    active: "status-ok",
+    suspended: "status-bad",
+    past_due: "status-warn",
+    cancelled: "status-muted",
+    trialing: "status-info",
+  };
+  return map[status] || "status-muted";
+};
+
+const formatDate = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 };
 
 const handleBulkSuspend = async () => {
@@ -415,37 +524,62 @@ onMounted(() => {
   margin: 0;
   font-size: var(--text-sm);
 }
-.bulk-card {
-  background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: var(--space-5);
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
 }
-.bulk-header {
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: var(--radius-full);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
   margin-bottom: var(--space-4);
+  flex-wrap: wrap;
 }
-.bulk-header h2 {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--ink);
-}
-.bulk-header-actions {
+.toolbar-left {
   display: flex;
-  gap: var(--space-2);
+  align-items: center;
+  gap: var(--space-3);
 }
-.search-row {
-  margin-bottom: var(--space-4);
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.select-all-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.selection-count {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent-600);
 }
 .search-input {
-  width: 100%;
-  max-width: 320px;
+  width: 240px;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -459,86 +593,7 @@ onMounted(() => {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
-.tenant-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--space-3);
-}
-.tenant-option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  cursor: pointer;
-  transition: all var(--duration-150) var(--ease-in-out);
-}
-.tenant-option:hover {
-  border-color: var(--accent);
-  background: var(--surface-sunken);
-}
-.tenant-option.selected {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.tenant-option input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--accent);
-}
-.tenant-option-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-0-5);
-}
-.tenant-option-name {
-  font-weight: 600;
-  font-size: var(--text-sm);
-  color: var(--ink);
-}
-.tenant-option-meta {
-  font-size: var(--text-xs);
-  color: var(--ink-muted);
-}
-.selection-bar {
-  margin-top: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  background: var(--accent-soft);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-lg);
-  color: var(--accent-600);
-  font-weight: 600;
-  font-size: var(--text-sm);
-}
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
-}
-.action-card {
-  background: var(--surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
-}
-.action-card h3 {
-  margin: 0 0 var(--space-2) 0;
-  font-family: var(--font-sans);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--ink);
-}
-.action-desc {
-  margin: 0 0 var(--space-4) 0;
-  font-size: var(--text-sm);
-  color: var(--ink-muted);
-}
 .filter-select {
-  width: 100%;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -552,12 +607,111 @@ onMounted(() => {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
-textarea.filter-select {
-  resize: vertical;
-  min-height: 80px;
+.table-wrapper {
+  overflow-x: auto;
+  white-space: nowrap;
+  margin-bottom: var(--space-5);
 }
-.form-group {
-  margin-bottom: var(--space-3);
+.table-inner {
+  display: inline-block;
+  min-width: 100%;
+  vertical-align: middle;
+}
+.tenant-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.tenant-table th {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--ink-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tenant-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--ink);
+}
+.tenant-table tbody tr:hover {
+  background: var(--surface-sunken);
+}
+.tenant-table .checkbox-cell {
+  width: 40px;
+  text-align: center;
+}
+.tenant-table .mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+.empty-row {
+  text-align: center;
+  color: var(--ink-muted);
+  padding: var(--space-6);
+}
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.status-ok {
+  background: var(--earth-100);
+  color: var(--earth-600);
+  border-color: var(--earth-200);
+}
+.status-bad {
+  background: var(--rose-100);
+  color: var(--rose-600);
+  border-color: var(--rose-200);
+}
+.status-warn {
+  background: var(--accent-100);
+  color: var(--accent-600);
+  border-color: var(--accent-200);
+}
+.status-muted {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+  border-color: var(--neutral-200);
+}
+.status-info {
+  background: var(--sky-100);
+  color: var(--sky-600);
+  border-color: var(--sky-200);
+}
+.actions-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.action-group {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+.action-group-title {
+  margin: 0 0 var(--space-3) 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+.action-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 .btn-primary {
   width: 100%;
@@ -585,6 +739,27 @@ textarea.filter-select {
   box-shadow: var(--shadow-md);
 }
 .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-secondary {
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  transition: all var(--duration-150) var(--ease-in-out);
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--neutral-300);
+  background: var(--surface-sunken);
+}
+.btn-secondary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -639,10 +814,5 @@ textarea.filter-select {
   background: var(--rose-100);
   color: var(--rose-600);
   border: 1px solid var(--rose-200);
-}
-.empty-state {
-  text-align: center;
-  padding: var(--space-6);
-  color: var(--ink-muted);
 }
 </style>
