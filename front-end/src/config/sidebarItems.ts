@@ -1226,6 +1226,25 @@ export const superAdminNavItems: NavItem[] = adminNavItems.filter(
   (item) => !item.tenantAdminOnly && !item.requiresId
 );
 
+const SUPER_ADMIN_SIDEBAR_ROUTE_NAMES = new Set([
+  "super-admin-overview",
+  "platform-analytics",
+  "platform-status",
+  "tenant-dashboard",
+  "platform-at-risk-tenants",
+  "platform-feature-flags",
+  "role-management",
+  "platform-settings",
+]);
+
+export const superAdminSidebarNavItems: NavItem[] = superAdminNavItems.filter(
+  (item) => SUPER_ADMIN_SIDEBAR_ROUTE_NAMES.has(item.routeName)
+);
+
+export const superAdminTopBarNavItems: NavItem[] = superAdminNavItems.filter(
+  (item) => !SUPER_ADMIN_SIDEBAR_ROUTE_NAMES.has(item.routeName)
+);
+
 export const tenantNavItems: NavItem[] = [
   ...authenticatedNavItems,
   ...adminNavItems.filter(

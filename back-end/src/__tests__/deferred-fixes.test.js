@@ -138,6 +138,58 @@ describe("Reservation — mergeReservationTables", () => {
   });
 });
 
+describe("Reservation — unmergeReservationTables clears table-level links", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("clears parentTableId and linkedTableIds on all merged tables and clears mergedFromTableIds on the reservation", async () => {
+    const updateSpy = jest.fn().mockResolvedValue([1]);
+    db.reservation.findOne.mockResolvedValue({
+      id: 10,
+      mergedFromTableIds: [1, 2, 3],
+      update: jest.fn().mockResolvedValue(true),
+    });
+    db.table.update.mockImplementation(updateSpy);
+
+    const result = await reservationDAO.unmergeReservationTables(10, 1);
+
+    expect(result).not.toBeNull();
+    expect(db.sequelize.transaction).toHaveBeenCalledTimes(1);
+    const tableUpdateCalls = updateSpy.mock.calls.filter(
+      (c) => c[1]?.where?.tenantId === 1 && c[1]?.transaction
+    );
+    const parentClear = tableUpdateCalls.some(
+      (c) => c[0].parentTableId === null
+    );
+    const linkedClear = tableUpdateCalls.some(
+      (c) => c[0].linkedTableIds === null
+    );
+    expect(parentClear).toBe(true);
+    expect(linkedClear).toBe(true);
+  });
+
+  it("returns null when reservation does not exist", async () => {
+    db.reservation.findOne.mockResolvedValue(null);
+    const result = await reservationDAO.unmergeReservationTables(999, 1);
+    expect(result).toBeNull();
+  });
+
+  it("skips table updates when mergedFromTableIds is empty", async () => {
+    const updateSpy = jest.fn().mockResolvedValue([1]);
+    db.reservation.findOne.mockResolvedValue({
+      id: 10,
+      mergedFromTableIds: null,
+      update: jest.fn().mockResolvedValue(true),
+    });
+    db.table.update.mockImplementation(updateSpy);
+
+    const result = await reservationDAO.unmergeReservationTables(10, 1);
+
+    expect(result).not.toBeNull();
+    expect(db.sequelize.transaction).toHaveBeenCalledTimes(1);
+    expect(db.table.update).not.toHaveBeenCalled();
+  });
+});
+
 describe("Auth — sliding window lockout", () => {
   beforeEach(() => jest.clearAllMocks());
 

@@ -342,6 +342,46 @@ const clearLoginAttempts = async (email, ipAddress, tenantId) => {
   });
 };
 
+const listPlatformUsers = async () => {
+  const { Op } = db.Sequelize;
+  return await User.findAll({
+    attributes: ["id", "username", "email", "role", "permissions", "locale", "isSuperAdmin", "platformRoles", "tenantId", "createdAt", "updatedAt"],
+    where: {
+      tenantId: null,
+      [Op.or]: [{ isSuperAdmin: true }, { platformRoles: { [Op.ne]: null } }],
+    },
+    order: [["createdAt", "DESC"]],
+  });
+};
+
+const findPlatformUserByEmail = async (email) => {
+  return await User.findOne({
+    where: { email, tenantId: null },
+  });
+};
+
+const createPlatformUser = async ({ username, email, password, role, isSuperAdmin, platformRoles }) => {
+  const errors = validatePasswordComplexity(password);
+  if (errors.length > 0) {
+    throw { status: 400, message: errors.join(". ") + "." };
+  }
+  const existing = await findPlatformUserByEmail(email);
+  if (existing) {
+    throw { status: 409, message: "A platform user with this email already exists!" };
+  }
+  const hashedPassword = await hashPassword(password);
+  return await User.create({
+    username,
+    email,
+    password: hashedPassword,
+    role: role || "admin",
+    isSuperAdmin: isSuperAdmin || false,
+    platformRoles: platformRoles || [],
+    tenantId: null,
+    emailVerified: true,
+  });
+};
+
 module.exports = {
   hashPassword,
   comparePassword,
@@ -367,6 +407,9 @@ module.exports = {
   revokeRefreshToken,
   revokeAllUserTokens,
   cleanupExpiredTokens,
+  listPlatformUsers,
+  findPlatformUserByEmail,
+  createPlatformUser,
   recordFailedLogin,
   checkLoginLockout,
   clearLoginAttempts,

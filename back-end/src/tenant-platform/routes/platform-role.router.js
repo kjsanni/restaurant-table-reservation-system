@@ -11,6 +11,12 @@ router
   .all(httpMethodError);
 
 router
+  .route("/platform/users")
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePlatformRole("platform_admin")), tryCatchHandler(platformRoleController.listPlatformUsersHandler))
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePlatformRole("platform_admin")), tryCatchHandler(platformRoleController.createPlatformUserHandler))
+  .all(httpMethodError);
+
+router
   .route("/platform/roles/assign")
   .post(tryCatchHandler(protect), tryCatchHandler(requirePlatformRole("platform_admin")), tryCatchHandler(platformRoleController.assignPlatformRoleHandler))
   .all(httpMethodError);

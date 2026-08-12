@@ -1,0 +1,39 @@
+<svg width="640" height="400" viewBox="0 0 640 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g opacity="0.15">
+    <rect x="80" y="100" width="200" height="120" rx="12" fill="#1a1410"/>
+    <rect x="120" y="120" width="120" height="12" rx="2" fill="#d97706"/>
+    <rect x="120" y="140" width="90" height="8" rx="2" fill="#d9a086"/>
+    <rect x="120" y="160" width="120" height="8" rx="2" fill="#d9a086"/>
+    <rect x="120" y="180" width="70" height="8" rx="2" fill="#d9a086"/>
+  </g>
+  <g opacity="0.12">
+    <rect x="300" y="80" width="240" height="200" rx="12" fill="#ffffff"/>
+    <rect x="320" y="100" width="200" height="12" rx="2" fill="#1a1410"/>
+    <rect x="320" y="120" width="160" height="8" rx="2" fill="#9a9389"/>
+    <rect x="320" y="140" width="200" height="8" rx="2" fill="#9a9389"/>
+    <rect x="320" y="160" width="140" height="8" rx="2" fill="#d9a086"/>
+    <rect x="320" y="180" width="200" height="8" rx="2" fill="#9a9389"/>
+    <rect x="320" y="200" width="160" height="8" rx="2" fill="#9a9389"/>
+    <rect x="320" y="220" width="200" height="8" rx="2" fill="#9a9389"/>
+    <rect x="320" y="240" width="140" height="8" rx="2" fill="#9a9389"/>
+  </g>
+  <g opacity="0.2">
+    <circle cx="500" cy="280" r="28" fill="#4d7c0f"/>
+    <path d="M500 264 L500 280 L510 288" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g opacity="0.15">
+    <circle cx="200" cy="320" r="24" fill="#d97706"/>
+    <path d="M192 312 L200 320 L208 304" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g opacity="0.08">
+    <path d="M560 120 L570 110 L580 120 L570 130 Z" fill="#4d7c0f"/>
+    <path d="M570 110 L570 140" stroke="#4d7c0f" stroke-width="2" stroke-linecap="round"/>
+    <path d="M565 140 L575 140" stroke="#4d7c0f" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g opacity="0.1">
+    <rect x="40" y="280" width="50" height="40" rx="4" fill="#1a1410"/>
+    <rect x="50" y="290" width="30" height="4" rx="2" fill="#d97706"/>
+    <rect x="50" y="300" width="30" height="4" rx="2" fill="#d9a086"/>
+    <rect x="50" y="310" width="20" height="4" rx="2" fill="#9a9389"/>
+  </g>
+</svg>

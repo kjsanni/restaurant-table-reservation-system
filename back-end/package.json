@@ -33,7 +33,10 @@
     "test:postman:prod": "BASE_URL=http://192.168.88.10 bash scripts/smoke-test.sh",
     "audit": "npm audit --omit=dev --audit-level=moderate",
     "audit:fix": "npm audit --omit=dev --audit-level=moderate --fix",
-    "lint": "eslint . --ext .js --ignore-pattern 'src/__tests__/*' --ignore-pattern 'load-tests/*' --ignore-pattern 'scripts/*'"
+    "lint": "eslint . --ext .js --ignore-pattern 'src/__tests__/*' --ignore-pattern 'load-tests/*' --ignore-pattern 'scripts/*'",
+    "codacy:analyze": "codacy-analysis analyze .",
+    "codacy:info": "codacy-analysis info",
+    "codacy:upload": "codacy-analysis upload"
   },
   "author": "Slavyan Hristov",
   "license": "ISC",
