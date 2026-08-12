@@ -41,7 +41,11 @@ async function generateAsset(asset) {
   const b64 = data.data[0].b64_json;
   const buffer = Buffer.from(b64, "base64");
 
-  const outPath = path.join(process.cwd(), "front-end/src/assets/images", path.basename(asset.path));
+  const basename = path.basename(asset.path);
+  if (!/^[\w.-]+$/.test(basename)) {
+    throw new Error(`Unsafe filename: ${asset.path}`);
+  }
+  const outPath = path.join(process.cwd(), "front-end/src/assets/images", basename);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, buffer);
   console.log(`✓ Generated ${asset.id} -> ${outPath}`);

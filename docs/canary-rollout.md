@@ -21,17 +21,17 @@ divided into four gates, each with explicit entry and exit criteria.
 
 ## Gate 0: Local Verification
 
-### Entry criteria
+### Gate 0 — Entry criteria
 - Working tree committed to a feature branch
 - Branch passes lint + typecheck + unit tests (881 tests)
 
-### Exit criteria
+### Gate 0 — Exit criteria
 - `npm run lint` — 0 errors
 - `cd front-end && npm run build` — succeeds
 - `cd back-end && npm test` — 881 tests pass
 - `npm run migrate:up` — migrations apply cleanly in local MySQL
 
-### Command
+### Gate 0 — Command
 ```bash
 cd front-end && npm run lint && npm run build && \
   cd ../back-end && npm test && npm run migrate:up --dry-run
@@ -41,11 +41,11 @@ cd front-end && npm run lint && npm run build && \
 
 ## Gate 1: Canary (5% of tenants)
 
-### Entry criteria
+### Gate 1 — Entry criteria
 - Feature deployed to canary Podman container on port 8080
 - Canary runs behind the `X-Tenant-ID` header allowlist
 
-### Exit criteria
+### Gate 0 — Exit criteria
 - No 5xx errors in Grafana dashboard for 15 minutes
 - No Sentry alerts in canary namespace
 - Health check `/health` passes for all canary pods
@@ -61,7 +61,7 @@ Use the allowlist in `config/canary-tenants.json`:
 }
 ```
 
-### Command
+### Gate 0 — Command
 ```bash
 podman run -p 8080:8080 \
   --env NODE_ENV=canary \
@@ -73,11 +73,11 @@ podman run -p 8080:8080 \
 
 ## Gate 2: Staging (100% of tenants)
 
-### Entry criteria
+### Gate 2 — Entry criteria
 - Canary gate passed
 - Feature deployed to staging namespace
 
-### Exit criteria
+### Gate 0 — Exit criteria
 - All 881 backend tests pass against staging DB
 - Frontend type-check passes in staging CI
 - QA sign-off on 5 key flows: tenant create, suspend, feature flags, onboarding, support tickets
