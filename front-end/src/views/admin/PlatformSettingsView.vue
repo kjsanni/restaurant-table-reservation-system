@@ -213,10 +213,7 @@ const TURNSITE_KEYS = new Set([
   "turnstile_secret_key",
 ]);
 
-const HIDDEN_KEYS = new Set([
-  ...TURNSITE_KEYS,
-  "global_feature_flags",
-]);
+const HIDDEN_KEYS = new Set([...TURNSITE_KEYS, "global_feature_flags"]);
 
 const isHiddenKey = (key) => HIDDEN_KEYS.has(key);
 

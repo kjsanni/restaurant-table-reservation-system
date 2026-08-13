@@ -39,6 +39,16 @@ const DEFAULTS = [
   { key: "custom_domain", value: "", domain: "branding", description: "Default custom domain for tenant white-labeling (empty = none)" },
 
   { key: "global_feature_flags", value: { table_management: true, waitlist: true, staff_scheduling: true, loyalty: true, pos_sync: false, salon_appointments: false, salon_walkins: false, salon_client_profiles: false, salon_whatsapp_booking: false, salon_module_enabled: false, erpnext_accounting: false, erpnext_stock: false, erpnext_crm: false, erpnext_hr: false, erpnext_pos: false, erpnext_manufacturing: false }, domain: "other", description: "Global default feature flags for all tenants" },
+
+  { key: "vertical_onboarding_templates", value: [
+    { id: 1, name: "Full Service Restaurant", vertical: "restaurant", description: "Complete table reservations, waitlist, delivery, and takeaway with loyalty program.", defaultSettings: { restaurantType: "full_service", businessVertical: "restaurant" }, defaultServiceModes: ["dine_in", "takeaway", "delivery"], featureFlags: { table_management: true, waitlist: true, staff_scheduling: true, loyalty: true, pos_sync: false }, createdAt: "2026-08-12T00:00:00.000Z" },
+    { id: 2, name: "Quick Service", vertical: "restaurant", description: "Takeaway and delivery-focused with POS sync enabled.", defaultSettings: { restaurantType: "quick_service", businessVertical: "restaurant" }, defaultServiceModes: ["takeaway", "delivery"], featureFlags: { table_management: false, waitlist: false, staff_scheduling: true, loyalty: true, pos_sync: true }, createdAt: "2026-08-12T00:00:00.000Z" },
+    { id: 3, name: "Cloud Kitchen", vertical: "restaurant", description: "Delivery-only operation optimized for delivery aggregators.", defaultSettings: { restaurantType: "cloud_kitchen", businessVertical: "restaurant" }, defaultServiceModes: ["delivery"], featureFlags: { table_management: false, waitlist: false, staff_scheduling: false, loyalty: true, pos_sync: true }, createdAt: "2026-08-12T00:00:00.000Z" },
+    { id: 4, name: "Dine-In Only", vertical: "restaurant", description: "Traditional restaurant with table reservations and waitlist.", defaultSettings: { restaurantType: "dine_in_only", businessVertical: "restaurant" }, defaultServiceModes: ["dine_in"], featureFlags: { table_management: true, waitlist: true, staff_scheduling: true, loyalty: false, pos_sync: false }, createdAt: "2026-08-12T00:00:00.000Z" },
+    { id: 5, name: "Cafe", vertical: "restaurant", description: "Casual cafe with dine-in and takeaway service.", defaultSettings: { restaurantType: "cafe", businessVertical: "restaurant" }, defaultServiceModes: ["dine_in", "takeaway"], featureFlags: { table_management: true, waitlist: false, staff_scheduling: true, loyalty: false, pos_sync: false }, createdAt: "2026-08-12T00:00:00.000Z" },
+    { id: 6, name: "Bar / Lounge", vertical: "restaurant", description: "Bar with reservations, walk-ins, and takeaway.", defaultSettings: { restaurantType: "bar", businessVertical: "restaurant" }, defaultServiceModes: ["dine_in", "takeaway"], featureFlags: { table_management: true, waitlist: true, staff_scheduling: true, loyalty: true, pos_sync: false }, createdAt: "2026-08-12T00:00:00.000Z" },
+    { id: 7, name: "Full Service Salon", vertical: "salon", description: "Complete salon with appointments, walk-ins, client profiles, and WhatsApp booking.", defaultSettings: { restaurantType: "salon", businessVertical: "salon", salon_payment_config: { currency: "GHS", depositRequired: false, defaultDepositPercent: 0, enabledChannels: ["card_paystack"], momoProviders: ["mtn_momo", "vodafone_cash", "airtel_tigo"] }, salon_sms_fallback_enabled: false, salon_whatsapp_config: { enabled: false, phoneNumberId: "", token: "" } }, defaultServiceModes: ["appointments", "walkins"], featureFlags: { table_management: false, waitlist: false, staff_scheduling: true, loyalty: false, pos_sync: false, salon_appointments: true, salon_walkins: true, salon_client_profiles: true, salon_whatsapp_booking: true, erpnext_accounting: false, erpnext_stock: false, erpnext_crm: false, erpnext_hr: false, erpnext_pos: false, erpnext_manufacturing: false }, createdAt: "2026-08-12T00:00:00.000Z" },
+  ], domain: "other", description: "Pre-configured vertical onboarding templates for restaurant and salon business types" },
 ];
 
 module.exports = {
@@ -56,7 +66,7 @@ module.exports = {
     }));
 
     await queryInterface.bulkInsert("settings", records);
-    console.log(`[${new Date().toISOString()}] Seeded ${records.length} platform settings across 7 domains`);
+    console.log(`[${new Date().toISOString()}] Seeded ${records.length} platform settings across 8 domains`);
   },
 
   async down(queryInterface, Sequelize) {

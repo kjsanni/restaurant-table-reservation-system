@@ -5,9 +5,7 @@
         <h1>Vertical Templates</h1>
         <p class="subtitle">Pre-configured setups per business vertical</p>
       </div>
-      <button class="btn-primary" @click="showCreate = true">
-        New Template
-      </button>
+      <button class="btn-primary" @click="createTemplate">New Template</button>
     </div>
 
     <div class="filters">
@@ -121,7 +119,6 @@ import adminAPI from "@/services/adminAPI";
 const loading = ref(false);
 const items = ref([]);
 const selectedTemplate = ref(null);
-const showCreate = ref(false);
 const saving = ref(false);
 const filterVertical = ref("");
 const searchQuery = ref("");
@@ -167,6 +164,17 @@ const editTemplate = (template) => {
     description: template.description || "",
     defaultSettings: template.defaultSettings || {},
     defaultServiceModes: template.defaultServiceModes || [],
+  };
+};
+
+const createTemplate = () => {
+  selectedTemplate.value = {};
+  form.value = {
+    name: "",
+    vertical: "restaurant",
+    description: "",
+    defaultSettings: {},
+    defaultServiceModes: [],
   };
 };
 
