@@ -37,6 +37,8 @@ const DEFAULTS = [
   { key: "platform_logo_url", value: "", domain: "branding", description: "URL to platform-wide logo asset" },
   { key: "platform_primary_color", value: "#4F46E5", domain: "branding", description: "Primary brand color (hex)" },
   { key: "custom_domain", value: "", domain: "branding", description: "Default custom domain for tenant white-labeling (empty = none)" },
+
+  { key: "global_feature_flags", value: { table_management: true, waitlist: true, staff_scheduling: true, loyalty: true, pos_sync: false, salon_appointments: false, salon_walkins: false, salon_client_profiles: false, salon_whatsapp_booking: false, salon_module_enabled: false, erpnext_accounting: false, erpnext_stock: false, erpnext_crm: false, erpnext_hr: false, erpnext_pos: false, erpnext_manufacturing: false }, domain: "other", description: "Global default feature flags for all tenants" },
 ];
 
 module.exports = {

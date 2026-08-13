@@ -213,7 +213,12 @@ const TURNSITE_KEYS = new Set([
   "turnstile_secret_key",
 ]);
 
-const isHiddenKey = (key) => TURNSITE_KEYS.has(key);
+const HIDDEN_KEYS = new Set([
+  ...TURNSITE_KEYS,
+  "global_feature_flags",
+]);
+
+const isHiddenKey = (key) => HIDDEN_KEYS.has(key);
 
 const CONFIGURE_LINKS = {
   password_policy: "/super-admin/security/password-policy",
