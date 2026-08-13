@@ -2,7 +2,8 @@
 
 import fs from "fs";
 import path from "path";
-import manifest from "../images/manifest.json" assert { type: "json" };
+import { readFileSync } from "fs";
+const manifest = JSON.parse(readFileSync(new URL("../images/manifest.json", import.meta.url), "utf8"));
 
 const IMAGE_GEN_URL = process.env.IMAGE_GEN_URL || "https://api.openai.com/v1/images/generations";
 const IMAGE_GEN_API_KEY = process.env.OPENAI_API_KEY;
