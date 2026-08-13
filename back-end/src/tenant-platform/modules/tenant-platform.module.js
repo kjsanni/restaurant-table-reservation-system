@@ -2,7 +2,7 @@
 
 const { adminMiddleware } = require("../../middleware/adminMiddleware");
 const { logAction, validateCsrfToken } = require("../../middleware");
-const { webhookLimiter } = require("../../middleware/rateLimit");
+const { webhookLimiter, adminActionLimiter } = require("../../middleware/rateLimit");
 
 const tenantAdminRoutes = require("../routes/tenantAdmin.router");
 const planRoutes = require("../routes/plan.router");
@@ -139,7 +139,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/integrations", router: integrationAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/impersonation", router: impersonationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/analytics", router: advancedAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/platform", router: platformRoleRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/platform", router: platformRoleRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/maintenance", router: maintenanceRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/trust-safety", router: trustSafetyRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/monitoring", router: monitoringRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
@@ -164,7 +164,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/encryption-keys", router: encryptionKeyRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/auto-scaling", router: autoScalingTriggerRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/compliance", router: complianceEvidenceRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/debug", router: debugRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/debug", router: debugRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/migration", router: migrationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/postmortems", router: postmortemRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/data-anonymization", router: dataAnonymizationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },

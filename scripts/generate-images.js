@@ -45,7 +45,11 @@ async function generateAsset(asset) {
   if (!/^[\w.-]+$/.test(basename)) {
     throw new Error(`Unsafe filename: ${asset.path}`);
   }
-  const outPath = path.join(process.cwd(), "front-end/src/assets/images", basename);
+  const imagesDir = path.resolve(process.cwd(), "front-end/src/assets/images");
+  const outPath = path.resolve(imagesDir, basename);
+  if (!outPath.startsWith(imagesDir + path.sep)) {
+    throw new Error(`Path traversal detected: ${asset.path}`);
+  }
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, buffer);
   console.log(`✓ Generated ${asset.id} -> ${outPath}`);
