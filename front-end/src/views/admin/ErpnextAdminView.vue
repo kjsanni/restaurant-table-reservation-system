@@ -68,7 +68,7 @@
           <div class="tenant-actions">
             <button
               class="btn-secondary btn-sm"
-              @click="viewTenantDetail(tenant.id)"
+              @click="viewTenantModules(tenant.id)"
             >
               Manage Modules
             </button>
@@ -139,8 +139,8 @@ const handleSearch = () => {
   handleSearch._timer = setTimeout(() => loadTenants(), 300);
 };
 
-const viewTenantDetail = (tenantId) => {
-  router.push(`/admin/tenants/${tenantId}`);
+const viewTenantModules = (tenantId) => {
+  router.push(`/admin/erpnext/tenants/${tenantId}/modules`);
 };
 
 onMounted(() => {

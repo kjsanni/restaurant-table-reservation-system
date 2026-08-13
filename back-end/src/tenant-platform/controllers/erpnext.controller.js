@@ -4,8 +4,24 @@ const db = require("../../db/models");
 const { validateModuleDependencies, getModuleMetadata, getEnabledModules } = require("../../integrations/erpnext/module-registry");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
+const resolveTenantById = async (id) => {
+  return db.tenant.findByPk(id, {
+    attributes: ["id", "name", "slug", "plan", "settings", "createdAt"],
+    include: [
+      {
+        model: db.user,
+        as: "users",
+        attributes: ["id", "username", "email"],
+      },
+    ],
+  });
+};
+
 const getErpnextTenantHandler = async (req, res) => {
-  const tenant = req.tenant;
+  const tenant = await resolveTenantById(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
   const featureFlags = tenant.settings?.featureFlags || {};
   const erpnextModules = getEnabledModules(featureFlags);
   const onboardingStatus = tenant.settings?.erpnextOnboardingStatus || {};
@@ -21,7 +37,10 @@ const getErpnextTenantHandler = async (req, res) => {
 };
 
 const provisionErpnextModuleHandler = async (req, res) => {
-  const tenant = req.tenant;
+  const tenant = await resolveTenantById(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
   const { module: moduleFlag } = req.body;
 
   if (!moduleFlag) {
@@ -70,7 +89,10 @@ const provisionErpnextModuleHandler = async (req, res) => {
 };
 
 const deprovisionErpnextModuleHandler = async (req, res) => {
-  const tenant = req.tenant;
+  const tenant = await resolveTenantById(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
   const { module: moduleFlag } = req.body;
 
   if (!moduleFlag) {
@@ -161,7 +183,10 @@ const listErpnextTenantsHandler = async (req, res) => {
 };
 
 const triggerSyncHandler = async (req, res) => {
-  const tenant = req.tenant;
+  const tenant = await resolveTenantById(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
   const { syncType = "full" } = req.body;
   const validTypes = ["full", "customers", "invoices", "payments", "items", "stock", "employees", "crm"];
 
@@ -175,8 +200,19 @@ const triggerSyncHandler = async (req, res) => {
     return res.status(403).json({ success: false, message: "No ERPNext modules enabled for this tenant" });
   }
 
-  const { enqueueFullSync } = require("../../integrations/erpnext/sync/orchestrator");
-  const result = await enqueueFullSync(tenant.id);
+  const orchestrator = require("../../integrations/erpnext/sync/orchestrator");
+  const syncMap = {
+    customers: orchestrator.enqueueCustomerSync,
+    invoices: orchestrator.enqueueInvoiceSync,
+    payments: orchestrator.enqueuePaymentSync,
+    items: orchestrator.enqueueItemSync,
+    stock: orchestrator.enqueueStockEntrySync,
+    employees: orchestrator.enqueueEmployeeSync,
+    crm: orchestrator.enqueueCrmCustomerSync,
+    full: orchestrator.enqueueFullSync,
+  };
+  const enqueue = syncMap[syncType];
+  const result = await enqueue(tenant.id);
 
   await platformAuditDAO.log(
     req.user?.id || null,
@@ -192,7 +228,10 @@ const triggerSyncHandler = async (req, res) => {
 };
 
 const getSyncStatusHandler = async (req, res) => {
-  const tenant = req.tenant;
+  const tenant = await resolveTenantById(req.params.id);
+  if (!tenant) {
+    return res.status(404).json({ success: false, message: "Tenant not found" });
+  }
   const onboardingStatus = tenant.settings?.erpnextOnboardingStatus || {};
   const lastSync = tenant.settings?.erpnextLastSync || null;
 

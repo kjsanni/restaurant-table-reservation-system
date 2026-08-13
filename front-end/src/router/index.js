@@ -849,6 +849,12 @@ router.addRoute({
       meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
     },
     {
+      path: "erpnext/tenants/:id/modules",
+      name: "platform-erpnext-tenant-modules",
+      component: () => import("../views/admin/ErpnextTenantModulesView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+    },
+    {
       path: "security/password-policy",
       name: "platform-password-policy",
       component: () => import("../views/admin/PasswordPolicyView.vue"),
