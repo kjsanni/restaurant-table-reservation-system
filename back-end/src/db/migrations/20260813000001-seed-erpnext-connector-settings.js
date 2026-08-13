@@ -3,7 +3,7 @@
 module.exports = {
   async up(queryInterface) {
     const existing = await queryInterface.sequelize.query(
-      'SELECT `key` FROM global_settings WHERE `key` IN (:keys)',
+      'SELECT `key` FROM `settings` WHERE `key` IN (:keys)',
       {
         replacements: { keys: ["erpnext_base_url", "erpnext_api_key", "erpnext_api_secret", "erpnext_timeout_ms", "erpnext_cache_ttl"] },
         type: queryInterface.sequelize.QueryTypes.SELECT,
@@ -35,21 +35,21 @@ module.exports = {
           key,
           value: JSON.stringify(defaultValue),
           description: descriptions[key],
-          tenant_id: null,
-          created_at: new Date(),
-          updated_at: new Date(),
+          tenantId: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         });
       }
     }
 
     if (toInsert.length > 0) {
-      await queryInterface.bulkInsert("global_settings", toInsert, {});
+      await queryInterface.bulkInsert("settings", toInsert, {});
     }
   },
 
   async down(queryInterface) {
     await queryInterface.sequelize.query(
-      'DELETE FROM global_settings WHERE `key` IN (:keys)',
+      'DELETE FROM `settings` WHERE `key` IN (:keys)',
       {
         replacements: {
           keys: [
