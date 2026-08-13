@@ -25,7 +25,6 @@
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/vue": "^0.5.0",
-    "csurf": "^1.11.1",
     "express-rate-limit": "^8.5.2"
   },
   "devDependencies": {
