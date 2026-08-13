@@ -51,11 +51,11 @@ const createOrUpdateErpnextEmployee = async (staff, tenantId) => {
   });
 
   if (existing && existing.erpnextDocname) {
-    const result = await getClient().put(`/api/resource/Employee/${existing.erpnextDocname}`, payload);
+    const result = await (await getClient()).put(`/api/resource/Employee/${existing.erpnextDocname}`, payload);
     return result.data;
   }
 
-  const result = await getClient().post("/api/resource/Employee", payload);
+  const result = await (await getClient()).post("/api/resource/Employee", payload);
   const employee = result.data.data;
 
   await db.erpnextSync.upsert({
@@ -109,11 +109,11 @@ const createOrUpdateErpnextLead = async (customer, tenantId) => {
   });
 
   if (existing && existing.erpnextDocname) {
-    const result = await getClient().put(`/api/resource/Lead/${existing.erpnextDocname}`, payload);
+    const result = await (await getClient()).put(`/api/resource/Lead/${existing.erpnextDocname}`, payload);
     return result.data;
   }
 
-  const result = await getClient().post("/api/resource/Lead", payload);
+  const result = await (await getClient()).post("/api/resource/Lead", payload);
   const lead = result.data.data;
 
   await db.erpnextSync.upsert({

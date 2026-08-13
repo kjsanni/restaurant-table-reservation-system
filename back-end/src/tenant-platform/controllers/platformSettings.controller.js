@@ -39,6 +39,11 @@ const DOMAIN_ALLOWLISTS = {
     "shaqexpress_enabled",
     "notification_channels",
     "africastalking_config",
+    "erpnext_base_url",
+    "erpnext_api_key",
+    "erpnext_api_secret",
+    "erpnext_timeout_ms",
+    "erpnext_cache_ttl",
   ],
   branding: [
     "platform_brand_name",

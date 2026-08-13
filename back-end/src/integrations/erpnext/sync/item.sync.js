@@ -20,11 +20,11 @@ const createOrUpdateErpnextItem = async (item, tenantId) => {
   });
 
   if (existing && existing.erpnextDocname) {
-    const result = await getClient().put(`/api/resource/Item/${existing.erpnextDocname}`, payload);
+    const result = await (await getClient()).put(`/api/resource/Item/${existing.erpnextDocname}`, payload);
     return result.data;
   }
 
-  const result = await getClient().post("/api/resource/Item", payload);
+  const result = await (await getClient()).post("/api/resource/Item", payload);
   const erpnextItem = result.data.data;
 
   await db.erpnextSync.upsert({

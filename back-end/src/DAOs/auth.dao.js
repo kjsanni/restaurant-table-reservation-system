@@ -200,6 +200,12 @@ const stripSensitiveSettingValue = (setting) => {
   if (key === "turnstile_secret_key" && setting.value) {
     setting.value = "[REDACTED]";
   }
+  if (key === "erpnext_api_key" && setting.value) {
+    setting.value = "[REDACTED]";
+  }
+  if (key === "erpnext_api_secret" && setting.value) {
+    setting.value = "[REDACTED]";
+  }
   return setting;
 };
 
