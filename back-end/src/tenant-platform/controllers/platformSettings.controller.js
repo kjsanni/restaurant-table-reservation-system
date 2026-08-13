@@ -101,6 +101,11 @@ const updatePlatformSettingHandler = async (req, res) => {
     req.ip
   );
 
+  if (key.startsWith("erpnext_")) {
+    const erpnextClient = require("../../integrations/erpnext/client");
+    erpnextClient.resetClient();
+  }
+
   res.status(200).json({ success: true, setting: updated });
 };
 
