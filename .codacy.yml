@@ -14,7 +14,6 @@ exclude_paths:
   - "back-end/src/verticals/salon/DAOs/staffLocationAssignment.dao.js"
   - "back-end/src/verticals/salon/controllers/inventoryTransfer.controller.js"
   - "scripts/check-legal-versions.js"
-  - "scripts/generate-images.js"
   - "drinks-vendor/**"
 
 engines:

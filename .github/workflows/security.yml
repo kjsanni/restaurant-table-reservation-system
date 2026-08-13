@@ -50,7 +50,7 @@ jobs:
       - name: Install Semgrep
         run: pip install semgrep
       - name: Run Semgrep SAST scan
-        run: semgrep --config p/security-audit --config p/owasp-top-ten --config p/nodejs --config p/vuejs --sarif --output semgrep.sarif . --exclude scripts/generate-images.js || true
+        run: semgrep --config p/security-audit --config p/owasp-top-ten --config p/nodejs --config p/vuejs --sarif --output semgrep.sarif . || true
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v4
         with:
