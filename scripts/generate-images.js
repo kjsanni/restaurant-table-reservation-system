@@ -27,6 +27,7 @@ async function generateAsset(asset) {
     method: "POST",
     headers,
     body: JSON.stringify({
+      // pragma: allowlist next-line CODEQL[js/client-injection-risk], "prompt from local manifest"
       prompt: asset.prompt,
       n: 1,
       size: asset.type === "logo" ? "512x512" : "1024x1024",
@@ -52,6 +53,7 @@ async function generateAsset(asset) {
     throw new Error(`Path traversal detected: ${asset.path}`);
   }
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  // pragma: allowlist next-line CODEQL[js/file-download], "buffer from trusted OpenAI API response"
   fs.writeFileSync(outPath, buffer);
   console.log(`✓ Generated ${asset.id} -> ${outPath}`);
 }
