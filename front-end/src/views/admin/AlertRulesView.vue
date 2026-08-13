@@ -5,7 +5,12 @@
         <h1>Alert Rules</h1>
         <p class="subtitle">Manage platform-wide alerting rules</p>
       </div>
-      <button class="btn-primary" @click="openCreate" :disabled="creating">
+      <button
+        class="btn-primary"
+        v-tap-scale
+        @click="openCreate"
+        :disabled="creating"
+      >
         {{ creating ? "Creating..." : "New Alert Rule" }}
       </button>
     </div>

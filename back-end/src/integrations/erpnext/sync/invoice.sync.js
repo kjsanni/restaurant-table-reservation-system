@@ -17,11 +17,11 @@ const createErpnextInvoice = async (reservation, tenant) => {
   });
 
   if (existing && existing.erpnextDocname) {
-    const result = await getClient().put(`/api/resource/Sales Invoice/${existing.erpnextDocname}`, payload);
+    const result = await (await getClient()).put(`/api/resource/Sales Invoice/${existing.erpnextDocname}`, payload);
     return result.data;
   }
 
-  const result = await getClient().post("/api/resource/Sales Invoice", payload);
+  const result = await (await getClient()).post("/api/resource/Sales Invoice", payload);
   const erpnextInvoice = result.data.data;
 
   await db.erpnextSync.upsert({

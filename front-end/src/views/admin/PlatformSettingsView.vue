@@ -81,7 +81,108 @@
         </div>
       </div>
 
-      <div v-for="(items, domain) in domains" :key="domain" class="domain-card">
+      <div class="domain-card erpnext-card">
+        <div class="domain-header">
+          <h3>ERPNext Connector</h3>
+          <span class="domain-count">Integration settings</span>
+        </div>
+        <div class="domain-items">
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-key">Server URL</span>
+              <span class="setting-description">
+                ERPNext server base URL (e.g., https://erp.example.com)
+              </span>
+            </div>
+            <div class="setting-actions">
+              <input
+                v-model="erpnextBaseUrl"
+                type="text"
+                class="filter-select"
+                placeholder="https://erp.example.com"
+                :disabled="saving"
+                @blur="saveErpnextSettings"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-key">API Key</span>
+              <span class="setting-description">
+                ERPNext API key for authentication (secret)
+              </span>
+            </div>
+            <div class="setting-actions">
+              <input
+                v-model="erpnextApiKey"
+                type="password"
+                class="filter-select"
+                placeholder="API key"
+                :disabled="saving"
+                @blur="saveErpnextSettings"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-key">API Secret</span>
+              <span class="setting-description">
+                ERPNext API secret for authentication (secret)
+              </span>
+            </div>
+            <div class="setting-actions">
+              <input
+                v-model="erpnextApiSecret"
+                type="password"
+                class="filter-select"
+                placeholder="API secret"
+                :disabled="saving"
+                @blur="saveErpnextSettings"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-key">Request Timeout (ms)</span>
+              <span class="setting-description">
+                Timeout for ERPNext API requests
+              </span>
+            </div>
+            <div class="setting-actions">
+              <input
+                v-model.number="erpnextTimeoutMs"
+                type="number"
+                class="filter-select"
+                :disabled="saving"
+                @blur="saveErpnextSettings"
+              />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-key">Cache TTL (seconds)</span>
+              <span class="setting-description">
+                Cache duration for ERPNext API responses
+              </span>
+            </div>
+            <div class="setting-actions">
+              <input
+                v-model.number="erpnextCacheTtl"
+                type="number"
+                class="filter-select"
+                :disabled="saving"
+                @blur="saveErpnextSettings"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        v-for="(items, domain) in visibleDomains"
+        :key="domain"
+        class="domain-card"
+      >
         <div class="domain-header">
           <h3>{{ formatDomain(domain) }}</h3>
           <span class="domain-count"
@@ -169,7 +270,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import adminAPI from "@/services/adminAPI";
 import { useRouter } from "vue-router";
 
@@ -185,6 +286,12 @@ const auditChanges = ref([]);
 const turnstileEnabled = ref(false);
 const turnstileSiteKey = ref("");
 const turnstileSecretKey = ref("");
+
+const erpnextBaseUrl = ref("");
+const erpnextApiKey = ref("");
+const erpnextApiSecret = ref("");
+const erpnextTimeoutMs = ref(30000);
+const erpnextCacheTtl = ref(300);
 
 const DOMAIN_LABELS = {
   security: "Security Posture",
@@ -203,6 +310,28 @@ const INLINE_EDITABLE = new Set([
   "currency_locale",
 ]);
 
+const TURNSITE_KEYS = new Set([
+  "turnstile_enabled",
+  "turnstile_site_key",
+  "turnstile_secret_key",
+]);
+
+const ERPNEXT_KEYS = new Set([
+  "erpnext_base_url",
+  "erpnext_api_key",
+  "erpnext_api_secret",
+  "erpnext_timeout_ms",
+  "erpnext_cache_ttl",
+]);
+
+const HIDDEN_KEYS = new Set([
+  ...TURNSITE_KEYS,
+  ...ERPNEXT_KEYS,
+  "global_feature_flags",
+]);
+
+const isHiddenKey = (key) => HIDDEN_KEYS.has(key);
+
 const CONFIGURE_LINKS = {
   password_policy: "/super-admin/security/password-policy",
   maintenance_mode: "/admin/settings",
@@ -215,6 +344,17 @@ const CONFIGURE_LINKS = {
 };
 
 const isInlineEditable = (key) => INLINE_EDITABLE.has(key);
+
+const visibleDomains = computed(() => {
+  const result = {};
+  for (const [domain, items] of Object.entries(domains.value)) {
+    const filtered = items.filter((item) => !isHiddenKey(item.key));
+    if (filtered.length > 0) {
+      result[domain] = filtered;
+    }
+  }
+  return result;
+});
 
 const isBooleanSetting = (key) => {
   const setting = Object.values(domains.value)
@@ -230,6 +370,7 @@ const loadSettings = async () => {
     const res = await adminAPI.listPlatformSettings();
     domains.value = res.data?.domains || {};
     await loadTurnstileSettings();
+    await loadErpnextSettings();
   } catch (e) {
     error.value = "Failed to load platform settings.";
   } finally {
@@ -237,17 +378,54 @@ const loadSettings = async () => {
   }
 };
 
-const loadTurnstileSettings = async () => {
+const loadErpnextSettings = async () => {
   try {
     const res = await adminAPI.get("/admin/platform-settings");
-    const settings = res.data?.domains?.security || [];
+    const settings = res.data?.domains?.integrations || [];
     const findSetting = (key) => settings.find((s) => s.key === key)?.value;
 
-    turnstileEnabled.value = Boolean(findSetting("turnstile_enabled"));
-    turnstileSiteKey.value = findSetting("turnstile_site_key") || "";
-    turnstileSecretKey.value = findSetting("turnstile_secret_key") || "";
+    erpnextBaseUrl.value = findSetting("erpnext_base_url") || "";
+    erpnextApiKey.value = findSetting("erpnext_api_key") || "";
+    erpnextApiSecret.value = findSetting("erpnext_api_secret") || "";
+    erpnextTimeoutMs.value = findSetting("erpnext_timeout_ms") || 30000;
+    erpnextCacheTtl.value = findSetting("erpnext_cache_ttl") || 300;
   } catch {
     // keep defaults
+  }
+};
+
+const saveErpnextSettings = async () => {
+  saving.value = true;
+  try {
+    await adminAPI.updatePlatformSetting(
+      "erpnext_base_url",
+      erpnextBaseUrl.value
+    );
+    if (erpnextApiKey.value) {
+      await adminAPI.updatePlatformSetting(
+        "erpnext_api_key",
+        erpnextApiKey.value
+      );
+    }
+    if (erpnextApiSecret.value) {
+      await adminAPI.updatePlatformSetting(
+        "erpnext_api_secret",
+        erpnextApiSecret.value
+      );
+    }
+    await adminAPI.updatePlatformSetting(
+      "erpnext_timeout_ms",
+      erpnextTimeoutMs.value
+    );
+    await adminAPI.updatePlatformSetting(
+      "erpnext_cache_ttl",
+      erpnextCacheTtl.value
+    );
+    await loadSettings();
+  } catch (e) {
+    error.value = "Failed to save ERPNext settings.";
+  } finally {
+    saving.value = false;
   }
 };
 

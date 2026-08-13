@@ -43,7 +43,6 @@ const erpnextHrRouter = require("../integrations/erpnext/proxies/hr.proxy");
 const erpnextCrmRouter = require("../integrations/erpnext/proxies/crm.proxy");
 const erpnextManufacturingRouter = require("../integrations/erpnext/proxies/manufacturing.proxy");
 const erpnextOnboardingRouter = require("../integrations/erpnext/onboarding/onboarding");
-const erpnextAdminRouter = require("../integrations/erpnext/admin/admin.router");
 
 const { adminMiddleware } = require("../middleware/adminMiddleware");
 
@@ -235,14 +234,6 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
     erpnextCrmRouter,
     erpnextManufacturingRouter,
     erpnextOnboardingRouter
-  );
-  app.use(
-    "/api/v1/admin/erpnext",
-    logAction,
-    validateCsrfToken,
-    adminActionLimiter,
-    adminMiddleware,
-    erpnextAdminRouter
   );
   app.use("/api/v1/notifications", generalLimiter, logAction, validateCsrfToken, notificationRouter);
   app.use("/api/v1/email-templates", generalLimiter, logAction, validateCsrfToken, emailTemplateRouter);

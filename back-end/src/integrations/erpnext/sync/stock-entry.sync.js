@@ -10,7 +10,7 @@ const createStockEntry = async (item, quantity, type, tenantId) => {
 
   const payload = mapStockEntry(item, quantity, type, tenant);
 
-  const result = await getClient().post("/api/resource/Stock Entry", payload);
+  const result = await (await getClient()).post("/api/resource/Stock Entry", payload);
   const stockEntry = result.data.data;
 
   await db.erpnextSync.upsert({

@@ -24,7 +24,7 @@ router.get("/inventory/items", tryCatchHandler(requireActiveTenant, checkErpnext
   const filters = { company: tenant.name };
   if (search) filters.name = ["like", `%${search}%`];
   try {
-    const result = await getClient().get("/api/resource/Item", {
+    const result = await (await getClient()).get("/api/resource/Item", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -41,7 +41,7 @@ router.get("/inventory/stock", tryCatchHandler(requireActiveTenant, checkErpnext
   if (itemCode) filters.item_code = itemCode;
   if (warehouse) filters.warehouse = warehouse;
   try {
-    const result = await getClient().get("/api/resource/Stock Ledger Entry", {
+    const result = await (await getClient()).get("/api/resource/Stock Ledger Entry", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -54,7 +54,7 @@ router.get("/inventory/warehouses", tryCatchHandler(requireActiveTenant, checkEr
   const tenant = req.tenant;
   const { getClient } = require("../client");
   try {
-    const result = await getClient().get("/api/resource/Warehouse", {
+    const result = await (await getClient()).get("/api/resource/Warehouse", {
       params: { filters: { company: tenant.name } },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -67,7 +67,7 @@ router.get("/inventory/stock/valuation", tryCatchHandler(requireActiveTenant, ch
   const tenant = req.tenant;
   const { getClient } = require("../client");
   try {
-    const result = await getClient().get("/api/resource/Stock Ledger Entry", {
+    const result = await (await getClient()).get("/api/resource/Stock Ledger Entry", {
       params: { filters: { company: tenant.name }, fields: ["item_code", "warehouse", "actual_qty", "valuation_rate"], limit_page_length: 1000 },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -81,7 +81,7 @@ router.get("/inventory/stock/low-stock", tryCatchHandler(requireActiveTenant, ch
   const { getClient } = require("../client");
   const { threshold = 10 } = req.query;
   try {
-    const result = await getClient().get("/api/resource/Item", {
+    const result = await (await getClient()).get("/api/resource/Item", {
       params: { filters: { company: tenant.name, actual_qty: ["<", parseInt(threshold, 10)] }, limit_page_length: 1000 },
     });
     res.status(200).json({ success: true, data: result.data });
