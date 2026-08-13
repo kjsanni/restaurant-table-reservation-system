@@ -1188,6 +1188,15 @@ export const adminNavItems: NavItem[] = [
     section: "Tenants",
   },
   {
+    routeName: "platform-roles",
+    text: "Platform Users",
+    icon: "mdi:account-group",
+    requiresAuth: true,
+    requiresPermission: "manage_tenants",
+    platformOnly: true,
+    section: "Platform",
+  },
+  {
     routeName: "role-management",
     text: "Roles",
     icon: "mdi:key",

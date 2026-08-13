@@ -81,7 +81,11 @@
         </div>
       </div>
 
-      <div v-for="(items, domain) in domains" :key="domain" class="domain-card">
+      <div
+        v-for="(items, domain) in visibleDomains"
+        :key="domain"
+        class="domain-card"
+      >
         <div class="domain-header">
           <h3>{{ formatDomain(domain) }}</h3>
           <span class="domain-count"
@@ -169,7 +173,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import adminAPI from "@/services/adminAPI";
 import { useRouter } from "vue-router";
 
@@ -203,6 +207,14 @@ const INLINE_EDITABLE = new Set([
   "currency_locale",
 ]);
 
+const TURNSITE_KEYS = new Set([
+  "turnstile_enabled",
+  "turnstile_site_key",
+  "turnstile_secret_key",
+]);
+
+const isHiddenKey = (key) => TURNSITE_KEYS.has(key);
+
 const CONFIGURE_LINKS = {
   password_policy: "/super-admin/security/password-policy",
   maintenance_mode: "/admin/settings",
@@ -215,6 +227,17 @@ const CONFIGURE_LINKS = {
 };
 
 const isInlineEditable = (key) => INLINE_EDITABLE.has(key);
+
+const visibleDomains = computed(() => {
+  const result = {};
+  for (const [domain, items] of Object.entries(domains.value)) {
+    const filtered = items.filter((item) => !isHiddenKey(item.key));
+    if (filtered.length > 0) {
+      result[domain] = filtered;
+    }
+  }
+  return result;
+});
 
 const isBooleanSetting = (key) => {
   const setting = Object.values(domains.value)

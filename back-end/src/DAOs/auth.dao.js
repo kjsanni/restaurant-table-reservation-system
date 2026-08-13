@@ -347,8 +347,10 @@ const listPlatformUsers = async () => {
   return await User.findAll({
     attributes: ["id", "username", "email", "role", "permissions", "locale", "isSuperAdmin", "platformRoles", "tenantId", "createdAt", "updatedAt"],
     where: {
-      tenantId: null,
-      [Op.or]: [{ isSuperAdmin: true }, { platformRoles: { [Op.ne]: null } }],
+      [Op.or]: [
+        { isSuperAdmin: true },
+        { tenantId: null, platformRoles: { [Op.ne]: null } },
+      ],
     },
     order: [["createdAt", "DESC"]],
   });
@@ -356,7 +358,7 @@ const listPlatformUsers = async () => {
 
 const findPlatformUserByEmail = async (email) => {
   return await User.findOne({
-    where: { email, tenantId: null },
+    where: { email, [db.Sequelize.Op.or]: [{ isSuperAdmin: true }, { tenantId: null }] },
   });
 };
 

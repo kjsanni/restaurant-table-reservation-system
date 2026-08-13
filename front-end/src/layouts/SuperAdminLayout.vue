@@ -684,8 +684,8 @@ watch(
   align-items: center;
   gap: var(--space-2);
   flex-shrink: 0;
-  max-width: calc(100% - 200px);
   overflow: visible;
+  max-width: 60%;
 }
 
 .sa-toggle-btn {
@@ -713,7 +713,6 @@ watch(
 .sa-topbar-nav {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
   height: 36px;
   overflow: visible;
 }
@@ -721,15 +720,10 @@ watch(
 .sa-topbar-nav-scroll {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-1);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding-right: var(--space-2);
-}
-
-.sa-topbar-nav-scroll::-webkit-scrollbar {
-  display: none;
+  width: 100%;
+  overflow: visible;
 }
 
 .sa-dropdown {
@@ -803,8 +797,8 @@ watch(
   top: 115%;
   left: 0;
   min-width: 240px;
-  max-height: 320px;
-  overflow-y: auto;
+  max-height: 600px;
+  overflow: visible;
   background: var(--surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -859,10 +853,10 @@ watch(
 .sa-topbar-center {
   flex: 1;
   text-align: center;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
   padding: 0 var(--space-2);
 }
 

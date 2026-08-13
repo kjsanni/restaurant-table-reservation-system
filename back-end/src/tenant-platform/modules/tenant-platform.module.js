@@ -138,7 +138,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/integrations", router: integrationAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/impersonation", router: impersonationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/analytics", router: advancedAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/platform-roles", router: platformRoleRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/platform", router: platformRoleRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/maintenance", router: maintenanceRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/trust-safety", router: trustSafetyRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/monitoring", router: monitoringRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },

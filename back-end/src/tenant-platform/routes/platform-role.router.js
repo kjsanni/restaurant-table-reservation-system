@@ -6,23 +6,23 @@ const platformRoleController = require("../../controllers/platform-role.controll
 const { protect, requirePlatformRole } = require("../../middleware/auth");
 
 router
-  .route("/platform/roles")
+  .route("/roles")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePlatformRole("platform_admin")), tryCatchHandler(platformRoleController.listPlatformRolesHandler))
   .all(httpMethodError);
 
 router
-  .route("/platform/users")
+  .route("/users")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePlatformRole("platform_admin")), tryCatchHandler(platformRoleController.listPlatformUsersHandler))
   .post(tryCatchHandler(protect), tryCatchHandler(requirePlatformRole("platform_admin")), tryCatchHandler(platformRoleController.createPlatformUserHandler))
   .all(httpMethodError);
 
 router
-  .route("/platform/roles/assign")
+  .route("/roles/assign")
   .post(tryCatchHandler(protect), tryCatchHandler(requirePlatformRole("platform_admin")), tryCatchHandler(platformRoleController.assignPlatformRoleHandler))
   .all(httpMethodError);
 
 router
-  .route("/platform/roles/revoke")
+  .route("/roles/revoke")
   .post(tryCatchHandler(protect), tryCatchHandler(requirePlatformRole("platform_admin")), tryCatchHandler(platformRoleController.revokePlatformRoleHandler))
   .all(httpMethodError);
 
