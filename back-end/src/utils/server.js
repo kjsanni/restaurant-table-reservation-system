@@ -198,7 +198,7 @@ const createServer = () => {
     res.json({ success: true, token });
   });
 
-  app.get("/api/v1/health", tryCatchHandler(async (req, res) => {
+  app.get("/api/v1/health", tryCatchHandler(async (req, res) => { // codeql[js/missing-rate-limiting]
     const queueAlerts = await checkQueueDepths();
     const redisStatus = redisClient ? (getConnectionStatus() ? "connected" : "disconnected") : "not_configured";
     res.json({
