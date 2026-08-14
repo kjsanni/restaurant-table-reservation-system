@@ -127,7 +127,7 @@ walletPassRequestController.listRequests = async (req, res) => {
   const tenantId = req.tenant?.id;
   const filters = {
     status: req.query.status,
-    limit: req.query.limit ? parseInt(req.query.limit, 10) : 50,
+    limit: Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200),
   };
 
   const requests = await passSigningRequestDAO.listByTenant(tenantId, filters);
@@ -193,7 +193,7 @@ walletPassRequestController.getRequest = async (req, res) => {
 walletPassRequestController.listPendingApproval = async (req, res) => {
   const filters = {
     tenantId: req.query.tenantId ? parseInt(req.query.tenantId, 10) : null,
-    limit: req.query.limit ? parseInt(req.query.limit, 10) : 100,
+    limit: Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 200),
   };
 
   const requests = await passSigningRequestDAO.listPendingApproval(filters);

@@ -62,7 +62,8 @@ class AppleWalletAdapter extends WalletPassAdapter {
   setPhotoOnPass(passJson, qrCodeData) {
     if (!qrCodeData.photoRef) return;
     const photoRef = String(qrCodeData.photoRef);
-    const photoPath = path.join(__dirname, "../../../uploads/event-photos", `${photoRef}.jpg`); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - resolved below with path traversal check
+    if (!/^[a-f0-9]{64}$/i.test(photoRef)) return;
+    const photoPath = path.join(__dirname, "../../../uploads/event-photos", `${photoRef}.jpg`); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - validated as SHA-256 hex above
     const resolvedPhoto = path.resolve(photoPath);
     const resolvedAssets = path.resolve(path.join(__dirname, "../../../uploads/event-photos")); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - static __dirname path
     if (resolvedPhoto.startsWith(resolvedAssets + path.sep) && fs.existsSync(resolvedPhoto)) {
@@ -86,7 +87,7 @@ class AppleWalletAdapter extends WalletPassAdapter {
           token: qrCodeData.tokenHash,
           eventId: qrCodeData.eventId,
           signature: crypto
-            .createHmac("sha256", certs.qrSecret || "dev-qr-secret-change-me")
+            .createHmac("sha256", certs.qrSecret)
             .update(qrCodeData.tokenHash)
             .digest("hex"),
         }),
@@ -201,7 +202,7 @@ class AppleWalletAdapter extends WalletPassAdapter {
       pkpassBuffer = await this.createPKPass(passJsonPath, certs);
     } catch (err) {
       logger.error("Apple Wallet pass signing failed", { error: err.message, tenantId });
-      throw new Error(`Apple pass signing error: ${err.message}`);
+      throw new Error("Apple pass signing failed");
     }
 
     const outputFile = path.join(tempDir, "ticket.pkpass"); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - static filename

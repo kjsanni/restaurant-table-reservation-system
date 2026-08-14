@@ -1,6 +1,7 @@
 "use strict";
 
 const db = require("../../db/models");
+const { encrypt, decrypt } = require("../../utils/encryption");
 
 const signedPassArtifactDAO = {};
 
@@ -12,7 +13,7 @@ signedPassArtifactDAO.create = async ({ requestId, platform, artifactType, artif
     status,
     artifactType,
     artifactPath,
-    accessToken,
+    accessToken: accessToken ? encrypt(accessToken) : null,
     error,
   });
 };
@@ -29,6 +30,11 @@ signedPassArtifactDAO.findByRequestAndPlatform = (requestId, platform) => {
     where: { requestId, platform },
     order: [["createdAt", "DESC"]],
   });
+};
+
+signedPassArtifactDAO.getDecryptedAccessToken = (artifact) => {
+  if (!artifact || !artifact.accessToken) return null;
+  return decrypt(artifact.accessToken);
 };
 
 module.exports = signedPassArtifactDAO;

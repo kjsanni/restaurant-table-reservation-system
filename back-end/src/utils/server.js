@@ -11,6 +11,8 @@ const emailVerificationRouter = require("../routes/emailVerification.router");
 const auditLogRouter = require("../routes/auditLog.router");
 const rbacRouter = require("../routes/rbac.router");
 const adminRouter = require("../routes/admin.router");
+const walletPassAdminRouter = require("../routes/walletPassAdmin.router");
+const walletPassRequestRouter = require("../verticals/event/routes/walletPassRequest.router");
 const notificationRouter = require("../routes/notification.router");
 const emailTemplateRouter = require("../routes/emailTemplate.router");
 const webhookRouter = require("../routes/webhook.router");
@@ -135,7 +137,7 @@ const createServer = () => {
     clearInterval(tenantCronInterval);
     clearInterval(salonCronInterval);
     clearInterval(backupCronInterval);
-  clearInterval(scheduledReportsCronInterval);
+    clearInterval(scheduledReportsCronInterval);
     if (io) io.close();
     if (logStream && typeof logStream.end === "function") {
       logStream.end();
@@ -190,7 +192,7 @@ const createServer = () => {
         // nosemgrep: javascript.lang.security.audit.cookie-http-only-disabled - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
         httpOnly: false, // guardrails-disable-line - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
         secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "lax" : false,
+        sameSite: "lax",
         path: "/",
         maxAge: 24 * 60 * 60 * 1000,
       });
@@ -254,6 +256,21 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
     adminActionLimiter,
     adminMiddleware,
     erpnextAdminRouter
+  );
+  app.use(
+    "/api/v1/admin/wallet-pass",
+    logAction,
+    validateCsrfToken,
+    adminActionLimiter,
+    adminMiddleware,
+    walletPassAdminRouter
+  );
+  app.use(
+    "/api/v1/events",
+    generalLimiter,
+    logAction,
+    validateCsrfToken,
+    walletPassRequestRouter
   );
   app.use("/api/v1/notifications", generalLimiter, logAction, validateCsrfToken, notificationRouter);
   app.use("/api/v1/email-templates", generalLimiter, logAction, validateCsrfToken, emailTemplateRouter);
