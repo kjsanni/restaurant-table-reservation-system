@@ -711,6 +711,19 @@ router.addRoute({
       meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
     },
     {
+      path: "tenants/:id/migrations",
+      name: "tenant-migrations",
+      component: () =>
+        import("../views/admin/TenantMigrationDashboardView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+    },
+    {
+      path: "tenants/:id/provisioning",
+      name: "tenant-provisioning",
+      component: () => import("../views/admin/ProvisioningView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+    },
+    {
       path: "tenants/:id/api-keys",
       name: "tenant-api-keys",
       component: () => import("../views/admin/ApiKeyManagementView.vue"),
@@ -1173,6 +1186,13 @@ router.addRoute({
       path: "benchmarks",
       name: "platform-benchmarks",
       component: () => import("../views/admin/BenchmarkView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+    },
+    {
+      path: "events",
+      name: "platform-events",
+      component: () =>
+        import("../views/admin/SuperAdminEventManagementView.vue"),
       meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
     },
   ],
@@ -1793,6 +1813,100 @@ const customerPortalRoutes = [
     name: "customer-packages",
     component: () => import("../views/customer/CustomerPortalPackagesView.vue"),
     meta: { requiresAuth: true, requiresVertical: "salon", standalone: true },
+  },
+  {
+    path: "/portal/events",
+    name: "customer-events",
+    component: () => import("../views/customer/CustomerPortalEventsView.vue"),
+    meta: { requiresAuth: true, requiresVertical: "event", standalone: true },
+  },
+  {
+    path: "/portal/events/:id",
+    name: "customer-event-detail",
+    component: () =>
+      import("../views/customer/CustomerPortalEventDetailView.vue"),
+    meta: { requiresAuth: true, requiresVertical: "event", standalone: true },
+  },
+  {
+    path: "/events/manage",
+    name: "event-management",
+    component: () => import("../views/tenant/EventManagementView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "manage_events",
+    },
+  },
+  {
+    path: "/events/new",
+    name: "event-create",
+    component: () => import("../views/tenant/EventFormView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "manage_events",
+    },
+  },
+  {
+    path: "/events/:id/edit",
+    name: "event-edit",
+    component: () => import("../views/tenant/EventFormView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "manage_events",
+    },
+  },
+  {
+    path: "/events/:eventId/bookings",
+    name: "event-bookings",
+    component: () => import("../views/tenant/EventBookingManagementView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "manage_events",
+    },
+  },
+  {
+    path: "/events/:eventId/guests",
+    name: "event-guests",
+    component: () => import("../views/tenant/EventGuestListView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "manage_events",
+    },
+  },
+  {
+    path: "/events/:eventId/qr-codes",
+    name: "event-qr-codes",
+    component: () => import("../views/tenant/EventQRManageView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "manage_events",
+    },
+  },
+  {
+    path: "/events/:eventId/ticket-types",
+    name: "event-ticket-types",
+    component: () => import("../views/tenant/EventTicketTypesView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "manage_events",
+    },
+  },
+  {
+    path: "/events/:eventId/scanner",
+    name: "event-scanner",
+    component: () => import("../views/tenant/EventCheckinScannerView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "manage_events",
+      standalone: true,
+    },
   },
 ];
 
