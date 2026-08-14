@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const helmet = require("helmet");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -252,6 +253,17 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
   app.use("/api/v1/webhooks/shaqexpress", logAction, webhookLimiter, shaqexpressRouter);
   app.use("/api/v1/sync", generalLimiter, logAction, syncLimiter, require("../routes/sync.router"));
   app.use("/api/v1/legal", generalLimiter, legalRouter);
+
+  const frontendDistPath = path.resolve(__dirname, "../../../front-end/dist");
+  app.use(express.static(frontendDistPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendDistPath, "index.html"), (err) => {
+      if (err) {
+        res.status(404).send("Frontend build not found. Run 'npm run build' in front-end/.");
+      }
+    });
+  });
+
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
   }

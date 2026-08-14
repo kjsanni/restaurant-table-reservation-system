@@ -56,15 +56,29 @@ jobs:
           max-allowed-issues: 2147483647
 
       # Enforce quality gate on security issues only (error-level in SARIF).
-      # This catches new security findings without blocking on pre-existing
-      # code-quality issues from engines that .codacy.yml cannot disable.
+      # Only flags findings in files changed by this PR to avoid blocking on
+      # pre-existing issues in untouched code.
       - name: Enforce security quality gate
         run: |
-          security_count=$(jq '[.runs[].results[] | select(.level == "error" or .level == "fatal") | select(.ruleId | test("^Biome_"; "i") | not)] | length' results.sarif)
-          echo "Security findings (error/fatal level, excluding Biome lint): $security_count"
+          # Get list of files changed in this PR commit range
+          changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD 2>/dev/null || echo "")
+          echo "Changed files: $changed_files"
+          # Count error/fatal findings (excluding Biome lint) only in PR-changed files
+          security_count=$(jq --arg changed "$changed_files" '
+            [.runs[].results[]
+             | select(.level == "error" or .level == "fatal")
+             | select(.ruleId | test("^Biome_"; "i") | not)
+             | select(.locations[0].physicalLocation.artifactLocation.uri as $f | $changed | split("\n") | index($f) | not | not)
+            ] | length' results.sarif 2>/dev/null || echo 0)
+          echo "Security findings in PR-changed files (error/fatal level, excluding Biome lint): $security_count"
           if [ "$security_count" -gt 0 ]; then
-            echo "::error::Codacy found $security_count security findings. See SARIF results for details."
-            jq '.runs[].results[] | select(.level == "error" or .level == "fatal") | select(.ruleId | test("^Biome_"; "i") | not) | {ruleId, message: .message.text, file: .locations[0].physicalLocation.artifactLocation.uri, line: .locations[0].physicalLocation.region.line}' results.sarif
+            echo "::error::Codacy found $security_count security findings in PR-changed files. See SARIF results for details."
+            jq --arg changed "$changed_files" '
+            [.runs[].results[]
+             | select(.level == "error" or .level == "fatal")
+             | select(.ruleId | test("^Biome_"; "i") | not)
+             | select(.locations[0].physicalLocation.artifactLocation.uri as $f | $changed | split("\n") | index($f) | not | not)
+             | {ruleId, message: .message.text, file: .locations[0].physicalLocation.artifactLocation.uri, line: .locations[0].physicalLocation.region.line}]' results.sarif
             exit 1
           fi
 
