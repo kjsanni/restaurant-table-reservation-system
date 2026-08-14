@@ -361,13 +361,60 @@ const rollbackStep = async (pipeline, stepIndex, tenant) => {
   }
 };
 
-const startProvisioning = async (tenantId, actorUserId = null) => {
+const validateTenant = async (tenantId) => {
   const tenant = await db.tenant.findByPk(tenantId);
   if (!tenant) {
     const err = new Error("Tenant not found");
     err.status = 404;
     throw err;
   }
+  return tenant;
+};
+
+const executeProvisioningSteps = async (pipeline, tenant, startIndex, tenantId, actorUserId) => {
+  for (let i = startIndex; i < STEPS.length; i++) {
+    pipeline.currentStepIndex = i;
+    if (pipeline.status === "paused") {
+      return { paused: true };
+    }
+    try {
+      await runStep(pipeline, i, tenant);
+    } catch (err) {
+      await rollbackAll(pipeline, tenant);
+      pipeline.status = "failed";
+      pipeline.error = err.message;
+      await provisioningPipelineDAO.upsert(pipeline);
+      await platformAuditDAO.log(
+        actorUserId, "provisioning.failed", "tenant", tenantId, tenantId,
+        { step: STEPS[i].key, error: err.message }, null
+      );
+      return { failed: true, err };
+    }
+  }
+  return { completed: true };
+};
+
+const finalizeProvisioning = async (pipeline, actorUserId, tenantId) => {
+  if (pipeline.status === "paused") {
+    await provisioningPipelineDAO.upsert(pipeline);
+    await platformAuditDAO.log(
+      actorUserId, "provisioning.paused", "tenant", tenantId, tenantId,
+      { currentStep: STEPS[pipeline.currentStepIndex]?.key }, null
+    );
+    return;
+  }
+
+  pipeline.status = "completed";
+  pipeline.completedAt = new Date();
+  await provisioningPipelineDAO.upsert(pipeline);
+  await platformAuditDAO.log(
+    actorUserId, "provisioning.completed", "tenant", tenantId, tenantId,
+    { durationMs: pipeline.completedAt - pipeline.startedAt }, null
+  );
+};
+
+const startProvisioning = async (tenantId, actorUserId = null) => {
+  const tenant = await validateTenant(tenantId);
 
   let pipeline = await getPipeline(tenantId);
   if (!pipeline) {
@@ -396,56 +443,10 @@ const startProvisioning = async (tenantId, actorUserId = null) => {
     await updateStepStatus(pipeline, i, "pending");
   }
 
-  for (let i = 0; i < STEPS.length; i++) {
-    if (pipeline.status === "paused") {
-      break;
-    }
-    try {
-      await runStep(pipeline, i, tenant);
-    } catch (err) {
-      await rollbackAll(pipeline, tenant);
-      pipeline.status = "failed";
-      pipeline.error = err.message;
-      await provisioningPipelineDAO.upsert(pipeline);
-      await platformAuditDAO.log(
-        actorUserId,
-        "provisioning.failed",
-        "tenant",
-        tenantId,
-        tenantId,
-        { step: STEPS[i].key, error: err.message },
-        null
-      );
-      return pipeline;
-    }
-  }
+  const result = await executeProvisioningSteps(pipeline, tenant, 0, tenantId, actorUserId);
+  if (result.failed) return pipeline;
 
-  if (pipeline.status === "paused") {
-    await provisioningPipelineDAO.upsert(pipeline);
-    await platformAuditDAO.log(
-      actorUserId,
-      "provisioning.paused",
-      "tenant",
-      tenantId,
-      tenantId,
-      { currentStep: STEPS[pipeline.currentStepIndex]?.key },
-      null
-    );
-    return pipeline;
-  }
-
-  pipeline.status = "completed";
-  pipeline.completedAt = new Date();
-  await provisioningPipelineDAO.upsert(pipeline);
-  await platformAuditDAO.log(
-    actorUserId,
-    "provisioning.completed",
-    "tenant",
-    tenantId,
-    tenantId,
-    { durationMs: pipeline.completedAt - pipeline.startedAt },
-    null
-  );
+  await finalizeProvisioning(pipeline, actorUserId, tenantId);
   return pipeline;
 };
 
@@ -479,65 +480,15 @@ const resumeProvisioning = async (tenantId, actorUserId = null) => {
     throw err;
   }
 
-  const tenant = await db.tenant.findByPk(tenantId);
-  if (!tenant) {
-    const err = new Error("Tenant not found");
-    err.status = 404;
-    throw err;
-  }
-
+  const tenant = await validateTenant(tenantId);
   pipeline.status = "running";
-  const startIndex = pipeline.currentStepIndex;
 
-  for (let i = startIndex; i < STEPS.length; i++) {
-    pipeline.currentStepIndex = i;
-    if (pipeline.status === "paused") break;
-    try {
-      await runStep(pipeline, i, tenant);
-    } catch (err) {
-      await rollbackAll(pipeline, tenant);
-      pipeline.status = "failed";
-      pipeline.error = err.message;
-      await provisioningPipelineDAO.upsert(pipeline);
-      await platformAuditDAO.log(
-        actorUserId,
-        "provisioning.failed",
-        "tenant",
-        tenantId,
-        tenantId,
-        { step: STEPS[i].key, error: err.message },
-        null
-      );
-      return pipeline;
-    }
-  }
-
-  if (pipeline.status === "paused") {
-    await provisioningPipelineDAO.upsert(pipeline);
-    await platformAuditDAO.log(
-      actorUserId,
-      "provisioning.paused",
-      "tenant",
-      tenantId,
-      tenantId,
-      { currentStep: STEPS[pipeline.currentStepIndex]?.key },
-      null
-    );
-    return pipeline;
-  }
-
-  pipeline.status = "completed";
-  pipeline.completedAt = new Date();
-  await provisioningPipelineDAO.upsert(pipeline);
-  await platformAuditDAO.log(
-    actorUserId,
-    "provisioning.completed",
-    "tenant",
-    tenantId,
-    tenantId,
-    { durationMs: pipeline.completedAt - pipeline.startedAt },
-    null
+  const result = await executeProvisioningSteps(
+    pipeline, tenant, pipeline.currentStepIndex, tenantId, actorUserId
   );
+  if (result.failed) return pipeline;
+
+  await finalizeProvisioning(pipeline, actorUserId, tenantId);
   return pipeline;
 };
 
