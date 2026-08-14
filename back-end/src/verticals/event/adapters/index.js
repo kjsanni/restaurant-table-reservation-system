@@ -1,9 +1,8 @@
-"use strict";
-
 const AppleWalletAdapter = require("./appleWalletAdapter");
 const GoogleWalletAdapter = require("./googleWalletAdapter");
 const SamsungPayAdapter = require("./samsungPayAdapter");
-const logger = require("../../../utils/logger");
+
+const SUPPORTED_PLATFORMS = ["apple", "google", "samsung"];
 
 const adapters = {
   apple: new AppleWalletAdapter(),
@@ -11,12 +10,10 @@ const adapters = {
   samsung: new SamsungPayAdapter(),
 };
 
-const SUPPORTED_PLATFORMS = Object.keys(adapters);
-
 const getAdapter = (platform) => {
   const adapter = adapters[platform];
   if (!adapter) {
-    throw new Error(`Unsupported wallet platform: ${platform}. Supported: ${SUPPORTED_PLATFORMS.join(", ")}`);
+    throw new Error(`Unsupported wallet platform: ${platform}`);
   }
   return adapter;
 };
@@ -27,18 +24,9 @@ const signAllPlatforms = async (designSnapshot, tenantId) => {
 
   for (const platform of SUPPORTED_PLATFORMS) {
     try {
-      const adapter = getAdapter(platform);
-      const result = await adapter.sign(designSnapshot, tenantId);
-      results[platform] = result;
-      logger.info(`Wallet pass signed for platform ${platform}`, { tenantId, platform });
+      results[platform] = await adapter.sign(designSnapshot, tenantId);
     } catch (err) {
       errors[platform] = err.message;
-      logger.error(`Wallet pass signing failed for platform ${platform}`, {
-        error: err.message,
-        tenantId,
-        platform,
-      });
-      results[platform] = null;
     }
   }
 
@@ -46,8 +34,10 @@ const signAllPlatforms = async (designSnapshot, tenantId) => {
 };
 
 module.exports = {
-  adapters,
+  SUPPORTED_PLATFORMS,
   getAdapter,
   signAllPlatforms,
-  SUPPORTED_PLATFORMS,
+  AppleWalletAdapter,
+  GoogleWalletAdapter,
+  SamsungPayAdapter,
 };
