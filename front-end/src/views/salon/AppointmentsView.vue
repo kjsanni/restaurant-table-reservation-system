@@ -243,7 +243,9 @@ const updateStatus = async (apt: Appointment, status: string) => {
 const deleteAppointment = async (id: number) => {
   if (confirmingDelete.value !== id) {
     confirmingDelete.value = id;
-    setTimeout(() => { confirmingDelete.value = null; }, 3000);
+    setTimeout(() => {
+      confirmingDelete.value = null;
+    }, 3000);
     return;
   }
   confirmingDelete.value = null;
@@ -297,9 +299,7 @@ const bulkCancel = async () => {
     confirmingBulkDelete.value = false;
     try {
       await Promise.all(
-        selectedIds.value.map((id) =>
-          appointmentAPI.deleteAppointment(id)
-        )
+        selectedIds.value.map((id) => appointmentAPI.deleteAppointment(id))
       );
       appointments.value = appointments.value.filter(
         (a) => !selectedIds.value.includes(a.id)
@@ -311,7 +311,9 @@ const bulkCancel = async () => {
     return;
   }
   confirmingBulkDelete.value = true;
-  setTimeout(() => { confirmingBulkDelete.value = false; }, 3000);
+  setTimeout(() => {
+    confirmingBulkDelete.value = false;
+  }, 3000);
 };
 
 onMounted(async () => {

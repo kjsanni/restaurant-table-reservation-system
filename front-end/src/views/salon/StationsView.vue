@@ -114,12 +114,12 @@ const submitForm = async () => {
   }
 };
 
-const confirmingDelete = ref<number | null>(null);
-
 const deleteStation = async (id: number) => {
   if (confirmingDelete.value !== id) {
     confirmingDelete.value = id;
-    setTimeout(() => { confirmingDelete.value = null; }, 3000);
+    setTimeout(() => {
+      confirmingDelete.value = null;
+    }, 3000);
     return;
   }
   confirmingDelete.value = null;
@@ -203,10 +203,7 @@ onUnmounted(() => {
               <button class="btn-sm" @click="editStation(station)">
                 {{ t("common.edit") }}
               </button>
-              <button
-                class="btn-danger-sm"
-                @click="deleteStation(station.id)"
-              >
+              <button class="btn-danger-sm" @click="deleteStation(station.id)">
                 {{
                   confirmingDelete === station.id
                     ? t("common.confirm", "Confirm")

@@ -137,7 +137,14 @@ const submitShift = async () => {
 };
 
 const removeShift = async (id: number) => {
-  if (!confirm(t("salon.confirmRemoveShift"))) return;
+  if (confirmingDelete.value !== id) {
+    confirmingDelete.value = id;
+    setTimeout(() => {
+      confirmingDelete.value = null;
+    }, 3000);
+    return;
+  }
+  confirmingDelete.value = null;
   try {
     await shiftAPI.deleteShift(id);
     shifts.value = shifts.value.filter((s) => s.id !== id);
@@ -274,7 +281,11 @@ onMounted(async () => {
                 </div>
                 <div v-if="shift.role" class="shift-role">{{ shift.role }}</div>
                 <button class="btn-danger-sm" @click="removeShift(shift.id)">
-                  {{ t("salon.remove") }}
+                  {{
+                    confirmingDelete === shift.id
+                      ? t("common.confirm", "Confirm")
+                      : t("salon.remove")
+                  }}
                 </button>
               </div>
               <div v-if="!groupedByDay[day].length" class="empty-cell">

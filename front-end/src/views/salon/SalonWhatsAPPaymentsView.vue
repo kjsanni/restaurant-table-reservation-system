@@ -76,7 +76,11 @@
                   class="btn-refund"
                   @click="refundAppointment(apt)"
                 >
-                  {{ t("salon.refund", "Refund") }}
+                  {{
+                    confirmingRefund === apt.id
+                      ? t("common.confirm", "Confirm")
+                      : t("salon.refund", "Refund")
+                  }}
                 </button>
               </td>
               <td class="text-mono">{{ apt.paymentReference || "—" }}</td>
@@ -99,6 +103,7 @@ const toast = useToastStore();
 import formatMoney from "@/utils/formatMoney";
 
 const loading = ref(false);
+const confirmingRefund = ref<number | null>(null);
 const items = ref([]);
 
 const summary = computed(() => {
@@ -171,15 +176,14 @@ const verifyAppointment = async (apt) => {
 };
 
 const refundAppointment = async (apt) => {
-  if (
-    !confirm(
-      t(
-        "salon.refundConfirm",
-        `Refund appointment #${apt.id}? This cannot be undone.`
-      )
-    )
-  )
+  if (confirmingRefund.value !== apt.id) {
+    confirmingRefund.value = apt.id;
+    setTimeout(() => {
+      confirmingRefund.value = null;
+    }, 3000);
     return;
+  }
+  confirmingRefund.value = null;
   try {
     await appointmentAPI.refundAppointment(apt.id);
     await load();

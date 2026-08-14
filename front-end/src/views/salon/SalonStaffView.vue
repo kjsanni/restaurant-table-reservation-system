@@ -56,10 +56,7 @@
                 <button class="btn-sm" @click="openEditForm(person)">
                   {{ t("common.edit", "Edit") }}
                 </button>
-                <button
-                  class="btn-danger-sm"
-                  @click="confirmDelete(person)"
-                >
+                <button class="btn-danger-sm" @click="confirmDelete(person)">
                   {{ t("common.delete", "Delete") }}
                 </button>
                 <button class="btn-sm" @click="openAssignModal(person)">
@@ -78,7 +75,13 @@
       @click.self="showFormModal = false"
     >
       <div class="modal">
-        <h2>{{ editingStaff ? t("salon.editStaff", "Edit Staff") : t("salon.addStaff", "Add Staff") }}</h2>
+        <h2>
+          {{
+            editingStaff
+              ? t("salon.editStaff", "Edit Staff")
+              : t("salon.addStaff", "Add Staff")
+          }}
+        </h2>
         <div class="form-group">
           <label>{{ t("salon.username", "Username") }}</label>
           <input v-model="form.username" class="field-input" />
@@ -100,7 +103,11 @@
             @click="submitStaffForm"
             :disabled="submittingForm"
           >
-            {{ submittingForm ? t("salon.saving", "Saving...") : t("common.save", "Save") }}
+            {{
+              submittingForm
+                ? t("salon.saving", "Saving...")
+                : t("common.save", "Save")
+            }}
           </button>
         </div>
       </div>
@@ -113,7 +120,14 @@
     >
       <div class="modal">
         <h2>{{ t("salon.confirmDeleteStaff", "Delete Staff") }}</h2>
-        <p>{{ t("salon.confirmDeleteStaffMsg", "Are you sure you want to delete this staff member?") }}</p>
+        <p>
+          {{
+            t(
+              "salon.confirmDeleteStaffMsg",
+              "Are you sure you want to delete this staff member?"
+            )
+          }}
+        </p>
         <div class="modal-actions">
           <button class="btn-secondary" @click="showDeleteConfirm = false">
             {{ t("salon.cancelBtn", "Cancel") }}
@@ -208,7 +222,10 @@ const load = async () => {
     staff.value = staffRes.data?.data || [];
     locations.value = locationsRes.data?.data || [];
   } catch (err) {
-    toastStore.add(t("salon.failedToLoadStaff", "Failed to load staff"), "error");
+    toastStore.add(
+      t("salon.failedToLoadStaff", "Failed to load staff"),
+      "error"
+    );
   } finally {
     loading.value = false;
   }
@@ -265,7 +282,10 @@ const submitDelete = async () => {
     await load();
     toastStore.add(t("salon.staffDeleted", "Staff deleted"), "success");
   } catch (err) {
-    toastStore.add(t("salon.staffDeleteFailed", "Failed to delete staff"), "error");
+    toastStore.add(
+      t("salon.staffDeleteFailed", "Failed to delete staff"),
+      "error"
+    );
   } finally {
     submittingDelete.value = false;
   }

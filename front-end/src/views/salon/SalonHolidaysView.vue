@@ -52,7 +52,9 @@ const submitHoliday = async () => {
 const removeHoliday = async (id: number) => {
   if (confirmingDelete.value !== id) {
     confirmingDelete.value = id;
-    setTimeout(() => { confirmingDelete.value = null; }, 3000);
+    setTimeout(() => {
+      confirmingDelete.value = null;
+    }, 3000);
     return;
   }
   confirmingDelete.value = null;
@@ -125,10 +127,7 @@ onMounted(loadHolidays);
             >
               <div class="holiday-name">{{ holiday.name }}</div>
               <div class="holiday-date">{{ holiday.date }}</div>
-              <button
-                class="btn-danger-sm"
-                @click="removeHoliday(holiday.id)"
-              >
+              <button class="btn-danger-sm" @click="removeHoliday(holiday.id)">
                 {{
                   confirmingDelete === holiday.id
                     ? t("common.confirm", "Confirm")

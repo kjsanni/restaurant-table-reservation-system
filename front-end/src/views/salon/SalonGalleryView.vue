@@ -258,11 +258,7 @@ onMounted(loadImages);
           <button class="btn-secondary" @click="showEditModal = false">
             {{ t("salon.cancelBtn", "Cancel") }}
           </button>
-          <button
-            class="btn-primary"
-            :disabled="saving"
-            @click="updateImage"
-          >
+          <button class="btn-primary" :disabled="saving" @click="updateImage">
             {{ saving ? t("salon.saving") : t("common.save", "Save") }}
           </button>
         </div>
@@ -276,16 +272,19 @@ onMounted(loadImages);
     >
       <div class="modal">
         <h2>{{ t("salon.confirmDeleteImage", "Delete Image") }}</h2>
-        <p>{{ t("salon.confirmDeleteImageMsg", "Are you sure you want to delete this image?") }}</p>
+        <p>
+          {{
+            t(
+              "salon.confirmDeleteImageMsg",
+              "Are you sure you want to delete this image?"
+            )
+          }}
+        </p>
         <div class="modal-actions">
           <button class="btn-secondary" @click="showDeleteConfirm = false">
             {{ t("salon.cancelBtn", "Cancel") }}
           </button>
-          <button
-            class="btn-danger"
-            :disabled="saving"
-            @click="deleteImage"
-          >
+          <button class="btn-danger" :disabled="saving" @click="deleteImage">
             {{ t("common.delete", "Delete") }}
           </button>
         </div>
