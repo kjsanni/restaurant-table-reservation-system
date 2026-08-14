@@ -400,6 +400,266 @@
           }
         }
       }
+    },
+    "/admin/wallet-pass-requests": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List pending wallet pass signing requests (super-admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of pending signing requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "requests": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/WalletPassRequest" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/wallet-pass-requests/{requestId}/approve": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Approve a wallet pass signing request (super-admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "requestId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reviewNotes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "request": { "$ref": "#/components/schemas/WalletPassRequest" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Request not found" }
+        }
+      }
+    },
+    "/admin/wallet-pass-requests/{requestId}/reject": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Reject a wallet pass signing request (super-admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "requestId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reviewNotes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "request": { "$ref": "#/components/schemas/WalletPassRequest" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Request not found" }
+        }
+      }
+    },
+    "/e/{shortCode}": {
+      "get": {
+        "tags": ["Event"],
+        "summary": "View event ticket in browser (public)",
+        "parameters": [
+          { "name": "shortCode", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "format", "in": "query", "required": false, "schema": { "type": "string", "enum": ["pkpass", "google", "samsung"] } }
+        ],
+        "responses": {
+          "200": { "description": "HTML ticket page or file/JSON for wallet pass formats" },
+          "400": { "description": "Invalid short code" },
+          "403": { "description": "Invalid signature" },
+          "404": { "description": "Ticket not found" },
+          "410": { "description": "Link expired or wallet pass not available" }
+        }
+      }
+    },
+    "/events/{eventId}/wallet-passes/request": {
+      "post": {
+        "tags": ["Event"],
+        "summary": "Request a wallet pass signing for an event (tenant staff)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "attendeeName": { "type": "string" },
+                  "attendeeEmail": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signing request created, payment initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "requestId": { "type": "integer" },
+                    "authorizationUrl": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Design not configured" },
+          "503": { "description": "Wallet pass signing service not configured" }
+        }
+      }
+    },
+    "/events/{eventId}/wallet-passes/requests": {
+      "get": {
+        "tags": ["Event"],
+        "summary": "List wallet pass signing requests for an event (tenant staff)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of signing requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "requests": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/WalletPassRequest" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/events/{eventId}/wallet-passes/requests/{requestId}": {
+      "get": {
+        "tags": ["Event"],
+        "summary": "Get a specific wallet pass signing request (tenant staff)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "requestId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signing request details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "request": { "$ref": "#/components/schemas/WalletPassRequest" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Request not found" }
+        }
+      }
+    },
+    "/events/{eventId}/wallet-passes/requests/{requestId}/artifacts": {
+      "get": {
+        "tags": ["Event"],
+        "summary": "List signed wallet pass artifacts for a request (tenant staff)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "requestId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of artifacts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "artifacts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "platform": { "type": "string" },
+                          "status": { "type": "string" },
+                          "artifactType": { "type": "string" },
+                          "hasArtifact": { "type": "boolean" },
+                          "error": { "type": ["string", "null"] }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -408,6 +668,31 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "WalletPassRequest": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "tenantId": { "type": "integer" },
+          "eventId": { "type": "integer" },
+          "requesterId": { "type": ["integer", "null"] },
+          "designSnapshot": { "type": "object" },
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["pending_payment", "pending", "approved", "signed", "completed", "rejected", "failed", "cancelled"]
+          },
+          "paymentReference": { "type": ["string", "null"] },
+          "paymentStatus": { "type": "string" },
+          "platformStatuses": { "type": "object" },
+          "reviewNotes": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "completedAt": { "type": ["string", "null"], "format": "date-time" }
+        }
       }
     }
   }

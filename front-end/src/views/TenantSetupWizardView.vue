@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
 import { getXsrfToken } from "@/composables/useXsrfToken";
+import erpnextAPI from "@/services/erpnextAPI";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -170,33 +171,15 @@ const submitErpnextOnboarding = async () => {
       companyName: erpnextCompanyName.value || undefined,
       fiscalYearStart: erpnextFiscalYearStart.value || undefined,
     };
-    const companyRes = await fetch("/api/v1/erpnext/onboarding/company", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(companyPayload),
-    });
-    if (!companyRes.ok) {
-      const data = await companyRes.json().catch(() => ({}));
-      throw new Error(data.message || "Failed to create ERPNext company");
-    }
+    await erpnextAPI.createCompany(companyPayload);
 
     if (
       erpnextModules.value.includes("erpnext_stock") &&
       erpnextWarehouseName.value.trim()
     ) {
-      const whRes = await fetch("/api/v1/erpnext/onboarding/warehouse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          warehouseName: erpnextWarehouseName.value,
-        }),
+      await erpnextAPI.createWarehouse({
+        warehouseName: erpnextWarehouseName.value,
       });
-      if (!whRes.ok) {
-        const data = await whRes.json().catch(() => ({}));
-        throw new Error(data.message || "Failed to create ERPNext warehouse");
-      }
     }
 
     await authStore.fetchCapabilities();

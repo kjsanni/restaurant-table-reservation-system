@@ -17,4 +17,14 @@ router
   .delete(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(verticalTemplateController.deleteTemplateHandler))
   .all(httpMethodError);
 
+router
+  .route("/:id/clone")
+  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(verticalTemplateController.cloneTemplateHandler))
+  .all(httpMethodError);
+
+router
+  .route("/usage")
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(verticalTemplateController.getTemplateUsageHandler))
+  .all(httpMethodError);
+
 module.exports = router;

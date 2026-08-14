@@ -15,6 +15,14 @@ export const listPlatformRoles = () => {
   return API.get("/admin/platform/roles");
 };
 
+export const listPlatformUsers = () => {
+  return API.get("/admin/platform/users");
+};
+
+export const createPlatformUser = (data) => {
+  return API.post("/admin/platform/users", data);
+};
+
 export const getUsers = () => {
   return API.get("/auth/users");
 };

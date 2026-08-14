@@ -205,7 +205,12 @@ const handleTOTPLogin = async () => {
             <button type="submit" class="btn-primary" :disabled="submitting">
               {{ submitting ? "Signing in..." : "Sign In" }}
             </button>
-            <RouterLink to="/register" class="link">Create account</RouterLink>
+            <RouterLink
+              v-if="resolvedMode !== 'super-admin'"
+              to="/register"
+              class="link"
+              >Create account</RouterLink
+            >
           </div>
         </form>
 

@@ -37,7 +37,10 @@ const highlightedParts = computed(() => {
   let match;
   while ((match = regex.exec(notes)) !== null) {
     if (match.index > lastIndex) {
-      parts.push({ text: notes.slice(lastIndex, match.index), highlight: false });
+      parts.push({
+        text: notes.slice(lastIndex, match.index),
+        highlight: false,
+      });
     }
     parts.push({ text: match[1], highlight: true });
     lastIndex = regex.lastIndex;

@@ -12,6 +12,7 @@ const { businessVertical } = useCapabilities();
 const { apply: applyBranding } = useTenantBranding();
 
 const isSalon = computed(() => businessVertical.value === "salon");
+const isEvent = computed(() => businessVertical.value === "event");
 
 const firstName = computed(() => {
   const name =
@@ -32,6 +33,9 @@ const portalSubtitle = computed(() => {
     (isSalon.value ? "your salon" : "your restaurant");
   if (isSalon.value) {
     return `Manage your appointments and services at ${tenant}`;
+  }
+  if (isEvent.value) {
+    return `Discover and book events at ${tenant}`;
   }
   return `Manage your reservations and orders at ${tenant}`;
 });
@@ -72,6 +76,18 @@ const portalLinks = computed(() => {
         icon: "mdi:package-variant-closed",
       }
     );
+  }
+  if (isEvent.value) {
+    links.splice(1, 0, {
+      name: "Events",
+      path: "/portal/events",
+      icon: "mdi:calendar-star",
+    });
+    links.splice(2, 0, {
+      name: "My Tickets",
+      path: "/portal/events/wallet-passes",
+      icon: "mdi:ticket-confirmation",
+    });
   }
   return links;
 });

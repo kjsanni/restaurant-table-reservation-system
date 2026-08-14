@@ -473,7 +473,39 @@ const unmergeReservationTables = async (reservationId, tenantId) => {
     where: withTenant({ id: reservationId }, tenantId),
   });
   if (!reservation) return null;
-  await reservation.update({ mergedFromTableIds: null });
+
+  const mergedIds = Array.isArray(reservation.mergedFromTableIds)
+    ? reservation.mergedFromTableIds.map((id) => parseInt(id, 10)).filter(Boolean)
+    : [];
+
+  await db.sequelize.transaction(async (t) => {
+    if (mergedIds.length > 0) {
+      await Table.update(
+        { parentTableId: null },
+        {
+          where: withTenant(
+            { id: mergedIds, parentTableId: { [db.Sequelize.Op.ne]: null } },
+            tenantId
+          ),
+          transaction: t,
+        }
+      );
+
+      await Table.update(
+        { linkedTableIds: null },
+        {
+          where: withTenant(
+            { id: mergedIds, linkedTableIds: { [db.Sequelize.Op.ne]: null } },
+            tenantId
+          ),
+          transaction: t,
+        }
+      );
+    }
+
+    await reservation.update({ mergedFromTableIds: null }, { transaction: t });
+  });
+
   return reservation;
 };
 

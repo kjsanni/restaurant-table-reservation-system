@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { normalizeSettingValue } = require("../utils/settings");
+const CircuitBreaker = require("../utils/circuitBreaker");
 
 const AFRICASTALKING_BASE = "https://api.africastalking.com/restless/send";
 
@@ -23,13 +24,19 @@ const africaTalkingSender = async ({ to, message, senderId, config }) => {
   payload.append("message", message);
   payload.append("from", from);
 
-  const response = await axios.post(AFRICASTALKING_BASE, payload.toString(), {
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      apiKey,
-    },
-  });
-  return response.data;
+  const response = await CircuitBreaker.execute(
+    "sms",
+    () => axios.post(AFRICASTALKING_BASE, payload.toString(), {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        apiKey,
+      },
+      timeout: 10000,
+    }).then((r) => r.data),
+    { failureThreshold: 5, recoveryTimeout: 30000 }
+  );
+
+  return response;
 };
 
 const twilioSender = async ({ to, message, senderId, config }) => {
@@ -46,21 +53,27 @@ const twilioSender = async ({ to, message, senderId, config }) => {
     throw new Error("Recipient phone number is required.");
   }
 
-  const response = await axios.post(
-    `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
-    new URLSearchParams({
-      To: cleanedTo,
-      From: from,
-      Body: message,
-    }),
-    {
-      auth: {
-        username: accountSid,
-        password: authToken,
-      },
-    }
+  const response = await CircuitBreaker.execute(
+    "sms",
+    () => axios.post(
+      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+      new URLSearchParams({
+        To: cleanedTo,
+        From: from,
+        Body: message,
+      }),
+      {
+        auth: {
+          username: accountSid,
+          password: authToken,
+        },
+        timeout: 10000,
+      }
+    ).then((r) => r.data),
+    { failureThreshold: 5, recoveryTimeout: 30000 }
   );
-  return response.data;
+
+  return response;
 };
 
 const PROVIDERS = {
@@ -127,7 +140,6 @@ const loadPlatformSmsConfig = async () => {
       return normalizeSettingValue(setting.value);
     }
   } catch {
-    // ignore and fall back to env values
   }
   return {};
 };

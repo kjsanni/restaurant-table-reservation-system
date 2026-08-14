@@ -80,6 +80,10 @@ export const bulkDeleteTenants = (tenantIds) => {
   return API.post("/admin/bulk/delete", { tenantIds });
 };
 
+export const bulkProvisionTenants = (tenantIds) => {
+  return API.post("/admin/bulk/provision", { tenantIds });
+};
+
 export const listPlatformSettings = () => {
   return API.get("/admin/platform-settings");
 };
@@ -130,4 +134,56 @@ export const resetTenantTokens = (tenantId) => {
 
 export const forceLogoutTenant = (tenantId) => {
   return API.post(`/admin/incidents/${tenantId}/force-logout`);
+};
+
+export const listTenantMigrations = (tenantId) => {
+  return API.get(`/admin/tenants/${tenantId}/migrations`);
+};
+
+export const getTenantMigrationStatus = (tenantId) => {
+  return API.get(`/admin/tenants/${tenantId}/migrations/status`);
+};
+
+export const enqueueTenantMigration = (tenantId, data) => {
+  return API.post(`/admin/tenants/${tenantId}/migrations`, data);
+};
+
+export const runTenantMigration = (id, runner) => {
+  return API.post(`/admin/migrations/${id}/run`, { runner });
+};
+
+export const pauseTenantMigration = (id) => {
+  return API.post(`/admin/migrations/${id}/pause`);
+};
+
+export const resumeTenantMigration = (id, runner) => {
+  return API.post(`/admin/migrations/${id}/resume`, { runner });
+};
+
+export const rollbackTenantMigration = (id, rollbackRunner) => {
+  return API.post(`/admin/migrations/${id}/rollback`, { rollbackRunner });
+};
+
+export const startTenantProvisioning = (tenantId) => {
+  return API.post(`/admin/tenants/${tenantId}/provisioning`);
+};
+
+export const pauseTenantProvisioning = (tenantId) => {
+  return API.post(`/admin/tenants/${tenantId}/provisioning/pause`);
+};
+
+export const resumeTenantProvisioning = (tenantId) => {
+  return API.post(`/admin/tenants/${tenantId}/provisioning/resume`);
+};
+
+export const rollbackTenantProvisioning = (tenantId) => {
+  return API.post(`/admin/tenants/${tenantId}/provisioning/rollback`);
+};
+
+export const getTenantProvisioningStatus = (tenantId) => {
+  return API.get(`/admin/tenants/${tenantId}/provisioning`);
+};
+
+export const listProvisioningSteps = () => {
+  return API.get("/admin/provisioning/steps");
 };

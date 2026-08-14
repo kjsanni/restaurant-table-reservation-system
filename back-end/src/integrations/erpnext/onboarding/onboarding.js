@@ -36,7 +36,7 @@ router.post("/onboarding/company", tryCatchHandler(requireActiveTenant, checkErp
   };
 
   try {
-    const result = await getClient().post("/api/resource/Company", payload);
+    const result = await (await getClient()).post("/api/resource/Company", payload);
     const company = result.data.data;
 
     await db.tenant.update(
@@ -63,7 +63,7 @@ router.post("/onboarding/warehouse", tryCatchHandler(requireActiveTenant, checkE
   };
 
   try {
-    const result = await getClient().post("/api/resource/Warehouse", payload);
+    const result = await (await getClient()).post("/api/resource/Warehouse", payload);
     const warehouse = result.data.data;
 
     await db.tenant.update(
@@ -98,7 +98,7 @@ router.post("/onboarding/employee-import", tryCatchHandler(requireActiveTenant, 
         designation: mapping.designation || "",
         status: "Active",
       };
-      const result = await getClient().post("/api/resource/Employee", payload);
+      const result = await (await getClient()).post("/api/resource/Employee", payload);
       results.push({ staffId: mapping.staffId, status: "success", erpnextName: result.data.data.name });
     } catch (err) {
       results.push({ staffId: mapping.staffId, status: "failed", error: err.message });

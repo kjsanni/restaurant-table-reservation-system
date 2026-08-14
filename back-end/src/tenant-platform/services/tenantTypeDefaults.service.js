@@ -86,6 +86,91 @@ const TYPE_DEFAULTS = {
     salon_payment_config: { currency: "GHS", depositRequired: false, defaultDepositPercent: 0, enabledChannels: ["card_paystack"], momoProviders: ["mtn_momo", "vodafone_cash", "airtel_tigo"] },
     salon_sms_fallback_enabled: false,
   },
+   event: {
+     serviceModes: ["ticketed_entry", "vip_access", "general_admission", "table_reservation", "event_checkin"],
+     featureFlags: {
+       table_management: false,
+       waitlist: false,
+       staff_scheduling: true,
+       loyalty: true,
+       pos_sync: false,
+       event_ticketing: true,
+       event_guest_list: true,
+       event_vip_lounge: true,
+       event_table_reservation: true,
+       event_access_control: true,
+       event_qr_checkin: false,
+       event_whatsapp_invites: false,
+     },
+   },
+  vip_lounge: {
+    serviceModes: ["vip_access", "table_reservation", "event_checkin"],
+    featureFlags: {
+      table_management: false,
+      waitlist: false,
+      staff_scheduling: true,
+      loyalty: true,
+      pos_sync: false,
+      event_guest_list: true,
+      event_vip_lounge: true,
+      event_table_reservation: true,
+      event_access_control: true,
+      event_qr_checkin: true,
+      event_whatsapp_invites: false,
+    },
+  },
+  conference: {
+    serviceModes: ["ticketed_entry", "general_admission", "event_checkin"],
+    featureFlags: {
+      table_management: false,
+      waitlist: false,
+      staff_scheduling: true,
+      loyalty: false,
+      pos_sync: false,
+      event_guest_list: true,
+      event_vip_lounge: false,
+      event_table_reservation: false,
+      event_access_control: true,
+      event_qr_checkin: true,
+      event_whatsapp_invites: true,
+    },
+  },
+  festival: {
+    serviceModes: ["ticketed_entry", "vip_access", "general_admission", "event_checkin"],
+    featureFlags: {
+      table_management: false,
+      waitlist: false,
+      staff_scheduling: true,
+      loyalty: true,
+      pos_sync: false,
+      event_guest_list: true,
+      event_vip_lounge: true,
+      event_table_reservation: false,
+      event_access_control: true,
+      event_qr_checkin: true,
+      event_whatsapp_invites: true,
+    },
+  },
+  corporate: {
+    serviceModes: ["ticketed_entry", "table_reservation", "event_checkin"],
+    featureFlags: {
+      table_management: false,
+      waitlist: false,
+      staff_scheduling: true,
+      loyalty: false,
+      pos_sync: false,
+      event_guest_list: true,
+      event_vip_lounge: false,
+      event_table_reservation: true,
+      event_access_control: true,
+      event_qr_checkin: true,
+      event_whatsapp_invites: false,
+    },
+  },
+  eventDefaults: {
+    event_venue_config: { capacity: 0, zones: [] },
+    event_checkin_config: { enabled: false, qrCode: true, offlineMode: false },
+  },
 };
 
 const FLAG_CATEGORIES = {
@@ -107,6 +192,18 @@ const FLAG_CATEGORIES = {
       salon_client_profiles: { label: "Client Profiles", description: "Client history, preferences, and notes" },
       salon_whatsapp_booking: { label: "WhatsApp Booking", description: "Receive and confirm bookings via WhatsApp" },
       salon_module_enabled: { label: "Salon Module", description: "Enable the full salon vertical (switches business mode)" },
+    },
+  },
+  event: {
+    label: "Event",
+    flags: {
+      event_ticketing: { label: "Ticketing", description: "Sell and manage event tickets and passes" },
+      event_guest_list: { label: "Guest List", description: "Manage event guest lists and invitations" },
+      event_vip_lounge: { label: "VIP Lounge", description: "VIP area access control and concierge services" },
+      event_table_reservation: { label: "Table Reservation", description: "Reserve tables within event venues" },
+      event_access_control: { label: "Access Control", description: "Ticket-type gated access to event zones" },
+      event_qr_checkin: { label: "QR Check-in", description: "Mobile QR/barcode scanning for event entry" },
+      event_whatsapp_invites: { label: "WhatsApp Invites", description: "Send event invitations and reminders via WhatsApp" },
     },
   },
   erpnext: {
@@ -145,6 +242,14 @@ const seedSalonSettings = async (tenantId) => {
   }
 };
 
+const seedEventSettings = async (tenantId) => {
+  const { updateSetting } = require("../../DAOs/auth.dao");
+  const defaults = TYPE_DEFAULTS.eventDefaults || {};
+  for (const [key, value] of Object.entries(defaults)) {
+    await updateSetting(key, value, tenantId);
+  }
+};
+
 const getFeatureFlag = (tenant, flag) => {
   const flags = tenant?.settings?.featureFlags || {};
   return !!flags[flag];
@@ -163,4 +268,5 @@ module.exports = {
   getFeatureFlag,
   hasServiceMode,
   seedSalonSettings,
+  seedEventSettings,
 };

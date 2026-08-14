@@ -27,6 +27,14 @@ export const deleteVerticalTemplate = (id) => {
   return API.delete(`/admin/vertical-templates/${id}`);
 };
 
+export const cloneVerticalTemplate = (id) => {
+  return API.post(`/admin/vertical-templates/${id}/clone`);
+};
+
+export const getVerticalTemplateUsage = () => {
+  return API.get("/admin/vertical-templates/usage");
+};
+
 export const getVerticalAnalytics = () => {
   return API.get("/admin/vertical-analytics");
 };
@@ -115,4 +123,28 @@ export const downloadPlatformReport = (id) => {
 
 export const deletePlatformReport = (id) => {
   return API.delete(`/admin/platform-reports/${id}`);
+};
+
+export const listWalletPassRequests = (params = {}) => {
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      qs.set(key, value);
+    }
+  });
+  return API.get(
+    `/admin/wallet-pass-requests${qs.toString() ? `?${qs.toString()}` : ""}`
+  );
+};
+
+export const approveWalletPassRequest = (requestId, notes = "") => {
+  return API.post(`/admin/wallet-pass-requests/${requestId}/approve`, {
+    reviewNotes: notes,
+  });
+};
+
+export const rejectWalletPassRequest = (requestId, notes = "") => {
+  return API.post(`/admin/wallet-pass-requests/${requestId}/reject`, {
+    reviewNotes: notes,
+  });
 };

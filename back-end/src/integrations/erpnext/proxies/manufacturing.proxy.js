@@ -24,7 +24,7 @@ router.get("/manufacturing/boms", tryCatchHandler(requireActiveTenant, checkErpn
   const filters = { company: tenant.name };
   if (search) filters.name = ["like", `%${search}%`];
   try {
-    const result = await getClient().get("/api/resource/BOM", {
+    const result = await (await getClient()).get("/api/resource/BOM", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -37,7 +37,7 @@ router.get("/manufacturing/boms/:bomId", tryCatchHandler(requireActiveTenant, ch
   const { bomId } = req.params;
   const { getClient } = require("../client");
   try {
-    const result = await getClient().get(`/api/resource/BOM/${bomId}`);
+    const result = await (await getClient()).get(`/api/resource/BOM/${bomId}`);
     res.status(200).json({ success: true, data: result.data });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -53,7 +53,7 @@ router.get("/manufacturing/production-plans", tryCatchHandler(requireActiveTenan
   if (from) filters.from_date = from;
   if (to) filters.to_date = to;
   try {
-    const result = await getClient().get("/api/resource/Production Plan", {
+    const result = await (await getClient()).get("/api/resource/Production Plan", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });

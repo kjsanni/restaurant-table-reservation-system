@@ -135,8 +135,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(50),
         allowNull: true,
       },
+      templateId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+      },
       businessVertical: {
-        type: DataTypes.ENUM("restaurant", "salon"),
+        type: DataTypes.ENUM("restaurant", "salon", "event"),
         allowNull: false,
         defaultValue: "restaurant",
       },

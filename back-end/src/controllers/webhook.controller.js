@@ -1,6 +1,9 @@
 const webhookService = require("../services/webhook.service");
 const failedPaymentAlertDAO = require("../tenant-platform/DAOs/failedPaymentAlert.dao");
+const passSigningRequestDAO = require("../tenant-platform/DAOs/passSigningRequest.dao");
+const notificationDAO = require("../tenant-platform/DAOs/notification.dao");
 const db = require("../db/models");
+const logger = require("../utils/logger");
 const { verifyWebhookSignature } = require("../tenant-platform/services/paystack.service");
 const { validateWebhookUrl } = require("../tenant-platform/services/webhookNotification.service");
 
@@ -92,7 +95,7 @@ const paystackEventHandler = async (req, res) => {
 
     const appointmentId = data.metadata?.appointmentId;
     if (appointmentId && tenantId) {
-      const appointment = await db.appointment.findOne({
+      const appointment = await db.appointment.findOne({ // nosemgrep: javascript.lang.security.audit.no-sql-injection - Sequelize parameterized where, not MongoDB
         where: { id: appointmentId, tenantId },
       });
       if (appointment && appointment.paymentStatus !== "paid") {
@@ -100,6 +103,55 @@ const paystackEventHandler = async (req, res) => {
           paymentStatus: "paid",
           depositAmount: parseFloat(data.amount || 0) / 100,
         });
+      }
+    }
+
+    const bookingId = data.metadata?.bookingId;
+    if (bookingId && tenantId) {
+      const booking = await db.eventBooking.findOne({ // nosemgrep: javascript.lang.security.audit.no-sql-injection - Sequelize parameterized where, not MongoDB
+        where: { id: bookingId, tenantId },
+      });
+      if (booking && booking.paymentStatus !== "paid") {
+        await booking.update({
+          paymentStatus: "paid",
+          status: "confirmed",
+          paymentReference: data.reference,
+          paymentMethod: "paystack",
+        });
+      }
+    }
+
+    const signingRequestId = data.metadata?.requestId;
+    if (signingRequestId && tenantId) {
+      const request = await passSigningRequestDAO.findById(signingRequestId);
+      if (request && request.status === "pending_payment") {
+        await passSigningRequestDAO.updatePaymentStatus(signingRequestId, data.reference);
+        logger.info("Wallet pass signing payment confirmed", {
+          requestId: signingRequestId,
+          tenantId,
+          reference: data.reference,
+        });
+        try {
+          const superAdmins = await db.user.findAll({
+            where: { isSuperAdmin: true },
+            attributes: ["id"],
+          });
+          for (const admin of superAdmins) {
+            await notificationDAO.create({
+              userId: admin.id,
+              tenantId: null,
+              type: "wallet_pass_signing_request",
+              title: "New wallet pass signing request",
+              message: `Tenant ${tenantId} submitted a signing request (ID: ${signingRequestId})`,
+              data: { requestId: signingRequestId, tenantId },
+            });
+          }
+        } catch (notifyErr) {
+          logger.warn("Failed to notify super-admins of wallet pass request", {
+            error: notifyErr.message,
+            requestId: signingRequestId,
+          });
+        }
       }
     }
   }

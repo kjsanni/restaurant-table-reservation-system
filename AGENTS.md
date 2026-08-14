@@ -15,7 +15,7 @@ A multi-tenant restaurant table reservation SaaS with restaurant and salon verti
 
 - **Do not commit unless explicitly asked.** Leave work uncommitted; state that clearly.
 - **Auth init must complete before router installation.** `stores/auth.ts` must expose an `init()` method that resolves `getMe()`/`fetchTenantMode()`/`fetchCapabilities()`. `main.ts` must `await authStore.init()` before `app.use(router)`. `onMounted` alone is insufficient because Vue Router `beforeEach` guards execute before any component mounts. Changing this pattern requires explicit architectural review.
-- **Don't reintroduce NOT NULL / PARTITION BY on `tenantId`** for Reservations/Payments/Customers — their FK is `ON DELETE SET NULL`, so the column must stay nullable. (Migration `20260718000004/006/007` backfill NULLs to default tenant id=1.)
+- **Don't reintroduce NOT NULL / PARTITION BY on `tenantId`** for Reservations/Payments/Customers — their FK is `ON DELETE SET NULL`, so the column must stay nullable. (Migration `20260718_000004/006/007` backfill NULLs to default tenant id=1.)
 - **Legal/compliance:** docs live in `legal/` (single source of truth, version-controlled). Customer/tenant-facing policy is enforced via the tamper-evident `legal_acceptances` table; acceptance version is tracked by `LEGAL_DOCUMENT_VERSIONS` (backend controller + `front-end/src/services/legalAcceptanceAPI.js`). Bump the version in both places when a policy changes.
 - **RBAC:** domain rules in the project skill `restaurant-rbac` (`.kilo/skills/restaurant-rbac`). Load it for any auth/permission/staff-table work.
 - **Brand/UI:** keep off-brand hardcoded colors out; use `front-end/src/theme/colors.js` tokens or existing CSS custom properties.

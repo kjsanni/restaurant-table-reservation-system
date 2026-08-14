@@ -1,5 +1,14 @@
 const platformRoleController = require("../controllers/platform-role.controller");
 
+const authDAO = require("../DAOs/auth.dao");
+
+jest.mock("../DAOs/auth.dao", () => ({
+  listPlatformUsers: jest.fn(),
+  createPlatformUser: jest.fn(),
+  validatePasswordComplexity: jest.fn(),
+  hashPassword: jest.fn(),
+}));
+
 jest.mock("../db/models", () => ({
   user: {
     findByPk: jest.fn(),
@@ -131,6 +140,103 @@ describe("platform-role.controller", () => {
         "127.0.0.1"
       );
       expect(res.status).toHaveBeenCalledWith(200);
+    });
+  });
+
+  describe("listPlatformUsersHandler", () => {
+    it("returns list of platform users", async () => {
+      const mockUsers = [
+        { id: 1, username: "admin1", email: "admin1@co.com", role: "admin", isSuperAdmin: true, platformRoles: [] },
+      ];
+      authDAO.listPlatformUsers.mockResolvedValue(mockUsers);
+      const req = createReq();
+      const res = createRes();
+      await platformRoleController.listPlatformUsersHandler(req, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, users: mockUsers });
+    });
+
+    it("returns empty list when no platform users", async () => {
+      authDAO.listPlatformUsers.mockResolvedValue([]);
+      const req = createReq();
+      const res = createRes();
+      await platformRoleController.listPlatformUsersHandler(req, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ success: true, users: [] });
+    });
+  });
+
+  describe("createPlatformUserHandler", () => {
+    it("returns 400 when username, email, or password is missing", async () => {
+      const res = createRes();
+      await platformRoleController.createPlatformUserHandler({ body: {}, user: createReq().user, ip: "127.0.0.1" }, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ success: false, message: "username, email, and password are required" });
+    });
+
+    it("returns 400 when password complexity fails", async () => {
+      authDAO.createPlatformUser.mockRejectedValue({ status: 400, message: "Password must be at least 12 characters long." });
+      const res = createRes();
+      await platformRoleController.createPlatformUserHandler({
+        body: { username: "test", email: "test@co.com", password: "weak" },
+        user: createReq().user,
+        ip: "127.0.0.1",
+      }, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it("returns 409 when email already exists", async () => {
+      authDAO.createPlatformUser.mockRejectedValue({ status: 409, message: "A platform user with this email already exists!" });
+      const res = createRes();
+      await platformRoleController.createPlatformUserHandler({
+        body: { username: "test", email: "test@co.com", password: "StrongPass123!" },
+        user: createReq().user,
+        ip: "127.0.0.1",
+      }, res);
+      expect(res.status).toHaveBeenCalledWith(409);
+    });
+
+    it("creates platform user and logs audit", async () => {
+      const mockUser = {
+        id: 1,
+        username: "newadmin",
+        email: "newadmin@co.com",
+        role: "admin",
+        isSuperAdmin: false,
+        platformRoles: ["platform_billing"],
+        tenantId: null,
+      };
+      authDAO.createPlatformUser.mockResolvedValue(mockUser);
+      const req = createReq();
+      const res = createRes();
+      await platformRoleController.createPlatformUserHandler({
+        body: { username: "newadmin", email: "newadmin@co.com", password: "StrongPass123!", role: "admin", isSuperAdmin: false, platformRoles: ["platform_billing"] },
+        user: req.user,
+        ip: "127.0.0.1",
+      }, res);
+      expect(authDAO.createPlatformUser).toHaveBeenCalledWith({
+        username: "newadmin",
+        email: "newadmin@co.com",
+        password: "StrongPass123!",
+        role: "admin",
+        isSuperAdmin: false,
+        platformRoles: ["platform_billing"],
+      });
+      expect(platformAuditDAO.log).toHaveBeenCalledWith(
+        1,
+        "platform_user_created",
+        "user",
+        1,
+        null,
+        { username: "newadmin", email: "newadmin@co.com", role: "admin", isSuperAdmin: false, platformRoles: ["platform_billing"] },
+        "127.0.0.1"
+      );
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: "Platform user created successfully!",
+        user: mockUser,
+      });
     });
   });
 });

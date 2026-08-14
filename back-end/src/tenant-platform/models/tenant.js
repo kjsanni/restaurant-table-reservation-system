@@ -98,7 +98,7 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: "GHS",
       },
       businessVertical: {
-        type: DataTypes.ENUM("restaurant", "salon"),
+        type: DataTypes.ENUM("restaurant", "salon", "event"),
         allowNull: false,
         defaultValue: "restaurant",
       },

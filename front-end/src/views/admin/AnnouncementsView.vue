@@ -5,7 +5,7 @@
         <h1>Announcements</h1>
         <p class="subtitle">Broadcast system-wide messages to all tenants</p>
       </div>
-      <button class="btn-primary" @click="showCreate = true">
+      <button class="btn-primary" v-tap-scale @click="showCreate = true">
         New Announcement
       </button>
     </div>
