@@ -7,6 +7,7 @@ const walletPassService = require("../services/walletPass.service");
 const passSigningRequestDAO = require("../../../tenant-platform/DAOs/passSigningRequest.dao");
 const cache = require("../../../utils/cache");
 const logger = require("../../../utils/logger");
+const escapeHtml = require("escape-html");
 
 const webPassController = {};
 
@@ -167,14 +168,15 @@ webPassController.viewPass = async (req, res) => {
   });
 
   res.setHeader("Content-Type", "text/html");
-  res.send(html); //NOSONAR
+  res.send(html);
 };
 
 const generatePassPage = (data) => {
   const { event, attendee, ticket, shortCode, baseUrl, walletPassesEnabled = false } = data;
-  const appleWalletUrl = `${baseUrl}/e/${shortCode}?format=pkpass`; //NOSONAR
-  const googlePayUrl = `${baseUrl}/e/${shortCode}?format=google`; //NOSONAR
-  const samsungPayUrl = `${baseUrl}/e/${shortCode}?format=samsung`; //NOSONAR
+  const e = escapeHtml;
+  const appleWalletUrl = `${baseUrl}/e/${shortCode}?format=pkpass`;
+  const googlePayUrl = `${baseUrl}/e/${shortCode}?format=google`;
+  const samsungPayUrl = `${baseUrl}/e/${shortCode}?format=samsung`;
 
   const walletPassButtons = walletPassesEnabled
     ? `<div class="add-buttons">
@@ -191,15 +193,15 @@ const generatePassPage = (data) => {
     : `<div class="wallet-disabled" style="text-align:center;padding:24px;border-radius:12px;background:#f8f9fa;border:1px dashed #dee2e6;">
       <p style="color:#6c757d;font-size:14px;margin-bottom:12px;">Wallet passes are not yet available for this event.</p>
       <p style="color:#6c757d;font-size:12px;">Contact the event organizer to enable Apple/Google/Samsung wallet passes.</p>
-    </div>`; //NOSONAR
+    </div>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${event.name} - Ticket</title>
-  <meta name="apple-itunes-app" content="app-id=${process.env.APPLE_APP_ID || ''}, app-argument=${baseUrl}">
+  <title>${e(event.name || "Event Ticket")} - Ticket</title>
+  <meta name="apple-itunes-app" content="app-id=${process.env.APPLE_APP_ID || ''}, app-argument=${e(baseUrl)}">
   <style>
     body { font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8f9fa; padding: 16px; }
     .container { max-width: 480px; margin: 0 auto; }
@@ -224,23 +226,23 @@ const generatePassPage = (data) => {
 <body>
   <div class="container">
     <div class="header">
-      <div class="event-name">${event.name || "Event Ticket"}</div>
-      <div class="event-detail">${event.venue || ""}</div>
+      <div class="event-name">${e(event.name || "Event Ticket")}</div>
+      <div class="event-detail">${e(event.venue || "")}</div>
       <div class="event-detail">${event.date ? new Date(event.date).toLocaleDateString() : ""}</div>
     </div>
 
     <div class="card">
       <div class="photo">
         ${attendee.photoUrl
-          ? `<img src="${attendee.photoUrl}" alt="${attendee.name}">`
+          ? `<img src="${e(attendee.photoUrl)}" alt="${e(attendee.name)}">`
           : `<div class="photo-placeholder">\u{1F466}</div>`
         }
       </div>
-      <div class="attendee-name" style="margin-top: 16px;">${attendee.name || "Guest"}</div>
+      <div class="attendee-name" style="margin-top: 16px;">${e(attendee.name || "Guest")}</div>
       <div style="text-align: center; margin-top: 12px;">
-        ${attendee.seat ? `<span class="badge">Seat: ${attendee.seat}</span>` : ""}
-        ${attendee.tier ? `<span class="badge">${attendee.tier} Tier</span>` : ""}
-        ${attendee.ticketType ? `<span class="badge">${attendee.ticketType}</span>` : ""}
+        ${attendee.seat ? `<span class="badge">Seat: ${e(attendee.seat)}</span>` : ""}
+        ${attendee.tier ? `<span class="badge">${e(attendee.tier)} Tier</span>` : ""}
+        ${attendee.ticketType ? `<span class="badge">${e(attendee.ticketType)}</span>` : ""}
       </div>
     </div>
 
@@ -248,8 +250,8 @@ const generatePassPage = (data) => {
 
     <div class="qr-section">
       <p style="font-size: 12px; color: #6c757d; margin-bottom: 12px;">Show this ticket at the gate</p>
-      <div class="qr-code">${ticket.tokenHash?.substring(0, 16) || "N/A"}...</div>
-      <p style="font-size: 12px; color: #6c757d; margin-top: 8px;">Ticket ID: #${ticket.id}</p>
+      <div class="qr-code">${e(ticket.tokenHash?.substring(0, 16) || "N/A")}...</div>
+      <p style="font-size: 12px; color: #6c757d; margin-top: 8px;">Ticket ID: #${e(String(ticket.id))}</p>
     </div>
   </div>
 </body>
@@ -257,8 +259,8 @@ const generatePassPage = (data) => {
 };
 
 const generateErrorPage = (title, message) => {
-  return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{font-family:sans-serif;text-align:center;padding:48px;background:#f8f9fa;}</style></head> //NOSONAR
-    <body><h1>${title}</h1><p style="color:#6c757d;font-size:16px;">${message}</p>
+  return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title><style>body{font-family:sans-serif;text-align:center;padding:48px;background:#f8f9fa;}</style></head>
+    <body><h1>${escapeHtml(title)}</h1><p style="color:#6c757d;font-size:16px;">${escapeHtml(message)}</p>
     <p style="margin-top:32px;"><a href="/" style="color:#0d6efd;">Return to event</a></p></body></html>`;
 };
 

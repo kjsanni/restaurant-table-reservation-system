@@ -200,7 +200,12 @@ jobs:
           echo $! > /tmp/backend.pid
           echo "Server started with PID: $!"
       - name: Wait for backend
-        run: npx wait-on http://localhost:8000/api/v1/health --timeout 120000
+        run: |
+          if ! npx wait-on http://localhost:8000/api/v1/health --timeout 120000; then
+            echo "=== Backend failed to start. Server log: ==="
+            cat /tmp/backend.log
+            exit 1
+          fi
       - name: Run API contract tests
         working-directory: back-end
         run: npm run test:postman
