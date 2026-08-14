@@ -88,8 +88,12 @@ class EventPortalAPI {
     return API.post(`/events/${eventId}/guests/${guestId}/qr-code`, {});
   }
 
-  checkinToken(token, scannerParams = {}) {
-    return API.post(`/events/checkin/${token}`, scannerParams);
+  checkinToken(token, scannerParams = {}, headers = {}) {
+    return API.post(`/events/checkin/${token}`, scannerParams, { headers });
+  }
+
+  getScannerConfig() {
+    return API.get(`/events/scanner/config`);
   }
 
   verifyToken(token) {

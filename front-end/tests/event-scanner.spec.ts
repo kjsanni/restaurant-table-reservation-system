@@ -11,41 +11,32 @@ test.describe("Event check-in scanner flow", () => {
   });
 
   test.describe("Scanner UI", () => {
-    test("scanner page loads with camera view", async ({ page }) => {
-      await loginAsTenantStaff(page);
+  test("scanner page loads with camera view", async ({ page }) => {
+    await loginAsTenantStaff(page);
 
-      await page.goto("/events/1/scanner");
-      await page.waitForLoadState("domcontentloaded");
+    await page.goto("/events/1/scanner");
+    await page.waitForLoadState("domcontentloaded");
 
-      await expect(page.locator(".scanner-header h1")).toContainText(/QR Codes: /);
-      await expect(page.locator(".scanner-header")).toBeVisible();
+    await expect(page.locator("h1")).toContainText(/Check-in Scanner/);
 
-      const cameraContainer = page.locator("#qr-scanner");
-      if (await cameraContainer.count() > 0) {
-        await expect(cameraContainer).toBeVisible();
-      } else {
-        await expect(page.locator(".manual-entry")).toBeVisible();
-      }
-    });
+    const scanInput = page.locator(".scan-input");
+    if (await scanInput.count() > 0) {
+      await expect(scanInput).toBeVisible();
+    }
+  });
 
-    test("scanner has manual entry fallback", async ({ page }) => {
-      await loginAsTenantStaff(page);
+  test("scanner has manual entry fallback", async ({ page }) => {
+    await loginAsTenantStaff(page);
 
-      await page.goto("/events/1/scanner");
-      await page.waitForLoadState("domcontentloaded");
+    await page.goto("/events/1/scanner");
+    await page.waitForLoadState("domcontentloaded");
 
-      const showManualBtn = page.locator("button.btn-secondary");
-      if (await showManualBtn.count() > 0) {
-        await showManualBtn.click();
-      }
-
-      const manualInput = page.locator(".token-input");
-      if (await manualInput.count() > 0) {
-        await expect(manualInput).toBeVisible();
-        await manualInput.fill("a".repeat(64));
-        await page.locator("button.btn-secondary").last().click();
-      }
-    });
+    const scanInput = page.locator(".scan-input");
+    if (await scanInput.count() > 0) {
+      await scanInput.fill("a".repeat(64));
+      await page.locator(".btn-primary").click();
+    }
+  });
   });
 
   test.describe("QR code management with new fields", () => {

@@ -41,8 +41,14 @@ const generateWalletPass = async (qrCodeData, tenantId) => {
     throw new Error("Wallet pass certificate not configured for tenant");
   }
 
-  const tempDir = path.join(PKPASS_TEMP_DIR, `${qrCodeData.id}_${Date.now()}`);
+  const tempDir = path.join(PKPASS_TEMP_DIR, `${Date.now()}_${process.pid}`);
   fs.mkdirSync(tempDir, { recursive: true });
+
+  const resolvedTempDir = path.resolve(tempDir);
+  const resolvedPkpassDir = path.resolve(PKPASS_TEMP_DIR);
+  if (!resolvedTempDir.startsWith(resolvedPkpassDir + path.sep)) {
+    throw new Error("Invalid wallet pass path");
+  }
 
   const passJson = {
     formatVersion: 1,
@@ -96,10 +102,19 @@ const generateWalletPass = async (qrCodeData, tenantId) => {
   const filesToSign = ["pass.json"];
 
   if (qrCodeData.photoRef) {
-    const photoPath = path.join(ASSETS_DIR, `${qrCodeData.photoRef}.jpg`);
-    if (fs.existsSync(photoPath)) {
+    const photoRef = String(qrCodeData.photoRef);
+    if (!/^[a-f0-9]{64}$/i.test(photoRef)) {
+      throw new Error("Invalid photo reference");
+    }
+    const photoPath = path.join(ASSETS_DIR, `${photoRef}.jpg`);
+    const resolvedPhotoPath = path.resolve(photoPath);
+    const resolvedAssetsDir = path.resolve(ASSETS_DIR);
+    if (!resolvedPhotoPath.startsWith(resolvedAssetsDir + path.sep)) {
+      throw new Error("Invalid photo path");
+    }
+    if (fs.existsSync(resolvedPhotoPath)) {
       const destPath = path.join(tempDir, "logo.jpg");
-      fs.copyFileSync(photoPath, destPath);
+      fs.copyFileSync(resolvedPhotoPath, destPath);
       passJson.images = { "logo": "logo.jpg" };
       filesToSign.push("logo.jpg");
     }

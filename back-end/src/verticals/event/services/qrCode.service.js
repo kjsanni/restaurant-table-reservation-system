@@ -324,4 +324,23 @@ qrCodeService.verifyPayload = verifyPayload;
 qrCodeService.verifySignature = verifySignature;
 qrCodeService.loadQrSecret = loadQrSecret;
 
+const loadScannerConfig = async (tenantId) => {
+  const setting = await db.setting.findOne({
+    where: { key: "event_checkin_config", tenantId },
+  });
+  if (setting && setting.value) {
+    return setting.value;
+  }
+  return { scannerApiKey: null, geofenceRadiusMeters: 50, scanRateLimit: 5 };
+};
+
+qrCodeService.getScannerConfig = async (tenantId) => {
+  const config = await loadScannerConfig(tenantId);
+  return {
+    scannerApiKey: config.scannerApiKey || null,
+    geofenceRadiusMeters: config.geofenceRadiusMeters || 50,
+    scanRateLimit: config.scanRateLimit || 5,
+  };
+};
+
 module.exports = qrCodeService;

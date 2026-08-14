@@ -42,7 +42,11 @@ photoController.getPhoto = async (req, res) => {
   }
 
   const ext = req.query.ext || "jpg";
-  const filename = `${photoRef}.${ext}`;
+  const normalizedExt = String(ext).split(".").pop()?.toLowerCase() || "jpg";
+  if (!["jpg", "jpeg", "png"].includes(normalizedExt)) {
+    return res.status(400).json({ success: false, error: "INVALID_EXT", message: "Invalid image extension" });
+  }
+  const filename = `${photoRef}.${normalizedExt}`;
   const filepath = path.join(ATTENDEE_PHOTOS_DIR, filename);
 
   if (!fs.existsSync(filepath)) {
@@ -57,7 +61,7 @@ photoController.getPhoto = async (req, res) => {
     return res.status(404).json({ success: false, error: "NOT_FOUND", message: "Photo not found" });
   }
 
-  res.type(`image/${ext}`);
+  res.type(`image/${normalizedExt}`);
   res.sendFile(filepath);
 };
 

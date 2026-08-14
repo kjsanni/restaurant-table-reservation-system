@@ -42,8 +42,18 @@ const toastStore = useToastStore();
 const token = ref("");
 const scanning = ref(false);
 const result = ref("");
+const scannerApiKey = ref("");
 
 const eventId = route.params.eventId;
+
+const loadScannerConfig = async () => {
+  try {
+    const res = await eventPortalAPI.getScannerConfig();
+    scannerApiKey.value = res.data?.config?.scannerApiKey || "";
+  } catch (err) {
+    console.error("Failed to load scanner config", err);
+  }
+};
 
 const resultClass = computed(() => {
   if (!result.value) return "";
@@ -61,9 +71,13 @@ const scan = async () => {
   scanning.value = true;
   result.value = "";
   try {
+    const headers = {};
+    if (scannerApiKey.value) {
+      headers["x-api-key"] = scannerApiKey.value;
+    }
     const res = await eventPortalAPI.checkinToken(token.value.trim(), {
       eventId,
-    });
+    }, headers);
     const message = res.data?.message || "Check-in successful";
     result.value = message;
     toastStore.add(message, "success");
@@ -80,6 +94,10 @@ const scan = async () => {
 const goBack = () => {
   router.push("/events/manage");
 };
+
+onMounted(() => {
+  loadScannerConfig();
+});
 </script>
 
 <style scoped>
