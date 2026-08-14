@@ -136,36 +136,27 @@ class AppleWalletAdapter extends WalletPassAdapter {
     return passJson;
   }
 
-  async sign(designSnapshot, tenantId) {
+  createTempDir() {
+    const tempDir = path.join(PKPASS_TEMP_DIR, `${Date.now()}_${process.pid}_${crypto.randomBytes(4).toString("hex")}`);
+    fs.mkdirSync(tempDir, { recursive: true, mode: 0o700 });
+    return tempDir;
+  }
+
+  copyLogoIfValid(tempDir, designSnapshot) {
+    if (!designSnapshot.ticketData?.photoRef) return;
+    const photoRef = String(designSnapshot.ticketData.photoRef);
+    if (!/^[a-f0-9]{64}$/i.test(photoRef)) return;
+    const photoPath = path.join(__dirname, "../../../uploads/event-photos", `${photoRef}.jpg`);
+    if (fs.existsSync(photoPath)) {
+      const logoCopy = path.join(tempDir, "logo.jpg");
+      fs.copyFileSync(photoPath, logoCopy);
+    }
+  }
+
+  async createPKPass(passJsonPath, certs) {
     const PKPass = require("passkit-generator").PKPass;
-
-    const certs = await this.loadCertificates(tenantId);
-    if (!certs.cert) {
-      throw new Error("Apple Wallet pass certificate not configured for tenant");
-    }
-
-    const passJson = this.buildPassJson(designSnapshot.design || {}, designSnapshot.ticketData || {}, certs);
-
-    const tempDir = path.join(PKPASS_TEMP_DIR, `${Date.now()}_${process.pid}_${crypto.randomBytes(4).toString("hex")}`); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - no user input, uses Date.now/process.pid/randomBytes
-    fs.mkdirSync(tempDir, { recursive: true, mode: 0o700 }); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - validated tempDir above
-
-    const passJsonPath = path.join(tempDir, "pass.json"); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - static filename
-    fs.writeFileSync(passJsonPath, JSON.stringify(passJson, null, 2));
-
-    if (passJson.images?.logo && designSnapshot.ticketData?.photoRef) {
-      const photoRef = String(designSnapshot.ticketData.photoRef);
-      if (/^[a-f0-9]{64}$/i.test(photoRef)) {
-        const photoPath = path.join(__dirname, "../../../uploads/event-photos", `${photoRef}.jpg`); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - validated as SHA-256 hex on line above
-        if (fs.existsSync(photoPath)) {
-          const logoCopy = path.join(tempDir, "logo.jpg");
-          fs.copyFileSync(photoPath, logoCopy);
-        }
-      }
-    }
-
-    let pass;
     try {
-      pass = await PKPass.from(
+      return await PKPass.from(
         {
           passTypeIdentifier: certs.passTypeId || "pass.com.event.ticket",
           teamIdentifier: certs.teamId,
@@ -181,21 +172,43 @@ class AppleWalletAdapter extends WalletPassAdapter {
         }
       );
     } catch (err) {
-      logger.error("Apple Wallet pass signing failed", { error: err.message, tenantId });
       throw new Error(`Apple pass signing error: ${err.message}`);
     }
+  }
 
-    const outputFile = path.join(tempDir, "ticket.pkpass"); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - static filename
+  async sign(designSnapshot, tenantId) {
+    const certs = await this.loadCertificates(tenantId);
+    if (!certs.cert) {
+      throw new Error("Apple Wallet pass certificate not configured for tenant");
+    }
+
+    const passJson = this.buildPassJson(designSnapshot.design || {}, designSnapshot.ticketData || {}, certs);
+    const tempDir = this.createTempDir();
+
+    const passJsonPath = path.join(tempDir, "pass.json");
+    fs.writeFileSync(passJsonPath, JSON.stringify(passJson, null, 2));
+
+    if (passJson.images?.logo) {
+      this.copyLogoIfValid(tempDir, designSnapshot);
+    }
+
+    let pass;
+    try {
+      pass = await this.createPKPass(passJsonPath, certs);
+    } catch (err) {
+      logger.error("Apple Wallet pass signing failed", { error: err.message, tenantId });
+      throw err;
+    }
+
+    const outputFile = path.join(tempDir, "ticket.pkpass");
     const buffers = [];
     pass.on("data", (buf) => buffers.push(buf));
     await new Promise((resolve, reject) => {
       pass.on("end", resolve);
       pass.on("error", reject);
     });
-    const pkpassBuffer = Buffer.concat(buffers);
-    fs.writeFileSync(outputFile, pkpassBuffer);
+    fs.writeFileSync(outputFile, Buffer.concat(buffers));
 
-    // Clean up temp dir
     setTimeout(() => {
       try {
         fs.rmSync(tempDir, { recursive: true, force: true });
