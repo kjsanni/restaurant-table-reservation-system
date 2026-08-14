@@ -50,6 +50,7 @@
   },
   "dependencies": {
     "@sentry/node": "^10.70.0",
+    "archiver": "^8.0.0",
     "axios": "^1.18.1",
     "axios-debug-log": "^1.0.0",
     "bcrypt": "^6.0.0",

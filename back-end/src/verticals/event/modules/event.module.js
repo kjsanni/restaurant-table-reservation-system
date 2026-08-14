@@ -11,6 +11,8 @@ const ticketTypeRouter = require("../routes/ticketType.router");
 const qrCodeRouter = require("../routes/qrCode.router");
 const eventBookingRouter = require("../routes/eventBooking.router");
 const eventPaymentRouter = require("../routes/eventPayment.router");
+const webPassRouter = require("../routes/webPass.router");
+const photoRouter = require("../routes/photo.router");
 
 const eventModule = {
   id: "event",
@@ -20,12 +22,13 @@ const eventModule = {
   manifestPath: require("path").join(__dirname, "event.module.js"),
   routes: [
     { path: "/api/v1/events", router: eventRouter, middleware: [logAction, validateCsrfToken, tenantLimiter, requireVertical("event")] },
-    { path: "/api/v1/events/:eventId/guests", router: guestListRouter, middleware: [logAction, validateCsrfToken, tenantLimiter, requireVertical("event"), requiredFeature("event_guest_list")] },
-    { path: "/api/v1/events/:eventId/ticket-types", router: ticketTypeRouter, middleware: [logAction, validateCsrfToken, tenantWriteLimiter, requireVertical("event"), requiredFeature("event_ticketing")] },
-    { path: "/api/v1/events/:eventId/qr-codes", router: qrCodeRouter, middleware: [logAction, validateCsrfToken, tenantWriteLimiter, requireVertical("event"), requiredFeature("event_qr_checkin")] },
-    { path: "/api/v1/events/checkin/:code", router: qrCodeRouter, middleware: [logAction, validateCsrfToken, tenantLimiter, requireVertical("event"), requiredFeature("event_qr_checkin")] },
+    { path: "/api/v1/events", router: guestListRouter, middleware: [logAction, validateCsrfToken, tenantLimiter, requireVertical("event"), requiredFeature("event_guest_list")] },
+    { path: "/api/v1/events", router: ticketTypeRouter, middleware: [logAction, validateCsrfToken, tenantWriteLimiter, requireVertical("event"), requiredFeature("event_ticketing")] },
+    { path: "/api/v1/events", router: qrCodeRouter, middleware: [logAction, requiredFeature("event_qr_checkin")] },
     { path: "/api/v1/events/bookings", router: eventBookingRouter, middleware: [logAction, validateCsrfToken, tenantWriteLimiter, requireVertical("event")] },
     { path: "/api/v1/events/bookings/:bookingId/payments", router: eventPaymentRouter, middleware: [logAction, validateCsrfToken, tenantWriteLimiter, requireVertical("event")] },
+    { path: "/api/v1/public/e", router: webPassRouter, middleware: [tenantLimiter] },
+    { path: "/api/v1/events/checkin/photo", router: photoRouter, middleware: [logAction, tenantLimiter] },
   ],
 };
 

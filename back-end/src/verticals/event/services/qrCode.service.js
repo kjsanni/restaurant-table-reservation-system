@@ -322,5 +322,6 @@ qrCodeService.buildQrPayload = buildQrPayload;
 qrCodeService.signPayload = signPayload;
 qrCodeService.verifyPayload = verifyPayload;
 qrCodeService.verifySignature = verifySignature;
+qrCodeService.loadQrSecret = loadQrSecret;
 
 module.exports = qrCodeService;

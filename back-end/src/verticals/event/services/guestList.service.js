@@ -1,7 +1,6 @@
 "use strict";
 
 const guestListDAO = require("../DAOs/guestList.dao");
-const ticketTypeDAO = require("../DAOs/ticketType.dao");
 const qrCodeDAO = require("../DAOs/qrCode.dao");
 const qrCodeService = require("./qrCode.service");
 const crypto = require("crypto");
