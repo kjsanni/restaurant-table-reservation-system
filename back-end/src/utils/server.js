@@ -260,6 +260,18 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
     res.type("text/plain");
     res.send("User-agent: *\nAllow: /\nSitemap: https://vibespotgh.com/sitemap.xml\n");
   });
+
+  const frontendDistPath = require("path").join(__dirname, "../../front-end/dist");
+  if (require("fs").existsSync(frontendDistPath)) {
+    app.use(require("express").static(frontendDistPath));
+    app.get("*", (req, res) => {
+      if (req.path.startsWith("/api/") || req.path.startsWith("/socket.io")) {
+        return notFound(req, res);
+      }
+      res.sendFile(require("path").join(frontendDistPath, "index.html"));
+    });
+  }
+
   app.use(notFound);
   app.use(errorHandler);
   return { app, server, io };
