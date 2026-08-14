@@ -24,10 +24,14 @@ webPassController.viewPass = async (req, res) => {
   }
 
   const decoded = JSON.parse(cached);
-  const { ticketId, tenantId, rawToken } = decoded;
+  const { ticketId, tenantId, rawToken, sig } = decoded;
+
+  if (!sig) {
+    return res.status(500).send(generateErrorPage("Server Error", "Ticket data is incomplete."));
+  }
 
   const secret = await qrCodeService.loadQrSecret(tenantId);
-  if (!qrCodeService.verifySignature(rawToken, crypto.createHmac("sha256", secret).update(rawToken).digest("hex"), secret)) {
+  if (!qrCodeService.verifySignature(rawToken, sig, secret)) {
     return res.status(403).send(generateErrorPage("Invalid Ticket", "This ticket could not be verified."));
   }
 

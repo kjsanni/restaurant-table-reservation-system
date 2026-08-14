@@ -2,6 +2,7 @@
 
 const crypto = require("crypto");
 const qrCodeDAO = require("../DAOs/qrCode.dao");
+const qrCodeService = require("./qrCode.service");
 const db = require("../../../db/models");
 const whatsappService = require("../../../services/whatsapp/whastapp.service");
 const logger = require("../../../utils/logger");
@@ -10,10 +11,12 @@ const cache = require("../../../utils/cache");
 const MAX_TICKETS_PER_WHATSAPP = 10;
 const SHORT_URL_TTL = 60 * 60 * 24 * 7;
 
-const generateShortUrl = (ticketId, tenantId, rawToken) => {
+const generateShortUrl = async (ticketId, tenantId, rawToken) => {
   const shortCode = crypto.randomBytes(8).toString("hex");
-  const payload = JSON.stringify({ ticketId, tenantId, rawToken });
-  cache.set(`event_pass:${shortCode}`, payload, SHORT_URL_TTL);
+  const secret = await qrCodeService.loadQrSecret(tenantId);
+  const sig = crypto.createHmac("sha256", secret).update(rawToken).digest("hex");
+  const payload = JSON.stringify({ ticketId, tenantId, rawToken, sig });
+  await cache.set(`event_pass:${shortCode}`, payload, SHORT_URL_TTL);
   return `/e/${shortCode}`;
 };
 
@@ -76,7 +79,7 @@ eventTicketNotificationService.sendTicketsBatched = async (eventId, guestListEnt
         metadata: entry.metadata || null,
       });
 
-      const shortUrl = generateShortUrl(record.id, tenantId, rawToken);
+      const shortUrl = await generateShortUrl(record.id, tenantId, rawToken);
       shortUrls.push(shortUrl);
       tickets.push({ ticketId: record.id, tokenHash, shortUrl });
     }
@@ -130,7 +133,7 @@ eventTicketNotificationService.sendTicketsBatched = async (eventId, guestListEnt
 };
 
 eventTicketNotificationService.sendTicketFallback = async (ticketId, tenantId, rawToken, recipientPhone) => {
-  const shortUrl = generateShortUrl(ticketId, tenantId, rawToken);
+  const shortUrl = await generateShortUrl(ticketId, tenantId, rawToken);
 
   return {
     shortUrl,
