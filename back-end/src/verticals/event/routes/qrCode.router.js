@@ -32,7 +32,7 @@ router
 
 router
   .route("/scanner/config")
-  .get(tryCatchHandler(protect), tryCatchHandler(tenantLimiter), tryCatchHandler(requirePermission("view_events")), tryCatchHandler(qrCodeController.getScannerConfigHandler))
+  .get(tryCatchHandler(protect), tryCatchHandler(tenantLimiter), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(qrCodeController.getScannerConfigHandler))
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
 
 router

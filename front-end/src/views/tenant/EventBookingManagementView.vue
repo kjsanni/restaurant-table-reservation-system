@@ -144,7 +144,7 @@ const updateStatus = async (item, status) => {
     if (status === "cancelled") {
       await eventPortalAPI.cancelBooking(item.id);
     } else {
-      await eventPortalAPI.updateEvent(item.eventId, { status });
+      await eventPortalAPI.updateBooking(item.id, { status });
     }
     toastStore.add(`Booking ${status}`, "success");
     load();
