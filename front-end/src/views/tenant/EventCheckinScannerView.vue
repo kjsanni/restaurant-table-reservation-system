@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import eventPortalAPI from "@/services/eventPortalAPI";
 import { useToastStore } from "@/stores/toast";

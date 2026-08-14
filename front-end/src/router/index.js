@@ -1129,6 +1129,18 @@ router.addRoute({
   meta: { standalone: true },
 });
 router.addRoute({
+  path: "/support",
+  component: () => import("../layouts/TenantLayout.vue"),
+  children: [
+    {
+      path: "",
+      name: "tenant-support",
+      component: () => import("../views/tenant/TenantSupportView.vue"),
+      meta: { standalone: true, requiresAuth: true },
+    },
+  ],
+});
+router.addRoute({
   path: "/admin",
   redirect: "/super-admin/overview",
 });
@@ -1829,6 +1841,13 @@ const customerPortalRoutes = [
     name: "customer-event-detail",
     component: () =>
       import("../views/customer/CustomerPortalEventDetailView.vue"),
+    meta: { requiresAuth: true, requiresVertical: "event", standalone: true },
+  },
+  {
+    path: "/portal/events/:eventId/wallet-pass",
+    name: "customer-event-wallet-pass",
+    component: () =>
+      import("../views/customer/CustomerPortalEventWalletPassView.vue"),
     meta: { requiresAuth: true, requiresVertical: "event", standalone: true },
   },
   {

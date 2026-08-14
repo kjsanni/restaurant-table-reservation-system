@@ -5,7 +5,7 @@ jest.mock("../utils/cache", () => ({
   getConnectionStatus: () => false,
 }));
 
-const { tenantLimiter, tenantWriteLimiter, makeTenantLimiter } = require("../tenant-platform/middleware/tenantRateLimit");
+const { tenantLimiter, makeTenantLimiter } = require("../tenant-platform/middleware/tenantRateLimit");
 
 describe("tenantRateLimit middleware", () => {
   let req;

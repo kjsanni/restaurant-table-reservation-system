@@ -9,10 +9,10 @@ const { decrypt } = require("../../../utils/encryption");
 const logger = require("../../../utils/logger");
 const WalletPassAdapter = require("./walletPassAdapter.base");
 
-const PKPASS_TEMP_DIR = path.join(os.tmpdir(), "pkpass-signed");
+const PKPASS_TEMP_DIR = path.join(__dirname, "../../../uploads/.pkpass-temp");
 
 if (!fs.existsSync(PKPASS_TEMP_DIR)) {
-  fs.mkdirSync(PKPASS_TEMP_DIR, { recursive: true });
+  fs.mkdirSync(PKPASS_TEMP_DIR, { recursive: true, mode: 0o700 });
 }
 
 class AppleWalletAdapter extends WalletPassAdapter {
@@ -144,21 +144,19 @@ class AppleWalletAdapter extends WalletPassAdapter {
     const passJson = this.buildPassJson(designSnapshot.design || {}, designSnapshot.ticketData || {}, certs);
 
     const tempDir = path.join(PKPASS_TEMP_DIR, `${Date.now()}_${process.pid}_${crypto.randomBytes(4).toString("hex")}`);
-    fs.mkdirSync(tempDir, { recursive: true });
-
-    const manifest = {};
-    const filesToSign = ["pass.json"];
+    fs.mkdirSync(tempDir, { recursive: true, mode: 0o700 });
 
     const passJsonPath = path.join(tempDir, "pass.json");
     fs.writeFileSync(passJsonPath, JSON.stringify(passJson, null, 2));
-    manifest["pass.json"] = crypto.createHash("sha256").update(fs.readFileSync(passJsonPath)).digest("hex");
 
-    let logoPath = null;
     if (passJson.images?.logo && designSnapshot.ticketData?.photoRef) {
       const photoRef = String(designSnapshot.ticketData.photoRef);
       if (/^[a-f0-9]{64}$/i.test(photoRef)) {
         const photoPath = path.join(__dirname, "../../../uploads/event-photos", `${photoRef}.jpg`);
-        logoPath = photoPath;
+        if (fs.existsSync(photoPath)) {
+          const logoCopy = path.join(tempDir, "logo.jpg");
+          fs.copyFileSync(photoPath, logoCopy);
+        }
       }
     }
 

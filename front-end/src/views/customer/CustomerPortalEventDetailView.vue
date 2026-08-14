@@ -318,6 +318,33 @@ onMounted(async () => {
             </div>
           </div>
         </div>
+
+        <div class="wallet-pass-section">
+          <h2>Digital Wallet Pass</h2>
+          <div class="wallet-pass-card">
+            <div class="wallet-pass-header">
+              <span
+                class="mdi mdi:wallet-gift-card"
+                style="font-size: 24px; color: var(--brand-600)"
+              ></span>
+              <div>
+                <h3>Add to Apple Wallet, Google Pay, Samsung Pay</h3>
+                <p class="wallet-pass-subtitle">
+                  Save your ticket to your phone's wallet app for easy entry at
+                  the gate.
+                </p>
+              </div>
+            </div>
+            <button
+              class="wallet-pass-btn"
+              @click="
+                router.push(`/portal/events/${eventId.value}/wallet-pass`)
+              "
+            >
+              Manage Wallet Pass
+            </button>
+          </div>
+        </div>
       </template>
     </div>
 
@@ -489,6 +516,46 @@ onMounted(async () => {
 }
 .tickets-section {
   margin-top: var(--space-8);
+}
+.wallet-pass-section {
+  margin-top: var(--space-8);
+}
+.wallet-pass-card {
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  background: var(--white);
+}
+.wallet-pass-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.wallet-pass-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--neutral-900);
+}
+.wallet-pass-subtitle {
+  color: var(--neutral-600);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+.wallet-pass-btn {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--brand-600);
+  color: var(--white);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.wallet-pass-btn:hover {
+  background: var(--brand-700);
 }
 .tickets-section h2 {
   font-size: 20px;

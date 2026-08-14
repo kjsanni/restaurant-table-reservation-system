@@ -5,11 +5,11 @@ class WalletPassAdapter {
     this.platformName = platformName;
   }
 
-  async sign(designSnapshot, tenantId) {
+  async sign(_designSnapshot, _tenantId) {
     throw new Error(`sign() not implemented for ${this.platformName}`);
   }
 
-  async verify(artifactPath) {
+  async verify(_artifactPath) {
     return true;
   }
 

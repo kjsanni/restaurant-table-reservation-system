@@ -33,6 +33,8 @@ const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
 const { startBackupWorker } = require("../queues/backup.queue");
 const { startProvisioningWorker } = require("../queues/provisioning.queue");
+const { startWalletPassSigningWorker, closeWalletPassSigningWorker } = require("../queues/walletPass.queue");
+const walletPassAdminRouter = require("../routes/walletPassAdmin.router");
 const { client: redisClient, getConnectionStatus } = require("./cache");
 const { checkQueueDepths } = require("../queues/queue");
 const { resolveTenant } = require("../tenant-platform/middleware/resolveTenant");
@@ -125,15 +127,18 @@ const createServer = () => {
     const rw = startReportWorker();
     const bw = startBackupWorker();
     const pw = startProvisioningWorker();
+    const wpw = startWalletPassSigningWorker();
     if (nw) workers.push(nw);
     if (rw) workers.push(rw);
     if (bw) workers.push(bw);
     if (pw) workers.push(pw);
+    if (wpw) workers.push(wpw);
   } catch (err) {
     console.warn("BullMQ workers not started:", err.message);
   }
 
   const shutdownWorkers = async () => {
+    await closeWalletPassSigningWorker();
     await Promise.all(workers.map((w) => w.close().catch(() => {})));
     clearInterval(tenantCronInterval);
     clearInterval(salonCronInterval);
@@ -223,6 +228,7 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
   app.use("/api/v1/audit-logs", generalLimiter, auditLogRouter);
   app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
+  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, walletPassAdminRouter);
   app.use("/api/v1/public", publicRouter);
   app.use("/api/v1/public/status", statusRouter);
   app.use("/api/v1/docs", docsRouter);

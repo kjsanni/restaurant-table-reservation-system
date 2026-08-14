@@ -82,8 +82,6 @@ class GoogleWalletAdapter extends WalletPassAdapter {
     const design = designSnapshot.design || {};
     const qrCodeData = designSnapshot.ticketData || {};
 
-    const payload = this.buildJwtPayload(design, qrCodeData, config);
-
     const token = new JWT({
       email: config.accountEmail,
       privateKey: config.privateKey,
@@ -123,7 +121,7 @@ class GoogleWalletAdapter extends WalletPassAdapter {
 
     let classId;
     try {
-      const response = await client.request({
+       await client.request({
         url: `https://walletdemo.android.com/walleto/v1/eventTicketClass/${ticketClass.resource.id}`,
         method: "PUT",
         data: ticketClass.resource,
@@ -172,9 +170,8 @@ class GoogleWalletAdapter extends WalletPassAdapter {
       },
     };
 
-    let objectResponse;
     try {
-      objectResponse = await client.request({
+      await client.request({
         url: `https://walletdemo.android.com/walleto/v1/eventTicketObject/${objectId}`,
         method: "PUT",
         data: ticketObject.resource,

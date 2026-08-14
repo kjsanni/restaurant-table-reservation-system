@@ -1,6 +1,6 @@
 "use strict";
 
-const db = require("../../db/models");
+const db = require("../../../db/models");
 const { signAllPlatforms, getAdapter, SUPPORTED_PLATFORMS } = require("../adapters");
 const logger = require("../../../utils/logger");
 

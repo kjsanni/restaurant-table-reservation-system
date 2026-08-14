@@ -4,7 +4,6 @@ const express = require("express");
 const router = express.Router({ mergeParams: true });
 const tryCatchHandler = require("../../../middleware/tryCatch");
 const { protect, requirePermission } = require("../../../middleware/auth");
-const { validateScannerApiKey } = require("../middleware/scannerAuth");
 const upload = require("../middleware/photoUpload");
 const photoController = require("../controllers/photo.controller");
 

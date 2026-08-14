@@ -99,6 +99,21 @@ class EventPortalAPI {
   verifyToken(token) {
     return API.get(`/events/checkin/${token}/verify`);
   }
+
+  createWalletPassRequest(eventId) {
+    return API.post(`/events/${eventId}/wallet-passes/request`);
+  }
+
+  listWalletPassRequests(eventId, params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return API.get(
+      `/events/${eventId}/wallet-passes/requests${qs ? `?${qs}` : ""}`
+    );
+  }
+
+  getWalletPassRequest(eventId, requestId) {
+    return API.get(`/events/${eventId}/wallet-passes/requests/${requestId}`);
+  }
 }
 
 export default new EventPortalAPI();

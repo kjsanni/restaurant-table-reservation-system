@@ -174,7 +174,7 @@ qrCodeService.checkin = async (rawToken, tenantId, userId, scannerParams = {}) =
     return { valid: false, error: "INVALID_TOKEN", message: "Invalid QR code format" };
   }
 
-  if (sig) {
+  if (sig && typeof sig === "string" && sig.length > 0) {
     const secret = await loadQrSecret(tenantId);
     if (!verifySignature(rawToken, sig, secret)) {
       await logAudit(

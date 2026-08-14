@@ -3,10 +3,6 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const db = require("../../../db/models");
-const qrCodeDAO = require("../DAOs/qrCode.dao");
-const qrCodeService = require("./qrCode.service");
-const walletPassService = require("./walletPass.service");
 
 const ATTENDEE_PHOTOS_DIR = path.join(__dirname, "../../../uploads/event-photos");
 
@@ -58,10 +54,10 @@ photoController.getPhoto = async (req, res) => {
     const jpgPath = path.join(ATTENDEE_PHOTOS_DIR, `${photoRef}.jpg`);
     const pngPath = path.join(ATTENDEE_PHOTOS_DIR, `${photoRef}.png`);
     if (fs.existsSync(jpgPath)) {
-      return res.sendFile("jpg", { root: ATTENDEE_PHOTOS_DIR });
+      return res.sendFile(`${photoRef}.jpg`, { root: ATTENDEE_PHOTOS_DIR });
     }
     if (fs.existsSync(pngPath)) {
-      return res.sendFile("png", { root: ATTENDEE_PHOTOS_DIR });
+      return res.sendFile(`${photoRef}.png`, { root: ATTENDEE_PHOTOS_DIR });
     }
     return res.status(404).json({ success: false, error: "NOT_FOUND", message: "Photo not found" });
   }
