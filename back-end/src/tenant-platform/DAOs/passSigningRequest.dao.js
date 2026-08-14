@@ -28,7 +28,7 @@ passSigningRequestDAO.findById = (id, tenantId = null) => {
   const where = { id };
   if (tenantId) where.tenantId = tenantId;
 
-  return db.passSigningRequest.findOne({
+  return db.passSigningRequest.findOne({ // nosemgrep: javascript.lang.security.audit.no-sql-injection - Sequelize parameterized where, not MongoDB
     where,
     include: [
       { model: db.user, as: "requester", attributes: ["id", "username", "email"] },

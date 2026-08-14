@@ -95,7 +95,7 @@ const paystackEventHandler = async (req, res) => {
 
     const appointmentId = data.metadata?.appointmentId;
     if (appointmentId && tenantId) {
-      const appointment = await db.appointment.findOne({
+      const appointment = await db.appointment.findOne({ // nosemgrep: javascript.lang.security.audit.no-sql-injection - Sequelize parameterized where, not MongoDB
         where: { id: appointmentId, tenantId },
       });
       if (appointment && appointment.paymentStatus !== "paid") {
@@ -108,7 +108,7 @@ const paystackEventHandler = async (req, res) => {
 
     const bookingId = data.metadata?.bookingId;
     if (bookingId && tenantId) {
-      const booking = await db.eventBooking.findOne({
+      const booking = await db.eventBooking.findOne({ // nosemgrep: javascript.lang.security.audit.no-sql-injection - Sequelize parameterized where, not MongoDB
         where: { id: bookingId, tenantId },
       });
       if (booking && booking.paymentStatus !== "paid") {

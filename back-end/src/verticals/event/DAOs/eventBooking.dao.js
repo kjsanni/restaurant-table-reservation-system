@@ -12,7 +12,7 @@ eventBookingDAO.create = async (data) => {
 eventBookingDAO.findById = async (id, tenantId) => {
   const where = { id };
   if (tenantId) where.tenantId = tenantId;
-  return db.eventBooking.findOne({
+  return db.eventBooking.findOne({ // nosemgrep: javascript.lang.security.audit.no-sql-injection - Sequelize parameterized where, not MongoDB
     where,
     include: [
       { model: db.event, as: "event" },
@@ -77,7 +77,7 @@ eventBookingDAO.findByReference = async (reference, tenantId) => {
 };
 
 eventBookingDAO.countConfirmedByEvent = async (eventId, tenantId) => {
-  const result = await db.eventBooking.findOne({
+  const result = await db.eventBooking.findOne({ // nosemgrep: javascript.lang.security.audit.no-sql-injection - Sequelize parameterized where, not MongoDB
     where: { eventId, tenantId, status: "confirmed" },
     attributes: [
       [db.sequelize.fn("SUM", db.sequelize.col("quantity")), "totalConfirmed"],

@@ -67,11 +67,9 @@ Adopt the **same vertical module pattern** as restaurant and salon, implemented 
 **Status:** Accepted
 **Date:** 2026-08-14
 
-### Context
+### Context: Partitioning Rejection `20260718000004/006/007` attempted to partition `Reservations`, `Payments`, and `Customers` tables by `LINEAR KEY(tenantId)` with `NOT NULL` constraints on `tenantId`. The `QRCodes` table in the event vertical has a foreign key to `tenantId` with `ON DELETE SET NULL` semantics (same as Reservations/Payments/Customers), which means the column must remain nullable to support graceful tenant deletion.
 
-Phase 3 migrations `20260718000004/006/007` attempted to partition `Reservations`, `Payments`, and `Customers` tables by `LINEAR KEY(tenantId)` with `NOT NULL` constraints on `tenantId`. The `QRCodes` table in the event vertical has a foreign key to `tenantId` with `ON DELETE SET NULL` semantics (same as Reservations/Payments/Customers), which means the column must remain nullable to support graceful tenant deletion.
-
-### Decision
+### Decision: Partitioning Rejection
 
 **Do not** apply `PARTITION BY LINEAR KEY(tenantId)` or `NOT NULL` constraints to the `QRCodes` (or any event vertical) tables. The existing Phase 3 partition migrations (which were rejected per the correction in `corrections.md`) must not be reintroduced for the event vertical.
 
@@ -81,7 +79,7 @@ Phase 3 migrations `20260718000004/006/007` attempted to partition `Reservations
 2. **Backfill already exists**: Migration `20260814000003` backfills any NULL `tenantId` values to the default tenant (id=1) for backward compatibility.
 3. **Single-tenant query pattern**: Event check-ins always include tenant context from the API key, so query-time tenant filtering is sufficient for isolation without partitioning.
 
-### Consequences
+### Consequences: Partitioning Impact
 
 - **Positive**: No migration failures, consistent with corrected Phase 3 approach, no risk of reintroducing the partition bug.
 - **Negative**: No partition-level performance optimization for very large tenants (acceptable for v1; can revisit with horizontal sharding if needed).

@@ -5,7 +5,7 @@ const db = require("../../db/models");
 const provisioningPipelineDAO = {};
 
 provisioningPipelineDAO.findByTenantId = async (tenantId) => {
-  return db.provisioningPipeline.findOne({ where: { tenantId } });
+  return db.provisioningPipeline.findOne({ where: { tenantId } }); // nosemgrep: javascript.lang.security.audit.no-sql-injection - Sequelize parameterized where, not MongoDB
 };
 
 provisioningPipelineDAO.upsert = async (pipeline) => {

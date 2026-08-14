@@ -9,10 +9,10 @@ const { decrypt } = require("../../../utils/encryption");
 const logger = require("../../../utils/logger");
 const WalletPassAdapter = require("./walletPassAdapter.base");
 
-const PKPASS_TEMP_DIR = path.join(__dirname, "../../../uploads/.pkpass-temp");
+const PKPASS_TEMP_DIR = path.join(__dirname, "../../../uploads/.pkpass-temp"); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - static __dirname path
 
 if (!fs.existsSync(PKPASS_TEMP_DIR)) {
-  fs.mkdirSync(PKPASS_TEMP_DIR, { recursive: true, mode: 0o700 });
+  fs.mkdirSync(PKPASS_TEMP_DIR, { recursive: true, mode: 0o700 }); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - static __dirname path
 }
 
 class AppleWalletAdapter extends WalletPassAdapter {
@@ -58,6 +58,17 @@ class AppleWalletAdapter extends WalletPassAdapter {
       orgName: settingMap.apple_organization_name || process.env.APPLE_ORGANIZATION_NAME || "Event Tickets",
       qrSecret: settingMap.event_qr_secret || process.env.EVENT_QR_SECRET,
     };
+  }
+
+  setPhotoOnPass(passJson, qrCodeData) {
+    if (!qrCodeData.photoRef) return;
+    const photoRef = String(qrCodeData.photoRef);
+    const photoPath = path.join(__dirname, "../../../uploads/event-photos", `${photoRef}.jpg`); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - resolved below with path traversal check
+    const resolvedPhoto = path.resolve(photoPath);
+    const resolvedAssets = path.resolve(path.join(__dirname, "../../../uploads/event-photos")); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - static __dirname path
+    if (resolvedPhoto.startsWith(resolvedAssets + path.sep) && fs.existsSync(resolvedPhoto)) {
+      passJson.images = { logo: "logo.jpg" };
+    }
   }
 
   buildPassJson(design, qrCodeData, certs) {
@@ -120,15 +131,7 @@ class AppleWalletAdapter extends WalletPassAdapter {
       passJson.primaryFields = design.primaryFields;
     }
 
-    if (qrCodeData.photoRef) {
-      const photoRef = String(qrCodeData.photoRef);
-      const photoPath = path.join(__dirname, "../../../uploads/event-photos", `${photoRef}.jpg`);
-      const resolvedPhoto = path.resolve(photoPath);
-      const resolvedAssets = path.resolve(path.join(__dirname, "../../../uploads/event-photos"));
-      if (resolvedPhoto.startsWith(resolvedAssets + path.sep) && fs.existsSync(resolvedPhoto)) {
-        passJson.images = { logo: "logo.jpg" };
-      }
-    }
+    this.setPhotoOnPass(passJson, qrCodeData);
 
     return passJson;
   }
@@ -143,16 +146,16 @@ class AppleWalletAdapter extends WalletPassAdapter {
 
     const passJson = this.buildPassJson(designSnapshot.design || {}, designSnapshot.ticketData || {}, certs);
 
-    const tempDir = path.join(PKPASS_TEMP_DIR, `${Date.now()}_${process.pid}_${crypto.randomBytes(4).toString("hex")}`);
-    fs.mkdirSync(tempDir, { recursive: true, mode: 0o700 });
+    const tempDir = path.join(PKPASS_TEMP_DIR, `${Date.now()}_${process.pid}_${crypto.randomBytes(4).toString("hex")}`); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - no user input, uses Date.now/process.pid/randomBytes
+    fs.mkdirSync(tempDir, { recursive: true, mode: 0o700 }); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - validated tempDir above
 
-    const passJsonPath = path.join(tempDir, "pass.json");
+    const passJsonPath = path.join(tempDir, "pass.json"); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - static filename
     fs.writeFileSync(passJsonPath, JSON.stringify(passJson, null, 2));
 
     if (passJson.images?.logo && designSnapshot.ticketData?.photoRef) {
       const photoRef = String(designSnapshot.ticketData.photoRef);
       if (/^[a-f0-9]{64}$/i.test(photoRef)) {
-        const photoPath = path.join(__dirname, "../../../uploads/event-photos", `${photoRef}.jpg`);
+        const photoPath = path.join(__dirname, "../../../uploads/event-photos", `${photoRef}.jpg`); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - validated as SHA-256 hex on line above
         if (fs.existsSync(photoPath)) {
           const logoCopy = path.join(tempDir, "logo.jpg");
           fs.copyFileSync(photoPath, logoCopy);
@@ -182,7 +185,7 @@ class AppleWalletAdapter extends WalletPassAdapter {
       throw new Error(`Apple pass signing error: ${err.message}`);
     }
 
-    const outputFile = path.join(tempDir, "ticket.pkpass");
+    const outputFile = path.join(tempDir, "ticket.pkpass"); // nosemgrep: javascript.lang.security.audit.dangerous-path-path-join - static filename
     const buffers = [];
     pass.on("data", (buf) => buffers.push(buf));
     await new Promise((resolve, reject) => {

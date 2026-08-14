@@ -25,98 +25,75 @@ const columnExists = async (queryInterface, tableName, columnName) => {
   return false;
 };
 
+const columnDefinitions = (Sequelize) => ({
+  [COLS.tokenHash]: {
+    type: Sequelize.STRING(64),
+    allowNull: true,
+    unique: true,
+    after: "code",
+  },
+  [COLS.maxUses]: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+    after: "status",
+  },
+  [COLS.usedCount]: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    after: "maxUses",
+  },
+  [COLS.validFrom]: {
+    type: Sequelize.DATE,
+    allowNull: true,
+    after: "expiresAt",
+  },
+  [COLS.attendeeName]: {
+    type: Sequelize.STRING(90),
+    allowNull: true,
+    after: COLS.validFrom,
+  },
+  [COLS.photoRef]: {
+    type: Sequelize.STRING(64),
+    allowNull: true,
+    after: COLS.attendeeName,
+  },
+  [COLS.seat]: {
+    type: Sequelize.STRING(20),
+    allowNull: true,
+    after: COLS.photoRef,
+  },
+  [COLS.tier]: {
+    type: Sequelize.STRING(20),
+    allowNull: true,
+    after: COLS.seat,
+  },
+  [COLS.ticketType]: {
+    type: Sequelize.STRING(50),
+    allowNull: true,
+    after: COLS.tier,
+  },
+});
+
+const addMissingColumns = async (queryInterface, Sequelize) => {
+  const defs = columnDefinitions(Sequelize);
+  const added = [];
+  for (const col of Object.keys(defs)) {
+    if (!(await columnExists(queryInterface, TABLE, col))) {
+      await queryInterface.addColumn(TABLE, col, defs[col]);
+      added.push(col);
+    }
+  }
+  if (added.length > 0) {
+    // eslint-disable-next-line no-console
+    console.info(`[migration] Added columns to ${TABLE}: ${added.join(", ")}`);
+  }
+};
+
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const added = [];
-
-    if (!(await columnExists(queryInterface, TABLE, COLS.tokenHash))) {
-      await queryInterface.addColumn(TABLE, COLS.tokenHash, {
-        type: Sequelize.STRING(64),
-        allowNull: true,
-        unique: true,
-        after: "code",
-      });
-      added.push(COLS.tokenHash);
-    }
-
-    if (!(await columnExists(queryInterface, TABLE, COLS.maxUses))) {
-      await queryInterface.addColumn(TABLE, COLS.maxUses, {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        defaultValue: 1,
-        after: "status",
-      });
-      added.push(COLS.maxUses);
-    }
-
-    if (!(await columnExists(queryInterface, TABLE, COLS.usedCount))) {
-      await queryInterface.addColumn(TABLE, COLS.usedCount, {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        defaultValue: 0,
-        after: "maxUses",
-      });
-      added.push(COLS.usedCount);
-    }
-
-    if (!(await columnExists(queryInterface, TABLE, COLS.validFrom))) {
-      await queryInterface.addColumn(TABLE, COLS.validFrom, {
-        type: Sequelize.DATE,
-        allowNull: true,
-        after: "expiresAt",
-      });
-      added.push(COLS.validFrom);
-    }
-
-    if (!(await columnExists(queryInterface, TABLE, COLS.attendeeName))) {
-      await queryInterface.addColumn(TABLE, COLS.attendeeName, {
-        type: Sequelize.STRING(90),
-        allowNull: true,
-        after: "validFrom",
-      });
-      added.push(COLS.attendeeName);
-    }
-
-    if (!(await columnExists(queryInterface, TABLE, COLS.photoRef))) {
-      await queryInterface.addColumn(TABLE, COLS.photoRef, {
-        type: Sequelize.STRING(64),
-        allowNull: true,
-        after: COLS.attendeeName,
-      });
-      added.push(COLS.photoRef);
-    }
-
-    if (!(await columnExists(queryInterface, TABLE, COLS.seat))) {
-      await queryInterface.addColumn(TABLE, COLS.seat, {
-        type: Sequelize.STRING(20),
-        allowNull: true,
-        after: COLS.photoRef,
-      });
-      added.push(COLS.seat);
-    }
-
-    if (!(await columnExists(queryInterface, TABLE, COLS.tier))) {
-      await queryInterface.addColumn(TABLE, COLS.tier, {
-        type: Sequelize.STRING(20),
-        allowNull: true,
-        after: COLS.seat,
-      });
-      added.push(COLS.tier);
-    }
-
-    if (!(await columnExists(queryInterface, TABLE, COLS.ticketType))) {
-      await queryInterface.addColumn(TABLE, COLS.ticketType, {
-        type: Sequelize.STRING(50),
-        allowNull: true,
-        after: COLS.tier,
-      });
-      added.push(COLS.ticketType);
-    }
-
-    if (added.length > 0) {
-      // eslint-disable-next-line no-console
-      console.info(`[migration] Added columns to ${TABLE}: ${added.join(", ")}`);
-    }
+    await addMissingColumns(queryInterface, Sequelize);
   },
 
   async down(queryInterface, Sequelize) {

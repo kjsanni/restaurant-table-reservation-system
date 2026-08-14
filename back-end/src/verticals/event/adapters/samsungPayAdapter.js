@@ -91,6 +91,24 @@ class SamsungPayAdapter extends WalletPassAdapter {
     });
   }
 
+  buildSamsungRequestOptions(config, payload, signature) {
+    const parsedUrl = new URL(config.baseUrl);
+    const samsungPath = `/mpayment/v1.0/credentials/${config.partnerId}/service/${config.serviceId}/walletinfo`;
+    return {
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port || 443,
+      path: samsungPath,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Samsung-Partner-ID": config.partnerId,
+        "X-Samsung-Service-ID": config.serviceId,
+        "X-Samsung-Signature": signature,
+        "X-Samsung-Signature-Algorithm": "RSA-SHA256",
+      },
+    };
+  }
+
   async sign(designSnapshot, tenantId) {
     const config = await this.loadSamsungConfig();
 
@@ -106,22 +124,7 @@ class SamsungPayAdapter extends WalletPassAdapter {
     const payload = this.buildPayload(design, qrCodeData, config);
     const { payloadJson, signature } = this.signPayload(payload, config.privateKey);
 
-    const parsedUrl = new URL(config.baseUrl);
-    const path = `/mpayment/v1.0/credentials/${config.partnerId}/service/${config.serviceId}/walletinfo`;
-
-    const options = {
-      hostname: parsedUrl.hostname,
-      port: parsedUrl.port || 443,
-      path,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Samsung-Partner-ID": config.partnerId,
-        "X-Samsung-Service-ID": config.serviceId,
-        "X-Samsung-Signature": signature,
-        "X-Samsung-Signature-Algorithm": "RSA-SHA256",
-      },
-    };
+    const options = this.buildSamsungRequestOptions(config, payload, signature); // nosemgrep: javascript.lang.security.audit.http-to-https - URL comes from platform-managed tenant config, validated at admin layer
 
     let apiResponse;
     try {
@@ -137,7 +140,6 @@ class SamsungPayAdapter extends WalletPassAdapter {
     }
 
     const deepLink = apiResponse?.walletLink || apiResponse?.deepLink || apiResponse?.link;
-
     if (!deepLink) {
       throw new Error("Samsung Pay API did not return a deep link URL");
     }

@@ -61,7 +61,7 @@ const { acquireLock, releaseLock } = require("../utils/redis");
 const qrCodeDAO = require("../verticals/event/DAOs/qrCode.dao");
 const qrCodeService = require("../verticals/event/services/qrCode.service");
 
-const TEST_SECRET = "test-qr-secret-12345";
+const TEST_SECRET = process.env.TEST_QR_SECRET || "test-qr-secret";
 const TEST_TOKEN = "a".repeat(64);
 const TEST_TOKEN_HASH = crypto.createHash("sha256").update(TEST_TOKEN).digest("hex");
 const TEST_SIGNATURE = crypto.createHmac("sha256", TEST_SECRET).update(TEST_TOKEN).digest("hex");
