@@ -11,6 +11,7 @@ router
   .route("/")
   .get(
     tryCatchHandler(tenantLimiter),
+    // codeql[js/missing-rate-limiting] SUPPRESSED: tenantLimiter applied above
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),
@@ -18,6 +19,7 @@ router
   )
   .post(
     tryCatchHandler(tenantWriteLimiter),
+    // codeql[js/missing-rate-limiting] SUPPRESSED: tenantWriteLimiter applied above
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),
@@ -29,6 +31,7 @@ router
   .route("/:id")
   .put(
     tryCatchHandler(tenantWriteLimiter),
+    // codeql[js/missing-rate-limiting] SUPPRESSED: tenantWriteLimiter applied above
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),
@@ -36,6 +39,7 @@ router
   )
   .delete(
     tryCatchHandler(tenantWriteLimiter),
+    // codeql[js/missing-rate-limiting] SUPPRESSED: tenantWriteLimiter applied above
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),
