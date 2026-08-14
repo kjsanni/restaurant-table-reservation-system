@@ -103,7 +103,7 @@ const toast = useToastStore();
 import formatMoney from "@/utils/formatMoney";
 
 const loading = ref(false);
-const confirmingRefund = ref(null as number | null);
+const confirmingRefund = ref<number | undefined>(undefined);
 const items = ref([]);
 
 const summary = computed(() => {
