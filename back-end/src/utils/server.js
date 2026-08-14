@@ -261,7 +261,7 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
     res.send("User-agent: *\nAllow: /\nSitemap: https://vibespotgh.com/sitemap.xml\n");
   });
 
-  const frontendDistPath = require("path").join(__dirname, "../../front-end/dist");
+  const frontendDistPath = require("path").join(__dirname, "../../../front-end/dist");
   if (require("fs").existsSync(frontendDistPath)) {
     app.use(require("express").static(frontendDistPath));
     app.get("*", (req, res) => {
