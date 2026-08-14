@@ -1,21 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class GiftCard extends Model {
-    static associate(models) {
-      GiftCard.belongsTo(models.customer, {
-        foreignKey: "purchasedByCustomerId",
-        as: "purchasedBy",
-      });
-      GiftCard.belongsTo(models.customer, {
-        foreignKey: "redeemedByCustomerId",
-        as: "redeemedBy",
-      });
-    }
-  }
-  GiftCard.init(
-    {
-      tenantId: {
+
+const getGiftCardAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -64,12 +52,25 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "giftCard",
-      tableName: "gift_cards",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class GiftCard extends Model {
+    static associate(models) {
+      GiftCard.belongsTo(models.customer, {
+        foreignKey: "purchasedByCustomerId",
+        as: "purchasedBy",
+      });
+      GiftCard.belongsTo(models.customer, {
+        foreignKey: "redeemedByCustomerId",
+        as: "redeemedBy",
+      });
     }
-  );
+  }
+  GiftCard.init(getGiftCardAttributes(DataTypes), {
+    sequelize,
+    modelName: "giftCard",
+    tableName: "gift_cards",
+  });
   return GiftCard;
 };

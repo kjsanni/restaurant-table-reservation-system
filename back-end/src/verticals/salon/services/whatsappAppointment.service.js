@@ -107,226 +107,223 @@ const startSalonAppointmentFlow = async (phone, tenantId) => {
   await sendText(phone, `Welcome to our salon booking! Please select a service:\n\n${menu}\n\nReply with the number.`, tenantId);
 };
 
-const handleSalonAppointmentState = async (phone, normalized, rawMessage, session, tenantId) => {
-  if (session.state === "salon_service") {
+const handleSalonServiceState = async (phone, normalized, session, tenantId) => {
+  const idx = parseInt(normalized, 10) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= session.services.length) {
+    await sendText(phone, "Invalid choice. Please reply with the service number.", tenantId);
+    return;
+  }
+  const service = session.services[idx];
+  session.selectedServiceId = service.id;
+  await setSession(phone, { ...session, state: "salon_date" });
+  const today = new Date().toISOString().slice(0, 10);
+  await sendText(phone, `You selected: ${service.name} (${service.durationMinutes}m)\n\nWhat date would you like? (YYYY-MM-DD)\nExample: ${today}`, tenantId);
+};
+
+const handleSalonDateState = async (phone, rawMessage, session, tenantId) => {
+  const parsed = rawMessage.trim();
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(parsed)) {
+    await sendText(phone, "Please send the date in YYYY-MM-DD format. Example: 2026-08-01", tenantId);
+    return;
+  }
+  const slots = await appointmentSchedulingService.findAvailableSlots(tenantId, session.selectedServiceId, parsed);
+  if (!slots.length) {
+    await sendText(phone, "No available slots for this date. Please try another date.", tenantId);
+    return;
+  }
+  session.selectedDate = parsed;
+  session.slots = slots.slice(0, 10);
+  await setSession(phone, { ...session, state: "salon_time" });
+  const slotList = session.slots.map((s, i) => `${i + 1}. ${new Date(s.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`).join("\n");
+  await sendText(phone, `Available slots for ${parsed}:\n\n${slotList}\n\nReply with the slot number.`, tenantId);
+};
+
+const handleSalonTimeState = async (phone, normalized, session, tenantId) => {
+  const idx = parseInt(normalized, 10) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= session.slots.length) {
+    await sendText(phone, "Invalid slot. Please reply with the slot number.", tenantId);
+    return;
+  }
+  const slot = session.slots[idx];
+  session.selectedSlot = slot;
+  const stylists = await formatStylists(tenantId, session.selectedServiceId);
+  session.stylists = stylists;
+  await setSession(phone, { ...session, state: "salon_stylist" });
+  const stylistList = stylists.map((s, i) => `${i + 1}. ${s.name}`).join("\n");
+  await sendText(phone, `Selected time: ${new Date(slot.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}\n\nChoose a stylist:\n\n${stylistList}\n\nReply with the number or "any" for the first available.`, tenantId);
+};
+
+const handleSalonStylistState = async (phone, normalized, session, tenantId) => {
+  let stylistId = null;
+  if (!["any", "0", "none"].includes(normalized)) {
     const idx = parseInt(normalized, 10) - 1;
-    if (isNaN(idx) || idx < 0 || idx >= session.services.length) {
-      await sendText(phone, "Invalid choice. Please reply with the service number.", tenantId);
+    if (isNaN(idx) || idx < 0 || idx >= session.stylists.length) {
+      await sendText(phone, "Invalid stylist. Reply with the number or 'any'.", tenantId);
       return;
     }
-    const service = session.services[idx];
-    session.selectedServiceId = service.id;
-    await setSession(phone, { ...session, state: "salon_date" });
-    const today = new Date().toISOString().slice(0, 10);
-    await sendText(phone, `You selected: ${service.name} (${service.durationMinutes}m)\n\nWhat date would you like? (YYYY-MM-DD)\nExample: ${today}`, tenantId);
-    return;
+    stylistId = session.stylists[idx].id;
+  } else {
+    stylistId = session.stylists[0]?.id || null;
   }
+  session.selectedStylistId = stylistId;
+  await setSession(phone, { ...session, state: "salon_customer_details" });
+  await sendText(phone, "Please share your full name.", tenantId);
+};
 
-  if (session.state === "salon_date") {
-    const parsed = rawMessage.trim();
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(parsed)) {
-      await sendText(phone, "Please send the date in YYYY-MM-DD format. Example: 2026-08-01", tenantId);
-      return;
-    }
-    const slots = await appointmentSchedulingService.findAvailableSlots(tenantId, session.selectedServiceId, parsed);
-    if (!slots.length) {
-      await sendText(phone, "No available slots for this date. Please try another date.", tenantId);
-      return;
-    }
-    session.selectedDate = parsed;
-    session.slots = slots.slice(0, 10);
-    await setSession(phone, { ...session, state: "salon_time" });
-    const slotList = session.slots.map((s, i) => `${i + 1}. ${new Date(s.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`).join("\n");
-    await sendText(phone, `Available slots for ${parsed}:\n\n${slotList}\n\nReply with the slot number.`, tenantId);
-    return;
-  }
+const handleSalonCustomerDetailsState = async (phone, rawMessage, session, tenantId) => {
+  session.customerName = rawMessage.trim();
+  session.customerPhone = phone;
+  await setSession(phone, { ...session, state: "salon_confirm" });
+  const service = session.services.find((s) => s.id === session.selectedServiceId);
+  const stylist = session.stylists.find((s) => s.id === session.selectedStylistId);
+  await sendText(
+    phone,
+    `Please confirm your booking:\n\nService: ${service?.name || "Unknown"}\nDate: ${session.selectedDate}\nTime: ${new Date(session.selectedSlot.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}\nStylist: ${stylist?.name || "Any"}\nName: ${session.customerName}\n\nReply 'yes' to confirm or 'no' to cancel.`,
+    tenantId
+  );
+};
 
-  if (session.state === "salon_time") {
-    const idx = parseInt(normalized, 10) - 1;
-    if (isNaN(idx) || idx < 0 || idx >= session.slots.length) {
-      await sendText(phone, "Invalid slot. Please reply with the slot number.", tenantId);
-      return;
-    }
-    const slot = session.slots[idx];
-    session.selectedSlot = slot;
-    const stylists = await formatStylists(tenantId, session.selectedServiceId);
-    session.stylists = stylists;
-    await setSession(phone, { ...session, state: "salon_stylist" });
-    const stylistList = stylists.map((s, i) => `${i + 1}. ${s.name}`).join("\n");
-    await sendText(phone, `Selected time: ${new Date(slot.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}\n\nChoose a stylist:\n\n${stylistList}\n\nReply with the number or "any" for the first available.`, tenantId);
-    return;
-  }
+const processPayment = async (phone, session, appointment, tenantId, service, customer) => {
+  const paymentConfig = await getSalonPaymentConfig(tenantId);
+  const servicePrice = service?.price || 50;
+  const depositRequired = paymentConfig?.depositRequired;
+  const depositPercent = paymentConfig?.defaultDepositPercent || 0;
+  const chargeAmount = (depositRequired && depositPercent > 0)
+    ? (servicePrice * depositPercent) / 100
+    : servicePrice;
 
-  if (session.state === "salon_stylist") {
-    let stylistId = null;
-    if (!["any", "0", "none"].includes(normalized)) {
-      const idx = parseInt(normalized, 10) - 1;
-      if (isNaN(idx) || idx < 0 || idx >= session.stylists.length) {
-        await sendText(phone, "Invalid stylist. Reply with the number or 'any'.", tenantId);
-        return;
-      }
-      stylistId = session.stylists[idx].id;
-    } else {
-      stylistId = session.stylists[0]?.id || null;
-    }
-    session.selectedStylistId = stylistId;
-    await setSession(phone, { ...session, state: "salon_customer_details" });
-    await sendText(phone, "Please share your full name.", tenantId);
-    return;
-  }
+  const channels = paymentConfig?.enabledChannels && Array.isArray(paymentConfig.enabledChannels)
+    ? paymentConfig?.enabledChannels
+    : null;
 
-  if (session.state === "salon_customer_details") {
-    const _parts = rawMessage.trim().split(" ");
-    session.customerName = rawMessage.trim();
-    session.customerPhone = phone;
-    await setSession(phone, { ...session, state: "salon_confirm" });
+  const payment = await withRetry(
+    () =>
+      initializeCharge({
+        email: customer.email || `wa_${phone}@salon.local`,
+        amount: chargeAmount,
+        metadata: { appointmentId: appointment.id, service: service?.name },
+        channels,
+      }),
+    2,
+    1500
+  );
+
+  await appointmentDao.update(appointment.id, tenantId, {
+    paymentReference: payment.reference,
+  });
+
+  session.paymentReference = payment.reference;
+  await sendText(phone, `Booking confirmed! 🎉\nAppointment ID: #${appointment.id}\n\nPay now to secure your slot:\n${payment.authorization_url}\n\nReference: ${payment.reference}`, tenantId);
+};
+
+const confirmBooking = async (phone, session, tenantId) => {
+  try {
     const service = session.services.find((s) => s.id === session.selectedServiceId);
-    const stylist = session.stylists.find((s) => s.id === session.selectedStylistId);
-    await sendText(
-      phone,
-      `Please confirm your booking:\n\nService: ${service?.name || "Unknown"}\nDate: ${session.selectedDate}\nTime: ${new Date(session.selectedSlot.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}\nStylist: ${stylist?.name || "Any"}\nName: ${session.customerName}\n\nReply 'yes' to confirm or 'no' to cancel.`,
-      tenantId
+    const customer = await ensureCustomer(phone, tenantId);
+    const start = new Date(session.selectedSlot.start);
+    const durationMinutes = service?.durationMinutes || 30;
+    const bufferMinutes = service?.bufferMinutes || 0;
+
+    const conflict = await appointmentSchedulingService.checkConflicts(
+      tenantId, null, session.selectedStylistId, start,
+      durationMinutes, bufferMinutes, null
     );
-    return;
-  }
 
-  if (session.state === "salon_confirm") {
-    if (["yes", "y", "confirm", "ok"].includes(normalized)) {
-      try {
-        const service = session.services.find((s) => s.id === session.selectedServiceId);
-        const customer = await ensureCustomer(phone, tenantId);
-        const start = new Date(session.selectedSlot.start);
-        const durationMinutes = service?.durationMinutes || 30;
-        const bufferMinutes = service?.bufferMinutes || 0;
+    if (conflict.hasConflict) {
+      const reasons = [];
+      if (conflict.holiday) reasons.push("the salon is closed");
+      if (conflict.stylistOccupied) reasons.push("the stylist is double-booked");
+      if (conflict.stationOccupied) reasons.push("a station conflict exists");
+      if (conflict.shiftViolation) reasons.push("the stylist is not on shift");
 
-        const conflict = await appointmentSchedulingService.checkConflicts(
-          tenantId,
-          null,
-          session.selectedStylistId,
-          start,
-          durationMinutes,
-          bufferMinutes,
-          null
-        );
-
-        if (conflict.hasConflict) {
-          const reasons = [];
-          if (conflict.holiday) reasons.push("the salon is closed");
-          if (conflict.stylistOccupied) reasons.push("the stylist is double-booked");
-          if (conflict.stationOccupied) reasons.push("a station conflict exists");
-          if (conflict.shiftViolation) reasons.push("the stylist is not on shift");
-
-          await sendText(
-            phone,
-            `Sorry, this slot is no longer available: ${reasons.join(", ")}. Reply to book again.`,
-            tenantId
-          );
-          await setSession(phone, { state: "idle", tenantId });
-          return;
-        }
-
-        const appointment = await appointmentDao.create({
-          tenantId,
-          customerId: customer.id,
-          serviceId: session.selectedServiceId,
-          stylistId: session.selectedStylistId,
-          start: start.toISOString(),
-          end: new Date(start.getTime() + durationMinutes * 60000).toISOString(),
-          durationMinutes,
-          status: "confirmed",
-          paymentStatus: "unpaid",
-          depositAmount: 0,
-          source: "whatsapp",
-        });
-        session.appointmentId = appointment.id;
-        await setSession(phone, { ...session, state: "salon_payment" });
-
-        const paymentConfig = await getSalonPaymentConfig(tenantId);
-        const servicePrice = service?.price || 50;
-        const depositRequired = paymentConfig?.depositRequired;
-        const depositPercent = paymentConfig?.defaultDepositPercent || 0;
-        const chargeAmount = (depositRequired && depositPercent > 0)
-          ? (servicePrice * depositPercent) / 100
-          : servicePrice;
-
-        const channels = paymentConfig?.enabledChannels && Array.isArray(paymentConfig.enabledChannels)
-          ? paymentConfig.enabledChannels
-          : null;
-
-        const payment = await withRetry(
-          () =>
-            initializeCharge({
-              email: customer.email || `wa_${phone}@salon.local`,
-              amount: chargeAmount,
-              metadata: { appointmentId: appointment.id, service: service?.name },
-              channels,
-            }),
-          2,
-          1500
-        );
-
-        await appointmentDao.update(appointment.id, tenantId, {
-          paymentReference: payment.reference,
-        });
-
-        session.paymentReference = payment.reference;
-        await sendText(phone, `Booking confirmed! 🎉\nAppointment ID: #${appointment.id}\n\nPay now to secure your slot:\n${payment.authorization_url}\n\nReference: ${payment.reference}`, tenantId);
-      } catch (err) {
-        const msg = err?.message || "Something went wrong.";
-        await sendText(phone, `Booking failed: ${msg}\nPlease try again later.`, tenantId);
-        await setSession(phone, { state: "idle", tenantId });
-      }
-      return;
-    }
-    if (["no", "n", "cancel"].includes(normalized)) {
-      await sendText(phone, "Booking cancelled. Reply anytime to book again.", tenantId);
+      await sendText(phone, `Sorry, this slot is no longer available: ${reasons.join(", ")}. Reply to book again.`, tenantId);
       await setSession(phone, { state: "idle", tenantId });
       return;
     }
-    await sendText(phone, "Please reply 'yes' to confirm or 'no' to cancel.", tenantId);
+
+    const appointment = await appointmentDao.create({
+      tenantId, customerId: customer.id, serviceId: session.selectedServiceId,
+      stylistId: session.selectedStylistId, start: start.toISOString(),
+      end: new Date(start.getTime() + durationMinutes * 60000).toISOString(),
+      durationMinutes, status: "confirmed", paymentStatus: "unpaid",
+      depositAmount: 0, source: "whatsapp",
+    });
+    session.appointmentId = appointment.id;
+    await setSession(phone, { ...session, state: "salon_payment" });
+
+    await processPayment(phone, session, appointment, tenantId, service, customer);
+  } catch (err) {
+    const msg = err?.message || "Something went wrong.";
+    await sendText(phone, `Booking failed: ${msg}\nPlease try again later.`, tenantId);
+    await setSession(phone, { state: "idle", tenantId });
+  }
+};
+
+const handleSalonConfirmState = async (phone, normalized, session, tenantId) => {
+  if (["yes", "y", "confirm", "ok"].includes(normalized)) {
+    await confirmBooking(phone, session, tenantId);
     return;
   }
+  if (["no", "n", "cancel"].includes(normalized)) {
+    await sendText(phone, "Booking cancelled. Reply anytime to book again.", tenantId);
+    await setSession(phone, { state: "idle", tenantId });
+    return;
+  }
+  await sendText(phone, "Please reply 'yes' to confirm or 'no' to cancel.", tenantId);
+};
 
-  if (session.state === "salon_payment") {
-    if (["status", "check", "paid", "payment"].includes(normalized)) {
-      try {
-        const appointment = await appointmentDao.findById(session.appointmentId, tenantId);
-        if (!appointment) {
-          await sendText(phone, "Booking not found. Please start again.", tenantId);
-          await setSession(phone, { state: "idle", tenantId });
-          return;
-        }
-        let status = appointment.paymentStatus;
-        if (status !== "paid" && appointment.paymentReference) {
-          try {
-            const verification = await verifyPayment(appointment.paymentReference);
-            if (verification?.data?.status === "success") {
-              await appointmentDao.update(appointment.id, tenantId, {
-                paymentStatus: "paid",
-                depositAmount: (verification.data.amount || 0) / 100,
-              });
-              status = "paid";
-            }
-          } catch {
-            // fallback to local status if verification fails
-          }
-        }
-        const message = status === "paid" ? "Payment confirmed! ✅" : `Payment status: ${status}. Your slot is held temporarily.`;
-        await sendText(phone, `${message}\nAppointment #${appointment.id} on ${new Date(appointment.start).toISOString().slice(0, 10)} at ${new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`, tenantId);
-      } catch {
-        await sendText(phone, "Could not check payment status right now. Please try again later.", tenantId);
+const handleSalonPaymentState = async (phone, normalized, session, tenantId) => {
+  if (["status", "check", "paid", "payment"].includes(normalized)) {
+    try {
+      const appointment = await appointmentDao.findById(session.appointmentId, tenantId);
+      if (!appointment) {
+        await sendText(phone, "Booking not found. Please start again.", tenantId);
+        await setSession(phone, { state: "idle", tenantId });
+        return;
       }
-      return;
+      let status = appointment.paymentStatus;
+      if (status !== "paid" && appointment.paymentReference) {
+        try {
+          const verification = await verifyPayment(appointment.paymentReference);
+          if (verification?.data?.status === "success") {
+            await appointmentDao.update(appointment.id, tenantId, {
+              paymentStatus: "paid",
+              depositAmount: (verification.data.amount || 0) / 100,
+            });
+            status = "paid";
+          }
+        } catch {
+          // fallback to local status if verification fails
+        }
+      }
+      const message = status === "paid" ? "Payment confirmed!" : `Payment status: ${status}. Your slot is held temporarily.`;
+      await sendText(phone, `${message}\nAppointment #${appointment.id} on ${new Date(appointment.start).toISOString().slice(0, 10)} at ${new Date(appointment.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`, tenantId);
+    } catch {
+      await sendText(phone, "Could not check payment status right now. Please try again later.", tenantId);
     }
-    await sendText(phone, "We will confirm your payment shortly. Reply 'status' to check.", tenantId);
     return;
   }
+  await sendText(phone, "We will confirm your payment shortly. Reply 'status' to check.", tenantId);
+};
 
-  if (session.state === "idle") {
+const stateHandlers = {
+  salon_service: handleSalonServiceState,
+  salon_date: handleSalonDateState,
+  salon_time: handleSalonTimeState,
+  salon_stylist: handleSalonStylistState,
+  salon_customer_details: handleSalonCustomerDetailsState,
+  salon_confirm: handleSalonConfirmState,
+  salon_payment: handleSalonPaymentState,
+};
+
+const handleSalonAppointmentState = async (phone, normalized, rawMessage, session, tenantId) => {
+  const handler = stateHandlers[session.state];
+  if (!handler) {
     await startSalonAppointmentFlow(phone, tenantId);
     return;
   }
+  await handler(phone, normalized, rawMessage, session, tenantId);
 };
 
 module.exports = {

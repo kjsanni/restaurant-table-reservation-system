@@ -1,19 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class ServicePackage extends Model {
-    static associate(models) {
-      ServicePackage.belongsToMany(models.service, {
-        through: "service_package_items",
-        foreignKey: "packageId",
-        otherKey: "serviceId",
-        as: "services",
-      });
-    }
-  }
-  ServicePackage.init(
-    {
-      tenantId: {
+
+const getServicePackageAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -55,12 +45,23 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
       },
-    },
-    {
-      sequelize,
-      modelName: "servicePackage",
-      tableName: "service_packages",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class ServicePackage extends Model {
+    static associate(models) {
+      ServicePackage.belongsToMany(models.service, {
+        through: "service_package_items",
+        foreignKey: "packageId",
+        otherKey: "serviceId",
+        as: "services",
+      });
     }
-  );
+  }
+  ServicePackage.init(getServicePackageAttributes(DataTypes), {
+    sequelize,
+    modelName: "servicePackage",
+    tableName: "service_packages",
+  });
   return ServicePackage;
 };

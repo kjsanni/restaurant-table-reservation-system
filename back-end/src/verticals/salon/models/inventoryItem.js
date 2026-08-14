@@ -1,18 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class InventoryItem extends Model {
-    static associate(models) {
-      InventoryItem.belongsTo(models.tenant, { foreignKey: "tenantId" });
-      InventoryItem.belongsTo(models.location, {
-        foreignKey: "locationId",
-        as: "location",
-      });
-    }
-  }
-  InventoryItem.init(
-    {
-      tenantId: {
+
+const getInventoryItemAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -73,12 +64,22 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "inventoryItem",
-      tableName: "inventory_items",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class InventoryItem extends Model {
+    static associate(models) {
+      InventoryItem.belongsTo(models.tenant, { foreignKey: "tenantId" });
+      InventoryItem.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
     }
-  );
+  }
+  InventoryItem.init(getInventoryItemAttributes(DataTypes), {
+    sequelize,
+    modelName: "inventoryItem",
+    tableName: "inventory_items",
+  });
   return InventoryItem;
 };

@@ -2,6 +2,18 @@
 const { Op } = require("sequelize");
 const salonModels = require("../models");
 
+const buildOrConditions = (stationId, stylistId, end) => {
+  const conditions = [];
+  if (stationId) {
+    conditions.push({ stationId, start: { [Op.lt]: end } });
+  }
+  if (stylistId) {
+    conditions.push({ stylistId, start: { [Op.lt]: end } });
+  }
+  return conditions;
+};
+
+
 const appointmentDao = {
   async findAllForTenant(tenantId, filters = {}) {
     const where = { tenantId };
@@ -95,50 +107,24 @@ const appointmentDao = {
       tenantId,
       status: { [Op.notIn]: ["cancelled", "no_show"] },
       start: { [Op.lt]: end },
+      ...(locationId && { locationId }),
+      [Op.or]: buildOrConditions(stationId, stylistId, end),
     };
 
-    if (locationId) {
-      where.locationId = locationId;
-    }
-
-    const orConditions = [];
-    if (stationId) {
-      orConditions.push({
-        stationId,
-        start: {
-          [Op.lt]: end,
-        },
-      });
-    }
-    if (stylistId) {
-      orConditions.push({
-        stylistId,
-        start: {
-          [Op.lt]: end,
-        },
-      });
-    }
-
-    const query = {
-      where: {
-        ...where,
-        [Op.or]: orConditions,
-      },
+    const existing = await salonModels.sequelize.models.appointment.findAll({
+      where,
       include: [
         { model: salonModels.sequelize.models.service, as: "service" },
         { model: salonModels.sequelize.models.station, as: "station" },
         { model: salonModels.sequelize.models.user, as: "stylist" },
       ],
-    };
-
-    const existing = await salonModels.sequelize.models.appointment.findAll(query);
+    });
 
     return existing.filter((apt) => {
       if (excludeId && apt.id === excludeId) return false;
       const aptBuffer = apt.bufferMinutes || 0;
       const aptEnd = new Date(new Date(apt.start).getTime() + (apt.durationMinutes + aptBuffer) * 60000);
-      const aptStart = apt.start;
-      return new Date(start) < aptEnd && end > new Date(aptStart);
+      return new Date(start) < aptEnd && end > new Date(apt.start);
     });
   },
 
