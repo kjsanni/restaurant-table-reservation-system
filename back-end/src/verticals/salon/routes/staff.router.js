@@ -10,14 +10,14 @@ const { tenantLimiter, tenantWriteLimiter } = require("../../../tenant-platform/
 router
   .route("/")
   .get(
-    tryCatchHandler(tenantLimiter),
+    tryCatchHandler(tenantLimiter), // codeql[js/missing-rate-limiting]
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),
     tryCatchHandler(staffController.getSalonStaffHandler)
   )
   .post(
-    tryCatchHandler(tenantWriteLimiter),
+    tryCatchHandler(tenantWriteLimiter), // codeql[js/missing-rate-limiting]
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),
@@ -28,14 +28,14 @@ router
 router
   .route("/:id")
   .put(
-    tryCatchHandler(tenantWriteLimiter),
+    tryCatchHandler(tenantWriteLimiter), // codeql[js/missing-rate-limiting]
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),
     tryCatchHandler(staffController.updateSalonStaffHandler)
   )
   .delete(
-    tryCatchHandler(tenantWriteLimiter),
+    tryCatchHandler(tenantWriteLimiter), // codeql[js/missing-rate-limiting]
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),

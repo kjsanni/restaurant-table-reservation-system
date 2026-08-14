@@ -25,7 +25,7 @@ signedPassArtifactDAO.listByRequest = (requestId) => {
 };
 
 signedPassArtifactDAO.findByRequestAndPlatform = (requestId, platform) => {
-  return db.signedPassArtifact.findOne({
+  return db.signedPassArtifact.findOne({ // nosemgrep: javascript.lang.security.audit.no-sql-injection - Sequelize parameterized where, not MongoDB
     where: { requestId, platform },
     order: [["createdAt", "DESC"]],
   });

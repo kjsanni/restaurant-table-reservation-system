@@ -11,8 +11,11 @@ const logger = require("../../../utils/logger");
 const webPassController = {};
 
 const checkWalletPassApproved = async (eventId, tenantId) => {
-  const approved = await passSigningRequestDAO.listByTenant(tenantId, {});
-  return approved.some((r) => r.eventId === eventId && r.status === "approved");
+  const approved = await passSigningRequestDAO.listByTenant(tenantId, {
+    status: "approved",
+    limit: 1,
+  });
+  return approved.some((r) => r.eventId === eventId);
 };
 
 webPassController.viewPass = async (req, res) => {
