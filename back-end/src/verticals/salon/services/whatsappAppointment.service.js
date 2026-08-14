@@ -107,7 +107,7 @@ const startSalonAppointmentFlow = async (phone, tenantId) => {
   await sendText(phone, `Welcome to our salon booking! Please select a service:\n\n${menu}\n\nReply with the number.`, tenantId);
 };
 
-const handleSalonServiceState = async (phone, normalized, session, tenantId) => {
+const handleSalonServiceState = async (phone, normalized, rawMessage, session, tenantId) => {
   const idx = parseInt(normalized, 10) - 1;
   if (isNaN(idx) || idx < 0 || idx >= session.services.length) {
     await sendText(phone, "Invalid choice. Please reply with the service number.", tenantId);
@@ -120,7 +120,7 @@ const handleSalonServiceState = async (phone, normalized, session, tenantId) => 
   await sendText(phone, `You selected: ${service.name} (${service.durationMinutes}m)\n\nWhat date would you like? (YYYY-MM-DD)\nExample: ${today}`, tenantId);
 };
 
-const handleSalonDateState = async (phone, rawMessage, session, tenantId) => {
+const handleSalonDateState = async (phone, normalized, rawMessage, session, tenantId) => {
   const parsed = rawMessage.trim();
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(parsed)) {
@@ -139,7 +139,7 @@ const handleSalonDateState = async (phone, rawMessage, session, tenantId) => {
   await sendText(phone, `Available slots for ${parsed}:\n\n${slotList}\n\nReply with the slot number.`, tenantId);
 };
 
-const handleSalonTimeState = async (phone, normalized, session, tenantId) => {
+const handleSalonTimeState = async (phone, normalized, rawMessage, session, tenantId) => {
   const idx = parseInt(normalized, 10) - 1;
   if (isNaN(idx) || idx < 0 || idx >= session.slots.length) {
     await sendText(phone, "Invalid slot. Please reply with the slot number.", tenantId);
@@ -154,7 +154,7 @@ const handleSalonTimeState = async (phone, normalized, session, tenantId) => {
   await sendText(phone, `Selected time: ${new Date(slot.start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}\n\nChoose a stylist:\n\n${stylistList}\n\nReply with the number or "any" for the first available.`, tenantId);
 };
 
-const handleSalonStylistState = async (phone, normalized, session, tenantId) => {
+const handleSalonStylistState = async (phone, normalized, rawMessage, session, tenantId) => {
   let stylistId = null;
   if (!["any", "0", "none"].includes(normalized)) {
     const idx = parseInt(normalized, 10) - 1;
@@ -171,7 +171,7 @@ const handleSalonStylistState = async (phone, normalized, session, tenantId) => 
   await sendText(phone, "Please share your full name.", tenantId);
 };
 
-const handleSalonCustomerDetailsState = async (phone, rawMessage, session, tenantId) => {
+const handleSalonCustomerDetailsState = async (phone, normalized, rawMessage, session, tenantId) => {
   session.customerName = rawMessage.trim();
   session.customerPhone = phone;
   await setSession(phone, { ...session, state: "salon_confirm" });
@@ -260,7 +260,7 @@ const confirmBooking = async (phone, session, tenantId) => {
   }
 };
 
-const handleSalonConfirmState = async (phone, normalized, session, tenantId) => {
+const handleSalonConfirmState = async (phone, normalized, rawMessage, session, tenantId) => {
   if (["yes", "y", "confirm", "ok"].includes(normalized)) {
     await confirmBooking(phone, session, tenantId);
     return;
@@ -273,7 +273,7 @@ const handleSalonConfirmState = async (phone, normalized, session, tenantId) => 
   await sendText(phone, "Please reply 'yes' to confirm or 'no' to cancel.", tenantId);
 };
 
-const handleSalonPaymentState = async (phone, normalized, session, tenantId) => {
+const handleSalonPaymentState = async (phone, normalized, rawMessage, session, tenantId) => {
   if (["status", "check", "paid", "payment"].includes(normalized)) {
     try {
       const appointment = await appointmentDao.findById(session.appointmentId, tenantId);
