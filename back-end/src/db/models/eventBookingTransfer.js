@@ -1,6 +1,19 @@
 "use strict";
 const { Model } = require("sequelize");
 
+const getEventBookingTransferAttributes = (DataTypes) => ({
+  tenantId: { type: DataTypes.INTEGER, allowNull: true },
+  eventBookingId: { type: DataTypes.INTEGER, allowNull: false },
+  fromEmail: { type: DataTypes.STRING(255), allowNull: true },
+  fromName: { type: DataTypes.STRING(255), allowNull: true },
+  toEmail: { type: DataTypes.STRING(255), allowNull: true },
+  toName: { type: DataTypes.STRING(255), allowNull: true },
+  transferredAt: { allowNull: false, type: DataTypes.DATE },
+  transferredBy: { type: DataTypes.INTEGER, allowNull: true },
+  reason: { type: DataTypes.TEXT, allowNull: true },
+  metadata: { type: DataTypes.JSON, allowNull: true },
+});
+
 module.exports = (sequelize, DataTypes) => {
   class EventBookingTransfer extends Model {
     static associate(models) {
@@ -19,57 +32,13 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
 
-  EventBookingTransfer.init(
-    {
-      tenantId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      eventBookingId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      fromEmail: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-      },
-      fromName: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-      },
-      toEmail: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-      },
-      toName: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-      },
-      transferredAt: {
-        allowNull: false,
-        type: DataTypes.DATE,
-      },
-      transferredBy: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      reason: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      metadata: {
-        type: DataTypes.JSON,
-        allowNull: true,
-      },
-    },
-    {
-      sequelize,
-      modelName: "eventBookingTransfer",
-      tableName: "event_booking_transfers",
-      timestamps: true,
-      underscored: true,
-    }
-  );
+  EventBookingTransfer.init(getEventBookingTransferAttributes(DataTypes), {
+    sequelize,
+    modelName: "eventBookingTransfer",
+    tableName: "event_booking_transfers",
+    timestamps: true,
+    underscored: true,
+  });
 
   return EventBookingTransfer;
 };
