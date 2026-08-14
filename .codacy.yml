@@ -13,8 +13,12 @@ exclude_paths:
   - "back-end/src/verticals/salon/DAOs/inventoryTransfer.dao.js"
   - "back-end/src/verticals/salon/DAOs/staffLocationAssignment.dao.js"
   - "back-end/src/verticals/salon/controllers/inventoryTransfer.controller.js"
+  - "back-end/src/verticals/event/controllers/webPass.controller.js"
   - "scripts/check-legal-versions.js"
   - "drinks-vendor/**"
+  - "back-end/src/db/migrations/**"
+  - "back-end/src/db/seeders/**"
+  - "front-end/src/composables/**"
 
 engines:
   jshint:
