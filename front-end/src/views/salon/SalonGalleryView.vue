@@ -3,12 +3,18 @@ import { ref, onMounted } from "vue";
 import galleryAPI from "@/services/galleryAPI";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
+import { useToastStore } from "@/stores/toast";
 
 const { t } = useI18n();
+const toastStore = useToastStore();
 
 const loading = ref(true);
 const saving = ref(false);
 const images = ref<any[]>([]);
+const showUploadModal = ref(false);
+const showEditModal = ref(false);
+const showDeleteConfirm = ref(false);
+const selectedImage = ref<any>(null);
 const form = ref({
   url: "",
   caption: "",
@@ -28,6 +34,22 @@ const loadImages = async () => {
   }
 };
 
+const openUploadModal = () => {
+  form.value = { url: "", caption: "", isPublic: false, appointmentId: "" };
+  showUploadModal.value = true;
+};
+
+const openEditModal = (item: any) => {
+  selectedImage.value = item;
+  form.value = {
+    url: item.url,
+    caption: item.caption || "",
+    isPublic: item.isPublic || false,
+    appointmentId: item.appointmentId || "",
+  };
+  showEditModal.value = true;
+};
+
 const uploadImage = async () => {
   if (!form.value.url.trim()) return;
   saving.value = true;
@@ -38,22 +60,53 @@ const uploadImage = async () => {
         ? Number(form.value.appointmentId)
         : null,
     });
+    showUploadModal.value = false;
     form.value = { url: "", caption: "", isPublic: false, appointmentId: "" };
     loadImages();
+    toastStore.add(t("salon.imageUploaded", "Image uploaded"), "success");
   } catch (err) {
     logger.error("Failed to upload image", { error: err });
+    toastStore.add(t("salon.uploadFailed", "Failed to upload image"), "error");
   } finally {
     saving.value = false;
   }
 };
 
-const deleteImage = async (id: number) => {
-  if (!confirm("Delete this image?")) return;
+const updateImage = async () => {
+  if (!selectedImage.value) return;
+  saving.value = true;
   try {
-    await galleryAPI.delete(id);
+    await galleryAPI.update(selectedImage.value.id, {
+      caption: form.value.caption,
+      isPublic: form.value.isPublic,
+    });
+    showEditModal.value = false;
     loadImages();
+    toastStore.add(t("salon.imageUpdated", "Image updated"), "success");
+  } catch (err) {
+    logger.error("Failed to update image", { error: err });
+    toastStore.add(t("salon.updateFailed", "Failed to update image"), "error");
+  } finally {
+    saving.value = false;
+  }
+};
+
+const confirmDelete = (id: number) => {
+  selectedImage.value = images.value.find((img) => img.id === id);
+  showDeleteConfirm.value = true;
+};
+
+const deleteImage = async () => {
+  if (!selectedImage.value) return;
+  try {
+    await galleryAPI.delete(selectedImage.value.id);
+    showDeleteConfirm.value = false;
+    selectedImage.value = null;
+    loadImages();
+    toastStore.add(t("salon.imageDeleted", "Image deleted"), "success");
   } catch (err) {
     logger.error("Failed to delete image", { error: err });
+    toastStore.add(t("salon.deleteFailed", "Failed to delete image"), "error");
   }
 };
 
@@ -73,6 +126,11 @@ onMounted(loadImages);
         <h1>{{ t("salon.gallery") }}</h1>
         <p>{{ t("salon.gallerySubtitle") }}</p>
       </div>
+      <div class="topbar-right">
+        <button class="btn-primary" @click="openUploadModal">
+          {{ t("salon.addImageBtn", "Add Image") }}
+        </button>
+      </div>
     </div>
 
     <div class="content-wrapper">
@@ -82,84 +140,154 @@ onMounted(loadImages);
       </div>
 
       <div v-else class="stack">
-        <div class="settings-card">
-          <h3>{{ t("salon.addImage") }}</h3>
-          <div class="grid">
-            <label class="full">
-              {{ t("salon.imageUrl") }}
-              <input
-                v-model="form.url"
-                class="field-input"
-                :placeholder="t('salon.imageUrlPlaceholder')"
-              />
-            </label>
-            <label class="full">
-              {{ t("salon.caption") }}
-              <input
-                v-model="form.caption"
-                class="field-input"
-                :placeholder="t('salon.captionPlaceholder')"
-              />
-            </label>
-            <label>
-              {{ t("salon.appointmentIdOptional") }}
-              <input
-                v-model="form.appointmentId"
-                class="field-input"
-                type="number"
-                :placeholder="t('salon.appointmentIdPlaceholder')"
-              />
-            </label>
-            <label class="checkbox">
-              <input v-model="form.isPublic" type="checkbox" />
-              {{ t("salon.showOnPublicProfile") }}
-            </label>
-          </div>
-          <div class="form-actions">
-            <button
-              class="btn-primary"
-              :disabled="saving || !form.url.trim()"
-              @click="uploadImage"
-            >
-              {{ saving ? t("salon.saving") : t("salon.addImageBtn") }}
-            </button>
-          </div>
+        <div v-if="!images.length" class="empty-state">
+          {{ t("salon.galleryEmpty") }}
         </div>
-
-        <div class="settings-card">
-          <h3>{{ t("salon.galleryTitle") }}</h3>
-          <div v-if="!images.length" class="empty-state">
-            {{ t("salon.galleryEmpty") }}
-          </div>
-          <div class="gallery-grid">
-            <div v-for="item in images" :key="item.id" class="gallery-item">
-              <img
-                :src="item.url"
-                :alt="item.caption || 'Gallery image'"
-                loading="lazy"
-              />
-              <div class="gallery-meta">
-                <div class="gallery-caption">
-                  {{ item.caption || t("salon.untitled") }}
-                </div>
-                <div class="gallery-meta-row">
-                  <span :class="['pill', item.isPublic ? 't-true' : 't-false']">
-                    {{
-                      item.isPublic
-                        ? t("salon.publicLabel")
-                        : t("salon.privateLabel")
-                    }}
-                  </span>
-                  <span class="gallery-date">{{
-                    formatDate(item.createdAt)
-                  }}</span>
-                </div>
-                <button class="btn-danger-sm" @click="deleteImage(item.id)">
+        <div class="gallery-grid">
+          <div v-for="item in images" :key="item.id" class="gallery-item">
+            <img
+              :src="item.url"
+              :alt="item.caption || 'Gallery image'"
+              loading="lazy"
+            />
+            <div class="gallery-meta">
+              <div class="gallery-caption">
+                {{ item.caption || t("salon.untitled") }}
+              </div>
+              <div class="gallery-meta-row">
+                <span :class="['pill', item.isPublic ? 't-true' : 't-false']">
+                  {{
+                    item.isPublic
+                      ? t("salon.publicLabel")
+                      : t("salon.privateLabel")
+                  }}
+                </span>
+                <span class="gallery-date">{{
+                  formatDate(item.createdAt)
+                }}</span>
+              </div>
+              <div class="gallery-actions">
+                <button class="btn-secondary-sm" @click="openEditModal(item)">
+                  {{ t("common.edit", "Edit") }}
+                </button>
+                <button class="btn-danger-sm" @click="confirmDelete(item.id)">
                   {{ t("salon.deleteImage") }}
                 </button>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showUploadModal"
+      class="modal-overlay"
+      @click.self="showUploadModal = false"
+    >
+      <div class="modal">
+        <h2>{{ t("salon.addImage") }}</h2>
+        <div class="form-group">
+          <label class="full">
+            {{ t("salon.imageUrl") }}
+            <input
+              v-model="form.url"
+              class="field-input"
+              :placeholder="t('salon.imageUrlPlaceholder')"
+            />
+          </label>
+          <label class="full">
+            {{ t("salon.caption") }}
+            <input
+              v-model="form.caption"
+              class="field-input"
+              :placeholder="t('salon.captionPlaceholder')"
+            />
+          </label>
+          <label>
+            {{ t("salon.appointmentIdOptional") }}
+            <input
+              v-model="form.appointmentId"
+              class="field-input"
+              type="number"
+              :placeholder="t('salon.appointmentIdPlaceholder')"
+            />
+          </label>
+          <label class="checkbox">
+            <input v-model="form.isPublic" type="checkbox" />
+            {{ t("salon.showOnPublicProfile") }}
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="showUploadModal = false">
+            {{ t("salon.cancelBtn", "Cancel") }}
+          </button>
+          <button
+            class="btn-primary"
+            :disabled="saving || !form.url.trim()"
+            @click="uploadImage"
+          >
+            {{ saving ? t("salon.saving") : t("salon.addImageBtn") }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showEditModal"
+      class="modal-overlay"
+      @click.self="showEditModal = false"
+    >
+      <div class="modal">
+        <h2>{{ t("salon.editImage", "Edit Image") }}</h2>
+        <div class="form-group">
+          <label class="full">
+            {{ t("salon.caption") }}
+            <input
+              v-model="form.caption"
+              class="field-input"
+              :placeholder="t('salon.captionPlaceholder')"
+            />
+          </label>
+          <label class="checkbox">
+            <input v-model="form.isPublic" type="checkbox" />
+            {{ t("salon.showOnPublicProfile") }}
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="showEditModal = false">
+            {{ t("salon.cancelBtn", "Cancel") }}
+          </button>
+          <button
+            class="btn-primary"
+            :disabled="saving"
+            @click="updateImage"
+          >
+            {{ saving ? t("salon.saving") : t("common.save", "Save") }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showDeleteConfirm"
+      class="modal-overlay"
+      @click.self="showDeleteConfirm = false"
+    >
+      <div class="modal">
+        <h2>{{ t("salon.confirmDeleteImage", "Delete Image") }}</h2>
+        <p>{{ t("salon.confirmDeleteImageMsg", "Are you sure you want to delete this image?") }}</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="showDeleteConfirm = false">
+            {{ t("salon.cancelBtn", "Cancel") }}
+          </button>
+          <button
+            class="btn-danger"
+            :disabled="saving"
+            @click="deleteImage"
+          >
+            {{ t("common.delete", "Delete") }}
+          </button>
         </div>
       </div>
     </div>
@@ -190,6 +318,11 @@ onMounted(loadImages);
   color: var(--neutral-600);
   font-size: 14px;
   margin-top: 4px;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .content-wrapper {
   flex: 1;
@@ -231,64 +364,10 @@ onMounted(loadImages);
   flex-direction: column;
   gap: 18px;
 }
-.settings-card {
-  background: var(--white);
-  border: 1px solid var(--neutral-200);
-  border-radius: var(--radius-xl);
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(26, 20, 16, 0.05);
-}
-.settings-card h3 {
-  font-family: var(--font-serif);
-  font-size: 17px;
-  font-weight: 700;
-  margin-bottom: 14px;
-  color: var(--neutral-900);
-}
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-.grid label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--neutral-700);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.full {
-  grid-column: 1 / -1;
-}
-.field-input {
-  border: 1px solid var(--neutral-200);
-  border-radius: var(--radius-lg);
-  padding: 10px 12px;
-  font-size: 14px;
-  background: var(--white);
-  color: var(--neutral-900);
-  width: 100%;
-}
-.checkbox {
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  text-transform: none;
-  font-size: 14px;
-  color: var(--neutral-900);
-}
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 14px;
-}
 .empty-state {
   text-align: center;
   color: var(--neutral-500);
-  padding: 24px;
+  padding: 40px;
 }
 .gallery-grid {
   display: grid;
@@ -331,6 +410,10 @@ onMounted(loadImages);
   font-size: 12px;
   color: var(--neutral-500);
 }
+.gallery-actions {
+  display: flex;
+  gap: 8px;
+}
 .pill {
   display: inline-flex;
   padding: 4px 10px;
@@ -346,6 +429,106 @@ onMounted(loadImages);
 .t-false {
   background: var(--neutral-100);
   color: var(--neutral-700);
+}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+.modal h2 {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  margin: 0 0 16px;
+}
+.form-group {
+  margin-bottom: 12px;
+}
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neutral-700);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.form-group .full {
+  grid-column: 1 / -1;
+}
+.field-input {
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  padding: 10px 12px;
+  font-size: 14px;
+  background: var(--white);
+  color: var(--neutral-900);
+  width: 100%;
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: none;
+  font-size: 14px;
+  color: var(--neutral-900);
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.btn-primary {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--brand-600);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-secondary {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--neutral-200);
+  background: var(--white);
+  color: var(--neutral-900);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-danger {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: #fecaca;
+  color: #7f1d1d;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-secondary-sm {
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--neutral-200);
+  background: var(--white);
+  color: var(--neutral-900);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
 }
 .btn-danger-sm {
   padding: 6px 10px;

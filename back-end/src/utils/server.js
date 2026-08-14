@@ -32,6 +32,7 @@ const { authLimiter, generalLimiter, adminActionLimiter, syncLimiter, webhookLim
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
 const { startBackupWorker } = require("../queues/backup.queue");
+const { startProvisioningWorker } = require("../queues/provisioning.queue");
 const { client: redisClient, getConnectionStatus } = require("./cache");
 const { checkQueueDepths } = require("../queues/queue");
 const { resolveTenant } = require("../tenant-platform/middleware/resolveTenant");
@@ -42,6 +43,7 @@ const erpnextInventoryRouter = require("../integrations/erpnext/proxies/inventor
 const erpnextHrRouter = require("../integrations/erpnext/proxies/hr.proxy");
 const erpnextCrmRouter = require("../integrations/erpnext/proxies/crm.proxy");
 const erpnextManufacturingRouter = require("../integrations/erpnext/proxies/manufacturing.proxy");
+const erpnextReportsRouter = require("../integrations/erpnext/proxies/reports.proxy");
 const erpnextOnboardingRouter = require("../integrations/erpnext/onboarding/onboarding");
 
 const { adminMiddleware } = require("../middleware/adminMiddleware");
@@ -122,9 +124,11 @@ const createServer = () => {
     const nw = startNotificationWorker();
     const rw = startReportWorker();
     const bw = startBackupWorker();
+    const pw = startProvisioningWorker();
     if (nw) workers.push(nw);
     if (rw) workers.push(rw);
     if (bw) workers.push(bw);
+    if (pw) workers.push(pw);
   } catch (err) {
     console.warn("BullMQ workers not started:", err.message);
   }
@@ -233,6 +237,7 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
     erpnextHrRouter,
     erpnextCrmRouter,
     erpnextManufacturingRouter,
+    erpnextReportsRouter,
     erpnextOnboardingRouter
   );
   app.use("/api/v1/notifications", generalLimiter, logAction, validateCsrfToken, notificationRouter);

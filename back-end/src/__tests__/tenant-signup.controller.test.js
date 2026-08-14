@@ -20,8 +20,18 @@ jest.mock("../tenant-platform/DAOs/plan.dao", () => ({
   findBySlug: jest.fn(),
 }));
 
+jest.mock("../tenant-platform/controllers/verticalTemplate.controller", () => ({
+  getTemplateById: jest.fn(),
+  recordTemplateUsage: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock("../tenant-platform/services/tenantTypeDefaults.service", () => ({
   applyTypeDefaults: jest.fn(),
+  seedEventSettings: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock("../tenant-platform/services/provisioning.service", () => ({
+  startProvisioning: jest.fn().mockResolvedValue({ status: "completed" }),
 }));
 
 jest.mock("../db/models", () => ({
@@ -183,6 +193,87 @@ describe("tenant-signup.controller", () => {
     expect(res.json).toHaveBeenCalledWith({
       success: false,
       message: "Invalid plan selected",
+    });
+  });
+
+  it("applies event template settings when templateId is provided", async () => {
+    tenantAdminDAO.findBySlug.mockResolvedValue(null);
+    authDAO.findUserByEmail.mockResolvedValue(null);
+    planDAO.findBySlug.mockResolvedValue({ id: 1, slug: "starter", name: "Starter" });
+    const verticalTemplateController = require("../tenant-platform/controllers/verticalTemplate.controller");
+    verticalTemplateController.getTemplateById.mockResolvedValue({
+      id: 14,
+      name: "VIP Lounge",
+      vertical: "event",
+      defaultSettings: { restaurantType: "vip_lounge", businessVertical: "event" },
+      defaultServiceModes: ["vip_access", "table_reservation", "event_checkin"],
+      featureFlags: { event_vip_lounge: true, event_guest_list: true },
+    });
+
+    const mockTenant = {
+      id: 11,
+      name: "Event Business",
+      slug: "event-business",
+      plan: "starter",
+      businessVertical: "event",
+      restaurantType: "vip_lounge",
+      serviceModes: ["vip_access", "table_reservation", "event_checkin"],
+      settings: { featureFlags: { event_vip_lounge: true, event_guest_list: true } },
+      save: jest.fn().mockResolvedValue(true),
+    };
+    tenantAdminDAO.create.mockResolvedValue(mockTenant);
+
+    authService.registerUser.mockResolvedValue({
+      id: 21,
+      username: "event",
+      email: "event@test.com",
+      role: "admin",
+      permissions: {},
+    });
+
+    const req = createReq({
+      name: "Event Business",
+      slug: "event-business",
+      email: "event@test.com",
+      password: "Password123",
+      templateId: 14,
+    });
+    const res = createRes();
+
+    await tenantSignupController.signupTenantHandler(req, res);
+
+    expect(tenantAdminDAO.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        businessVertical: "event",
+        restaurantType: "vip_lounge",
+        serviceModes: ["vip_access", "table_reservation", "event_checkin"],
+        templateId: 14,
+      }),
+      expect.any(Object)
+    );
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  it("returns 400 when templateId is invalid", async () => {
+    tenantAdminDAO.findBySlug.mockResolvedValue(null);
+    authDAO.findUserByEmail.mockResolvedValue(null);
+    const verticalTemplateController = require("../tenant-platform/controllers/verticalTemplate.controller");
+    verticalTemplateController.getTemplateById.mockResolvedValue(null);
+
+    const req = createReq({
+      name: "Test Business",
+      slug: "test-business",
+      email: "test@test.com",
+      password: "Password123",
+      templateId: 999,
+    });
+    const res = createRes();
+
+    await tenantSignupController.signupTenantHandler(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: "Template with id 999 not found",
     });
   });
 });

@@ -153,13 +153,14 @@
       <h2>Module Configuration</h2>
       <p class="section-hint">
         Switch this venue's business vertical. This enables the corresponding
-        module (restaurant or salon) and branding.
+        module (restaurant, salon, or event) and branding.
       </p>
       <div class="field">
         <label>Business Vertical</label>
         <select v-model="businessVertical" :disabled="savingVertical">
           <option value="restaurant">Restaurant</option>
           <option value="salon">Salon</option>
+          <option value="event">Event</option>
         </select>
       </div>
       <button
@@ -172,7 +173,7 @@
       <span v-if="verticalSaved" class="saved-tag">Saved</span>
     </div>
 
-    <div class="section">
+    <div class="section" v-if="businessVertical === 'restaurant'">
       <h2>Restaurant Subtype</h2>
       <p class="section-hint">
         Fine-tune the restaurant type for this venue. This affects default

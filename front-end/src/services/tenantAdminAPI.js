@@ -47,8 +47,8 @@ const bulkChangeVertical = (tenantIds, businessVertical) => {
   });
 };
 
-const updateFeatureFlags = (id, featureFlags) => {
-  return API.patch(`/admin/feature-flags/tenants/${id}`, { featureFlags });
+const getProvisioningStatus = (tenantId) => {
+  return API.get(`/admin/tenants/${tenantId}/provisioning`);
 };
 
 export default {
@@ -64,4 +64,5 @@ export default {
   exportData,
   anonymizeData,
   bulkChangeVertical,
+  getProvisioningStatus,
 };

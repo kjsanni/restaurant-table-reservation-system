@@ -197,6 +197,7 @@ import { useI18n } from "@/composables/useI18n";
 import serviceAPI from "@/services/serviceAPI";
 import authAPI from "@/services/authAPI";
 import locationAPI from "@/services/locationAPI";
+import logger from "@/utils/logger";
 
 const { t } = useI18n();
 
@@ -295,7 +296,7 @@ const loadLocations = async () => {
     const res = await locationAPI.list();
     locations.value = res.data.data || [];
   } catch (err) {
-    console.error("Failed to load locations", err);
+    logger.error("Failed to load locations", { error: err });
   }
 };
 

@@ -3,7 +3,10 @@ const authService = require("../services/authService");
 const authDAO = require("../DAOs/auth.dao");
 const tenantAdminDAO = require("../tenant-platform/DAOs/tenantAdmin.dao");
 const planDAO = require("../tenant-platform/DAOs/plan.dao");
-const { applyTypeDefaults } = require("../tenant-platform/services/tenantTypeDefaults.service");
+const { applyTypeDefaults, seedEventSettings } = require("../tenant-platform/services/tenantTypeDefaults.service");
+const verticalTemplateController = require("../tenant-platform/controllers/verticalTemplate.controller");
+const { enqueueProvisioning } = require("../queues/provisioning.queue");
+const provisioningService = require("../tenant-platform/services/provisioning.service");
 
 const signupTenantHandler = async (req, res) => {
   const {
@@ -15,6 +18,7 @@ const signupTenantHandler = async (req, res) => {
     restaurantType,
     serviceModes,
     planSlug,
+    templateId,
   } = req.body;
 
   if (!name || !slug || !email || !password) {
@@ -47,6 +51,18 @@ const signupTenantHandler = async (req, res) => {
     }
   }
 
+  let template = null;
+  if (templateId) {
+    template = await verticalTemplateController.getTemplateById(templateId);
+    if (!template) {
+      return res.status(400).json({ success: false, message: `Template with id ${templateId} not found` });
+    }
+  }
+
+  const resolvedVertical = template?.defaultSettings?.businessVertical || businessVertical || "restaurant";
+  const resolvedRestaurantType = template?.defaultSettings?.restaurantType || restaurantType || (resolvedVertical === "event" ? "event" : "full_service");
+  const resolvedServiceModes = template?.defaultServiceModes?.length > 0 ? template.defaultServiceModes : serviceModes || ["dine_in", "takeaway", "delivery"];
+
   const dbSeq = db.sequelize;
   const result = await dbSeq.transaction(async (t) => {
     const tenant = await tenantAdminDAO.create({
@@ -55,18 +71,32 @@ const signupTenantHandler = async (req, res) => {
       plan: plan?.slug || "starter",
       status: "trialing",
       currency: "GHS",
-      businessVertical: businessVertical || "restaurant",
-      restaurantType: restaurantType || "full_service",
-      serviceModes: serviceModes || ["dine_in", "takeaway", "delivery"],
-      settings: {},
+      businessVertical: resolvedVertical,
+      restaurantType: resolvedRestaurantType,
+      serviceModes: resolvedServiceModes,
+      settings: template?.featureFlags ? { featureFlags: template.featureFlags } : {},
+      templateId: template?.id || null,
     }, { transaction: t });
 
-    if (tenant.businessVertical === "salon") {
+    if (resolvedVertical === "salon") {
       applyTypeDefaults(tenant, "salon");
-    } else if (restaurantType) {
-      applyTypeDefaults(tenant, restaurantType);
+    } else if (resolvedVertical === "event") {
+      applyTypeDefaults(tenant, "event");
+    } else if (resolvedRestaurantType) {
+      applyTypeDefaults(tenant, resolvedRestaurantType);
     }
     await tenant.save({ transaction: t });
+
+    if (template) {
+      verticalTemplateController.recordTemplateUsage({
+        templateId: template.id,
+        tenantId: tenant.id,
+        appliedBy: null,
+        source: "tenant_creation",
+      }).catch((err) => {
+        console.error("Failed to record template usage:", err.message);
+      });
+    }
 
     const username = email.split("@")[0];
     const user = await authService.registerUser(authDAO, {
@@ -85,6 +115,12 @@ const signupTenantHandler = async (req, res) => {
   });
 
   const { tenant, user, token, refreshToken } = result;
+
+  try {
+    await enqueueProvisioning(tenant.id, null);
+  } catch (provisionErr) {
+    console.error("Provisioning enqueue failed after signup:", provisionErr.message);
+  }
 
   const isSecure = req.secure || false;
   const cookieBase = {

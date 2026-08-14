@@ -23,6 +23,7 @@ interface Station {
 const stations = ref<Station[]>([]);
 const loading = ref(true);
 const showForm = ref(false);
+const confirmingDelete = ref<number | null>(null);
 const editingId = ref<number | null>(null);
 const form = ref<{
   name: string;
@@ -113,8 +114,15 @@ const submitForm = async () => {
   }
 };
 
+const confirmingDelete = ref<number | null>(null);
+
 const deleteStation = async (id: number) => {
-  if (!confirm(t("salon.confirmDeleteStation"))) return;
+  if (confirmingDelete.value !== id) {
+    confirmingDelete.value = id;
+    setTimeout(() => { confirmingDelete.value = null; }, 3000);
+    return;
+  }
+  confirmingDelete.value = null;
   try {
     await stationAPI.deleteStation(id);
     stations.value = stations.value.filter((s) => s.id !== id);
@@ -195,8 +203,15 @@ onUnmounted(() => {
               <button class="btn-sm" @click="editStation(station)">
                 {{ t("common.edit") }}
               </button>
-              <button class="btn-danger-sm" @click="deleteStation(station.id)">
-                {{ t("common.delete") }}
+              <button
+                class="btn-danger-sm"
+                @click="deleteStation(station.id)"
+              >
+                {{
+                  confirmingDelete === station.id
+                    ? t("common.confirm", "Confirm")
+                    : t("common.delete")
+                }}
               </button>
             </div>
           </div>

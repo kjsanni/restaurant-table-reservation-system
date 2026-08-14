@@ -62,6 +62,16 @@ const appointmentDao = {
   },
 
   async update(id, tenantId, data) {
+    if (data.start || data.durationMinutes !== undefined || data.bufferMinutes !== undefined) {
+      const existing = await salonModels.sequelize.models.appointment.findByPk(id);
+      if (!existing) return null;
+      const start = data.start ? new Date(data.start) : new Date(existing.start);
+      const durationMinutes = data.durationMinutes ?? existing.durationMinutes;
+      const bufferMinutes = data.bufferMinutes ?? existing.bufferMinutes;
+      data.end = new Date(start.getTime() + (durationMinutes + bufferMinutes) * 60000);
+      data.bufferMinutes = bufferMinutes;
+    }
+
     const [affected] = await salonModels.sequelize.models.appointment.update(data, {
       where: { id, tenantId },
       returning: true,

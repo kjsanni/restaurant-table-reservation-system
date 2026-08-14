@@ -1,6 +1,7 @@
 const axios = require("axios");
 const db = require("../../db/models");
 const { normalizeSettingValue } = require("../../utils/settings");
+const CircuitBreaker = require("../../utils/circuitBreaker");
 
 const PAYSTACK_BASE = "https://api.paystack.co";
 
@@ -28,7 +29,6 @@ const loadPaystackConfig = async () => {
       if (cfg.mode) mode = cfg.mode;
     }
   } catch {
-    // fall back to env values
   }
 
   cachedConfig = { secretKey, webhookSecret, mode };
@@ -39,6 +39,7 @@ const loadPaystackConfig = async () => {
 const buildClient = (secretKey) =>
   axios.create({
     baseURL: PAYSTACK_BASE,
+    timeout: 10000,
     headers: {
       Authorization: `Bearer ${secretKey}`,
       "Content-Type": "application/json",
@@ -51,16 +52,22 @@ const buildPlatformClient = async () => {
 };
 
 const paystackRequest = async (method, path, payload = null) => {
-  const client = await buildPlatformClient();
-  let response;
-  if (method === "get") {
-    response = await client.get(path);
-  } else if (method === "post") {
-    response = await client.post(path, payload);
-  } else {
-    throw new Error(`Unsupported HTTP method: ${method}`);
-  }
-  return response.data.data;
+  return CircuitBreaker.execute(
+    "paystack",
+    async () => {
+      const client = await buildPlatformClient();
+      let response;
+      if (method === "get") {
+        response = await client.get(path);
+      } else if (method === "post") {
+        response = await client.post(path, payload);
+      } else {
+        throw new Error(`Unsupported HTTP method: ${method}`);
+      }
+      return response.data.data;
+    },
+    { failureThreshold: 5, recoveryTimeout: 30000 }
+  );
 };
 
 const validateSecretKey = async (secretKey) => {

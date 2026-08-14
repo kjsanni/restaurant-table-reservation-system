@@ -43,8 +43,11 @@ const erpnextAPI = {
   syncCustomers: (customerIds = null) =>
     apiClient.post("/accounting/sync/customers", { customerIds }),
 
-  syncInvoices: (reservationIds = null) =>
-    apiClient.post("/accounting/sync/invoices", { reservationIds }),
+  syncInvoices: (params = {}) =>
+    apiClient.post("/accounting/sync/invoices", params),
+
+  syncAppointmentInvoices: (appointmentIds = null) =>
+    apiClient.post("/accounting/sync/invoices", { appointmentIds }),
 
   syncPayments: (paymentIds = null) =>
     apiClient.post("/accounting/sync/payments", { paymentIds }),
@@ -108,6 +111,19 @@ const erpnextAPI = {
 
   importEmployees: (data) =>
     apiClient.post("/onboarding/employee-import", data),
+
+  getTaxTemplates: () => apiClient.get("/accounting/tax-templates"),
+
+  getGhanaTaxSummary: (params = {}) =>
+    apiClient.get("/accounting/ghana-tax-summary", { params }),
+
+  getGhanaPL: (params = {}) => apiClient.get("/reports/ghana/pl", { params }),
+
+  getGhanaBalanceSheet: (params = {}) =>
+    apiClient.get("/reports/ghana/balance-sheet", { params }),
+
+  getGhanaTaxCompliance: (params = {}) =>
+    apiClient.get("/reports/ghana/tax-compliance", { params }),
 };
 
 export default erpnextAPI;

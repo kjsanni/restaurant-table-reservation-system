@@ -22,6 +22,7 @@ interface StaffShift {
 const shifts = ref<StaffShift[]>([]);
 const staff = ref<{ id: number; username: string; role?: string }[]>([]);
 const loading = ref(true);
+const confirmingDelete = ref<number | null>(null);
 const submitting = ref(false);
 const errorMsg = ref("");
 const locations = ref<Array<{ id: number; name: string }>>([]);

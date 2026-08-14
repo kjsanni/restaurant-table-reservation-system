@@ -102,6 +102,21 @@ const paystackEventHandler = async (req, res) => {
         });
       }
     }
+
+    const bookingId = data.metadata?.bookingId;
+    if (bookingId && tenantId) {
+      const booking = await db.eventBooking.findOne({
+        where: { id: bookingId, tenantId },
+      });
+      if (booking && booking.paymentStatus !== "paid") {
+        await booking.update({
+          paymentStatus: "paid",
+          status: "confirmed",
+          paymentReference: data.reference,
+          paymentMethod: "paystack",
+        });
+      }
+    }
   }
 
   return res.status(200).json({ success: true });

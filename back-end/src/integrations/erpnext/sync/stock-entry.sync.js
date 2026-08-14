@@ -1,7 +1,7 @@
 "use strict";
 
 const { getClient } = require("../client");
-const { mapStockEntry } = require("../mappers/item.mapper");
+const { mapSalonInventoryItem, mapStockEntry } = require("../mappers/item.mapper");
 const db = require("../../../db/models");
 
 const createStockEntry = async (item, quantity, type, tenantId) => {

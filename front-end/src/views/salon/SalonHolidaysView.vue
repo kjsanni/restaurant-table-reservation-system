@@ -14,6 +14,7 @@ interface Holiday {
 
 const holidays = ref<Holiday[]>([]);
 const loading = ref(true);
+const confirmingDelete = ref<number | null>(null);
 const submitting = ref(false);
 const errorMsg = ref("");
 const name = ref("");
@@ -49,7 +50,12 @@ const submitHoliday = async () => {
 };
 
 const removeHoliday = async (id: number) => {
-  if (!confirm("Remove this holiday?")) return;
+  if (confirmingDelete.value !== id) {
+    confirmingDelete.value = id;
+    setTimeout(() => { confirmingDelete.value = null; }, 3000);
+    return;
+  }
+  confirmingDelete.value = null;
   try {
     await scheduleAPI.deleteHoliday(id);
     holidays.value = holidays.value.filter((h) => h.id !== id);
@@ -119,8 +125,15 @@ onMounted(loadHolidays);
             >
               <div class="holiday-name">{{ holiday.name }}</div>
               <div class="holiday-date">{{ holiday.date }}</div>
-              <button class="btn-danger-sm" @click="removeHoliday(holiday.id)">
-                {{ t("salon.removeBtn") }}
+              <button
+                class="btn-danger-sm"
+                @click="removeHoliday(holiday.id)"
+              >
+                {{
+                  confirmingDelete === holiday.id
+                    ? t("common.confirm", "Confirm")
+                    : t("salon.removeBtn")
+                }}
               </button>
             </div>
           </div>

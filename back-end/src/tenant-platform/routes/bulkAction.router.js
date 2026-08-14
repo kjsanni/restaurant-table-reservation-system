@@ -45,4 +45,9 @@ router
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(bulkController.bulkDeleteHandler))
   .all(httpMethodError);
 
+router
+  .route("/provision")
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_tenants")), tryCatchHandler(bulkController.bulkProvisionHandler))
+  .all(httpMethodError);
+
 module.exports = router;

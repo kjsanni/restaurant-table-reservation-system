@@ -8,7 +8,34 @@ const { requireVertical } = require("../../../middleware/requireVertical");
 
 router
   .route("/")
-  .get(tryCatchHandler(protect), tryCatchHandler(requireVertical("salon")), tryCatchHandler(requirePermission("manage_staff")), tryCatchHandler(staffController.getSalonStaffHandler))
+  .get(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("manage_staff")),
+    tryCatchHandler(staffController.getSalonStaffHandler)
+  )
+  .post(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("manage_staff")),
+    tryCatchHandler(staffController.createSalonStaffHandler)
+  )
+  .all(httpMethodError);
+
+router
+  .route("/:id")
+  .put(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("manage_staff")),
+    tryCatchHandler(staffController.updateSalonStaffHandler)
+  )
+  .delete(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("manage_staff")),
+    tryCatchHandler(staffController.deleteSalonStaffHandler)
+  )
   .all(httpMethodError);
 
 module.exports = router;
