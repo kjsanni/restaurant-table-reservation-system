@@ -4,6 +4,7 @@ import { onBeforeRouteLeave } from "vue-router";
 import authAPI from "@/services/authAPI";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
+import { confirm } from "@/utils/confirm";
 
 const { t } = useI18n();
 
@@ -115,7 +116,7 @@ onMounted(loadSettings);
 
 onBeforeRouteLeave(() => {
   if (saving.value) {
-    return window.confirm(
+    return confirm(
       t("salon.leaveUnsaved", "Settings are still saving. Leave anyway?")
     );
   }

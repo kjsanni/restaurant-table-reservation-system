@@ -75,9 +75,13 @@ const scan = async () => {
     if (scannerApiKey.value) {
       headers["x-api-key"] = scannerApiKey.value;
     }
-    const res = await eventPortalAPI.checkinToken(token.value.trim(), {
-      eventId,
-    }, headers);
+    const res = await eventPortalAPI.checkinToken(
+      token.value.trim(),
+      {
+        eventId,
+      },
+      headers
+    );
     const message = res.data?.message || "Check-in successful";
     result.value = message;
     toastStore.add(message, "success");

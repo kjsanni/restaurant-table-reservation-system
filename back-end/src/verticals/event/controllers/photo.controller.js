@@ -25,8 +25,13 @@ photoController.uploadPhoto = async (req, res) => {
   const photoRef = crypto.createHash("sha256").update(req.file.buffer).digest("hex");
   const filename = `${photoRef}${ext}`;
   const filepath = path.join(ATTENDEE_PHOTOS_DIR, filename);
+  const resolved = path.resolve(filepath);
+  const resolvedBase = path.resolve(ATTENDEE_PHOTOS_DIR);
+  if (!resolved.startsWith(resolvedBase + path.sep)) {
+    return res.status(400).json({ success: false, error: "INVALID_PATH", message: "Invalid file path" });
+  }
 
-  fs.writeFileSync(filepath, req.file.buffer);
+  fs.writeFileSync(resolved, req.file.buffer);
 
   return res.status(200).json({
     success: true,
@@ -37,7 +42,7 @@ photoController.uploadPhoto = async (req, res) => {
 
 photoController.getPhoto = async (req, res) => {
   const { photoRef } = req.params;
-  if (!photoRef || !/^[a-f0-9]{64}$/.test(photoRef)) {
+  if (!photoRef || !/^[a-f0-9]{64}$/i.test(photoRef)) {
     return res.status(400).json({ success: false, error: "INVALID_PHOTO_REF", message: "Invalid photo reference" });
   }
 
@@ -46,23 +51,22 @@ photoController.getPhoto = async (req, res) => {
   if (!["jpg", "jpeg", "png"].includes(normalizedExt)) {
     return res.status(400).json({ success: false, error: "INVALID_EXT", message: "Invalid image extension" });
   }
-  const filename = `${photoRef}.${normalizedExt}`;
-  const filepath = path.join(ATTENDEE_PHOTOS_DIR, filename);
 
-  if (!fs.existsSync(filepath)) {
+  const filename = `${photoRef}.${normalizedExt}`;
+
+  if (!fs.existsSync(path.join(ATTENDEE_PHOTOS_DIR, filename))) {
     const jpgPath = path.join(ATTENDEE_PHOTOS_DIR, `${photoRef}.jpg`);
     const pngPath = path.join(ATTENDEE_PHOTOS_DIR, `${photoRef}.png`);
     if (fs.existsSync(jpgPath)) {
-      return res.sendFile(jpgPath);
+      return res.sendFile("jpg", { root: ATTENDEE_PHOTOS_DIR });
     }
     if (fs.existsSync(pngPath)) {
-      return res.sendFile(pngPath);
+      return res.sendFile("png", { root: ATTENDEE_PHOTOS_DIR });
     }
     return res.status(404).json({ success: false, error: "NOT_FOUND", message: "Photo not found" });
   }
 
-  res.type(`image/${normalizedExt}`);
-  res.sendFile(filepath);
+  res.sendFile(filename, { root: ATTENDEE_PHOTOS_DIR });
 };
 
 module.exports = photoController;
