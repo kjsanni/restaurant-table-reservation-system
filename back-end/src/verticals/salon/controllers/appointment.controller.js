@@ -114,7 +114,7 @@ const appointmentController = {
       if (validationErrors.length > 0) {
         return res.status(422).json({ success: false, message: "Validation failed", errors: validationErrors });
       }
-      const allowed = ["status", "start", "durationMinutes", "end", "bufferMinutes", "notes", "paymentStatus", "depositAmount", "serviceId", "stylistId", "stationId", "locationId"];
+      const allowed = ["status", "start", "durationMinutes", "bufferMinutes", "notes", "paymentStatus", "depositAmount", "serviceId", "stylistId", "stationId", "locationId"];
       const updates = {};
       for (const key of allowed) {
         if (Object.prototype.hasOwnProperty.call(req.body, key)) {

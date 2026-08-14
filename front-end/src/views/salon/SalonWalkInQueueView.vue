@@ -42,6 +42,7 @@ interface StylistOption {
 
 const walkins = ref<Appointment[]>([]);
 const loading = ref(true);
+const confirmingDelete = ref<number | null>(null);
 const showForm = ref(false);
 const submitting = ref(false);
 const generalError = ref("");
@@ -261,7 +262,14 @@ const updateStatus = async (apt: Appointment, status: string) => {
 };
 
 const removeWalkin = async (id: number) => {
-  if (!confirm("Remove this walk-in from the queue?")) return;
+  if (confirmingDelete.value !== id) {
+    confirmingDelete.value = id;
+    setTimeout(() => {
+      confirmingDelete.value = null;
+    }, 3000);
+    return;
+  }
+  confirmingDelete.value = null;
   try {
     await appointmentAPI.deleteAppointment(id);
     walkins.value = walkins.value.filter((w) => w.id !== id);
@@ -452,7 +460,11 @@ onMounted(async () => {
                   </option>
                 </select>
                 <button class="btn-danger-sm" @click="removeWalkin(apt.id)">
-                  {{ t("salon.removeBtn") }}
+                  {{
+                    confirmingDelete === apt.id
+                      ? t("common.confirm", "Confirm")
+                      : t("salon.removeBtn")
+                  }}
                 </button>
               </div>
             </div>
