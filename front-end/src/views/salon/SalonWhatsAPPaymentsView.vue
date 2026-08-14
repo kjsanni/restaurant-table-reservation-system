@@ -76,7 +76,11 @@
                   class="btn-refund"
                   @click="refundAppointment(apt)"
                 >
-                  {{ t("salon.refund", "Refund") }}
+                  {{
+                    confirmingRefund === apt.id
+                      ? t("common.confirm", "Confirm")
+                      : t("salon.refund", "Refund")
+                  }}
                 </button>
               </td>
               <td class="text-mono">{{ apt.paymentReference || "—" }}</td>
@@ -89,14 +93,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import appointmentAPI from "@/services/appointmentAPI";
 import { useI18n } from "@/composables/useI18n";
+import { useToastStore } from "@/stores/toast";
 
 const { t } = useI18n();
+const toast = useToastStore();
 import formatMoney from "@/utils/formatMoney";
 
 const loading = ref(false);
+const confirmingRefund = ref<number | null>(null);
 const items = ref([]);
 
 const summary = computed(() => {
@@ -164,20 +171,23 @@ const verifyAppointment = async (apt) => {
 };
 
 const refundAppointment = async (apt) => {
-  if (
-    !confirm(
-      t(
-        "salon.refundConfirm",
-        `Refund appointment #${apt.id}? This cannot be undone.`
-      )
-    )
-  )
+  if (confirmingRefund.value !== apt.id) {
+    confirmingRefund.value = apt.id;
+    setTimeout(() => {
+      if (confirmingRefund.value === apt.id) {
+        confirmingRefund.value = null;
+      }
+    }, 3000);
     return;
+  }
+
+  confirmingRefund.value = null;
   try {
     await appointmentAPI.refundAppointment(apt.id);
     await load();
+    toast.success(t("salon.refundSuccess", "Refund processed successfully"));
   } catch (e) {
-    alert(
+    toast.error(
       e?.response?.data?.message || t("salon.refundFailed", "Refund failed")
     );
   }
