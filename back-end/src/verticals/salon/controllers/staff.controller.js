@@ -7,30 +7,34 @@ const getSalonStaffHandler = async (req, res) => {
   const tenantId = req.tenant?.id;
   const staff = await staffDao.findAllForTenant(tenantId, req.query);
 
-  const formatted = await Promise.all(
-    staff.map(async (user) => {
-      const skills = await db.sequelize.models.staffServiceSkill.findAll({
-        where: { userId: user.id },
-        include: [
-          {
-            model: db.sequelize.models.service,
-            as: "service",
-            attributes: ["id", "name"],
-          },
-        ],
-      });
-      return {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        skills: skills.map((ss) => ({
-          serviceId: ss.serviceId,
-          skillLevel: ss.skillLevel,
-          service: ss.service,
-        })),
-      };
-    })
-  );
+  const staffIds = staff.map((u) => u.id);
+  const allSkills = await db.sequelize.models.staffServiceSkill.findAll({
+    where: { userId: staffIds },
+    include: [
+      {
+        model: db.sequelize.models.service,
+        as: "service",
+        attributes: ["id", "name"],
+      },
+    ],
+  });
+
+  const skillsByUser = {};
+  allSkills.forEach((ss) => {
+    if (!skillsByUser[ss.userId]) skillsByUser[ss.userId] = [];
+    skillsByUser[ss.userId].push(ss);
+  });
+
+  const formatted = staff.map((user) => ({
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    skills: (skillsByUser[user.id] || []).map((ss) => ({
+      serviceId: ss.serviceId,
+      skillLevel: ss.skillLevel,
+      service: ss.service,
+    })),
+  }));
 
   res.status(200).json({ success: true, data: formatted });
 };

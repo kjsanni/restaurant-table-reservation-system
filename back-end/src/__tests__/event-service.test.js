@@ -188,8 +188,6 @@ describe("Event Service Layer", () => {
     it("checkin verifies HMAC signature before DB lookup", async () => {
       db.setting.findOne.mockResolvedValue({ value: "test-secret" });
       const rawToken = "a".repeat(64);
-      const crypto = require("crypto");
-      const sig = crypto.createHmac("sha256", "test-secret").update(rawToken).digest("hex");
       cache.get.mockResolvedValue(null);
       qrCodeDAO.markUsedAtomic.mockResolvedValue(null);
 

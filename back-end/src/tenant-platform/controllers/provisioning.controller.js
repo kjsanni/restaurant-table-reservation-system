@@ -46,7 +46,7 @@ const getDLQStatusHandler = async (req, res) => {
 };
 
 const retryDLQEntryHandler = async (req, res) => {
-  const { tenantId, jobId } = req.params;
+  const { jobId } = req.params;
   const actorUserId = req.user?.id || null;
   try {
     const result = await provisioningService.retryDLQEntry(jobId, actorUserId);

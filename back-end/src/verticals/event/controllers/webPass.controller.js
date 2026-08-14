@@ -1,14 +1,19 @@
 "use strict";
 
-const crypto = require("crypto");
 const db = require("../../../db/models");
 const qrCodeDAO = require("../DAOs/qrCode.dao");
 const qrCodeService = require("./qrCode.service");
 const walletPassService = require("./walletPass.service");
+const passSigningRequestDAO = require("../../../tenant-platform/DAOs/passSigningRequest.dao");
 const cache = require("../../../utils/cache");
 const logger = require("../../../utils/logger");
 
 const webPassController = {};
+
+const checkWalletPassApproved = async (eventId, tenantId) => {
+  const approved = await passSigningRequestDAO.listByTenant(tenantId, {});
+  return approved.some((r) => r.eventId === eventId && r.status === "approved");
+};
 
 webPassController.viewPass = async (req, res) => {
   const { shortCode } = req.params;
@@ -50,12 +55,42 @@ webPassController.viewPass = async (req, res) => {
     ? `${process.env.PLATFORM_BASE_URL || ""}/api/v1/events/checkin/photo/${qrCode.photoRef}`
     : null;
 
+  const ticketData = {
+    id: qrCode.id,
+    eventId: qrCode.eventId,
+    eventName: event?.name,
+    venue: event?.venue,
+    eventDate: event?.eventDate,
+    attendeeName: qrCode.attendeeName,
+    seat: qrCode.seat,
+    tier: qrCode.tier,
+    ticketType: qrCode.ticketType,
+    tokenHash: qrCode.tokenHash,
+    expiresAt: qrCode.expiresAt,
+    status: qrCode.status,
+    photoRef: qrCode.photoRef,
+  };
+
+  const walletPassesEnabled = await checkWalletPassApproved(qrCode.eventId, tenantId);
+
   if (req.headers.accept?.includes("application/vnd.apple.pkpass") || req.query.format === "pkpass") {
+    if (!walletPassesEnabled) {
+      return res.status(410).send(
+        generateErrorPage(
+          "Wallet Pass Not Available",
+          "Apple Wallet passes are not yet available for this event. Please contact the event organizer."
+        )
+      );
+    }
     try {
-      const pass = await walletPassService.generateWalletPass(qrCode.toJSON(), tenantId);
-      res.setHeader("Content-Type", pass.mimeType);
-      res.setHeader("Content-Disposition", `attachment; filename="${pass.filename}"`);
-      res.sendFile(pass.pkpassPath);
+      const signResult = await walletPassService.generateArtifact(ticketData, tenantId);
+      const appleArtifact = signResult.results.apple;
+      if (!appleArtifact || appleArtifact.artifactType !== "file") {
+        throw new Error(signResult.errors.apple || "Apple Wallet signing failed");
+      }
+      res.setHeader("Content-Type", "application/vnd.apple.pkpass");
+      res.setHeader("Content-Disposition", `attachment; filename="ticket-${qrCode.id}.pkpass"`);
+      res.sendFile(appleArtifact.artifactPath);
       return;
     } catch (err) {
       logger.error("Wallet pass generation failed", { ticketId, error: err.message });
@@ -64,8 +99,51 @@ webPassController.viewPass = async (req, res) => {
   }
 
   if (req.query.format === "google") {
-    const googlePayJwt = generateGooglePayJwt(qrCode, event, tenantId);
-    return res.json({ googlePayJwt });
+    if (!walletPassesEnabled) {
+      return res.status(410).json({
+        success: false,
+        message: "Google Wallet passes are not yet available for this event.",
+      });
+    }
+    try {
+      const signResult = await walletPassService.generateArtifact(ticketData, tenantId);
+      const googleArtifact = signResult.results.google;
+      if (!googleArtifact || googleArtifact.artifactType !== "url") {
+        throw new Error(signResult.errors.google || "Google Wallet signing failed");
+      }
+      return res.json({
+        success: true,
+        googlePayJwt: googleArtifact.accessToken,
+        deepLink: googleArtifact.artifactPath,
+      });
+    } catch (err) {
+      logger.error("Google Wallet pass generation failed", { ticketId, error: err.message });
+      return res.status(500).json({ success: false, message: "Could not generate Google Wallet pass." });
+    }
+  }
+
+  if (req.query.format === "samsung") {
+    if (!walletPassesEnabled) {
+      return res.status(410).json({
+        success: false,
+        message: "Samsung Pay passes are not yet available for this event.",
+      });
+    }
+    try {
+      const signResult = await walletPassService.generateArtifact(ticketData, tenantId);
+      const samsungArtifact = signResult.results.samsung;
+      if (!samsungArtifact || samsungArtifact.artifactType !== "url") {
+        throw new Error(signResult.errors.samsung || "Samsung Pay signing failed");
+      }
+      return res.json({
+        success: true,
+        deepLink: samsungArtifact.artifactPath,
+        accessToken: samsungArtifact.accessToken,
+      });
+    } catch (err) {
+      logger.error("Samsung Pay pass generation failed", { ticketId, error: err.message });
+      return res.status(500).json({ success: false, message: "Could not generate Samsung Pay pass." });
+    }
   }
 
   const html = generatePassPage({
@@ -85,53 +163,35 @@ webPassController.viewPass = async (req, res) => {
     },
     shortCode,
     baseUrl: process.env.PLATFORM_BASE_URL || "",
+    walletPassesEnabled,
   });
 
   res.setHeader("Content-Type", "text/html");
   res.send(html);
 };
 
-const generateGooglePayJwt = (qrCode, event, tenantId) => {
-  const payload = {
-    iss: process.env.GOOGLE_PAY_ISSUER_ID || "event-tickets",
-    aud: "google-pay",
-    typ: "event-ticket",
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 86400,
-    event: {
-      name: event?.name,
-      venue: event?.venue,
-      date: event?.eventDate,
-    },
-    attendee: {
-      name: qrCode.attendeeName,
-      seat: qrCode.seat,
-      tier: qrCode.tier,
-    },
-    ticketId: qrCode.id,
-    tokenHash: qrCode.tokenHash,
-  };
-
-  const header = { alg: "HS256", typ: "JWT" };
-  const headerB64 = Buffer.from(JSON.stringify(header)).toString("base64url");
-  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString("base64url");
-
-  const secret = process.env.GOOGLE_PAY_JWT_SECRET || process.env.EVENT_QR_SECRET || "dev-qr-secret-change-me";
-  const signature = crypto.createHmac("sha256", secret).update(`${headerB64}.${payloadB64}`).digest("base64url");
-
-  return `${headerB64}.${payloadB64}.${signature}`;
-};
-
-const generateErrorPage = (title, message) => {
-  return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{font-family:sans-serif;text-align:center;padding:48px;background:#f8f9fa;}</style></head>
-    <body><h1>${title}</h1><p style="color:#6c757d;font-size:16px;">${message}</p>
-    <p style="margin-top:32px;"><a href="/" style="color:#0d6efd;">Return to event</a></p></body></html>`;
-};
-
 const generatePassPage = (data) => {
-  const { event, attendee, ticket, shortCode, baseUrl } = data;
+  const { event, attendee, ticket, shortCode, baseUrl, walletPassesEnabled = false } = data;
   const appleWalletUrl = `${baseUrl}/e/${shortCode}?format=pkpass`;
   const googlePayUrl = `${baseUrl}/e/${shortCode}?format=google`;
+  const samsungPayUrl = `${baseUrl}/e/${shortCode}?format=samsung`;
+
+  const walletPassButtons = walletPassesEnabled
+    ? `<div class="add-buttons">
+      <a href="${appleWalletUrl}" class="btn btn-apple">
+        <span>\u{1F512}</span> Add to Apple Wallet
+      </a>
+      <a href="${googlePayUrl}" class="btn btn-google">
+        <span>\u{1F4F6}</span> Add to Google Pay
+      </a>
+      <a href="${samsungPayUrl}" class="btn btn-samsung">
+        <span>\u{1F4F6}</span> Add to Samsung Pay
+      </a>
+    </div>`
+    : `<div class="wallet-disabled" style="text-align:center;padding:24px;border-radius:12px;background:#f8f9fa;border:1px dashed #dee2e6;">
+      <p style="color:#6c757d;font-size:14px;margin-bottom:12px;">Wallet passes are not yet available for this event.</p>
+      <p style="color:#6c757d;font-size:12px;">Contact the event organizer to enable Apple/Google/Samsung wallet passes.</p>
+    </div>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -157,6 +217,7 @@ const generatePassPage = (data) => {
     .btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .btn-apple { background: #000; color: #fff; }
     .btn-google { background: #4285f4; color: #fff; }
+    .btn-samsung { background: #1f2937; color: #fff; }
     .qr-section { text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid #e9ecef; }
     .qr-code { font-family: monospace; font-size: 13px; background: #f1f3f5; padding: 8px 12px; border-radius: 6px; display: inline-block; word-break: break-all; }
   </style>
@@ -184,14 +245,7 @@ const generatePassPage = (data) => {
       </div>
     </div>
 
-    <div class="add-buttons">
-      <a href="${appleWalletUrl}" class="btn btn-apple">
-        <span>\u{1F512}</span> Add to Apple Wallet
-      </a>
-      <a href="${googlePayUrl}" class="btn btn-google">
-        <span>\u{1F4F6}</span> Add to Google Pay
-      </a>
-    </div>
+    ${walletPassButtons}
 
     <div class="qr-section">
       <p style="font-size: 12px; color: #6c757d; margin-bottom: 12px;">Show this ticket at the gate</p>
@@ -203,4 +257,10 @@ const generatePassPage = (data) => {
 </html>`;
 };
 
-module.exports = { webPassController, generateGooglePayJwt };
+const generateErrorPage = (title, message) => {
+  return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{font-family:sans-serif;text-align:center;padding:48px;background:#f8f9fa;}</style></head>
+    <body><h1>${title}</h1><p style="color:#6c757d;font-size:16px;">${message}</p>
+    <p style="margin-top:32px;"><a href="/" style="color:#0d6efd;">Return to event</a></p></body></html>`;
+};
+
+module.exports = { webPassController, generatePassPage };

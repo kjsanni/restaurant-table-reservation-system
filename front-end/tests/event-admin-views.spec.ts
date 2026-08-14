@@ -28,7 +28,7 @@ test.describe("Event admin flow - QR codes, guest list, ticket types", () => {
     await expect(page.locator("h1")).toContainText("QR Codes");
 
     const cards = await page.locator(".qr-card").count();
-    expect(cards).toBeGreaterThanOrEqual(0);
+    expect(cards).toBeGreaterThan(0);
   });
 
   test("tenant admin can open the scanner from QR management", async ({ page }) => {
@@ -71,12 +71,12 @@ test.describe("Event admin flow - QR codes, guest list, ticket types", () => {
   });
 
   test("scanner page is accessible without CSRF token (API key auth)", async ({ request }) => {
-    await page;
     const token = "a".repeat(64);
 
-    await request.post(`/api/v1/events/checkin/${token}`, {
+    const response = await request.post(`/api/v1/events/checkin/${token}`, {
       data: { scannerId: "test" },
       headers: { "x-api-key": "test-key" },
     });
+    expect(response.status()).not.toBe(403);
   });
 });
