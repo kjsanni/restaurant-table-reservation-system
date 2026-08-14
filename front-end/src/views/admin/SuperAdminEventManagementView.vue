@@ -10,34 +10,110 @@
       </button>
     </div>
 
-    <div class="filters">
-      <input
-        v-model="searchQuery"
-        placeholder="Search events..."
-        class="search-input"
-        @input="debouncedLoad"
-      />
-      <select v-model="filterStatus" class="filter-select" @change="load">
-        <option value="">All Statuses</option>
-        <option value="draft">Draft</option>
-        <option value="published">Published</option>
-        <option value="cancelled">Cancelled</option>
-        <option value="completed">Completed</option>
-      </select>
-      <select v-model="filterVertical" class="filter-select" @change="load">
-        <option value="">All Verticals</option>
-        <option value="restaurant">Restaurant</option>
-        <option value="salon">Salon</option>
-        <option value="event">Event</option>
-      </select>
+    <div class="tabs">
+      <button
+        class="tab"
+        :class="{ active: activeTab === 'events' }"
+        @click="activeTab = 'events'"
+      >
+        Events
+      </button>
+      <button
+        class="tab"
+        :class="{ active: activeTab === 'wallet-passes' }"
+        @click="activeTab = 'wallet-passes'"
+      >
+        Wallet Pass Requests
+      </button>
     </div>
 
-    <div class="card">
-      <div v-if="loading" class="loading-state-inline">
+    <div v-show="activeTab === 'events'">
+      <div class="filters">
+        <input
+          v-model="searchQuery"
+          placeholder="Search events..."
+          class="search-input"
+          @input="debouncedLoad"
+        />
+        <select v-model="filterStatus" class="filter-select" @change="load">
+          <option value="">All Statuses</option>
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select v-model="filterVertical" class="filter-select" @change="load">
+          <option value="">All Verticals</option>
+          <option value="restaurant">Restaurant</option>
+          <option value="salon">Salon</option>
+          <option value="event">Event</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div v-if="loading" class="loading-state-inline">
+          <div class="spinner-sm"></div>
+        </div>
+        <div v-else-if="items.length === 0" class="empty-state">
+          No events found
+        </div>
+        <div v-else class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Event</th>
+                <th>Tenant</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Tickets</th>
+                <th>Bookings</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in items" :key="item.id">
+                <td>#{{ item.id }}</td>
+                <td>
+                  <div class="cell-primary">{{ item.name }}</div>
+                  <div class="cell-secondary">
+                    {{ item.eventType || "General" }}
+                  </div>
+                </td>
+                <td>{{ item.tenant?.name || item.tenantId }}</td>
+                <td>{{ formatDate(item.eventDate) }}</td>
+                <td>
+                  <span class="badge" :class="statusClass(item.status)">
+                    {{ item.status }}
+                  </span>
+                </td>
+                <td>
+                  <span v-if="item.isTicketed" class="badge badge-info">
+                    Ticketed
+                  </span>
+                  <span v-else class="badge">Free</span>
+                </td>
+                <td>{{ item._bookingCount || 0 }}</td>
+                <td class="actions-cell">
+                  <button class="btn-sm" @click="viewItem(item)">View</button>
+                  <button class="btn-sm" @click="editItem(item)">Edit</button>
+                  <button class="btn-sm btn-danger" @click="removeItem(item)">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div v-show="activeTab === 'wallet-passes'" class="card">
+      <div v-if="walletPassLoading" class="loading-state-inline">
         <div class="spinner-sm"></div>
       </div>
-      <div v-else-if="items.length === 0" class="empty-state">
-        No events found
+      <div v-else-if="walletPassRequests.length === 0" class="empty-state">
+        No wallet pass requests found
       </div>
       <div v-else class="table-wrap">
         <table class="data-table">
@@ -46,42 +122,98 @@
               <th>ID</th>
               <th>Event</th>
               <th>Tenant</th>
-              <th>Date</th>
               <th>Status</th>
-              <th>Tickets</th>
-              <th>Bookings</th>
+              <th>Amount</th>
+              <th>Payment</th>
+              <th>Apple</th>
+              <th>Google</th>
+              <th>Samsung</th>
+              <th>Created</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in items" :key="item.id">
-              <td>#{{ item.id }}</td>
+            <tr v-for="req in walletPassRequests" :key="req.id">
+              <td>#{{ req.id }}</td>
               <td>
-                <div class="cell-primary">{{ item.name }}</div>
+                <div class="cell-primary">
+                  {{ req.event?.name || `Event #${req.eventId}` }}
+                </div>
                 <div class="cell-secondary">
-                  {{ item.eventType || "General" }}
+                  {{
+                    req.event?.eventDate ? formatDate(req.event.eventDate) : ""
+                  }}
                 </div>
               </td>
-              <td>{{ item.tenant?.name || item.tenantId }}</td>
-              <td>{{ formatDate(item.eventDate) }}</td>
+              <td>{{ req.tenant?.name || req.tenantId }}</td>
               <td>
-                <span class="badge" :class="statusClass(item.status)">
-                  {{ item.status }}
+                <span class="badge" :class="passStatusClass(req.status)">
+                  {{ passStatusLabel(req.status) }}
+                </span>
+              </td>
+              <td>{{ req.currency }} {{ req.amount.toFixed(2) }}</td>
+              <td>
+                <span class="badge" :class="passStatusClass(req.paymentStatus)">
+                  {{ req.paymentStatus }}
                 </span>
               </td>
               <td>
-                <span v-if="item.isTicketed" class="badge badge-info">
-                  Ticketed
+                <span
+                  v-if="req.platformStatuses?.apple"
+                  class="badge"
+                  :class="passStatusClass(req.platformStatuses.apple)"
+                >
+                  {{ req.platformStatuses.apple }}
                 </span>
-                <span v-else class="badge">Free</span>
+                <span v-else class="cell-secondary">—</span>
               </td>
-              <td>{{ item._bookingCount || 0 }}</td>
+              <td>
+                <span
+                  v-if="req.platformStatuses?.google"
+                  class="badge"
+                  :class="passStatusClass(req.platformStatuses.google)"
+                >
+                  {{ req.platformStatuses.google }}
+                </span>
+                <span v-else class="cell-secondary">—</span>
+              </td>
+              <td>
+                <span
+                  v-if="req.platformStatuses?.samsung"
+                  class="badge"
+                  :class="passStatusClass(req.platformStatuses.samsung)"
+                >
+                  {{ req.platformStatuses.samsung }}
+                </span>
+                <span v-else class="cell-secondary">—</span>
+              </td>
+              <td>{{ formatDate(req.createdAt) }}</td>
               <td class="actions-cell">
-                <button class="btn-sm" @click="viewItem(item)">View</button>
-                <button class="btn-sm" @click="editItem(item)">Edit</button>
-                <button class="btn-sm btn-danger" @click="removeItem(item)">
-                  Delete
+                <button
+                  v-if="req.status === 'pending'"
+                  class="btn-sm btn-danger"
+                  @click="openReview(req, 'reject')"
+                >
+                  Reject
                 </button>
+                <button
+                  v-if="req.status === 'pending'"
+                  class="btn-sm"
+                  @click="openReview(req, 'approve')"
+                  style="margin-left: 4px"
+                >
+                  Approve
+                </button>
+                <button
+                  v-else-if="
+                    req.status === 'approved' || req.status === 'signed'
+                  "
+                  class="btn-sm"
+                  disabled
+                >
+                  Processing…
+                </button>
+                <span v-else class="cell-secondary">—</span>
               </td>
             </tr>
           </tbody>
@@ -191,14 +323,95 @@
         </div>
       </div>
     </div>
+
+    <div
+      v-if="reviewModalOpen"
+      class="modal-overlay"
+      @click.self="reviewModalOpen = false"
+    >
+      <div class="modal">
+        <div class="modal-header">
+          <h3>
+            {{
+              selectedRequest?.status === "pending"
+                ? "Review Wallet Pass Request"
+                : "View Request"
+            }}
+          </h3>
+          <button class="btn-close" @click="reviewModalOpen = false">×</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="selectedRequest" class="review-details">
+            <div class="review-row">
+              <strong>Request ID</strong>
+              <span>#{{ selectedRequest.id }}</span>
+            </div>
+            <div class="review-row">
+              <strong>Amount</strong>
+              <span
+                >{{ selectedRequest.currency }}
+                {{ selectedRequest.amount.toFixed(2) }}</span
+              >
+            </div>
+            <div class="review-row">
+              <strong>Payment Reference</strong>
+              <span>{{ selectedRequest.paymentReference || "N/A" }}</span>
+            </div>
+            <div class="review-row">
+              <strong>Event</strong>
+              <span>{{
+                selectedRequest.event?.name ||
+                `Event #${selectedRequest.eventId}`
+              }}</span>
+            </div>
+            <div class="review-row">
+              <strong>Tenant ID</strong>
+              <span>{{ selectedRequest.tenantId }}</span>
+            </div>
+            <div class="field">
+              <label for="reviewNotes">Review Notes</label>
+              <textarea
+                id="reviewNotes"
+                v-model="reviewNotes"
+                rows="3"
+                class="field-input"
+                placeholder="Add notes for the tenant..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="reviewModalOpen = false">
+            Cancel
+          </button>
+          <button
+            v-if="selectedRequest?.status === 'pending'"
+            class="btn-danger"
+            :disabled="saving"
+            @click="rejectRequest"
+          >
+            Reject
+          </button>
+          <button
+            v-if="selectedRequest?.status === 'pending'"
+            class="btn-primary"
+            :disabled="saving"
+            @click="approveRequest"
+          >
+            Approve &amp; Enqueue Signing
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useToastStore } from "@/stores/toast";
 import eventPortalAPI from "@/services/eventPortalAPI";
+import adminAPI from "@/services/adminAPI";
 import { buildQueryString } from "@/services/admin/verticalAPI";
 
 interface Event {
@@ -220,6 +433,23 @@ interface Event {
   _bookingCount?: number;
 }
 
+interface WalletPassRequest {
+  id: number;
+  eventId: number;
+  tenantId: number;
+  tenant?: { id: number; name: string };
+  event?: { id: number; name: string; eventDate: string };
+  status: string;
+  amount: number;
+  currency: string;
+  paymentStatus: string;
+  platformStatuses: Record<string, string>;
+  reviewNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+}
+
 const router = useRouter();
 const toast = useToastStore();
 const items = ref<Event[]>([]);
@@ -230,6 +460,12 @@ const filterStatus = ref("");
 const filterVertical = ref("");
 const selectedItem = ref<Event | null>(null);
 const form = ref<Partial<Event>>({});
+const activeTab = ref<"events" | "wallet-passes">("events");
+const walletPassRequests = ref<WalletPassRequest[]>([]);
+const walletPassLoading = ref(false);
+const reviewModalOpen = ref(false);
+const selectedRequest = ref<WalletPassRequest | null>(null);
+const reviewNotes = ref("");
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -246,6 +482,86 @@ const statusClass = (status: string) => {
 const formatDate = (dateStr: string) => {
   if (!dateStr) return "TBD";
   return new Date(dateStr + "T00:00:00").toLocaleDateString();
+};
+
+const passStatusClass = (status: string) => {
+  const map: Record<string, string> = {
+    pending_payment: "badge-warning",
+    pending: "badge-info",
+    approved: "badge-success",
+    signed: "badge-info",
+    completed: "badge-success",
+    rejected: "badge-danger",
+    failed: "badge-danger",
+    cancelled: "badge-muted",
+  };
+  return map[status] || "badge";
+};
+
+const passStatusLabel = (status: string) => {
+  const map: Record<string, string> = {
+    pending_payment: "Payment Pending",
+    pending: "Pending Review",
+    approved: "Approved",
+    signed: "Signed",
+    completed: "Completed",
+    rejected: "Rejected",
+    failed: "Failed",
+    cancelled: "Cancelled",
+  };
+  return map[status] || status;
+};
+
+const loadWalletPassRequests = async () => {
+  walletPassLoading.value = true;
+  try {
+    const res = await adminAPI.listWalletPassRequests();
+    walletPassRequests.value = res.data?.requests || res.data || [];
+  } catch (err) {
+    toast.add("Failed to load wallet pass requests", "error", 4000);
+  } finally {
+    walletPassLoading.value = false;
+  }
+};
+
+const approveRequest = async () => {
+  if (!selectedRequest.value) return;
+  try {
+    await adminAPI.approveWalletPassRequest(
+      selectedRequest.value.id,
+      reviewNotes.value
+    );
+    toast.add("Request approved. Signing job enqueued.", "success", 3000);
+    reviewModalOpen.value = false;
+    reviewNotes.value = "";
+    selectedRequest.value = null;
+    loadWalletPassRequests();
+  } catch (err) {
+    toast.add("Failed to approve request", "error", 4000);
+  }
+};
+
+const rejectRequest = async () => {
+  if (!selectedRequest.value) return;
+  try {
+    await adminAPI.rejectWalletPassRequest(
+      selectedRequest.value.id,
+      reviewNotes.value
+    );
+    toast.add("Request rejected", "success", 3000);
+    reviewModalOpen.value = false;
+    reviewNotes.value = "";
+    selectedRequest.value = null;
+    loadWalletPassRequests();
+  } catch (err) {
+    toast.add("Failed to reject request", "error", 4000);
+  }
+};
+
+const openReview = (req: WalletPassRequest, action: "approve" | "reject") => {
+  selectedRequest.value = req;
+  reviewNotes.value = req.reviewNotes || "";
+  reviewModalOpen.value = true;
 };
 
 const load = async () => {
@@ -320,6 +636,7 @@ const removeItem = async (item: Event) => {
 
 onMounted(() => {
   load();
+  loadWalletPassRequests();
 });
 </script>
 
@@ -415,9 +732,33 @@ onMounted(() => {
   background: var(--neutral-100);
   color: var(--neutral-600);
 }
+.badge-warning {
+  background: #fef3c2;
+  color: #924004;
+}
 .actions-cell {
   display: flex;
   gap: var(--space-2);
+}
+.review-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--neutral-100);
+}
+.review-row:last-child {
+  border-bottom: none;
+}
+.review-row strong {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neutral-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.review-row span {
+  font-size: 14px;
+  color: var(--neutral-900);
 }
 .btn-sm {
   padding: var(--space-1) var(--space-2);

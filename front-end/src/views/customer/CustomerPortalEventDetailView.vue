@@ -42,6 +42,7 @@ interface Booking {
   paymentStatus: string;
   paymentReference: string | null;
   bookedAt: string;
+  currency?: string;
   ticketType?: TicketType;
   event?: Event;
 }
@@ -64,6 +65,8 @@ const notes = ref("");
 const submitting = ref(false);
 const paymentLoading = ref(false);
 const errorMessage = ref("");
+const showConfirmation = ref(false);
+const confirmedBooking = ref<Booking | null>(null);
 
 const loadEvent = async () => {
   loading.value = true;
@@ -182,7 +185,10 @@ const initiatePayment = async () => {
     );
     const data = res.data;
     if (data?.authorizationUrl) {
-      window.location.href = data.authorizationUrl;
+      const returnUrl = `${window.location.origin}/portal/events/${eventId.value}?paid=true&booking=${booking.value.id}`;
+      const paystackUrl = new URL(data.authorizationUrl);
+      paystackUrl.searchParams.set("callback_url", returnUrl);
+      window.location.href = paystackUrl.toString();
     } else {
       throw new Error("Payment initialization failed");
     }
@@ -194,8 +200,34 @@ const initiatePayment = async () => {
   }
 };
 
+const checkPostPayment = async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const paid = urlParams.get("paid");
+  const bookingId = urlParams.get("booking");
+  if (paid === "true" && bookingId) {
+    try {
+      const res = await eventPortalAPI.getBooking(Number(bookingId));
+      confirmedBooking.value = res.data?.item || res.data;
+      showConfirmation.value = true;
+      window.history.replaceState({}, "", `/portal/events/${eventId.value}`);
+    } catch (err) {
+      logger.error("Failed to load booking after payment", { error: err });
+    }
+  }
+};
+
+const viewWalletPass = () => {
+  router.push(`/portal/events/${eventId.value}/wallet-pass`);
+};
+
+const backToEvent = () => {
+  showConfirmation.value = false;
+  confirmedBooking.value = null;
+};
+
 onMounted(async () => {
   await loadEvent();
+  await checkPostPayment();
 });
 </script>
 
@@ -346,6 +378,52 @@ onMounted(async () => {
           </div>
         </div>
       </template>
+
+      <div
+        v-if="showConfirmation && confirmedBooking"
+        class="confirmation-section"
+      >
+        <div class="confirmation-card">
+          <div class="confirmation-header">
+            <span
+              class="mdi mdi:check-circle"
+              style="font-size: 48px; color: #16a34a"
+            ></span>
+            <h2>Payment Successful!</h2>
+          </div>
+          <p class="confirmation-message">
+            Your ticket for {{ event?.name }} has been confirmed.
+          </p>
+          <div class="confirmation-details">
+            <div class="detail-row">
+              <strong>Booking ID</strong>
+              <p>#{{ confirmedBooking.id }}</p>
+            </div>
+            <div class="detail-row">
+              <strong>Tickets</strong>
+              <p>
+                {{ confirmedBooking.quantity }} x
+                {{ confirmedBooking.ticketType?.name || "Ticket" }}
+              </p>
+            </div>
+            <div class="detail-row">
+              <strong>Total Paid</strong>
+              <p>
+                {{ confirmedBooking.currency || "GHS" }}
+                {{ Number(confirmedBooking.total || 0).toFixed(2) }}
+              </p>
+            </div>
+          </div>
+          <div class="confirmation-actions">
+            <button class="wallet-pass-btn" @click="viewWalletPass">
+              View Wallet Pass
+            </button>
+            <button class="secondary" @click="backToEvent">
+              Back to Event
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div
@@ -519,6 +597,65 @@ onMounted(async () => {
 }
 .wallet-pass-section {
   margin-top: var(--space-8);
+}
+.confirmation-section {
+  margin-top: var(--space-8);
+}
+.confirmation-card {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  text-align: center;
+}
+.confirmation-header {
+  margin-bottom: var(--space-4);
+}
+.confirmation-header h2 {
+  margin: var(--space-3) 0 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--neutral-900);
+}
+.confirmation-message {
+  color: var(--neutral-600);
+  margin-bottom: var(--space-6);
+}
+.confirmation-details {
+  text-align: left;
+  margin-bottom: var(--space-6);
+}
+.confirmation-details .detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--neutral-100);
+}
+.confirmation-details .detail-row:last-child {
+  border-bottom: none;
+}
+.confirmation-details strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neutral-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.confirmation-details p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--neutral-900);
+}
+.confirmation-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+}
+.confirmation-actions .wallet-pass-btn {
+  flex: 1;
+}
+.confirmation-actions .secondary {
+  flex: 1;
 }
 .wallet-pass-card {
   border: 1px solid var(--neutral-200);

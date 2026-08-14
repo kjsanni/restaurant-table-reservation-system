@@ -83,6 +83,11 @@ const portalLinks = computed(() => {
       path: "/portal/events",
       icon: "mdi:calendar-star",
     });
+    links.splice(2, 0, {
+      name: "My Tickets",
+      path: "/portal/events/wallet-passes",
+      icon: "mdi:ticket-confirmation",
+    });
   }
   return links;
 });
