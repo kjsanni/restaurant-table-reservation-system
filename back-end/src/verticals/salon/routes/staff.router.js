@@ -11,40 +11,36 @@ router
   .route("/")
   .get(
     tryCatchHandler(tenantLimiter),
-    // codeql[js/missing-rate-limiting] SUPPRESSED: tenantLimiter applied above
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),
     tryCatchHandler(staffController.getSalonStaffHandler)
-  )
+  ) // codeql[js/missing-rate-limiting]
   .post(
     tryCatchHandler(tenantWriteLimiter),
-    // codeql[js/missing-rate-limiting] SUPPRESSED: tenantWriteLimiter applied above
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),
     tryCatchHandler(staffController.createSalonStaffHandler)
-  )
+  ) // codeql[js/missing-rate-limiting]
   .all(httpMethodError);
 
 router
   .route("/:id")
   .put(
     tryCatchHandler(tenantWriteLimiter),
-    // codeql[js/missing-rate-limiting] SUPPRESSED: tenantWriteLimiter applied above
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),
     tryCatchHandler(staffController.updateSalonStaffHandler)
-  )
+  ) // codeql[js/missing-rate-limiting]
   .delete(
     tryCatchHandler(tenantWriteLimiter),
-    // codeql[js/missing-rate-limiting] SUPPRESSED: tenantWriteLimiter applied above
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("manage_staff")),
     tryCatchHandler(staffController.deleteSalonStaffHandler)
-  )
+  ) // codeql[js/missing-rate-limiting]
   .all(httpMethodError);
 
 module.exports = router;
