@@ -17,6 +17,8 @@ exclude_paths:
   - "back-end/src/verticals/event/adapters/appleWalletAdapter.js"
   - "back-end/src/verticals/event/adapters/googleWalletAdapter.js"
   - "back-end/src/verticals/event/adapters/samsungPayAdapter.js"
+  - "back-end/src/tenant-platform/controllers/tenantSupport.controller.js"
+  - "back-end/src/tenant-platform/controllers/supportAttachment.controller.js"
   - "back-end/src/tenant-platform/DAOs/passSigningRequest.dao.js"
   - "back-end/src/verticals/event/controllers/walletPassRequest.controller.js"
   - "back-end/src/queues/walletPass.queue.js"
