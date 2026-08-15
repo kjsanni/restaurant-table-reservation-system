@@ -62,8 +62,7 @@ function splitSections(markdown) {
 function readLegalDoc(slug) {
   const file = SLUG_TO_FILE[slug];
   if (!file) return null;
-  // codacy-suppress path-traversal
-  const fullPath = path.join(LEGAL_DIR, file);
+  const fullPath = path.join(LEGAL_DIR, file); // codacy-suppress path-traversal
   if (!fs.existsSync(fullPath)) return null;
 
   const markdown = fs.readFileSync(fullPath, "utf-8");

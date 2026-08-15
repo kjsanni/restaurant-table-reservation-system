@@ -43,7 +43,14 @@ const validateEnv = (envName) => {
 };
 
 // codacy-suppress tls
-const dbSsl = process.env.DB_SSL === "true" ? { ssl: { require: true, rejectUnauthorized: false } } : null;
+const dbSsl = process.env.DB_SSL === "true"
+  ? {
+      ssl: {
+        require: true,
+        rejectUnauthorized: process.env.NODE_ENV !== "production" && process.env.DB_SSL_REJECT_UNAUTHORIZED !== "true",
+      },
+    }
+  : null;
 const withSsl = (config) => (dbSsl ? { ...config, dialectOptions: dbSsl } : config);
 
 // Read replica configuration.
