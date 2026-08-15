@@ -123,6 +123,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
   }
 
   const user = await userDAO.findUserByEmail(email, tenantId);
+  console.log("[DEBUG loginUser] email:", email, "tenantId:", tenantId, "user.id:", user?.id, "user.emailVerified:", user?.emailVerified, "user.email:", user?.email, "user.totpEnabled:", user?.totpEnabled);
 
   const isValidPassword = user && await userDAO.comparePassword(
     password,
