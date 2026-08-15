@@ -128,23 +128,6 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
   }
 
   const user = await userDAO.findUserByEmail(email, tenantId);
-  console.log(
-    "[DEBUG loginUser] email:",
-    sanitizeForLog(email),
-    "tenantId:",
-    sanitizeForLog(tenantId),
-    "user.id:",
-    user?.id,
-    "user.emailVerified:",
-    user?.emailVerified,
-    "user.email:",
-    sanitizeForLog(user?.email),
-    "user.totpEnabled:",
-    user?.totpEnabled
-  );
-  const User = require("../db/models").user;
-  const allUsers = await User.findAll({ where: { email }, attributes: ["id", "emailVerified", "tenantId", "isSuperAdmin", "totpEnabled"], order: [["id", "ASC"]] });
-  console.log("[DEBUG loginUser] ALL users with email:", allUsers.map((u) => ({ id: u.id, emailVerified: u.emailVerified, tenantId: u.tenantId, isSuperAdmin: u.isSuperAdmin, totpEnabled: u.totpEnabled })));
 
   const isValidPassword = user && await userDAO.comparePassword(
     password,
