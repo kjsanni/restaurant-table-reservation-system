@@ -5,11 +5,6 @@ const { verifyTokenWithFallback, getCurrentSecret } = require("../utils/jwtRotat
 const JWT_SECRET = getCurrentSecret();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30m";
 
-const sanitizeForLog = (value) => {
-  if (value === null || value === undefined) return value;
-  return String(value).replace(/[\r\n]/g, "");
-};
-
 const generateToken = (userId, role, locale = "en") => {
   return jwt.sign({ userId, role, locale }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
