@@ -32,6 +32,25 @@ const getGalleryImagesHandler = async (req, res) => {
   }
 };
 
+const updateGalleryImageHandler = async (req, res) => {
+  try {
+    const tenantId = req.tenant?.id;
+    const { id } = req.params;
+    const payload = req.body;
+    const image = await galleryDao.update(id, tenantId, {
+      caption: payload.caption,
+      isPublic: payload.isPublic,
+    });
+    if (!image) {
+      return res.status(404).json({ success: false, message: "Image not found" });
+    }
+    return res.status(200).json({ success: true, image });
+  } catch (err) {
+    console.error("updateGalleryImageHandler error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to update gallery image" });
+  }
+};
+
 const deleteGalleryImageHandler = async (req, res) => {
   try {
     const tenantId = req.tenant?.id;
@@ -50,5 +69,6 @@ const deleteGalleryImageHandler = async (req, res) => {
 module.exports = {
   createGalleryImageHandler,
   getGalleryImagesHandler,
+  updateGalleryImageHandler,
   deleteGalleryImageHandler,
 };

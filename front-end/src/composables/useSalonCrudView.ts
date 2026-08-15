@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import logger from "@/utils/logger";
 import { useI18n } from "@/composables/useI18n";
+import { confirm } from "@/utils/confirm";
 
 const ALLOWED_METHODS = ["list", "get", "create", "update", "delete"] as const;
 

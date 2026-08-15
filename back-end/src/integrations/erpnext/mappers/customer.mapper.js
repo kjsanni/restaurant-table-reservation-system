@@ -47,6 +47,38 @@ const mapReservationToInvoice = (reservation, tenant) => {
   };
 };
 
+const mapAppointmentToInvoice = (appointment, tenant, service) => {
+  const rate = parseFloat(service?.price || appointment.amount || 0);
+  const items = [
+    {
+      item_code: "RTRS Salon Appointment",
+      qty: 1,
+      rate,
+      amount: rate,
+      description: `Salon appointment: ${service?.name || "Service"} on ${appointment.start}`,
+    },
+  ];
+
+  return {
+    doctype: "Sales Invoice",
+    customer: "",
+    customer_name: `${appointment.customer?.firstName || ""} ${appointment.customer?.lastName || ""}`.trim(),
+    posting_date: appointment.start ? new Date(appointment.start).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+    due_date: appointment.start ? new Date(appointment.start).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+    company: tenant.name,
+    currency: tenant.currency || "GHS",
+    items,
+    total: rate,
+    grand_total: rate,
+    base_total: rate,
+    base_grand_total: rate,
+    status: "Draft",
+    source: appointment.source || "web",
+    rtrs_appointment_id: appointment.id,
+    rtrs_tenant_id: tenant.id,
+  };
+};
+
 const mapPaymentToErpnext = (payment, reservation) => {
   return {
     doctype: "Payment Entry",
@@ -69,5 +101,6 @@ const mapPaymentToErpnext = (payment, reservation) => {
 module.exports = {
   mapCustomerToErpnext,
   mapReservationToInvoice,
+  mapAppointmentToInvoice,
   mapPaymentToErpnext,
 };

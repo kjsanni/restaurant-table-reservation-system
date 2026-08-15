@@ -136,6 +136,15 @@ const getTenantDashboard = async () => {
     ],
   });
 
+  const allTenants = await db.tenant.findAll({
+    attributes: ["id", "settings"],
+  });
+
+  const erpnextEnabledCount = allTenants.filter((t) => {
+    const flags = t.settings?.featureFlags || {};
+    return Object.values(flags).some((v) => v === true && String(v).startsWith("erpnext_"));
+  }).length;
+
   return {
     total,
     active,
@@ -145,6 +154,7 @@ const getTenantDashboard = async () => {
     trialing,
     mrr: mrr || 0,
     recentTenants,
+    erpnextEnabledCount,
   };
 };
 

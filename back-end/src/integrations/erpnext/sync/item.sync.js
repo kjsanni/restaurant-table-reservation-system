@@ -1,14 +1,22 @@
 "use strict";
 
 const { getClient } = require("../client");
-const { mapInventoryItemToErpnext } = require("../mappers/item.mapper");
+const { mapSalonInventoryItem, mapRestaurantIngredient } = require("../mappers/item.mapper");
 const db = require("../../../db/models");
+
+const resolveMapper = (item) => {
+  if (item.constructor?.modelName === "inventoryItem") {
+    return mapSalonInventoryItem;
+  }
+  return mapRestaurantIngredient;
+};
 
 const createOrUpdateErpnextItem = async (item, tenantId) => {
   const tenant = await db.tenant.findByPk(tenantId);
   if (!tenant) throw new Error(`Tenant ${tenantId} not found`);
 
-  const payload = mapInventoryItemToErpnext(item, tenant);
+  const mapper = resolveMapper(item);
+  const payload = mapper(item, tenant);
 
 // codacy-suppress NoSqlInjection
   const existing = await db.erpnextSync.findOne({

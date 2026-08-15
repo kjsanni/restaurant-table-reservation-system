@@ -1,6 +1,7 @@
 "use strict";
 
 const { logAction, validateCsrfToken } = require("../../../middleware");
+const { tenantLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
 
 const salonAppointmentRoutes = require("../routes/appointment.router");
 const salonStationRoutes = require("../routes/station.router");
@@ -34,30 +35,30 @@ const salonModule = {
   enabled: () => true,
   manifestPath: require("path").join(__dirname, "salon.module.js"),
   routes: [
-    { path: "/api/v1/salon/appointments", router: salonAppointmentRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/stations", router: salonStationRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/services", router: salonServiceRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/packages", router: salonServicePackageRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/gift-cards", router: salonGiftCardRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/referrals", router: salonReferralRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/locations", router: salonLocationRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/inventory", router: salonInventoryRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/expenses", router: salonExpensesRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/pricing", router: salonPricingRulesRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/commissions", router: salonCommissionRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/customer-portal", router: salonCustomerPortalRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/reports", router: salonReportsRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/recurring-appointments", router: salonRecurringAppointmentRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/client-segmentation", router: salonClientSegmentationRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/staff", router: salonStaffRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/marketing-campaigns", router: salonMarketingCampaignRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/gallery", router: salonGalleryRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/dashboard", router: salonDashboardRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/whatsapp", router: salonWhatsAppRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/scheduled-reports", router: salonScheduledReportRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/inventory-transfers", router: salonInventoryTransferRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/staff-location-assignments", router: salonStaffLocationAssignmentRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/salon/cross-location-dashboard", router: crossLocationDashboardRoutes, middleware: [logAction, validateCsrfToken] },
+    { path: "/api/v1/salon/appointments", router: salonAppointmentRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/stations", router: salonStationRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/services", router: salonServiceRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/packages", router: salonServicePackageRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/gift-cards", router: salonGiftCardRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/referrals", router: salonReferralRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/locations", router: salonLocationRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/inventory", router: salonInventoryRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/expenses", router: salonExpensesRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/pricing", router: salonPricingRulesRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/commissions", router: salonCommissionRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/customer-portal", router: salonCustomerPortalRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/reports", router: salonReportsRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/recurring-appointments", router: salonRecurringAppointmentRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/client-segmentation", router: salonClientSegmentationRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/staff", router: salonStaffRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/marketing-campaigns", router: salonMarketingCampaignRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/gallery", router: salonGalleryRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/dashboard", router: salonDashboardRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/whatsapp", router: salonWhatsAppRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/scheduled-reports", router: salonScheduledReportRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/inventory-transfers", router: salonInventoryTransferRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/staff-location-assignments", router: salonStaffLocationAssignmentRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/salon/cross-location-dashboard", router: crossLocationDashboardRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
   ],
 };
 

@@ -84,6 +84,47 @@ router.get("/accounting/tax-report", tryCatchHandler(requireActiveTenant, checkE
   }
 }));
 
+router.get("/accounting/tax-templates", tryCatchHandler(requireActiveTenant, checkErpnextFeature, async (req, res) => {
+  const tenant = req.tenant;
+  const { getClient } = require("../client");
+  try {
+    const result = await (await getClient()).get("/api/resource/Sales Taxes and Charges Template", {
+      params: { filters: { company: tenant.name }, limit_page_length: 100 },
+    });
+    res.status(200).json({ success: true, data: result.data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
+router.get("/accounting/ghana-tax-summary", tryCatchHandler(requireActiveTenant, checkErpnextFeature, async (req, res) => {
+  const tenant = req.tenant;
+  const { getClient } = require("../client");
+  const { from, to } = req.query;
+  const filters = { company: tenant.name };
+  if (from) filters.from_date = from;
+  if (to) filters.to_date = to;
+  try {
+    const result = await (await getClient()).get("/api/resource/Sales Invoice", {
+      params: {
+        filters,
+        fields: ["name", "posting_date", "total", "total_taxes_and_charges", "taxes_and_charges"],
+        limit_page_length: 1000,
+      },
+    });
+    const invoices = result.data?.data || [];
+    const summary = {
+      totalInvoices: invoices.length,
+      totalTaxCollected: invoices.reduce((sum, inv) => sum + parseFloat(inv.total_taxes_and_charges || 0), 0),
+      totalInvoiceValue: invoices.reduce((sum, inv) => sum + parseFloat(inv.total || 0), 0),
+      invoices,
+    };
+    res.status(200).json({ success: true, data: summary });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
 router.get("/accounting/invoices", tryCatchHandler(requireActiveTenant, checkErpnextFeature, async (req, res) => {
   const tenant = req.tenant;
   const { getClient } = require("../client");
@@ -169,19 +210,26 @@ router.post("/accounting/sync/customers", tryCatchHandler(requireActiveTenant, c
 
 router.post("/accounting/sync/invoices", tryCatchHandler(requireActiveTenant, checkErpnextFeature, async (req, res) => {
   const tenant = req.tenant;
-  const { reservationIds } = req.body;
+  const { reservationIds, appointmentIds } = req.body;
   try {
+    const results = [];
     if (reservationIds && reservationIds.length > 0) {
-      const results = [];
       for (const reservationId of reservationIds) {
-        const result = await syncInvoice(tenant.id, reservationId);
+        const result = await syncInvoice(tenant.id, reservationId, "reservation");
         results.push(result);
       }
-      res.status(200).json({ success: true, results });
-    } else {
-      const results = await syncAllInvoices(tenant.id);
-      res.status(200).json({ success: true, results });
     }
+    if (appointmentIds && appointmentIds.length > 0) {
+      for (const appointmentId of appointmentIds) {
+        const result = await syncInvoice(tenant.id, appointmentId, "appointment");
+        results.push(result);
+      }
+    }
+    if (!reservationIds?.length && !appointmentIds?.length) {
+      const bulk = await syncAllInvoices(tenant.id);
+      results.push(...bulk);
+    }
+    res.status(200).json({ success: true, results });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

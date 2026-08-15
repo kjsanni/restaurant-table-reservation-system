@@ -8,6 +8,9 @@ const E2E_TENANT_SLUG = process.env.E2E_TENANT_SLUG || "default";
 const E2E_TENANT_EMAIL = process.env.E2E_TENANT_EMAIL || "akua@demo.test";
 const E2E_TENANT_PASSWORD =
   process.env.E2E_TENANT_PASSWORD || "password123";
+const E2E_CUSTOMER_EMAIL = process.env.E2E_CUSTOMER_EMAIL || "customer@demo.test";
+const E2E_CUSTOMER_PASSWORD =
+  process.env.E2E_CUSTOMER_PASSWORD || "customer123";
 
 async function loginAsPlatformAdmin(page) {
   await page.goto("/super-admin/login");
@@ -30,6 +33,17 @@ async function loginAsTenantStaff(page) {
   });
 }
 
+async function loginAsCustomer(page) {
+  await page.goto("/customer/login");
+  await page.waitForLoadState("domcontentloaded");
+  await page.fill("#email", E2E_CUSTOMER_EMAIL);
+  await page.fill("#password", E2E_CUSTOMER_PASSWORD);
+  await page.press("#password", "Enter");
+  await page.waitForURL((url) => !url.pathname.includes("/login"), {
+    timeout: 60000,
+  });
+}
+
 export const test = base.extend({
   loginAsPlatformAdmin: [
     async ({ page }, use) => {
@@ -41,14 +55,22 @@ export const test = base.extend({
       await use(loginAsTenantStaff(page));
     },
   ],
+  loginAsCustomer: [
+    async ({ page }, use) => {
+      await use(loginAsCustomer(page));
+    },
+  ],
 });
 
 export {
   loginAsPlatformAdmin,
   loginAsTenantStaff,
+  loginAsCustomer,
   E2E_SUPER_ADMIN_EMAIL,
   E2E_SUPER_ADMIN_PASSWORD,
   E2E_TENANT_SLUG,
   E2E_TENANT_EMAIL,
   E2E_TENANT_PASSWORD,
+  E2E_CUSTOMER_EMAIL,
+  E2E_CUSTOMER_PASSWORD,
 };

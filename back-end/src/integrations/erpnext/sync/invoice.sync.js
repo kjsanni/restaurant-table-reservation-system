@@ -1,18 +1,19 @@
 "use strict";
 
 const { getClient } = require("../client");
-const { mapReservationToInvoice } = require("../mappers/customer.mapper");
+const { mapReservationToInvoice, mapAppointmentToInvoice } = require("../mappers/customer.mapper");
 const db = require("../../../db/models");
 
-const createErpnextInvoice = async (reservation, tenant) => {
-  const payload = mapReservationToInvoice(reservation, tenant);
+const createErpnextInvoice = async (entity, tenant, entityType) => {
+  const mapper = entityType === "appointment" ? mapAppointmentToInvoice : mapReservationToInvoice;
+  const payload = mapper(entity, tenant, entity.service);
 
-// codacy-suppress NoSqlInjection
+  // codacy-suppress NoSqlInjection
   const existing = await db.erpnextSync.findOne({
     where: {
       tenantId: tenant.id,
-      rtrsEntityType: "reservation",
-      rtrsEntityId: reservation.id,
+      rtrsEntityType: entityType,
+      rtrsEntityId: entity.id,
     },
   });
 
@@ -26,8 +27,8 @@ const createErpnextInvoice = async (reservation, tenant) => {
 
   await db.erpnextSync.upsert({
     tenantId: tenant.id,
-    rtrsEntityType: "reservation",
-    rtrsEntityId: reservation.id,
+    rtrsEntityType: entityType,
+    rtrsEntityId: entity.id,
     erpnextDocType: "Sales Invoice",
     erpnextDocname: erpnextInvoice.name,
     erpnextDocStatus: erpnextInvoice.status || "Draft",
@@ -36,32 +37,71 @@ const createErpnextInvoice = async (reservation, tenant) => {
   return erpnextInvoice;
 };
 
-const syncInvoice = async (tenantId, reservationId) => {
-  const reservation = await db.reservation.findByPk(reservationId, {
-    where: { tenantId },
-    include: [{ model: db.customer, as: "customer" }],
-  });
-  if (!reservation) {
-    throw new Error(`Reservation ${reservationId} not found for tenant ${tenantId}`);
+const syncInvoice = async (tenantId, entityId, entityType = "reservation") => {
+  let entity = null;
+  let include = [];
+
+  if (entityType === "appointment") {
+    entity = await db.appointment.findByPk(entityId, {
+      where: { tenantId },
+      include: [
+        { model: db.customer, as: "customer" },
+        { model: db.service, as: "service" },
+      ],
+    });
+    if (!entity) {
+      throw new Error(`Appointment ${entityId} not found for tenant ${tenantId}`);
+    }
+  } else {
+    entity = await db.reservation.findByPk(entityId, {
+      where: { tenantId },
+      include: [{ model: db.customer, as: "customer" }],
+    });
+    if (!entity) {
+      throw new Error(`Reservation ${entityId} not found for tenant ${tenantId}`);
+    }
   }
-  return createErpnextInvoice(reservation, await db.tenant.findByPk(tenantId));
+
+  return createErpnextInvoice(entity, await db.tenant.findByPk(tenantId), entityType);
 };
 
 const syncAllInvoices = async (tenantId) => {
+  const tenant = await db.tenant.findByPk(tenantId);
+  const results = [];
+
   const reservations = await db.reservation.findAll({
     where: { tenantId, paymentStatus: { [db.Sequelize.Op.ne]: "unpaid" } },
     include: [{ model: db.customer, as: "customer" }],
   });
-  const tenant = await db.tenant.findByPk(tenantId);
-  const results = [];
+
   for (const reservation of reservations) {
     try {
-      const result = await createErpnextInvoice(reservation, tenant);
+      const result = await createErpnextInvoice(reservation, tenant, "reservation");
       results.push({ reservationId: reservation.id, status: "success", erpnextName: result.name });
     } catch (err) {
       results.push({ reservationId: reservation.id, status: "failed", error: err.message });
     }
   }
+
+  if (db.appointment) {
+    const appointments = await db.appointment.findAll({
+      where: { tenantId, paymentStatus: { [db.Sequelize.Op.ne]: "unpaid" } },
+      include: [
+        { model: db.customer, as: "customer" },
+        { model: db.service, as: "service" },
+      ],
+    });
+
+    for (const appointment of appointments) {
+      try {
+        const result = await createErpnextInvoice(appointment, tenant, "appointment");
+        results.push({ appointmentId: appointment.id, status: "success", erpnextName: result.name });
+      } catch (err) {
+        results.push({ appointmentId: appointment.id, status: "failed", error: err.message });
+      }
+    }
+  }
+
   return results;
 };
 

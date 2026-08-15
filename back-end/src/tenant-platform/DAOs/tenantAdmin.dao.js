@@ -51,6 +51,7 @@ tenantAdminDAO.list = async (filters = {}) => {
       "currency",
       "restaurantType",
       "restaurantSubtype",
+      "templateId",
       "serviceModes",
       "createdAt",
       "updatedAt",

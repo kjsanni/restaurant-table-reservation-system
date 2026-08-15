@@ -1,14 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
 
-module.exports = (sequelize, DataTypes) => {
-  class RecurringAppointment extends Model {
-    static associate(_unused) {}
-  }
-
-  RecurringAppointment.init(
-    {
-      tenantId: {
+const getRecurringAppointmentAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -62,13 +57,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "recurring_appointment",
-      tableName: "recurring_appointments",
-    }
-  );
+});
 
+module.exports = (sequelize, DataTypes) => {
+  class RecurringAppointment extends Model {
+    static associate(_unused) {}
+  }
+  RecurringAppointment.init(getRecurringAppointmentAttributes(DataTypes), {
+    sequelize,
+    modelName: "recurring_appointment",
+    tableName: "recurring_appointments",
+  });
   return RecurringAppointment;
 };

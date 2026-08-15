@@ -1,26 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class InventoryTransfer extends Model {
-    static associate(models) {
-      InventoryTransfer.belongsTo(models.tenant, { foreignKey: "tenantId" });
-      InventoryTransfer.belongsTo(models.location, {
-        foreignKey: "fromLocationId",
-        as: "fromLocation",
-      });
-      InventoryTransfer.belongsTo(models.location, {
-        foreignKey: "toLocationId",
-        as: "toLocation",
-      });
-      InventoryTransfer.belongsTo(models.inventoryItem, {
-        foreignKey: "inventoryItemId",
-        as: "inventoryItem",
-      });
-    }
-  }
-  InventoryTransfer.init(
-    {
-      tenantId: {
+
+const getInventoryTransferAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -51,12 +34,30 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "inventoryTransfer",
-      tableName: "inventory_transfers",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class InventoryTransfer extends Model {
+    static associate(models) {
+      InventoryTransfer.belongsTo(models.tenant, { foreignKey: "tenantId" });
+      InventoryTransfer.belongsTo(models.location, {
+        foreignKey: "fromLocationId",
+        as: "fromLocation",
+      });
+      InventoryTransfer.belongsTo(models.location, {
+        foreignKey: "toLocationId",
+        as: "toLocation",
+      });
+      InventoryTransfer.belongsTo(models.inventoryItem, {
+        foreignKey: "inventoryItemId",
+        as: "inventoryItem",
+      });
     }
-  );
+  }
+  InventoryTransfer.init(getInventoryTransferAttributes(DataTypes), {
+    sequelize,
+    modelName: "inventoryTransfer",
+    tableName: "inventory_transfers",
+  });
   return InventoryTransfer;
 };
