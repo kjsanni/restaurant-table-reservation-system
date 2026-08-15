@@ -209,12 +209,17 @@ const createAttachmentHandler = async (req, res) => {
 const downloadAttachmentHandler = async (req, res) => {
   const filename = path.basename(req.params.filename);
   const filePath = path.join(UPLOAD_DIR, filename);
+  const resolvedPath = path.resolve(filePath);
 
-  if (!fs.existsSync(filePath)) {
+  if (!resolvedPath.startsWith(path.resolve(UPLOAD_DIR))) {
+    return res.status(400).json({ success: false, message: "Invalid file path" });
+  }
+
+  if (!fs.existsSync(resolvedPath)) {
     return res.status(404).json({ success: false, message: "File not found" });
   }
 
-  res.download(filePath, filename, (err) => {
+  res.download(resolvedPath, filename, (err) => {
     if (err) {
       console.error("Attachment download error:", err.message);
     }
@@ -228,8 +233,9 @@ const deleteAttachmentHandler = async (req, res) => {
   }
 
   const filePath = path.join(UPLOAD_DIR, path.basename(attachment.filename || ""));
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
+  const resolvedPath = path.resolve(filePath);
+  if (resolvedPath.startsWith(path.resolve(UPLOAD_DIR)) && fs.existsSync(resolvedPath)) {
+    fs.unlinkSync(resolvedPath);
   }
 
   await platformAuditDAO.log(
