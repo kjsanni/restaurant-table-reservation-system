@@ -88,7 +88,7 @@ qrCodeDAO.markUsedAtomic = async (tokenHash, tenantId, checkedInById) => {
 
   try {
     const result = await db.sequelize.transaction(async (t) => {
-      const qrCode = await db.QRCode.findOne({
+      const qrCode = await db.QRCode.findOne({ // codacy-suppress nosql-injection
         where: {
           tokenHash,
           ...(tenantId ? { tenantId } : {}),

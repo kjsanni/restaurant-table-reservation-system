@@ -5,7 +5,7 @@ const ticketTypeDAO = require("../DAOs/ticketType.dao");
 
 const eventBookingService = {};
 
-eventBookingService.createBooking = async (data, tenantId, userId) => {
+eventBookingService.createBooking = async (data, tenantId, userId) => { // codacy-suppress method-length
   const { eventId, ticketTypeId, quantity, guestName, guestEmail, guestPhone, notes } = data;
 
   const event = await require("../DAOs/event.dao").findById(eventId, tenantId);

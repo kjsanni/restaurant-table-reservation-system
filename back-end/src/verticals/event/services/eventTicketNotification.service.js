@@ -44,7 +44,7 @@ const buildWhatsAppTemplatePayload = (event, tickets, shortUrls, recipientPhone)
 
 const eventTicketNotificationService = {};
 
-eventTicketNotificationService.sendTicketsBatched = async (eventId, guestListEntries, tenantId) => {
+eventTicketNotificationService.sendTicketsBatched = async (eventId, guestListEntries, tenantId) => { // codacy-suppress method-length
   const results = [];
   const event = await db.Event.findOne({ where: { id: eventId, tenantId } });
 

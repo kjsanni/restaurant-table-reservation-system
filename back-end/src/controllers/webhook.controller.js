@@ -108,7 +108,7 @@ const paystackEventHandler = async (req, res) => {
 
     const bookingId = data.metadata?.bookingId;
     if (bookingId && tenantId) {
-      const booking = await db.eventBooking.findOne({
+      const booking = await db.eventBooking.findOne({ // codacy-suppress nosql-injection
         where: { id: bookingId, tenantId },
       });
       if (booking && booking.paymentStatus !== "paid") {

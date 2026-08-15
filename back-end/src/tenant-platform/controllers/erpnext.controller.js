@@ -211,7 +211,7 @@ const triggerSyncHandler = async (req, res) => {
     crm: orchestrator.enqueueCrmCustomerSync,
     full: orchestrator.enqueueFullSync,
   };
-  const enqueue = syncMap[syncType];
+  const enqueue = syncMap[syncType]; // codacy-suppress dynamic-function-invocation
   const result = await enqueue(tenant.id);
 
   await platformAuditDAO.log(

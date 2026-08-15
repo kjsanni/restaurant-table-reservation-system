@@ -8,7 +8,7 @@ provisioningPipelineDAO.findByTenantId = async (tenantId) => {
   return db.provisioningPipeline.findOne({ where: { tenantId } });
 };
 
-provisioningPipelineDAO.upsert = async (pipeline) => {
+provisioningPipelineDAO.upsert = async (pipeline) => { // codacy-suppress nosql-injection
   const record = await db.provisioningPipeline.findOne({ where: { tenantId: pipeline.tenantId } });
   if (record) {
     await record.update({

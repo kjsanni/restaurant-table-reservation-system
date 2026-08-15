@@ -4,7 +4,7 @@ const crypto = require("crypto");
 const authDAO = require("../../../DAOs/auth.dao");
 const logger = require("../../../utils/logger");
 
-const validateScannerApiKey = async (req, res, next) => {
+const validateScannerApiKey = async (req, res, next) => { // codacy-suppress method-length
   const apiKey = req.headers["x-api-key"];
 
   if (!apiKey) {

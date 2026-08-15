@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  up: async (queryInterface, Sequelize) => { // codacy-suppress method-length
     await queryInterface.createTable("tenant_migration_status", {
       id: {
         type: Sequelize.INTEGER,

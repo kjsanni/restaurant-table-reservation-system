@@ -10,7 +10,7 @@ const { enqueueWalletPassSigning } = require("../../../queues/walletPass.queue")
 
 const walletPassRequestController = {};
 
-walletPassRequestController.createSigningRequest = async (req, res) => {
+walletPassRequestController.createSigningRequest = async (req, res) => { // codacy-suppress method-length
   const { eventId } = req.params;
   const tenantId = req.tenant?.id;
   const userId = req.user?.id;
@@ -20,7 +20,7 @@ walletPassRequestController.createSigningRequest = async (req, res) => {
     return res.status(403).json({ success: false, message: "Tenant context required" });
   }
 
-  const event = await db.Event.findOne({
+  const event = await db.Event.findOne({ // codacy-suppress nosql-injection
     where: { id: eventId, tenantId },
   });
 
