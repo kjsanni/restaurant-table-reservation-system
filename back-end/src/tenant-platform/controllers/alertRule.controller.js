@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const alertRuleDAO = require("../DAOs/alertRule.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listAlertRulesHandler = async (req, res) => {
   const { isActive, metric, limit } = req.query;
@@ -35,15 +36,7 @@ const createAlertRuleHandler = async (req, res) => {
   }
 
   const rule = await alertRuleDAO.create(data);
-  await platformAuditDAO.log(
-    req.user.id,
-    "alert_rule.created",
-    "alert_rule",
-    rule.id,
-    null,
-    { name: rule.name, metric: rule.metric },
-    req.ip
-  );
+await auditLog(req, "alert_rule.created", "alert_rule", rule.id, { name: rule.name, metric: rule.metric });
   res.status(201).json({ success: true, item: rule });
 };
 
@@ -62,15 +55,7 @@ const updateAlertRuleHandler = async (req, res) => {
   }
 
   const updated = await alertRuleDAO.update(req.params.id, updates);
-  await platformAuditDAO.log(
-    req.user.id,
-    "alert_rule.updated",
-    "alert_rule",
-    rule.id,
-    null,
-    { name: updated.name, metric: updated.metric },
-    req.ip
-  );
+await auditLog(req, "alert_rule.updated", "alert_rule", rule.id, { name: updated.name, metric: updated.metric });
   res.status(200).json({ success: true, item: updated });
 };
 
@@ -79,15 +64,7 @@ const deleteAlertRuleHandler = async (req, res) => {
   if (!rule) {
     return response.notFound(res, "Alert rule not found");
   }
-  await platformAuditDAO.log(
-    req.user.id,
-    "alert_rule.deleted",
-    "alert_rule",
-    rule.id,
-    null,
-    { name: rule.name },
-    req.ip
-  );
+  await auditLog(req, "alert_rule.deleted", "alert_rule", rule.id, { name: rule.name });
   res.status(200).json({ success: true });
 };
 

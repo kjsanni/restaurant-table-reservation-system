@@ -3,6 +3,7 @@ const response = require("../utils/response");
 const db = require("../../db/models");
 const authDAO = require("../../DAOs/auth.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listSessionsHandler = async (req, res) => {
   const tokens = await db.refreshToken.findAll({
@@ -43,15 +44,7 @@ const revokeSessionHandler = async (req, res) => {
 
   await token.update({ isRevoked: true });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "super_admin.session_revoked",
-    "user",
-    req.user.id,
-    req.tenant?.id || null,
-    { sessionId: token.id },
-    req.ip
-  );
+  await auditLog(req, "super_admin.session_revoked", "user", req.user.id, { sessionId: token.id });
 
   res.status(200).json({ success: true, message: "Session revoked" });
 };
@@ -59,15 +52,7 @@ const revokeSessionHandler = async (req, res) => {
 const revokeAllSessionsHandler = async (req, res) => {
   await authDAO.revokeAllUserTokens(req.user.id, req.tenant?.id);
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "super_admin.all_sessions_revoked",
-    "user",
-    req.user.id,
-    req.tenant?.id || null,
-    {},
-    req.ip
-  );
+  await auditLog(req, "super_admin.all_sessions_revoked", "user", req.user.id, {});
 
   res.status(200).json({ success: true, message: "All sessions revoked" });
 };

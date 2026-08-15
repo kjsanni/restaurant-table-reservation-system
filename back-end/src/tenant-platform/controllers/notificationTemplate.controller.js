@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const notificationTemplateDAO = require("../DAOs/notificationTemplate.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listTemplatesHandler = async (req, res) => {
   const { channel, isActive } = req.query;
@@ -31,15 +32,7 @@ const createTemplateHandler = async (req, res) => {
     isActive: isActive ?? true,
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.notification_template_created",
-    "notification_template",
-    template.id,
-    null,
-    { key, channel },
-    req.ip
-  );
+await auditLog(req, "platform.notification_template_created", "notification_template", template.id, { key, channel });
 
   res.status(201).json({ success: true, item: template });
 };
@@ -56,15 +49,7 @@ const updateTemplateHandler = async (req, res) => {
     return response.notFound(res, "Template not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.notification_template_updated",
-    "notification_template",
-    template.id,
-    null,
-    { key: template.key },
-    req.ip
-  );
+  await auditLog(req, "platform.notification_template_updated", "notification_template", template.id, { key: template.key });
 
   res.status(200).json({ success: true, item: template });
 };
@@ -75,15 +60,7 @@ const deleteTemplateHandler = async (req, res) => {
     return response.notFound(res, "Template not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.notification_template_deleted",
-    "notification_template",
-    template.id,
-    null,
-    { key: template.key },
-    req.ip
-  );
+  await auditLog(req, "platform.notification_template_deleted", "notification_template", template.id, { key: template.key });
 
   res.status(200).json({ success: true });
 };

@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const supportNoteDAO = require("../DAOs/supportNote.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listNotesHandler = async (req, res) => {
   const { conversationId, ticketId } = req.query;
@@ -32,15 +33,7 @@ const createNoteHandler = async (req, res) => {
     mentions,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.note_created",
-    "support_note",
-    note.id,
-    req.tenant?.id || null,
-    { conversationId, ticketId, mentions },
-    req.ip
-  );
+await auditLog(req, "support.note_created", "support_note", note.id, { conversationId, ticketId, mentions });
 
   res.status(201).json({ success: true, item: note });
 };
@@ -51,15 +44,7 @@ const deleteNoteHandler = async (req, res) => {
     return response.notFound(res, "Note not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.note_deleted",
-    "support_note",
-    note.id,
-    req.user?.isSuperAdmin ? null : req.tenant?.id,
-    {},
-    req.ip
-  );
+  await auditLog(req, "support.note_deleted", "support_note", note.id, {}, { tenantId: req.user?.isSuperAdmin ? null : req.tenant?.id });
 
   res.status(200).json({ success: true });
 };

@@ -5,6 +5,7 @@ const response = require("../utils/response");
 const db = require("../../db/models");
 const { validateModuleDependencies, getModuleMetadata, getEnabledModules } = require("../../integrations/erpnext/module-registry");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const resolveTenantById = async (id) => {
   return db.tenant.findByPk(id, {
@@ -77,15 +78,7 @@ const provisionErpnextModuleHandler = async (req, res) => {
     settings: { ...tenant.settings, featureFlags },
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "erpnext.module_provisioned",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { module: moduleFlag, moduleName: metadata.name, action: "provision" },
-    req.ip
-  );
+await auditLog(req, "erpnext.module_provisioned", "tenant", tenant.id, { module: moduleFlag, moduleName: metadata.name, action: "provision" }, { tenantId: tenant.id });
 
   res.status(200).json({ success: true, module: moduleFlag, message: `${metadata.name} provisioning started` });
 };
@@ -129,15 +122,7 @@ const deprovisionErpnextModuleHandler = async (req, res) => {
     settings: { ...tenant.settings, featureFlags: allFlags },
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "erpnext.module_deprovisioned",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { module: moduleFlag, moduleName: metadata.name, action: "deprovision" },
-    req.ip
-  );
+await auditLog(req, "erpnext.module_deprovisioned", "tenant", tenant.id, { module: moduleFlag, moduleName: metadata.name, action: "deprovision" }, { tenantId: tenant.id });
 
   res.status(200).json({ success: true, module: moduleFlag, message: `${metadata.name} deprovisioned` });
 };
@@ -216,15 +201,7 @@ const triggerSyncHandler = async (req, res) => {
   const enqueue = syncMap[syncType]; // codacy-suppress dynamic-function-invocation
   const result = await enqueue(tenant.id);
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "erpnext.sync.triggered",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { syncType, tenantId: tenant.id },
-    req.ip
-  );
+await auditLog(req, "erpnext.sync.triggered", "tenant", tenant.id, { syncType, tenantId: tenant.id }, { tenantId: tenant.id });
 
   res.status(200).json({ success: true, message: `ERPNext ${syncType} sync enqueued`, enqueued: result.enqueued });
 };

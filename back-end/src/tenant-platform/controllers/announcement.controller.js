@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const announcementDAO = require("../DAOs/announcement.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listAnnouncementsHandler = async (req, res) => {
   const { channel, isActive } = req.query;
@@ -27,15 +28,7 @@ const createAnnouncementHandler = async (req, res) => {
     scheduledAt: scheduledAt || null,
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.announcement_created",
-    "announcement",
-    announcement.id,
-    null,
-    { title, channel },
-    req.ip
-  );
+await auditLog(req, "platform.announcement_created", "announcement", announcement.id, { title, channel });
 
   res.status(201).json({ success: true, item: announcement });
 };
@@ -55,15 +48,7 @@ const updateAnnouncementHandler = async (req, res) => {
     return response.notFound(res, "Announcement not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.announcement_updated",
-    "announcement",
-    announcement.id,
-    null,
-    { title: announcement.title },
-    req.ip
-  );
+  await auditLog(req, "platform.announcement_updated", "announcement", announcement.id, { title: announcement.title });
 
   res.status(200).json({ success: true, item: announcement });
 };
@@ -74,15 +59,7 @@ const deleteAnnouncementHandler = async (req, res) => {
     return response.notFound(res, "Announcement not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.announcement_deleted",
-    "announcement",
-    announcement.id,
-    null,
-    { title: announcement.title },
-    req.ip
-  );
+  await auditLog(req, "platform.announcement_deleted", "announcement", announcement.id, { title: announcement.title });
 
   res.status(200).json({ success: true });
 };

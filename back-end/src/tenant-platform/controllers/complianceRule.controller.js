@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const complianceRuleDAO = require("../DAOs/complianceRule.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listRulesHandler = async (req, res) => {
   const { vertical } = req.query;
@@ -26,15 +27,7 @@ const createRuleHandler = async (req, res) => {
     frequency: frequency || null,
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "tenant.compliance_rule_created",
-    "compliance_rule",
-    rule.id,
-    null,
-    { vertical, ruleKey },
-    req.ip
-  );
+await auditLog(req, "tenant.compliance_rule_created", "compliance_rule", rule.id, { vertical, ruleKey });
 
   res.status(201).json({ success: true, item: rule });
 };
@@ -52,15 +45,7 @@ const updateRuleHandler = async (req, res) => {
     return response.notFound(res, "Rule not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "tenant.compliance_rule_updated",
-    "compliance_rule",
-    rule.id,
-    null,
-    { ruleKey: rule.ruleKey },
-    req.ip
-  );
+  await auditLog(req, "tenant.compliance_rule_updated", "compliance_rule", rule.id, { ruleKey: rule.ruleKey });
 
   res.status(200).json({ success: true, item: rule });
 };
@@ -71,15 +56,7 @@ const deleteRuleHandler = async (req, res) => {
     return response.notFound(res, "Rule not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "tenant.compliance_rule_deleted",
-    "compliance_rule",
-    rule.id,
-    null,
-    { ruleKey: rule.ruleKey },
-    req.ip
-  );
+  await auditLog(req, "tenant.compliance_rule_deleted", "compliance_rule", rule.id, { ruleKey: rule.ruleKey });
 
   res.status(200).json({ success: true });
 };

@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const impersonationDAO = require("../DAOs/impersonation.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const startImpersonationHandler = async (req, res) => {
   const { tenantUserId, reason } = req.body;
@@ -27,15 +28,7 @@ const startImpersonationHandler = async (req, res) => {
     ipAddress: req.ip,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "impersonation.started",
-    "user",
-    targetUser.id,
-    targetUser.tenantId,
-    { reason, targetEmail: targetUser.email },
-    req.ip
-  );
+await auditLog(req, "impersonation.started", "user", targetUser.id, { reason, targetEmail: targetUser.email }, { tenantId: targetUser.tenantId });
 
   res.status(201).json({
     success: true,
@@ -51,15 +44,7 @@ const endImpersonationHandler = async (req, res) => {
     return response.notFound(res, "Impersonation session not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "impersonation.ended",
-    "user",
-    session.tenantUserId,
-    session.tenantId,
-    {},
-    req.ip
-  );
+  await auditLog(req, "impersonation.ended", "user", session.tenantUserId, {}, { tenantId: session.tenantId });
 
   res.status(200).json({ success: true });
 };

@@ -14,6 +14,7 @@ const { enqueueProvisioning } = require("../../queues/provisioning.queue");
 const verticalTemplateController = require("./verticalTemplate.controller");
 const axios = require("axios");
 const { normalizeSettingValue } = require("../../utils/settings");
+const auditLog = require("../utils/auditLog");
 
 const createTenantHandler = async (req, res) => {
   const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType, businessVertical, serviceModes, templateId } = req.body;
@@ -184,15 +185,7 @@ const updateTenantHandler = async (req, res) => {
   await tenant.update(updates);
 
   if (Object.keys(changes).length > 0) {
-    await platformAuditDAO.log(
-      req.user?.id || null,
-      "tenant.updated",
-      "tenant",
-      tenant.id,
-      tenant.id,
-      { changes },
-      req.ip
-    );
+    await auditLog(req, "tenant.updated", "tenant", tenant.id, { changes }, { tenantId: tenant.id });
   }
 
   res.status(200).json({ success: true, item: tenant });
@@ -446,15 +439,7 @@ const updateGatewayHandler = async (req, res) => {
   await tenant.save();
 
   if (changes.length > 0) {
-    await platformAuditDAO.log(
-      req.user?.id || null,
-      "tenant.gateway_updated",
-      "tenant",
-      tenant.id,
-      tenant.id,
-      { changes },
-      req.ip
-    );
+    await auditLog(req, "tenant.gateway_updated", "tenant", tenant.id, { changes }, { tenantId: tenant.id });
   }
 
   res.status(200).json({ success: true, item: sanitizeTenant(tenant) });

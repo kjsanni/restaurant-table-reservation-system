@@ -5,6 +5,7 @@ const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const { reportQueue, safeAdd } = require("../../queues/queue");
 const reportService = require("../../services/reportService");
 const PDFDocument = require("pdfkit");
+const auditLog = require("../utils/auditLog");
 
 const listPlatformReportsHandler = async (req, res) => {
   const { reportType, status } = req.query;
@@ -31,15 +32,7 @@ const createPlatformReportHandler = async (req, res) => {
     createdBy: req.user?.id || null,
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.report_created",
-    "platform_report",
-    report.id,
-    null,
-    { name, reportType, format },
-    req.ip
-  );
+await auditLog(req, "platform.report_created", "platform_report", report.id, { name, reportType, format });
 
   const queued = await safeAdd(reportQueue, "platform-report", {
     type: format,
@@ -118,15 +111,7 @@ const deletePlatformReportHandler = async (req, res) => {
     return response.notFound(res, "Report not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.report_deleted",
-    "platform_report",
-    report.id,
-    null,
-    { name: report.name },
-    req.ip
-  );
+  await auditLog(req, "platform.report_deleted", "platform_report", report.id, { name: report.name });
 
   res.status(200).json({ success: true });
 };

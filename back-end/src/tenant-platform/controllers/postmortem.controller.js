@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const createPostmortemHandler = async (req, res) => {
   const { incidentId, summary, rootCause, impact, remediation, followUpActions } = req.body;
@@ -24,15 +25,7 @@ const createPostmortemHandler = async (req, res) => {
     createdBy: req.user.id,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "postmortem.created",
-    "incident_postmortem",
-    postmortem.id,
-    incident.tenantId,
-    { incidentId, summary },
-    req.ip
-  );
+await auditLog(req, "postmortem.created", "incident_postmortem", postmortem.id, { incidentId, summary }, { tenantId: incident.tenantId });
 
   res.status(201).json({ success: true, item: postmortem });
 };

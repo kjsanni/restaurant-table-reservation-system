@@ -7,6 +7,7 @@ const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const supportNotificationService = require("../services/supportNotification.service");
 const path = require("path");
 const fs = require("fs");
+const auditLog = require("../utils/auditLog");
 
 const UPLOAD_DIR = path.join(__dirname, "../../../uploads/support-attachments");
 
@@ -58,15 +59,7 @@ const createTicketHandler = async (req, res) => {
     body: message,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.tenant_ticket_created",
-    "support_ticket",
-    ticket.id,
-    req.tenant?.id || null,
-    { subject, priority, category },
-    req.ip
-  );
+await auditLog(req, "support.tenant_ticket_created", "support_ticket", ticket.id, { subject, priority, category });
 
   const customerEmail = await supportNotificationService.resolveUserEmail(req.user.id);
   await supportNotificationService.notifyTicketCreated({
@@ -93,15 +86,7 @@ const updateTicketHandler = async (req, res) => {
     return response.notFound(res, "Ticket not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.tenant_ticket_updated",
-    "support_ticket",
-    ticket.id,
-    req.tenant?.id || null,
-    { updates },
-    req.ip
-  );
+  await auditLog(req, "support.tenant_ticket_updated", "support_ticket", ticket.id, { updates });
 
   res.status(200).json({ success: true, item: ticket });
 };
@@ -149,15 +134,7 @@ const sendMessageHandler = async (req, res) => {
     agentEmail: req.user.email,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.tenant_message_sent",
-    "support_ticket_message",
-    message.id,
-    req.tenant?.id || null,
-    { ticketId: ticket.id },
-    req.ip
-  );
+  await auditLog(req, "support.tenant_message_sent", "support_ticket_message", message.id, { ticketId: ticket.id });
 
   res.status(201).json({ success: true, item: message });
 };
@@ -195,15 +172,7 @@ const createAttachmentHandler = async (req, res) => {
     url: `/api/v1/admin/support-tickets/tenant/attachments/download/${file.filename}`,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.tenant_attachment_uploaded",
-    "support_attachment",
-    attachment.id,
-    req.tenant?.id || null,
-    { ticketId, filename: file.filename },
-    req.ip
-  );
+await auditLog(req, "support.tenant_attachment_uploaded", "support_attachment", attachment.id, { ticketId, filename: file.filename });
 
   res.status(201).json({ success: true, item: attachment });
 };
@@ -240,15 +209,7 @@ const deleteAttachmentHandler = async (req, res) => {
     fs.unlinkSync(resolvedPath); // codacy-suppress path-traversal
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.tenant_attachment_deleted",
-    "support_attachment",
-    attachment.id,
-    req.tenant?.id || null,
-    { filename: attachment.filename },
-    req.ip
-  );
+  await auditLog(req, "support.tenant_attachment_deleted", "support_attachment", attachment.id, { filename: attachment.filename });
 
   res.status(200).json({ success: true });
 };

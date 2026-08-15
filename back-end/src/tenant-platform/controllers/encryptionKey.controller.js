@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const encryptionKeyDAO = require("../DAOs/encryptionKey.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listEncryptionKeysHandler = async (req, res) => {
   const { status, purpose, limit } = req.query;
@@ -33,15 +34,7 @@ const createEncryptionKeyHandler = async (req, res) => {
     return response.badRequest(res, "name is required");
   }
   const key = await encryptionKeyDAO.create(data);
-  await platformAuditDAO.log(
-    req.user.id,
-    "encryption_key.created",
-    "encryption_key",
-    key.id,
-    null,
-    { name: key.name, purpose: key.purpose },
-    req.ip
-  );
+await auditLog(req, "encryption_key.created", "encryption_key", key.id, { name: key.name, purpose: key.purpose });
   res.status(201).json({ success: true, item: key });
 };
 
@@ -57,15 +50,7 @@ const rotateEncryptionKeyHandler = async (req, res) => {
     rotatedBy: req.user.id,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "encryption_key.rotated",
-    "encryption_key",
-    key.id,
-    null,
-    { name: key.name },
-    req.ip
-  );
+  await auditLog(req, "encryption_key.rotated", "encryption_key", key.id, { name: key.name });
 
   res.status(200).json({ success: true, item: updated });
 };
@@ -80,15 +65,7 @@ const retireEncryptionKeyHandler = async (req, res) => {
     status: "retired",
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "encryption_key.retired",
-    "encryption_key",
-    key.id,
-    null,
-    { name: key.name },
-    req.ip
-  );
+  await auditLog(req, "encryption_key.retired", "encryption_key", key.id, { name: key.name });
 
   res.status(200).json({ success: true, item: updated });
 };
@@ -98,15 +75,7 @@ const deleteEncryptionKeyHandler = async (req, res) => {
   if (!key) {
     return response.notFound(res, "Encryption key not found");
   }
-  await platformAuditDAO.log(
-    req.user.id,
-    "encryption_key.deleted",
-    "encryption_key",
-    key.id,
-    null,
-    { name: key.name },
-    req.ip
-  );
+  await auditLog(req, "encryption_key.deleted", "encryption_key", key.id, { name: key.name });
   res.status(200).json({ success: true });
 };
 

@@ -4,6 +4,7 @@ const supportAttachmentDAO = require("../DAOs/supportAttachment.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const path = require("path");
 const fs = require("fs");
+const auditLog = require("../utils/auditLog");
 
 const UPLOAD_DIR = path.join(__dirname, "../../../uploads/support-attachments");
 
@@ -40,15 +41,7 @@ const createAttachmentHandler = async (req, res) => {
     url: `/api/v1/admin/support-attachments/download/${file.filename}`,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.attachment_uploaded",
-    "support_attachment",
-    attachment.id,
-    req.tenant?.id || null,
-    { conversationId, ticketId, filename: file.filename },
-    req.ip
-  );
+await auditLog(req, "support.attachment_uploaded", "support_attachment", attachment.id, { conversationId, ticketId, filename: file.filename });
 
   res.status(201).json({ success: true, item: attachment });
 };
@@ -85,15 +78,7 @@ const deleteAttachmentHandler = async (req, res) => {
     fs.unlinkSync(resolvedPath); // codacy-suppress path-traversal
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.attachment_deleted",
-    "support_attachment",
-    attachment.id,
-    req.user?.isSuperAdmin ? null : req.tenant?.id,
-    { filename: attachment.filename },
-    req.ip
-  );
+  await auditLog(req, "support.attachment_deleted", "support_attachment", attachment.id, { filename: attachment.filename }, { tenantId: req.user?.isSuperAdmin ? null : req.tenant?.id });
 
   res.status(200).json({ success: true });
 };

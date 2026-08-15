@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const getTenantConversationIds = async (tenantId) => {
   const conversations = await db.supportConversation.findAll({
@@ -32,15 +33,7 @@ const createRetentionPolicyHandler = async (req, res) => {
     isActive: true,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "retention.policy_created",
-    "data_retention_policy",
-    policy.id,
-    null,
-    { name, dataCategory, retentionDays, action: policy.action },
-    req.ip
-  );
+await auditLog(req, "retention.policy_created", "data_retention_policy", policy.id, { name, dataCategory, retentionDays, action: policy.action });
 
   res.status(201).json({ success: true, item: policy });
 };
@@ -61,15 +54,7 @@ const updateRetentionPolicyHandler = async (req, res) => {
 
   await policy.update(updates);
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "retention.policy_updated",
-    "data_retention_policy",
-    policy.id,
-    null,
-    { updates },
-    req.ip
-  );
+  await auditLog(req, "retention.policy_updated", "data_retention_policy", policy.id, { updates });
 
   res.status(200).json({ success: true, item: policy });
 };
@@ -82,15 +67,7 @@ const deleteRetentionPolicyHandler = async (req, res) => {
 
   await policy.destroy();
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "retention.policy_deleted",
-    "data_retention_policy",
-    policy.id,
-    null,
-    { name: policy.name, dataCategory: policy.dataCategory },
-    req.ip
-  );
+await auditLog(req, "retention.policy_deleted", "data_retention_policy", policy.id, { name: policy.name, dataCategory: policy.dataCategory });
 
   res.status(200).json({ success: true });
 };
@@ -151,15 +128,7 @@ const executeRetentionHandler = async (req, res) => {
     }
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "retention.executed",
-    "data_retention_policy",
-    null,
-    null,
-    { results },
-    req.ip
-  );
+  await auditLog(req, "retention.executed", "data_retention_policy", null, { results });
 
   res.status(200).json({ success: true, results });
 };

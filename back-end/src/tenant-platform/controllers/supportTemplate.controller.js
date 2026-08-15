@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const TEMPLATE_KEY = "support_response_templates";
 
@@ -38,15 +39,7 @@ const createTemplateHandler = async (req, res) => {
     description: "Support agent response templates",
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "support.template_created",
-    "setting",
-    template.id,
-    null,
-    { title, category },
-    req.ip
-  );
+await auditLog(req, "support.template_created", "setting", template.id, { title, category });
 
   res.status(201).json({ success: true, item: template });
 };
@@ -75,15 +68,7 @@ const updateTemplateHandler = async (req, res) => {
     description: "Support agent response templates",
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "support.template_updated",
-    "setting",
-    templates[index].id,
-    null,
-    { changes: { from: previous, to: templates[index] } },
-    req.ip
-  );
+await auditLog(req, "support.template_updated", "setting", templates[index].id, { changes: { from: previous, to: templates[index] } });
 
   res.status(200).json({ success: true, item: templates[index] });
 };
@@ -104,15 +89,7 @@ const deleteTemplateHandler = async (req, res) => {
     description: "Support agent response templates",
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "support.template_deleted",
-    "setting",
-    removed.id,
-    null,
-    { title: removed.title },
-    req.ip
-  );
+  await auditLog(req, "support.template_deleted", "setting", removed.id, { title: removed.title });
 
   res.status(200).json({ success: true });
 };

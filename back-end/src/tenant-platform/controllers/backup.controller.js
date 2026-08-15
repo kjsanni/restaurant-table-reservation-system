@@ -4,6 +4,7 @@ const backupRecordDAO = require("../DAOs/backupRecord.dao");
 const backupService = require("../services/backup.service");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const fs = require("fs");
+const auditLog = require("../utils/auditLog");
 
 const listBackupRecordsHandler = async (req, res) => {
   const { status, type, limit } = req.query;
@@ -73,15 +74,7 @@ const executeBackupHandler = async (req, res) => {
       completedAt: new Date(),
     });
 
-    await platformAuditDAO.log(
-      req.user.id,
-      "backup.completed",
-      "backup",
-      record.id,
-      null,
-      { type: record.type, sizeBytes: result.sizeBytes },
-      req.ip
-    );
+await auditLog(req, "backup.completed", "backup", record.id, { type: record.type, sizeBytes: result.sizeBytes });
 
     res.status(200).json({ success: true, item: await backupRecordDAO.findById(record.id) });
   } catch (err) {
@@ -91,15 +84,7 @@ const executeBackupHandler = async (req, res) => {
       completedAt: new Date(),
     });
 
-    await platformAuditDAO.log(
-      req.user.id,
-      "backup.failed",
-      "backup",
-      record.id,
-      null,
-      { error: err.message || "Backup failed" },
-      req.ip
-    );
+    await auditLog(req, "backup.failed", "backup", record.id, { error: err.message || "Backup failed" });
 
     res.status(500).json({ success: false, message: err.message || "Backup failed" });
   }
@@ -123,15 +108,7 @@ const restoreBackupHandler = async (req, res) => {
       res.status(200).json({ success: true, dryRun: true, ...result });
     } else {
       const result = await backupService.runRestore({ filePath: record.storagePath });
-      await platformAuditDAO.log(
-        req.user.id,
-        "backup.restored",
-        "backup",
-        record.id,
-        null,
-        { type: record.type },
-        req.ip
-      );
+      await auditLog(req, "backup.restored", "backup", record.id, { type: record.type });
       res.status(200).json({ success: true, ...result });
     }
   } catch (err) {

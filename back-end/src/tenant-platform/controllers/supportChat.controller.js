@@ -3,6 +3,7 @@ const response = require("../utils/response");
 const supportConversationDAO = require("../DAOs/supportConversation.dao");
 const supportMessageDAO = require("../DAOs/supportMessage.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listConversationsHandler = async (req, res) => {
   const { status, assignedTo } = req.query;
@@ -46,15 +47,7 @@ const createConversationHandler = async (req, res) => {
     body: message,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.conversation_created",
-    "support_conversation",
-    conversation.id,
-    req.tenant?.id || null,
-    { subject, priority },
-    req.ip
-  );
+await auditLog(req, "support.conversation_created", "support_conversation", conversation.id, { subject, priority });
 
   res.status(201).json({ success: true, item: conversation });
 };
@@ -73,15 +66,7 @@ const updateConversationHandler = async (req, res) => {
     return response.notFound(res, "Conversation not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.conversation_updated",
-    "support_conversation",
-    conversation.id,
-    req.tenant?.id || null,
-    { updates },
-    req.ip
-  );
+  await auditLog(req, "support.conversation_updated", "support_conversation", conversation.id, { updates });
 
   res.status(200).json({ success: true, item: conversation });
 };
@@ -92,15 +77,7 @@ const deleteConversationHandler = async (req, res) => {
     return response.notFound(res, "Conversation not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.conversation_deleted",
-    "support_conversation",
-    conversation.id,
-    req.tenant?.id || null,
-    {},
-    req.ip
-  );
+  await auditLog(req, "support.conversation_deleted", "support_conversation", conversation.id, {});
 
   res.status(200).json({ success: true });
 };
@@ -135,15 +112,7 @@ const sendMessageHandler = async (req, res) => {
 
   await supportConversationDAO.update(conversation.id, { lastMessageAt: new Date() }, req.user?.isSuperAdmin ? null : req.tenant?.id);
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.message_sent",
-    "support_message",
-    message.id,
-    req.user?.isSuperAdmin ? null : req.tenant?.id,
-    { conversationId: conversation.id },
-    req.ip
-  );
+  await auditLog(req, "support.message_sent", "support_message", message.id, { conversationId: conversation.id }, { tenantId: req.user?.isSuperAdmin ? null : req.tenant?.id });
 
   res.status(201).json({ success: true, item: message });
 };
@@ -179,15 +148,7 @@ const autoAssignConversationHandler = async (req, res) => {
 
   if (bestAgentId) {
     await supportConversationDAO.update(req.params.id, { assignedTo: bestAgentId }, req.user?.isSuperAdmin ? null : req.tenant?.id);
-    await platformAuditDAO.log(
-      req.user.id,
-      "support.conversation_auto_assigned",
-      "support_conversation",
-      conversation.id,
-      req.user?.isSuperAdmin ? null : req.tenant?.id,
-      { assignedTo: bestAgentId },
-      req.ip
-    );
+    await auditLog(req, "support.conversation_auto_assigned", "support_conversation", conversation.id, { assignedTo: bestAgentId }, { tenantId: req.user?.isSuperAdmin ? null : req.tenant?.id });
     const updated = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
     return res.status(200).json({ success: true, item: updated });
   }
@@ -208,15 +169,7 @@ const submitCsatHandler = async (req, res) => {
 
   await supportConversationDAO.update(req.params.id, { csatRating: rating, csatFeedback: feedback || null }, req.user?.isSuperAdmin ? null : req.tenant?.id);
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.csat_submitted",
-    "support_conversation",
-    conversation.id,
-    req.user?.isSuperAdmin ? null : req.tenant?.id,
-    { rating },
-    req.ip
-  );
+  await auditLog(req, "support.csat_submitted", "support_conversation", conversation.id, { rating }, { tenantId: req.user?.isSuperAdmin ? null : req.tenant?.id });
 
   const updated = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   res.status(200).json({ success: true, item: updated });

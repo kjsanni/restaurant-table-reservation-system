@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const dataRetentionPolicyDAO = require("../DAOs/dataRetentionPolicy.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listPoliciesHandler = async (req, res) => {
   const { isActive } = req.query;
@@ -25,15 +26,7 @@ const createPolicyHandler = async (req, res) => {
     isActive: isActive ?? true,
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.data_retention_policy_created",
-    "data_retention_policy",
-    policy.id,
-    null,
-    { name, dataCategory, retentionDays },
-    req.ip
-  );
+await auditLog(req, "platform.data_retention_policy_created", "data_retention_policy", policy.id, { name, dataCategory, retentionDays });
 
   res.status(201).json({ success: true, item: policy });
 };
@@ -50,15 +43,7 @@ const updatePolicyHandler = async (req, res) => {
     return response.notFound(res, "Policy not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.data_retention_policy_updated",
-    "data_retention_policy",
-    policy.id,
-    null,
-    { name: policy.name },
-    req.ip
-  );
+  await auditLog(req, "platform.data_retention_policy_updated", "data_retention_policy", policy.id, { name: policy.name });
 
   res.status(200).json({ success: true, item: policy });
 };
@@ -69,15 +54,7 @@ const deletePolicyHandler = async (req, res) => {
     return response.notFound(res, "Policy not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.data_retention_policy_deleted",
-    "data_retention_policy",
-    policy.id,
-    null,
-    { name: policy.name },
-    req.ip
-  );
+  await auditLog(req, "platform.data_retention_policy_deleted", "data_retention_policy", policy.id, { name: policy.name });
 
   res.status(200).json({ success: true });
 };

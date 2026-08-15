@@ -4,6 +4,7 @@ const supportTicketDAO = require("../DAOs/supportTicket.dao");
 const supportTicketMessageDAO = require("../DAOs/supportTicketMessage.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const supportNotificationService = require("../services/supportNotification.service");
+const auditLog = require("../utils/auditLog");
 
 const listSupportTicketsHandler = async (req, res) => {
   const { status, priority, category, limit } = req.query;
@@ -49,15 +50,7 @@ const createSupportTicketHandler = async (req, res) => {
       body: message,
     });
 
-    await platformAuditDAO.log(
-      req.user.id,
-      "support.ticket_created",
-      "support_ticket",
-      ticket.id,
-      req.tenant?.id || null,
-      { subject, priority, category },
-      req.ip
-    );
+await auditLog(req, "support.ticket_created", "support_ticket", ticket.id, { subject, priority, category });
 
     if (ticket.userId && ticket.userId !== req.user.id) {
       const customerEmail = await supportNotificationService.resolveUserEmail(ticket.userId);
@@ -107,15 +100,7 @@ const updateSupportTicketHandler = async (req, res) => {
     await supportNotificationService.notifyTicketResolved({ ticket, tenantId: req.tenant?.id, customerEmail });
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.ticket_updated",
-    "support_ticket",
-    ticket.id,
-    req.tenant?.id || null,
-    { updates },
-    req.ip
-  );
+  await auditLog(req, "support.ticket_updated", "support_ticket", ticket.id, { updates });
 
   res.status(200).json({ success: true, item: ticket });
 };
@@ -126,15 +111,7 @@ const deleteSupportTicketHandler = async (req, res) => {
     return response.notFound(res, "Ticket not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.ticket_deleted",
-    "support_ticket",
-    ticket.id,
-    req.tenant?.id || null,
-    {},
-    req.ip
-  );
+  await auditLog(req, "support.ticket_deleted", "support_ticket", ticket.id, {});
 
   res.status(200).json({ success: true });
 };
@@ -186,15 +163,7 @@ const sendTicketMessageHandler = async (req, res) => {
     agentEmail,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.message_sent",
-    "support_ticket_message",
-    message.id,
-    req.tenant?.id || null,
-    { ticketId: ticket.id },
-    req.ip
-  );
+  await auditLog(req, "support.message_sent", "support_ticket_message", message.id, { ticketId: ticket.id });
 
   res.status(201).json({ success: true, item: message });
 };
@@ -273,15 +242,7 @@ const autoAssignTicketHandler = async (req, res) => {
 
   const updated = await supportTicketDAO.update(ticket.id, { assignedTo: assignee.id }, req.user?.isSuperAdmin ? null : req.tenant?.id);
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.ticket_auto_assigned",
-    "support_ticket",
-    ticket.id,
-    req.tenant?.id || null,
-    { assignedTo: assignee.id, category: ticket.category, withinBusinessHours },
-    req.ip
-  );
+await auditLog(req, "support.ticket_auto_assigned", "support_ticket", ticket.id, { assignedTo: assignee.id, category: ticket.category, withinBusinessHours });
 
   res.status(200).json({ success: true, item: updated, withinBusinessHours });
 };

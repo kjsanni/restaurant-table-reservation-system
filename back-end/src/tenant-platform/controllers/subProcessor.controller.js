@@ -2,6 +2,7 @@ const response = require("../utils/response");
 
 const subProcessorDAO = require("../DAOs/subProcessor.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listSubProcessorsHandler = async (req, res) => {
   const { category, isActive } = req.query;
@@ -27,15 +28,7 @@ const createSubProcessorHandler = async (req, res) => {
     isActive: isActive ?? true,
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.sub_processor_created",
-    "sub_processor",
-    processor.id,
-    null,
-    { name, category },
-    req.ip
-  );
+await auditLog(req, "platform.sub_processor_created", "sub_processor", processor.id, { name, category });
 
   res.status(201).json({ success: true, item: processor });
 };
@@ -55,15 +48,7 @@ const updateSubProcessorHandler = async (req, res) => {
     return response.notFound(res, "Sub-processor not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.sub_processor_updated",
-    "sub_processor",
-    processor.id,
-    null,
-    { name: processor.name },
-    req.ip
-  );
+  await auditLog(req, "platform.sub_processor_updated", "sub_processor", processor.id, { name: processor.name });
 
   res.status(200).json({ success: true, item: processor });
 };
@@ -74,15 +59,7 @@ const deleteSubProcessorHandler = async (req, res) => {
     return response.notFound(res, "Sub-processor not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.sub_processor_deleted",
-    "sub_processor",
-    processor.id,
-    null,
-    { name: processor.name },
-    req.ip
-  );
+  await auditLog(req, "platform.sub_processor_deleted", "sub_processor", processor.id, { name: processor.name });
 
   res.status(200).json({ success: true });
 };
