@@ -22,7 +22,7 @@ class SamsungPayAdapter extends WalletPassAdapter {
           db.Sequelize.literal("'samsung_pay_base_url'"),
         ],
       },
-    });
+    }); // nosemgrep: javascript.lang.security.audit.no-sql-injection - hardcoded literal strings in Sequelize IN clause
 
     const settingMap = {};
     platformSettings.forEach((s) => {

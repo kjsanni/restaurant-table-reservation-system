@@ -30,7 +30,7 @@ class AppleWalletAdapter extends WalletPassAdapter {
           db.Sequelize.literal("'event_qr_secret'"),
         ],
       },
-    });
+    }); // nosemgrep: javascript.lang.security.audit.no-sql-injection - hardcoded literal strings in Sequelize IN clause
 
     const settingMap = {};
     passSettings.forEach((s) => {
