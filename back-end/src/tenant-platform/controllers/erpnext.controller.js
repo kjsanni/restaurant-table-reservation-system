@@ -6,6 +6,20 @@ const db = require("../../db/models");
 const { validateModuleDependencies, getModuleMetadata, getEnabledModules } = require("../../integrations/erpnext/module-registry");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
+const { enqueueCustomerSync, enqueueInvoiceSync, enqueuePaymentSync, enqueueItemSync, enqueueStockEntrySync, enqueueEmployeeSync, enqueueCrmCustomerSync, enqueueFullSync } = require("../../integrations/erpnext/sync/orchestrator");
+
+const SYNC_TYPES = ["full", "customers", "invoices", "payments", "items", "stock", "employees", "crm"];
+const SYNC_MAP = {
+  customers: enqueueCustomerSync,
+  invoices: enqueueInvoiceSync,
+  payments: enqueuePaymentSync,
+  items: enqueueItemSync,
+  stock: enqueueStockEntrySync,
+  employees: enqueueEmployeeSync,
+  crm: enqueueCrmCustomerSync,
+  full: enqueueFullSync,
+};
+const DEFAULT_PAGE_LIMIT = 50;
 
 const resolveTenantById = async (id) => {
   return db.tenant.findByPk(id, {
@@ -129,7 +143,7 @@ await auditLog(req, "erpnext.module_deprovisioned", "tenant", tenant.id, { modul
 
 const listErpnextTenantsHandler = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 50;
+  const limit = parseInt(req.query.limit) || DEFAULT_PAGE_LIMIT;
   const offset = (page - 1) * limit;
   const search = (req.query.search || "").trim().toLowerCase();
 
@@ -175,10 +189,9 @@ const triggerSyncHandler = async (req, res) => {
     return response.notFound(res, "Tenant not found");
   }
   const { syncType = "full" } = req.body;
-  const validTypes = ["full", "customers", "invoices", "payments", "items", "stock", "employees", "crm"];
 
-  if (!validTypes.includes(syncType)) {
-    return res.status(400).json({ success: false, message: `Invalid sync type. Must be one of: ${validTypes.join(", ")}` });
+  if (!SYNC_TYPES.includes(syncType)) {
+    return res.status(400).json({ success: false, message: `Invalid sync type. Must be one of: ${SYNC_TYPES.join(", ")}` });
   }
 
   const featureFlags = tenant.settings?.featureFlags || {};
@@ -187,18 +200,7 @@ const triggerSyncHandler = async (req, res) => {
     return response.forbidden(res, "No ERPNext modules enabled for this tenant");
   }
 
-  const orchestrator = require("../../integrations/erpnext/sync/orchestrator");
-  const syncMap = {
-    customers: orchestrator.enqueueCustomerSync,
-    invoices: orchestrator.enqueueInvoiceSync,
-    payments: orchestrator.enqueuePaymentSync,
-    items: orchestrator.enqueueItemSync,
-    stock: orchestrator.enqueueStockEntrySync,
-    employees: orchestrator.enqueueEmployeeSync,
-    crm: orchestrator.enqueueCrmCustomerSync,
-    full: orchestrator.enqueueFullSync,
-  };
-  const enqueue = syncMap[syncType]; // nosemgrep
+  const enqueue = SYNC_MAP[syncType]; // nosemgrep // codacy-suppress dynamic-function-invocation
   const result = await enqueue(tenant.id);
 
 await auditLog(req, "erpnext.sync.triggered", "tenant", tenant.id, { syncType, tenantId: tenant.id }, { tenantId: tenant.id });

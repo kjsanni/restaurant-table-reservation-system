@@ -4,6 +4,7 @@ const express = require("express");
 const router = express.Router();
 
 const LEGAL_DIR = path.join(__dirname, "..", "..", "..", "legal");
+const LEGAL_BASE_DIR = path.resolve(LEGAL_DIR);
 
 const SLUG_TO_FILE = {
   privacy: "PRIVACY_POLICY.md",
@@ -37,15 +38,10 @@ function splitSections(markdown) {
   for (const raw of lines) {
     const line = raw.trim();
     const headingMatch = line.match(/^#{1,6}\s+(.*)$/);
-    if (headingMatch && /^#/.test(line) && !line.startsWith("###")) {
+    if (headingMatch && !line.startsWith("###")) {
       const text = headingMatch[1].trim();
-      if (!current) {
-        current = { heading: text, body: "" };
-        sections.push(current);
-      } else {
-        current = { heading: text, body: "" };
-        sections.push(current);
-      }
+      current = { heading: text, body: "" };
+      sections.push(current);
       continue;
     }
     if (current) {
@@ -62,9 +58,8 @@ function splitSections(markdown) {
 function readLegalDoc(slug) {
   const file = SLUG_TO_FILE[slug];
   if (!file) return null;
-  const fullPath = path.resolve(LEGAL_DIR, file); // nosemgrep: express-path-join-resolve-traversal
-  const baseDir = path.resolve(LEGAL_DIR);
-  if (!fullPath.startsWith(baseDir)) return null; // nosemgrep: express-path-join-resolve-traversal
+  const fullPath = path.resolve(LEGAL_DIR, file); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
+  if (!fullPath.startsWith(LEGAL_BASE_DIR)) return null; // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
   if (!fs.existsSync(fullPath)) return null;
 
   const markdown = fs.readFileSync(fullPath, "utf-8");
