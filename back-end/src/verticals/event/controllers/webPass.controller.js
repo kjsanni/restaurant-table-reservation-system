@@ -108,12 +108,19 @@ const generateGooglePayJwt = (qrCode, event, tenantId) => {
     tokenHash: qrCode.tokenHash,
   };
 
-  const header = { alg: "HS256", typ: "JWT" };
+  const privateKey = process.env.GOOGLE_PAY_JWT_PRIVATE_KEY;
+  if (!privateKey) {
+    throw new Error("GOOGLE_PAY_JWT_PRIVATE_KEY is not configured");
+  }
+
+  const header = { alg: "RS256", typ: "JWT" };
   const headerB64 = Buffer.from(JSON.stringify(header)).toString("base64url");
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString("base64url");
 
-  const secret = process.env.GOOGLE_PAY_JWT_SECRET || process.env.EVENT_QR_SECRET || "dev-qr-secret-change-me";
-  const signature = crypto.createHmac("sha256", secret).update(`${headerB64}.${payloadB64}`).digest("base64url");
+  const sign = crypto.createSign("RSA-SHA256");
+  sign.update(`${headerB64}.${payloadB64}`);
+  sign.end();
+  const signature = sign.sign(privateKey).toString("base64url");
 
   return `${headerB64}.${payloadB64}.${signature}`;
 };

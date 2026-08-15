@@ -15,7 +15,7 @@ router
 
 router
   .route("/:photoRef")
-  .get(tryCatchHandler(photoController.getPhoto))
+  .get(tryCatchHandler(protect), tryCatchHandler(photoController.getPhoto))
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
 
 module.exports = router;

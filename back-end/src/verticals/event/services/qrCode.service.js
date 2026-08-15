@@ -174,18 +174,16 @@ qrCodeService.checkin = async (rawToken, tenantId, userId, scannerParams = {}) =
     return { valid: false, error: "INVALID_TOKEN", message: "Invalid QR code format" };
   }
 
-  if (sig) {
-    const secret = await loadQrSecret(tenantId);
-    if (!verifySignature(rawToken, sig, secret)) {
-      await logAudit(
-        "qr_checkin_failure",
-        null,
-        tenantId,
-        userId,
-        { reason: "invalid_signature", tokenHash: qrCodeDAO.hashToken(rawToken).substring(0, 8) + "..." }
-      );
-      return { valid: false, error: "INVALID_SIGNATURE", message: "Invalid QR signature" };
-    }
+  const secret = await loadQrSecret(tenantId);
+  if (!verifySignature(rawToken, sig, secret)) {
+    await logAudit(
+      "qr_checkin_failure",
+      null,
+      tenantId,
+      userId,
+      { reason: "invalid_signature", tokenHash: qrCodeDAO.hashToken(rawToken).substring(0, 8) + "..." }
+    );
+    return { valid: false, error: "INVALID_SIGNATURE", message: "Invalid QR signature" };
   }
 
   const tokenHash = qrCodeDAO.hashToken(rawToken);

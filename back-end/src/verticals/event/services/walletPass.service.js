@@ -95,11 +95,13 @@ const generateWalletPass = async (qrCodeData, tenantId) => {
   const manifest = {};
   const filesToSign = ["pass.json"];
 
-  if (qrCodeData.photoRef) {
+  if (qrCodeData.photoRef && /^[a-f0-9]{64}$/i.test(qrCodeData.photoRef)) {
     const photoPath = path.join(ASSETS_DIR, `${qrCodeData.photoRef}.jpg`);
-    if (fs.existsSync(photoPath)) {
+    const resolvedPhoto = path.resolve(photoPath);
+    const resolvedAssets = path.resolve(ASSETS_DIR);
+    if (resolvedPhoto.startsWith(resolvedAssets + path.sep) && fs.existsSync(resolvedPhoto)) {
       const destPath = path.join(tempDir, "logo.jpg");
-      fs.copyFileSync(photoPath, destPath);
+      fs.copyFileSync(resolvedPhoto, destPath);
       passJson.images = { "logo": "logo.jpg" };
       filesToSign.push("logo.jpg");
     }
