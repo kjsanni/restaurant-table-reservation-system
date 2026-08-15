@@ -2,6 +2,7 @@
 const db = require("../../../db/models");
 const staffDao = require("../DAOs/staff.dao");
 const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 
 const getSalonStaffHandler = async (req, res) => {
   const tenantId = req.tenant?.id;
@@ -43,15 +44,18 @@ const createSalonStaffHandler = async (req, res) => {
   try {
     const tenantId = req.tenant?.id;
     const payload = req.body;
+    const plainPassword = payload.password || crypto.randomUUID();
+    const hashedPassword = await bcrypt.hash(plainPassword, 12);
     const staff = await staffDao.create({
       tenantId,
       username: payload.username,
       email: payload.email,
       name: payload.name || payload.username,
       role: "staff",
-      password: payload.password || crypto.randomUUID(),
+      password: hashedPassword,
     });
-    res.status(201).json({ success: true, data: staff });
+    const { password: _pw, ...safeStaff } = staff.toJSON ? staff.toJSON() : staff;
+    res.status(201).json({ success: true, data: safeStaff });
   } catch (err) {
     console.error("createSalonStaffHandler error:", err.message);
     res.status(400).json({ success: false, message: err.message || "Failed to create staff" });
