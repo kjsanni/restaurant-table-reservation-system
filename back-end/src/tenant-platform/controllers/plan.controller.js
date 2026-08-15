@@ -1,7 +1,6 @@
 const db = require("../../db/models");
 const planDAO = require("../DAOs/plan.dao");
 const { invalidatePlansCache } = require("../services/tenantSubscription.service");
-// codacy-suppress sql
 
 const listPlansHandler = async (req, res) => {
   const { isActive } = req.query;

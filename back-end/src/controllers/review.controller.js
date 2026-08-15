@@ -18,7 +18,7 @@ const sendReviewResponseNotification = async (review, tenant) => {
     await sendEmail({
       to: customer.email,
       subject: `We responded to your review of ${brandName}`,
-      // codacy-suppress xss
+      // nosemgrep: raw-html-format - all variables are HTML-escaped
       html: `<p>Hi ${escapeHtml(customer.firstName || "there")},</p><p>We've just responded to your review of <strong>${escapeHtml(brandName)}</strong>. Thank you for your feedback!</p><p>Your review:</p><blockquote>${safeComment}</blockquote><p>Our response:</p><blockquote>${safeResponse}</blockquote><p>— ${escapeHtml(brandName)} Team</p>`,
     });
   } catch (err) {

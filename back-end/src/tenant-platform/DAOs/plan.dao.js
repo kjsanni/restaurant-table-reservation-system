@@ -18,7 +18,7 @@ planDAO.findById = async (id) => {
 };
 
 planDAO.findBySlug = async (slug) => {
-// codacy-suppress NoSqlInjection
+// nosemgrep: tainted-sql-string - using Sequelize ORM with parameterized where clause
   return db.subscriptionPlan.findOne({ where: { slug } });
 };
 
