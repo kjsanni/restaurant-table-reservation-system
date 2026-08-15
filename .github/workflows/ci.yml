@@ -228,8 +228,16 @@ jobs:
       - name: Show backend log after contract tests
         if: always()
         run: cat /tmp/backend.log 2>/dev/null || echo "No backend log found"
+      - name: Start frontend server
+        working-directory: front-end
+        run: |
+          npx vite preview --port 8080 --host &
+          echo $! > /tmp/frontend.pid
+          echo "Frontend preview started with PID: $!"
+      - name: Wait for frontend
+        run: npx wait-on http://localhost:8080 --timeout 60000 || (echo "Frontend failed to start"; exit 1)
       - name: Run Playwright E2E tests
         working-directory: front-end
         run: npm run test:e2e -- --project=chromium tests/actor-entry-points.spec.ts
         env:
-          BASE_URL: http://localhost:8000
+          BASE_URL: http://localhost:8080
