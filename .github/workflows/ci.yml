@@ -5,6 +5,7 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  workflow_dispatch:
 
 jobs:
   backend-test:
@@ -146,6 +147,7 @@ jobs:
       REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
       JWT_SECRET: test-secret-key-for-ci-only-1234567890
+      ENCRYPTION_KEY: test-encryption-key-for-ci-only
       CORS_ORIGINS: http://localhost:8080
       PORT: 8000
       ADMIN_INITIAL_PASSWORD: admin123
@@ -199,7 +201,11 @@ jobs:
           echo $! > /tmp/backend.pid
           echo "Server started with PID: $!"
       - name: Wait for backend
-        run: npx wait-on http://localhost:8000/api/v1/health --timeout 120000
+        run: |
+          npx wait-on http://localhost:8000/api/v1/health --timeout 120000 || (cat /tmp/backend.log 2>/dev/null; exit 1)
+      - name: Debug backend log
+        if: failure()
+        run: cat /tmp/backend.log 2>/dev/null || echo "No backend log found"
       - name: Run API contract tests
         working-directory: back-end
         run: npm run test:postman
