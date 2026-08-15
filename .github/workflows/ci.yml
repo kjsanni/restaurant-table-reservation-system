@@ -212,6 +212,9 @@ jobs:
         env:
           BASE_URL: http://localhost:8000
           NODE_ENV: test
+      - name: Show backend log after contract tests
+        if: always()
+        run: cat /tmp/backend.log 2>/dev/null || echo "No backend log found"
       - name: Run Playwright E2E tests
         working-directory: front-end
         run: npm run test:e2e -- --project=chromium tests/actor-entry-points.spec.ts
