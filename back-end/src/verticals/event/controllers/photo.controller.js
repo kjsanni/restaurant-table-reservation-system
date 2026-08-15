@@ -50,9 +50,9 @@ photoController.getPhoto = async (req, res) => {
 
   const filename = `${photoRef}.${normalizedExt}`;
 
-  if (!fs.existsSync(path.join(ATTENDEE_PHOTOS_DIR, filename))) {
-    const jpgPath = path.join(ATTENDEE_PHOTOS_DIR, `${photoRef}.jpg`);
-    const pngPath = path.join(ATTENDEE_PHOTOS_DIR, `${photoRef}.png`);
+  if (!fs.existsSync(path.join(ATTENDEE_PHOTOS_DIR, filename))) { // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - photoRef validated as SHA-256 hex, ext whitelisted; nosemgrep: javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal - path validated above
+    const jpgPath = path.join(ATTENDEE_PHOTOS_DIR, `${photoRef}.jpg`); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - photoRef validated as SHA-256 hex; nosemgrep: javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal - path under ATTENDEE_PHOTOS_DIR
+    const pngPath = path.join(ATTENDEE_PHOTOS_DIR, `${photoRef}.png`); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - photoRef validated as SHA-256 hex; nosemgrep: javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal - path under ATTENDEE_PHOTOS_DIR
     if (fs.existsSync(jpgPath)) {
       return res.sendFile(`${photoRef}.jpg`, { root: ATTENDEE_PHOTOS_DIR });
     }

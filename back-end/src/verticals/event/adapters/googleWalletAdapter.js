@@ -158,7 +158,7 @@ class GoogleWalletAdapter extends WalletPassAdapter {
             token: qrCodeData.tokenHash,
             eventId: qrCodeData.eventId,
             signature: crypto
-              .createHmac("sha256", process.env.EVENT_QR_SECRET || "dev-qr-secret-change-me")
+              .createHmac("sha256", process.env.EVENT_QR_SECRET)
               .update(qrCodeData.tokenHash)
               .digest("hex"),
           }),
