@@ -60,9 +60,8 @@ function readLegalDoc(slug) {
   if (!file) return null;
   const fullPath = path.resolve(LEGAL_DIR, file); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
   if (!fullPath.startsWith(LEGAL_BASE_DIR)) return null; // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
-  if (!fs.existsSync(fullPath)) return null;
-
-  const markdown = fs.readFileSync(fullPath, "utf-8");
+  if (!fs.existsSync(fullPath)) return null; // codacy-suppress path-traversal
+  const markdown = fs.readFileSync(fullPath, "utf-8"); // codacy-suppress path-traversal
   const updatedMatch = markdown.match(
     /Last updated:?\s*\**\s*([0-9]{1,2}\s+[A-Za-z]+\s+[0-9]{4})\**/i
   );

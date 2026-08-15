@@ -17,12 +17,12 @@ const photoLimiter = makeTenantLimiter({
 
 router
   .route("/upload")
-  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(photoLimiter), tryCatchHandler(upload.single("photo")), tryCatchHandler(photoController.uploadPhoto))
+  .post(photoLimiter, tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(upload.single("photo")), tryCatchHandler(photoController.uploadPhoto))
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
 
 router
   .route("/:photoRef")
-  .get(tryCatchHandler(protect), tryCatchHandler(photoLimiter), tryCatchHandler(photoController.getPhoto))
+  .get(photoLimiter, tryCatchHandler(protect), tryCatchHandler(photoController.getPhoto))
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
 
 module.exports = router;
