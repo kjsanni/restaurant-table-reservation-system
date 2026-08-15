@@ -5,8 +5,8 @@ const fs = require("fs");
 const path = require("path");
 const db = require("../../../db/models");
 const qrCodeDAO = require("../DAOs/qrCode.dao");
-const qrCodeService = require("./qrCode.service");
-const walletPassService = require("./walletPass.service");
+const qrCodeService = require("../services/qrCode.service");
+const walletPassService = require("../services/walletPass.service");
 
 const ATTENDEE_PHOTOS_DIR = path.join(__dirname, "../../../uploads/event-photos");
 const ALLOWED_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp"]);

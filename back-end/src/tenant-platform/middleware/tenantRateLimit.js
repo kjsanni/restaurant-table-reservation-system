@@ -1,3 +1,6 @@
+const rateLimit = require("express-rate-limit");
+const { RedisStore } = require("rate-limit-redis");
+const { client, getConnectionStatus } = require("../../utils/cache");
 const { makeLimiter } = require("../../middleware/rateLimit");
 
 const tenantLimiter = makeLimiter("rl:tenant:", {
@@ -22,7 +25,28 @@ const tenantWriteLimiter = makeLimiter("rl:tenant-write:", {
   legacyHeaders: false,
 });
 
+const makeTenantLimiter = (opts = {}) => {
+  const { redisPrefix = "rl:tenant:", ...rateOpts } = opts;
+  let store;
+
+  if (client && getConnectionStatus()) {
+    store = new RedisStore({
+      sendCommand: (...args) => client.sendCommand(args),
+      prefix: redisPrefix,
+    });
+  } else {
+    console.warn(`[rateLimit] Redis unavailable for ${redisPrefix}; using in-memory store.`);
+  }
+
+  return rateLimit({
+    ...rateOpts,
+    ...(store ? { store } : {}),
+    keyGenerator: (req) => `${req.tenant?.id || "anon"}:${req.ip || ""}`,
+  });
+};
+
 module.exports = {
   tenantLimiter,
   tenantWriteLimiter,
+  makeTenantLimiter,
 };

@@ -3,8 +3,8 @@
 const crypto = require("crypto");
 const db = require("../../../db/models");
 const qrCodeDAO = require("../DAOs/qrCode.dao");
-const qrCodeService = require("./qrCode.service");
-const walletPassService = require("./walletPass.service");
+const qrCodeService = require("../services/qrCode.service");
+const walletPassService = require("../services/walletPass.service");
 const cache = require("../../../utils/cache");
 const logger = require("../../../utils/logger");
 

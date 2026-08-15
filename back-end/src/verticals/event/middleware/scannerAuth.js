@@ -1,8 +1,8 @@
 "use strict";
 
 const crypto = require("crypto");
-const authDAO = require("../../DAOs/auth.dao");
-const logger = require("../../utils/logger");
+const authDAO = require("../../../DAOs/auth.dao");
+const logger = require("../../../utils/logger");
 
 const validateScannerApiKey = async (req, res, next) => {
   const apiKey = req.headers["x-api-key"];
