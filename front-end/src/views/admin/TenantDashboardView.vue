@@ -37,6 +37,10 @@
         <div class="card-label">Venue Revenue (GHS)</div>
         <div class="card-value">{{ formatMrr(dashboard?.mrr) }}</div>
       </div>
+      <div class="card">
+        <div class="card-label">ERPNext Tenants</div>
+        <div class="card-value info">{{ dashboard?.erpnextEnabledCount }}</div>
+      </div>
     </div>
 
     <div class="quick-actions">
@@ -68,6 +72,14 @@
         <option value="cancelled">Cancelled</option>
         <option value="trialing">Trialing</option>
       </select>
+      <select v-model="filterProvisioning" class="filter-select">
+        <option value="">All Provisioning</option>
+        <option value="running">Running</option>
+        <option value="paused">Paused</option>
+        <option value="completed">Completed</option>
+        <option value="failed">Failed</option>
+        <option value="rolled_back">Rolled Back</option>
+      </select>
       <button @click="openCreateModal" class="btn-primary">+ Add Venue</button>
     </div>
 
@@ -75,6 +87,9 @@
       <span class="bulk-count">{{ selectedTenants.length }} selected</span>
       <button @click="openVerticalModal" class="btn-secondary">
         Change Vertical
+      </button>
+      <button @click="bulkProvision" class="btn-secondary">
+        Run Provisioning
       </button>
       <button @click="clearSelection" class="btn-secondary">Clear</button>
     </div>
@@ -133,6 +148,7 @@
               <select v-model="form.businessVertical">
                 <option value="restaurant">Restaurant</option>
                 <option value="salon">Salon</option>
+                <option value="event">Event</option>
               </select>
             </div>
             <div class="form-group">
@@ -230,6 +246,7 @@
             <select v-model="verticalForm.businessVertical" required>
               <option value="restaurant">Restaurant</option>
               <option value="salon">Salon</option>
+              <option value="event">Event</option>
             </select>
           </div>
           <div class="modal-actions">
@@ -263,6 +280,7 @@
             <th>ERPNext</th>
             <th>Vertical</th>
             <th>Status</th>
+            <th>Provisioning</th>
             <th>Subscription</th>
             <th>Next Billing</th>
             <th>Actions</th>
@@ -291,6 +309,16 @@
               <span :class="['status-badge', tenant.status]">{{
                 tenant.status
               }}</span>
+            </td>
+            <td>
+              <span
+                :class="[
+                  'provisioning-badge',
+                  provisioningStatuses[tenant.id] || 'unknown',
+                ]"
+              >
+                {{ provisioningStatuses[tenant.id] || "—" }}
+              </span>
             </td>
             <td>{{ tenant.subscriptionStatus }}</td>
             <td>{{ formatDate(tenant.currentPeriodEnd) }}</td>
@@ -356,9 +384,11 @@ const dashboard = ref({
   recentTenants: [],
 });
 const tenants = ref([]);
+const provisioningStatuses = ref({});
 const plans = ref([]);
 const searchQuery = ref("");
 const filterStatus = ref("");
+const filterProvisioning = ref("");
 const selectedTenants = ref([]);
 const showVerticalModal = ref(false);
 const verticalForm = ref({
@@ -403,18 +433,34 @@ const SALON_TYPES = [
   { value: "dreadlocks", label: "Dreadlocks & Braids" },
 ];
 
-const venueTypeOptions = computed(() =>
-  form.value.businessVertical === "salon" ? SALON_TYPES : RESTAURANT_TYPES
-);
+const EVENT_TYPES = [
+  { value: "vip_lounge", label: "VIP Lounge" },
+  { value: "conference", label: "Conference / Exhibition" },
+  { value: "festival", label: "Festival Grounds" },
+  { value: "corporate", label: "Corporate Event" },
+];
 
-const venueTypeLabel = computed(() =>
-  form.value.businessVertical === "salon" ? "Salon Type" : "Restaurant Type"
-);
+const venueTypeOptions = computed(() => {
+  if (form.value.businessVertical === "salon") return SALON_TYPES;
+  if (form.value.businessVertical === "event") return EVENT_TYPES;
+  return RESTAURANT_TYPES;
+});
+
+const venueTypeLabel = computed(() => {
+  if (form.value.businessVertical === "salon") return "Salon Type";
+  if (form.value.businessVertical === "event") return "Event Type";
+  return "Restaurant Type";
+});
 
 watch(
   () => form.value.businessVertical,
   (vertical) => {
-    const defaults = vertical === "salon" ? "hair-dressers" : "full_service";
+    const defaults =
+      vertical === "salon"
+        ? "hair-dressers"
+        : vertical === "event"
+          ? "vip_lounge"
+          : "full_service";
     if (form.value.restaurantType !== defaults) {
       form.value.restaurantType = defaults;
     }
@@ -429,7 +475,10 @@ const filteredTenants = computed(() => {
       t.slug.toLowerCase().includes(searchQuery.value.toLowerCase());
     const matchesStatus =
       !filterStatus.value || t.status === filterStatus.value;
-    return matchesSearch && matchesStatus;
+    const provisioning = provisioningStatuses.value[t.id];
+    const matchesProvisioning =
+      !filterProvisioning.value || provisioning === filterProvisioning.value;
+    return matchesSearch && matchesStatus && matchesProvisioning;
   });
 });
 
@@ -441,6 +490,25 @@ const loadDashboard = async () => {
 const loadTenants = async () => {
   const response = await tenantAdminAPI.getAll();
   tenants.value = response.data.collection || [];
+};
+
+const loadProvisioningStatuses = async () => {
+  if (!tenants.value.length) return;
+  const results = await Promise.all(
+    tenants.value.map(async (tenant) => {
+      try {
+        const res = await tenantAdminAPI.getProvisioningStatus(tenant.id);
+        return { tenantId: tenant.id, status: res.data?.item?.status || null };
+      } catch {
+        return { tenantId: tenant.id, status: null };
+      }
+    })
+  );
+  const map = {};
+  for (const item of results) {
+    map[item.tenantId] = item.status;
+  }
+  provisioningStatuses.value = map;
 };
 
 const loadPlans = async () => {
@@ -533,6 +601,20 @@ const changeVertical = async () => {
   }
 };
 
+const bulkProvision = async () => {
+  try {
+    await tenantAdminAPI.bulkProvisionTenants(selectedTenants.value);
+    await loadProvisioningStatuses();
+    selectedTenants.value = [];
+    toastStore?.add("Provisioning started for selected tenants", "success");
+  } catch (err) {
+    toastStore?.add(
+      err.response?.data?.message || "Failed to start provisioning",
+      "error"
+    );
+  }
+};
+
 const createTenant = async () => {
   try {
     await tenantAdminAPI.create(form.value);
@@ -580,6 +662,7 @@ const formatMrr = (val) => {
 onMounted(async () => {
   await loadDashboard();
   await loadTenants();
+  await loadProvisioningStatuses();
   await loadPlans();
 });
 </script>
@@ -640,6 +723,9 @@ onMounted(async () => {
 }
 .card-value.muted {
   color: var(--ink-muted);
+}
+.card-value.info {
+  color: var(--sky-600);
 }
 .quick-actions {
   display: flex;
@@ -749,6 +835,38 @@ onMounted(async () => {
 .status-badge.trialing {
   background: var(--sky-100);
   color: var(--sky-600);
+}
+.provisioning-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.provisioning-badge.running {
+  background: var(--accent-100);
+  color: var(--accent-600);
+}
+.provisioning-badge.paused {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+}
+.provisioning-badge.completed {
+  background: var(--earth-100);
+  color: var(--earth-600);
+}
+.provisioning-badge.failed {
+  background: var(--rose-100);
+  color: var(--rose-600);
+}
+.provisioning-badge.rolled_back {
+  background: var(--neutral-100);
+  color: var(--neutral-500);
+}
+.provisioning-badge.unknown {
+  background: var(--neutral-50);
+  color: var(--neutral-500);
 }
 .actions {
   display: flex;

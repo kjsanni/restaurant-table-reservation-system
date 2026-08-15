@@ -9,7 +9,7 @@ module.exports = {
         primaryKey: true,
       },
       vertical: {
-        type: Sequelize.ENUM("restaurant", "salon"),
+        type: Sequelize.ENUM("restaurant", "salon", "event"),
         allowNull: false,
       },
       ruleKey: {

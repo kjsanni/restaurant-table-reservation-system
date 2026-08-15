@@ -1,7 +1,7 @@
 const authService = require("../services/authService");
 const authDAO = require("../DAOs/auth.dao");
 const roleDAO = require("../DAOs/role.dao");
-const { applyTypeDefaults, TYPE_DEFAULTS } = require("../tenant-platform/services/tenantTypeDefaults.service");
+const { applyTypeDefaults, TYPE_DEFAULTS, seedEventSettings } = require("../tenant-platform/services/tenantTypeDefaults.service");
 const customerService = require("../services/customerService");
 const emailVerificationDAO = require("../DAOs/emailVerification.dao");
 const emailService = require("../services/emailService");
@@ -390,6 +390,13 @@ const setupTenantHandler = async (req, res) => {
     seedSalonSettings(tenant.id).catch((err) => {
       console.error("Failed to seed salon settings:", err.message);
     });
+  } else if (businessVertical === "event") {
+    if (!tenant.restaurantType || tenant.restaurantType !== "vip_lounge") {
+      applyTypeDefaults(tenant, "event");
+    }
+    seedEventSettings(tenant.id).catch((err) => {
+      console.error("Failed to seed event settings:", err.message);
+    });
   } else if (restaurantType !== undefined) {
     if (!VALID_TYPES.includes(restaurantType)) {
       return res.status(400).json({
@@ -402,7 +409,7 @@ const setupTenantHandler = async (req, res) => {
     }
   }
 
-  if (businessVertical !== "salon" && serviceModes !== undefined) {
+  if (businessVertical !== "salon" && businessVertical !== "event" && serviceModes !== undefined) {
     if (!Array.isArray(serviceModes) || serviceModes.length === 0) {
       return res.status(400).json({ success: false, message: "serviceModes must be a non-empty array" });
     }

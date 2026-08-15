@@ -90,6 +90,46 @@ module.exports = {
       password: customerPasswordHash,
       emailVerified: true,
     });
+
+    const [existingEvent] = await queryInterface.sequelize.query(
+      "SELECT id FROM Events WHERE tenantId = :tenantId AND name = 'Test Event' LIMIT 1",
+      { replacements: { tenantId }, type: queryInterface.sequelize.QueryTypes.SELECT }
+    );
+
+    let eventId;
+    if (existingEvent) {
+      eventId = existingEvent.id;
+    } else {
+      const [eventResult] = await queryInterface.sequelize.query(
+        `INSERT INTO Events (tenantId, createdById, name, description, eventType, venue, address, eventDate, startTime, endTime, capacity, status, isTicketed, requiresApproval, checkinEnabled, metadata, createdAt, updatedAt)
+         VALUES (:tenantId, :createdById, 'Test Event', 'A test event for E2E testing', 'concert', 'Test Venue', '123 Test St', DATE_ADD(CURDATE(), INTERVAL 7 DAY), '18:00:00', '21:00:00', 100, 'published', true, false, false, NULL, NOW(), NOW())`,
+        {
+          replacements: { tenantId, createdById: 1 },
+          type: queryInterface.sequelize.QueryTypes.INSERT,
+        }
+      );
+      eventId = eventResult;
+    }
+
+    const [existingTicket] = await queryInterface.sequelize.query(
+      "SELECT id FROM TicketTypes WHERE eventId = :eventId AND name = 'General Admission' LIMIT 1",
+      { replacements: { eventId }, type: queryInterface.sequelize.QueryTypes.SELECT }
+    );
+
+    let ticketTypeId;
+    if (existingTicket) {
+      ticketTypeId = existingTicket.id;
+    } else {
+      const [ticketResult] = await queryInterface.sequelize.query(
+        `INSERT INTO TicketTypes (tenantId, eventId, name, description, price, currency, quantity, soldCount, isActive, createdAt, updatedAt)
+         VALUES (:tenantId, :eventId, 'General Admission', 'Standard entry', 50.00, 'GHS', 100, 0, true, NOW(), NOW())`,
+        {
+          replacements: { tenantId, eventId },
+          type: queryInterface.sequelize.QueryTypes.INSERT,
+        }
+      );
+      ticketTypeId = ticketResult;
+    }
   },
 
   async down(queryInterface) {

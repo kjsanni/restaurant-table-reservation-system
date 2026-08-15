@@ -1,21 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class Location extends Model {
-    static associate(models) {
-      Location.hasMany(models.user, {
-        foreignKey: "locationId",
-        as: "users",
-      });
-      Location.hasMany(models.appointment, {
-        foreignKey: "locationId",
-        as: "appointments",
-      });
-    }
-  }
-  Location.init(
-    {
-      tenantId: {
+
+const getLocationAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -71,12 +59,25 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DECIMAL(11, 8),
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "location",
-      tableName: "locations",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class Location extends Model {
+    static associate(models) {
+      Location.hasMany(models.user, {
+        foreignKey: "locationId",
+        as: "users",
+      });
+      Location.hasMany(models.appointment, {
+        foreignKey: "locationId",
+        as: "appointments",
+      });
     }
-  );
+  }
+  Location.init(getLocationAttributes(DataTypes), {
+    sequelize,
+    modelName: "location",
+    tableName: "locations",
+  });
   return Location;
 };

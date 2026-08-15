@@ -4,6 +4,7 @@ import expenseAPI from "@/services/expenseAPI";
 import locationAPI from "@/services/locationAPI";
 import { useI18n } from "@/composables/useI18n";
 import { useSalonCrudView } from "@/composables/useSalonCrudView";
+import logger from "@/utils/logger";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 
 const { t } = useI18n();
@@ -74,7 +75,7 @@ const loadLocations = async () => {
     const res = await locationAPI.list();
     locations.value = res.data.data || [];
   } catch (err) {
-    console.error("Failed to load locations", err);
+    logger.error("Failed to load locations", { error: err });
   }
 };
 

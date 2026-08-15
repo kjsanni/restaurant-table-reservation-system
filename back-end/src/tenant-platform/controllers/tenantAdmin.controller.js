@@ -6,12 +6,14 @@ const {
   disableTenant,
   getTenantDashboard,
 } = require("../services/tenantSubscription.service");
-const { applyTypeDefaults, seedSalonSettings } = require("../services/tenantTypeDefaults.service");
+const { applyTypeDefaults, seedSalonSettings, seedEventSettings } = require("../services/tenantTypeDefaults.service");
+const { enqueueProvisioning } = require("../../queues/provisioning.queue");
+const verticalTemplateController = require("./verticalTemplate.controller");
 const axios = require("axios");
 const { normalizeSettingValue } = require("../../utils/settings");
 
 const createTenantHandler = async (req, res) => {
-  const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType, businessVertical, serviceModes } = req.body;
+  const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType, businessVertical, serviceModes, templateId } = req.body;
 
   if (!name || !slug) {
     return res.status(400).json({ success: false, message: "Name and slug are required" });
@@ -27,6 +29,14 @@ const createTenantHandler = async (req, res) => {
     return res.status(409).json({ success: false, message: `Slug "${normalizedSlug}" is already in use` });
   }
 
+  let template = null;
+  if (templateId) {
+    template = await verticalTemplateController.getTemplateById(templateId);
+    if (!template) {
+      return res.status(400).json({ success: false, message: `Template with id ${templateId} not found` });
+    }
+  }
+
   const typeDefaults =
     require("../services/tenantTypeDefaults.service").TYPE_DEFAULTS[
       restaurantType || "full_service"
@@ -34,10 +44,21 @@ const createTenantHandler = async (req, res) => {
 
   const salonDefaults = require("../services/tenantTypeDefaults.service").TYPE_DEFAULTS.salonDefaults || {};
 
+  const resolvedVertical = template?.defaultSettings?.businessVertical || businessVertical || "restaurant";
+  const resolvedRestaurantType = template?.defaultSettings?.restaurantType || restaurantType || (resolvedVertical === "event" ? "event" : "full_service");
+
   const settings = {
-    featureFlags: { ...typeDefaults.featureFlags },
-    ...(businessVertical === "salon" ? salonDefaults : {}),
+    featureFlags: { ...typeDefaults.featureFlags, ...(template?.featureFlags || {}) },
+    ...(resolvedVertical === "salon" ? salonDefaults : {}),
+    ...(template?.defaultSettings || {}),
   };
+
+  const resolvedServiceModes =
+    Array.isArray(serviceModes) && serviceModes.length > 0
+      ? serviceModes
+      : template?.defaultServiceModes?.length > 0
+      ? template.defaultServiceModes
+      : typeDefaults.serviceModes;
 
   const tenant = await tenantAdminDAO.create({
     name,
@@ -48,16 +69,42 @@ const createTenantHandler = async (req, res) => {
     billingEmail,
     billingName,
     currency: currency || "GHS",
-    businessVertical: businessVertical || "restaurant",
-    serviceModes: Array.isArray(serviceModes) && serviceModes.length > 0 ? serviceModes : typeDefaults.serviceModes,
+    businessVertical: resolvedVertical,
+    serviceModes: resolvedServiceModes,
     settings,
-    restaurantType: restaurantType || "full_service",
+    restaurantType: resolvedRestaurantType,
+    templateId: template?.id || null,
   });
 
-  if (businessVertical === "salon") {
+  if (template) {
+    verticalTemplateController
+      .recordTemplateUsage({
+        templateId: template.id,
+        tenantId: tenant.id,
+        appliedBy: req.user?.id || null,
+        source: "tenant_creation",
+      })
+      .catch((err) => {
+        console.error("Failed to record template usage:", err.message);
+      });
+  }
+
+  if (resolvedVertical === "salon") {
     seedSalonSettings(tenant.id).catch((err) => {
       console.error("Failed to seed salon settings:", err.message);
     });
+  } else if (resolvedVertical === "event") {
+    seedEventSettings(tenant.id).catch((err) => {
+      console.error("Failed to seed event settings:", err.message);
+    });
+  }
+
+  try {
+    enqueueProvisioning(tenant.id, req.user?.id || null).catch((err) => {
+      console.error("Failed to enqueue provisioning:", err.message);
+    });
+  } catch (provisionErr) {
+    console.error("Provisioning failed after admin tenant creation:", provisionErr.message);
   }
 
   res.status(201).json({ success: true, item: tenant });

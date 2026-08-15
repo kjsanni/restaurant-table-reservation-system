@@ -1,33 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class Appointment extends Model {
-    static associate(models) {
-      Appointment.belongsTo(models.customer, {
-        foreignKey: "customerId",
-        as: "customer",
-      });
-      Appointment.belongsTo(models.service, {
-        foreignKey: "serviceId",
-        as: "service",
-      });
-      Appointment.belongsTo(models.station, {
-        foreignKey: "stationId",
-        as: "station",
-      });
-      Appointment.belongsTo(models.location, {
-        foreignKey: "locationId",
-        as: "location",
-      });
-      Appointment.belongsTo(models.user, {
-        foreignKey: "stylistId",
-        as: "stylist",
-      });
-    }
-  }
-  Appointment.init(
-    {
-      tenantId: {
+
+const getAppointmentAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -116,12 +92,37 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "appointment",
-      tableName: "appointments",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class Appointment extends Model {
+    static associate(models) {
+      Appointment.belongsTo(models.customer, {
+        foreignKey: "customerId",
+        as: "customer",
+      });
+      Appointment.belongsTo(models.service, {
+        foreignKey: "serviceId",
+        as: "service",
+      });
+      Appointment.belongsTo(models.station, {
+        foreignKey: "stationId",
+        as: "station",
+      });
+      Appointment.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
+      Appointment.belongsTo(models.user, {
+        foreignKey: "stylistId",
+        as: "stylist",
+      });
     }
-  );
+  }
+  Appointment.init(getAppointmentAttributes(DataTypes), {
+    sequelize,
+    modelName: "appointment",
+    tableName: "appointments",
+  });
   return Appointment;
 };

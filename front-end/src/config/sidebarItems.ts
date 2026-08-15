@@ -241,6 +241,14 @@ export const authenticatedNavItems: NavItem[] = [
     requiresVertical: "salon",
   },
   {
+    routeName: "event-management",
+    text: "Events",
+    icon: "mdi:calendar-star",
+    requiresAuth: true,
+    requiresVertical: "event",
+    requiresPermission: "manage_events",
+  },
+  {
     routeName: "erpnext-accounting",
     text: "Accounting",
     icon: "mdi:chart-pie",
@@ -486,6 +494,28 @@ export const adminNavItems: NavItem[] = [
     routeName: "tenant-timeline",
     text: "Tenant Timeline",
     icon: "mdi:timeline",
+    requiresAuth: true,
+    requiresPermission: "manage_tenants",
+    tenantOnly: true,
+    platformOnly: true,
+    requiresId: true,
+    section: "Tenants",
+  },
+  {
+    routeName: "tenant-migrations",
+    text: "Migrations",
+    icon: "mdi:database-sync",
+    requiresAuth: true,
+    requiresPermission: "manage_tenants",
+    tenantOnly: true,
+    platformOnly: true,
+    requiresId: true,
+    section: "Tenants",
+  },
+  {
+    routeName: "tenant-provisioning",
+    text: "Provisioning",
+    icon: "mdi:rocket-launch",
     requiresAuth: true,
     requiresPermission: "manage_tenants",
     tenantOnly: true,
@@ -1197,6 +1227,15 @@ export const adminNavItems: NavItem[] = [
     section: "Platform",
   },
   {
+    routeName: "platform-events",
+    text: "Events",
+    icon: "mdi:calendar-star",
+    requiresAuth: true,
+    requiresPermission: "manage_tenants",
+    platformOnly: true,
+    section: "Platform",
+  },
+  {
     routeName: "role-management",
     text: "Roles",
     icon: "mdi:key",
@@ -1244,6 +1283,7 @@ const SUPER_ADMIN_SIDEBAR_ROUTE_NAMES = new Set([
   "platform-feature-flags",
   "role-management",
   "platform-settings",
+  "platform-events",
 ]);
 
 export const superAdminSidebarNavItems: NavItem[] = superAdminNavItems.filter(

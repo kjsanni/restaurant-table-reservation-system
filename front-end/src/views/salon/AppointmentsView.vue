@@ -46,6 +46,8 @@ interface StylistOption {
 const appointments = ref<Appointment[]>([]);
 const loading = ref(true);
 const showForm = ref(false);
+const confirmingDelete = ref<number | null>(null);
+const confirmingBulkDelete = ref(false);
 const submitting = ref(false);
 const generalError = ref("");
 
@@ -239,7 +241,14 @@ const updateStatus = async (apt: Appointment, status: string) => {
 };
 
 const deleteAppointment = async (id: number) => {
-  if (!confirm(t("salon.confirmCancelAppointment"))) return;
+  if (confirmingDelete.value !== id) {
+    confirmingDelete.value = id;
+    setTimeout(() => {
+      confirmingDelete.value = null;
+    }, 3000);
+    return;
+  }
+  confirmingDelete.value = null;
   try {
     await appointmentAPI.deleteAppointment(id);
     appointments.value = appointments.value.filter((a) => a.id !== id);
@@ -286,18 +295,25 @@ const bulkUpdateStatus = async () => {
 
 const bulkCancel = async () => {
   if (!selectedIds.value.length) return;
-  if (!confirm(`Cancel ${selectedIds.value.length} appointment(s)?`)) return;
-  try {
-    await Promise.all(
-      selectedIds.value.map((id) => appointmentAPI.deleteAppointment(id))
-    );
-    appointments.value = appointments.value.filter(
-      (a) => !selectedIds.value.includes(a.id)
-    );
-    selectedIds.value = [];
-  } catch (err) {
-    logger.error("Bulk cancel failed", { error: err });
+  if (confirmingBulkDelete.value) {
+    confirmingBulkDelete.value = false;
+    try {
+      await Promise.all(
+        selectedIds.value.map((id) => appointmentAPI.deleteAppointment(id))
+      );
+      appointments.value = appointments.value.filter(
+        (a) => !selectedIds.value.includes(a.id)
+      );
+      selectedIds.value = [];
+    } catch (err) {
+      logger.error("Bulk cancel failed", { error: err });
+    }
+    return;
   }
+  confirmingBulkDelete.value = true;
+  setTimeout(() => {
+    confirmingBulkDelete.value = false;
+  }, 3000);
 };
 
 onMounted(async () => {
@@ -515,7 +531,11 @@ const handleServiceChange = async () => {
           {{ t("salon.apply") }}
         </button>
         <button class="btn-danger-sm" @click="bulkCancel">
-          {{ t("salon.cancelSelected") }}
+          {{
+            confirmingBulkDelete
+              ? t("common.confirm", "Confirm")
+              : t("salon.cancelSelected")
+          }}
         </button>
         <button class="btn-secondary" @click="selectedIds = []">
           {{ t("salon.clear") }}
@@ -594,7 +614,11 @@ const handleServiceChange = async () => {
                   class="btn-danger-sm"
                   @click="deleteAppointment(apt.id)"
                 >
-                  {{ t("common.cancel") }}
+                  {{
+                    confirmingDelete === apt.id
+                      ? t("common.confirm", "Confirm")
+                      : t("common.cancel")
+                  }}
                 </button>
               </td>
             </tr>

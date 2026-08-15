@@ -1,6 +1,7 @@
 const axios = require("axios");
 const db = require("../db/models");
 const { normalizeSettingValue } = require("../utils/settings");
+const CircuitBreaker = require("../utils/circuitBreaker");
 
 const SHAQ_BASE_URL = "https://public-api.shaqexpress.com/api/v1";
 
@@ -31,12 +32,19 @@ const getAuthToken = async (tenantId) => {
     throw new Error("Shaq Express is not configured.");
   }
 
-  const response = await axios.post(`${SHAQ_BASE_URL}/auth/login`, {
-    identifier,
-    secret,
-  });
+  const response = await CircuitBreaker.execute(
+    "shaqexpress",
+    async () => {
+      const res = await axios.post(`${SHAQ_BASE_URL}/auth/login`, {
+        identifier,
+        secret,
+      }, { timeout: 10000 });
+      return res.data;
+    },
+    { failureThreshold: 5, recoveryTimeout: 30000 }
+  );
 
-  cachedToken = response.data?.data?.token;
+  cachedToken = response?.data?.token;
   tokenExpiry = new Date(Date.now() + 6 * 24 * 60 * 60 * 1000);
   return cachedToken;
 };
@@ -52,38 +60,62 @@ const authHeaders = async (tenantId) => {
 
 const createPackage = async (tenantId, packageData) => {
   const headers = await authHeaders(tenantId);
-  const response = await axios.post(`${SHAQ_BASE_URL}/packages`, packageData, { headers });
-  return response.data;
+  const response = await CircuitBreaker.execute(
+    "shaqexpress",
+    () => axios.post(`${SHAQ_BASE_URL}/packages`, packageData, { headers, timeout: 10000 }).then((r) => r.data),
+    { failureThreshold: 5, recoveryTimeout: 30000 }
+  );
+  return response;
 };
 
 const getPackage = async (tenantId, partnerRef) => {
   const headers = await authHeaders(tenantId);
-  const response = await axios.get(`${SHAQ_BASE_URL}/packages/${encodeURIComponent(partnerRef)}`, { headers });
-  return response.data;
+  const response = await CircuitBreaker.execute(
+    "shaqexpress",
+    () => axios.get(`${SHAQ_BASE_URL}/packages/${encodeURIComponent(partnerRef)}`, { headers, timeout: 10000 }).then((r) => r.data),
+    { failureThreshold: 5, recoveryTimeout: 30000 }
+  );
+  return response;
 };
 
 const trackPackage = async (tenantId, trackingNumber) => {
   const headers = await authHeaders(tenantId);
-  const response = await axios.get(`${SHAQ_BASE_URL}/tracking/${encodeURIComponent(trackingNumber)}`, { headers });
-  return response.data;
+  const response = await CircuitBreaker.execute(
+    "shaqexpress",
+    () => axios.get(`${SHAQ_BASE_URL}/tracking/${encodeURIComponent(trackingNumber)}`, { headers, timeout: 10000 }).then((r) => r.data),
+    { failureThreshold: 5, recoveryTimeout: 30000 }
+  );
+  return response;
 };
 
 const getRegions = async (tenantId) => {
   const headers = await authHeaders(tenantId);
-  const response = await axios.get(`${SHAQ_BASE_URL}/setup/regions`, { headers });
-  return response.data;
+  const response = await CircuitBreaker.execute(
+    "shaqexpress",
+    () => axios.get(`${SHAQ_BASE_URL}/setup/regions`, { headers, timeout: 10000 }).then((r) => r.data),
+    { failureThreshold: 5, recoveryTimeout: 30000 }
+  );
+  return response;
 };
 
 const cancelPackage = async (tenantId, partnerRef) => {
   const headers = await authHeaders(tenantId);
-  const response = await axios.post(`${SHAQ_BASE_URL}/packages/${encodeURIComponent(partnerRef)}/cancel`, {}, { headers });
-  return response.data;
+  const response = await CircuitBreaker.execute(
+    "shaqexpress",
+    () => axios.post(`${SHAQ_BASE_URL}/packages/${encodeURIComponent(partnerRef)}/cancel`, {}, { headers, timeout: 10000 }).then((r) => r.data),
+    { failureThreshold: 5, recoveryTimeout: 30000 }
+  );
+  return response;
 };
 
 const updatePackage = async (tenantId, partnerRef, updates) => {
   const headers = await authHeaders(tenantId);
-  const response = await axios.patch(`${SHAQ_BASE_URL}/packages/${encodeURIComponent(partnerRef)}`, updates, { headers });
-  return response.data;
+  const response = await CircuitBreaker.execute(
+    "shaqexpress",
+    () => axios.patch(`${SHAQ_BASE_URL}/packages/${encodeURIComponent(partnerRef)}`, updates, { headers, timeout: 10000 }).then((r) => r.data),
+    { failureThreshold: 5, recoveryTimeout: 30000 }
+  );
+  return response;
 };
 
 const verifyWebhookSignature = (payload, signature, secret) => {

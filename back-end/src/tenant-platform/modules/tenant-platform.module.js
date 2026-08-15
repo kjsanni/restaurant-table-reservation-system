@@ -82,6 +82,7 @@ const notificationTemplateRoutes = require("../routes/notificationTemplate.route
 const announcementRoutes = require("../routes/announcement.router");
 const dataRetentionPolicyRoutes = require("../routes/dataRetentionPolicy.router");
 const postmortemRoutes = require("../routes/postmortem.router");
+const provisioningRoutes = require("../routes/provisioning.router");
 const migrationRoutes = require("../routes/migration.router");
 const debugRoutes = require("../routes/debug.router");
 const breakGlassRoutes = require("../routes/breakGlass.router");
@@ -106,6 +107,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/tenants", router: noteRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/tenants", router: tenantAdminRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/tenants", router: tenantMigrationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: provisioningRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/plans", router: planRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/payments", router: platformPaymentRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/usage", router: usageRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },

@@ -85,6 +85,15 @@ const bulkDeleteHandler = async (req, res) => {
   res.status(200).json({ success: true, message: `Deleted ${count} tenants` });
 };
 
+const bulkProvisionHandler = async (req, res) => {
+  const { tenantIds } = req.body;
+  if (!Array.isArray(tenantIds) || tenantIds.length === 0) {
+    return res.status(400).json({ success: false, message: "tenantIds array is required" });
+  }
+  const results = await bulkDAO.bulkProvision(tenantIds);
+  res.status(200).json({ success: true, results });
+};
+
 module.exports = {
   bulkSuspendHandler,
   bulkChangePlanHandler,
@@ -94,4 +103,5 @@ module.exports = {
   bulkExportHandler,
   bulkAssignFeatureFlagsHandler,
   bulkDeleteHandler,
+  bulkProvisionHandler,
 };

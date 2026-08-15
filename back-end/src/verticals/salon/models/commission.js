@@ -1,29 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class Commission extends Model {
-    static associate(models) {
-      Commission.belongsTo(models.user, {
-        foreignKey: "userId",
-        as: "stylist",
-      });
-      Commission.belongsTo(models.appointment, {
-        foreignKey: "appointmentId",
-        as: "appointment",
-      });
-      Commission.belongsTo(models.service, {
-        foreignKey: "serviceId",
-        as: "service",
-      });
-      Commission.belongsTo(models.location, {
-        foreignKey: "locationId",
-        as: "location",
-      });
-    }
-  }
-  Commission.init(
-    {
-      tenantId: {
+
+const getCommissionAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -69,12 +49,33 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "commission",
-      tableName: "commissions",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class Commission extends Model {
+    static associate(models) {
+      Commission.belongsTo(models.user, {
+        foreignKey: "userId",
+        as: "stylist",
+      });
+      Commission.belongsTo(models.appointment, {
+        foreignKey: "appointmentId",
+        as: "appointment",
+      });
+      Commission.belongsTo(models.service, {
+        foreignKey: "serviceId",
+        as: "service",
+      });
+      Commission.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
     }
-  );
+  }
+  Commission.init(getCommissionAttributes(DataTypes), {
+    sequelize,
+    modelName: "commission",
+    tableName: "commissions",
+  });
   return Commission;
 };

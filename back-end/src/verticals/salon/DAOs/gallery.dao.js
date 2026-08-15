@@ -28,6 +28,13 @@ const galleryDao = {
     return { total: count, data: rows };
   },
 
+  async update(id, tenantId, data) {
+    const record = await this.findById(id, tenantId);
+    if (!record) return null;
+    await record.update(data);
+    return record;
+  },
+
   async delete(id, tenantId) {
     const record = await salonModels.sequelize.models.galleryImage.findOne({
       where: { id, tenantId },

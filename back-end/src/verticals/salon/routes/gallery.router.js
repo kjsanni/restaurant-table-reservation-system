@@ -25,6 +25,12 @@ router
 
 router
   .route("/:id")
+  .put(
+    tryCatchHandler(protect),
+    tryCatchHandler(requireVertical("salon")),
+    tryCatchHandler(requirePermission("manage_services")),
+    tryCatchHandler(galleryController.updateGalleryImageHandler)
+  )
   .delete(
     tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),

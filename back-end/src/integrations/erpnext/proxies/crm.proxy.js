@@ -81,4 +81,46 @@ router.get("/crm/opportunities", tryCatchHandler(requireActiveTenant, checkErpne
   }
 }));
 
+router.post("/crm/sync/leads", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
+  const tenant = req.tenant;
+  const { customerIds } = req.body;
+  const { syncCrmLead, syncAllCrmLeads } = require("../sync/employee.sync");
+  try {
+    if (customerIds && customerIds.length > 0) {
+      const results = [];
+      for (const customerId of customerIds) {
+        const result = await syncCrmLead(tenant.id, customerId);
+        results.push(result);
+      }
+      res.status(200).json({ success: true, results });
+    } else {
+      const results = await syncAllCrmLeads(tenant.id);
+      res.status(200).json({ success: true, results });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
+router.post("/crm/sync/customers", tryCatchHandler(requireActiveTenant, checkErpnextCrm, async (req, res) => {
+  const tenant = req.tenant;
+  const { customerIds } = req.body;
+  const { syncCrmCustomer, syncAllCrmCustomers } = require("../sync/crm.sync");
+  try {
+    if (customerIds && customerIds.length > 0) {
+      const results = [];
+      for (const customerId of customerIds) {
+        const result = await syncCrmCustomer(tenant.id, customerId);
+        results.push(result);
+      }
+      res.status(200).json({ success: true, results });
+    } else {
+      const results = await syncAllCrmCustomers(tenant.id);
+      res.status(200).json({ success: true, results });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}));
+
 module.exports = router;

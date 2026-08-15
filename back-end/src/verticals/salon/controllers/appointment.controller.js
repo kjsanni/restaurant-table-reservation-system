@@ -52,6 +52,37 @@ const emitSalonAppointmentEvent = (req, event, payload) => {
   }
 };
 
+const processRefund = async (req, res, appointment, tenantId) => {
+  let refundResult = null;
+  if (appointment.paymentReference) {
+    try {
+      const { refundPayment } = require("../../../tenant-platform/services/paystack.service");
+      refundResult = await refundPayment(appointment.paymentReference);
+    } catch (refundErr) {
+      return localizedError(req, res, 502, "salon.paystackRefundFailed", { error: refundErr.message });
+    }
+  }
+
+  const updated = await appointmentDao.update(appointment.id, tenantId, {
+    paymentStatus: "unpaid",
+    depositAmount: 0,
+    refundedAt: new Date(),
+  });
+  if (!updated) {
+    return localizedError(req, res, 404, "salon.appointmentNotFound");
+  }
+
+  await logAction(req, "appointment_refunded", {
+    appointmentId: appointment.id,
+    customerId: appointment.customerId,
+    previousPaymentStatus: appointment.paymentStatus,
+    refundReference: refundResult?.reference || null,
+  });
+
+  emitSalonAppointmentEvent(req, "salon-appointment-refunded", updated);
+  return localizedResponse(req, res, 200, "salon.refundSuccess", { id: updated.id });
+};
+
 const appointmentController = {
   async getAllAppointments(req, res) {
     try {
@@ -114,7 +145,7 @@ const appointmentController = {
       if (validationErrors.length > 0) {
         return res.status(422).json({ success: false, message: "Validation failed", errors: validationErrors });
       }
-      const allowed = ["status", "start", "durationMinutes", "end", "bufferMinutes", "notes", "paymentStatus", "depositAmount", "serviceId", "stylistId", "stationId", "locationId"];
+      const allowed = ["status", "start", "durationMinutes", "bufferMinutes", "notes", "paymentStatus", "depositAmount", "serviceId", "stylistId", "stationId", "locationId"];
       const updates = {};
       for (const key of allowed) {
         if (Object.prototype.hasOwnProperty.call(req.body, key)) {
@@ -196,34 +227,7 @@ const appointmentController = {
         return localizedError(req, res, 400, "salon.refundNotAllowedAfterAppointmentStart");
       }
 
-      let refundResult = null;
-      if (appointment.paymentReference) {
-        try {
-          const { refundPayment } = require("../../../tenant-platform/services/paystack.service");
-          refundResult = await refundPayment(appointment.paymentReference);
-        } catch (refundErr) {
-          return localizedError(req, res, 502, "salon.paystackRefundFailed", { error: refundErr.message });
-        }
-      }
-
-      const updated = await appointmentDao.update(req.params.id, tenantId, {
-        paymentStatus: "unpaid",
-        depositAmount: 0,
-        refundedAt: new Date(),
-      });
-      if (!updated) {
-        return localizedError(req, res, 404, "salon.appointmentNotFound");
-      }
-
-      await logAction(req, "appointment_refunded", {
-        appointmentId: appointment.id,
-        customerId: appointment.customerId,
-        previousPaymentStatus: appointment.paymentStatus,
-        refundReference: refundResult?.reference || null,
-      });
-
-      emitSalonAppointmentEvent(req, "salon-appointment-refunded", updated);
-      return localizedResponse(req, res, 200, "salon.refundSuccess", { id: updated.id });
+      return processRefund(req, res, appointment, tenantId);
     } catch {
       return localizedError(req, res, 500, "common.internalError");
     }

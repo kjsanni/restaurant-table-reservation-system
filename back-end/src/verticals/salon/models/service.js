@@ -1,33 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class Service extends Model {
-    static associate(models) {
-      Service.belongsTo(models.serviceCategory, {
-        foreignKey: "categoryId",
-        as: "category",
-      });
-      Service.belongsTo(models.user, {
-        foreignKey: "defaultStylistId",
-        as: "defaultStylist",
-      });
-      Service.belongsTo(models.location, {
-        foreignKey: "locationId",
-        as: "location",
-      });
-      Service.hasMany(models.appointment, {
-        foreignKey: "serviceId",
-        as: "appointments",
-      });
-      Service.hasMany(models.staffServiceSkill, {
-        foreignKey: "serviceId",
-        as: "staffServiceSkills",
-      });
-    }
-  }
-  Service.init(
-    {
-      tenantId: {
+
+const getServiceAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -86,12 +62,37 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "service",
-      tableName: "services",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class Service extends Model {
+    static associate(models) {
+      Service.belongsTo(models.serviceCategory, {
+        foreignKey: "categoryId",
+        as: "category",
+      });
+      Service.belongsTo(models.user, {
+        foreignKey: "defaultStylistId",
+        as: "defaultStylist",
+      });
+      Service.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
+      Service.hasMany(models.appointment, {
+        foreignKey: "serviceId",
+        as: "appointments",
+      });
+      Service.hasMany(models.staffServiceSkill, {
+        foreignKey: "serviceId",
+        as: "staffServiceSkills",
+      });
     }
-  );
+  }
+  Service.init(getServiceAttributes(DataTypes), {
+    sequelize,
+    modelName: "service",
+    tableName: "services",
+  });
   return Service;
 };
