@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const platformReportDAO = {};
 
@@ -23,18 +24,8 @@ platformReportDAO.findById = (id) => {
   return db.platformReport.findByPk(id);
 };
 
-platformReportDAO.update = async (id, updates) => {
-  const report = await platformReportDAO.findById(id);
-  if (!report) return null;
-  await report.update(updates);
-  return report;
-};
+platformReportDAO.update = async (id, updates) => baseDAO.updateById(db.platformReport, id, updates);
 
-platformReportDAO.remove = async (id) => {
-  const report = await platformReportDAO.findById(id);
-  if (!report) return null;
-  await report.destroy();
-  return report;
-};
+platformReportDAO.remove = async (id) => baseDAO.removeById(db.platformReport, id);
 
 module.exports = platformReportDAO;

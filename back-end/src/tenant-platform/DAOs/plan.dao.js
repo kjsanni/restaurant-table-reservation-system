@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const planDAO = {};
 
@@ -25,18 +26,8 @@ planDAO.create = async (data) => {
   return db.subscriptionPlan.create(data);
 };
 
-planDAO.update = async (id, data) => {
-  const plan = await db.subscriptionPlan.findByPk(id);
-  if (!plan) return null;
-  await plan.update(data);
-  return plan;
-};
+planDAO.update = async (id, data) => baseDAO.updateById(db.subscriptionPlan, id, data);
 
-planDAO.remove = async (id) => {
-  const plan = await db.subscriptionPlan.findByPk(id);
-  if (!plan) return null;
-  await plan.destroy();
-  return plan;
-};
+planDAO.remove = async (id) => baseDAO.removeById(db.subscriptionPlan, id);
 
 module.exports = planDAO;

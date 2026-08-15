@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const penetrationTestReportDAO = {};
 
@@ -21,18 +22,8 @@ penetrationTestReportDAO.findById = (id) => {
   return db.penetrationTestReport.findByPk(id);
 };
 
-penetrationTestReportDAO.update = async (id, updates) => {
-  const report = await penetrationTestReportDAO.findById(id);
-  if (!report) return null;
-  await report.update(updates);
-  return report;
-};
+penetrationTestReportDAO.update = async (id, updates) => baseDAO.updateById(db.penetrationTestReport, id, updates);
 
-penetrationTestReportDAO.remove = async (id) => {
-  const report = await penetrationTestReportDAO.findById(id);
-  if (!report) return null;
-  await report.destroy();
-  return report;
-};
+penetrationTestReportDAO.remove = async (id) => baseDAO.removeById(db.penetrationTestReport, id);
 
 module.exports = penetrationTestReportDAO;

@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const insuranceDocumentDAO = {};
 
@@ -21,18 +22,8 @@ insuranceDocumentDAO.findById = (id) => {
   return db.insuranceDocument.findByPk(id);
 };
 
-insuranceDocumentDAO.update = async (id, updates) => {
-  const document = await insuranceDocumentDAO.findById(id);
-  if (!document) return null;
-  await document.update(updates);
-  return document;
-};
+insuranceDocumentDAO.update = async (id, updates) => baseDAO.updateById(db.insuranceDocument, id, updates);
 
-insuranceDocumentDAO.remove = async (id) => {
-  const document = await insuranceDocumentDAO.findById(id);
-  if (!document) return null;
-  await document.destroy();
-  return document;
-};
+insuranceDocumentDAO.remove = async (id) => baseDAO.removeById(db.insuranceDocument, id);
 
 module.exports = insuranceDocumentDAO;

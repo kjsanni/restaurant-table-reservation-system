@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const alertRuleDAO = {};
 
@@ -22,19 +23,9 @@ alertRuleDAO.findById = (id) => {
   return db.alertRule.findByPk(id);
 };
 
-alertRuleDAO.update = async (id, updates) => {
-  const rule = await alertRuleDAO.findById(id);
-  if (!rule) return null;
-  await rule.update(updates);
-  return rule;
-};
+alertRuleDAO.update = async (id, updates) => baseDAO.updateById(db.alertRule, id, updates);
 
-alertRuleDAO.remove = async (id) => {
-  const rule = await alertRuleDAO.findById(id);
-  if (!rule) return null;
-  await rule.destroy();
-  return rule;
-};
+alertRuleDAO.remove = async (id) => baseDAO.removeById(db.alertRule, id);
 
 alertRuleDAO.findActive = () => {
   return db.alertRule.findAll({

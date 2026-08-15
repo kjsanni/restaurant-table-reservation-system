@@ -1,6 +1,7 @@
 const db = require("../../db/models");
 const platformAuditDAO = require("./platformAudit.dao");
 const { Op } = require("sequelize");
+const baseDAO = require("./base.dao");
 
 const tenantAdminDAO = {};
 
@@ -73,12 +74,7 @@ tenantAdminDAO.findById = async (id) => {
   });
 };
 
-tenantAdminDAO.update = async (id, updates) => {
-  const tenant = await db.tenant.findByPk(id);
-  if (!tenant) return null;
-  await tenant.update(updates);
-  return tenant;
-};
+tenantAdminDAO.update = async (id, updates) => baseDAO.updateById(db.tenant, id, updates);
 
 tenantAdminDAO.setStatus = async (id, status, reason) => {
   const tenant = await db.tenant.findByPk(id);

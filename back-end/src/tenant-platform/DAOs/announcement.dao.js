@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const announcementDAO = {};
 
@@ -22,18 +23,8 @@ announcementDAO.findById = (id) => {
   return db.announcement.findByPk(id);
 };
 
-announcementDAO.update = async (id, updates) => {
-  const announcement = await announcementDAO.findById(id);
-  if (!announcement) return null;
-  await announcement.update(updates);
-  return announcement;
-};
+announcementDAO.update = async (id, updates) => baseDAO.updateById(db.announcement, id, updates);
 
-announcementDAO.remove = async (id) => {
-  const announcement = await announcementDAO.findById(id);
-  if (!announcement) return null;
-  await announcement.destroy();
-  return announcement;
-};
+announcementDAO.remove = async (id) => baseDAO.removeById(db.announcement, id);
 
 module.exports = announcementDAO;

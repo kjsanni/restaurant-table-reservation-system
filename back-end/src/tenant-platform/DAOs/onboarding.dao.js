@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const onboardingDAO = {};
 
@@ -8,12 +9,7 @@ onboardingDAO.getByTenant = (tenantId) => {
 };
 
 onboardingDAO.upsert = (tenantId, steps = []) => {
-  return db.tenantOnboarding.findOne({ where: { tenantId } }).then((record) => {
-    if (!record) {
-      return db.tenantOnboarding.create({ tenantId, steps, completedAt: null });
-    }
-    return record.update({ steps });
-  });
+  return baseDAO.upsert(db.tenantOnboarding, { tenantId }, { tenantId, steps, completedAt: null });
 };
 
 onboardingDAO.complete = (tenantId) => {

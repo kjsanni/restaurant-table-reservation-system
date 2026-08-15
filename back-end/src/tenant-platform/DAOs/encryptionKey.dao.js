@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const encryptionKeyDAO = {};
 
@@ -22,18 +23,8 @@ encryptionKeyDAO.findById = (id) => {
   return db.encryptionKey.findByPk(id);
 };
 
-encryptionKeyDAO.update = async (id, updates) => {
-  const key = await encryptionKeyDAO.findById(id);
-  if (!key) return null;
-  await key.update(updates);
-  return key;
-};
+encryptionKeyDAO.update = async (id, updates) => baseDAO.updateById(db.encryptionKey, id, updates);
 
-encryptionKeyDAO.remove = async (id) => {
-  const key = await encryptionKeyDAO.findById(id);
-  if (!key) return null;
-  await key.destroy();
-  return key;
-};
+encryptionKeyDAO.remove = async (id) => baseDAO.removeById(db.encryptionKey, id);
 
 module.exports = encryptionKeyDAO;

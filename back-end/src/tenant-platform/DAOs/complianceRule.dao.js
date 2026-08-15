@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const complianceRuleDAO = {};
 
@@ -21,18 +22,8 @@ complianceRuleDAO.findById = (id) => {
   return db.complianceRule.findByPk(id);
 };
 
-complianceRuleDAO.update = async (id, updates) => {
-  const rule = await complianceRuleDAO.findById(id);
-  if (!rule) return null;
-  await rule.update(updates);
-  return rule;
-};
+complianceRuleDAO.update = async (id, updates) => baseDAO.updateById(db.complianceRule, id, updates);
 
-complianceRuleDAO.remove = async (id) => {
-  const rule = await complianceRuleDAO.findById(id);
-  if (!rule) return null;
-  await rule.destroy();
-  return rule;
-};
+complianceRuleDAO.remove = async (id) => baseDAO.removeById(db.complianceRule, id);
 
 module.exports = complianceRuleDAO;

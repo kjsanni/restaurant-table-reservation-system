@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const backupRecordDAO = {};
 
@@ -22,12 +23,7 @@ backupRecordDAO.findById = (id) => {
   return db.backupRecord.findByPk(id);
 };
 
-backupRecordDAO.update = async (id, updates) => {
-  const record = await backupRecordDAO.findById(id);
-  if (!record) return null;
-  await record.update(updates);
-  return record;
-};
+backupRecordDAO.update = async (id, updates) => baseDAO.updateById(db.backupRecord, id, updates);
 
 backupRecordDAO.getLatest = (status = "completed") => {
 // codacy-suppress NoSqlInjection
@@ -48,11 +44,6 @@ backupRecordDAO.findScheduled = () => {
   });
 };
 
-backupRecordDAO.updateScheduling = async (id, updates) => {
-  const record = await backupRecordDAO.findById(id);
-  if (!record) return null;
-  await record.update(updates);
-  return record;
-};
+backupRecordDAO.updateScheduling = async (id, updates) => baseDAO.updateById(db.backupRecord, id, updates);
 
 module.exports = backupRecordDAO;

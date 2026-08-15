@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const tenantMigrationStatusDAO = {};
 
@@ -29,12 +30,7 @@ tenantMigrationStatusDAO.findByTenantAndMigration = (tenantId, migrationName) =>
   });
 };
 
-tenantMigrationStatusDAO.update = async (id, updates) => {
-  const record = await db.tenantMigrationStatus.findByPk(id);
-  if (!record) return null;
-  await record.update(updates);
-  return record;
-};
+tenantMigrationStatusDAO.update = async (id, updates) => baseDAO.updateById(db.tenantMigrationStatus, id, updates);
 
 tenantMigrationStatusDAO.updateByTenantAndMigration = async (tenantId, migrationName, updates) => {
   const record = await db.tenantMigrationStatus.findOne({

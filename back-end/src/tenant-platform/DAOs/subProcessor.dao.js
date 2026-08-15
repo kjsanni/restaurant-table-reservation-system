@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const subProcessorDAO = {};
 
@@ -22,18 +23,8 @@ subProcessorDAO.findById = (id) => {
   return db.subProcessor.findByPk(id);
 };
 
-subProcessorDAO.update = async (id, updates) => {
-  const processor = await subProcessorDAO.findById(id);
-  if (!processor) return null;
-  await processor.update(updates);
-  return processor;
-};
+subProcessorDAO.update = async (id, updates) => baseDAO.updateById(db.subProcessor, id, updates);
 
-subProcessorDAO.remove = async (id) => {
-  const processor = await subProcessorDAO.findById(id);
-  if (!processor) return null;
-  await processor.destroy();
-  return processor;
-};
+subProcessorDAO.remove = async (id) => baseDAO.removeById(db.subProcessor, id);
 
 module.exports = subProcessorDAO;

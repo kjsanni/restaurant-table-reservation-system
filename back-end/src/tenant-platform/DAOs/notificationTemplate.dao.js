@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const notificationTemplateDAO = {};
 
@@ -27,18 +28,8 @@ notificationTemplateDAO.findByKey = (key) => {
   return db.notificationTemplate.findOne({ where: { key } });
 };
 
-notificationTemplateDAO.update = async (id, updates) => {
-  const template = await notificationTemplateDAO.findById(id);
-  if (!template) return null;
-  await template.update(updates);
-  return template;
-};
+notificationTemplateDAO.update = async (id, updates) => baseDAO.updateById(db.notificationTemplate, id, updates);
 
-notificationTemplateDAO.remove = async (id) => {
-  const template = await notificationTemplateDAO.findById(id);
-  if (!template) return null;
-  await template.destroy();
-  return template;
-};
+notificationTemplateDAO.remove = async (id) => baseDAO.removeById(db.notificationTemplate, id);
 
 module.exports = notificationTemplateDAO;

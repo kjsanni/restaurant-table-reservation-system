@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const autoScalingTriggerDAO = {};
 
@@ -22,18 +23,8 @@ autoScalingTriggerDAO.findById = (id) => {
   return db.autoScalingTrigger.findByPk(id);
 };
 
-autoScalingTriggerDAO.update = async (id, updates) => {
-  const trigger = await autoScalingTriggerDAO.findById(id);
-  if (!trigger) return null;
-  await trigger.update(updates);
-  return trigger;
-};
+autoScalingTriggerDAO.update = async (id, updates) => baseDAO.updateById(db.autoScalingTrigger, id, updates);
 
-autoScalingTriggerDAO.remove = async (id) => {
-  const trigger = await autoScalingTriggerDAO.findById(id);
-  if (!trigger) return null;
-  await trigger.destroy();
-  return trigger;
-};
+autoScalingTriggerDAO.remove = async (id) => baseDAO.removeById(db.autoScalingTrigger, id);
 
 module.exports = autoScalingTriggerDAO;

@@ -1,4 +1,5 @@
 const db = require("../../db/models");
+const baseDAO = require("./base.dao");
 
 const dataRetentionPolicyDAO = {};
 
@@ -21,18 +22,8 @@ dataRetentionPolicyDAO.findById = (id) => {
   return db.dataRetentionPolicy.findByPk(id);
 };
 
-dataRetentionPolicyDAO.update = async (id, updates) => {
-  const policy = await dataRetentionPolicyDAO.findById(id);
-  if (!policy) return null;
-  await policy.update(updates);
-  return policy;
-};
+dataRetentionPolicyDAO.update = async (id, updates) => baseDAO.updateById(db.dataRetentionPolicy, id, updates);
 
-dataRetentionPolicyDAO.remove = async (id) => {
-  const policy = await dataRetentionPolicyDAO.findById(id);
-  if (!policy) return null;
-  await policy.destroy();
-  return policy;
-};
+dataRetentionPolicyDAO.remove = async (id) => baseDAO.removeById(db.dataRetentionPolicy, id);
 
 module.exports = dataRetentionPolicyDAO;
