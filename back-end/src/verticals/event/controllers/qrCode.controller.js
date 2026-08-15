@@ -28,11 +28,6 @@ const generateBatchQRCodesHandler = async (req, res) => {
   res.status(201).json({ success: true, items: qrCodes });
 };
 
-const getScannerConfigHandler = async (req, res) => {
-  const config = await qrCodeService.getScannerConfig(req.tenant?.id);
-  res.status(200).json({ success: true, config });
-};
-
 const checkinHandler = async (req, res) => {
   const token = req.params?.token;
   const { scannerId, latitude, longitude, signature } = req.body || {};
@@ -117,7 +112,6 @@ module.exports = {
   getQRCodesHandler,
   generateQRCodeHandler,
   generateBatchQRCodesHandler,
-  getScannerConfigHandler,
   checkinHandler,
   verifyTokenHandler,
 };

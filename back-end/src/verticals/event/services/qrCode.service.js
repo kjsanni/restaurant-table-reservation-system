@@ -174,18 +174,16 @@ qrCodeService.checkin = async (rawToken, tenantId, userId, scannerParams = {}) =
     return { valid: false, error: "INVALID_TOKEN", message: "Invalid QR code format" };
   }
 
-  if (sig && typeof sig === "string" && sig.length > 0) {
-    const secret = await loadQrSecret(tenantId);
-    if (!verifySignature(rawToken, sig, secret)) {
-      await logAudit(
-        "qr_checkin_failure",
-        null,
-        tenantId,
-        userId,
-        { reason: "invalid_signature", tokenHash: qrCodeDAO.hashToken(rawToken).substring(0, 8) + "..." }
-      );
-      return { valid: false, error: "INVALID_SIGNATURE", message: "Invalid QR signature" };
-    }
+  const secret = await loadQrSecret(tenantId);
+  if (!verifySignature(rawToken, sig, secret)) {
+    await logAudit(
+      "qr_checkin_failure",
+      null,
+      tenantId,
+      userId,
+      { reason: "invalid_signature", tokenHash: qrCodeDAO.hashToken(rawToken).substring(0, 8) + "..." }
+    );
+    return { valid: false, error: "INVALID_SIGNATURE", message: "Invalid QR signature" };
   }
 
   const tokenHash = qrCodeDAO.hashToken(rawToken);
@@ -323,24 +321,5 @@ qrCodeService.signPayload = signPayload;
 qrCodeService.verifyPayload = verifyPayload;
 qrCodeService.verifySignature = verifySignature;
 qrCodeService.loadQrSecret = loadQrSecret;
-
-const loadScannerConfig = async (tenantId) => {
-  const setting = await db.setting.findOne({
-    where: { key: "event_checkin_config", tenantId },
-  });
-  if (setting && setting.value) {
-    return setting.value;
-  }
-  return { scannerApiKey: null, geofenceRadiusMeters: 50, scanRateLimit: 5 };
-};
-
-qrCodeService.getScannerConfig = async (tenantId) => {
-  const config = await loadScannerConfig(tenantId);
-  return {
-    scannerApiKey: config.scannerApiKey || null,
-    geofenceRadiusMeters: config.geofenceRadiusMeters || 50,
-    scanRateLimit: config.scanRateLimit || 5,
-  };
-};
 
 module.exports = qrCodeService;

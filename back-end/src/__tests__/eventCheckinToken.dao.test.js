@@ -312,7 +312,7 @@ describe("QRCode DAO (Security-Enhanced)", () => {
       });
       db.QRCode.findOne.mockResolvedValue(mockQr);
 
-      await qrCodeDAO.markUsedAtomic("hash123", 1, 5);
+      const result = await qrCodeDAO.markUsedAtomic("hash123", 1, 5);
 
       expect(mockQr.increment).toHaveBeenCalledWith("usedCount", { transaction: expect.anything() });
       expect(mockQr.update).toHaveBeenCalledWith(

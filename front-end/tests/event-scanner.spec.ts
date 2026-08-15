@@ -11,36 +11,45 @@ test.describe("Event check-in scanner flow", () => {
   });
 
   test.describe("Scanner UI", () => {
-  test("scanner page loads with camera view", async ({ page }) => {
-    await loginAsTenantStaff(page);
+    test("scanner page loads with camera view", async ({ page }) => {
+      await loginAsTenantStaff(page);
 
-    await page.goto("/events/1/scanner");
-    await page.waitForLoadState("domcontentloaded");
+      await page.goto("/events/1/scanner");
+      await page.waitForLoadState("domcontentloaded");
 
-    await expect(page.locator("h1")).toContainText(/Check-in Scanner/);
+      await expect(page.locator(".scanner-header h1")).toContainText(/QR Codes: /);
+      await expect(page.locator(".scanner-header")).toBeVisible();
 
-    const scanInput = page.locator(".scan-input");
-    if (await scanInput.count() > 0) {
-      await expect(scanInput).toBeVisible();
-    }
+      const cameraContainer = page.locator("#qr-scanner");
+      if (await cameraContainer.count() > 0) {
+        await expect(cameraContainer).toBeVisible();
+      } else {
+        await expect(page.locator(".manual-entry")).toBeVisible();
+      }
+    });
+
+    test("scanner has manual entry fallback", async ({ page }) => {
+      await loginAsTenantStaff(page);
+
+      await page.goto("/events/1/scanner");
+      await page.waitForLoadState("domcontentloaded");
+
+      const showManualBtn = page.locator("button.btn-secondary");
+      if (await showManualBtn.count() > 0) {
+        await showManualBtn.click();
+      }
+
+      const manualInput = page.locator(".token-input");
+      if (await manualInput.count() > 0) {
+        await expect(manualInput).toBeVisible();
+        await manualInput.fill("a".repeat(64));
+        await page.locator("button.btn-secondary").last().click();
+      }
+    });
   });
 
-  test("scanner has manual entry fallback", async ({ page }) => {
-    await loginAsTenantStaff(page);
-
-    await page.goto("/events/1/scanner");
-    await page.waitForLoadState("domcontentloaded");
-
-    const scanInput = page.locator(".scan-input");
-    if (await scanInput.count() > 0) {
-      await scanInput.fill("a".repeat(64));
-      await page.locator(".btn-primary").click();
-    }
-  });
-  });
-
-  test.describe("QR code management", () => {
-    test("QR management page shows cards and is navigable to scanner", async ({ page }) => {
+  test.describe("QR code management with new fields", () => {
+    test("QR management page shows new columns and scanner button", async ({ page }) => {
       await loginAsTenantStaff(page);
 
       await page.goto("/events/1/qr-codes");
@@ -48,9 +57,18 @@ test.describe("Event check-in scanner flow", () => {
 
       await expect(page.locator("h1")).toContainText("QR Codes");
 
-      const cards = page.locator(".qr-card");
-      if (await cards.count() > 0) {
-        await expect(cards.first()).toBeVisible();
+      const scannerBtn = page.locator("button.btn-secondary[title='Open check-in scanner']");
+      if (await scannerBtn.count() > 0) {
+        await expect(scannerBtn).toBeVisible();
+      }
+
+      const headers = page.locator(".data-table th");
+      if ((await headers.count()) > 0) {
+        const headerTexts = await headers.allInnerTexts();
+        expect(headerTexts).toContain("Token Hash");
+        expect(headerTexts).toContain("Attendee");
+        expect(headerTexts).toContain("Usage");
+        expect(headerTexts).toContain("Tier");
       }
     });
   });

@@ -208,12 +208,4 @@ eventBookingService.findByPaymentReference = async (reference, tenantId) => {
   return eventBookingDAO.findByReference(reference, tenantId);
 };
 
-eventBookingService.updateBookingStatus = async (id, tenantId, updates) => {
-  const booking = await eventBookingDAO.findById(id, tenantId);
-  if (!booking) {
-    throw new Error("Booking not found");
-  }
-  return eventBookingDAO.update(id, tenantId, updates);
-};
-
 module.exports = eventBookingService;

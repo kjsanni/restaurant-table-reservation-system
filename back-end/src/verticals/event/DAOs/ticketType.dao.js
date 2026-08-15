@@ -1,6 +1,7 @@
 "use strict";
 
 const db = require("../../../db/models");
+const { Op } = require("sequelize");
 
 const ticketTypeDAO = {};
 

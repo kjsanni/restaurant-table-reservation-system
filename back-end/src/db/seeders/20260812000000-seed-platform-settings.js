@@ -35,8 +35,6 @@ const DEFAULTS = [
 
   { key: "event_qr_secret", value: "", domain: "events", description: "Platform-level HMAC secret for event QR code signing (super-admin managed)" },
   { key: "event_checkin_config", value: { geofenceRadiusMeters: 50, scanRateLimit: 5, deviceBindingTtlHours: 4, recentScanCacheHours: 168 }, domain: "events", description: "Event QR check-in security configuration" },
-  { key: "wallet_pass_signing_price", value: 50.0, domain: "events", description: "Platform price per wallet pass signing request (tenant pays platform directly, no revenue split)" },
-  { key: "wallet_pass_signing_currency", value: "GHS", domain: "events", description: "Currency for wallet pass signing service pricing" },
 
   { key: "platform_brand_name", value: "Restaurant Reservation System", domain: "branding", description: "Platform brand name displayed to tenants and customers" },
   { key: "platform_logo_url", value: "", domain: "branding", description: "URL to platform-wide logo asset" },

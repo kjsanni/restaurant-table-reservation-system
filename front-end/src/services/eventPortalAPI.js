@@ -88,31 +88,12 @@ class EventPortalAPI {
     return API.post(`/events/${eventId}/guests/${guestId}/qr-code`, {});
   }
 
-  checkinToken(token, scannerParams = {}, headers = {}) {
-    return API.post(`/events/checkin/${token}`, scannerParams, { headers });
-  }
-
-  getScannerConfig() {
-    return API.get(`/events/scanner/config`);
+  checkinToken(token, scannerParams = {}) {
+    return API.post(`/events/checkin/${token}`, scannerParams);
   }
 
   verifyToken(token) {
     return API.get(`/events/checkin/${token}/verify`);
-  }
-
-  createWalletPassRequest(eventId) {
-    return API.post(`/events/${eventId}/wallet-passes/request`);
-  }
-
-  listWalletPassRequests(eventId, params = {}) {
-    const qs = new URLSearchParams(params).toString();
-    return API.get(
-      `/events/${eventId}/wallet-passes/requests${qs ? `?${qs}` : ""}`
-    );
-  }
-
-  getWalletPassRequest(eventId, requestId) {
-    return API.get(`/events/${eventId}/wallet-passes/requests/${requestId}`);
   }
 }
 

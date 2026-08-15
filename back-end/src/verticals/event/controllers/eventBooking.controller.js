@@ -38,19 +38,11 @@ const getBookingHandler = async (req, res) => {
 
 const confirmBookingHandler = async (req, res) => {
   try {
-    const { paymentReference, paymentMethod, status } = req.body;
-    const updates = {};
-    if (status) updates.status = status;
-    if (paymentReference) updates.paymentReference = paymentReference;
-    if (paymentMethod) updates.paymentMethod = paymentMethod;
-    if (paymentReference || paymentMethod || status) {
-      updates.paymentStatus = paymentReference ? "paid" : updates.paymentStatus;
-    }
-
-    const booking = await eventBookingService.updateBookingStatus(
+    const booking = await eventBookingService.confirmBooking(
       req.params.id,
       req.tenant?.id,
-      updates
+      req.body.paymentReference,
+      req.body.paymentMethod
     );
     if (!booking) {
       return res.status(404).json({ success: false, message: "Booking not found" });
