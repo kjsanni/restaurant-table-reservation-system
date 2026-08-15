@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const supportNoteDAO = require("../DAOs/supportNote.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -16,7 +18,7 @@ const listNotesHandler = async (req, res) => {
 const createNoteHandler = async (req, res) => {
   const { conversationId, ticketId, body } = req.body;
   if (!body || !conversationId || !ticketId) {
-    return res.status(400).json({ success: false, message: "Body, conversationId, and ticketId are required" });
+    return response.badRequest(res, "Body, conversationId, and ticketId are required");
   }
 
   const mentions = (body.match(/@(\w+)/g) || []).map((m) => m.slice(1));
@@ -46,7 +48,7 @@ const createNoteHandler = async (req, res) => {
 const deleteNoteHandler = async (req, res) => {
   const note = await supportNoteDAO.remove(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!note) {
-    return res.status(404).json({ success: false, message: "Note not found" });
+    return response.notFound(res, "Note not found");
   }
 
   await platformAuditDAO.log(

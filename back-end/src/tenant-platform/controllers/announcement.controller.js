@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const announcementDAO = require("../DAOs/announcement.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -13,7 +15,7 @@ const listAnnouncementsHandler = async (req, res) => {
 const createAnnouncementHandler = async (req, res) => {
   const { title, message, channel, priority, isActive, scheduledAt } = req.body;
   if (!title || !message) {
-    return res.status(400).json({ success: false, message: "title and message are required" });
+    return response.badRequest(res, "title and message are required");
   }
 
   const announcement = await announcementDAO.create({
@@ -50,7 +52,7 @@ const updateAnnouncementHandler = async (req, res) => {
   });
 
   if (!announcement) {
-    return res.status(404).json({ success: false, message: "Announcement not found" });
+    return response.notFound(res, "Announcement not found");
   }
 
   await platformAuditDAO.log(
@@ -69,7 +71,7 @@ const updateAnnouncementHandler = async (req, res) => {
 const deleteAnnouncementHandler = async (req, res) => {
   const announcement = await announcementDAO.remove(req.params.id);
   if (!announcement) {
-    return res.status(404).json({ success: false, message: "Announcement not found" });
+    return response.notFound(res, "Announcement not found");
   }
 
   await platformAuditDAO.log(

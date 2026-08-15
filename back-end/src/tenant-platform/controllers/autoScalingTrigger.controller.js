@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const autoScalingTriggerDAO = require("../DAOs/autoScalingTrigger.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -14,7 +16,7 @@ const listAutoScalingTriggersHandler = async (req, res) => {
 const getAutoScalingTriggerHandler = async (req, res) => {
   const trigger = await autoScalingTriggerDAO.findById(req.params.id);
   if (!trigger) {
-    return res.status(404).json({ success: false, message: "Auto scaling trigger not found" });
+    return response.notFound(res, "Auto scaling trigger not found");
   }
   res.status(200).json({ success: true, item: trigger });
 };
@@ -29,7 +31,7 @@ const createAutoScalingTriggerHandler = async (req, res) => {
   }
 
   if (!data.name || !data.metric || !data.action) {
-    return res.status(400).json({ success: false, message: "name, metric and action are required" });
+    return response.badRequest(res, "name, metric and action are required");
   }
 
   const trigger = await autoScalingTriggerDAO.create(data);
@@ -48,7 +50,7 @@ const createAutoScalingTriggerHandler = async (req, res) => {
 const updateAutoScalingTriggerHandler = async (req, res) => {
   const trigger = await autoScalingTriggerDAO.findById(req.params.id);
   if (!trigger) {
-    return res.status(404).json({ success: false, message: "Auto scaling trigger not found" });
+    return response.notFound(res, "Auto scaling trigger not found");
   }
 
   const allowed = ["name", "metric", "operator", "threshold", "action", "minInstances", "maxInstances", "cooldownMinutes", "isActive"];
@@ -75,7 +77,7 @@ const updateAutoScalingTriggerHandler = async (req, res) => {
 const deleteAutoScalingTriggerHandler = async (req, res) => {
   const trigger = await autoScalingTriggerDAO.remove(req.params.id);
   if (!trigger) {
-    return res.status(404).json({ success: false, message: "Auto scaling trigger not found" });
+    return response.notFound(res, "Auto scaling trigger not found");
   }
   await platformAuditDAO.log(
     req.user.id,

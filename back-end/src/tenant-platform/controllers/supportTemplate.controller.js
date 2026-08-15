@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -16,7 +18,7 @@ const listTemplatesHandler = async (req, res) => {
 const createTemplateHandler = async (req, res) => {
   const { title, body, category } = req.body;
   if (!title || !body) {
-    return res.status(400).json({ success: false, message: "Title and body are required" });
+    return response.badRequest(res, "Title and body are required");
   }
 
   const templates = await loadTemplates();
@@ -54,7 +56,7 @@ const updateTemplateHandler = async (req, res) => {
   const templates = await loadTemplates();
   const index = templates.findIndex((t) => t.id === parseInt(req.params.id, 10));
   if (index === -1) {
-    return res.status(404).json({ success: false, message: "Template not found" });
+    return response.notFound(res, "Template not found");
   }
 
   const previous = { ...templates[index] };
@@ -90,7 +92,7 @@ const deleteTemplateHandler = async (req, res) => {
   const templates = await loadTemplates();
   const index = templates.findIndex((t) => t.id === parseInt(req.params.id, 10));
   if (index === -1) {
-    return res.status(404).json({ success: false, message: "Template not found" });
+    return response.notFound(res, "Template not found");
   }
 
   const removed = templates.splice(index, 1)[0];

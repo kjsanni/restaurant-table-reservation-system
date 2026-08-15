@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const tenantMigrationStatusDAO = require("../DAOs/tenantMigrationStatus.dao");
 const tenantMigrationService = require("../services/tenantMigration.service");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
@@ -18,7 +20,7 @@ const listTenantMigrationsHandler = async (req, res) => {
 const getTenantMigrationHandler = async (req, res) => {
   const record = await tenantMigrationStatusDAO.findById(req.params.id);
   if (!record) {
-    return res.status(404).json({ success: false, message: "Migration record not found" });
+    return response.notFound(res, "Migration record not found");
   }
   res.status(200).json({ success: true, item: record });
 };
@@ -34,7 +36,7 @@ const enqueueTenantMigrationHandler = async (req, res) => {
   const { migrationName, metadata } = req.body;
 
   if (!migrationName || typeof migrationName !== "string") {
-    return res.status(400).json({ success: false, message: "migrationName is required" });
+    return response.badRequest(res, "migrationName is required");
   }
 
   const record = await tenantMigrationService.enqueue({
@@ -53,7 +55,7 @@ const runTenantMigrationHandler = async (req, res) => {
   const { runner } = req.body;
 
   if (typeof runner !== "function") {
-    return res.status(400).json({ success: false, message: "runner function is required in request body" });
+    return response.badRequest(res, "runner function is required in request body");
   }
 
   const result = await tenantMigrationService.run(id, runner, req.user?.id, req.ip);
@@ -71,7 +73,7 @@ const resumeTenantMigrationHandler = async (req, res) => {
   const { runner } = req.body;
 
   if (typeof runner !== "function") {
-    return res.status(400).json({ success: false, message: "runner function is required in request body" });
+    return response.badRequest(res, "runner function is required in request body");
   }
 
   const result = await tenantMigrationService.resume(id, runner, req.user?.id, req.ip);

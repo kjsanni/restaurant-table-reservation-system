@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const authDAO = require("../../DAOs/auth.dao");
@@ -25,7 +27,7 @@ const listIncidentsHandler = async (req, res) => {
 const createIncidentHandler = async (req, res) => {
   const { title, description, severity, affectedTenantIds, metadata } = req.body;
   if (!title) {
-    return res.status(400).json({ success: false, message: "title is required" });
+    return response.badRequest(res, "title is required");
   }
 
   const incident = await db.incident.create({
@@ -54,7 +56,7 @@ const createIncidentHandler = async (req, res) => {
 const updateIncidentHandler = async (req, res) => {
   const incident = await db.incident.findByPk(req.params.id);
   if (!incident) {
-    return res.status(404).json({ success: false, message: "Incident not found" });
+    return response.notFound(res, "Incident not found");
   }
 
   const allowed = ["status", "severity", "title", "description", "affectedTenantIds", "metadata"];
@@ -88,7 +90,7 @@ const updateIncidentHandler = async (req, res) => {
 const deleteIncidentHandler = async (req, res) => {
   const incident = await db.incident.findByPk(req.params.id);
   if (!incident) {
-    return res.status(404).json({ success: false, message: "Incident not found" });
+    return response.notFound(res, "Incident not found");
   }
 
   await incident.destroy();
@@ -109,7 +111,7 @@ const deleteIncidentHandler = async (req, res) => {
 const lockTenantHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   await tenant.update({ status: "suspended", suspendedReason: "Locked by platform admin via incident response" });
@@ -130,7 +132,7 @@ const lockTenantHandler = async (req, res) => {
 const resetTenantTokensHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const users = await authDAO.getAllUsers(tenant.id);
@@ -155,7 +157,7 @@ const resetTenantTokensHandler = async (req, res) => {
 const forceLogoutTenantHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const users = await authDAO.getAllUsers(tenant.id);

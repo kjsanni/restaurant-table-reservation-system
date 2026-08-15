@@ -1,15 +1,17 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const createPostmortemHandler = async (req, res) => {
   const { incidentId, summary, rootCause, impact, remediation, followUpActions } = req.body;
   if (!incidentId || !summary) {
-    return res.status(400).json({ success: false, message: "incidentId and summary are required" });
+    return response.badRequest(res, "incidentId and summary are required");
   }
 
   const incident = await db.incident.findByPk(incidentId);
   if (!incident) {
-    return res.status(404).json({ success: false, message: "Incident not found" });
+    return response.notFound(res, "Incident not found");
   }
 
   const postmortem = await db.incidentPostmortem.create({

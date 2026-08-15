@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const authDAO = require("../../DAOs/auth.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
@@ -36,7 +38,7 @@ const revokeSessionHandler = async (req, res) => {
   });
 
   if (!token) {
-    return res.status(404).json({ success: false, message: "Session not found" });
+    return response.notFound(res, "Session not found");
   }
 
   await token.update({ isRevoked: true });

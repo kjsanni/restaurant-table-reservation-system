@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 "use strict";
 
 const db = require("../../db/models");
@@ -20,7 +22,7 @@ const resolveTenantById = async (id) => {
 const getErpnextTenantHandler = async (req, res) => {
   const tenant = await resolveTenantById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const featureFlags = tenant.settings?.featureFlags || {};
   const erpnextModules = getEnabledModules(featureFlags);
@@ -39,12 +41,12 @@ const getErpnextTenantHandler = async (req, res) => {
 const provisionErpnextModuleHandler = async (req, res) => {
   const tenant = await resolveTenantById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const { module: moduleFlag } = req.body;
 
   if (!moduleFlag) {
-    return res.status(400).json({ success: false, message: "module is required" });
+    return response.badRequest(res, "module is required");
   }
 
   const metadata = getModuleMetadata(moduleFlag);
@@ -91,12 +93,12 @@ const provisionErpnextModuleHandler = async (req, res) => {
 const deprovisionErpnextModuleHandler = async (req, res) => {
   const tenant = await resolveTenantById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const { module: moduleFlag } = req.body;
 
   if (!moduleFlag) {
-    return res.status(400).json({ success: false, message: "module is required" });
+    return response.badRequest(res, "module is required");
   }
 
   const metadata = getModuleMetadata(moduleFlag);
@@ -185,7 +187,7 @@ const listErpnextTenantsHandler = async (req, res) => {
 const triggerSyncHandler = async (req, res) => {
   const tenant = await resolveTenantById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const { syncType = "full" } = req.body;
   const validTypes = ["full", "customers", "invoices", "payments", "items", "stock", "employees", "crm"];
@@ -197,7 +199,7 @@ const triggerSyncHandler = async (req, res) => {
   const featureFlags = tenant.settings?.featureFlags || {};
   const hasErpnext = Object.keys(featureFlags).some((k) => k.startsWith("erpnext_") && featureFlags[k]);
   if (!hasErpnext) {
-    return res.status(403).json({ success: false, message: "No ERPNext modules enabled for this tenant" });
+    return response.forbidden(res, "No ERPNext modules enabled for this tenant");
   }
 
   const orchestrator = require("../../integrations/erpnext/sync/orchestrator");
@@ -230,7 +232,7 @@ const triggerSyncHandler = async (req, res) => {
 const getSyncStatusHandler = async (req, res) => {
   const tenant = await resolveTenantById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const onboardingStatus = tenant.settings?.erpnextOnboardingStatus || {};
   const lastSync = tenant.settings?.erpnextLastSync || null;

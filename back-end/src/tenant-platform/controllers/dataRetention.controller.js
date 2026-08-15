@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -19,7 +21,7 @@ const listRetentionPoliciesHandler = async (req, res) => {
 const createRetentionPolicyHandler = async (req, res) => {
   const { name, dataCategory, retentionDays, action } = req.body;
   if (!name || !dataCategory || !retentionDays) {
-    return res.status(400).json({ success: false, message: "name, dataCategory, and retentionDays are required" });
+    return response.badRequest(res, "name, dataCategory, and retentionDays are required");
   }
 
   const policy = await db.dataRetentionPolicy.create({
@@ -46,7 +48,7 @@ const createRetentionPolicyHandler = async (req, res) => {
 const updateRetentionPolicyHandler = async (req, res) => {
   const policy = await db.dataRetentionPolicy.findByPk(req.params.id);
   if (!policy) {
-    return res.status(404).json({ success: false, message: "Policy not found" });
+    return response.notFound(res, "Policy not found");
   }
 
   const allowed = ["name", "dataCategory", "retentionDays", "action", "isActive"];
@@ -75,7 +77,7 @@ const updateRetentionPolicyHandler = async (req, res) => {
 const deleteRetentionPolicyHandler = async (req, res) => {
   const policy = await db.dataRetentionPolicy.findByPk(req.params.id);
   if (!policy) {
-    return res.status(404).json({ success: false, message: "Policy not found" });
+    return response.notFound(res, "Policy not found");
   }
 
   await policy.destroy();

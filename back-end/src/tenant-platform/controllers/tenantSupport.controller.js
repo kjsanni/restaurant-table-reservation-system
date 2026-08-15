@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const supportTicketDAO = require("../DAOs/supportTicket.dao");
 const supportTicketMessageDAO = require("../DAOs/supportTicketMessage.dao");
 const supportAttachmentDAO = require("../DAOs/supportAttachment.dao");
@@ -12,7 +14,7 @@ const listMyTicketsHandler = async (req, res) => {
   const { status, category, limit } = req.query;
   const tenantId = req.tenant?.id;
   if (!tenantId) {
-    return res.status(403).json({ success: false, message: "Tenant context required" });
+    return response.forbidden(res, "Tenant context required");
   }
 
   const data = await supportTicketDAO.list({
@@ -27,7 +29,7 @@ const listMyTicketsHandler = async (req, res) => {
 const getTicketHandler = async (req, res) => {
   const ticket = await supportTicketDAO.findById(req.params.id, req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
   res.status(200).json({ success: true, item: ticket });
 };
@@ -35,7 +37,7 @@ const getTicketHandler = async (req, res) => {
 const createTicketHandler = async (req, res) => {
   const { subject, message, priority, category } = req.body;
   if (!subject || !message) {
-    return res.status(400).json({ success: false, message: "Subject and message are required" });
+    return response.badRequest(res, "Subject and message are required");
   }
 
   const ticket = await supportTicketDAO.create({
@@ -88,7 +90,7 @@ const updateTicketHandler = async (req, res) => {
 
   const ticket = await supportTicketDAO.update(req.params.id, updates, req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   await platformAuditDAO.log(
@@ -107,7 +109,7 @@ const updateTicketHandler = async (req, res) => {
 const listMessagesHandler = async (req, res) => {
   const ticket = await supportTicketDAO.findById(req.params.id, req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   const messages = await supportTicketMessageDAO.list({ ticketId: ticket.id });
@@ -117,16 +119,16 @@ const listMessagesHandler = async (req, res) => {
 const sendMessageHandler = async (req, res) => {
   const { body } = req.body;
   if (!body) {
-    return res.status(400).json({ success: false, message: "Message body is required" });
+    return response.badRequest(res, "Message body is required");
   }
 
   const ticket = await supportTicketDAO.findById(req.params.id, req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   if (ticket.status === "closed") {
-    return res.status(400).json({ success: false, message: "Cannot reply to a closed ticket" });
+    return response.badRequest(res, "Cannot reply to a closed ticket");
   }
 
   const message = await supportTicketMessageDAO.create({
@@ -164,7 +166,7 @@ const listAttachmentsHandler = async (req, res) => {
   const { ticketId } = req.query;
   const tenantId = req.tenant?.id;
   if (!tenantId) {
-    return res.status(403).json({ success: false, message: "Tenant context required" });
+    return response.forbidden(res, "Tenant context required");
   }
 
   const data = await supportAttachmentDAO.list({
@@ -179,7 +181,7 @@ const createAttachmentHandler = async (req, res) => {
   const file = req.file;
   const { ticketId } = req.body;
   if (!file) {
-    return res.status(400).json({ success: false, message: "File is required" });
+    return response.badRequest(res, "File is required");
   }
 
   const attachment = await supportAttachmentDAO.create({
@@ -212,11 +214,11 @@ const downloadAttachmentHandler = async (req, res) => {
   const resolvedPath = path.resolve(filePath); // codacy-suppress path-traversal
 
   if (!resolvedPath.startsWith(path.resolve(UPLOAD_DIR))) {
-    return res.status(400).json({ success: false, message: "Invalid file path" });
+    return response.badRequest(res, "Invalid file path");
   }
 
   if (!fs.existsSync(resolvedPath)) { // codacy-suppress path-traversal
-    return res.status(404).json({ success: false, message: "File not found" });
+    return response.notFound(res, "File not found");
   }
 
   res.download(resolvedPath, filename, (err) => {
@@ -229,7 +231,7 @@ const downloadAttachmentHandler = async (req, res) => {
 const deleteAttachmentHandler = async (req, res) => {
   const attachment = await supportAttachmentDAO.remove(req.params.id, req.tenant?.id);
   if (!attachment) {
-    return res.status(404).json({ success: false, message: "Attachment not found" });
+    return response.notFound(res, "Attachment not found");
   }
 
   const filePath = path.join(UPLOAD_DIR, path.basename(attachment.filename || "")); // codacy-suppress path-traversal

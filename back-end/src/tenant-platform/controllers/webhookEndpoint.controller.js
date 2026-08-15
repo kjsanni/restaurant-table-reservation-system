@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const webhookEndpointDAO = require("../DAOs/webhookEndpoint.dao");
 const { validateWebhookUrl } = require("../services/webhookNotification.service");
 
@@ -10,13 +12,13 @@ const createWebhookEndpointHandler = async (req, res) => {
   const { url, events, secret } = req.body;
 
   if (!url || !events || !Array.isArray(events) || events.length === 0) {
-    return res.status(400).json({ success: false, message: "url and events array are required" });
+    return response.badRequest(res, "url and events array are required");
   }
 
   try {
     await validateWebhookUrl(url);
   } catch (err) {
-    return res.status(400).json({ success: false, message: err.message });
+    return response.badRequest(res, err.message);
   }
 
   const endpoint = await webhookEndpointDAO.create({
@@ -33,7 +35,7 @@ const createWebhookEndpointHandler = async (req, res) => {
 const updateWebhookEndpointHandler = async (req, res) => {
   const endpoint = await webhookEndpointDAO.findById(req.params.id, req.tenant?.id);
   if (!endpoint) {
-    return res.status(404).json({ success: false, message: "Webhook endpoint not found" });
+    return response.notFound(res, "Webhook endpoint not found");
   }
 
   const allowed = ["url", "events", "secret", "isActive"];
@@ -48,7 +50,7 @@ const updateWebhookEndpointHandler = async (req, res) => {
     try {
       await validateWebhookUrl(updates.url);
     } catch (err) {
-      return res.status(400).json({ success: false, message: err.message });
+      return response.badRequest(res, err.message);
     }
   }
 
@@ -59,7 +61,7 @@ const updateWebhookEndpointHandler = async (req, res) => {
 const deleteWebhookEndpointHandler = async (req, res) => {
   const endpoint = await webhookEndpointDAO.findById(req.params.id, req.tenant?.id);
   if (!endpoint) {
-    return res.status(404).json({ success: false, message: "Webhook endpoint not found" });
+    return response.notFound(res, "Webhook endpoint not found");
   }
 
   await webhookEndpointDAO.remove(req.params.id, req.tenant?.id);

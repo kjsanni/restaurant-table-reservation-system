@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const notificationTemplateDAO = require("../DAOs/notificationTemplate.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -13,7 +15,7 @@ const listTemplatesHandler = async (req, res) => {
 const createTemplateHandler = async (req, res) => {
   const { key, channel, subject, body, isActive } = req.body;
   if (!key || !channel || !body) {
-    return res.status(400).json({ success: false, message: "key, channel, and body are required" });
+    return response.badRequest(res, "key, channel, and body are required");
   }
 
   const existing = await notificationTemplateDAO.findByKey(key);
@@ -51,7 +53,7 @@ const updateTemplateHandler = async (req, res) => {
   });
 
   if (!template) {
-    return res.status(404).json({ success: false, message: "Template not found" });
+    return response.notFound(res, "Template not found");
   }
 
   await platformAuditDAO.log(
@@ -70,7 +72,7 @@ const updateTemplateHandler = async (req, res) => {
 const deleteTemplateHandler = async (req, res) => {
   const template = await notificationTemplateDAO.remove(req.params.id);
   if (!template) {
-    return res.status(404).json({ success: false, message: "Template not found" });
+    return response.notFound(res, "Template not found");
   }
 
   await platformAuditDAO.log(

@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const platformReportDAO = require("../DAOs/platformReport.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const { reportQueue, safeAdd } = require("../../queues/queue");
@@ -16,7 +18,7 @@ const listPlatformReportsHandler = async (req, res) => {
 const createPlatformReportHandler = async (req, res) => {
   const { name, reportType, format, filters, schedule } = req.body;
   if (!name || !reportType || !format) {
-    return res.status(400).json({ success: false, message: "name, reportType, and format are required" });
+    return response.badRequest(res, "name, reportType, and format are required");
   }
 
   const report = await platformReportDAO.create({
@@ -57,7 +59,7 @@ const createPlatformReportHandler = async (req, res) => {
 const getPlatformReportHandler = async (req, res) => {
   const report = await platformReportDAO.findById(req.params.id);
   if (!report) {
-    return res.status(404).json({ success: false, message: "Report not found" });
+    return response.notFound(res, "Report not found");
   }
   res.status(200).json({ success: true, item: report });
 };
@@ -65,7 +67,7 @@ const getPlatformReportHandler = async (req, res) => {
 const downloadPlatformReportHandler = async (req, res) => {
   const report = await platformReportDAO.findById(req.params.id);
   if (!report) {
-    return res.status(404).json({ success: false, message: "Report not found" });
+    return response.notFound(res, "Report not found");
   }
 
   const filters = report.filters || {};
@@ -100,7 +102,7 @@ const downloadPlatformReportHandler = async (req, res) => {
       return;
     }
 
-    return res.status(400).json({ success: false, message: "Unsupported format" });
+    return response.badRequest(res, "Unsupported format");
   } catch (err) {
     await platformReportDAO.update(report.id, {
       status: "failed",
@@ -113,7 +115,7 @@ const downloadPlatformReportHandler = async (req, res) => {
 const deletePlatformReportHandler = async (req, res) => {
   const report = await platformReportDAO.remove(req.params.id);
   if (!report) {
-    return res.status(404).json({ success: false, message: "Report not found" });
+    return response.notFound(res, "Report not found");
   }
 
   await platformAuditDAO.log(

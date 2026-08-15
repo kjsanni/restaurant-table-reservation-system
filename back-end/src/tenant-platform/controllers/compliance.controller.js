@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const legalAcceptanceDAO = require("../DAOs/legalAcceptance.dao");
 const dsarRequestDAO = require("../DAOs/dsarRequest.dao");
@@ -44,12 +46,12 @@ const autoFulfillSimpleDsarHandler = async (req, res) => {
   const { requestId } = req.body;
 
   if (!requestId) {
-    return res.status(400).json({ success: false, message: "requestId is required" });
+    return response.badRequest(res, "requestId is required");
   }
 
   const record = await dsarRequestDAO.findById(requestId);
   if (!record) {
-    return res.status(404).json({ success: false, message: "DSAR request not found" });
+    return response.notFound(res, "DSAR request not found");
   }
 
   if (record.status !== "pending") {

@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const encryptionKeyDAO = require("../DAOs/encryptionKey.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -14,7 +16,7 @@ const listEncryptionKeysHandler = async (req, res) => {
 const getEncryptionKeyHandler = async (req, res) => {
   const key = await encryptionKeyDAO.findById(req.params.id);
   if (!key) {
-    return res.status(404).json({ success: false, message: "Encryption key not found" });
+    return response.notFound(res, "Encryption key not found");
   }
   res.status(200).json({ success: true, item: key });
 };
@@ -28,7 +30,7 @@ const createEncryptionKeyHandler = async (req, res) => {
     }
   }
   if (!data.name) {
-    return res.status(400).json({ success: false, message: "name is required" });
+    return response.badRequest(res, "name is required");
   }
   const key = await encryptionKeyDAO.create(data);
   await platformAuditDAO.log(
@@ -46,7 +48,7 @@ const createEncryptionKeyHandler = async (req, res) => {
 const rotateEncryptionKeyHandler = async (req, res) => {
   const key = await encryptionKeyDAO.findById(req.params.id);
   if (!key) {
-    return res.status(404).json({ success: false, message: "Encryption key not found" });
+    return response.notFound(res, "Encryption key not found");
   }
 
   const updated = await encryptionKeyDAO.update(key.id, {
@@ -71,7 +73,7 @@ const rotateEncryptionKeyHandler = async (req, res) => {
 const retireEncryptionKeyHandler = async (req, res) => {
   const key = await encryptionKeyDAO.findById(req.params.id);
   if (!key) {
-    return res.status(404).json({ success: false, message: "Encryption key not found" });
+    return response.notFound(res, "Encryption key not found");
   }
 
   const updated = await encryptionKeyDAO.update(key.id, {
@@ -94,7 +96,7 @@ const retireEncryptionKeyHandler = async (req, res) => {
 const deleteEncryptionKeyHandler = async (req, res) => {
   const key = await encryptionKeyDAO.remove(req.params.id);
   if (!key) {
-    return res.status(404).json({ success: false, message: "Encryption key not found" });
+    return response.notFound(res, "Encryption key not found");
   }
   await platformAuditDAO.log(
     req.user.id,

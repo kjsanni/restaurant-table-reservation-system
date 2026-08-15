@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const provisioningService = require("../services/provisioning.service");
 const { enqueueProvisioning } = require("../../queues/provisioning.queue");
 
@@ -29,7 +31,7 @@ const rollbackProvisioningHandler = async (req, res) => {
 const getProvisioningStatusHandler = async (req, res) => {
   const status = provisioningService.getProvisioningStatus(req.params.tenantId);
   if (!status) {
-    return res.status(404).json({ success: false, message: "Provisioning not found for this tenant" });
+    return response.notFound(res, "Provisioning not found for this tenant");
   }
   res.status(200).json({ success: true, item: status });
 };
@@ -53,7 +55,7 @@ const retryDLQEntryHandler = async (req, res) => {
     res.status(202).json({ success: true, message: "DLQ job re-enqueued", data: result });
   } catch (err) {
     if (err.status === 404) {
-      return res.status(404).json({ success: false, message: err.message });
+      return response.notFound(res, err.message);
     }
     throw err;
   }

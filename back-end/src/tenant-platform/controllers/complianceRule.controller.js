@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const complianceRuleDAO = require("../DAOs/complianceRule.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -12,7 +14,7 @@ const listRulesHandler = async (req, res) => {
 const createRuleHandler = async (req, res) => {
   const { vertical, ruleKey, label, description, required, frequency } = req.body;
   if (!vertical || !ruleKey || !label) {
-    return res.status(400).json({ success: false, message: "vertical, ruleKey, and label are required" });
+    return response.badRequest(res, "vertical, ruleKey, and label are required");
   }
 
   const rule = await complianceRuleDAO.create({
@@ -47,7 +49,7 @@ const updateRuleHandler = async (req, res) => {
   });
 
   if (!rule) {
-    return res.status(404).json({ success: false, message: "Rule not found" });
+    return response.notFound(res, "Rule not found");
   }
 
   await platformAuditDAO.log(
@@ -66,7 +68,7 @@ const updateRuleHandler = async (req, res) => {
 const deleteRuleHandler = async (req, res) => {
   const rule = await complianceRuleDAO.remove(req.params.id);
   if (!rule) {
-    return res.status(404).json({ success: false, message: "Rule not found" });
+    return response.notFound(res, "Rule not found");
   }
 
   await platformAuditDAO.log(

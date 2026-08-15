@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const dsarRequestDAO = require("../DAOs/dsarRequest.dao");
 const { DSAR_REQUEST_TYPES } = require("./dsarRequest.controller");
@@ -6,7 +8,7 @@ const submitHandler = async (req, res) => {
   const { tenantSlug, requestType, requestData } = req.body;
 
   if (!tenantSlug) {
-    return res.status(400).json({ success: false, message: "tenantSlug is required" });
+    return response.badRequest(res, "tenantSlug is required");
   }
   if (!requestType || !DSAR_REQUEST_TYPES.includes(requestType)) {
     return res.status(400).json({
@@ -17,7 +19,7 @@ const submitHandler = async (req, res) => {
 
   const tenant = await db.tenant.findOne({ where: { slug: tenantSlug } });
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const record = await dsarRequestDAO.create({

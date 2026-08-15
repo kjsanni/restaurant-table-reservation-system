@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const usageDAO = require("../DAOs/usage.dao");
 const usageEventDAO = require("../DAOs/usageEvent.dao");
 
@@ -10,7 +12,7 @@ const listTenantUsageHandler = async (req, res) => {
 const getTenantUsageHandler = async (req, res) => {
   const data = await usageDAO.getTenantUsage(req.params.id);
   if (!data) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   res.status(200).json({ success: true, item: data });
 };

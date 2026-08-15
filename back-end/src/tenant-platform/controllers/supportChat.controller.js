@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const supportConversationDAO = require("../DAOs/supportConversation.dao");
 const supportMessageDAO = require("../DAOs/supportMessage.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
@@ -17,7 +19,7 @@ const listConversationsHandler = async (req, res) => {
 const getConversationHandler = async (req, res) => {
   const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
   res.status(200).json({ success: true, item: conversation });
 };
@@ -25,7 +27,7 @@ const getConversationHandler = async (req, res) => {
 const createConversationHandler = async (req, res) => {
   const { subject, message, priority } = req.body;
   if (!message) {
-    return res.status(400).json({ success: false, message: "Message is required" });
+    return response.badRequest(res, "Message is required");
   }
 
   const conversation = await supportConversationDAO.create({
@@ -68,7 +70,7 @@ const updateConversationHandler = async (req, res) => {
 
   const conversation = await supportConversationDAO.update(req.params.id, updates, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
   await platformAuditDAO.log(
@@ -87,7 +89,7 @@ const updateConversationHandler = async (req, res) => {
 const deleteConversationHandler = async (req, res) => {
   const conversation = await supportConversationDAO.remove(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
   await platformAuditDAO.log(
@@ -106,7 +108,7 @@ const deleteConversationHandler = async (req, res) => {
 const listMessagesHandler = async (req, res) => {
   const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
   const messages = await supportMessageDAO.list(conversation.id);
@@ -116,12 +118,12 @@ const listMessagesHandler = async (req, res) => {
 const sendMessageHandler = async (req, res) => {
   const { body } = req.body;
   if (!body) {
-    return res.status(400).json({ success: false, message: "Message body is required" });
+    return response.badRequest(res, "Message body is required");
   }
 
   const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
   const message = await supportMessageDAO.create({
@@ -149,7 +151,7 @@ const sendMessageHandler = async (req, res) => {
 const autoAssignConversationHandler = async (req, res) => {
   const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
   if (conversation.assignedTo) {
@@ -196,12 +198,12 @@ const autoAssignConversationHandler = async (req, res) => {
 const submitCsatHandler = async (req, res) => {
   const { rating, feedback } = req.body;
   if (!rating || rating < 1 || rating > 5) {
-    return res.status(400).json({ success: false, message: "Rating must be between 1 and 5" });
+    return response.badRequest(res, "Rating must be between 1 and 5");
   }
 
   const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
   await supportConversationDAO.update(req.params.id, { csatRating: rating, csatFeedback: feedback || null }, req.user?.isSuperAdmin ? null : req.tenant?.id);

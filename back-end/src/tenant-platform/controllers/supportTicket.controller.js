@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const supportTicketDAO = require("../DAOs/supportTicket.dao");
 const supportTicketMessageDAO = require("../DAOs/supportTicketMessage.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
@@ -19,7 +21,7 @@ const listSupportTicketsHandler = async (req, res) => {
 const getSupportTicketHandler = async (req, res) => {
   const ticket = await supportTicketDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
   res.status(200).json({ success: true, item: ticket });
 };
@@ -27,7 +29,7 @@ const getSupportTicketHandler = async (req, res) => {
 const createSupportTicketHandler = async (req, res) => {
   const { subject, message, priority, category } = req.body;
   if (!subject || !message) {
-    return res.status(400).json({ success: false, message: "Subject and message are required" });
+    return response.badRequest(res, "Subject and message are required");
   }
   try {
     const ticket = await supportTicketDAO.create({
@@ -85,7 +87,7 @@ const updateSupportTicketHandler = async (req, res) => {
   const existingTicket = await supportTicketDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   const ticket = await supportTicketDAO.update(req.params.id, updates, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   if (updates.assignedTo && updates.assignedTo !== existingTicket.assignedTo) {
@@ -121,7 +123,7 @@ const updateSupportTicketHandler = async (req, res) => {
 const deleteSupportTicketHandler = async (req, res) => {
   const ticket = await supportTicketDAO.remove(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   await platformAuditDAO.log(
@@ -140,7 +142,7 @@ const deleteSupportTicketHandler = async (req, res) => {
 const listTicketMessagesHandler = async (req, res) => {
   const ticket = await supportTicketDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   const messages = await supportTicketMessageDAO.list({ ticketId: ticket.id });
@@ -150,12 +152,12 @@ const listTicketMessagesHandler = async (req, res) => {
 const sendTicketMessageHandler = async (req, res) => {
   const { body } = req.body;
   if (!body) {
-    return res.status(400).json({ success: false, message: "Message body is required" });
+    return response.badRequest(res, "Message body is required");
   }
 
   const ticket = await supportTicketDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   const message = await supportTicketMessageDAO.create({
@@ -211,7 +213,7 @@ let roundRobinIndex = 0;
 const autoAssignTicketHandler = async (req, res) => {
   const ticket = await supportTicketDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   const agents = await db.user.findAll({
@@ -221,7 +223,7 @@ const autoAssignTicketHandler = async (req, res) => {
   });
 
   if (!agents.length) {
-    return res.status(404).json({ success: false, message: "No available agents for auto-assignment" });
+    return response.notFound(res, "No available agents for auto-assignment");
   }
 
   const agentLoads = await Promise.all(

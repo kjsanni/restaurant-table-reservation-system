@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const subProcessorDAO = require("../DAOs/subProcessor.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -13,7 +15,7 @@ const listSubProcessorsHandler = async (req, res) => {
 const createSubProcessorHandler = async (req, res) => {
   const { name, category, country, dataTypes, purpose, isActive } = req.body;
   if (!name) {
-    return res.status(400).json({ success: false, message: "name is required" });
+    return response.badRequest(res, "name is required");
   }
 
   const processor = await subProcessorDAO.create({
@@ -50,7 +52,7 @@ const updateSubProcessorHandler = async (req, res) => {
   });
 
   if (!processor) {
-    return res.status(404).json({ success: false, message: "Sub-processor not found" });
+    return response.notFound(res, "Sub-processor not found");
   }
 
   await platformAuditDAO.log(
@@ -69,7 +71,7 @@ const updateSubProcessorHandler = async (req, res) => {
 const deleteSubProcessorHandler = async (req, res) => {
   const processor = await subProcessorDAO.remove(req.params.id);
   if (!processor) {
-    return res.status(404).json({ success: false, message: "Sub-processor not found" });
+    return response.notFound(res, "Sub-processor not found");
   }
 
   await platformAuditDAO.log(

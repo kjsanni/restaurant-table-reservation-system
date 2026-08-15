@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const insuranceDocumentDAO = require("../DAOs/insuranceDocument.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -13,7 +15,7 @@ const listInsuranceDocumentsHandler = async (req, res) => {
 const getInsuranceDocumentHandler = async (req, res) => {
   const document = await insuranceDocumentDAO.findById(req.params.id);
   if (!document) {
-    return res.status(404).json({ success: false, message: "Insurance document not found" });
+    return response.notFound(res, "Insurance document not found");
   }
   res.status(200).json({ success: true, item: document });
 };
@@ -35,7 +37,7 @@ const createInsuranceDocumentHandler = async (req, res) => {
 const updateInsuranceDocumentHandler = async (req, res) => {
   const document = await insuranceDocumentDAO.update(req.params.id, req.body);
   if (!document) {
-    return res.status(404).json({ success: false, message: "Insurance document not found" });
+    return response.notFound(res, "Insurance document not found");
   }
   await platformAuditDAO.log(
     req.user.id,
@@ -52,7 +54,7 @@ const updateInsuranceDocumentHandler = async (req, res) => {
 const deleteInsuranceDocumentHandler = async (req, res) => {
   const document = await insuranceDocumentDAO.remove(req.params.id);
   if (!document) {
-    return res.status(404).json({ success: false, message: "Insurance document not found" });
+    return response.notFound(res, "Insurance document not found");
   }
   await platformAuditDAO.log(
     req.user.id,

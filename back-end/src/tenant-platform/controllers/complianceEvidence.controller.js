@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const complianceEvidenceDAO = require("../DAOs/complianceEvidence.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -15,7 +17,7 @@ const listComplianceEvidenceHandler = async (req, res) => {
 const getComplianceEvidenceHandler = async (req, res) => {
   const item = await complianceEvidenceDAO.findById(req.params.id);
   if (!item) {
-    return res.status(404).json({ success: false, message: "Compliance evidence not found" });
+    return response.notFound(res, "Compliance evidence not found");
   }
   res.status(200).json({ success: true, item });
 };
@@ -30,7 +32,7 @@ const createComplianceEvidenceHandler = async (req, res) => {
   }
 
   if (!data.framework || !data.controlId || !data.title) {
-    return res.status(400).json({ success: false, message: "framework, controlId and title are required" });
+    return response.badRequest(res, "framework, controlId and title are required");
   }
 
   const item = await complianceEvidenceDAO.create(data);
@@ -49,7 +51,7 @@ const createComplianceEvidenceHandler = async (req, res) => {
 const updateComplianceEvidenceHandler = async (req, res) => {
   const item = await complianceEvidenceDAO.findById(req.params.id);
   if (!item) {
-    return res.status(404).json({ success: false, message: "Compliance evidence not found" });
+    return response.notFound(res, "Compliance evidence not found");
   }
 
   const allowed = ["framework", "controlId", "title", "description", "status", "owner", "dueDate", "evidenceUrl", "notes"];
@@ -76,7 +78,7 @@ const updateComplianceEvidenceHandler = async (req, res) => {
 const deleteComplianceEvidenceHandler = async (req, res) => {
   const item = await complianceEvidenceDAO.remove(req.params.id);
   if (!item) {
-    return res.status(404).json({ success: false, message: "Compliance evidence not found" });
+    return response.notFound(res, "Compliance evidence not found");
   }
   await platformAuditDAO.log(
     req.user.id,
