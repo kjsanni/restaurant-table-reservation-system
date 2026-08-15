@@ -75,7 +75,7 @@ const deletePlanHandler = async (req, res) => {
     return response.notFound(res, "Plan not found");
   }
 
-  const tenantCount = await db.tenant.count({ where: { plan: plan.slug } }); // nosemgrep // codacy-suppress nosql-injection
+  const tenantCount = await db.tenant.count({ where: { plan: plan.slug } }); // nosemgrep: javascript.express.security.injection.tainted-sql-string.tainted-sql-string
   if (tenantCount > 0) {
     return res.status(409).json({
       success: false,
