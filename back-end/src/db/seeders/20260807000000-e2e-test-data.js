@@ -20,12 +20,15 @@ const ensureUser = async (queryInterface, tenantId, email, role, extra = {}) => 
     { replacements: { email, tenantId }, type: queryInterface.sequelize.QueryTypes.SELECT }
   );
 
+  console.log("[SEED DEBUG] ensureUser:", { email, tenantId, existing: existing ? { id: existing.id } : null });
+
   if (existing) {
     if (email === "admin@rtrs.com") {
       await queryInterface.sequelize.query(
         "UPDATE users SET password = :password, isSuperAdmin = true, platformRoles = :platformRoles, totpEnabled = false, totpConfirmed = false, emailVerified = true, updatedAt = :now WHERE id = :id",
         { replacements: { password: extra.password, platformRoles: JSON.stringify(["platform_admin"]), now: new Date(), id: existing.id } }
       );
+      console.log("[SEED DEBUG] UPDATE admin user:", { id: existing.id, emailVerified: true });
     } else if (email === "akua@demo.test") {
       await queryInterface.sequelize.query(
         "UPDATE users SET password = :password, emailVerified = true, updatedAt = :now WHERE id = :id",
