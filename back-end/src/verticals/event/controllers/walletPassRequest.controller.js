@@ -192,7 +192,10 @@ walletPassRequestController.getRequest = async (req, res) => {
 
 walletPassRequestController.listPendingApproval = async (req, res) => {
   const filters = {
-    tenantId: req.query.tenantId ? parseInt(req.query.tenantId, 10) : null,
+const filters = {
+  tenantId: req.query.tenantId && !Number.isNaN(parseInt(req.query.tenantId, 10)) ? parseInt(req.query.tenantId, 10) : null,
+  limit: req.query.limit ? parseInt(req.query.limit, 10) : 100,
+};
     limit: Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 200),
   };
 
