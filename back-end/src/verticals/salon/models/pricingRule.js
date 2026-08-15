@@ -1,12 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class PricingRule extends Model {
-    static associate(_unused) {}
-  }
-  PricingRule.init(
-    {
-      tenantId: {
+
+const getPricingRuleAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -78,12 +75,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "pricingRule",
-      tableName: "pricing_rules",
-    }
-  );
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class PricingRule extends Model {
+    static associate(_unused) {}
+  }
+  PricingRule.init(getPricingRuleAttributes(DataTypes), {
+    sequelize,
+    modelName: "pricingRule",
+    tableName: "pricing_rules",
+  });
   return PricingRule;
 };

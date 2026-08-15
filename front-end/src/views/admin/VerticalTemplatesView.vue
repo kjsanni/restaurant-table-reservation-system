@@ -13,6 +13,7 @@
         <option value="">All Verticals</option>
         <option value="restaurant">Restaurant</option>
         <option value="salon">Salon</option>
+        <option value="event">Event</option>
       </select>
       <input
         v-model="searchQuery"
@@ -38,6 +39,7 @@
               <th>Name</th>
               <th>Vertical</th>
               <th>Description</th>
+              <th>Used By</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -51,7 +53,26 @@
                 </span>
               </td>
               <td class="preview-cell">{{ template.description || "—" }}</td>
+              <td class="usage-cell">{{ usageCountFor(template.id) || 0 }}</td>
               <td class="actions-cell">
+                <button class="btn-sm btn-secondary" @click="preview(template)">
+                  Preview
+                </button>
+                <button
+                  class="btn-sm btn-secondary"
+                  @click="applyToTenant(template)"
+                  title="Apply template to tenant"
+                >
+                  Apply
+                </button>
+                <button
+                  class="btn-sm btn-secondary"
+                  @click="cloneTemplate(template)"
+                  :disabled="tryingClone"
+                  title="Clone template"
+                >
+                  Clone
+                </button>
                 <button class="btn-sm" @click="editTemplate(template)">
                   Edit
                 </button>
@@ -68,17 +89,43 @@
       </div>
     </div>
 
+    <div class="usage-section" v-if="usageSummary.length > 0">
+      <h2>Template Usage Analytics</h2>
+      <div class="usage-table">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Template</th>
+              <th>Vertical</th>
+              <th>Applied To</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="stat in usageSummary" :key="stat.templateId">
+              <td>{{ stat.templateName }}</td>
+              <td>
+                <span class="badge" :class="verticalClass(stat.vertical)">
+                  {{ stat.vertical }}
+                </span>
+              </td>
+              <td>{{ stat.usageCount }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div
       v-if="selectedTemplate"
       class="modal-overlay"
       @click.self="selectedTemplate = null"
     >
-      <div class="modal">
+      <div class="modal" style="max-width: 720px">
         <div class="modal-header">
           <h3>{{ selectedTemplate.id ? "Edit Template" : "New Template" }}</h3>
           <button class="btn-close" @click="selectedTemplate = null">×</button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto">
           <div class="field">
             <label>Name</label>
             <input v-model="form.name" class="field-input" />
@@ -88,6 +135,7 @@
             <select v-model="form.vertical" class="field-input">
               <option value="restaurant">Restaurant</option>
               <option value="salon">Salon</option>
+              <option value="event">Event</option>
             </select>
           </div>
           <div class="field">
@@ -96,6 +144,41 @@
               v-model="form.description"
               rows="3"
               class="field-input"
+            ></textarea>
+          </div>
+          <div class="field">
+            <label>Default Service Modes</label>
+            <div class="checkbox-group">
+              <label
+                v-for="mode in serviceModeOptions"
+                :key="mode"
+                class="checkbox-label"
+              >
+                <input
+                  type="checkbox"
+                  :value="mode"
+                  v-model="form.defaultServiceModes"
+                />
+                {{ mode }}
+              </label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Default Settings (JSON)</label>
+            <textarea
+              v-model="form.defaultSettings"
+              rows="4"
+              class="field-input mono"
+              placeholder='e.g. {"restaurantType":"full_service","businessVertical":"restaurant"}'
+            ></textarea>
+          </div>
+          <div class="field">
+            <label>Feature Flags (JSON)</label>
+            <textarea
+              v-model="form.featureFlags"
+              rows="6"
+              class="field-input mono"
+              placeholder='e.g. {"table_management":true,"loyalty":false}'
             ></textarea>
           </div>
           <div class="modal-actions">
@@ -109,29 +192,151 @@
         </div>
       </div>
     </div>
+
+    <div
+      v-if="previewTemplate"
+      class="modal-overlay"
+      @click.self="previewTemplate = null"
+    >
+      <div class="modal" style="max-width: 600px">
+        <div class="modal-header">
+          <h3>Template Preview: {{ previewTemplate.name }}</h3>
+          <button class="btn-close" @click="previewTemplate = null">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="info-row">
+            <span class="label">Vertical</span>
+            <span class="value">{{ previewTemplate.vertical }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Description</span>
+            <span class="value">{{ previewTemplate.description || "—" }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Service Modes</span>
+            <span class="value">
+              <span
+                v-for="mode in previewTemplate.defaultServiceModes || []"
+                :key="mode"
+                class="tag"
+                >{{ mode }}</span
+              >
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="label">Default Settings</span>
+            <pre class="json-preview">{{
+              formatJSON(previewTemplate.defaultSettings)
+            }}</pre>
+          </div>
+          <div class="info-row">
+            <span class="label">Feature Flags</span>
+            <pre class="json-preview">{{
+              formatJSON(previewTemplate.featureFlags)
+            }}</pre>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="previewTemplate = null">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
+import { useToastStore } from "@/stores/toast";
+
+const toastStore = useToastStore();
+const toast = (msg, type = "info") => toastStore.add(msg, type, 3000);
+
+const parseJSONField = (val) => {
+  if (!val || val === "") return {};
+  if (typeof val === "object") return val;
+  try {
+    return JSON.parse(val);
+  } catch {
+    return {};
+  }
+};
 
 const loading = ref(false);
 const items = ref([]);
 const selectedTemplate = ref(null);
+const previewTemplate = ref(null);
 const saving = ref(false);
+const tryingClone = ref(false);
 const filterVertical = ref("");
 const searchQuery = ref("");
+const usageLoading = ref(false);
+const usageItems = ref([]);
+const usageSummary = ref([]);
 const form = ref({
   name: "",
   vertical: "restaurant",
   description: "",
   defaultSettings: {},
   defaultServiceModes: [],
+  featureFlags: {},
 });
 
+const serviceModeOptions = [
+  "dine_in",
+  "takeaway",
+  "delivery",
+  "appointments",
+  "walkins",
+];
+
+const formatJSON = (obj) => {
+  if (!obj) return "—";
+  try {
+    return JSON.stringify(obj, null, 2);
+  } catch {
+    return "—";
+  }
+};
+
 const verticalClass = (vertical) => {
-  return vertical === "restaurant" ? "badge-info" : "badge-success";
+  if (vertical === "restaurant") return "badge-info";
+  if (vertical === "salon") return "badge-success";
+  return "badge-warning";
+};
+
+const preview = (template) => {
+  previewTemplate.value = template;
+};
+
+const usageCountFor = (templateId) => {
+  const stat = usageSummary.value.find((s) => s.templateId === templateId);
+  return stat?.usageCount || 0;
+};
+
+const applyToTenant = async (template) => {
+  const tenantId = prompt("Enter tenant ID to apply this template to:");
+  if (!tenantId) return;
+  try {
+    const settings = template.defaultSettings || {};
+    const featureFlags = template.featureFlags || {};
+    const serviceModes = template.defaultServiceModes || [];
+    const updateData = {};
+    if (settings.businessVertical)
+      updateData.businessVertical = settings.businessVertical;
+    if (settings.restaurantType)
+      updateData.restaurantType = settings.restaurantType;
+    if (serviceModes.length) updateData.serviceModes = serviceModes;
+    if (Object.keys(featureFlags).length) {
+      updateData.settings = { featureFlags };
+    }
+    await adminAPI.patch(`/admin/tenants/${tenantId}`, updateData);
+    toast("Template applied to tenant", "success");
+  } catch (err) {
+    toast(err.response?.data?.message || "Failed to apply template", "error");
+  }
 };
 
 const load = async () => {
@@ -162,8 +367,15 @@ const editTemplate = (template) => {
     name: template.name,
     vertical: template.vertical,
     description: template.description || "",
-    defaultSettings: template.defaultSettings || {},
+    defaultSettings:
+      typeof template.defaultSettings === "string"
+        ? template.defaultSettings
+        : JSON.stringify(template.defaultSettings || {}, null, 2),
     defaultServiceModes: template.defaultServiceModes || [],
+    featureFlags:
+      typeof template.featureFlags === "string"
+        ? template.featureFlags
+        : JSON.stringify(template.featureFlags || {}, null, 2),
   };
 };
 
@@ -173,29 +385,36 @@ const createTemplate = () => {
     name: "",
     vertical: "restaurant",
     description: "",
-    defaultSettings: {},
+    defaultSettings: "{}",
     defaultServiceModes: [],
+    featureFlags: "{}",
   };
 };
 
 const save = async () => {
   saving.value = true;
   try {
+    const payload = {
+      name: form.value.name,
+      vertical: form.value.vertical,
+      description: form.value.description,
+      defaultSettings: parseJSONField(form.value.defaultSettings),
+      defaultServiceModes: form.value.defaultServiceModes,
+      featureFlags: parseJSONField(form.value.featureFlags),
+    };
     if (selectedTemplate.value?.id) {
-      await adminAPI.updateVerticalTemplate(
-        selectedTemplate.value.id,
-        form.value
-      );
+      await adminAPI.updateVerticalTemplate(selectedTemplate.value.id, payload);
     } else {
-      await adminAPI.createVerticalTemplate(form.value);
+      await adminAPI.createVerticalTemplate(payload);
     }
     selectedTemplate.value = null;
     form.value = {
       name: "",
       vertical: "restaurant",
       description: "",
-      defaultSettings: {},
+      defaultSettings: "{}",
       defaultServiceModes: [],
+      featureFlags: "{}",
     };
     await load();
   } finally {
@@ -209,8 +428,35 @@ const removeTemplate = async (id) => {
   await load();
 };
 
+const cloneTemplate = async (template) => {
+  tryingClone.value = true;
+  try {
+    await adminAPI.cloneVerticalTemplate(template.id);
+    toast(`Cloned "${template.name}" into a new template`, "success");
+    await load();
+  } catch (err) {
+    toast(err.response?.data?.message || "Failed to clone template", "error");
+  } finally {
+    tryingClone.value = false;
+  }
+};
+
+const loadUsage = async () => {
+  usageLoading.value = true;
+  try {
+    const res = await adminAPI.getVerticalTemplateUsage();
+    usageSummary.value = res.data?.summary || [];
+    usageItems.value = res.data?.collection || [];
+  } catch (err) {
+    console.error("Failed to load template usage", err);
+  } finally {
+    usageLoading.value = false;
+  }
+};
+
 onMounted(() => {
   load();
+  loadUsage();
 });
 </script>
 
@@ -258,6 +504,84 @@ onMounted(() => {
   cursor: pointer;
   font-size: var(--text-sm);
   font-weight: 600;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  accent-color: var(--brand-600);
+}
+
+.mono {
+  font-family:
+    "SF Mono", "Fira Code", "Monaco", "Consolas", "Courier New", monospace;
+  font-size: var(--text-xs);
+  resize: vertical;
+}
+
+.json-preview {
+  background: var(--neutral-50);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-family:
+    "SF Mono", "Fira Code", "Monaco", "Consolas", "Courier New", monospace;
+  font-size: var(--text-xs);
+  white-space: pre-wrap;
+  overflow-x: auto;
+  margin: 0;
+  width: 100%;
+  min-height: 40px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+  margin-right: 4px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+
+.value {
+  font-weight: 500;
+  font-size: var(--text-sm);
+  color: var(--ink-secondary);
 }
 .loading-state-inline {
   display: flex;
@@ -339,6 +663,10 @@ onMounted(() => {
 .badge-success {
   background: var(--earth-100);
   color: var(--earth-700);
+}
+.badge-warning {
+  background: var(--accent-100);
+  color: var(--accent-700);
 }
 .modal-overlay {
   position: fixed;

@@ -1,21 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class SalonClientProfile extends Model {
-    static associate(models) {
-      SalonClientProfile.belongsTo(models.customer, {
-        foreignKey: "customerId",
-        as: "customer",
-      });
-      SalonClientProfile.belongsTo(models.user, {
-        foreignKey: "preferredStylistId",
-        as: "preferredStylist",
-      });
-    }
-  }
-  SalonClientProfile.init(
-    {
-      tenantId: {
+
+const getSalonClientProfileAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -81,12 +69,25 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATEONLY,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "salonClientProfile",
-      tableName: "salon_client_profiles",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class SalonClientProfile extends Model {
+    static associate(models) {
+      SalonClientProfile.belongsTo(models.customer, {
+        foreignKey: "customerId",
+        as: "customer",
+      });
+      SalonClientProfile.belongsTo(models.user, {
+        foreignKey: "preferredStylistId",
+        as: "preferredStylist",
+      });
     }
-  );
+  }
+  SalonClientProfile.init(getSalonClientProfileAttributes(DataTypes), {
+    sequelize,
+    modelName: "salonClientProfile",
+    tableName: "salon_client_profiles",
+  });
   return SalonClientProfile;
 };

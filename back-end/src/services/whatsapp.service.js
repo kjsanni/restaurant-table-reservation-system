@@ -1,5 +1,6 @@
 const axios = require("axios");
 const db = require("../db/models");
+const CircuitBreaker = require("../utils/circuitBreaker");
 
 const envToken = process.env.WHATSAPP_TOKEN;
 const envPhoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
@@ -19,7 +20,6 @@ const resolveConfig = async (tenantId) => {
       if (cfg.phoneNumberId) phoneNumberId = cfg.phoneNumberId;
     }
   } catch {
-    // fall back to env values on any read error
   }
   return { token, phoneNumberId, enabled: Boolean(token && phoneNumberId) };
 };
@@ -33,16 +33,25 @@ const buildClient = (token, phoneNumberId) => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        timeout: 10000,
       }),
   };
 };
 
-const sendWhatsAppMessage = async (to, templateName, languageCode = "en_US", components = [], tenantId) => {
+const sendWithCircuitBreaker = async (tenantId, payload, path) => {
   const { token, phoneNumberId, enabled } = await resolveConfig(tenantId);
   if (!enabled) {
     throw new Error("WhatsApp is not configured.");
   }
 
+  return CircuitBreaker.execute(
+    "whatsapp",
+    () => buildClient(token, phoneNumberId).post(path, payload).then((r) => r.data),
+    { failureThreshold: 5, recoveryTimeout: 30000 }
+  );
+};
+
+const sendWhatsAppMessage = async (to, templateName, languageCode = "en_US", components = [], tenantId) => {
   const payload = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -56,8 +65,8 @@ const sendWhatsAppMessage = async (to, templateName, languageCode = "en_US", com
   };
 
   try {
-    const response = await buildClient(token, phoneNumberId).post("/messages", payload);
-    return response.data;
+    const response = await sendWithCircuitBreaker(tenantId, payload, "/messages");
+    return response;
   } catch (err) {
     const message = err.response?.data?.error?.message || err.message;
     throw new Error(`WhatsApp send failed: ${message}`);
@@ -65,11 +74,6 @@ const sendWhatsAppMessage = async (to, templateName, languageCode = "en_US", com
 };
 
 const sendWhatsAppText = async (to, text, tenantId) => {
-  const { token, phoneNumberId, enabled } = await resolveConfig(tenantId);
-  if (!enabled) {
-    throw new Error("WhatsApp is not configured.");
-  }
-
   const payload = {
     messaging_product: "whatsapp",
     to: formatPhoneNumber(to),
@@ -78,8 +82,8 @@ const sendWhatsAppText = async (to, text, tenantId) => {
   };
 
   try {
-    const response = await buildClient(token, phoneNumberId).post("/messages", payload);
-    return response.data;
+    const response = await sendWithCircuitBreaker(tenantId, payload, "/messages");
+    return response;
   } catch (err) {
     const message = err.response?.data?.error?.message || err.message;
     throw new Error(`WhatsApp send failed: ${message}`);
@@ -97,11 +101,6 @@ const formatPhoneNumber = (phone) => {
 };
 
 const sendLocationMessage = async (to, { latitude, longitude, name = null, address = null }, tenantId) => {
-  const { token, phoneNumberId, enabled } = await resolveConfig(tenantId);
-  if (!enabled) {
-    throw new Error("WhatsApp is not configured.");
-  }
-
   const payload = {
     messaging_product: "whatsapp",
     to: formatPhoneNumber(to),
@@ -115,8 +114,8 @@ const sendLocationMessage = async (to, { latitude, longitude, name = null, addre
   };
 
   try {
-    const response = await buildClient(token, phoneNumberId).post("/messages", payload);
-    return response.data;
+    const response = await sendWithCircuitBreaker(tenantId, payload, "/messages");
+    return response;
   } catch (err) {
     const message = err.response?.data?.error?.message || err.message;
     throw new Error(`WhatsApp send failed: ${message}`);
@@ -124,11 +123,6 @@ const sendLocationMessage = async (to, { latitude, longitude, name = null, addre
 };
 
 const sendInteractiveMessage = async (to, { bodyText, buttons = [] }, tenantId) => {
-  const { token, phoneNumberId, enabled } = await resolveConfig(tenantId);
-  if (!enabled) {
-    throw new Error("WhatsApp is not configured.");
-  }
-
   const payload = {
     messaging_product: "whatsapp",
     to: formatPhoneNumber(to),
@@ -146,8 +140,8 @@ const sendInteractiveMessage = async (to, { bodyText, buttons = [] }, tenantId) 
   };
 
   try {
-    const response = await buildClient(token, phoneNumberId).post("/messages", payload);
-    return response.data;
+    const response = await sendWithCircuitBreaker(tenantId, payload, "/messages");
+    return response;
   } catch (err) {
     const message = err.response?.data?.error?.message || err.message;
     throw new Error(`WhatsApp send failed: ${message}`);

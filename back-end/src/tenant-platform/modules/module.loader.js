@@ -4,12 +4,14 @@ const { ModuleRegistry } = require("./module.registry");
 const { tenantPlatformModule } = require("./tenant-platform.module");
 const { restaurantModule } = require("../../verticals/restaurant/modules/restaurant.module");
 const { salonModule } = require("../../verticals/salon/modules/salon.module");
+const { eventModule } = require("../../verticals/event/modules/event.module");
 
 const registry = new ModuleRegistry();
 
 registry.register(tenantPlatformModule);
 registry.register(restaurantModule);
 registry.register(salonModule);
+registry.register(eventModule);
 
 const violations = registry.verifyIntegrity();
 if (violations.length > 0) {

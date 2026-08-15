@@ -85,4 +85,20 @@ bulkDAO.deleteTenants = async (tenantIds) => {
   return tenants.length;
 };
 
+bulkDAO.bulkProvision = async (tenantIds) => {
+  const provisioningService = require("../services/provisioning.service");
+  const results = await Promise.allSettled(
+    tenantIds.map(async (tenantId) => {
+      try {
+        const pipeline = await provisioningService.startProvisioning(tenantId, null);
+        return { tenantId, status: pipeline.status, error: pipeline.error || null };
+      } catch (err) {
+        return { tenantId, status: "failed", error: err.message };
+      }
+    })
+  );
+
+  return results.map((r) => r.value || r.reason);
+};
+
 module.exports = bulkDAO;

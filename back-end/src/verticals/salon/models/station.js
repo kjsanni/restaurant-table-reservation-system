@@ -1,29 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class Station extends Model {
-    static associate(models) {
-      Station.belongsTo(models.user, {
-        foreignKey: "defaultStylistId",
-        as: "defaultStylist",
-      });
-      Station.belongsTo(models.floorPlan, {
-        foreignKey: "floorPlanId",
-        as: "floorPlan",
-      });
-      Station.belongsTo(models.location, {
-        foreignKey: "locationId",
-        as: "location",
-      });
-      Station.hasMany(models.appointment, {
-        foreignKey: "stationId",
-        as: "appointments",
-      });
-    }
-  }
-  Station.init(
-    {
-      tenantId: {
+
+const getStationAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -68,12 +48,33 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "station",
-      tableName: "stations",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class Station extends Model {
+    static associate(models) {
+      Station.belongsTo(models.user, {
+        foreignKey: "defaultStylistId",
+        as: "defaultStylist",
+      });
+      Station.belongsTo(models.floorPlan, {
+        foreignKey: "floorPlanId",
+        as: "floorPlan",
+      });
+      Station.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
+      Station.hasMany(models.appointment, {
+        foreignKey: "stationId",
+        as: "appointments",
+      });
     }
-  );
+  }
+  Station.init(getStationAttributes(DataTypes), {
+    sequelize,
+    modelName: "station",
+    tableName: "stations",
+  });
   return Station;
 };
