@@ -103,7 +103,7 @@ const toast = useToastStore();
 import formatMoney from "@/utils/formatMoney";
 
 const loading = ref(false);
-const confirmingRefund = ref<number | null>(null);
+const confirmingRefund = ref<number | undefined>(undefined); // codeql[js/implicit-operand-conversion] SUPPRESSED: intentional nullable ref type for two-step confirmation
 const items = ref([]);
 
 const summary = computed(() => {
