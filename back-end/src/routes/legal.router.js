@@ -62,7 +62,9 @@ function splitSections(markdown) {
 function readLegalDoc(slug) {
   const file = SLUG_TO_FILE[slug];
   if (!file) return null;
-  const fullPath = path.join(LEGAL_DIR, file); // nosemgrep: express-path-join-resolve-traversal - file is from hardcoded SLUG_TO_FILE map, not user input
+  const fullPath = path.resolve(LEGAL_DIR, file); // nosemgrep: express-path-join-resolve-traversal
+  const baseDir = path.resolve(LEGAL_DIR);
+  if (!fullPath.startsWith(baseDir)) return null; // nosemgrep: express-path-join-resolve-traversal
   if (!fs.existsSync(fullPath)) return null;
 
   const markdown = fs.readFileSync(fullPath, "utf-8");

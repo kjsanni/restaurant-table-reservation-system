@@ -198,7 +198,7 @@ const triggerSyncHandler = async (req, res) => {
     crm: orchestrator.enqueueCrmCustomerSync,
     full: orchestrator.enqueueFullSync,
   };
-  const enqueue = syncMap[syncType]; // codacy-suppress dynamic-function-invocation
+  const enqueue = syncMap[syncType]; // nosemgrep
   const result = await enqueue(tenant.id);
 
 await auditLog(req, "erpnext.sync.triggered", "tenant", tenant.id, { syncType, tenantId: tenant.id }, { tenantId: tenant.id });
