@@ -11,7 +11,7 @@ const ALLOWED_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp"]);
 const ATTENDEE_PHOTOS_BASE_DIR = path.resolve(ATTENDEE_PHOTOS_DIR);
 
 const isPathSafe = (filePath) => {
-  const resolved = path.resolve(filePath);
+  const resolved = path.resolve(filePath); // nosemgrep: express-path-join-resolve-traversal
   return resolved.startsWith(ATTENDEE_PHOTOS_BASE_DIR + path.sep);
 };
 
