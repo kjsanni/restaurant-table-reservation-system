@@ -24,7 +24,21 @@ const signAllPlatforms = async (designSnapshot, tenantId) => {
 
   for (const platform of SUPPORTED_PLATFORMS) {
     try {
+const signAllPlatforms = async (designSnapshot, tenantId) => {
+  const results = {};
+  const errors = {};
+
+  for (const platform of SUPPORTED_PLATFORMS) {
+    try {
+      const adapter = getAdapter(platform);
       results[platform] = await adapter.sign(designSnapshot, tenantId);
+    } catch (err) {
+      errors[platform] = err.message;
+    }
+  }
+
+  return { results, errors, platforms: SUPPORTED_PLATFORMS };
+};
     } catch (err) {
       errors[platform] = err.message;
     }
