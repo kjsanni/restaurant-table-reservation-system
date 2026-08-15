@@ -5,6 +5,7 @@ import "vuestic-ui/css";
 import App from "./App.vue";
 import router from "./router";
 import { useAuthStore } from "@/stores/auth";
+import { vHoverLift, vTapScale } from "@/directives/motion";
 import "./assets/design-system.css";
 import "./assets/main.css";
 import "./assets/settings.css";
@@ -57,6 +58,9 @@ async function bootstrap() {
   const app = createApp(App);
 
   app.use(pinia);
+
+  app.directive("hover-lift", vHoverLift);
+  app.directive("tap-scale", vTapScale);
 
   const authStore = useAuthStore();
   await authStore.init();

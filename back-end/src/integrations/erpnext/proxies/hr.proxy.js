@@ -24,7 +24,7 @@ router.get("/hr/employees", tryCatchHandler(requireActiveTenant, checkErpnextHr,
   const filters = { company: tenant.name };
   if (search) filters.name = ["like", `%${search}%`];
   try {
-    const result = await getClient().get("/api/resource/Employee", {
+    const result = await (await getClient()).get("/api/resource/Employee", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -38,7 +38,7 @@ router.get("/hr/employees/:employeeId", tryCatchHandler(requireActiveTenant, che
   const { employeeId } = req.params;
   const { getClient } = require("../client");
   try {
-    const result = await getClient().get(`/api/resource/Employee/${employeeId}`);
+    const result = await (await getClient()).get(`/api/resource/Employee/${employeeId}`);
     res.status(200).json({ success: true, data: result.data });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -53,7 +53,7 @@ router.get("/hr/employees/attendance", tryCatchHandler(requireActiveTenant, chec
   if (from) filters.attendance_date = [">=", from];
   if (to) filters.attendance_date = ["<=", to];
   try {
-    const result = await getClient().get("/api/resource/Employee Attendance", {
+    const result = await (await getClient()).get("/api/resource/Employee Attendance", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -70,7 +70,7 @@ router.get("/hr/employees/payroll", tryCatchHandler(requireActiveTenant, checkEr
   if (from) filters.start_date = [">=", from];
   if (to) filters.end_date = ["<=", to];
   try {
-    const result = await getClient().get("/api/resource/Salary Slip", {
+    const result = await (await getClient()).get("/api/resource/Salary Slip", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });

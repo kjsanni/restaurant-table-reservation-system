@@ -2,24 +2,59 @@
 
 const axios = require("axios");
 const { cache } = require("../../utils/cache");
+const authDAO = require("../../DAOs/auth.dao");
 
-const ERPNEXT_BASE_URL = process.env.ERPNEXT_BASE_URL || "";
-const ERPNEXT_API_KEY = process.env.ERPNEXT_API_KEY || "";
-const ERPNEXT_API_SECRET = process.env.ERPNEXT_API_SECRET || "";
-const ERPNEXT_TIMEOUT = parseInt(process.env.ERPNEXT_TIMEOUT_MS || "30000", 10);
-const CACHE_TTL = parseInt(process.env.ERPNEXT_CACHE_TTL || "300", 10);
+const ERPNEXT_TIMEOUT_DEFAULT = 30000;
+const CACHE_TTL_DEFAULT = 300;
 
 let clientInstance = null;
+let clientConfig = null;
 
-const getClient = () => {
+const getConfig = async () => {
+  if (clientConfig) return clientConfig;
+
+  const [baseUrlSetting, apiKeySetting, apiSecretSetting, timeoutSetting, cacheTtlSetting] =
+    await Promise.all([
+      authDAO.getPlatformSettingByKey("erpnext_base_url").catch(() => null),
+      authDAO.getPlatformSettingByKey("erpnext_api_key").catch(() => null),
+      authDAO.getPlatformSettingByKey("erpnext_api_secret").catch(() => null),
+      authDAO.getPlatformSettingByKey("erpnext_timeout_ms").catch(() => null),
+      authDAO.getPlatformSettingByKey("erpnext_cache_ttl").catch(() => null),
+    ]);
+
+  clientConfig = {
+    baseUrl: (baseUrlSetting?.value && baseUrlSetting.value !== "[REDACTED]" ? baseUrlSetting.value : null) ||
+             process.env.ERPNEXT_BASE_URL || "",
+    apiKey: (apiKeySetting?.value && apiKeySetting.value !== "[REDACTED]" ? apiKeySetting.value : null) ||
+            process.env.ERPNEXT_API_KEY || "",
+    apiSecret: (apiSecretSetting?.value && apiSecretSetting.value !== "[REDACTED]" ? apiSecretSetting.value : null) ||
+               process.env.ERPNEXT_API_SECRET || "",
+    timeout: parseInt(
+      (timeoutSetting?.value != null ? timeoutSetting.value : process.env.ERPNEXT_TIMEOUT_MS) ||
+        ERPNEXT_TIMEOUT_DEFAULT,
+      10
+    ),
+    cacheTtl: parseInt(
+      (cacheTtlSetting?.value != null ? cacheTtlSetting.value : process.env.ERPNEXT_CACHE_TTL) ||
+        CACHE_TTL_DEFAULT,
+      10
+    ),
+  };
+
+  return clientConfig;
+};
+
+const getClient = async () => {
   if (clientInstance) return clientInstance;
 
+  const config = await getConfig();
+
   clientInstance = axios.create({
-    baseURL: ERPNEXT_BASE_URL,
-    timeout: ERPNEXT_TIMEOUT,
+    baseURL: config.baseUrl,
+    timeout: config.timeout,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Basic ${Buffer.from(`${ERPNEXT_API_KEY}:${ERPNEXT_API_SECRET}`).toString("base64")}`,
+      Authorization: `Basic ${Buffer.from(`${config.apiKey}:${config.apiSecret}`).toString("base64")}`,
     },
   });
 
@@ -41,6 +76,11 @@ const getClient = () => {
   return clientInstance;
 };
 
+const getCacheTtl = async () => {
+  const config = await getConfig();
+  return config.cacheTtl;
+};
+
 const get = async (path, params = {}, tenantId = null) => {
   const cacheKey = tenantId ? `erpnext:${tenantId}:${path}:${JSON.stringify(params)}` : null;
   if (cacheKey) {
@@ -48,45 +88,58 @@ const get = async (path, params = {}, tenantId = null) => {
     if (cached !== null) return cached;
   }
 
-  const response = await getClient().get(path, { params });
+  const client = await getClient();
+  const response = await client.get(path, { params });
   const data = response.data;
+  const ttl = await getCacheTtl();
 
   if (cacheKey && data) {
-    await cache.set(cacheKey, data, CACHE_TTL);
+    await cache.set(cacheKey, data, ttl);
   }
 
   return data;
 };
 
 const post = async (path, body = {}, _tenantId = null) => {
-  const response = await getClient().post(path, body);
+  const client = await getClient();
+  const response = await client.post(path, body);
   return response.data;
 };
 
 const put = async (path, body = {}, _tenantId = null) => {
-  const response = await getClient().put(path, body);
+  const client = await getClient();
+  const response = await client.put(path, body);
   return response.data;
 };
 
 const del = async (path, _tenantId = null) => {
-  const response = await getClient().delete(path);
+  const client = await getClient();
+  const response = await client.delete(path);
   return response.data;
 };
 
 const healthCheck = async () => {
   try {
-    const response = await getClient().get("/api/method/ping");
+    const client = await getClient();
+    const response = await client.get("/api/method/ping");
     return { ok: true, status: response.status };
   } catch (err) {
     return { ok: false, error: err.message };
   }
 };
 
+const resetClient = () => {
+  clientInstance = null;
+  clientConfig = null;
+};
+
 module.exports = {
   getClient,
+  getConfig,
   get,
   post,
   put,
   del,
   healthCheck,
+  resetClient,
 };

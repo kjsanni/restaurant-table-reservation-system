@@ -24,7 +24,7 @@ router.get("/crm/customers", tryCatchHandler(requireActiveTenant, checkErpnextCr
   const filters = { company: tenant.name };
   if (search) filters.customer_name = ["like", `%${search}%`];
   try {
-    const result = await getClient().get("/api/resource/Customer", {
+    const result = await (await getClient()).get("/api/resource/Customer", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -40,7 +40,7 @@ router.get("/crm/leads", tryCatchHandler(requireActiveTenant, checkErpnextCrm, a
   const filters = { company: tenant.name };
   if (search) filters.lead_name = ["like", `%${search}%`];
   try {
-    const result = await getClient().get("/api/resource/Lead", {
+    const result = await (await getClient()).get("/api/resource/Lead", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -56,7 +56,7 @@ router.get("/crm/campaigns", tryCatchHandler(requireActiveTenant, checkErpnextCr
   const filters = { company: tenant.name };
   if (search) filters.name = ["like", `%${search}%`];
   try {
-    const result = await getClient().get("/api/resource/Campaign", {
+    const result = await (await getClient()).get("/api/resource/Campaign", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -72,7 +72,7 @@ router.get("/crm/opportunities", tryCatchHandler(requireActiveTenant, checkErpne
   const filters = { company: tenant.name };
   if (search) filters.party_name = ["like", `%${search}%`];
   try {
-    const result = await getClient().get("/api/resource/Opportunity", {
+    const result = await (await getClient()).get("/api/resource/Opportunity", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });

@@ -30,7 +30,7 @@ router.get("/accounting/company", tryCatchHandler(requireActiveTenant, checkErpn
   const tenant = req.tenant;
   const { getClient } = require("../client");
   try {
-    const result = await getClient().get(`/api/resource/Company/${tenant.name}`);
+    const result = await (await getClient()).get(`/api/resource/Company/${tenant.name}`);
     res.status(200).json({ success: true, data: result.data });
   } catch {
     res.status(404).json({ success: false, message: "ERPNext company not found. Complete ERPNext onboarding first." });
@@ -45,7 +45,7 @@ router.get("/accounting/profit-loss", tryCatchHandler(requireActiveTenant, check
   if (from) filters.from_date = from;
   if (to) filters.to_date = to;
   try {
-    const result = await getClient().get("/api/resource/Profit and Loss Statement", { params: { filters } });
+    const result = await (await getClient()).get("/api/resource/Profit and Loss Statement", { params: { filters } });
     res.status(200).json({ success: true, data: result.data });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -60,7 +60,7 @@ router.get("/accounting/balance-sheet", tryCatchHandler(requireActiveTenant, che
   if (from) filters.from_date = from;
   if (to) filters.to_date = to;
   try {
-    const result = await getClient().get("/api/resource/Balance Sheet", { params: { filters } });
+    const result = await (await getClient()).get("/api/resource/Balance Sheet", { params: { filters } });
     res.status(200).json({ success: true, data: result.data });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -75,7 +75,7 @@ router.get("/accounting/tax-report", tryCatchHandler(requireActiveTenant, checkE
   if (from) filters.from_date = from;
   if (to) filters.to_date = to;
   try {
-    const result = await getClient().get("/api/resource/GST Settings", {
+    const result = await (await getClient()).get("/api/resource/GST Settings", {
       params: { filters: { company: tenant.name } },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -93,7 +93,7 @@ router.get("/accounting/invoices", tryCatchHandler(requireActiveTenant, checkErp
   if (from) filters.from_date = from;
   if (to) filters.to_date = to;
   try {
-    const result = await getClient().get("/api/resource/Sales Invoice", {
+    const result = await (await getClient()).get("/api/resource/Sales Invoice", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -107,7 +107,7 @@ router.get("/accounting/invoices/:invoiceId", tryCatchHandler(requireActiveTenan
   const { invoiceId } = req.params;
   const { getClient } = require("../client");
   try {
-    const result = await getClient().get(`/api/resource/Sales Invoice/${invoiceId}`);
+    const result = await (await getClient()).get(`/api/resource/Sales Invoice/${invoiceId}`);
     res.status(200).json({ success: true, data: result.data });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -122,7 +122,7 @@ router.get("/accounting/payments", tryCatchHandler(requireActiveTenant, checkErp
   if (from) filters.from_date = from;
   if (to) filters.to_date = to;
   try {
-    const result = await getClient().get("/api/resource/Payment Entry", {
+    const result = await (await getClient()).get("/api/resource/Payment Entry", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });
@@ -138,7 +138,7 @@ router.get("/accounting/customers", tryCatchHandler(requireActiveTenant, checkEr
   const filters = { company: tenant.name };
   if (search) filters.name = ["like", `%${search}%`];
   try {
-    const result = await getClient().get("/api/resource/Customer", {
+    const result = await (await getClient()).get("/api/resource/Customer", {
       params: { filters, page, page_length: parseInt(pageSize, 10) },
     });
     res.status(200).json({ success: true, data: result.data });

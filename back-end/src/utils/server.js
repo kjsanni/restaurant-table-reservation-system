@@ -11,8 +11,6 @@ const emailVerificationRouter = require("../routes/emailVerification.router");
 const auditLogRouter = require("../routes/auditLog.router");
 const rbacRouter = require("../routes/rbac.router");
 const adminRouter = require("../routes/admin.router");
-const walletPassAdminRouter = require("../routes/walletPassAdmin.router");
-const walletPassRequestRouter = require("../verticals/event/routes/walletPassRequest.router");
 const notificationRouter = require("../routes/notification.router");
 const emailTemplateRouter = require("../routes/emailTemplate.router");
 const webhookRouter = require("../routes/webhook.router");
@@ -45,7 +43,6 @@ const erpnextHrRouter = require("../integrations/erpnext/proxies/hr.proxy");
 const erpnextCrmRouter = require("../integrations/erpnext/proxies/crm.proxy");
 const erpnextManufacturingRouter = require("../integrations/erpnext/proxies/manufacturing.proxy");
 const erpnextOnboardingRouter = require("../integrations/erpnext/onboarding/onboarding");
-const erpnextAdminRouter = require("../integrations/erpnext/admin/admin.router");
 
 const { adminMiddleware } = require("../middleware/adminMiddleware");
 
@@ -137,7 +134,7 @@ const createServer = () => {
     clearInterval(tenantCronInterval);
     clearInterval(salonCronInterval);
     clearInterval(backupCronInterval);
-    clearInterval(scheduledReportsCronInterval);
+  clearInterval(scheduledReportsCronInterval);
     if (io) io.close();
     if (logStream && typeof logStream.end === "function") {
       logStream.end();
@@ -192,7 +189,7 @@ const createServer = () => {
         // nosemgrep: javascript.lang.security.audit.cookie-http-only-disabled - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
         httpOnly: false, // guardrails-disable-line - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: process.env.NODE_ENV === "production" ? "lax" : false,
         path: "/",
         maxAge: 24 * 60 * 60 * 1000,
       });
@@ -200,7 +197,7 @@ const createServer = () => {
     res.json({ success: true, token });
   });
 
-  app.get("/api/v1/health", tryCatchHandler(async (req, res) => { // codeql[js/missing-rate-limiting]
+  app.get("/api/v1/health", tryCatchHandler(async (req, res) => {
     const queueAlerts = await checkQueueDepths();
     const redisStatus = redisClient ? (getConnectionStatus() ? "connected" : "disconnected") : "not_configured";
     res.json({
@@ -211,17 +208,6 @@ const createServer = () => {
       queueAlerts: queueAlerts.length ? queueAlerts : undefined,
     });
   }));
-
-  const frontendDistPath = require("path").join(__dirname, "../../../front-end/dist");
-  if (require("fs").existsSync(frontendDistPath)) {
-    app.use(require("express").static(frontendDistPath));
-    app.get("*", generalLimiter, (req, res, next) => {
-      if (req.path.startsWith("/api/") || req.path.startsWith("/socket.io")) {
-        return next();
-      }
-      res.sendFile(require("path").join(frontendDistPath, "index.html"));
-    });
-  }
 
   app.use(tryCatchHandler(resolveTenant));
   app.use(tryCatchHandler(requireActiveTenant));
@@ -249,29 +235,6 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
     erpnextManufacturingRouter,
     erpnextOnboardingRouter
   );
-  app.use(
-    "/api/v1/admin/erpnext",
-    logAction,
-    validateCsrfToken,
-    adminActionLimiter,
-    adminMiddleware,
-    erpnextAdminRouter
-  );
-  app.use(
-    "/api/v1/admin/wallet-pass",
-    logAction,
-    validateCsrfToken,
-    adminActionLimiter,
-    adminMiddleware,
-    walletPassAdminRouter
-  );
-  app.use(
-    "/api/v1/events",
-    generalLimiter,
-    logAction,
-    validateCsrfToken,
-    walletPassRequestRouter
-  );
   app.use("/api/v1/notifications", generalLimiter, logAction, validateCsrfToken, notificationRouter);
   app.use("/api/v1/email-templates", generalLimiter, logAction, validateCsrfToken, emailTemplateRouter);
   app.use("/api/v1/webhooks", logAction, webhookLimiter, webhookRouter);
@@ -288,7 +251,6 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
     res.type("text/plain");
     res.send("User-agent: *\nAllow: /\nSitemap: https://vibespotgh.com/sitemap.xml\n");
   });
-
   app.use(notFound);
   app.use(errorHandler);
   return { app, server, io };

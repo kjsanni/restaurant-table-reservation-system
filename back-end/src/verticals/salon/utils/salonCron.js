@@ -82,8 +82,6 @@ const processRecurringAppointments = async (tenantId) => {
         depositAmount: 0,
         source: "web",
       });
-      console.log("DEBUG cron created", { appointmentId: appointment?.id, recurringId: r.id });
-
       await recurringAppointmentDao.update(r.id, tenantId, {
         lastGeneratedAt: nextDateStr,
       });

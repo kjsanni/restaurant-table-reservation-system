@@ -1,4 +1,5 @@
 const db = require("../db/models");
+const authDAO = require("../DAOs/auth.dao");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 
 const PLATFORM_ROLES = {
@@ -125,8 +126,71 @@ const revokePlatformRoleHandler = async (req, res) => {
   return res.status(200).json({ success: true, platformRoles: user.platformRoles });
 };
 
+const listPlatformUsersHandler = async (req, res) => {
+  const users = await authDAO.listPlatformUsers();
+  return res.status(200).json({ success: true, users });
+};
+
+const createPlatformUserHandler = async (req, res) => {
+  const { username, email, password, role, isSuperAdmin, platformRoles } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ success: false, message: "username, email, and password are required" });
+  }
+
+  let user;
+  try {
+    user = await authDAO.createPlatformUser({
+      username,
+      email,
+      password,
+      role,
+      isSuperAdmin,
+      platformRoles,
+    });
+  } catch (err) {
+    if (err.status === 400) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+    if (err.status === 409) {
+      return res.status(409).json({ success: false, message: err.message });
+    }
+    throw err;
+  }
+
+  await platformAuditDAO
+    .log(
+      req.user?.id || null,
+      "platform_user_created",
+      "user",
+      user.id,
+      null,
+      { username, email, role, isSuperAdmin, platformRoles },
+      req.ip
+    )
+    .catch((err) => {
+      console.error("platform_user_created audit log failed:", err.message);
+    });
+
+  return res.status(201).json({
+    success: true,
+    message: "Platform user created successfully!",
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      isSuperAdmin: user.isSuperAdmin,
+      platformRoles: user.platformRoles,
+      tenantId: user.tenantId,
+    },
+  });
+};
+
 module.exports = {
   listPlatformRolesHandler,
+  listPlatformUsersHandler,
+  createPlatformUserHandler,
   assignPlatformRoleHandler,
   revokePlatformRoleHandler,
 };

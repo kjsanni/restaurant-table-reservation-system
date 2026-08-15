@@ -6,6 +6,18 @@ Ghana locale (GHS), Paystack payments, WhatsApp ordering, ShaQ Express delivery,
 Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` with vertical modules under `back-end/src/verticals/restaurant/` and `back-end/src/verticals/salon/`.
 
 **Current session additions:**
+- Support system unification (PR #82 merged):
+  - Backend: `supportTicket` + `supportTicketMessage` + `supportAttachment` models/DAOs/controllers/routes; tenant support routes (`tenantSupport.controller.js`); notification service (`supportNotification.service.js`); rate limiting on support routes.
+  - Frontend: `NotificationDropdown.vue`, `tenantSupportAPI.js`, `CustomerPortalSupportView.vue`, expanded `SupportTicketsView.vue`.
+  - Merged support chat into tickets; customers can create/reply/attach files to tickets.
+- Backend compliance & security hardening (PR #81 merged):
+  - Replaced hardcoded test secrets with `process.env` + fallbacks.
+  - Replaced weak `Math.random()` with `crypto.randomBytes()` in tests.
+  - Fixed `rejectUnauthorized: false` DB SSL config to be configurable.
+  - Added `decipher.setTagLength(16)` for AES-256-GCM compliance.
+  - Extracted `getScopedTenantId()` helper to reduce duplication in tenant-platform controllers.
+- Frontend composable consolidation: `useSupportStatus.ts` centralizes status/priority labels and CSS classes for support views.
+- Playwright E2E: 44 passed, 20 skipped (visual baselines pending).
 - Multi-tenant platform hardening, pagination, caching, and frontend polish (PR #78 merged):
   - Backend: distributed Redis cron lock (`back-end/src/utils/redis.js`) for tenant suspension, tenant search/pagination in `tenantAdmin.controller.js`, tenant-aware cache wrapper (`back-end/src/utils/tenantCache.js`) with prefix isolation, CSRF token endpoint fix (`back-end/src/utils/server.js`), schedule/holiday/setting DAO cache integration, monitoring controller refactor with extracted data-gathering functions, review controller XSS sanitization in email notifications, SMS provider service (Twilio), idempotent migration guards.
   - Frontend: TenantSwitcher search + pagination, table/floor-plan UI polish (status filters, section filters, shape toggle, snap-to-grid), GSAP animation composable (`front-end/src/composables/useAnimations.ts`), motion tokens in `front-end/src/theme/colors.js`, image-gen asset manifest (`front-end/src/assets/manifest.json`).
