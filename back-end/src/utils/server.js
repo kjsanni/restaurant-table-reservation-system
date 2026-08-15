@@ -215,7 +215,7 @@ const createServer = () => {
   const frontendDistPath = require("path").join(__dirname, "../../../front-end/dist");
   if (require("fs").existsSync(frontendDistPath)) {
     app.use(require("express").static(frontendDistPath));
-    app.get("*", (req, res, next) => {
+    app.get("*", generalLimiter, (req, res, next) => {
       if (req.path.startsWith("/api/") || req.path.startsWith("/socket.io")) {
         return next();
       }
