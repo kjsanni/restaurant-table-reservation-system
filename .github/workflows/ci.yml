@@ -190,7 +190,10 @@ jobs:
       - name: "Debug - inspect admin user in database"
         working-directory: back-end
         run: |
-          docker exec $(docker ps -q --filter "name=mysql") mysql -e "SELECT id, email, emailVerified, tenantId, isSuperAdmin, totpEnabled FROM users WHERE email='admin@rtrs.com'" rtrs_test 2>/dev/null || true
+          echo "=== ALL users with admin@rtrs.com ==="
+          docker exec $(docker ps -q --filter "name=mysql") mysql -u root -proot rtrs_test -e "SELECT id, email, emailVerified, tenantId, isSuperAdmin, totpEnabled FROM users WHERE email='admin@rtrs.com';" 2>&1 || true
+          echo "=== ALL users by id ==="
+          docker exec $(docker ps -q --filter "name=mysql") mysql -u root -proot rtrs_test -e "SELECT id, email, emailVerified, isSuperAdmin FROM users ORDER BY id;" 2>&1 || true
         env:
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
