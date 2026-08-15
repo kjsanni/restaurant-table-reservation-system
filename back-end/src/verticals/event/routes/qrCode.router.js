@@ -5,7 +5,7 @@ const router = express.Router();
 const tryCatchHandler = require("../../../middleware/tryCatch");
 const { protect, requirePermission } = require("../../../middleware/auth");
 const { validateCsrfToken } = require("../../../middleware");
-const { makeTenantLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
+const { makeTenantLimiter, tenantLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
 const { validateEventInput } = require("../middleware/validateEventInput");
 const { validateScannerApiKey } = require("../middleware/scannerAuth");
 const qrCodeController = require("../controllers/qrCode.controller");
@@ -26,6 +26,11 @@ router
   .route("/:eventId/qr-codes")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("view_events")), tryCatchHandler(qrCodeController.getQRCodesHandler))
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(validateCsrfToken), tryCatchHandler(validateEventInput), tryCatchHandler(qrCodeController.generateQRCodeHandler))
+  .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
+
+router
+  .route("/scanner/config")
+  .get(tenantLimiter, tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(qrCodeController.getScannerConfigHandler))
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
 
 router
