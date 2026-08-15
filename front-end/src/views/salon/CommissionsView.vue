@@ -179,7 +179,11 @@
                   class="btn-sm btn-danger"
                   @click="deleteCommission(c.id)"
                 >
-                  {{ t("common.delete") }}
+                  {{
+                    confirmingDelete === c.id
+                      ? t("common.confirm", "Confirm")
+                      : t("common.delete")
+                  }}
                 </button>
               </td>
             </tr>
@@ -197,6 +201,7 @@ import { useI18n } from "@/composables/useI18n";
 import serviceAPI from "@/services/serviceAPI";
 import authAPI from "@/services/authAPI";
 import locationAPI from "@/services/locationAPI";
+import logger from "@/utils/logger";
 
 const { t } = useI18n();
 
@@ -221,6 +226,7 @@ const stylists = ref<Array<{ id: number; username: string }>>([]);
 const services = ref<Array<{ id: number; name: string }>>([]);
 const locations = ref<Array<{ id: number; name: string }>>([]);
 const selectedLocationId = ref<number | "">("");
+const confirmingDelete = ref<number | null>(null);
 const editingId = ref<number | null>(null);
 const generalError = ref("");
 
@@ -295,7 +301,7 @@ const loadLocations = async () => {
     const res = await locationAPI.list();
     locations.value = res.data.data || [];
   } catch (err) {
-    console.error("Failed to load locations", err);
+    logger.error("Failed to load locations", { error: err });
   }
 };
 
@@ -382,7 +388,14 @@ const markPaid = async (c: { id: number }) => {
 };
 
 const deleteCommission = async (id: number) => {
-  if (!confirm(t("salon.confirmDeleteCommission"))) return;
+  if (confirmingDelete.value !== id) {
+    confirmingDelete.value = id;
+    setTimeout(() => {
+      confirmingDelete.value = null;
+    }, 3000);
+    return;
+  }
+  confirmingDelete.value = null;
   try {
     await commissionAPI.deleteCommission(id);
     await loadData();
