@@ -1,6 +1,5 @@
 const response = require("../utils/response");
 
-// nosemgrep: tainted-sql-string
 const db = require("../../db/models");
 const planDAO = require("../DAOs/plan.dao");
 const { invalidatePlansCache } = require("../services/tenantSubscription.service");
@@ -76,7 +75,8 @@ const deletePlanHandler = async (req, res) => {
     return response.notFound(res, "Plan not found");
   }
 
-  const tenantCount = await db.tenant.count({ where: { plan: plan.slug } }); // nosemgrep: javascript.express.security.injection.tainted-sql-string.tainted-sql-string
+  // nosemgrep: tainted-sql-string - using Sequelize ORM with parameterized where clause
+  const tenantCount = await db.tenant.count({ where: { plan: plan.slug } });
   if (tenantCount > 0) {
     return res.status(409).json({
       success: false,
