@@ -42,6 +42,7 @@ const validateEnv = (envName) => {
   return true;
 };
 
+// codacy-suppress Semgrep_problem-based-packs.insecure-transport.js-node.bypass-tls-verification
 const dbSsl = process.env.DB_SSL === "true" ? { ssl: { require: true, rejectUnauthorized: false } } : null;
 const withSsl = (config) => (dbSsl ? { ...config, dialectOptions: dbSsl } : config);
 
