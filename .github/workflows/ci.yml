@@ -151,6 +151,7 @@ jobs:
       CORS_ORIGINS: http://localhost:8080
       PORT: 8000
       ADMIN_INITIAL_PASSWORD: admin123
+      RATE_LIMIT_DISABLED: true
     steps:
       - uses: actions/checkout@v7
       - name: Setup Node.js environment
