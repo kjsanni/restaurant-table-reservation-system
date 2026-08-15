@@ -5,6 +5,11 @@ const { verifyTokenWithFallback, getCurrentSecret } = require("../utils/jwtRotat
 const JWT_SECRET = getCurrentSecret();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30m";
 
+const sanitizeForLog = (value) => {
+  if (value === null || value === undefined) return value;
+  return String(value).replace(/[\r\n]/g, "");
+};
+
 const generateToken = (userId, role, locale = "en") => {
   return jwt.sign({ userId, role, locale }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
@@ -123,7 +128,20 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
   }
 
   const user = await userDAO.findUserByEmail(email, tenantId);
-  console.log("[DEBUG loginUser] email:", email, "tenantId:", tenantId, "user.id:", user?.id, "user.emailVerified:", user?.emailVerified, "user.email:", user?.email, "user.totpEnabled:", user?.totpEnabled);
+  console.log(
+    "[DEBUG loginUser] email:",
+    sanitizeForLog(email),
+    "tenantId:",
+    sanitizeForLog(tenantId),
+    "user.id:",
+    user?.id,
+    "user.emailVerified:",
+    user?.emailVerified,
+    "user.email:",
+    sanitizeForLog(user?.email),
+    "user.totpEnabled:",
+    user?.totpEnabled
+  );
 
   const isValidPassword = user && await userDAO.comparePassword(
     password,
