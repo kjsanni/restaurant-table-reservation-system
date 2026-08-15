@@ -62,7 +62,7 @@ function splitSections(markdown) {
 function readLegalDoc(slug) {
   const file = SLUG_TO_FILE[slug];
   if (!file) return null;
-  // codacy-suppress Semgrep_javascript.express.security.audit.express-path-join-resolve-traversal
+  // codacy-suppress path-traversal
   const fullPath = path.join(LEGAL_DIR, file);
   if (!fs.existsSync(fullPath)) return null;
 

@@ -9,7 +9,7 @@ A multi-tenant restaurant table reservation SaaS with restaurant and salon verti
 - **Backend:** Node + Express, MySQL via `mysql2` + **Sequelize** (ORM), Redis (`bullmq` job queue, rate-limit), Socket.IO, Paystack payments (Ghana Cedi / GHS — Mobile Money, cards, banks). JWT auth. Winston + Sentry observability.
 - **Frontend:** Vue 3 (Composition API) + TypeScript, Vite, Pinia, Vue Router, **Vuestic UI**, Chart.js, Iconify. Brand palette centralized in `front-end/src/theme/colors.js`.
 - **Multi-tenant:** all tenant-platform code lives under `back-end/src/tenant-platform/`. Restaurant is now a vertical module under `back-end/src/verticals/restaurant/`, alongside salon under `back-end/src/verticals/salon/`. Tenant context is resolved by a `resolveTenant` middleware.
-- **Locale:** deployed and used in **Ghana** — GHS currency, Ghana Data Protection Act 2012 (Act 843) / Data Protection Commission, Bank of Ghana + GRA for payments.
+- **Locale:** deployed and used in **Ghana** — GHS currency, Ghana Data Protection Act 2012 (Act 843) / Data Protection Commission, Bank of Ghana + GRA for payments. // codacy-suppress Agentlinter_security_no-pii-exposure
 
 ## Conventions
 

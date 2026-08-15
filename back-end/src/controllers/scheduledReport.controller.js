@@ -172,7 +172,7 @@ const processScheduledReport = async (report) => {
   await exportSalonReportsHandler(mockReq, mockRes);
 
   const subject = `Scheduled Report: ${report.name}`;
-  // codacy-suppress Semgrep_javascript.express.security.injection.raw-html-format
+  // codacy-suppress xss
   const html = `<p>Please find attached your scheduled report: <strong>${escapeHtml(report.name)}</strong>.</p>`;
   const from = process.env.DEFAULT_FROM_EMAIL || "reports@vibespot.tech";
 
