@@ -23,6 +23,7 @@ exclude_paths:
   - "back-end/src/verticals/event/controllers/walletPassRequest.controller.js"
   - "back-end/src/queues/walletPass.queue.js"
   - "scripts/check-legal-versions.js"
+  - "AGENTS.md"
   - "drinks-vendor/**"
   - "back-end/src/db/migrations/**"
   - "back-end/src/db/seeders/**"

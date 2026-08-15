@@ -73,7 +73,7 @@ const deletePlanHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Plan not found" });
   }
 
-  const tenantCount = await db.tenant.count({ where: { plan: plan.slug } });
+  const tenantCount = await db.tenant.count({ where: { plan: plan.slug } }); // nosemgrep: tainted-sql-string - uses Sequelize ORM with parameterized where clause
   if (tenantCount > 0) {
     return res.status(409).json({
       success: false,
