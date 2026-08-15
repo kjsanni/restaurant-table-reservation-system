@@ -79,6 +79,10 @@ class GoogleWalletAdapter extends WalletPassAdapter {
       throw new Error("Google Pay signing credentials not configured (private key or service account email missing)");
     }
 
+    if (!process.env.EVENT_QR_SECRET) {
+      throw new Error("EVENT_QR_SECRET is not configured");
+    }
+
     const design = designSnapshot.design || {};
     const qrCodeData = designSnapshot.ticketData || {};
 

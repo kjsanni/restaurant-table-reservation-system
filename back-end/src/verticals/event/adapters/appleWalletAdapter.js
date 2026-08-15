@@ -187,6 +187,10 @@ class AppleWalletAdapter extends WalletPassAdapter {
       throw new Error("Apple Wallet pass certificate not configured for tenant");
     }
 
+    if (!certs.qrSecret) {
+      throw new Error("EVENT_QR_SECRET is not configured");
+    }
+
     const passJson = this.buildPassJson(designSnapshot.design || {}, designSnapshot.ticketData || {}, certs);
 
     const tempDir = this.createTempDir();
