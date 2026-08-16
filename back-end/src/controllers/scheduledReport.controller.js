@@ -172,7 +172,7 @@ const processScheduledReport = async (report) => {
   await exportSalonReportsHandler(mockReq, mockRes);
 
   const subject = `Scheduled Report: ${report.name}`;
-  const html = `<p>Please find attached your scheduled report: <strong>${escapeHtml(report.name)}</strong>.</p>`; // codacy-suppress XSS - report.name is HTML-escaped by escapeHtml()
+  const html = `<p>Please find attached your scheduled report: <strong>${escapeHtml(report.name)}</strong>.</p>`; // codacy-suppress raw-html-format - report.name is HTML-escaped by escapeHtml()
   const from = process.env.DEFAULT_FROM_EMAIL || "reports@vibespot.tech";
 
   await sendReportToRecipients(report, subject, html, from, csv);
