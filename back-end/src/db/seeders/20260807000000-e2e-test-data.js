@@ -31,8 +31,8 @@ const ensureUser = async (queryInterface, tenantId, email, role, extra = {}) => 
       console.log("[SEED DEBUG] UPDATE admin user:", { id: existing.id, emailVerified: true });
     } else if (email === "akua@demo.test") {
       await queryInterface.sequelize.query(
-        "UPDATE users SET password = :password, emailVerified = true, updatedAt = :now WHERE id = :id",
-        { replacements: { password: extra.password, now: new Date(), id: existing.id } }
+        "UPDATE users SET password = :password, emailVerified = true, permissions = :permissions, updatedAt = :now WHERE id = :id",
+        { replacements: { password: extra.password, permissions: JSON.stringify(extra.permissions), now: new Date(), id: existing.id } }
       );
     } else {
       await queryInterface.sequelize.query(
@@ -57,6 +57,12 @@ const ensureUser = async (queryInterface, tenantId, email, role, extra = {}) => 
 module.exports = {
   async up(queryInterface, Sequelize) {
     const tenantId = await resolveTenantId(queryInterface);
+
+    await queryInterface.sequelize.query(
+      "UPDATE tenants SET businessVertical = 'event', updatedAt = :now WHERE id = :tenantId",
+      { replacements: { tenantId, now: new Date() }, type: queryInterface.sequelize.QueryTypes.UPDATE }
+    );
+
     const adminPasswordHash = await bcrypt.hash("admin123", 10);
     const staffPasswordHash = await bcrypt.hash("password123", 10);
     const customerPasswordHash = await bcrypt.hash("customer123", 10);
@@ -85,6 +91,8 @@ module.exports = {
         edit_appointments: true,
         manage_stations: true,
         manage_services: true,
+        manage_events: true,
+        view_events: true,
       }),
     });
 

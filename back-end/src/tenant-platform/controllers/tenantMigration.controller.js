@@ -2,7 +2,6 @@ const response = require("../utils/response");
 
 const tenantMigrationStatusDAO = require("../DAOs/tenantMigrationStatus.dao");
 const tenantMigrationService = require("../services/tenantMigration.service");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
 const listTenantMigrationsHandler = async (req, res) => {
   const { tenantId } = req.params;

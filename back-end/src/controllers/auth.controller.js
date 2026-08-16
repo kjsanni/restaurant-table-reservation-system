@@ -342,6 +342,14 @@ const getMeHandler = async (req, res) => {
     user: {
       ...user.toJSON(),
       permissions: effectivePermissions,
+      tenant: req.tenant
+        ? {
+            id: req.tenant.id,
+            name: req.tenant.name,
+            slug: req.tenant.slug,
+            businessVertical: req.tenant.businessVertical,
+          }
+        : null,
     },
   });
 };

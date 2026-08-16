@@ -30,7 +30,15 @@ export const useAuthStore = defineStore("auth", () => {
     slug?: string;
     businessVertical?: string;
     settings?: Record<string, unknown>;
-  } | null>(null);
+  } | null>(() => {
+    try {
+      const stored = sessionStorage.getItem("currentTenant");
+      const parsed = stored ? JSON.parse(stored) : null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  });
   const tenantModeEnabled = ref(false);
   const branding = ref({
     brandName: "",
@@ -123,11 +131,19 @@ export const useAuthStore = defineStore("auth", () => {
     user.value = null;
     entryPoint.value = null;
     currentTenant.value = null;
+    sessionStorage.removeItem("currentTenant");
   };
 
   const getMe = async () => {
     const response = await authAPI.getMe();
     user.value = response.data.user;
+    if (!currentTenant.value && response.data.user?.tenant) {
+      currentTenant.value = response.data.user.tenant;
+      sessionStorage.setItem(
+        "currentTenant",
+        JSON.stringify(response.data.user.tenant)
+      );
+    }
     return response;
   };
 
@@ -189,10 +205,16 @@ export const useAuthStore = defineStore("auth", () => {
     } | null
   ) => {
     currentTenant.value = tenant;
+    if (tenant) {
+      sessionStorage.setItem("currentTenant", JSON.stringify(tenant));
+    } else {
+      sessionStorage.removeItem("currentTenant");
+    }
   };
 
   const clearTenant = () => {
     currentTenant.value = null;
+    sessionStorage.removeItem("currentTenant");
   };
 
   const fetchRegistrationStatus = async () => {
@@ -204,6 +226,10 @@ export const useAuthStore = defineStore("auth", () => {
     if (sessionInitialized.value) return;
     sessionInitialized.value = true;
     try {
+      const storedTenant = sessionStorage.getItem("currentTenant");
+      if (storedTenant) {
+        currentTenant.value = JSON.parse(storedTenant);
+      }
       await Promise.all([
         getMe().catch(() => {}),
         fetchTenantMode().catch(() => {}),

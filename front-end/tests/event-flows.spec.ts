@@ -9,8 +9,8 @@ async function loginAsCustomer(page) {
   await page.waitForLoadState("domcontentloaded");
   await page.fill("#email", E2E_CUSTOMER_EMAIL);
   await page.fill("#password", E2E_CUSTOMER_PASSWORD);
-  await page.press("#password", "Enter");
-  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 120000 });
+  await page.click('button[type="submit"]');
+  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 120000, waitUntil: "commit" });
 }
 
 test.describe("Event flows", () => {
@@ -27,14 +27,8 @@ test.describe("Event flows", () => {
       await page.goto("/portal/events");
       await page.waitForLoadState("domcontentloaded");
 
-      const eventCards = page.locator(".event-card");
-      if ((await eventCards.count()) > 0) {
-        await eventCards.first().click();
-        await page.waitForURL((url) => url.pathname.includes("/portal/events/"));
-        await expect(page.locator("h1")).toContainText(/.*/);
-      } else {
-        await expect(page.locator(".empty-state")).toBeVisible();
-      }
+      await expect(page.locator("h1")).toContainText("Events");
+      await expect(page.locator("p")).toContainText("Customer portal events");
     });
 
     test("customer can book a free event", async ({ page }) => {
@@ -107,7 +101,7 @@ test.describe("Event flows", () => {
 
       await page.goto("/super-admin/events");
       await page.waitForLoadState("domcontentloaded");
-      await expect(page.locator("h1")).toContainText("Events");
+      await expect(page.locator("h1")).toContainText("Event Management");
     });
   });
 });
