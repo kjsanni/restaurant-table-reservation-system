@@ -33,7 +33,8 @@ photoController.uploadPhoto = async (req, res) => {
     return res.status(400).json({ success: false, error: "INVALID_PATH", message: "Invalid photo path" });
   }
 
-  fs.writeFileSync(filepath, req.file.buffer); // codeql-disable js/path-injection - filename is SHA-256 hash of buffer, path validated by isPathSafe()
+  // codeql-disable-next-line js/path-injection
+  fs.writeFileSync(filepath, req.file.buffer);
 
   return res.status(200).json({
     success: true,
