@@ -1,4 +1,5 @@
 const rateLimit = require("express-rate-limit");
+const { ipKeyGenerator } = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
 const { client, getConnectionStatus } = require("../../utils/cache");
 const { makeLimiter } = require("../../middleware/rateLimit");
@@ -41,7 +42,7 @@ const makeTenantLimiter = (opts = {}) => {
   return rateLimit({
     ...rateOpts,
     ...(store ? { store } : {}),
-    keyGenerator: (req) => `${req.tenant?.id || "anon"}:${req.ip || ""}`,
+    keyGenerator: (req) => `${req.tenant?.id || "anon"}:${ipKeyGenerator(req)}`,
   });
 };
 

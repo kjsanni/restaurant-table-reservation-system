@@ -11,7 +11,7 @@ const ALLOWED_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp"]);
 const ATTENDEE_PHOTOS_BASE_DIR = path.resolve(ATTENDEE_PHOTOS_DIR);
 
 const isPathSafe = (filePath) => {
-  const resolved = path.resolve(filePath); // nosemgrep: express-path-join-resolve-traversal
+  const resolved = path.resolve(filePath); // codacy-suppress express-path-join-resolve-traversal - resolved path checked by startsWith
   return resolved.startsWith(ATTENDEE_PHOTOS_BASE_DIR + path.sep);
 };
 
@@ -28,7 +28,7 @@ photoController.uploadPhoto = async (req, res) => {
   const safeExt = ALLOWED_EXTS.has(ext) ? ext : "jpg";
   const photoRef = crypto.createHash("sha256").update(req.file.buffer).digest("hex");
   const filename = `${photoRef}.${safeExt}`;
-  const filepath = path.resolve(ATTENDEE_PHOTOS_DIR, filename); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress File_Access - filename is a SHA-256 hex digest validated by isPathSafe()
+  const filepath = path.resolve(ATTENDEE_PHOTOS_DIR, filename); // codacy-suppress express-path-join-resolve-traversal - filename is SHA-256 hex digest validated by isPathSafe()
   if (!isPathSafe(filepath)) {
     return res.status(400).json({ success: false, error: "INVALID_PATH", message: "Invalid photo path" });
   }
@@ -52,25 +52,25 @@ photoController.getPhoto = async (req, res) => {
   const ext = req.query.ext || "jpg";
   const safeExt = ALLOWED_EXTS.has(ext.toLowerCase()) ? ext.toLowerCase() : "jpg";
   const filename = `${photoRef}.${safeExt}`;
-  const filepath = path.join(ATTENDEE_PHOTOS_DIR, filename); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress File_Access - filename is a SHA-256 hex digest validated by regex
-  const resolvedPath = path.resolve(filepath); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress File_Access - resolvedPath checked by isPathSafe()
+  const filepath = path.join(ATTENDEE_PHOTOS_DIR, filename); // codacy-suppress express-path-join-resolve-traversal - filename is SHA-256 hex digest validated by regex
+  const resolvedPath = path.resolve(filepath); // codacy-suppress express-path-join-resolve-traversal - resolvedPath checked by isPathSafe()
   if (!isPathSafe(resolvedPath)) {
     return res.status(400).json({ success: false, error: "INVALID_PATH", message: "Invalid photo path" });
   }
 
   try {
     res.type(`image/${safeExt}`);
-    return res.sendFile(resolvedPath); // nosemgrep: express-res-sendfile // codacy-suppress File_Access - resolvedPath validated by isPathSafe()
+    return res.sendFile(resolvedPath); // codacy-suppress express-path-join-resolve-traversal - resolvedPath validated by isPathSafe()
   } catch {
-    const jpgResolved = path.resolve(ATTENDEE_PHOTOS_DIR, `${photoRef}.jpg`); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
-    const pngResolved = path.resolve(ATTENDEE_PHOTOS_DIR, `${photoRef}.png`); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
+    const jpgResolved = path.resolve(ATTENDEE_PHOTOS_DIR, `${photoRef}.jpg`); // codacy-suppress express-path-join-resolve-traversal - photoRef is SHA-256 hex digest validated by regex
+    const pngResolved = path.resolve(ATTENDEE_PHOTOS_DIR, `${photoRef}.png`); // codacy-suppress express-path-join-resolve-traversal - photoRef is SHA-256 hex digest validated by regex
     if (isPathSafe(jpgResolved)) {
       res.type("image/jpeg");
-      return res.sendFile(jpgResolved); // nosemgrep: express-res-sendfile // codacy-suppress path-traversal
+      return res.sendFile(jpgResolved); // codacy-suppress express-path-join-resolve-traversal - jpgResolved validated by isPathSafe()
     }
     if (isPathSafe(pngResolved)) {
       res.type("image/png");
-      return res.sendFile(pngResolved); // nosemgrep: express-res-sendfile // codacy-suppress path-traversal
+      return res.sendFile(pngResolved); // codacy-suppress express-path-join-resolve-traversal - pngResolved validated by isPathSafe()
     }
     return res.status(404).json({ success: false, error: "NOT_FOUND", message: "Photo not found" });
   }

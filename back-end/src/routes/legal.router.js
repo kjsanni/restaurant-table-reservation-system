@@ -60,7 +60,7 @@ function readLegalDoc(slug) {
   if (!file) return null;
   const fullPath = path.resolve(LEGAL_DIR, file); // codacy-suppress express-path-join-resolve-traversal - file is from fixed SLUG_TO_FILE map, fullPath validated by startsWith
   if (!fullPath.startsWith(LEGAL_BASE_DIR)) return null; // codacy-suppress express-path-join-resolve-traversal - path containment check
-  if (!fs.existsSync(fullPath)) return null; // codacy-suppress File_Access - existence check after path validation
+  if (!fs.existsSync(fullPath)) return null; // codacy-suppress express-path-join-resolve-traversal - existence check after path validation
   const markdown = fs.readFileSync(fullPath, "utf-8"); // codacy-suppress express-path-join-resolve-traversal - fullPath validated above
   const updatedMatch = markdown.match(
     /Last updated:?\s*\**\s*([0-9]{1,2}\s+[A-Za-z]+\s+[0-9]{4})\**/i
