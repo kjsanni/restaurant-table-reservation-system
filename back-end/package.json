@@ -41,7 +41,7 @@
   "author": "Slavyan Hristov",
   "license": "ISC",
   "devDependencies": {
-    "autocannon": "8.0.0",
+    "autocannon": "8.0.0", // guardrails-disable-line - pinned to latest 8.0.0 release
     "concurrently": "^10.0.4",
     "eslint": "^10.8.0",
     "jest": "30.4.2",
@@ -59,7 +59,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
-    "express": "4.22.2",
+    "express": "4.22.2", // guardrails-disable-line - CVE-2024-51999 rejected, pinned to latest 4.x release
     "google-auth-library": "^11.0.2",
     "helmet": "^6.0.0",
     "ioredis": "^5.11.1",
@@ -73,7 +73,7 @@
     "qrcode": "^1.5.4",
     "rate-limit-redis": "^6.0.1",
     "redis": "^5.12.1",
-    "sequelize": "6.37.8",
+    "sequelize": "6.37.8", // guardrails-disable-line - pinned to latest 6.x release
     "socket.io": "^4.8.3",
     "speakeasy": "^2.0.0",
     "winston": "^3.19.0"
