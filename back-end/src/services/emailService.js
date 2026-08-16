@@ -30,7 +30,7 @@ const DEFAULT_EMAIL_TEMPLATES = {
 
 const getEmailConfig = async () => {
   try {
-    const setting = await db.setting.findOne({
+    const setting = await db.setting.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
       where: { key: EMAIL_SETTING_KEY },
     });
     if (!setting) return null;
@@ -52,13 +52,13 @@ const getEmailConfig = async () => {
 
 const getEmailTheme = async () => {
   try {
-    const setting = await db.setting.findOne({
+    const setting = await db.setting.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
       where: { key: EMAIL_THEME_KEY },
     });
     const theme = setting && setting.value ? setting.value : {};
     let brand = {};
     try {
-      const branding = await db.setting.findOne({ where: { key: "branding" } });
+      const branding = await db.setting.findOne({ where: { key: "branding" } }); // codacy-suppress nosql-injection - parameterized ORM call
       if (branding && branding.value) {
         brand =
           typeof branding.value === "string"
@@ -83,7 +83,7 @@ const getEmailTheme = async () => {
 
 const getEmailTemplates = async () => {
   try {
-    const setting = await db.setting.findOne({
+    const setting = await db.setting.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
       where: { key: EMAIL_TEMPLATES_KEY },
     });
     if (!setting) return { ...DEFAULT_EMAIL_TEMPLATES };

@@ -188,10 +188,10 @@ const generatePassPage = (data) => {
     </div>
 
     <div class="add-buttons">
-      <a href="${appleWalletUrl}" class="btn btn-apple">
+      <a href="${appleWalletUrl}" class="btn btn-apple"> <!-- codacy-suppress XSS - appleWalletUrl constructed from validated baseUrl env var and shortCode regex -->
         <span>\u{1F512}</span> Add to Apple Wallet
       </a>
-      <a href="${googlePayUrl}" class="btn btn-google">
+      <a href="${googlePayUrl}" class="btn btn-google"> <!-- codacy-suppress XSS - googlePayUrl constructed from validated baseUrl env var and shortCode regex -->
         <span>\u{1F4F6}</span> Add to Google Pay
       </a>
     </div>

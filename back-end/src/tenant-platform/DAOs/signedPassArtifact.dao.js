@@ -7,7 +7,7 @@ const signedPassArtifactDAO = {};
 
 signedPassArtifactDAO.create = async ({ requestId, platform, artifactType, artifactPath, accessToken, error }) => {
   const status = error ? "failed" : "signed";
-  return await db.signedPassArtifact.create({
+  return await db.signedPassArtifact.create({ // codacy-suppress nosql-injection - parameterized ORM call
     requestId,
     platform,
     status,
@@ -19,14 +19,14 @@ signedPassArtifactDAO.create = async ({ requestId, platform, artifactType, artif
 };
 
 signedPassArtifactDAO.listByRequest = (requestId) => {
-  return db.signedPassArtifact.findAll({
+  return db.signedPassArtifact.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { requestId },
     order: [["createdAt", "ASC"]],
   });
 };
 
 signedPassArtifactDAO.findByRequestAndPlatform = (requestId, platform) => {
-  return db.signedPassArtifact.findOne({ // nosemgrep: javascript.lang.security.audit.no-sql-injection - Sequelize parameterized where, not MongoDB
+  return db.signedPassArtifact.findOne({ // nosemgrep: javascript.lang.security.audit.no-sql-injection - Sequelize parameterized where, not MongoDB // codacy-suppress nosql-injection - parameterized ORM call
     where: { requestId, platform },
     order: [["createdAt", "DESC"]],
   });

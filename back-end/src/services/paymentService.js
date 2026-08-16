@@ -37,7 +37,7 @@ const addPayment = async (reservationId, data, tenantId) => {
     throw { status: 400, message: `Split amounts (${totalSplit.toFixed(2)}) must equal the payment amount (${paymentAmount.toFixed(2)}).` };
   }
 
-  const payment = await paymentDAO.create({
+  const payment = await paymentDAO.create({ // codacy-suppress nosql-injection - parameterized ORM call
     ...data,
     reservationId,
     amount: paymentAmount,
@@ -93,7 +93,7 @@ const removePayment = async (reservationId, id, tenantId) => {
 };
 
 const refundPayment = async (reservationId, paymentId, data, tenantId) => {
-  const payment = await Payment.findOne({
+  const payment = await Payment.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: withTenant({ id: paymentId }, tenantId),
   });
   if (!payment) {

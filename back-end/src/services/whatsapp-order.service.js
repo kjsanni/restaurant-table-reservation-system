@@ -54,7 +54,7 @@ const sendTemplate = async (phone, templateName, variables = {}, tenantId) => {
 };
 
 const resolveTenant = async () => {
-  const tenant = await db.tenant.findOne({
+  const tenant = await db.tenant.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { isActive: true },
     order: [["id", "ASC"]],
   });

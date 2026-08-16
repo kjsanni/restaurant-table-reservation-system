@@ -48,18 +48,22 @@ await auditLog(req, "support.attachment_uploaded", "support_attachment", attachm
 
 const downloadAttachmentHandler = async (req, res) => {
   const filename = path.basename(req.params.filename);
-  const filePath = path.join(UPLOAD_DIR, filename); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal // guardrails-disable-line
-  const resolvedPath = path.resolve(filePath); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
-
-  if (!resolvedPath.startsWith(path.resolve(UPLOAD_DIR))) {
+  if (!filename || filename === "." || filename === "..") {
     return response.badRequest(res, "Invalid file path");
   }
 
-  if (!fs.existsSync(resolvedPath)) { // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
+  const uploadDirResolved = path.resolve(UPLOAD_DIR);
+  const filePath = path.join(uploadDirResolved, filename);
+
+  if (!filePath.startsWith(uploadDirResolved + path.sep) && filePath !== uploadDirResolved) {
+    return response.badRequest(res, "Invalid file path");
+  }
+
+  if (!fs.existsSync(filePath)) {
     return response.notFound(res, "File not found");
   }
 
-  res.download(resolvedPath, filename, (err) => { // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
+  res.download(filePath, filename, (err) => {
     if (err) {
       console.error("Attachment download error:", err.message);
     }
@@ -72,10 +76,12 @@ const deleteAttachmentHandler = async (req, res) => {
     return response.notFound(res, "Attachment not found");
   }
 
-  const filePath = path.join(UPLOAD_DIR, path.basename(attachment.filename || "")); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal // guardrails-disable-line
-  const resolvedPath = path.resolve(filePath); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
-  if (resolvedPath.startsWith(path.resolve(UPLOAD_DIR)) && fs.existsSync(resolvedPath)) { // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
-    fs.unlinkSync(resolvedPath); // nosemgrep: express-path-join-resolve-traversal // codacy-suppress path-traversal
+  const filename = path.basename(attachment.filename || "");
+  const uploadDirResolved = path.resolve(UPLOAD_DIR);
+  const filePath = path.join(uploadDirResolved, filename);
+
+  if (filePath.startsWith(uploadDirResolved + path.sep) && fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
   }
 
   await auditLog(req, "support.attachment_deleted", "support_attachment", attachment.id, { filename: attachment.filename }, { tenantId: req.user?.isSuperAdmin ? null : req.tenant?.id });

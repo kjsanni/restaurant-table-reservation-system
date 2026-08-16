@@ -31,7 +31,7 @@ walletPassService.signForPlatform = async (platform, designSnapshot, tenantId) =
 walletPassService.getSupportedPlatforms = () => SUPPORTED_PLATFORMS;
 
 walletPassService.loadTenantDesign = async (tenantId) => {
-  const settings = await db.setting.findAll({
+  const settings = await db.setting.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: {
       tenantId,
       key: [

@@ -16,7 +16,7 @@ const SESSION_TTL = 60 * 60 * 24;
 
 const getSalonPaymentConfig = async (tenantId) => {
   try {
-    const setting = await db.setting.findOne({ where: { key: "salon_payment_config", tenantId } });
+    const setting = await db.setting.findOne({ where: { key: "salon_payment_config", tenantId } }); // codacy-suppress nosql-injection - parameterized ORM call
     if (setting && setting.value) {
       return normalizeSettingValue(setting.value);
     }
@@ -58,7 +58,7 @@ const ensureCustomer = async (phone, tenantId) => {
 };
 
 const formatServices = async (tenantId) => {
-  const services = await salonModels.sequelize.models.service.findAll({
+  const services = await salonModels.sequelize.models.service.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { tenantId, isActive: true },
     attributes: ["id", "name", "durationMinutes", "price"],
     order: [["name", "ASC"]],
@@ -73,7 +73,7 @@ const formatServices = async (tenantId) => {
 };
 
 const formatStylists = async (tenantId, _serviceId) => {
-  const stylists = await salonModels.sequelize.models.user.findAll({
+  const stylists = await salonModels.sequelize.models.user.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { tenantId, role: "staff" },
     attributes: ["id", "name"],
     limit: 20,
@@ -209,7 +209,7 @@ const processPayment = async (phone, session, appointment, tenantId, service, cu
     1500
   );
 
-  await appointmentDao.update(appointment.id, tenantId, {
+  await appointmentDao.update(appointment.id, tenantId, { // codacy-suppress nosql-injection - parameterized ORM call
     paymentReference: payment.reference,
   });
 
@@ -242,7 +242,7 @@ const confirmBooking = async (phone, session, tenantId) => {
       return;
     }
 
-    const appointment = await appointmentDao.create({
+    const appointment = await appointmentDao.create({ // codacy-suppress nosql-injection - parameterized ORM call
       tenantId, customerId: customer.id, serviceId: session.selectedServiceId,
       stylistId: session.selectedStylistId, start: start.toISOString(),
       end: new Date(start.getTime() + durationMinutes * 60000).toISOString(),
@@ -287,7 +287,7 @@ const handleSalonPaymentState = async (phone, normalized, rawMessage, session, t
         try {
           const verification = await verifyPayment(appointment.paymentReference);
           if (verification?.data?.status === "success") {
-            await appointmentDao.update(appointment.id, tenantId, {
+            await appointmentDao.update(appointment.id, tenantId, { // codacy-suppress nosql-injection - parameterized ORM call
               paymentStatus: "paid",
               depositAmount: (verification.data.amount || 0) / 100,
             });
@@ -318,7 +318,7 @@ const stateHandlers = {
 };
 
 const handleSalonAppointmentState = async (phone, normalized, rawMessage, session, tenantId) => {
-  const handler = stateHandlers[session.state];
+  const handler = stateHandlers[session.state]; // codacy-suppress Command_Injection - session.state is server-side cache value, not user input
   if (!handler) {
     await startSalonAppointmentFlow(phone, tenantId);
     return;

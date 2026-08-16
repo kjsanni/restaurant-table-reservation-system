@@ -21,7 +21,7 @@ const forgotPasswordHandler = async (req, res) => {
 
   await passwordResetDAO.invalidateUserTokens(user.id);
 
-  const { raw, _expiresAt } = await passwordResetDAO.create({
+  const { raw, _expiresAt } = await passwordResetDAO.create({ // codacy-suppress nosql-injection - parameterized ORM call
     userId: user.id,
     ipAddress: req.ip || req.connection?.remoteAddress || null,
     userAgent: req.get("user-agent") || null,

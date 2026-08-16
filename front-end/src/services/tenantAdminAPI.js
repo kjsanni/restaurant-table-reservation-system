@@ -52,7 +52,9 @@ const getProvisioningStatus = (tenantId) => {
 };
 
 const updateFeatureFlags = (id, data) => {
-  return API.patch(`/admin/feature-flags/tenants/${id}`, { featureFlags: data });
+  return API.patch(`/admin/feature-flags/tenants/${id}`, {
+    featureFlags: data,
+  });
 };
 
 export default {

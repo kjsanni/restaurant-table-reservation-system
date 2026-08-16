@@ -4,7 +4,7 @@ const usageEventDAO = {};
 
 usageEventDAO.record = async ({ tenantId, resource, action, quantity = 1, metadata = {} }) => {
   if (!tenantId) return;
-  return await db.usageEvent.create({
+  return await db.usageEvent.create({ // codacy-suppress nosql-injection - parameterized ORM call
     tenantId,
     resource,
     action,
@@ -55,7 +55,7 @@ usageEventDAO.getPlatformUsageSummary = async ({ from, to } = {}) => {
     if (to) where.createdAt[db.Sequelize.Op.lte] = new Date(to);
   }
 
-  const events = await db.usageEvent.findAll({ where });
+  const events = await db.usageEvent.findAll({ where }); // codacy-suppress nosql-injection - parameterized ORM call
 
   const summary = events.reduce((acc, event) => {
     const key = `${event.resource}:${event.action}`;

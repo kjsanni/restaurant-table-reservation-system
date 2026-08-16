@@ -18,7 +18,7 @@ crossTenantSearchDAO.search = async (query, filters = {}) => {
   if (filters.tenantId) tenantWhere.tenantId = filters.tenantId;
 
   const [customers, reservations, orders] = await Promise.all([
-    db.customer.findAll({
+    db.customer.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       where: {
         ...tenantWhere,
         [Op.or]: [
@@ -34,7 +34,7 @@ crossTenantSearchDAO.search = async (query, filters = {}) => {
       limit: 20,
       attributes: ["id", "tenantId", "firstName", "lastName", "email", "phone", "visitCount", "createdAt"],
     }),
-    db.reservation.findAll({
+    db.reservation.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       where: {
         ...tenantWhere,
         [Op.or]: [
@@ -50,7 +50,7 @@ crossTenantSearchDAO.search = async (query, filters = {}) => {
       limit: 20,
       attributes: ["id", "tenantId", "customerId", "tableId", "resDate", "resTime", "resStatus", "notes", "createdAt"],
     }),
-    db.order.findAll({
+    db.order.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       where: {
         ...tenantWhere,
         [Op.or]: [

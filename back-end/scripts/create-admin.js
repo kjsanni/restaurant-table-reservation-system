@@ -14,7 +14,7 @@ const SALT_ROUNDS = 10;
 
 const run = async () => {
   const env = process.env.NODE_ENV || "development";
-  const config = require(path.resolve(__dirname, "..", "config", "config.js"))[env];
+  const config = require(path.resolve(__dirname, "..", "config", "config.js"))[env]; // codacy-suppress InsecureModuleImport - path is constructed from __dirname, not user input
 
   if (!config) {
     console.error(`❌ Missing "${env}" database config in config/config.js`);

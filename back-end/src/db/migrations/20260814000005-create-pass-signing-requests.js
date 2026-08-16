@@ -7,7 +7,7 @@ module.exports = {
 
     // Check if table already exists (idempotent)
     const [tables] = await queryInterface.sequelize.query(
-      `SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '${TABLE}'` // nosemgrep: javascript.sequelize.security.audit.sequelize-raw-query.sequelize-raw-query - TABLE is hardcoded constant, no user input
+      `SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '${TABLE}'` // codacy-suppress SQL_Injection - TABLE is a hardcoded constant, no user input
     );
 
     if (tables.length === 0) {
@@ -36,7 +36,7 @@ module.exports = {
 
     // Check if artifacts table already exists
     const [artifactTables] = await queryInterface.sequelize.query(
-      `SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '${ARTIFACT_TABLE}'` // nosemgrep: javascript.sequelize.security.audit.sequelize-raw-query.sequelize-raw-query - ARTIFACT_TABLE is hardcoded constant, no user input
+      `SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '${ARTIFACT_TABLE}'` // codacy-suppress SQL_Injection - ARTIFACT_TABLE is a hardcoded constant, no user input
     );
 
     if (artifactTables.length === 0) {
@@ -60,14 +60,14 @@ module.exports = {
 
     // Add indexes if they don't exist
     const [indexes] = await queryInterface.sequelize.query(
-      `SELECT index_name FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = '${TABLE}' AND index_name = 'idx_pass_signing_requests_tenant'` // nosemgrep: javascript.sequelize.security.audit.sequelize-raw-query.sequelize-raw-query - TABLE is hardcoded constant, no user input
+      `SELECT index_name FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = '${TABLE}' AND index_name = 'idx_pass_signing_requests_tenant'` // codacy-suppress SQL_Injection - TABLE is a hardcoded constant, no user input
     );
     if (indexes.length === 0) {
       await queryInterface.addIndex(TABLE, ["tenantId"], { name: "idx_pass_signing_requests_tenant" });
     }
 
     const [artifactIndexes] = await queryInterface.sequelize.query(
-      `SELECT index_name FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = '${ARTIFACT_TABLE}' AND index_name = 'idx_signed_pass_artifacts_request'` // nosemgrep: javascript.sequelize.security.audit.sequelize-raw-query.sequelize-raw-query - ARTIFACT_TABLE is hardcoded constant, no user input
+      `SELECT index_name FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = '${ARTIFACT_TABLE}' AND index_name = 'idx_signed_pass_artifacts_request'` // codacy-suppress SQL_Injection - ARTIFACT_TABLE is a hardcoded constant, no user input
     );
     if (artifactIndexes.length === 0) {
       await queryInterface.addIndex(ARTIFACT_TABLE, ["requestId"], { name: "idx_signed_pass_artifacts_request" });

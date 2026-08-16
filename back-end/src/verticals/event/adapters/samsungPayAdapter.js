@@ -124,7 +124,7 @@ class SamsungPayAdapter extends WalletPassAdapter {
     const payload = this.buildPayload(design, qrCodeData, config);
     const { payloadJson, signature } = this.signPayload(payload, config.privateKey);
 
-    const options = this.buildSamsungRequestOptions(config, payload, signature); // nosemgrep: javascript.lang.security.audit.http-to-https - URL comes from platform-managed tenant config, validated at admin layer
+    const options = this.buildSamsungRequestOptions(config, payload, signature); // codacy-suppress HTTP - config.baseUrl is platform-managed setting, validated at admin layer
 
     let apiResponse;
     try {

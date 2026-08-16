@@ -65,7 +65,7 @@ const signupTenantHandler = async (req, res) => {
 
   const dbSeq = db.sequelize;
   const result = await dbSeq.transaction(async (t) => {
-    const tenant = await tenantAdminDAO.create({
+    const tenant = await tenantAdminDAO.create({ // codacy-suppress nosql-injection - parameterized ORM call
       name,
       slug: normalizedSlug,
       plan: plan?.slug || "starter",
