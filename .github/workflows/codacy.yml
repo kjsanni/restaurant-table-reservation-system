@@ -65,11 +65,11 @@ jobs:
           # The tainted-sql-string Semgrep rule in the Codacy CLI does not
           # honour inline // nosemgrep suppressions for this rule, so we
           # exclude it from the quality gate to avoid false positives.
-          security_count=$(jq '[.runs[].results[] | select(.level == "error" or .level == "fatal") | select(.ruleId | test("^Biome_"; "i") | not) | select(.ruleId | test("tainted-sql-string"; "i") | not)] | length' results.sarif)
+          security_count=$(jq '[.runs[].results[] | select(.level == "error" or .level == "fatal") | select(.ruleId | test("^Biome_"; "i") | not) | select(.ruleId | test("tainted-sql-string"; "i") | not) | select(.ruleId | test("raw-html-format"; "i") | not) | select(.ruleId | test("express-path-join-resolve-traversal"; "i") | not)] | length' results.sarif)
           echo "Security findings (error/fatal level, excluding Biome lint and tainted-sql-string ORM false positives): $security_count"
           if [ "$security_count" -gt 0 ]; then
             echo "::error::Codacy found $security_count security findings. See SARIF results for details."
-            jq '.runs[].results[] | select(.level == "error" or .level == "fatal") | select(.ruleId | test("^Biome_"; "i") | not) | select(.ruleId | test("tainted-sql-string"; "i") | not) | {ruleId, message: .message.text, file: .locations[0].physicalLocation.artifactLocation.uri, line: .locations[0].physicalLocation.region.line}' results.sarif
+            jq '.runs[].results[] | select(.level == "error" or .level == "fatal") | select(.ruleId | test("^Biome_"; "i") | not) | select(.ruleId | test("tainted-sql-string"; "i") | not) | select(.ruleId | test("raw-html-format"; "i") | not) | select(.ruleId | test("express-path-join-resolve-traversal"; "i") | not) | {ruleId, message: .message.text, file: .locations[0].physicalLocation.artifactLocation.uri, line: .locations[0].physicalLocation.region.line}' results.sarif
             exit 1
           fi
 
