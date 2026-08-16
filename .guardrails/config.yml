@@ -1,5 +1,2 @@
-bundles: "auto"
-report:
-  findings: "onChangedLinesOnly"
-  pullRequest:
-    comment: false
+bundles:
+  - javascript
