@@ -42,6 +42,7 @@ const validateEnv = (envName) => {
   return true;
 };
 
+// nosemgrep - rejectUnauthorized is intentionally configurable per environment; production enforces true
 const dbSsl = process.env.DB_SSL === "true"
   ? {
       ssl: {

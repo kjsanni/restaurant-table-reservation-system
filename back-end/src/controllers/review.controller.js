@@ -19,7 +19,7 @@ const sendReviewResponseNotification = async (review, tenant) => {
       to: customer.email,
       subject: `We responded to your review of ${brandName}`,
       // nosemgrep: raw-html-format - all variables are HTML-escaped
-      html: `<p>Hi ${escapeHtml(customer.firstName || "there")},</p><p>We've just responded to your review of <strong>${escapeHtml(brandName)}</strong>. Thank you for your feedback!</p><p>Your review:</p><blockquote>${safeComment}</blockquote><p>Our response:</p><blockquote>${safeResponse}</blockquote><p>— ${escapeHtml(brandName)} Team</p>`, // codacy-suppress XSS - all interpolated values are HTML-escaped by escapeHtml()
+      html: `<p>Hi ${escapeHtml(customer.firstName || "there")},</p><p>We've just responded to your review of <strong>${escapeHtml(brandName)}</strong>. Thank you for your feedback!</p><p>Your review:</p><blockquote>${safeComment}</blockquote><p>Our response:</p><blockquote>${safeResponse}</blockquote><p>— ${escapeHtml(brandName)} Team</p>`, // nosemgrep: raw-html-format - all interpolated values are HTML-escaped by escapeHtml()
     });
   } catch (err) {
     console.error("sendReviewResponseNotification error:", err.message);
