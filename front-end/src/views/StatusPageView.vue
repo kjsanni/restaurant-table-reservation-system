@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { brandColors } from "@/theme/colors";
 
 const status = ref<any>(null);
 const loading = ref(true);
@@ -22,22 +23,22 @@ onMounted(async () => {
 });
 
 const statusColor = (status: string) => {
-  if (status === "healthy" || status === "operational") return "#4d7c0f";
-  if (status === "degraded" || status === "warning") return "#d97706";
-  if (status === "unhealthy" || status === "critical") return "#e11d48";
-  return "#9a9389";
+  if (status === "healthy" || status === "operational") return brandColors.earth500;
+  if (status === "degraded" || status === "warning") return brandColors.accent500;
+  if (status === "unhealthy" || status === "critical") return brandColors.rose500;
+  return brandColors.neutral500;
 };
 
 const incidentSeverityColor = (severity: string) => {
   switch (severity) {
     case "critical":
-      return "#e11d48";
+      return brandColors.rose600;
     case "high":
-      return "#d97706";
+      return brandColors.accent500;
     case "medium":
-      return "#3b82f6";
+      return brandColors.sky500;
     default:
-      return "#9a9389";
+      return brandColors.neutral500;
   }
 };
 
@@ -169,60 +170,60 @@ const formatDate = (date: string) => {
 <style scoped>
 .status-root {
   min-height: 100vh;
-  background: #faf9f7;
-  color: #312e2a;
+  background: var(--background);
+  color: var(--ink);
 }
 .status-hero {
-  background: #1a1410;
-  color: #fff;
-  padding: 4rem 1.5rem;
+  background: var(--brand-900);
+  color: var(--white);
+  padding: var(--space-16) var(--space-6);
   text-align: center;
 }
 .status-hero h1 {
-  margin: 0 0 0.5rem;
-  font-size: 2.5rem;
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-3xl);
 }
 .status-subtitle {
-  color: #94a3b8;
-  margin: 0 0 1.5rem;
+  color: var(--ink-muted);
+  margin: 0 0 var(--space-6);
 }
 .status-badge {
   display: inline-block;
-  padding: 0.5rem 1.25rem;
-  border-radius: 999px;
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-full);
   font-weight: 600;
-  color: #fff;
+  color: var(--white);
   text-transform: capitalize;
 }
 .loading-state,
 .error-state {
   text-align: center;
-  padding: 3rem;
-  color: #645d54;
+  padding: var(--space-16);
+  color: var(--ink-muted);
 }
 .error-state {
-  color: #e11d48;
+  color: var(--danger);
 }
 section {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: var(--space-8) var(--space-6);
 }
 section h2 {
-  margin: 0 0 1rem;
-  font-size: 1.25rem;
-  color: #1a1410;
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-xl);
+  color: var(--ink);
 }
 .checks-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
 }
 .check-card {
-  background: #fff;
-  border: 1px solid #e7e4de;
-  border-radius: 0.6rem;
-  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
 }
 .check-header {
   display: flex;
@@ -234,111 +235,112 @@ section h2 {
   font-weight: 500;
 }
 .check-status {
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: capitalize;
+  color: var(--white);
 }
 .uptime-card {
-  background: #fff;
-  border: 1px solid #e7e4de;
-  border-radius: 0.6rem;
-  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: var(--space-8);
 }
 .uptime-percent {
-  font-size: 3rem;
+  font-size: var(--text-3xl);
   font-weight: 700;
-  color: #4d7c0f;
+  color: var(--success);
 }
 .uptime-details {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  color: #645d54;
-  font-size: 0.95rem;
+  gap: var(--space-1);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
 }
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 .section-header h2 {
   margin: 0;
 }
 .incident-count {
-  color: #7d766c;
-  font-size: 0.9rem;
+  color: var(--ink-subtle);
+  font-size: var(--text-sm);
 }
 .empty-state {
   text-align: center;
-  padding: 2rem;
-  color: #645d54;
+  padding: var(--space-8);
+  color: var(--ink-muted);
 }
 .incidents-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 .incident-card {
-  background: #fff;
-  border: 1px solid #e7e4de;
-  border-radius: 0.6rem;
-  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
 }
 .incident-header {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 .incident-severity,
 .incident-status {
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
   font-weight: 600;
-  color: #fff;
   text-transform: capitalize;
+  color: var(--white);
 }
 .incident-card h3 {
-  margin: 0 0 0.25rem;
-  font-size: 1rem;
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-base);
 }
 .incident-date {
   margin: 0;
-  color: #7d766c;
-  font-size: 0.85rem;
+  color: var(--ink-subtle);
+  font-size: var(--text-sm);
 }
 .sla-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
 }
 .sla-card {
-  background: #fff;
-  border: 1px solid #e7e4de;
-  border-radius: 0.6rem;
-  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
 }
 .sla-card h3 {
-  margin: 0 0 0.5rem;
-  font-size: 1rem;
-  color: #1a1410;
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-base);
+  color: var(--ink);
 }
 .sla-card p {
-  margin: 0 0 0.25rem;
-  color: #645d54;
-  font-size: 0.9rem;
+  margin: 0 0 var(--space-1);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
 }
 .status-footer {
   text-align: center;
-  padding: 2rem;
-  color: #9a9389;
-  font-size: 0.9rem;
-  border-top: 1px solid #e7e4de;
+  padding: var(--space-8);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  border-top: 1px solid var(--border);
 }
 </style>

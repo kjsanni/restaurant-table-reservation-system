@@ -317,7 +317,7 @@ onMounted(() => {
 .nav-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: var(--space-4) var(--space-6);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -326,9 +326,9 @@ onMounted(() => {
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
   font-family: var(--font-serif);
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--neutral-900);
   letter-spacing: -0.02em;
@@ -337,7 +337,7 @@ onMounted(() => {
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .nav-link {
@@ -445,6 +445,22 @@ onMounted(() => {
   animation: float 14s ease-in-out infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide,
+  .hero-slide img,
+  .hero-orb,
+  .reveal-section,
+  .cart-fly-enter-active,
+  .cart-fly-leave-active {
+    animation: none;
+    transition: none;
+  }
+  .reveal-section {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .hero-orb-1 {
   width: 520px;
   height: 520px;
@@ -480,48 +496,50 @@ onMounted(() => {
   pointer-events: none;
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      transform: translateY(-35px) scale(1.06);
+    }
   }
-  50% {
-    transform: translateY(-35px) scale(1.06);
-  }
-}
 
-@keyframes kenBurns {
-  0% {
-    transform: scale(1) translate(0, 0);
+  @keyframes kenBurns {
+    0% {
+      transform: scale(1) translate(0, 0);
+    }
+    100% {
+      transform: scale(1.08) translate(-10px, -8px);
+    }
   }
-  100% {
-    transform: scale(1.08) translate(-10px, -8px);
-  }
-}
 
-@keyframes heroFade {
-  0%,
-  18% {
-    opacity: 1;
-  }
-  20%,
-  38% {
-    opacity: 0;
-  }
-  40%,
-  58% {
-    opacity: 1;
-  }
-  60%,
-  78% {
-    opacity: 0;
-  }
-  80%,
-  98% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
+  @keyframes heroFade {
+    0%,
+    18% {
+      opacity: 1;
+    }
+    20%,
+    38% {
+      opacity: 0;
+    }
+    40%,
+    58% {
+      opacity: 1;
+    }
+    60%,
+    78% {
+      opacity: 0;
+    }
+    80%,
+    98% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
   }
 }
 
@@ -596,14 +614,14 @@ onMounted(() => {
 .btn-primary-lg {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 16px 28px;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-7);
   border: none;
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
   color: white;
   font-weight: 600;
-  font-size: 15px;
+  font-size: var(--text-base);
   cursor: pointer;
   box-shadow: 0 8px 24px rgba(217, 119, 6, 0.3);
   transition: all 0.25s ease;
@@ -735,21 +753,21 @@ onMounted(() => {
 .tab-bar {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 36px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-9);
 }
 
 .tab {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 22px;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
   border-radius: var(--radius-lg);
   border: 1.5px solid var(--border);
   background: white;
   color: var(--ink-secondary);
   font-weight: 500;
-  font-size: 14px;
+  font-size: var(--text-sm);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1044,22 +1062,22 @@ onMounted(() => {
 }
 
 .cta-inner h2 {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
   font-family: var(--font-serif);
   font-size: clamp(24px, 3.5vw, 32px);
   font-weight: 700;
-  color: #ffffff;
+  color: var(--white);
 }
 
 .cta-inner p {
   margin: 0;
   color: rgba(255, 255, 255, 0.8);
-  font-size: 15px;
+  font-size: var(--text-base);
 }
 
 .cta-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .cta-strip .btn-primary-lg {
@@ -1194,18 +1212,18 @@ onMounted(() => {
 /* ─── Floating Cart ─── */
 .floating-cart {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
+  right: var(--space-6);
+  bottom: var(--space-6);
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 20px;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
   border: none;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
   color: white;
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--text-sm);
   cursor: pointer;
   box-shadow: 0 8px 28px rgba(217, 119, 6, 0.35);
   z-index: 200;

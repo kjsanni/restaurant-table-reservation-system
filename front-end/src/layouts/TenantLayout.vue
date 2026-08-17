@@ -15,7 +15,7 @@ import { useAnimations } from "@/composables/useAnimations";
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
-const { fadeIn } = useAnimations();
+const { fadeIn, fadeOut } = useAnimations();
 const { status, pendingCount } = useOnlineStatus();
 
 const collapsed = ref(false);
@@ -30,6 +30,26 @@ const user = computed<User | null>(
 );
 const isAdmin = computed(() => authStore.user?.role === "admin");
 const capabilities = computed(() => authStore.capabilities);
+
+let pageTween: gsap.core.Tween | null = null;
+let leaveTween: gsap.core.Tween | null = null;
+
+const beforeEnter = (el: Element) => {
+  el.style.opacity = "0";
+  el.style.transform = "translateY(8px)";
+};
+
+const onEnter = (el: Element, done: () => void) => {
+  if (pageTween) pageTween.kill();
+  pageTween = fadeIn(el, { duration: "base" });
+  pageTween.eventCallback("onComplete", done);
+};
+
+const onLeave = (el: Element, done: () => void) => {
+  if (leaveTween) leaveTween.kill();
+  leaveTween = fadeOut(el, { duration: "fast" });
+  leaveTween.eventCallback("onComplete", done);
+};
 
 const shouldShow = (item: {
   requiresAuth?: boolean;
@@ -130,7 +150,7 @@ watch(
   () => authStore.currentTenant?.businessVertical,
   (vertical) => {
     if (typeof document !== "undefined") {
-      const allowed = ["restaurant", "salon"];
+      const allowed = ["restaurant", "salon", "event"];
       const safe = allowed.includes(vertical || "") ? vertical || "" : "";
       document.documentElement.setAttribute("data-vertical", safe);
     }
@@ -176,6 +196,7 @@ watch(
               v-for="item in visibleNavItems"
               :key="item.routeName"
               :to="{ name: item.routeName }"
+              :aria-label="item.text"
               :class="[
                 'tl-nav-item',
                 { 'tl-nav-item-active': isActive(item.routeName) },
@@ -246,13 +267,20 @@ watch(
       </header>
 
       <main id="main-content" class="tl-content">
-        <RouterView v-slot="{ Component }">
-          <component
-            v-if="Component"
-            :is="Component"
-            :key="`${String($route.name)}-${authStore.currentTenant?.id ?? 'platform'}`"
-          />
-        </RouterView>
+        <Transition
+          name="page-transition"
+          @before-enter="beforeEnter"
+          @enter="onEnter"
+          @leave="onLeave"
+        >
+          <RouterView v-slot="{ Component }">
+            <component
+              v-if="Component"
+              :is="Component"
+              :key="`${String($route.name)}-${authStore.currentTenant?.id ?? 'platform'}`"
+            />
+          </RouterView>
+        </Transition>
       </main>
 
       <footer v-if="!route.meta.standalone" class="tl-footer">

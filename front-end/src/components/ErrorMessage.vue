@@ -16,11 +16,11 @@ defineProps({
 .error-banner-component {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 20px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: var(--card-radius, 12px);
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: var(--danger-soft);
+  border: 1px solid var(--rose-200);
+  border-radius: var(--card-radius, var(--radius-xl));
 }
 
 .error-icon {
@@ -29,8 +29,8 @@ defineProps({
 }
 
 .error-message {
-  font-family: "Inter-Medium";
-  font-size: 14px;
-  color: #e11d48;
+  font-family: "Public Sans", var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--danger);
 }
 </style>

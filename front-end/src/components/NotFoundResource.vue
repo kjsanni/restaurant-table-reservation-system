@@ -24,10 +24,10 @@ const props = defineProps({
   align-items: center;
   justify-content: center;
   width: 100%;
-  gap: 10px;
-  padding: 50px;
+  gap: var(--space-2);
+  padding: var(--space-12);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   background-color: var(--surface);
 }
 
@@ -35,7 +35,7 @@ const props = defineProps({
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 15px;
+  gap: var(--space-4);
   color: var(--border);
 }
 </style>

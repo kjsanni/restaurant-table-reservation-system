@@ -266,7 +266,7 @@ thead {
 
 th {
   text-align: left;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   font-size: 11px;
   font-weight: 700;
   color: var(--neutral-600);
@@ -276,7 +276,7 @@ th {
 }
 
 td {
-  padding: 14px 16px;
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--neutral-100);
   color: var(--neutral-800);
   font-family: var(--font-sans);

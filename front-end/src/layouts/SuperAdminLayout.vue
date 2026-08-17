@@ -5,7 +5,10 @@ import { Icon } from "@iconify/vue";
 import { VaSidebarItem } from "vuestic-ui";
 import { useAuthStore } from "@/stores/auth";
 import type { User } from "@/stores/auth";
-import { superAdminNavItems } from "@/config/sidebarItems";
+import {
+  superAdminSidebarNavItems,
+  superAdminTopBarNavItems,
+} from "@/config/sidebarItems";
 import type { NavItem } from "@/config/sidebarItems";
 import { useAnimations } from "@/composables/useAnimations";
 import gsap from "gsap";
@@ -13,7 +16,27 @@ import gsap from "gsap";
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
-const { fadeIn } = useAnimations();
+const { fadeIn, fadeOut } = useAnimations();
+
+let pageTween: gsap.core.Tween | null = null;
+let leaveTween: gsap.core.Tween | null = null;
+
+const beforeEnter = (el: Element) => {
+  el.style.opacity = "0";
+  el.style.transform = "translateY(8px)";
+};
+
+const onEnter = (el: Element, done: () => void) => {
+  if (pageTween) pageTween.kill();
+  pageTween = fadeIn(el, { duration: "base" });
+  pageTween.eventCallback("onComplete", done);
+};
+
+const onLeave = (el: Element, done: () => void) => {
+  if (leaveTween) leaveTween.kill();
+  leaveTween = fadeOut(el, { duration: "fast" });
+  leaveTween.eventCallback("onComplete", done);
+};
 
 const collapsed = ref(false);
 const sidebarVisible = ref(true);
@@ -108,7 +131,86 @@ const shouldShow = (item: {
   return true;
 };
 
-const visibleNavItems = computed(() => superAdminNavItems.filter(shouldShow));
+const visibleNavItems = computed(() =>
+  superAdminSidebarNavItems.filter(shouldShow)
+);
+
+const visibleTopBarItems = computed(() =>
+  superAdminTopBarNavItems.filter(shouldShow)
+);
+
+const topBarGroups = computed(() => {
+  const groups: Record<string, NavItem[]> = {};
+  for (const item of visibleTopBarItems.value) {
+    const section = item.section || "Other";
+    if (!groups[section]) groups[section] = [];
+    groups[section].push(item);
+  }
+  return groups;
+});
+
+const topBarSectionOrder = [
+  "Tenants",
+  "Financial",
+  "Integrations",
+  "Security & Compliance",
+  "Platform",
+  "Support",
+  "Data & Tools",
+];
+
+const orderedTopBarSections = computed(() => {
+  const sections = Object.keys(topBarGroups.value);
+  return sections.sort((a, b) => {
+    const aIdx = topBarSectionOrder.indexOf(a);
+    const bIdx = topBarSectionOrder.indexOf(b);
+    if (aIdx === -1 && bIdx === -1) return a.localeCompare(b);
+    if (aIdx === -1) return 1;
+    if (bIdx === -1) return -1;
+    return aIdx - bIdx;
+  });
+});
+
+const activeDropdown = ref<string | null>(null);
+
+const toggleDropdown = (section: string) => {
+  activeDropdown.value = activeDropdown.value === section ? null : section;
+};
+
+const currentSection = computed(() => {
+  const currentRoute = route.name as string;
+  for (const item of visibleTopBarItems.value) {
+    if (item.routeName === currentRoute) {
+      return item.section || null;
+    }
+  }
+  return null;
+});
+
+const itemCounts = computed(() => {
+  const counts: Record<string, number> = {};
+  for (const item of visibleTopBarItems.value) {
+    const section = item.section || "Other";
+    counts[section] = (counts[section] || 0) + 1;
+  }
+  return counts;
+});
+
+const topBarNavRef = ref<HTMLElement | null>(null);
+
+const closeTopBarDropdown = (e: MouseEvent) => {
+  if (activeDropdown.value && !topBarNavRef.value?.contains(e.target as Node)) {
+    activeDropdown.value = null;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener("click", closeTopBarDropdown);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", closeTopBarDropdown);
+});
 
 const groupedNavItems = computed(() => {
   const groups: Record<string, NavItem[]> = {};
@@ -154,10 +256,23 @@ const isActive = (routeName: string) =>
   (typeof route.name === "string" && route.name.startsWith(`${routeName}-`));
 
 watch(
+  () => route.name,
+  (newRoute) => {
+    const section = visibleTopBarItems.value.find(
+      (item) => item.routeName === (newRoute as string)
+    )?.section;
+    if (section && !activeDropdown.value) {
+      activeDropdown.value = section;
+    }
+  },
+  { immediate: true }
+);
+
+watch(
   () => authStore.currentTenant?.businessVertical,
   (vertical) => {
     if (typeof document !== "undefined") {
-      const allowed = ["restaurant", "salon"];
+      const allowed = ["restaurant", "salon", "event"];
       const safe = allowed.includes(vertical || "") ? vertical || "" : "";
       document.documentElement.setAttribute("data-vertical", safe);
     }
@@ -206,6 +321,7 @@ watch(
                 v-for="item in groupedNavItems[section]"
                 :key="item.routeName"
                 :to="{ name: item.routeName }"
+                :aria-label="item.text"
                 :class="[
                   'sa-nav-item',
                   { 'sa-nav-item-active': isActive(item.routeName) },
@@ -260,6 +376,58 @@ watch(
               height="20"
             />
           </button>
+
+          <nav
+            v-if="orderedTopBarSections.length"
+            class="sa-topbar-nav"
+            ref="topBarNavRef"
+          >
+            <div class="sa-topbar-nav-scroll">
+              <template v-for="section in orderedTopBarSections" :key="section">
+                <div
+                  class="sa-dropdown"
+                  :class="{ open: activeDropdown === section }"
+                >
+                  <button
+                    type="button"
+                    class="sa-dropdown-btn"
+                    :class="{ active: currentSection === section }"
+                    @click="toggleDropdown(section)"
+                    :aria-expanded="activeDropdown === section"
+                  >
+                    {{ section }}
+                    <span v-if="itemCounts[section]" class="sa-dropdown-count">
+                      {{ itemCounts[section] }}
+                    </span>
+                    <Icon
+                      icon="mdi:chevron-down"
+                      width="16"
+                      height="16"
+                      class="sa-dropdown-icon"
+                    />
+                  </button>
+                  <div class="sa-dropdown-panel">
+                    <VaSidebarItem
+                      v-for="item in topBarGroups[section]"
+                      :key="item.routeName"
+                      :to="{ name: item.routeName }"
+                      :aria-label="item.text"
+                      class="sa-dropdown-item"
+                      :class="{
+                        'sa-dropdown-item-active': isActive(item.routeName),
+                      }"
+                      @click="activeDropdown = null"
+                    >
+                      <template #icon>
+                        <Icon :icon="item.icon" width="18" height="18" />
+                      </template>
+                      <span class="sa-dropdown-text">{{ item.text }}</span>
+                    </VaSidebarItem>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </nav>
         </div>
         <div class="sa-topbar-center">
           <span class="sa-topbar-title">{{
@@ -274,9 +442,16 @@ watch(
       </header>
 
       <main class="sa-content">
-        <RouterView v-slot="{ Component }">
-          <component v-if="Component" :is="Component" :key="$route.name" />
-        </RouterView>
+        <Transition
+          name="page-transition"
+          @before-enter="beforeEnter"
+          @enter="onEnter"
+          @leave="onLeave"
+        >
+          <RouterView v-slot="{ Component }">
+            <component v-if="Component" :is="Component" :key="$route.name" />
+          </RouterView>
+        </Transition>
       </main>
     </div>
   </div>
@@ -346,8 +521,8 @@ watch(
   width: 44px;
   height: 44px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid color-mix(in srgb, var(--white) 12%, transparent);
+  background: color-mix(in srgb, var(--white) 8%, transparent);
   color: var(--white);
   display: grid;
   place-items: center;
@@ -357,7 +532,7 @@ watch(
 
 .sa-collapse-btn:hover,
 .sa-expand-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: color-mix(in srgb, var(--white) 16%, transparent);
 }
 
 .sa-nav {
@@ -372,7 +547,7 @@ watch(
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.45);
+  color: color-mix(in srgb, var(--white) 45%, transparent);
   user-select: none;
 }
 
@@ -382,7 +557,7 @@ watch(
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  color: #ffffff !important;
+  color: var(--white) !important;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -394,24 +569,24 @@ watch(
 }
 
 .sa-nav-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff !important;
+  background: color-mix(in srgb, var(--white) 8%, transparent);
+  color: var(--white) !important;
 }
 
 .sa-nav-item-active {
   background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
-  color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25);
+  color: var(--white) !important;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent-600) 25%, transparent);
 }
 
 .sa-nav-text {
   white-space: nowrap;
-  color: #ffffff !important;
+  color: var(--white) !important;
 }
 
 .sa-sidebar-bottom {
   padding: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid color-mix(in srgb, var(--white) 8%, transparent);
 }
 
 .sa-user-section {
@@ -451,7 +626,7 @@ watch(
 
 .sa-user-role {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.55);
+  color: color-mix(in srgb, var(--white) 55%, transparent);
 }
 
 .sa-logout-item {
@@ -460,7 +635,7 @@ watch(
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  color: rgba(255, 255, 255, 0.6);
+  color: color-mix(in srgb, var(--white) 60%, transparent);
   font-size: 14px;
   font-weight: 500;
   transition: all var(--duration-fast) var(--ease-out);
@@ -471,7 +646,7 @@ watch(
 }
 
 .sa-logout-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--white) 8%, transparent);
   color: var(--white);
 }
 
@@ -486,27 +661,21 @@ watch(
 .sa-topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   height: var(--topbar-height);
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--background);
   border-bottom: 1px solid var(--border-subtle);
   padding: 0 var(--space-6);
   gap: var(--space-4);
   z-index: var(--z-sticky);
   position: sticky;
   top: 0;
-  background: rgba(255, 255, 255, 0.88);
-  border-bottom: 1px solid var(--border-subtle);
-  padding: 0 var(--space-6);
-  gap: var(--space-4);
-  z-index: var(--z-sticky);
 }
 
 @supports (backdrop-filter: blur(1px)) {
   .sa-topbar {
-    backdrop-filter: blur(18px) saturate(1.4);
-    -webkit-backdrop-filter: blur(18px) saturate(1.4);
-    will-change: transform;
+    background: color-mix(in srgb, var(--background) 90%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 }
 
@@ -514,6 +683,9 @@ watch(
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  flex-shrink: 0;
+  overflow: visible;
+  max-width: 60%;
 }
 
 .sa-toggle-btn {
@@ -521,25 +693,171 @@ watch(
   align-items: center;
   justify-content: center;
   padding: 0;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   background: transparent;
   color: var(--ink);
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out);
+  flex-shrink: 0;
 }
 
 .sa-toggle-btn:hover {
   background: var(--neutral-100);
+  border-color: var(--border);
+  color: var(--ink-secondary);
+}
+
+.sa-topbar-nav {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  overflow: visible;
+}
+
+.sa-topbar-nav-scroll {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  width: 100%;
+  overflow: visible;
+}
+
+.sa-dropdown {
+  position: relative;
+}
+
+.sa-dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 6px 14px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  position: relative;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sa-dropdown-btn:hover {
+  background: var(--neutral-100);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+.sa-dropdown-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-500);
+  color: var(--accent-text);
+}
+
+.sa-dropdown-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  background: var(--neutral-200);
+  color: var(--neutral-700);
+}
+
+.sa-dropdown-btn.active .sa-dropdown-count {
+  background: var(--accent-100);
+  color: var(--accent-600);
+}
+
+.sa-dropdown-icon {
+  transition: transform var(--duration-fast) var(--ease-out);
+  color: var(--ink-subtle);
+}
+
+.sa-dropdown.open .sa-dropdown-icon,
+.sa-dropdown:hover .sa-dropdown-icon {
+  transform: rotate(180deg);
+  color: var(--ink);
+}
+
+.sa-dropdown-panel {
+  display: none;
+  position: absolute;
+  top: 115%;
+  left: 0;
+  min-width: 240px;
+  max-height: 600px;
+  overflow: visible;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-dropdown);
+  padding: 4px 0;
+}
+
+.sa-dropdown.open .sa-dropdown-panel,
+.sa-dropdown:hover .sa-dropdown-panel {
+  display: block;
+}
+
+.sa-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 14px;
+  border-radius: 0;
+  color: var(--ink) !important;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--duration-fast) var(--ease-out);
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.sa-dropdown-item:hover {
+  background: var(--neutral-100);
+  color: var(--ink) !important;
+}
+
+.sa-dropdown-item-active {
+  background: var(--accent-100) !important;
+  color: var(--accent-600) !important;
+  font-weight: 600;
+}
+
+.sa-dropdown-text {
+  white-space: nowrap;
+}
+
+@media screen and (max-width: 768px) {
+  .sa-topbar-nav {
+    display: none;
+  }
 }
 
 .sa-topbar-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  flex: 1;
+  text-align: center;
+  min-width: 0;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 var(--space-2);
 }
 
 .sa-topbar-title {
@@ -553,6 +871,7 @@ watch(
 .sa-topbar-right {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   gap: var(--space-3);
 }
 
@@ -561,7 +880,7 @@ watch(
   height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent-400), var(--accent-600));
-  color: white;
+  color: var(--brand-900);
   display: grid;
   place-items: center;
   font-size: 13px;
