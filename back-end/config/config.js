@@ -42,12 +42,14 @@ const validateEnv = (envName) => {
   return true;
 };
 
-// codacy-suppress SSL - rejectUnauthorized defaults to true in production; only relaxed when DB_SSL_REJECT_UNAUTHORIZED=false is explicitly set for dev/test environments
 const dbSsl = process.env.DB_SSL === "true"
   ? {
       ssl: {
         require: true,
-        rejectUnauthorized: process.env.NODE_ENV !== "production" && process.env.DB_SSL_REJECT_UNAUTHORIZED !== "true",
+        rejectUnauthorized:
+          process.env.NODE_ENV === "production"
+            ? true
+            : process.env.DB_SSL_REJECT_UNAUTHORIZED !== "false",
       },
     }
   : null;

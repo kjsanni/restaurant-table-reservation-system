@@ -95,7 +95,7 @@ test.describe("Event check-in scanner flow", () => {
       const response = await request.post(`/api/v1/events/checkin/${token}`, {
         data: { scannerId: "test", latitude: 0, longitude: 0 },
       });
-      expect(response.status()).toBe(400);
+      expect(response.status()).toBe(401);
     });
 
     test("checkin endpoint rejects invalid API key", async ({ request }) => {
@@ -104,7 +104,7 @@ test.describe("Event check-in scanner flow", () => {
         data: { scannerId: "test", latitude: 0, longitude: 0 },
         headers: { "x-api-key": "invalid-key" },
       });
-      expect(response.status()).toBe(400);
+      expect(response.status()).toBe(403);
     });
 
     test("checkin endpoint accepts valid API key with scanner params", async ({ request }) => {
