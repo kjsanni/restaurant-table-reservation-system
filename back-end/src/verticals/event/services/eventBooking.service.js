@@ -108,7 +108,7 @@ eventBookingService.updateBooking = async (id, tenantId, data) => {
     throw new Error("Booking not found");
   }
 
-  const allowed = ["status", "guestName", "guestEmail", "guestPhone", "notes", "quantity"];
+  const allowed = ["status", "guestName", "guestEmail", "guestPhone", "notes"];
   const updates = {};
   for (const key of allowed) {
     if (data[key] !== undefined) {
