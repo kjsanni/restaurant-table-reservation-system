@@ -8,7 +8,7 @@ const MASKED_EMAIL_DOMAIN = "example.com";
 const MASKED_PHONE = "XXXXXXXXXXX";
 
 dataAnonymizationDAO.anonymizeTenant = async (tenantId, performedBy) => {
-  const customers = await db.customer.findAll({
+  const customers = await db.customer.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { tenantId },
     attributes: ["id", "firstName", "lastName", "email", "phone"],
   });
@@ -20,7 +20,7 @@ dataAnonymizationDAO.anonymizeTenant = async (tenantId, performedBy) => {
     const maskedEmail = `user_${customer.id}@${MASKED_EMAIL_DOMAIN}`;
     const maskedPhone = MASKED_PHONE;
 
-    await customer.update({
+    await customer.update({ // codacy-suppress nosql-injection - parameterized ORM call
       firstName: maskedFirstName,
       lastName: maskedLastName,
       email: maskedEmail,

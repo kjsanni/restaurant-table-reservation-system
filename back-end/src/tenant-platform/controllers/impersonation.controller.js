@@ -1,19 +1,22 @@
+const response = require("../utils/response");
+
 const impersonationDAO = require("../DAOs/impersonation.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const startImpersonationHandler = async (req, res) => {
   const { tenantUserId, reason } = req.body;
   if (!tenantUserId) {
-    return res.status(400).json({ success: false, message: "tenantUserId is required" });
+    return response.badRequest(res, "tenantUserId is required");
   }
 
   const targetUser = await require("../../db/models").user.findByPk(tenantUserId);
   if (!targetUser) {
-    return res.status(404).json({ success: false, message: "Target user not found" });
+    return response.notFound(res, "Target user not found");
   }
 
   if (targetUser.isSuperAdmin) {
-    return res.status(400).json({ success: false, message: "Cannot impersonate another super admin" });
+    return response.badRequest(res, "Cannot impersonate another super admin");
   }
 
   const session = await impersonationDAO.createSession({
@@ -25,15 +28,7 @@ const startImpersonationHandler = async (req, res) => {
     ipAddress: req.ip,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "impersonation.started",
-    "user",
-    targetUser.id,
-    targetUser.tenantId,
-    { reason, targetEmail: targetUser.email },
-    req.ip
-  );
+await auditLog(req, "impersonation.started", "user", targetUser.id, { reason, targetEmail: targetUser.email }, { tenantId: targetUser.tenantId });
 
   res.status(201).json({
     success: true,
@@ -46,18 +41,10 @@ const endImpersonationHandler = async (req, res) => {
   const { id } = req.params;
   const session = await impersonationDAO.endSession(id, req.user.id);
   if (!session) {
-    return res.status(404).json({ success: false, message: "Impersonation session not found" });
+    return response.notFound(res, "Impersonation session not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "impersonation.ended",
-    "user",
-    session.tenantUserId,
-    session.tenantId,
-    {},
-    req.ip
-  );
+  await auditLog(req, "impersonation.ended", "user", session.tenantUserId, {}, { tenantId: session.tenantId });
 
   res.status(200).json({ success: true });
 };

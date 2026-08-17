@@ -103,6 +103,7 @@ onMounted(async () => {
   <div class="portal-home">
     <div class="portal-header">
       <h1>{{ greeting }}</h1>
+      <h2>Customer Portal</h2>
       <p>{{ portalSubtitle }}</p>
     </div>
     <div class="portal-links">

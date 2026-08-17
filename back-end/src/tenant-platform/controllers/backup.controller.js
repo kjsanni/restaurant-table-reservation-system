@@ -1,7 +1,10 @@
+const response = require("../utils/response");
+
 const backupRecordDAO = require("../DAOs/backupRecord.dao");
 const backupService = require("../services/backup.service");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const fs = require("fs");
+const auditLog = require("../utils/auditLog");
 
 const listBackupRecordsHandler = async (req, res) => {
   const { status, type, limit } = req.query;
@@ -16,7 +19,7 @@ const listBackupRecordsHandler = async (req, res) => {
 const getBackupRecordHandler = async (req, res) => {
   const record = await backupRecordDAO.findById(req.params.id);
   if (!record) {
-    return res.status(404).json({ success: false, message: "Backup record not found" });
+    return response.notFound(res, "Backup record not found");
   }
   res.status(200).json({ success: true, item: record });
 };
@@ -40,7 +43,7 @@ const updateBackupHandler = async (req, res) => {
   }
   const record = await backupRecordDAO.update(req.params.id, updates);
   if (!record) {
-    return res.status(404).json({ success: false, message: "Backup record not found" });
+    return response.notFound(res, "Backup record not found");
   }
   res.status(200).json({ success: true, item: record });
 };
@@ -57,7 +60,7 @@ const getBackupStatusHandler = async (req, res) => {
 const executeBackupHandler = async (req, res) => {
   const record = await backupRecordDAO.findById(req.params.id);
   if (!record) {
-    return res.status(404).json({ success: false, message: "Backup record not found" });
+    return response.notFound(res, "Backup record not found");
   }
 
   await backupRecordDAO.update(record.id, { status: "running", startedAt: new Date() });
@@ -71,15 +74,7 @@ const executeBackupHandler = async (req, res) => {
       completedAt: new Date(),
     });
 
-    await platformAuditDAO.log(
-      req.user.id,
-      "backup.completed",
-      "backup",
-      record.id,
-      null,
-      { type: record.type, sizeBytes: result.sizeBytes },
-      req.ip
-    );
+await auditLog(req, "backup.completed", "backup", record.id, { type: record.type, sizeBytes: result.sizeBytes });
 
     res.status(200).json({ success: true, item: await backupRecordDAO.findById(record.id) });
   } catch (err) {
@@ -89,15 +84,7 @@ const executeBackupHandler = async (req, res) => {
       completedAt: new Date(),
     });
 
-    await platformAuditDAO.log(
-      req.user.id,
-      "backup.failed",
-      "backup",
-      record.id,
-      null,
-      { error: err.message || "Backup failed" },
-      req.ip
-    );
+    await auditLog(req, "backup.failed", "backup", record.id, { error: err.message || "Backup failed" });
 
     res.status(500).json({ success: false, message: err.message || "Backup failed" });
   }
@@ -106,11 +93,11 @@ const executeBackupHandler = async (req, res) => {
 const restoreBackupHandler = async (req, res) => {
   const record = await backupRecordDAO.findById(req.params.id);
   if (!record) {
-    return res.status(404).json({ success: false, message: "Backup record not found" });
+    return response.notFound(res, "Backup record not found");
   }
 
   if (!record.storagePath) {
-    return res.status(400).json({ success: false, message: "Backup file not available for restore" });
+    return response.badRequest(res, "Backup file not available for restore");
   }
 
   const dryRun = req.body.dryRun === true;
@@ -121,15 +108,7 @@ const restoreBackupHandler = async (req, res) => {
       res.status(200).json({ success: true, dryRun: true, ...result });
     } else {
       const result = await backupService.runRestore({ filePath: record.storagePath });
-      await platformAuditDAO.log(
-        req.user.id,
-        "backup.restored",
-        "backup",
-        record.id,
-        null,
-        { type: record.type },
-        req.ip
-      );
+      await auditLog(req, "backup.restored", "backup", record.id, { type: record.type });
       res.status(200).json({ success: true, ...result });
     }
   } catch (err) {
@@ -140,11 +119,11 @@ const restoreBackupHandler = async (req, res) => {
 const downloadBackupHandler = async (req, res) => {
   const record = await backupRecordDAO.findById(req.params.id);
   if (!record || !record.storagePath) {
-    return res.status(404).json({ success: false, message: "Backup file not found" });
+    return response.notFound(res, "Backup file not found");
   }
 
   if (!fs.existsSync(record.storagePath)) {
-    return res.status(404).json({ success: false, message: "Backup file missing from storage" });
+    return response.notFound(res, "Backup file missing from storage");
   }
 
   res.download(record.storagePath, record.fileName || path.basename(record.storagePath));
@@ -153,7 +132,7 @@ const downloadBackupHandler = async (req, res) => {
 const scheduleBackupHandler = async (req, res) => {
   const record = await backupRecordDAO.findById(req.params.id);
   if (!record) {
-    return res.status(404).json({ success: false, message: "Backup record not found" });
+    return response.notFound(res, "Backup record not found");
   }
 
   const { _frequency, _nextRunAt } = req.body;

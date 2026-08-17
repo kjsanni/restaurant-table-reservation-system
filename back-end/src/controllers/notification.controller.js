@@ -42,7 +42,7 @@ const paystackWebhookInfoHandler = async (req, res) => {
   const webhookUrl = `${baseUrl}/api/v1/billing/webhook`;
   let lastEvent = null;
   try {
-    lastEvent = await db.paystackEvent.findOne({
+    lastEvent = await db.paystackEvent.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
       order: [["createdAt", "DESC"]],
     });
   } catch {

@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const marketplaceDAO = require("../DAOs/marketplace.dao");
 
 const marketplaceController = {};
@@ -29,14 +31,14 @@ marketplaceController.updateListingHandler = async (req, res) => {
   }
   const tenantId = req.tenant?.id;
   const listing = await marketplaceDAO.updateListing(req.params.id, updates, tenantId);
-  if (!listing) return res.status(404).json({ success: false, message: "Listing not found" });
+  if (!listing) return response.notFound(res, "Listing not found");
   res.status(200).json({ success: true, item: listing });
 };
 
 marketplaceController.removeListingHandler = async (req, res) => {
   const tenantId = req.tenant?.id;
   const removed = await marketplaceDAO.removeListing(req.params.id, tenantId);
-  if (!removed) return res.status(404).json({ success: false, message: "Listing not found" });
+  if (!removed) return response.notFound(res, "Listing not found");
   res.status(200).json({ success: true });
 };
 

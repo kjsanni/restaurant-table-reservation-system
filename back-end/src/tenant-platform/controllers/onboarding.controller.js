@@ -1,9 +1,11 @@
+const response = require("../utils/response");
+
 const onboardingDAO = require("../DAOs/onboarding.dao");
 
 const getOnboardingHandler = async (req, res) => {
   const record = await onboardingDAO.getByTenant(req.params.tenantId);
   if (!record) {
-    return res.status(404).json({ success: false, message: "Onboarding not found" });
+    return response.notFound(res, "Onboarding not found");
   }
   res.status(200).json({ success: true, item: record });
 };

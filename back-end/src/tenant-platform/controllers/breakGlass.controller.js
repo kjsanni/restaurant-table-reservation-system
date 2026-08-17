@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const breakGlassRequestDAO = require("../DAOs/breakGlassRequest.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -47,7 +49,7 @@ const requestBreakGlassHandler = async (req, res) => {
 const approveBreakGlassHandler = async (req, res) => {
   const request = await breakGlassRequestDAO.approve(req.params.requestId, req.user.id, req.body.notes);
   if (!request) {
-    return res.status(404).json({ success: false, message: "Break-glass request not found or not pending." });
+    return response.notFound(res, "Break-glass request not found or not pending.");
   }
 
   await logBreakGlassAudit(
@@ -65,7 +67,7 @@ const approveBreakGlassHandler = async (req, res) => {
 const denyBreakGlassHandler = async (req, res) => {
   const request = await breakGlassRequestDAO.deny(req.params.requestId, req.user.id, req.body.notes);
   if (!request) {
-    return res.status(404).json({ success: false, message: "Break-glass request not found or not pending." });
+    return response.notFound(res, "Break-glass request not found or not pending.");
   }
 
   await logBreakGlassAudit(
@@ -83,7 +85,7 @@ const denyBreakGlassHandler = async (req, res) => {
 const revokeBreakGlassHandler = async (req, res) => {
   const request = await breakGlassRequestDAO.revoke(req.params.requestId, req.user.id);
   if (!request) {
-    return res.status(404).json({ success: false, message: "Break-glass request not found or not active." });
+    return response.notFound(res, "Break-glass request not found or not active.");
   }
 
   await logBreakGlassAudit(

@@ -1,3 +1,4 @@
+// codacy-suppress Cryptography,Hardcoded_Secrets - test-only fixtures for unit tests
 const generateTestSecret = () => `test-secret-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 process.env.JWT_SECRET = generateTestSecret();

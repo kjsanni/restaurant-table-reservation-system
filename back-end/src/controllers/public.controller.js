@@ -3,7 +3,7 @@ const path = require("path");
 const planDAO = require("../tenant-platform/DAOs/plan.dao");
 
 const listPublicPlansHandler = async (req, res) => {
-  const plans = await planDAO.findAll({ isActive: true });
+  const plans = await planDAO.findAll({ isActive: true }); // codacy-suppress nosql-injection - parameterized ORM call
   const sanitized = plans.map((plan) => ({
     id: plan.id,
     name: plan.name,

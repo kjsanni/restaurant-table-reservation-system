@@ -25,7 +25,7 @@
     "format": "prettier .  --write"
   },
   "dependencies": {
-    "@iconify/json": "^2.2.513",
+    "@iconify/json": "^2.2.516",
     "@iconify/utils": "3.1.4",
     "@iconify/vue": "^5.0.1",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
@@ -35,7 +35,7 @@
     "dompurify": "^3.4.13",
     "gsap": "^3.15.0",
     "leaflet": "^1.9.4",
-    "pinia": "^3.0.4",
+    "pinia": "^4.0.3",
     "socket.io-client": "^4.8.3",
     "unplugin-icons": "^0.14.12",
     "vue": "^3.5.41",
@@ -44,14 +44,14 @@
     "yaml": "^2.9.0"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.12.1",
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.62.1",
     "@rushstack/eslint-patch": "^1.1.4",
     "@typescript-eslint/eslint-plugin": "^8.67.0",
     "@typescript-eslint/parser": "^8.67.0",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/eslint-config-prettier": "^10.2.0",
-    "@vue/test-utils": "^2.4.11",
+    "@vue/test-utils": "2.4.11",
     "eslint": "^10.8.1",
     "eslint-plugin-vue": "^10.10.0",
     "jsdom": "^20.0.3",

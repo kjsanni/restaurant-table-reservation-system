@@ -114,7 +114,7 @@ describe("Wallet Pass Signing Queue Worker", () => {
 
       queueModule.startWalletPassSigningWorker();
       const jobProcessor = Worker.mock.calls[0][1];
-      const result = await jobProcessor({ data: { requestId: 1, tenantId: 10 } });
+      await jobProcessor({ data: { requestId: 1, tenantId: 10 } });
 
       expect(passSigningRequestDAO.setSigning).toHaveBeenCalledWith(1);
       expect(walletPassService.signAllPlatforms).toHaveBeenCalledWith(

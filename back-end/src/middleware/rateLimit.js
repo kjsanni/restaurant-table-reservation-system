@@ -104,6 +104,7 @@ const webhookLimiter = makeLimiter("rl:webhook:", {
 });
 
 module.exports = {
+  makeLimiter,
   authLimiter,
   generalLimiter,
   bulkOperationLimiter,

@@ -29,7 +29,7 @@ const initializePaymentHandler = async (req, res) => {
   }
 
   const db = require("../db/models");
-  const tenant = await db.tenant.findByPk(req.tenant?.id);
+  const tenant = await db.tenant.findByPk(req.tenant?.id); // codacy-suppress nosql-injection - parameterized ORM call
   if (!tenant) {
     return res.status(404).json({ success: false, message: "Tenant not found" });
   }

@@ -106,7 +106,7 @@ const verifyWebhookSignature = async (payload, signature) => {
   if (!config.webhookSecret) return false;
   const crypto = require("crypto");
   const hash = crypto.createHmac("sha512", config.webhookSecret).update(payload).digest("hex");
-  return hash === signature;
+  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature)); // codacy-suppress Cryptography - timing-safe comparison for webhook signatures
 };
 
 const createCustomer = async (payload) => {

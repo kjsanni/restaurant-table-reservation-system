@@ -207,7 +207,7 @@ describe("Event Controllers", () => {
     });
 
     it("confirmBookingHandler confirms booking", async () => {
-      eventBookingService.updateBookingStatus.mockResolvedValue({ id: 1, status: "confirmed" });
+      eventBookingService.confirmBooking.mockResolvedValue({ id: 1, status: "confirmed" });
       const req = { tenant: { id: 1 }, params: { id: "1" }, body: { paymentReference: "ref" } };
       const res = createRes();
       await eventBookingController.confirmBookingHandler(req, res);

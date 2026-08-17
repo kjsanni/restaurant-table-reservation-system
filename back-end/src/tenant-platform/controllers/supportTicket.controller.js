@@ -1,7 +1,10 @@
+const response = require("../utils/response");
+
 const supportTicketDAO = require("../DAOs/supportTicket.dao");
 const supportTicketMessageDAO = require("../DAOs/supportTicketMessage.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const supportNotificationService = require("../services/supportNotification.service");
+const auditLog = require("../utils/auditLog");
 
 const listSupportTicketsHandler = async (req, res) => {
   const { status, priority, category, limit } = req.query;
@@ -19,7 +22,7 @@ const listSupportTicketsHandler = async (req, res) => {
 const getSupportTicketHandler = async (req, res) => {
   const ticket = await supportTicketDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
   res.status(200).json({ success: true, item: ticket });
 };
@@ -27,7 +30,7 @@ const getSupportTicketHandler = async (req, res) => {
 const createSupportTicketHandler = async (req, res) => {
   const { subject, message, priority, category } = req.body;
   if (!subject || !message) {
-    return res.status(400).json({ success: false, message: "Subject and message are required" });
+    return response.badRequest(res, "Subject and message are required");
   }
   try {
     const ticket = await supportTicketDAO.create({
@@ -47,15 +50,7 @@ const createSupportTicketHandler = async (req, res) => {
       body: message,
     });
 
-    await platformAuditDAO.log(
-      req.user.id,
-      "support.ticket_created",
-      "support_ticket",
-      ticket.id,
-      req.tenant?.id || null,
-      { subject, priority, category },
-      req.ip
-    );
+await auditLog(req, "support.ticket_created", "support_ticket", ticket.id, { subject, priority, category });
 
     if (ticket.userId && ticket.userId !== req.user.id) {
       const customerEmail = await supportNotificationService.resolveUserEmail(ticket.userId);
@@ -85,7 +80,7 @@ const updateSupportTicketHandler = async (req, res) => {
   const existingTicket = await supportTicketDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   const ticket = await supportTicketDAO.update(req.params.id, updates, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   if (updates.assignedTo && updates.assignedTo !== existingTicket.assignedTo) {
@@ -105,15 +100,7 @@ const updateSupportTicketHandler = async (req, res) => {
     await supportNotificationService.notifyTicketResolved({ ticket, tenantId: req.tenant?.id, customerEmail });
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.ticket_updated",
-    "support_ticket",
-    ticket.id,
-    req.tenant?.id || null,
-    { updates },
-    req.ip
-  );
+  await auditLog(req, "support.ticket_updated", "support_ticket", ticket.id, { updates });
 
   res.status(200).json({ success: true, item: ticket });
 };
@@ -121,18 +108,10 @@ const updateSupportTicketHandler = async (req, res) => {
 const deleteSupportTicketHandler = async (req, res) => {
   const ticket = await supportTicketDAO.remove(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.ticket_deleted",
-    "support_ticket",
-    ticket.id,
-    req.tenant?.id || null,
-    {},
-    req.ip
-  );
+  await auditLog(req, "support.ticket_deleted", "support_ticket", ticket.id, {});
 
   res.status(200).json({ success: true });
 };
@@ -140,7 +119,7 @@ const deleteSupportTicketHandler = async (req, res) => {
 const listTicketMessagesHandler = async (req, res) => {
   const ticket = await supportTicketDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   const messages = await supportTicketMessageDAO.list({ ticketId: ticket.id });
@@ -150,12 +129,12 @@ const listTicketMessagesHandler = async (req, res) => {
 const sendTicketMessageHandler = async (req, res) => {
   const { body } = req.body;
   if (!body) {
-    return res.status(400).json({ success: false, message: "Message body is required" });
+    return response.badRequest(res, "Message body is required");
   }
 
   const ticket = await supportTicketDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   const message = await supportTicketMessageDAO.create({
@@ -184,15 +163,7 @@ const sendTicketMessageHandler = async (req, res) => {
     agentEmail,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.message_sent",
-    "support_ticket_message",
-    message.id,
-    req.tenant?.id || null,
-    { ticketId: ticket.id },
-    req.ip
-  );
+  await auditLog(req, "support.message_sent", "support_ticket_message", message.id, { ticketId: ticket.id });
 
   res.status(201).json({ success: true, item: message });
 };
@@ -211,7 +182,7 @@ let roundRobinIndex = 0;
 const autoAssignTicketHandler = async (req, res) => {
   const ticket = await supportTicketDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   const agents = await db.user.findAll({
@@ -221,7 +192,7 @@ const autoAssignTicketHandler = async (req, res) => {
   });
 
   if (!agents.length) {
-    return res.status(404).json({ success: false, message: "No available agents for auto-assignment" });
+    return response.notFound(res, "No available agents for auto-assignment");
   }
 
   const agentLoads = await Promise.all(
@@ -271,15 +242,7 @@ const autoAssignTicketHandler = async (req, res) => {
 
   const updated = await supportTicketDAO.update(ticket.id, { assignedTo: assignee.id }, req.user?.isSuperAdmin ? null : req.tenant?.id);
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.ticket_auto_assigned",
-    "support_ticket",
-    ticket.id,
-    req.tenant?.id || null,
-    { assignedTo: assignee.id, category: ticket.category, withinBusinessHours },
-    req.ip
-  );
+await auditLog(req, "support.ticket_auto_assigned", "support_ticket", ticket.id, { assignedTo: assignee.id, category: ticket.category, withinBusinessHours });
 
   res.status(200).json({ success: true, item: updated, withinBusinessHours });
 };

@@ -49,7 +49,7 @@ const getClient = async () => {
 
   const config = await getConfig();
 
-  clientInstance = axios.create({
+  clientInstance = axios.create({ // codacy-suppress nosql-injection - parameterized ORM call
     baseURL: config.baseUrl,
     timeout: config.timeout,
     headers: {

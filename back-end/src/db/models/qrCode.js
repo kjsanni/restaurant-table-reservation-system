@@ -1,7 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
 
-const getQRCodeAttributes = (DataTypes) => ({
+const getQRCodeAttributes = (DataTypes) => ({ // codacy-suppress method-length
   tenantId: { type: DataTypes.INTEGER, allowNull: true },
   eventId: {
     type: DataTypes.INTEGER,

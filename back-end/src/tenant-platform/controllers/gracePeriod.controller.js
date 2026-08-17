@@ -1,9 +1,11 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 
 const getGracePeriodHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const plan = await db.subscriptionPlan.findOne({ where: { slug: tenant.plan } });
   const globalGrace = await db.setting.findOne({ where: { key: "default_grace_period_days" } });
@@ -15,11 +17,11 @@ const getGracePeriodHandler = async (req, res) => {
 const updateGracePeriodHandler = async (req, res) => {
   const { days } = req.body;
   if (typeof days !== "number" || days < 0) {
-    return res.status(400).json({ success: false, message: "Valid grace period days is required" });
+    return response.badRequest(res, "Valid grace period days is required");
   }
   const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const plan = await db.subscriptionPlan.findOne({ where: { slug: tenant.plan } });
   if (plan) {

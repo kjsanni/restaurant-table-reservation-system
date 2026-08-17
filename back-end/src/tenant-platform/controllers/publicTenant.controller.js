@@ -1,9 +1,11 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 
 const getBySlugHandler = async (req, res) => {
   const { slug } = req.params;
   if (!slug) {
-    return res.status(400).json({ success: false, message: "Slug is required" });
+    return response.badRequest(res, "Slug is required");
   }
 
   const tenant = await db.tenant.findOne({
@@ -25,7 +27,7 @@ const getBySlugHandler = async (req, res) => {
   });
 
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const json = tenant.toJSON();

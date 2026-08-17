@@ -1,15 +1,18 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const createPostmortemHandler = async (req, res) => {
   const { incidentId, summary, rootCause, impact, remediation, followUpActions } = req.body;
   if (!incidentId || !summary) {
-    return res.status(400).json({ success: false, message: "incidentId and summary are required" });
+    return response.badRequest(res, "incidentId and summary are required");
   }
 
   const incident = await db.incident.findByPk(incidentId);
   if (!incident) {
-    return res.status(404).json({ success: false, message: "Incident not found" });
+    return response.notFound(res, "Incident not found");
   }
 
   const postmortem = await db.incidentPostmortem.create({
@@ -22,15 +25,7 @@ const createPostmortemHandler = async (req, res) => {
     createdBy: req.user.id,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "postmortem.created",
-    "incident_postmortem",
-    postmortem.id,
-    incident.tenantId,
-    { incidentId, summary },
-    req.ip
-  );
+await auditLog(req, "postmortem.created", "incident_postmortem", postmortem.id, { incidentId, summary }, { tenantId: incident.tenantId });
 
   res.status(201).json({ success: true, item: postmortem });
 };

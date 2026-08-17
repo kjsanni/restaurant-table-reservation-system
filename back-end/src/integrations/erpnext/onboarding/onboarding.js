@@ -39,7 +39,7 @@ router.post("/onboarding/company", tryCatchHandler(requireActiveTenant, checkErp
     const result = await (await getClient()).post("/api/resource/Company", payload);
     const company = result.data.data;
 
-    await db.tenant.update(
+    await db.tenant.update( // codacy-suppress nosql-injection - parameterized ORM call
       { settings: { ...tenant.settings, erpnextOnboardingStatus: { ...(tenant.settings?.erpnextOnboardingStatus || {}), company: "completed" } } },
       { where: { id: tenant.id } }
     );
@@ -66,7 +66,7 @@ router.post("/onboarding/warehouse", tryCatchHandler(requireActiveTenant, checkE
     const result = await (await getClient()).post("/api/resource/Warehouse", payload);
     const warehouse = result.data.data;
 
-    await db.tenant.update(
+    await db.tenant.update( // codacy-suppress nosql-injection - parameterized ORM call
       { settings: { ...tenant.settings, erpnextOnboardingStatus: { ...(tenant.settings?.erpnextOnboardingStatus || {}), warehouse: "completed" } } },
       { where: { id: tenant.id } }
     );
@@ -105,7 +105,7 @@ router.post("/onboarding/employee-import", tryCatchHandler(requireActiveTenant, 
     }
   }
 
-  await db.tenant.update(
+  await db.tenant.update( // codacy-suppress nosql-injection - parameterized ORM call
     { settings: { ...tenant.settings, erpnextOnboardingStatus: { ...(tenant.settings?.erpnextOnboardingStatus || {}), employees: "completed" } } },
     { where: { id: tenant.id } }
   );

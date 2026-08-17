@@ -1,6 +1,7 @@
 const bulkDAO = require("../DAOs/bulk.dao");
 const { _requirePermission } = require("../../middleware/auth");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const bulkSuspendHandler = async (req, res) => {
   const { tenantIds, reason } = req.body;
@@ -36,15 +37,7 @@ const bulkChangeVerticalHandler = async (req, res) => {
   }
   const updated = await bulkDAO.changeVertical(tenantIds, businessVertical);
   for (const item of updated) {
-    await platformAuditDAO.log(
-      req.user?.id || null,
-      "tenant.vertical.changed",
-      "tenant",
-      item.id,
-      item.id,
-      { businessVertical, tenantName: item.name },
-      req.ip
-    );
+await auditLog(req, "tenant.vertical.changed", "tenant", item.id, { businessVertical, tenantName: item.name }, { tenantId: item.id });
   }
   res.status(200).json({ success: true, message: `Updated vertical for ${updated.length} tenants`, items: updated });
 };

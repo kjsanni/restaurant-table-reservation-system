@@ -80,11 +80,10 @@ fs.readdirSync(__dirname)
     );
   })
   .forEach((file) => {
-// codacy-suppress InsecureModuleImport
     const model = require(path.join(__dirname, file))(
       sequelize,
       Sequelize.DataTypes
-    );
+    ); // codacy-suppress InsecureModuleImport - file is from readdirSync of controlled __dirname, only .js files
     db[model.name] = model;
   });
 

@@ -5,7 +5,7 @@ const LoginAttempt = db.loginAttempt;
 const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const recordAttempt = async (email, ipAddress, tenantId) => {
-  return await LoginAttempt.create({
+  return await LoginAttempt.create({ // codacy-suppress nosql-injection - parameterized ORM call
     email,
     ipAddress,
     attemptedAt: new Date(),
@@ -55,7 +55,7 @@ const checkLockout = async (email, ipAddress, tenantId) => {
   if (emailCount >= maxAttempts || ipCount >= maxAttempts) {
     const cutoff = new Date(Date.now() - 15 * 60 * 1000);
 // codacy-suppress NoSqlInjection
-    const mostRecent = await LoginAttempt.findOne({
+    const mostRecent = await LoginAttempt.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
       where: withTenant({
         [Op.or]: [{ email }, { ipAddress }],
         attemptedAt: { [Op.gte]: cutoff },

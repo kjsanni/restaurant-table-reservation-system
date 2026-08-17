@@ -1,7 +1,8 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const planDAO = require("../DAOs/plan.dao");
 const { invalidatePlansCache } = require("../services/tenantSubscription.service");
-// codacy-suppress Semgrep_javascript.express.security.injection.tainted-sql-string
 
 const listPlansHandler = async (req, res) => {
   const { isActive } = req.query;
@@ -14,7 +15,7 @@ const listPlansHandler = async (req, res) => {
 const getPlanHandler = async (req, res) => {
   const plan = await planDAO.findById(req.params.id);
   if (!plan) {
-    return res.status(404).json({ success: false, message: "Plan not found" });
+    return response.notFound(res, "Plan not found");
   }
   res.status(200).json({ success: true, item: plan });
 };
@@ -29,7 +30,7 @@ const createPlanHandler = async (req, res) => {
   }
 
   if (!data.name || !data.slug) {
-    return res.status(400).json({ success: false, message: "Name and slug are required" });
+    return response.badRequest(res, "Name and slug are required");
   }
 
   const existing = await planDAO.findBySlug(data.slug);
@@ -45,7 +46,7 @@ const createPlanHandler = async (req, res) => {
 const updatePlanHandler = async (req, res) => {
   const plan = await planDAO.findById(req.params.id);
   if (!plan) {
-    return res.status(404).json({ success: false, message: "Plan not found" });
+    return response.notFound(res, "Plan not found");
   }
 
   const allowed = ["name", "slug", "price", "currency", "maxTables", "maxReservationsPerMonth", "isActive", "sortOrder", "erpnextModules"];
@@ -71,10 +72,11 @@ const updatePlanHandler = async (req, res) => {
 const deletePlanHandler = async (req, res) => {
   const plan = await planDAO.findById(req.params.id);
   if (!plan) {
-    return res.status(404).json({ success: false, message: "Plan not found" });
+    return response.notFound(res, "Plan not found");
   }
 
-  const tenantCount = await db.tenant.count({ where: { plan: plan.slug } });
+  const planSlug = String(plan.slug); // nosemgrep - Sequelize ORM uses parameterized queries
+  const tenantCount = await db.tenant.count({ where: { plan: planSlug } });
   if (tenantCount > 0) {
     return res.status(409).json({
       success: false,

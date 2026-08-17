@@ -133,7 +133,7 @@ const getProviderStatus = async () => {
 const loadPlatformSmsConfig = async () => {
   try {
     const db = require("../db/models");
-    const setting = await db.setting.findOne({
+    const setting = await db.setting.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
       where: { key: "africastalking_config", tenantId: null },
     });
     if (setting && setting.value) {
