@@ -9,6 +9,10 @@ class EventPortalAPI {
     return API.get(`/events/${eventId}`);
   }
 
+  createEvent(data) {
+    return API.post("/events", data);
+  }
+
   getTicketTypes(eventId) {
     return API.get(`/events/${eventId}/ticket-types`);
   }
@@ -33,6 +37,10 @@ class EventPortalAPI {
     return API.post(`/events/${eventId}/qr-codes`, data);
   }
 
+  generateBatchQRCodes(eventId, data) {
+    return API.post(`/events/${eventId}/qr-codes/batch`, data);
+  }
+
   getBookings(params = {}) {
     const qs = new URLSearchParams(params).toString();
     return API.get(`/events/bookings${qs ? `?${qs}` : ""}`);
@@ -44,6 +52,14 @@ class EventPortalAPI {
 
   createBooking(data) {
     return API.post("/events/bookings", data);
+  }
+
+  updateBooking(bookingId, data) {
+    return API.patch(`/events/bookings/${bookingId}`, data);
+  }
+
+  confirmBooking(bookingId) {
+    return API.patch(`/events/bookings/${bookingId}`);
   }
 
   updateEvent(eventId, data) {
@@ -94,6 +110,64 @@ class EventPortalAPI {
 
   verifyToken(token) {
     return API.get(`/events/checkin/${token}/verify`);
+  }
+
+  createSigningRequest(eventId, data) {
+    return API.post(`/events/${eventId}/wallet-passes/request`, data);
+  }
+
+  createWalletPassRequest(eventId, data) {
+    return this.createSigningRequest(eventId, data);
+  }
+
+  listRequests(eventId) {
+    return API.get(`/events/${eventId}/wallet-passes/requests`);
+  }
+
+  listWalletPassRequests(eventId) {
+    return this.listRequests(eventId);
+  }
+
+  getRequest(eventId, requestId) {
+    return API.get(`/events/${eventId}/wallet-passes/requests/${requestId}`);
+  }
+
+  getWalletPassRequest(eventId, requestId) {
+    return this.getRequest(eventId, requestId);
+  }
+
+  uploadEventPhoto(eventId, formData) {
+    return API.post(`/events/${eventId}/checkin/photo/upload`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  }
+
+  getPhoto(photoRef) {
+    return API.get(`/events/checkin/photo/${photoRef}`);
+  }
+
+  getPhotoUrl(photoRef) {
+    return `/api/v1/events/checkin/photo/${photoRef}`;
+  }
+
+  getWebPass(shortCode) {
+    return API.get(`/public/e/${shortCode}`);
+  }
+
+  getGooglePayJwt(shortCode) {
+    return API.get(`/public/e/${shortCode}`, { params: { format: "google" } });
+  }
+
+  listPendingApproval(eventId) {
+    return API.get(`/events/${eventId}/wallet-passes/requests/pending`);
+  }
+
+  approveRequest(eventId, requestId) {
+    return API.post(`/events/${eventId}/wallet-passes/requests/${requestId}/approve`);
+  }
+
+  rejectRequest(eventId, requestId) {
+    return API.post(`/events/${eventId}/wallet-passes/requests/${requestId}/reject`);
   }
 }
 

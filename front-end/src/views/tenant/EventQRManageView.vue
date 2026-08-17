@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useToastStore } from "@/stores/toast";
 import eventPortalAPI from "@/services/eventPortalAPI";
+import EventPhotoUpload from "@/components/EventPhotoUpload.vue";
 
 interface QRCode {
   id: number;
@@ -19,6 +20,7 @@ interface QRCode {
   tier?: string;
   ticketType?: string;
   guestListId?: number;
+  photoRef?: string | null;
 }
 
 const route = useRoute();
@@ -83,6 +85,13 @@ const openScanner = () => {
   });
 };
 
+const updateQRPhoto = (qrId: number, photoRef: string | null) => {
+  const qr = qrCodes.value.find((item) => item.id === qrId);
+  if (qr) {
+    qr.photoRef = photoRef;
+  }
+};
+
 onMounted(() => {
   load();
 });
@@ -134,6 +143,7 @@ onMounted(() => {
               <th>Token Hash</th>
               <th>Status</th>
               <th>Attendee</th>
+              <th>Photo</th>
               <th>Checked In</th>
               <th>Usage</th>
               <th>Expires</th>
@@ -154,6 +164,16 @@ onMounted(() => {
               </td>
               <td class="attendee-col">
                 {{ qr.attendeeName || "-" }}
+              </td>
+              <td>
+                <EventPhotoUpload
+                  v-if="qr.status === 'active'"
+                  :event-id="eventId"
+                  label="Upload"
+                  :model-value="qr.photoRef"
+                  @update:model-value="(photoRef) => updateQRPhoto(qr.id, photoRef)"
+                />
+                <span v-else class="text-muted">-</span>
               </td>
               <td>
                 {{

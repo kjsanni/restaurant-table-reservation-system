@@ -102,6 +102,30 @@ eventBookingService.confirmBooking = async (id, tenantId, paymentReference, paym
   return updated;
 };
 
+eventBookingService.updateBooking = async (id, tenantId, data) => {
+  const booking = await eventBookingDAO.findById(id, tenantId);
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
+
+  const allowed = ["status", "guestName", "guestEmail", "guestPhone", "notes"];
+  const updates = {};
+  for (const key of allowed) {
+    if (data[key] !== undefined) {
+      updates[key] = data[key];
+    }
+  }
+
+  if (updates.status === "cancelled" && booking.status !== "cancelled") {
+    updates.metadata = {
+      ...(booking.metadata || {}),
+      cancelledAt: new Date().toISOString(),
+    };
+  }
+
+  return eventBookingDAO.update(id, tenantId, updates);
+};
+
 eventBookingService.cancelBooking = async (id, tenantId, reason) => {
   const booking = await eventBookingDAO.findById(id, tenantId);
   if (!booking) {
