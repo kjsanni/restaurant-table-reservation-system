@@ -67,6 +67,12 @@ const router = createRouter({
       meta: { standalone: true },
     },
     {
+      path: "/e/:shortCode",
+      name: "public-event-pass",
+      component: () => import("../views/PublicEventPassView.vue"),
+      meta: { standalone: true },
+    },
+    {
       path: "/pricing",
       name: "pricing",
       component: () => import("../views/PricingView.vue"),

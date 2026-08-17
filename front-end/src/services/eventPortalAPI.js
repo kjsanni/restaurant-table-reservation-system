@@ -135,6 +135,20 @@ class EventPortalAPI {
   getWalletPassRequest(eventId, requestId) {
     return this.getRequest(eventId, requestId);
   }
+
+  uploadEventPhoto(eventId, formData) {
+    return API.post(`/events/${eventId}/checkin/photo/upload`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  }
+
+  getWebPass(shortCode) {
+    return API.get(`/public/e/${shortCode}`);
+  }
+
+  getGooglePayJwt(shortCode) {
+    return API.get(`/public/e/${shortCode}`, { params: { format: "google" } });
+  }
 }
 
 export default new EventPortalAPI();
