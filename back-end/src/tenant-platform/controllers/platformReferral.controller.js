@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const platformReferralDAO = require("../DAOs/platformReferral.dao");
 
 const platformReferralController = {};
@@ -28,7 +30,7 @@ platformReferralController.updateReferralHandler = async (req, res) => {
     }
   }
   const referral = await platformReferralDAO.updateReferral(req.params.id, updates);
-  if (!referral) return res.status(404).json({ success: false, message: "Referral not found" });
+  if (!referral) return response.notFound(res, "Referral not found");
   res.status(200).json({ success: true, item: referral });
 };
 

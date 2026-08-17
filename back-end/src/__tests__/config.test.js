@@ -67,9 +67,10 @@ describe("config validation", () => {
       DB_PASSWORD: "real-production-password",
       PORT: "8000",
       JWT_SECRET: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      API_URL: "http://192.168.88.10",
-      CORS_ORIGINS: "http://192.168.88.10",
-    });
+       API_URL: "http://192.168.88.10",
+       CORS_ORIGINS: "http://192.168.88.10",
+     });
+     without(["FRONTEND_URL"]);
     jest.isolateModules(() => {
       expect(() => require(path.resolve(__dirname, "../../config/config"))).toThrow(
         /Missing required production environment variables: FRONTEND_URL/

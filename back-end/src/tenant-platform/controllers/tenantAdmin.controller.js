@@ -1,4 +1,7 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
+
 const tenantAdminDAO = require("../DAOs/tenantAdmin.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const {
@@ -11,17 +14,18 @@ const { enqueueProvisioning } = require("../../queues/provisioning.queue");
 const verticalTemplateController = require("./verticalTemplate.controller");
 const axios = require("axios");
 const { normalizeSettingValue } = require("../../utils/settings");
+const auditLog = require("../utils/auditLog");
 
 const createTenantHandler = async (req, res) => {
   const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType, businessVertical, serviceModes, templateId } = req.body;
 
   if (!name || !slug) {
-    return res.status(400).json({ success: false, message: "Name and slug are required" });
+    return response.badRequest(res, "Name and slug are required");
   }
 
   const normalizedSlug = String(slug).trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
   if (!normalizedSlug) {
-    return res.status(400).json({ success: false, message: "Slug must contain only lowercase letters, numbers, and hyphens" });
+    return response.badRequest(res, "Slug must contain only lowercase letters, numbers, and hyphens");
   }
 
   const existing = await tenantAdminDAO.findBySlug(normalizedSlug);
@@ -142,7 +146,7 @@ const getTenantHandler = async (req, res) => {
   });
 
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   res.status(200).json({ success: true, item: tenant });
@@ -151,7 +155,7 @@ const getTenantHandler = async (req, res) => {
 const updateTenantHandler = async (req, res) => {
   const tenant = await tenantAdminDAO.findById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const allowed = ["name", "plan", "settings", "billingEmail", "billingName", "currency", "restaurantType", "restaurantSubtype", "serviceModes", "businessVertical", "whatsappConfig", "dataRegion", "residencyNotes", "domain"];
@@ -181,15 +185,7 @@ const updateTenantHandler = async (req, res) => {
   await tenant.update(updates);
 
   if (Object.keys(changes).length > 0) {
-    await platformAuditDAO.log(
-      req.user?.id || null,
-      "tenant.updated",
-      "tenant",
-      tenant.id,
-      tenant.id,
-      { changes },
-      req.ip
-    );
+    await auditLog(req, "tenant.updated", "tenant", tenant.id, { changes }, { tenantId: tenant.id });
   }
 
   res.status(200).json({ success: true, item: tenant });
@@ -199,7 +195,7 @@ const deleteTenantHandler = async (req, res) => {
   try {
     const tenant = await tenantAdminDAO.softDelete(req.params.id);
     if (!tenant) {
-      return res.status(404).json({ success: false, message: "Tenant not found" });
+      return response.notFound(res, "Tenant not found");
     }
 
     await tenantAdminDAO.log(
@@ -215,7 +211,7 @@ const deleteTenantHandler = async (req, res) => {
     res.status(200).json({ success: true, message: "Tenant deleted successfully", item: tenant });
   } catch (err) {
     if (err.isAlreadyDeleted) {
-      return res.status(400).json({ success: false, message: "Tenant is already deleted" });
+      return response.badRequest(res, "Tenant is already deleted");
     }
     throw err;
   }
@@ -226,7 +222,7 @@ const enableTenantHandler = async (req, res) => {
     const tenant = await enableTenant(req.params.id);
     res.status(200).json({ success: true, item: tenant });
   } catch (err) {
-    res.status(404).json({ success: false, message: err.message });
+    response.notFound(res, err.message);
   }
 };
 
@@ -236,14 +232,14 @@ const disableTenantHandler = async (req, res) => {
     const tenant = await disableTenant(req.params.id, reason);
     res.status(200).json({ success: true, item: tenant });
   } catch (err) {
-    res.status(404).json({ success: false, message: err.message });
+    response.notFound(res, err.message);
   }
 };
 
 const exportTenantDataHandler = async (req, res) => {
   const exported = await tenantAdminDAO.export(req.params.id);
   if (!exported) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const payload = {
@@ -296,7 +292,7 @@ const sanitizeTenant = (tenant) => {
 const testPaystackHandler = async (req, res) => {
   const tenant = await tenantAdminDAO.findById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const { publicKey, secretKey } = req.body;
@@ -334,7 +330,7 @@ const testPaystackHandler = async (req, res) => {
 const testShaqExpressHandler = async (req, res) => {
   const tenant = await tenantAdminDAO.findById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const { identifier, secret } = req.body;
@@ -416,7 +412,7 @@ const applyShaqExpressSettings = (tenant, shaqexpressIdentifier, shaqexpressSecr
 const updateGatewayHandler = async (req, res) => {
   const tenant = await tenantAdminDAO.findById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const {
@@ -437,21 +433,13 @@ const updateGatewayHandler = async (req, res) => {
     applyPaystackSettings(tenant, paystackPublicKey, paystackSecretKey, changes);
     applyShaqExpressSettings(tenant, shaqexpressIdentifier, shaqexpressSecret, shaqexpressWebhookUrl, changes);
   } catch (err) {
-    return res.status(400).json({ success: false, message: err.message });
+    return response.badRequest(res, err.message);
   }
 
   await tenant.save();
 
   if (changes.length > 0) {
-    await platformAuditDAO.log(
-      req.user?.id || null,
-      "tenant.gateway_updated",
-      "tenant",
-      tenant.id,
-      tenant.id,
-      { changes },
-      req.ip
-    );
+    await auditLog(req, "tenant.gateway_updated", "tenant", tenant.id, { changes }, { tenantId: tenant.id });
   }
 
   res.status(200).json({ success: true, item: sanitizeTenant(tenant) });

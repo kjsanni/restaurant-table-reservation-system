@@ -1,5 +1,8 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const TEMPLATE_KEY = "support_response_templates";
 
@@ -16,7 +19,7 @@ const listTemplatesHandler = async (req, res) => {
 const createTemplateHandler = async (req, res) => {
   const { title, body, category } = req.body;
   if (!title || !body) {
-    return res.status(400).json({ success: false, message: "Title and body are required" });
+    return response.badRequest(res, "Title and body are required");
   }
 
   const templates = await loadTemplates();
@@ -36,15 +39,7 @@ const createTemplateHandler = async (req, res) => {
     description: "Support agent response templates",
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "support.template_created",
-    "setting",
-    template.id,
-    null,
-    { title, category },
-    req.ip
-  );
+await auditLog(req, "support.template_created", "setting", template.id, { title, category });
 
   res.status(201).json({ success: true, item: template });
 };
@@ -54,7 +49,7 @@ const updateTemplateHandler = async (req, res) => {
   const templates = await loadTemplates();
   const index = templates.findIndex((t) => t.id === parseInt(req.params.id, 10));
   if (index === -1) {
-    return res.status(404).json({ success: false, message: "Template not found" });
+    return response.notFound(res, "Template not found");
   }
 
   const previous = { ...templates[index] };
@@ -73,15 +68,7 @@ const updateTemplateHandler = async (req, res) => {
     description: "Support agent response templates",
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "support.template_updated",
-    "setting",
-    templates[index].id,
-    null,
-    { changes: { from: previous, to: templates[index] } },
-    req.ip
-  );
+await auditLog(req, "support.template_updated", "setting", templates[index].id, { changes: { from: previous, to: templates[index] } });
 
   res.status(200).json({ success: true, item: templates[index] });
 };
@@ -90,7 +77,7 @@ const deleteTemplateHandler = async (req, res) => {
   const templates = await loadTemplates();
   const index = templates.findIndex((t) => t.id === parseInt(req.params.id, 10));
   if (index === -1) {
-    return res.status(404).json({ success: false, message: "Template not found" });
+    return response.notFound(res, "Template not found");
   }
 
   const removed = templates.splice(index, 1)[0];
@@ -102,15 +89,7 @@ const deleteTemplateHandler = async (req, res) => {
     description: "Support agent response templates",
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "support.template_deleted",
-    "setting",
-    removed.id,
-    null,
-    { title: removed.title },
-    req.ip
-  );
+  await auditLog(req, "support.template_deleted", "setting", removed.id, { title: removed.title });
 
   res.status(200).json({ success: true });
 };

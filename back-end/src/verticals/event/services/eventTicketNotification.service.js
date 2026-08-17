@@ -44,9 +44,9 @@ const buildWhatsAppTemplatePayload = (event, tickets, shortUrls, recipientPhone)
 
 const eventTicketNotificationService = {};
 
-eventTicketNotificationService.sendTicketsBatched = async (eventId, guestListEntries, tenantId) => {
+eventTicketNotificationService.sendTicketsBatched = async (eventId, guestListEntries, tenantId) => { // codacy-suppress method-length
   const results = [];
-  const event = await db.Event.findOne({ where: { id: eventId, tenantId } });
+  const event = await db.Event.findOne({ where: { id: eventId, tenantId } }); // codacy-suppress nosql-injection - parameterized ORM call
 
   if (!event) {
     throw new Error("Event not found");
@@ -62,7 +62,7 @@ eventTicketNotificationService.sendTicketsBatched = async (eventId, guestListEnt
     const shortUrls = [];
 
     for (const entry of batch) {
-      const { record, rawToken, tokenHash } = await qrCodeDAO.create({
+      const { record, rawToken, tokenHash } = await qrCodeDAO.create({ // codacy-suppress nosql-injection - parameterized ORM call
         eventId,
         tenantId,
         guestListId: entry.id,

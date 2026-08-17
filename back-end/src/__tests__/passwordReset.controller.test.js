@@ -1,3 +1,4 @@
+// codacy-suppress Cryptography,Hardcoded_Secrets - test-only fixtures for unit tests
 const TEST_PASSWORD = `test-password-${Math.random().toString(36).slice(2)}`;
 const TEST_TOKEN = `test-token-${Math.random().toString(36).slice(2)}`;
 

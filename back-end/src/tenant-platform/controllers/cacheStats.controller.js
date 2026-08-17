@@ -1,5 +1,6 @@
 const { getCacheStats, resetCacheStats } = require("../../utils/cache");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const getCacheStatsHandler = async (req, res) => {
   const stats = getCacheStats();
@@ -15,15 +16,7 @@ const getCacheStatsHandler = async (req, res) => {
 
 const resetCacheStatsHandler = async (req, res) => {
   resetCacheStats();
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "monitoring.cache_stats_reset",
-    "system",
-    null,
-    null,
-    {},
-    req.ip
-  );
+  await auditLog(req, "monitoring.cache_stats_reset", "system", null, {});
   res.status(200).json({ success: true });
 };
 

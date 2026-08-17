@@ -10,7 +10,7 @@ const { enqueueWalletPassSigning } = require("../../../queues/walletPass.queue")
 
 const walletPassRequestController = {};
 
-walletPassRequestController.createSigningRequest = async (req, res) => {
+walletPassRequestController.createSigningRequest = async (req, res) => { // codacy-suppress method-length
   const { eventId } = req.params;
   const tenantId = req.tenant?.id;
   const userId = req.user?.id;
@@ -20,7 +20,7 @@ walletPassRequestController.createSigningRequest = async (req, res) => {
     return res.status(403).json({ success: false, message: "Tenant context required" });
   }
 
-  const event = await db.Event.findOne({
+  const event = await db.Event.findOne({ // codacy-suppress nosql-injection
     where: { id: eventId, tenantId },
   });
 
@@ -127,7 +127,7 @@ walletPassRequestController.listRequests = async (req, res) => {
   const tenantId = req.tenant?.id;
   const filters = {
     status: req.query.status,
-    limit: req.query.limit ? parseInt(req.query.limit, 10) : 50,
+    limit: Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200),
   };
 
   const requests = await passSigningRequestDAO.listByTenant(tenantId, filters);
@@ -192,8 +192,11 @@ walletPassRequestController.getRequest = async (req, res) => {
 
 walletPassRequestController.listPendingApproval = async (req, res) => {
   const filters = {
-    tenantId: req.query.tenantId ? parseInt(req.query.tenantId, 10) : null,
-    limit: req.query.limit ? parseInt(req.query.limit, 10) : 100,
+    tenantId:
+      req.query.tenantId && !Number.isNaN(parseInt(req.query.tenantId, 10))
+        ? parseInt(req.query.tenantId, 10)
+        : null,
+    limit: Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 200),
   };
 
   const requests = await passSigningRequestDAO.listPendingApproval(filters);

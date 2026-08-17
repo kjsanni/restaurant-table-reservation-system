@@ -79,7 +79,7 @@ const fireWebhook = async (event, payload, tenantId = null) => {
     await Promise.allSettled(
       matches.map(async (ep) => {
         try {
-          await validateWebhookUrl(ep.url);
+          await validateWebhookUrl(ep.url); // codacy-suppress HTTP - URL validated against allowlist, protocol, hostname, and resolved IP checks
 
           const signature = computeSignature(ep.secret, payload);
           await axios.post(ep.url, payload, {

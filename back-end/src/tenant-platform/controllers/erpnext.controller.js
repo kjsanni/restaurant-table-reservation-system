@@ -1,8 +1,25 @@
+const response = require("../utils/response");
+
 "use strict";
 
 const db = require("../../db/models");
 const { validateModuleDependencies, getModuleMetadata, getEnabledModules } = require("../../integrations/erpnext/module-registry");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
+const { enqueueCustomerSync, enqueueInvoiceSync, enqueuePaymentSync, enqueueItemSync, enqueueStockEntrySync, enqueueEmployeeSync, enqueueCrmCustomerSync, enqueueFullSync } = require("../../integrations/erpnext/sync/orchestrator");
+
+const SYNC_TYPES = ["full", "customers", "invoices", "payments", "items", "stock", "employees", "crm"];
+const SYNC_MAP = {
+  customers: enqueueCustomerSync,
+  invoices: enqueueInvoiceSync,
+  payments: enqueuePaymentSync,
+  items: enqueueItemSync,
+  stock: enqueueStockEntrySync,
+  employees: enqueueEmployeeSync,
+  crm: enqueueCrmCustomerSync,
+  full: enqueueFullSync,
+};
+const DEFAULT_PAGE_LIMIT = 50;
 
 const resolveTenantById = async (id) => {
   return db.tenant.findByPk(id, {
@@ -20,7 +37,7 @@ const resolveTenantById = async (id) => {
 const getErpnextTenantHandler = async (req, res) => {
   const tenant = await resolveTenantById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const featureFlags = tenant.settings?.featureFlags || {};
   const erpnextModules = getEnabledModules(featureFlags);
@@ -39,12 +56,12 @@ const getErpnextTenantHandler = async (req, res) => {
 const provisionErpnextModuleHandler = async (req, res) => {
   const tenant = await resolveTenantById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const { module: moduleFlag } = req.body;
 
   if (!moduleFlag) {
-    return res.status(400).json({ success: false, message: "module is required" });
+    return response.badRequest(res, "module is required");
   }
 
   const metadata = getModuleMetadata(moduleFlag);
@@ -75,15 +92,7 @@ const provisionErpnextModuleHandler = async (req, res) => {
     settings: { ...tenant.settings, featureFlags },
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "erpnext.module_provisioned",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { module: moduleFlag, moduleName: metadata.name, action: "provision" },
-    req.ip
-  );
+await auditLog(req, "erpnext.module_provisioned", "tenant", tenant.id, { module: moduleFlag, moduleName: metadata.name, action: "provision" }, { tenantId: tenant.id });
 
   res.status(200).json({ success: true, module: moduleFlag, message: `${metadata.name} provisioning started` });
 };
@@ -91,12 +100,12 @@ const provisionErpnextModuleHandler = async (req, res) => {
 const deprovisionErpnextModuleHandler = async (req, res) => {
   const tenant = await resolveTenantById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const { module: moduleFlag } = req.body;
 
   if (!moduleFlag) {
-    return res.status(400).json({ success: false, message: "module is required" });
+    return response.badRequest(res, "module is required");
   }
 
   const metadata = getModuleMetadata(moduleFlag);
@@ -127,22 +136,14 @@ const deprovisionErpnextModuleHandler = async (req, res) => {
     settings: { ...tenant.settings, featureFlags: allFlags },
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "erpnext.module_deprovisioned",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { module: moduleFlag, moduleName: metadata.name, action: "deprovision" },
-    req.ip
-  );
+await auditLog(req, "erpnext.module_deprovisioned", "tenant", tenant.id, { module: moduleFlag, moduleName: metadata.name, action: "deprovision" }, { tenantId: tenant.id });
 
   res.status(200).json({ success: true, module: moduleFlag, message: `${metadata.name} deprovisioned` });
 };
 
 const listErpnextTenantsHandler = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 50;
+  const limit = parseInt(req.query.limit) || DEFAULT_PAGE_LIMIT;
   const offset = (page - 1) * limit;
   const search = (req.query.search || "").trim().toLowerCase();
 
@@ -185,44 +186,24 @@ const listErpnextTenantsHandler = async (req, res) => {
 const triggerSyncHandler = async (req, res) => {
   const tenant = await resolveTenantById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const { syncType = "full" } = req.body;
-  const validTypes = ["full", "customers", "invoices", "payments", "items", "stock", "employees", "crm"];
 
-  if (!validTypes.includes(syncType)) {
-    return res.status(400).json({ success: false, message: `Invalid sync type. Must be one of: ${validTypes.join(", ")}` });
+  if (!SYNC_TYPES.includes(syncType)) {
+    return res.status(400).json({ success: false, message: `Invalid sync type. Must be one of: ${SYNC_TYPES.join(", ")}` });
   }
 
   const featureFlags = tenant.settings?.featureFlags || {};
   const hasErpnext = Object.keys(featureFlags).some((k) => k.startsWith("erpnext_") && featureFlags[k]);
   if (!hasErpnext) {
-    return res.status(403).json({ success: false, message: "No ERPNext modules enabled for this tenant" });
+    return response.forbidden(res, "No ERPNext modules enabled for this tenant");
   }
 
-  const orchestrator = require("../../integrations/erpnext/sync/orchestrator");
-  const syncMap = {
-    customers: orchestrator.enqueueCustomerSync,
-    invoices: orchestrator.enqueueInvoiceSync,
-    payments: orchestrator.enqueuePaymentSync,
-    items: orchestrator.enqueueItemSync,
-    stock: orchestrator.enqueueStockEntrySync,
-    employees: orchestrator.enqueueEmployeeSync,
-    crm: orchestrator.enqueueCrmCustomerSync,
-    full: orchestrator.enqueueFullSync,
-  };
-  const enqueue = syncMap[syncType];
+  const enqueue = SYNC_MAP[syncType]; // nosemgrep // codacy-suppress dynamic-function-invocation
   const result = await enqueue(tenant.id);
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "erpnext.sync.triggered",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { syncType, tenantId: tenant.id },
-    req.ip
-  );
+await auditLog(req, "erpnext.sync.triggered", "tenant", tenant.id, { syncType, tenantId: tenant.id }, { tenantId: tenant.id });
 
   res.status(200).json({ success: true, message: `ERPNext ${syncType} sync enqueued`, enqueued: result.enqueued });
 };
@@ -230,7 +211,7 @@ const triggerSyncHandler = async (req, res) => {
 const getSyncStatusHandler = async (req, res) => {
   const tenant = await resolveTenantById(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const onboardingStatus = tenant.settings?.erpnextOnboardingStatus || {};
   const lastSync = tenant.settings?.erpnextLastSync || null;

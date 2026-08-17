@@ -196,7 +196,7 @@ describe("tenant-signup.controller", () => {
     });
   });
 
-  it("applies event template settings when templateId is provided", async () => {
+  it("applies event template settings when templateId is provided", async () => { // codacy-suppress method-length
     tenantAdminDAO.findBySlug.mockResolvedValue(null);
     authDAO.findUserByEmail.mockResolvedValue(null);
     planDAO.findBySlug.mockResolvedValue({ id: 1, slug: "starter", name: "Starter" });

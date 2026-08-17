@@ -2,11 +2,11 @@
 
 const express = require("express");
 const router = express.Router();
-const tryCatchHandler = require("../../../middleware/tryCatch");
-const httpMethodError = require("../../../middleware/httpMethodError");
-const { validateCsrfToken } = require("../../../middleware");
-const { requireSuperAdmin } = require("../../../middleware/auth");
-const walletPassRequestController = require("../../verticals/event/controllers/walletPassRequest.controller");
+const tryCatchHandler = require("../middleware/tryCatch");
+const httpMethodError = require("../middleware/httpMethodError");
+const { validateCsrfToken } = require("../middleware");
+const { requireSuperAdmin } = require("../middleware/auth");
+const walletPassRequestController = require("../verticals/event/controllers/walletPassRequest.controller");
 
 router
   .route("/wallet-pass-requests")

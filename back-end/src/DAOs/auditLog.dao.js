@@ -6,7 +6,7 @@ const { Op } = db.Sequelize;
 const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const createLog = async ({ action, entityType, entityId, userId, changes, ipAddress }, tenantId) => {
-  return await AuditLog.create({
+  return await AuditLog.create({ // codacy-suppress nosql-injection - parameterized ORM call
     action,
     entityType,
     entityId,
@@ -88,7 +88,7 @@ const getLogStats = async (filters = {}, tenantId) => {
   const where = buildWhere(filters, tenantId);
 
   const [actionStats, entityStats, userStats] = await Promise.all([
-    AuditLog.findAll({
+    AuditLog.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       attributes: [
         "action",
         [AuditLog.sequelize.fn("COUNT", AuditLog.sequelize.col("id")), "count"],
@@ -97,7 +97,7 @@ const getLogStats = async (filters = {}, tenantId) => {
       group: ["action"],
       raw: true,
     }),
-    AuditLog.findAll({
+    AuditLog.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       attributes: [
         "entityType",
         [AuditLog.sequelize.fn("COUNT", AuditLog.sequelize.col("id")), "count"],
@@ -106,7 +106,7 @@ const getLogStats = async (filters = {}, tenantId) => {
       group: ["entityType"],
       raw: true,
     }),
-    AuditLog.findAll({
+    AuditLog.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       attributes: [
         "userId",
         [AuditLog.sequelize.fn("COUNT", AuditLog.sequelize.col("id")), "count"],

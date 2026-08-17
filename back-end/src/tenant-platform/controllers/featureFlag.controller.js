@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const { validateModuleDependencies } = require("../../integrations/erpnext/module-registry");
 const { getPlansCached } = require("../services/tenantSubscription.service");
@@ -24,7 +26,7 @@ const getTenantFeatureFlagsHandler = async (req, res) => {
     attributes: ["id", "name", "settings"],
   });
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const featureFlags = tenant.settings?.featureFlags || {};
   res.status(200).json({ success: true, featureFlags });
@@ -33,7 +35,7 @@ const getTenantFeatureFlagsHandler = async (req, res) => {
 const updateTenantFeatureFlagsHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const featureFlags = req.body.featureFlags || {};
@@ -89,7 +91,7 @@ const updateGlobalFeatureFlagsHandler = async (req, res) => {
 const toggleSalonModuleHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const enabled = req.body.enabled !== false;
   const settings = tenant.settings || {};
@@ -114,7 +116,7 @@ const getFlagAuditLogHandler = async (req, res) => {
 const bulkCategoryActionHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const { category, action } = req.body || {};
@@ -123,7 +125,7 @@ const bulkCategoryActionHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: `Invalid category: ${category}` });
   }
   if (!["enable", "disable"].includes(action)) {
-    return res.status(400).json({ success: false, message: 'Action must be "enable" or "disable"' });
+    return response.badRequest(res, 'Action must be "enable" or "disable"');
   }
 
   const { FLAG_CATEGORIES } = require("../services/tenantTypeDefaults.service");
@@ -143,7 +145,7 @@ const bulkCategoryActionHandler = async (req, res) => {
 const resetTenantFlagsHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const { applyTypeDefaults } = require("../services/tenantTypeDefaults.service");
@@ -156,7 +158,7 @@ const resetTenantFlagsHandler = async (req, res) => {
 const createFlagPresetHandler = async (req, res) => {
   const { name, featureFlags, description, isPublic } = req.body || {};
   if (!name || !featureFlags) {
-    return res.status(400).json({ success: false, message: "Name and featureFlags are required" });
+    return response.badRequest(res, "Name and featureFlags are required");
   }
 
   const preset = await db.featureFlagPreset.create({
@@ -180,12 +182,12 @@ const listFlagPresetsHandler = async (req, res) => {
 const applyFlagPresetHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.id);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const preset = await db.featureFlagPreset.findByPk(req.params.presetId);
   if (!preset) {
-    return res.status(404).json({ success: false, message: "Preset not found" });
+    return response.notFound(res, "Preset not found");
   }
 
   const settings = tenant.settings || {};

@@ -81,7 +81,7 @@ const paymentSettledHandler = async (req, res) => {
     return res.status(404).json({ success: false, message: "Reservation not found" });
   }
 
-  const payment = await db.payment.create({
+  const payment = await db.payment.create({ // codacy-suppress nosql-injection - parameterized ORM call
     reservationId,
     amount: Number(amount),
     method,

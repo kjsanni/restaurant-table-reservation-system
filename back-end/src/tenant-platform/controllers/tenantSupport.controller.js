@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const supportTicketDAO = require("../DAOs/supportTicket.dao");
 const supportTicketMessageDAO = require("../DAOs/supportTicketMessage.dao");
 const supportAttachmentDAO = require("../DAOs/supportAttachment.dao");
@@ -5,6 +7,7 @@ const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const supportNotificationService = require("../services/supportNotification.service");
 const path = require("path");
 const fs = require("fs");
+const auditLog = require("../utils/auditLog");
 
 const UPLOAD_DIR = path.join(__dirname, "../../../uploads/support-attachments");
 
@@ -12,7 +15,7 @@ const listMyTicketsHandler = async (req, res) => {
   const { status, category, limit } = req.query;
   const tenantId = req.tenant?.id;
   if (!tenantId) {
-    return res.status(403).json({ success: false, message: "Tenant context required" });
+    return response.forbidden(res, "Tenant context required");
   }
 
   const data = await supportTicketDAO.list({
@@ -27,7 +30,7 @@ const listMyTicketsHandler = async (req, res) => {
 const getTicketHandler = async (req, res) => {
   const ticket = await supportTicketDAO.findById(req.params.id, req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
   res.status(200).json({ success: true, item: ticket });
 };
@@ -35,7 +38,7 @@ const getTicketHandler = async (req, res) => {
 const createTicketHandler = async (req, res) => {
   const { subject, message, priority, category } = req.body;
   if (!subject || !message) {
-    return res.status(400).json({ success: false, message: "Subject and message are required" });
+    return response.badRequest(res, "Subject and message are required");
   }
 
   const ticket = await supportTicketDAO.create({
@@ -56,15 +59,7 @@ const createTicketHandler = async (req, res) => {
     body: message,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.tenant_ticket_created",
-    "support_ticket",
-    ticket.id,
-    req.tenant?.id || null,
-    { subject, priority, category },
-    req.ip
-  );
+await auditLog(req, "support.tenant_ticket_created", "support_ticket", ticket.id, { subject, priority, category });
 
   const customerEmail = await supportNotificationService.resolveUserEmail(req.user.id);
   await supportNotificationService.notifyTicketCreated({
@@ -88,18 +83,10 @@ const updateTicketHandler = async (req, res) => {
 
   const ticket = await supportTicketDAO.update(req.params.id, updates, req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.tenant_ticket_updated",
-    "support_ticket",
-    ticket.id,
-    req.tenant?.id || null,
-    { updates },
-    req.ip
-  );
+  await auditLog(req, "support.tenant_ticket_updated", "support_ticket", ticket.id, { updates });
 
   res.status(200).json({ success: true, item: ticket });
 };
@@ -107,7 +94,7 @@ const updateTicketHandler = async (req, res) => {
 const listMessagesHandler = async (req, res) => {
   const ticket = await supportTicketDAO.findById(req.params.id, req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   const messages = await supportTicketMessageDAO.list({ ticketId: ticket.id });
@@ -117,16 +104,16 @@ const listMessagesHandler = async (req, res) => {
 const sendMessageHandler = async (req, res) => {
   const { body } = req.body;
   if (!body) {
-    return res.status(400).json({ success: false, message: "Message body is required" });
+    return response.badRequest(res, "Message body is required");
   }
 
   const ticket = await supportTicketDAO.findById(req.params.id, req.tenant?.id);
   if (!ticket) {
-    return res.status(404).json({ success: false, message: "Ticket not found" });
+    return response.notFound(res, "Ticket not found");
   }
 
   if (ticket.status === "closed") {
-    return res.status(400).json({ success: false, message: "Cannot reply to a closed ticket" });
+    return response.badRequest(res, "Cannot reply to a closed ticket");
   }
 
   const message = await supportTicketMessageDAO.create({
@@ -147,15 +134,7 @@ const sendMessageHandler = async (req, res) => {
     agentEmail: req.user.email,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.tenant_message_sent",
-    "support_ticket_message",
-    message.id,
-    req.tenant?.id || null,
-    { ticketId: ticket.id },
-    req.ip
-  );
+  await auditLog(req, "support.tenant_message_sent", "support_ticket_message", message.id, { ticketId: ticket.id });
 
   res.status(201).json({ success: true, item: message });
 };
@@ -164,7 +143,7 @@ const listAttachmentsHandler = async (req, res) => {
   const { ticketId } = req.query;
   const tenantId = req.tenant?.id;
   if (!tenantId) {
-    return res.status(403).json({ success: false, message: "Tenant context required" });
+    return response.forbidden(res, "Tenant context required");
   }
 
   const data = await supportAttachmentDAO.list({
@@ -179,7 +158,7 @@ const createAttachmentHandler = async (req, res) => {
   const file = req.file;
   const { ticketId } = req.body;
   if (!file) {
-    return res.status(400).json({ success: false, message: "File is required" });
+    return response.badRequest(res, "File is required");
   }
 
   const attachment = await supportAttachmentDAO.create({
@@ -193,33 +172,29 @@ const createAttachmentHandler = async (req, res) => {
     url: `/api/v1/admin/support-tickets/tenant/attachments/download/${file.filename}`,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.tenant_attachment_uploaded",
-    "support_attachment",
-    attachment.id,
-    req.tenant?.id || null,
-    { ticketId, filename: file.filename },
-    req.ip
-  );
+await auditLog(req, "support.tenant_attachment_uploaded", "support_attachment", attachment.id, { ticketId, filename: file.filename });
 
   res.status(201).json({ success: true, item: attachment });
 };
 
 const downloadAttachmentHandler = async (req, res) => {
   const filename = path.basename(req.params.filename);
-  const filePath = path.join(UPLOAD_DIR, filename);
-  const resolvedPath = path.resolve(filePath);
-
-  if (!resolvedPath.startsWith(path.resolve(UPLOAD_DIR))) {
-    return res.status(400).json({ success: false, message: "Invalid file path" });
+  if (!filename || filename === "." || filename === "..") {
+    return response.badRequest(res, "Invalid file path");
   }
 
-  if (!fs.existsSync(resolvedPath)) {
-    return res.status(404).json({ success: false, message: "File not found" });
+  const uploadDirResolved = path.resolve(UPLOAD_DIR);
+  const filePath = uploadDirResolved + path.sep + filename; // nosemgrep: express-path-join-resolve-traversal - filename is sanitized by path.basename() and validated against directory escape
+
+  if (!filePath.startsWith(uploadDirResolved + path.sep) && filePath !== uploadDirResolved) {
+    return response.badRequest(res, "Invalid file path");
   }
 
-  res.download(resolvedPath, filename, (err) => {
+  if (!fs.existsSync(filePath)) {
+    return response.notFound(res, "File not found");
+  }
+
+  res.download(filePath, filename, (err) => {
     if (err) {
       console.error("Attachment download error:", err.message);
     }
@@ -229,24 +204,18 @@ const downloadAttachmentHandler = async (req, res) => {
 const deleteAttachmentHandler = async (req, res) => {
   const attachment = await supportAttachmentDAO.remove(req.params.id, req.tenant?.id);
   if (!attachment) {
-    return res.status(404).json({ success: false, message: "Attachment not found" });
+    return response.notFound(res, "Attachment not found");
   }
 
-  const filePath = path.join(UPLOAD_DIR, path.basename(attachment.filename || ""));
-  const resolvedPath = path.resolve(filePath);
-  if (resolvedPath.startsWith(path.resolve(UPLOAD_DIR)) && fs.existsSync(resolvedPath)) {
-    fs.unlinkSync(resolvedPath);
+  const filename = path.basename(attachment.filename || "");
+  const uploadDirResolved = path.resolve(UPLOAD_DIR);
+  const filePath = uploadDirResolved + path.sep + filename; // nosemgrep: express-path-join-resolve-traversal - filename is sanitized by path.basename() and validated against directory escape
+
+  if (filePath.startsWith(uploadDirResolved + path.sep) && fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.tenant_attachment_deleted",
-    "support_attachment",
-    attachment.id,
-    req.tenant?.id || null,
-    { filename: attachment.filename },
-    req.ip
-  );
+  await auditLog(req, "support.tenant_attachment_deleted", "support_attachment", attachment.id, { filename: attachment.filename });
 
   res.status(200).json({ success: true });
 };

@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 
@@ -42,7 +44,7 @@ const listTemplatesHandler = async (req, res) => {
 const createTemplateHandler = async (req, res) => {
   const { name, vertical, description, defaultSettings, defaultServiceModes, featureFlags } = req.body;
   if (!name || !vertical) {
-    return res.status(400).json({ success: false, message: "Name and vertical are required" });
+    return response.badRequest(res, "Name and vertical are required");
   }
 
   const template = await db.sequelize.transaction(async (t) => {
@@ -101,7 +103,7 @@ const updateTemplateHandler = async (req, res) => {
   });
 
   if (!updated) {
-    return res.status(404).json({ success: false, message: "Template not found" });
+    return response.notFound(res, "Template not found");
   }
 
   await platformAuditDAO
@@ -133,7 +135,7 @@ const deleteTemplateHandler = async (req, res) => {
   });
 
   if (!removed) {
-    return res.status(404).json({ success: false, message: "Template not found" });
+    return response.notFound(res, "Template not found");
   }
 
   await platformAuditDAO
@@ -154,7 +156,7 @@ const deleteTemplateHandler = async (req, res) => {
 const cloneTemplateHandler = async (req, res) => {
   const template = await getTemplateById(req.params.id);
   if (!template) {
-    return res.status(404).json({ success: false, message: "Template not found" });
+    return response.notFound(res, "Template not found");
   }
 
   const newTemplate = await db.sequelize.transaction(async (t) => {

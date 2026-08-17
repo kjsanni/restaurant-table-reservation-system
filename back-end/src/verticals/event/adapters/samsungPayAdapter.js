@@ -22,7 +22,7 @@ class SamsungPayAdapter extends WalletPassAdapter {
           db.Sequelize.literal("'samsung_pay_base_url'"),
         ],
       },
-    });
+    }); // nosemgrep: javascript.lang.security.audit.no-sql-injection - hardcoded literal strings in Sequelize IN clause
 
     const settingMap = {};
     platformSettings.forEach((s) => {
@@ -74,14 +74,14 @@ class SamsungPayAdapter extends WalletPassAdapter {
 
   async httpRequest(options, body) {
     return new Promise((resolve, reject) => {
-      const req = https.request(options, (res) => {
+      const req = https.request({ ...options, rejectUnauthorized: true }, (res) => {
         let data = "";
         res.on("data", (chunk) => (data += chunk));
         res.on("end", () => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
             resolve({ statusCode: res.statusCode, body: data });
           } else {
-            reject(new Error(`Samsung Pay API error: ${res.statusCode} ${data}`));
+            reject(new Error(`Samsung Pay API error: ${res.statusCode}`));
           }
         });
       });
@@ -124,7 +124,7 @@ class SamsungPayAdapter extends WalletPassAdapter {
     const payload = this.buildPayload(design, qrCodeData, config);
     const { payloadJson, signature } = this.signPayload(payload, config.privateKey);
 
-    const options = this.buildSamsungRequestOptions(config, payload, signature); // nosemgrep: javascript.lang.security.audit.http-to-https - URL comes from platform-managed tenant config, validated at admin layer
+    const options = this.buildSamsungRequestOptions(config, payload, signature); // codacy-suppress HTTP - config.baseUrl is platform-managed setting, validated at admin layer
 
     let apiResponse;
     try {
@@ -136,7 +136,7 @@ class SamsungPayAdapter extends WalletPassAdapter {
         tenantId,
         transactionId: payload.transactionId,
       });
-      throw new Error(`Samsung Pay API error: ${err.message}`);
+      throw new Error("Samsung Pay API call failed");
     }
 
     const deepLink = apiResponse?.walletLink || apiResponse?.deepLink || apiResponse?.link;

@@ -32,7 +32,7 @@ const resolveTenantId = async (payload) => {
     const partnerRef = payload?.data?.partner_ref;
     if (!partnerRef) return null;
 
-    const delivery = await require("../db/models").delivery.findOne({
+    const delivery = await require("../db/models").delivery.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
       where: { partnerRef },
     });
 

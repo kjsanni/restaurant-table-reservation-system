@@ -1,10 +1,12 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 
 const getTimelineHandler = async (req, res) => {
   const tenantId = parseInt(req.params.tenantId, 10);
   const tenant = await db.tenant.findByPk(tenantId);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const logs = await db.platformAuditLog.findAll({

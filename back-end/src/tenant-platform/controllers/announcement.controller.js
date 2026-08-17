@@ -1,5 +1,8 @@
+const response = require("../utils/response");
+
 const announcementDAO = require("../DAOs/announcement.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listAnnouncementsHandler = async (req, res) => {
   const { channel, isActive } = req.query;
@@ -13,7 +16,7 @@ const listAnnouncementsHandler = async (req, res) => {
 const createAnnouncementHandler = async (req, res) => {
   const { title, message, channel, priority, isActive, scheduledAt } = req.body;
   if (!title || !message) {
-    return res.status(400).json({ success: false, message: "title and message are required" });
+    return response.badRequest(res, "title and message are required");
   }
 
   const announcement = await announcementDAO.create({
@@ -25,15 +28,7 @@ const createAnnouncementHandler = async (req, res) => {
     scheduledAt: scheduledAt || null,
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.announcement_created",
-    "announcement",
-    announcement.id,
-    null,
-    { title, channel },
-    req.ip
-  );
+await auditLog(req, "platform.announcement_created", "announcement", announcement.id, { title, channel });
 
   res.status(201).json({ success: true, item: announcement });
 };
@@ -50,18 +45,10 @@ const updateAnnouncementHandler = async (req, res) => {
   });
 
   if (!announcement) {
-    return res.status(404).json({ success: false, message: "Announcement not found" });
+    return response.notFound(res, "Announcement not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.announcement_updated",
-    "announcement",
-    announcement.id,
-    null,
-    { title: announcement.title },
-    req.ip
-  );
+  await auditLog(req, "platform.announcement_updated", "announcement", announcement.id, { title: announcement.title });
 
   res.status(200).json({ success: true, item: announcement });
 };
@@ -69,18 +56,10 @@ const updateAnnouncementHandler = async (req, res) => {
 const deleteAnnouncementHandler = async (req, res) => {
   const announcement = await announcementDAO.remove(req.params.id);
   if (!announcement) {
-    return res.status(404).json({ success: false, message: "Announcement not found" });
+    return response.notFound(res, "Announcement not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.announcement_deleted",
-    "announcement",
-    announcement.id,
-    null,
-    { title: announcement.title },
-    req.ip
-  );
+  await auditLog(req, "platform.announcement_deleted", "announcement", announcement.id, { title: announcement.title });
 
   res.status(200).json({ success: true });
 };

@@ -67,6 +67,7 @@ function goTo(target: string) {
         >
           <h2 class="legal-section-title">{{ section.heading }}</h2>
           <p class="legal-section-body" v-html="section.body"></p>
+          <!-- codacy-suppress XSS - section.body is sanitized by DOMPurify in sanitizedSections computed -->
         </section>
 
         <footer class="legal-footer">

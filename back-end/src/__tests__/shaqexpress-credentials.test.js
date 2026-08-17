@@ -1,3 +1,4 @@
+// codacy-suppress Cryptography,Hardcoded_Secrets - test-only fixtures for unit tests
 const { getCredentials, verifyWebhookSignature } = require("../services/shaqexpress.service");
 
 jest.mock("axios");

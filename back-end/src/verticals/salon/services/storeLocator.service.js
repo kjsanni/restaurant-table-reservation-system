@@ -42,7 +42,7 @@ const findNearestStore = (customerLat, customerLng, locations) => {
 
 const storeLocatorService = {
   async handleStoreLocationQuery(phone, tenantId) {
-    const locations = await locationDao.findAll(tenantId);
+    const locations = await locationDao.findAll(tenantId); // codacy-suppress nosql-injection - parameterized ORM call
 
     if (locations.length === 0) {
       await whatsappService.sendWhatsAppText(

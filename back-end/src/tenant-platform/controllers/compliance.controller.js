@@ -1,7 +1,10 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const legalAcceptanceDAO = require("../DAOs/legalAcceptance.dao");
 const dsarRequestDAO = require("../DAOs/dsarRequest.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const computeScorecard = async (tenantId) => {
   const totalTenants = await db.tenant.count({
@@ -44,12 +47,12 @@ const autoFulfillSimpleDsarHandler = async (req, res) => {
   const { requestId } = req.body;
 
   if (!requestId) {
-    return res.status(400).json({ success: false, message: "requestId is required" });
+    return response.badRequest(res, "requestId is required");
   }
 
   const record = await dsarRequestDAO.findById(requestId);
   if (!record) {
-    return res.status(404).json({ success: false, message: "DSAR request not found" });
+    return response.notFound(res, "DSAR request not found");
   }
 
   if (record.status !== "pending") {
@@ -61,15 +64,7 @@ const autoFulfillSimpleDsarHandler = async (req, res) => {
 
   await dsarRequestDAO.updateStatus(requestId, record.tenantId, "fulfilled", "Auto-fulfilled by compliance automation", new Date());
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "compliance.dsar.auto_fulfilled",
-    "dsar_request",
-    requestId,
-    null,
-    { requestType: record.requestType, autoFulfilled: true },
-    req.ip
-  );
+await auditLog(req, "compliance.dsar.auto_fulfilled", "dsar_request", requestId, { requestType: record.requestType, autoFulfilled: true });
 
   res.status(200).json({ success: true, message: "DSAR request auto-fulfilled" });
 };

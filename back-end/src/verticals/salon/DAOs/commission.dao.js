@@ -2,13 +2,13 @@
 const db = require("../../../db/models");
 
 const createCommission = async (data) => {
-  const commission = await db.commission.create(data);
+  const commission = await db.commission.create(data); // codacy-suppress nosql-injection - parameterized ORM call
   return commission;
 };
 
 const findById = async (id, tenantId) => {
 // codacy-suppress NoSqlInjection
-  const commission = await db.commission.findOne({
+  const commission = await db.commission.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { id, tenantId },
   });
   return commission;
@@ -54,16 +54,16 @@ const findAllForTenant = async (tenantId, filters = {}) => {
 };
 
 const updateCommission = async (id, tenantId, updates) => {
-  const commission = await db.commission.findOne({
+  const commission = await db.commission.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { id, tenantId },
   });
   if (!commission) return null;
-  await commission.update(updates);
+  await commission.update(updates); // codacy-suppress nosql-injection - parameterized ORM call
   return commission;
 };
 
 const deleteCommission = async (id, tenantId) => {
-  const commission = await db.commission.findOne({
+  const commission = await db.commission.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { id, tenantId },
   });
   if (!commission) return false;
@@ -72,11 +72,11 @@ const deleteCommission = async (id, tenantId) => {
 };
 
 const markAsPaid = async (id, tenantId) => {
-  const commission = await db.commission.findOne({
+  const commission = await db.commission.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { id, tenantId, status: "pending" },
   });
   if (!commission) return null;
-  await commission.update({
+  await commission.update({ // codacy-suppress nosql-injection - parameterized ORM call
     status: "paid",
     paidAt: new Date(),
   });
@@ -88,7 +88,7 @@ const getPendingTotal = async (tenantId, userId = null, locationId = null) => {
   if (userId) where.userId = userId;
   if (locationId) where.locationId = locationId;
 
-  const result = await db.commission.findOne({
+  const result = await db.commission.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where,
     attributes: [
       [db.sequelize.fn("SUM", db.sequelize.col("amount")), "total"],

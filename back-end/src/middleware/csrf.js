@@ -14,7 +14,7 @@ const setCsrfCookie = (req, res, next) => {
     const isProduction = process.env.NODE_ENV === "production";
     const isTest = process.env.NODE_ENV === "test";
     res.cookie(CSRF_COOKIE_NAME, token, {
-      httpOnly: false,
+      httpOnly: false, // guardrails-disable-line - Intentionally non-httpOnly for XSRF-TOKEN: double-submit CSRF requires the token to be readable by frontend JavaScript; protection is provided by sameSite + secure flags + server-side token validation
       secure: isProduction,
       sameSite: isTest ? false : isProduction ? "lax" : false,
       path: "/",
