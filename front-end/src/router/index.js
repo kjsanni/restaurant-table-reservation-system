@@ -1914,6 +1914,16 @@ const customerPortalRoutes = [
       standalone: true,
     },
   },
+  {
+    path: "/events/:eventId/wallet-passes",
+    name: "event-wallet-passes",
+    component: () => import("../views/tenant/WalletPassApprovalView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "manage_events",
+    },
+  },
 ];
 
 customerPortalRoutes.forEach((route) => router.addRoute(route));

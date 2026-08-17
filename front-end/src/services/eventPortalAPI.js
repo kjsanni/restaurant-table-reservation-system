@@ -142,12 +142,32 @@ class EventPortalAPI {
     });
   }
 
+  getPhoto(photoRef) {
+    return API.get(`/events/checkin/photo/${photoRef}`);
+  }
+
+  getPhotoUrl(photoRef) {
+    return `/api/v1/events/checkin/photo/${photoRef}`;
+  }
+
   getWebPass(shortCode) {
     return API.get(`/public/e/${shortCode}`);
   }
 
   getGooglePayJwt(shortCode) {
     return API.get(`/public/e/${shortCode}`, { params: { format: "google" } });
+  }
+
+  listPendingApproval(eventId) {
+    return API.get(`/events/${eventId}/wallet-passes/requests/pending`);
+  }
+
+  approveRequest(eventId, requestId) {
+    return API.post(`/events/${eventId}/wallet-passes/requests/${requestId}/approve`);
+  }
+
+  rejectRequest(eventId, requestId) {
+    return API.post(`/events/${eventId}/wallet-passes/requests/${requestId}/reject`);
   }
 }
 

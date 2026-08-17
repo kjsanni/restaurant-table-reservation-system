@@ -64,9 +64,7 @@ const onFileChange = async (event: Event) => {
 
     const res = await eventPortalAPI.uploadEventPhoto(props.eventId, formData);
     const photoRef = res.data?.photoRef || null;
-    previewUrl.value = photoRef
-      ? `/api/v1/events/checkin/photo/${photoRef}`
-      : null;
+    previewUrl.value = photoRef ? eventPortalAPI.getPhotoUrl(photoRef) : null;
     emit("update:modelValue", photoRef);
     toast.add("Photo uploaded", "success", 3000);
   } catch (err) {
