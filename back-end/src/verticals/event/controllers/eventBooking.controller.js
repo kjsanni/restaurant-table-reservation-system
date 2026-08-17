@@ -53,6 +53,22 @@ const confirmBookingHandler = async (req, res) => {
   }
 };
 
+const updateBookingHandler = async (req, res) => {
+  try {
+    const booking = await eventBookingService.updateBooking(
+      req.params.id,
+      req.tenant?.id,
+      req.body
+    );
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+    res.status(200).json({ success: true, item: booking });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
 const cancelBookingHandler = async (req, res) => {
   try {
     const result = await eventBookingService.cancelBooking(
@@ -87,6 +103,7 @@ module.exports = {
   getBookingsHandler,
   getBookingHandler,
   confirmBookingHandler,
+  updateBookingHandler,
   cancelBookingHandler,
   transferBookingHandler,
 };

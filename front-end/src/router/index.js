@@ -67,6 +67,12 @@ const router = createRouter({
       meta: { standalone: true },
     },
     {
+      path: "/e/:shortCode",
+      name: "public-event-pass",
+      component: () => import("../views/PublicEventPassView.vue"),
+      meta: { standalone: true },
+    },
+    {
       path: "/pricing",
       name: "pricing",
       component: () => import("../views/PricingView.vue"),
@@ -1906,6 +1912,16 @@ const customerPortalRoutes = [
       requiresVertical: "event",
       requiresPermission: "manage_events",
       standalone: true,
+    },
+  },
+  {
+    path: "/events/:eventId/wallet-passes",
+    name: "event-wallet-passes",
+    component: () => import("../views/tenant/WalletPassApprovalView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "manage_events",
     },
   },
 ];
