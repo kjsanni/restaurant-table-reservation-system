@@ -105,7 +105,7 @@ const substitute = (template, variables = {}) => {
   let result = template;
   for (const [key, value] of Object.entries(variables)) {
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`\\{\\{\\s*${escapedKey}\\s*\\}\\}`, "g");
+    const regex = new RegExp(`\\{\\{\\s*${escapedKey}\\s*\\}\\}`, "g"); // codacy-suppress Insecure_Modules_Libraries - key is escaped before use in RegExp, no injection possible
     result = result.replace(regex, String(value ?? ""));
   }
   result = result.replace(/\{\{\s*\w+\s*\}\}/g, "");

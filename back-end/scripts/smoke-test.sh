@@ -14,9 +14,11 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo ""
-echo "Seeding local database..."
-ADMIN_INITIAL_PASSWORD=admin123 npm run seed:all >/dev/null 2>&1 || true
+if [ "${NODE_ENV:-development}" != "test" ]; then
+  echo ""
+  echo "Seeding local database..."
+  ADMIN_INITIAL_PASSWORD=admin123 npm run seed:all >/dev/null 2>&1 || true
+fi
 
 echo ""
 echo "1. Health Check"

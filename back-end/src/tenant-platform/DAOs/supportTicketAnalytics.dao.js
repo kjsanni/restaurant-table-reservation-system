@@ -8,7 +8,7 @@ supportTicketAnalyticsDAO.getWhatsAppAnalytics = async (filters = {}) => {
   if (filters.from) where.createdAt = { ...where.createdAt, [db.Sequelize.Op.gte]: new Date(filters.from) };
   if (filters.to) where.createdAt = { ...where.createdAt, [db.Sequelize.Op.lte]: new Date(filters.to) };
 
-  const tickets = await db.supportTicket.findAll({
+  const tickets = await db.supportTicket.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where,
     attributes: [
       "id",

@@ -45,7 +45,7 @@ cd front-end && npm run lint && npm run build && \
 - Feature deployed to canary Podman container on port 8080
 - Canary runs behind the `X-Tenant-ID` header allowlist
 
-### Gate 0 — Exit criteria
+### Gate 1 — Exit criteria
 - No 5xx errors in Grafana dashboard for 15 minutes
 - No Sentry alerts in canary namespace
 - Health check `/health` passes for all canary pods

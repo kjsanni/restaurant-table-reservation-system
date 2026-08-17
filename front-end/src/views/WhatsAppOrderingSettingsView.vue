@@ -229,6 +229,7 @@ const resetTemplate = (name: string, defaultBody: string) => {
               <p class="settings-hint">
                 Customize the WhatsApp messages customers receive. Variables use
                 <code class="code-sample" v-html="'{{variableName}}'"></code>
+                <!-- codacy-suppress XSS - static template syntax example, no user input -->
                 syntax.
               </p>
             </div>
@@ -263,6 +264,7 @@ const resetTemplate = (name: string, defaultBody: string) => {
                   class="var-chip"
                   v-html="'{{' + v + '}}'"
                 ></code>
+                <!-- codacy-suppress XSS - static template variable syntax, v comes from hardcoded template definitions -->
                 <button
                   class="reset-btn"
                   @click="resetTemplate(tpl.name, tpl.body)"

@@ -1,6 +1,9 @@
+const response = require("../utils/response");
+
 const supportConversationDAO = require("../DAOs/supportConversation.dao");
 const supportMessageDAO = require("../DAOs/supportMessage.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listConversationsHandler = async (req, res) => {
   const { status, assignedTo } = req.query;
@@ -17,7 +20,7 @@ const listConversationsHandler = async (req, res) => {
 const getConversationHandler = async (req, res) => {
   const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
   res.status(200).json({ success: true, item: conversation });
 };
@@ -25,7 +28,7 @@ const getConversationHandler = async (req, res) => {
 const createConversationHandler = async (req, res) => {
   const { subject, message, priority } = req.body;
   if (!message) {
-    return res.status(400).json({ success: false, message: "Message is required" });
+    return response.badRequest(res, "Message is required");
   }
 
   const conversation = await supportConversationDAO.create({
@@ -44,15 +47,7 @@ const createConversationHandler = async (req, res) => {
     body: message,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.conversation_created",
-    "support_conversation",
-    conversation.id,
-    req.tenant?.id || null,
-    { subject, priority },
-    req.ip
-  );
+await auditLog(req, "support.conversation_created", "support_conversation", conversation.id, { subject, priority });
 
   res.status(201).json({ success: true, item: conversation });
 };
@@ -68,18 +63,10 @@ const updateConversationHandler = async (req, res) => {
 
   const conversation = await supportConversationDAO.update(req.params.id, updates, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.conversation_updated",
-    "support_conversation",
-    conversation.id,
-    req.tenant?.id || null,
-    { updates },
-    req.ip
-  );
+  await auditLog(req, "support.conversation_updated", "support_conversation", conversation.id, { updates });
 
   res.status(200).json({ success: true, item: conversation });
 };
@@ -87,18 +74,10 @@ const updateConversationHandler = async (req, res) => {
 const deleteConversationHandler = async (req, res) => {
   const conversation = await supportConversationDAO.remove(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.conversation_deleted",
-    "support_conversation",
-    conversation.id,
-    req.tenant?.id || null,
-    {},
-    req.ip
-  );
+  await auditLog(req, "support.conversation_deleted", "support_conversation", conversation.id, {});
 
   res.status(200).json({ success: true });
 };
@@ -106,7 +85,7 @@ const deleteConversationHandler = async (req, res) => {
 const listMessagesHandler = async (req, res) => {
   const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
   const messages = await supportMessageDAO.list(conversation.id);
@@ -116,12 +95,12 @@ const listMessagesHandler = async (req, res) => {
 const sendMessageHandler = async (req, res) => {
   const { body } = req.body;
   if (!body) {
-    return res.status(400).json({ success: false, message: "Message body is required" });
+    return response.badRequest(res, "Message body is required");
   }
 
   const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
   const message = await supportMessageDAO.create({
@@ -133,15 +112,7 @@ const sendMessageHandler = async (req, res) => {
 
   await supportConversationDAO.update(conversation.id, { lastMessageAt: new Date() }, req.user?.isSuperAdmin ? null : req.tenant?.id);
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.message_sent",
-    "support_message",
-    message.id,
-    req.user?.isSuperAdmin ? null : req.tenant?.id,
-    { conversationId: conversation.id },
-    req.ip
-  );
+  await auditLog(req, "support.message_sent", "support_message", message.id, { conversationId: conversation.id }, { tenantId: req.user?.isSuperAdmin ? null : req.tenant?.id });
 
   res.status(201).json({ success: true, item: message });
 };
@@ -149,7 +120,7 @@ const sendMessageHandler = async (req, res) => {
 const autoAssignConversationHandler = async (req, res) => {
   const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
   if (conversation.assignedTo) {
@@ -177,15 +148,7 @@ const autoAssignConversationHandler = async (req, res) => {
 
   if (bestAgentId) {
     await supportConversationDAO.update(req.params.id, { assignedTo: bestAgentId }, req.user?.isSuperAdmin ? null : req.tenant?.id);
-    await platformAuditDAO.log(
-      req.user.id,
-      "support.conversation_auto_assigned",
-      "support_conversation",
-      conversation.id,
-      req.user?.isSuperAdmin ? null : req.tenant?.id,
-      { assignedTo: bestAgentId },
-      req.ip
-    );
+    await auditLog(req, "support.conversation_auto_assigned", "support_conversation", conversation.id, { assignedTo: bestAgentId }, { tenantId: req.user?.isSuperAdmin ? null : req.tenant?.id });
     const updated = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
     return res.status(200).json({ success: true, item: updated });
   }
@@ -196,25 +159,17 @@ const autoAssignConversationHandler = async (req, res) => {
 const submitCsatHandler = async (req, res) => {
   const { rating, feedback } = req.body;
   if (!rating || rating < 1 || rating > 5) {
-    return res.status(400).json({ success: false, message: "Rating must be between 1 and 5" });
+    return response.badRequest(res, "Rating must be between 1 and 5");
   }
 
   const conversation = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!conversation) {
-    return res.status(404).json({ success: false, message: "Conversation not found" });
+    return response.notFound(res, "Conversation not found");
   }
 
   await supportConversationDAO.update(req.params.id, { csatRating: rating, csatFeedback: feedback || null }, req.user?.isSuperAdmin ? null : req.tenant?.id);
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.csat_submitted",
-    "support_conversation",
-    conversation.id,
-    req.user?.isSuperAdmin ? null : req.tenant?.id,
-    { rating },
-    req.ip
-  );
+  await auditLog(req, "support.csat_submitted", "support_conversation", conversation.id, { rating }, { tenantId: req.user?.isSuperAdmin ? null : req.tenant?.id });
 
   const updated = await supportConversationDAO.findById(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   res.status(200).json({ success: true, item: updated });

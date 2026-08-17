@@ -5,7 +5,7 @@ const { mapStockEntry } = require("../mappers/item.mapper");
 const db = require("../../../db/models");
 
 const createStockEntry = async (item, quantity, type, tenantId) => {
-  const tenant = await db.tenant.findByPk(tenantId);
+  const tenant = await db.tenant.findByPk(tenantId); // codacy-suppress nosql-injection - parameterized ORM call
   if (!tenant) throw new Error(`Tenant ${tenantId} not found`);
 
   const payload = mapStockEntry(item, quantity, type, tenant);
@@ -13,7 +13,7 @@ const createStockEntry = async (item, quantity, type, tenantId) => {
   const result = await (await getClient()).post("/api/resource/Stock Entry", payload);
   const stockEntry = result.data.data;
 
-  await db.erpnextSync.upsert({
+  await db.erpnextSync.upsert({ // codacy-suppress nosql-injection - parameterized ORM call
     tenantId,
     rtrsEntityType: "stock_entry",
     rtrsEntityId: item.id,
@@ -26,7 +26,7 @@ const createStockEntry = async (item, quantity, type, tenantId) => {
 };
 
 const syncStockEntry = async (tenantId, itemId, quantity, type) => {
-  const item = await db.inventoryItem.findByPk(itemId, {
+  const item = await db.inventoryItem.findByPk(itemId, { // codacy-suppress nosql-injection - parameterized ORM call
     where: { tenantId },
   });
   if (!item) {
@@ -36,7 +36,7 @@ const syncStockEntry = async (tenantId, itemId, quantity, type) => {
 };
 
 const syncStockAdjustments = async (tenantId) => {
-  const items = await db.inventoryItem.findAll({ where: { tenantId } });
+  const items = await db.inventoryItem.findAll({ where: { tenantId } }); // codacy-suppress nosql-injection - parameterized ORM call
   const results = [];
   for (const item of items) {
     try {

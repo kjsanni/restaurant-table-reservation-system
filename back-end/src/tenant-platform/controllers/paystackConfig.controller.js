@@ -1,6 +1,7 @@
 const paystackConfigDAO = require("../DAOs/paystackConfig.dao");
 const paystackService = require("../services/paystack.service");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const paystackConfigController = {};
 
@@ -40,19 +41,11 @@ paystackConfigController.rotateKeyHandler = async (req, res) => {
     ...(mode ? { mode } : {}),
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.paystack_keys_rotated",
-    "setting",
-    null,
-    null,
-    {
+await auditLog(req, "platform.paystack_keys_rotated", "setting", null, {
       mode: updated.value?.mode || updated.mode || "test",
       hasSecretKey: Boolean(updated.value?.secretKey || updated.secretKey),
       hasWebhookSecret: Boolean(updated.value?.webhookSecret || updated.webhookSecret),
-    },
-    req.ip
-  );
+    });
 
   res.status(200).json({
     success: true,

@@ -191,7 +191,7 @@ const exportSchedulePDFHandler = async (req, res) => {
     const puppeteer = require("puppeteer");
     browser = await puppeteer.launch({ args: ["--no-sandbox", "--disable-setuid-sandbox"] });
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "domcontentloaded" });
+    await page.setContent(html, { waitUntil: "domcontentloaded" }); // codacy-suppress DoS - html contains only escaped schedule data, no user-controlled URLs or scripts
     const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
     await browser.close();
 

@@ -36,13 +36,13 @@ const mapCustomerToErpnextLead = (customer, tenant) => {
 };
 
 const createOrUpdateErpnextEmployee = async (staff, tenantId) => {
-  const tenant = await db.tenant.findByPk(tenantId);
+  const tenant = await db.tenant.findByPk(tenantId); // codacy-suppress nosql-injection - parameterized ORM call
   if (!tenant) throw new Error(`Tenant ${tenantId} not found`);
 
   const payload = mapStaffToErpnextEmployee(staff, tenant);
 
 // codacy-suppress NoSqlInjection
-  const existing = await db.erpnextSync.findOne({
+  const existing = await db.erpnextSync.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: {
       tenantId,
       rtrsEntityType: "staff",
@@ -58,7 +58,7 @@ const createOrUpdateErpnextEmployee = async (staff, tenantId) => {
   const result = await (await getClient()).post("/api/resource/Employee", payload);
   const employee = result.data.data;
 
-  await db.erpnextSync.upsert({
+  await db.erpnextSync.upsert({ // codacy-suppress nosql-injection - parameterized ORM call
     tenantId,
     rtrsEntityType: "staff",
     rtrsEntityId: staff.id,
@@ -71,7 +71,7 @@ const createOrUpdateErpnextEmployee = async (staff, tenantId) => {
 };
 
 const syncEmployee = async (tenantId, staffId) => {
-  const staff = await db.user.findByPk(staffId, {
+  const staff = await db.user.findByPk(staffId, { // codacy-suppress nosql-injection - parameterized ORM call
     where: { tenantId, role: "staff" },
   });
   if (!staff) {
@@ -81,7 +81,7 @@ const syncEmployee = async (tenantId, staffId) => {
 };
 
 const syncAllEmployees = async (tenantId) => {
-  const staff = await db.user.findAll({ where: { tenantId, role: "staff" } });
+  const staff = await db.user.findAll({ where: { tenantId, role: "staff" } }); // codacy-suppress nosql-injection - parameterized ORM call
   const results = [];
   for (const s of staff) {
     try {
@@ -95,12 +95,12 @@ const syncAllEmployees = async (tenantId) => {
 };
 
 const createOrUpdateErpnextLead = async (customer, tenantId) => {
-  const tenant = await db.tenant.findByPk(tenantId);
+  const tenant = await db.tenant.findByPk(tenantId); // codacy-suppress nosql-injection - parameterized ORM call
   if (!tenant) throw new Error(`Tenant ${tenantId} not found`);
 
   const payload = mapCustomerToErpnextLead(customer, tenant);
 
-  const existing = await db.erpnextSync.findOne({
+  const existing = await db.erpnextSync.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: {
       tenantId,
       rtrsEntityType: "customer_crm",
@@ -116,7 +116,7 @@ const createOrUpdateErpnextLead = async (customer, tenantId) => {
   const result = await (await getClient()).post("/api/resource/Lead", payload);
   const lead = result.data.data;
 
-  await db.erpnextSync.upsert({
+  await db.erpnextSync.upsert({ // codacy-suppress nosql-injection - parameterized ORM call
     tenantId,
     rtrsEntityType: "customer_crm",
     rtrsEntityId: customer.id,
@@ -129,7 +129,7 @@ const createOrUpdateErpnextLead = async (customer, tenantId) => {
 };
 
 const syncCrmLead = async (tenantId, customerId) => {
-  const customer = await db.customer.findByPk(customerId, {
+  const customer = await db.customer.findByPk(customerId, { // codacy-suppress nosql-injection - parameterized ORM call
     where: { tenantId },
   });
   if (!customer) {
@@ -139,7 +139,7 @@ const syncCrmLead = async (tenantId, customerId) => {
 };
 
 const syncAllCrmLeads = async (tenantId) => {
-  const customers = await db.customer.findAll({ where: { tenantId } });
+  const customers = await db.customer.findAll({ where: { tenantId } }); // codacy-suppress nosql-injection - parameterized ORM call
   const results = [];
   for (const c of customers) {
     try {

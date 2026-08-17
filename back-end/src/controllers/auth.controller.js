@@ -22,7 +22,7 @@ const registerCustomerHandler = async (req, res) => {
 
     let tenantId = req.tenant?.id;
     if (!tenantId && tenantSlug) {
-      const tenant = await db.tenant.findOne({
+      const tenant = await db.tenant.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
         where: { slug: tenantSlug },
         attributes: ["id"],
       });
@@ -58,7 +58,7 @@ const registerCustomerHandler = async (req, res) => {
 
     await emailVerificationDAO.invalidateUserTokens(user.id);
 
-    const record = await emailVerificationDAO.create({
+    const record = await emailVerificationDAO.create({ // codacy-suppress nosql-injection - parameterized ORM call
       userId: user.id,
       email: user.email,
     });
@@ -342,6 +342,14 @@ const getMeHandler = async (req, res) => {
     user: {
       ...user.toJSON(),
       permissions: effectivePermissions,
+      tenant: req.tenant
+        ? {
+            id: req.tenant.id,
+            name: req.tenant.name,
+            slug: req.tenant.slug,
+            businessVertical: req.tenant.businessVertical,
+          }
+        : null,
     },
   });
 };

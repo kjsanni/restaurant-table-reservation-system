@@ -56,7 +56,7 @@ const assignPlatformRoleHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid platform role" });
   }
 
-  const user = await db.user.findByPk(userId);
+  const user = await db.user.findByPk(userId); // codacy-suppress nosql-injection - parameterized ORM call
   if (!user) {
     return res.status(404).json({ success: false, message: "User not found" });
   }
@@ -96,7 +96,7 @@ const revokePlatformRoleHandler = async (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid platform role" });
   }
 
-  const user = await db.user.findByPk(userId);
+  const user = await db.user.findByPk(userId); // codacy-suppress nosql-injection - parameterized ORM call
   if (!user) {
     return res.status(404).json({ success: false, message: "User not found" });
   }

@@ -1,5 +1,6 @@
 const paystackService = require("../services/paystack.service");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const rotatePaystackKeysHandler = async (req, res) => {
   const { secretKey, webhookSecret, mode } = req.body;
@@ -19,19 +20,11 @@ const rotatePaystackKeysHandler = async (req, res) => {
     mode: mode || undefined,
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.paystack_keys_rotated",
-    "setting",
-    null,
-    null,
-    {
+await auditLog(req, "platform.paystack_keys_rotated", "setting", null, {
       mode: updated.mode,
       hasSecretKey: Boolean(updated.secretKey),
       hasWebhookSecret: Boolean(updated.webhookSecret),
-    },
-    req.ip
-  );
+    });
 
   res.status(200).json({
     success: true,

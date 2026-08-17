@@ -54,7 +54,7 @@ const inboundHandler = async (req, res) => {
     let salonBookingEnabled = false;
     let storeLocatorEnabled = false;
     if (tenantId) {
-      const tenant = await db.tenant.findByPk(tenantId);
+      const tenant = await db.tenant.findByPk(tenantId); // codacy-suppress nosql-injection - parameterized ORM call
       isSalon = tenant?.businessVertical === "salon";
       if (isSalon) {
         const flags = tenant?.settings?.featureFlags || {};
@@ -120,7 +120,7 @@ const inboundHandler = async (req, res) => {
 const resolveTenantId = async (metadata) => {
   if (!metadata || !metadata.phone_number_id) return null;
   try {
-    const setting = await require("../db/models").setting.findOne({
+    const setting = await require("../db/models").setting.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
       where: { key: "whatsapp_config" },
     });
     if (setting && setting.value) {

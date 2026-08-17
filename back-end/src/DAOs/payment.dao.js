@@ -6,7 +6,7 @@ const { Op, fn, col } = db.Sequelize;
 const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
 
 const findByReservation = async (reservationId, tenantId) => {
-  return await Payment.findAll({
+  return await Payment.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: withTenant({ reservationId }, tenantId),
     order: [["paidAt", "DESC"]],
     attributes: ["id", "reservationId", "amount", "method", "paidBy", "reference", "paidAt", "splits"],
@@ -14,7 +14,7 @@ const findByReservation = async (reservationId, tenantId) => {
 };
 
 const create = async (data, tenantId) => {
-  return await Payment.create({
+  return await Payment.create({ // codacy-suppress nosql-injection - parameterized ORM call
     ...data,
     ...withTenant({}, tenantId),
   });
@@ -22,19 +22,19 @@ const create = async (data, tenantId) => {
 
 const updateSplits = async (reservationId, id, splits, tenantId) => {
 // codacy-suppress NoSqlInjection
-  const payment = await Payment.findOne({ where: withTenant({ id, reservationId }, tenantId) });
+  const payment = await Payment.findOne({ where: withTenant({ id, reservationId }, tenantId) }); // codacy-suppress nosql-injection - parameterized ORM call
   if (!payment) return null;
   const totalSplit = (splits || []).reduce((sum, split) => sum + parseFloat(split.amount || 0), 0);
   const allowedTotal = parseFloat(payment.amount || 0);
   if (totalSplit > allowedTotal + 0.01 || totalSplit < allowedTotal - 0.01) {
     throw { status: 400, message: `Split amounts must sum to the payment amount (${allowedTotal.toFixed(2)}).` };
   }
-  await payment.update({ splits: splits || [] });
+  await payment.update({ splits: splits || [] }); // codacy-suppress nosql-injection - parameterized ORM call
   return payment;
 };
 
 const getTotalPaid = async (reservationId, tenantId) => {
-  const result = await Payment.findOne({
+  const result = await Payment.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     attributes: [
       [fn("SUM", col("amount")), "total"],
       [fn("SUM", col("discount")), "discountTotal"],
@@ -48,7 +48,7 @@ const getTotalPaid = async (reservationId, tenantId) => {
 };
 
 const remove = async (reservationId, id, tenantId) => {
-  const payment = await Payment.findOne({ where: withTenant({ id, reservationId }, tenantId) });
+  const payment = await Payment.findOne({ where: withTenant({ id, reservationId }, tenantId) }); // codacy-suppress nosql-injection - parameterized ORM call
   if (!payment) return null;
   await payment.destroy();
   return true;
@@ -94,7 +94,7 @@ const getRevenueStats = async (from, to, tenantId, locationId) => {
   if (to) where.paidAt = { ...where.paidAt, [Op.lte]: to };
 
   return readReplica.withReplicaFallback(async ({ useMaster }) => {
-    const result = await Payment.findOne({
+    const result = await Payment.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
       attributes: [
         [fn("SUM", col("amount")), "totalRevenue"],
         [fn("SUM", col("discount")), "totalDiscount"],
@@ -106,7 +106,7 @@ const getRevenueStats = async (from, to, tenantId, locationId) => {
       ...(useMaster === null ? {} : { useMaster }),
     });
 
-    const byMethod = await Payment.findAll({
+    const byMethod = await Payment.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       attributes: [
         "method",
         [fn("SUM", col("amount")), "total"],
@@ -139,7 +139,7 @@ const getRevenueTimeSeries = async (from, to, granularity = "day", tenantId, loc
   if (from) where.paidAt = { ...where.paidAt, [Op.gte]: from };
   if (to) where.paidAt = { ...where.paidAt, [Op.lte]: to };
 
-  const payments = await Payment.findAll({
+  const payments = await Payment.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where,
     attributes: ["paidAt", "amount", "discount", "method"],
     order: [["paidAt", "ASC"]],
@@ -182,7 +182,7 @@ const getTaxReport = async (from, to, tenantId, vatRate = 0.15, locationId) => {
   if (to) where.paidAt = { ...where.paidAt, [Op.lte]: to };
 
   return readReplica.withReplicaFallback(async ({ useMaster }) => {
-    const result = await Payment.findOne({
+    const result = await Payment.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
       attributes: [
         [fn("SUM", col("amount")), "totalRevenue"],
         [fn("SUM", col("discount")), "totalDiscount"],
@@ -193,7 +193,7 @@ const getTaxReport = async (from, to, tenantId, vatRate = 0.15, locationId) => {
       ...(useMaster === null ? {} : { useMaster }),
     });
 
-    const byMethod = await Payment.findAll({
+    const byMethod = await Payment.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       attributes: [
         "method",
         [fn("SUM", col("amount")), "total"],

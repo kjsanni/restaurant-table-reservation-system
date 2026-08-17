@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const { _queues } = require("../../queues/queue");
 
@@ -5,7 +7,7 @@ const getTenantDebugInfoHandler = async (req, res) => {
   const tenantId = req.params.tenantId;
   const tenant = await db.tenant.findByPk(tenantId);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const recentAppointments = await db.sequelize.models.appointment.findAll({

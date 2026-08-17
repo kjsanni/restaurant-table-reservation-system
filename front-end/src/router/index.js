@@ -127,6 +127,18 @@ const router = createRouter({
       ],
     },
     {
+      path: "/support",
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "tenant-support",
+          component: () => import("../views/tenant/TenantSupportView.vue"),
+          meta: { requiresAuth: true },
+        },
+      ],
+    },
+    {
       path: "/erpnext/accounting",
       component: () => import("../layouts/TenantLayout.vue"),
       children: [
@@ -1730,18 +1742,6 @@ router.beforeEach((to, from, next) => {
       next({ name: "tenant-landing" });
     } else {
       next({ name: "customer-portal-home" });
-    }
-  } else if (
-    to.name === "home" &&
-    authStore.isAuthenticated &&
-    !authStore.isLoading
-  ) {
-    if (authStore.isSuperAdmin) {
-      next({ name: "super-admin-overview" });
-    } else if (authStore.user?.role === "admin") {
-      next({ name: "admin-settings" });
-    } else {
-      next({ name: "tenant-landing" });
     }
   } else {
     next();

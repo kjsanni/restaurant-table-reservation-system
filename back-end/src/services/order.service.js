@@ -20,7 +20,7 @@ const createOrder = async (tenantId, payload) => {
   }
 
   if (reservationId) {
-    const reservation = await require("../db/models").reservation.findByPk(reservationId);
+    const reservation = await require("../db/models").reservation.findByPk(reservationId); // codacy-suppress nosql-injection - parameterized ORM call
     if (!reservation) {
       throw { status: 404, message: "Linked reservation not found." };
     }

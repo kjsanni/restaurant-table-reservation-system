@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const dsarRequestDAO = require("../DAOs/dsarRequest.dao");
 
 const DSAR_REQUEST_TYPES = [
@@ -33,7 +35,7 @@ const listHandler = async (req, res) => {
 const getHandler = async (req, res) => {
   const record = await dsarRequestDAO.findById(req.params.id, req.params.tenantId);
   if (!record) {
-    return res.status(404).json({ success: false, message: "DSAR request not found" });
+    return response.notFound(res, "DSAR request not found");
   }
   res.status(200).json({
     success: true,
@@ -97,7 +99,7 @@ const patchHandler = async (req, res) => {
 
   const record = await dsarRequestDAO.findById(req.params.id, req.params.tenantId);
   if (!record) {
-    return res.status(404).json({ success: false, message: "DSAR request not found" });
+    return response.notFound(res, "DSAR request not found");
   }
 
   const nextStatus = status || record.status;

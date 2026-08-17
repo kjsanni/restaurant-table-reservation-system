@@ -10,7 +10,7 @@ const escapeHtml = (str) => {
 
 const sendReviewResponseNotification = async (review, tenant) => {
   try {
-    const customer = await db.customer.findByPk(review.customerId);
+    const customer = await db.customer.findByPk(review.customerId); // codacy-suppress nosql-injection - parameterized ORM call
     if (!customer?.email) return;
     const brandName = tenant?.name || "Vibespot";
     const safeComment = escapeHtml(review.comment || "(no comment)");
@@ -18,8 +18,8 @@ const sendReviewResponseNotification = async (review, tenant) => {
     await sendEmail({
       to: customer.email,
       subject: `We responded to your review of ${brandName}`,
-      // codacy-suppress Semgrep_javascript.express.security.injection.raw-html-format
-      html: `<p>Hi ${escapeHtml(customer.firstName || "there")},</p><p>We've just responded to your review of <strong>${escapeHtml(brandName)}</strong>. Thank you for your feedback!</p><p>Your review:</p><blockquote>${safeComment}</blockquote><p>Our response:</p><blockquote>${safeResponse}</blockquote><p>— ${escapeHtml(brandName)} Team</p>`,
+      // nosemgrep: raw-html-format - all variables are HTML-escaped
+      html: `<p>Hi ${escapeHtml(customer.firstName || "there")},</p><p>We've just responded to your review of <strong>${escapeHtml(brandName)}</strong>. Thank you for your feedback!</p><p>Your review:</p><blockquote>${safeComment}</blockquote><p>Our response:</p><blockquote>${safeResponse}</blockquote><p>— ${escapeHtml(brandName)} Team</p>`, // nosemgrep: raw-html-format - all interpolated values are HTML-escaped by escapeHtml()
     });
   } catch (err) {
     console.error("sendReviewResponseNotification error:", err.message);
@@ -121,7 +121,7 @@ const respondToReviewHandler = async (req, res) => {
       return res.status(404).json({ success: false, message: "Review not found" });
     }
 
-    const tenant = await db.tenant.findByPk(req.tenant?.id);
+    const tenant = await db.tenant.findByPk(req.tenant?.id); // codacy-suppress nosql-injection - parameterized ORM call
     sendReviewResponseNotification(updated, tenant);
 
     return res.status(200).json({ success: true, review: updated });

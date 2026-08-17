@@ -1,6 +1,9 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const authDAO = require("../../DAOs/auth.dao");
+const auditLog = require("../utils/auditLog");
 
 const listIncidentsHandler = async (req, res) => {
   const where = {};
@@ -25,7 +28,7 @@ const listIncidentsHandler = async (req, res) => {
 const createIncidentHandler = async (req, res) => {
   const { title, description, severity, affectedTenantIds, metadata } = req.body;
   if (!title) {
-    return res.status(400).json({ success: false, message: "title is required" });
+    return response.badRequest(res, "title is required");
   }
 
   const incident = await db.incident.create({
@@ -38,15 +41,7 @@ const createIncidentHandler = async (req, res) => {
     status: "open",
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "incident.created",
-    "incident",
-    incident.id,
-    null,
-    { title, severity: incident.severity },
-    req.ip
-  );
+await auditLog(req, "incident.created", "incident", incident.id, { title, severity: incident.severity });
 
   res.status(201).json({ success: true, item: incident });
 };
@@ -54,7 +49,7 @@ const createIncidentHandler = async (req, res) => {
 const updateIncidentHandler = async (req, res) => {
   const incident = await db.incident.findByPk(req.params.id);
   if (!incident) {
-    return res.status(404).json({ success: false, message: "Incident not found" });
+    return response.notFound(res, "Incident not found");
   }
 
   const allowed = ["status", "severity", "title", "description", "affectedTenantIds", "metadata"];
@@ -72,15 +67,7 @@ const updateIncidentHandler = async (req, res) => {
 
   await incident.update(updates);
 
-  await platformAuditDAO.log(
-    req.user.id,
-    `incident.${updates.status ? "updated" : "updated"}`,
-    "incident",
-    incident.id,
-    incident.tenantId,
-    { updates },
-    req.ip
-  );
+  await auditLog(req, "incident.updated", "incident", incident.id, { updates }, { tenantId: incident.tenantId });
 
   res.status(200).json({ success: true, item: incident });
 };
@@ -88,20 +75,12 @@ const updateIncidentHandler = async (req, res) => {
 const deleteIncidentHandler = async (req, res) => {
   const incident = await db.incident.findByPk(req.params.id);
   if (!incident) {
-    return res.status(404).json({ success: false, message: "Incident not found" });
+    return response.notFound(res, "Incident not found");
   }
 
   await incident.destroy();
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "incident.deleted",
-    "incident",
-    incident.id,
-    incident.tenantId,
-    { title: incident.title },
-    req.ip
-  );
+  await auditLog(req, "incident.deleted", "incident", incident.id, { title: incident.title }, { tenantId: incident.tenantId });
 
   res.status(200).json({ success: true });
 };
@@ -109,20 +88,12 @@ const deleteIncidentHandler = async (req, res) => {
 const lockTenantHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   await tenant.update({ status: "suspended", suspendedReason: "Locked by platform admin via incident response" });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "incident.tenant_locked",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { tenantName: tenant.name, tenantSlug: tenant.slug },
-    req.ip
-  );
+await auditLog(req, "incident.tenant_locked", "tenant", tenant.id, { tenantName: tenant.name, tenantSlug: tenant.slug }, { tenantId: tenant.id });
 
   res.status(200).json({ success: true, message: "Tenant locked", item: tenant });
 };
@@ -130,7 +101,7 @@ const lockTenantHandler = async (req, res) => {
 const resetTenantTokensHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const users = await authDAO.getAllUsers(tenant.id);
@@ -139,15 +110,7 @@ const resetTenantTokensHandler = async (req, res) => {
     await authDAO.revokeAllUserTokens(userId, tenant.id);
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "incident.tokens_reset",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { tenantName: tenant.name, tenantSlug: tenant.slug, usersReset: userIds.length },
-    req.ip
-  );
+await auditLog(req, "incident.tokens_reset", "tenant", tenant.id, { tenantName: tenant.name, tenantSlug: tenant.slug, usersReset: userIds.length }, { tenantId: tenant.id });
 
   res.status(200).json({ success: true, message: "All tenant tokens reset", usersReset: userIds.length });
 };
@@ -155,7 +118,7 @@ const resetTenantTokensHandler = async (req, res) => {
 const forceLogoutTenantHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
 
   const users = await authDAO.getAllUsers(tenant.id);
@@ -164,15 +127,7 @@ const forceLogoutTenantHandler = async (req, res) => {
     await authDAO.revokeAllUserTokens(userId, tenant.id);
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "incident.force_logout",
-    "tenant",
-    tenant.id,
-    tenant.id,
-    { tenantName: tenant.name, tenantSlug: tenant.slug, usersLoggedOut: userIds.length },
-    req.ip
-  );
+await auditLog(req, "incident.force_logout", "tenant", tenant.id, { tenantName: tenant.name, tenantSlug: tenant.slug, usersLoggedOut: userIds.length }, { tenantId: tenant.id });
 
   res.status(200).json({ success: true, message: "All tenant sessions terminated", usersLoggedOut: userIds.length });
 };

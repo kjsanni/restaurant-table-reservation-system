@@ -73,7 +73,6 @@ jobs:
             podman-compose -f podman-compose.yml up -d --force-recreate backend frontend
             podman-compose -f podman-compose.yml exec -T backend npx sequelize db:migrate
             podman-compose -f podman-compose.yml exec -T backend npm run seed:all
-            podman-compose -f podman-compose.yml exec -T backend pm2 reload ecosystem.config.js --env production
             sleep 10
             curl -f http://localhost:8000/api/v1/health || exit 1
 
@@ -99,6 +98,5 @@ jobs:
             podman-compose -f podman-compose.yml pull
             podman-compose -f podman-compose.yml up -d --force-recreate backend frontend
             podman-compose -f podman-compose.yml exec -T backend npx sequelize db:migrate
-            podman-compose -f podman-compose.yml exec -T backend pm2 reload ecosystem.config.js --env production
             sleep 10
             curl -f http://localhost:8000/api/v1/health || exit 1

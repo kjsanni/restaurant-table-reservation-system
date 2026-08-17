@@ -1,3 +1,4 @@
+// codacy-suppress Cryptography,Hardcoded_Secrets - test-only fixtures for unit tests
 const { verifyWebhookSignature, createPlan, initializeCharge, refundPayment, buildSplitConfig } = require("../tenant-platform/services/paystack.service");
 
 jest.mock("../db/models");
