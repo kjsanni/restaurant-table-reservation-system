@@ -27,4 +27,22 @@ router
   .get(tryCatchHandler(protect), tryCatchHandler(tenantLimiter), tryCatchHandler(requirePermission("view_events")), tryCatchHandler(walletPassRequestController.getRequest))
   .all(httpMethodError);
 
+// codeql[js/missing-rate-limiting] SUPPRESSED: tenantLimiter applied below
+router
+  .route("/:eventId/wallet-passes/requests/pending")
+  .get(tryCatchHandler(protect), tryCatchHandler(tenantLimiter), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(walletPassRequestController.listPendingApproval))
+  .all(httpMethodError);
+
+// codeql[js/missing-rate-limiting] SUPPRESSED: tenantWriteLimiter applied below
+router
+  .route("/:eventId/wallet-passes/requests/:requestId/approve")
+  .post(tryCatchHandler(protect), tryCatchHandler(tenantWriteLimiter), tryCatchHandler(validateCsrfToken), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(walletPassRequestController.approveRequest))
+  .all(httpMethodError);
+
+// codeql[js/missing-rate-limiting] SUPPRESSED: tenantWriteLimiter applied below
+router
+  .route("/:eventId/wallet-passes/requests/:requestId/reject")
+  .post(tryCatchHandler(protect), tryCatchHandler(tenantWriteLimiter), tryCatchHandler(validateCsrfToken), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(walletPassRequestController.rejectRequest))
+  .all(httpMethodError);
+
 module.exports = router;

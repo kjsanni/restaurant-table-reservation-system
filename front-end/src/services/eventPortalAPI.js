@@ -54,6 +54,10 @@ class EventPortalAPI {
     return API.post("/events/bookings", data);
   }
 
+  updateBooking(bookingId, data) {
+    return API.patch(`/events/bookings/${bookingId}`, data);
+  }
+
   confirmBooking(bookingId) {
     return API.patch(`/events/bookings/${bookingId}`);
   }
@@ -112,12 +116,24 @@ class EventPortalAPI {
     return API.post(`/events/${eventId}/wallet-passes/request`, data);
   }
 
+  createWalletPassRequest(eventId, data) {
+    return this.createSigningRequest(eventId, data);
+  }
+
   listRequests(eventId) {
     return API.get(`/events/${eventId}/wallet-passes/requests`);
   }
 
+  listWalletPassRequests(eventId) {
+    return this.listRequests(eventId);
+  }
+
   getRequest(eventId, requestId) {
     return API.get(`/events/${eventId}/wallet-passes/requests/${requestId}`);
+  }
+
+  getWalletPassRequest(eventId, requestId) {
+    return this.getRequest(eventId, requestId);
   }
 }
 

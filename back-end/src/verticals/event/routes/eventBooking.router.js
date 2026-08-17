@@ -17,7 +17,7 @@ router
 router
   .route("/:id")
   .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("view_events")), tryCatchHandler(eventBookingController.getBookingHandler))
-  .patch(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(validateCsrfToken), tryCatchHandler(eventBookingController.confirmBookingHandler))
+  .patch(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(validateCsrfToken), tryCatchHandler(eventBookingController.updateBookingHandler))
   .delete(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(validateCsrfToken), tryCatchHandler(eventBookingController.cancelBookingHandler))
   .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(validateCsrfToken), tryCatchHandler(eventBookingController.transferBookingHandler))
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
