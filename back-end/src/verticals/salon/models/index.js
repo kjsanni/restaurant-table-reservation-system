@@ -11,8 +11,7 @@ module.exports = (sequelize) => {
   fs.readdirSync(__dirname)
     .filter((file) => file.indexOf(".") !== 0 && file !== basename && file.slice(-3) === ".js")
     .forEach((file) => {
-// codacy-suppress InsecureModuleImport
-      const model = require(path.join(__dirname, file))(sequelize, require("sequelize").DataTypes);
+      const model = require(path.join(__dirname, file))(sequelize, require("sequelize").DataTypes); // codacy-suppress InsecureModuleImport - file is from readdirSync of controlled __dirname, only .js files
       db[model.name] = model;
     });
 

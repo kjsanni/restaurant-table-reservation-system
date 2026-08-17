@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 
 const listRefundsHandler = async (req, res) => {
@@ -26,11 +28,11 @@ const listRefundsHandler = async (req, res) => {
 const updateRefundStatusHandler = async (req, res) => {
   const refund = await db.refund.findByPk(req.params.id);
   if (!refund) {
-    return res.status(404).json({ success: false, message: "Refund not found" });
+    return response.notFound(res, "Refund not found");
   }
   const { status } = req.body;
   if (!["pending", "succeeded", "failed"].includes(status)) {
-    return res.status(400).json({ success: false, message: "Invalid status" });
+    return response.badRequest(res, "Invalid status");
   }
   await refund.update({ status });
   res.status(200).json({ success: true, item: refund });

@@ -1,5 +1,8 @@
+const response = require("../utils/response");
+
 const penetrationTestReportDAO = require("../DAOs/penetrationTestReport.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listPenetrationTestReportsHandler = async (req, res) => {
   const { status, limit } = req.query;
@@ -13,56 +16,32 @@ const listPenetrationTestReportsHandler = async (req, res) => {
 const getPenetrationTestReportHandler = async (req, res) => {
   const report = await penetrationTestReportDAO.findById(req.params.id);
   if (!report) {
-    return res.status(404).json({ success: false, message: "Penetration test report not found" });
+    return response.notFound(res, "Penetration test report not found");
   }
   res.status(200).json({ success: true, item: report });
 };
 
 const createPenetrationTestReportHandler = async (req, res) => {
   const report = await penetrationTestReportDAO.create(req.body);
-  await platformAuditDAO.log(
-    req.user.id,
-    "penetration_test_report.created",
-    "penetration_test_report",
-    report.id,
-    null,
-    { title: report.title },
-    req.ip
-  );
+  await auditLog(req, "penetration_test_report.created", "penetration_test_report", report.id, { title: report.title });
   res.status(201).json({ success: true, item: report });
 };
 
 const updatePenetrationTestReportHandler = async (req, res) => {
   const report = await penetrationTestReportDAO.update(req.params.id, req.body);
   if (!report) {
-    return res.status(404).json({ success: false, message: "Penetration test report not found" });
+    return response.notFound(res, "Penetration test report not found");
   }
-  await platformAuditDAO.log(
-    req.user.id,
-    "penetration_test_report.updated",
-    "penetration_test_report",
-    report.id,
-    null,
-    { title: report.title },
-    req.ip
-  );
+  await auditLog(req, "penetration_test_report.updated", "penetration_test_report", report.id, { title: report.title });
   res.status(200).json({ success: true, item: report });
 };
 
 const deletePenetrationTestReportHandler = async (req, res) => {
   const report = await penetrationTestReportDAO.remove(req.params.id);
   if (!report) {
-    return res.status(404).json({ success: false, message: "Penetration test report not found" });
+    return response.notFound(res, "Penetration test report not found");
   }
-  await platformAuditDAO.log(
-    req.user.id,
-    "penetration_test_report.deleted",
-    "penetration_test_report",
-    report.id,
-    null,
-    { title: report.title },
-    req.ip
-  );
+  await auditLog(req, "penetration_test_report.deleted", "penetration_test_report", report.id, { title: report.title });
   res.status(200).json({ success: true });
 };
 

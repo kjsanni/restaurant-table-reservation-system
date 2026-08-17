@@ -1,5 +1,8 @@
+const response = require("../utils/response");
+
 const supportNoteDAO = require("../DAOs/supportNote.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listNotesHandler = async (req, res) => {
   const { conversationId, ticketId } = req.query;
@@ -16,7 +19,7 @@ const listNotesHandler = async (req, res) => {
 const createNoteHandler = async (req, res) => {
   const { conversationId, ticketId, body } = req.body;
   if (!body || !conversationId || !ticketId) {
-    return res.status(400).json({ success: false, message: "Body, conversationId, and ticketId are required" });
+    return response.badRequest(res, "Body, conversationId, and ticketId are required");
   }
 
   const mentions = (body.match(/@(\w+)/g) || []).map((m) => m.slice(1));
@@ -30,15 +33,7 @@ const createNoteHandler = async (req, res) => {
     mentions,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.note_created",
-    "support_note",
-    note.id,
-    req.tenant?.id || null,
-    { conversationId, ticketId, mentions },
-    req.ip
-  );
+await auditLog(req, "support.note_created", "support_note", note.id, { conversationId, ticketId, mentions });
 
   res.status(201).json({ success: true, item: note });
 };
@@ -46,18 +41,10 @@ const createNoteHandler = async (req, res) => {
 const deleteNoteHandler = async (req, res) => {
   const note = await supportNoteDAO.remove(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!note) {
-    return res.status(404).json({ success: false, message: "Note not found" });
+    return response.notFound(res, "Note not found");
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.note_deleted",
-    "support_note",
-    note.id,
-    req.user?.isSuperAdmin ? null : req.tenant?.id,
-    {},
-    req.ip
-  );
+  await auditLog(req, "support.note_deleted", "support_note", note.id, {}, { tenantId: req.user?.isSuperAdmin ? null : req.tenant?.id });
 
   res.status(200).json({ success: true });
 };

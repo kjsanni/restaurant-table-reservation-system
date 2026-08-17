@@ -1,0 +1,70 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rtrs_dev
+      MYSQL_USER: rtrs_user
+      MYSQL_PASSWORD: testpass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: back-end/Dockerfile
+    ports:
+      - "8001:8000"
+    environment:
+      NODE_ENV: development
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: rtrs_dev
+      DB_USERNAME: rtrs_user
+      DB_PASSWORD: testpass
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: dev-secret-key-change-in-production
+      CORS_ORIGINS: http://localhost:8080
+      PORT: 8000
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./back-end:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: .
+      dockerfile: front-end/Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      VITE_API_URL: /api/v1
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

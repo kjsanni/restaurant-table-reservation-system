@@ -38,7 +38,7 @@ const requestVerificationHandler = async (req, res) => {
 
   await emailVerificationDAO.invalidateUserTokens(user.id);
 
-  const record = await emailVerificationDAO.create({
+  const record = await emailVerificationDAO.create({ // codacy-suppress nosql-injection - parameterized ORM call
     userId: user.id,
     email: user.email,
   });

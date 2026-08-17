@@ -1,5 +1,6 @@
 const { getLatencyMetrics, clearLatencyMetrics } = require("../../utils/apiLatency");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const getApiLatencyHandler = async (req, res) => {
   const metrics = getLatencyMetrics();
@@ -8,15 +9,7 @@ const getApiLatencyHandler = async (req, res) => {
 
 const clearApiLatencyHandler = async (req, res) => {
   clearLatencyMetrics();
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "monitoring.api_latency_cleared",
-    "system",
-    null,
-    null,
-    {},
-    req.ip
-  );
+  await auditLog(req, "monitoring.api_latency_cleared", "system", null, {});
   res.status(200).json({ success: true });
 };
 

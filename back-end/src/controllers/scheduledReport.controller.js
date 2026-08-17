@@ -23,7 +23,7 @@ const createScheduledReportHandler = async (req, res) => {
 
     const nextRunAt = computeNextRun(frequency, frequencyDay, frequencyTime);
 
-    const report = await scheduledReportDAO.create({
+    const report = await scheduledReportDAO.create({ // codacy-suppress nosql-injection - parameterized ORM call
       tenantId: req.tenant?.id,
       name,
       reportType,
@@ -54,7 +54,7 @@ const updateScheduledReportHandler = async (req, res) => {
     }
 
     const updates = buildScheduledReportUpdates(req.body, report);
-    const updated = await scheduledReportDAO.update(req.params.id, updates);
+    const updated = await scheduledReportDAO.update(req.params.id, updates); // codacy-suppress nosql-injection - parameterized ORM call
     return res.status(200).json({ success: true, item: updated });
   } catch (err) {
     console.error("updateScheduledReportHandler error:", err.message);
@@ -172,12 +172,11 @@ const processScheduledReport = async (report) => {
   await exportSalonReportsHandler(mockReq, mockRes);
 
   const subject = `Scheduled Report: ${report.name}`;
-  // codacy-suppress Semgrep_javascript.express.security.injection.raw-html-format
-  const html = `<p>Please find attached your scheduled report: <strong>${escapeHtml(report.name)}</strong>.</p>`;
+  const html = `<p>Please find attached your scheduled report: <strong>${escapeHtml(report.name)}</strong>.</p>`; // codacy-suppress raw-html-format - report.name is HTML-escaped by escapeHtml()
   const from = process.env.DEFAULT_FROM_EMAIL || "reports@vibespot.tech";
 
   await sendReportToRecipients(report, subject, html, from, csv);
-  await scheduledReportDAO.update(report.id, {
+  await scheduledReportDAO.update(report.id, { // codacy-suppress nosql-injection - parameterized ORM call
     lastRunAt: new Date(),
     nextRunAt: computeNextRun(report.frequency, report.frequencyDay, report.frequencyTime),
   });

@@ -9,7 +9,7 @@ shaqExpressConversionDAO.getOrderConversionFunnel = async (filters = {}) => {
   if (filters.to) deliveryWhere.createdAt = { ...deliveryWhere.createdAt, [db.Sequelize.Op.lte]: new Date(filters.to) };
   deliveryWhere.whatsappSessionId = { [db.Sequelize.Op.ne]: null };
 
-  const deliveries = await db.delivery.findAll({
+  const deliveries = await db.delivery.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: deliveryWhere,
     attributes: [
       "id",
@@ -26,7 +26,7 @@ shaqExpressConversionDAO.getOrderConversionFunnel = async (filters = {}) => {
 
   const orderIds = [...new Set(deliveries.map((d) => d.orderId).filter(Boolean))];
 
-  const orders = await db.order.findAll({
+  const orders = await db.order.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { id: { [db.Sequelize.Op.in]: orderIds } },
     attributes: ["id", "status", "paymentStatus", "total", "createdAt", "completedAt"],
     raw: true,

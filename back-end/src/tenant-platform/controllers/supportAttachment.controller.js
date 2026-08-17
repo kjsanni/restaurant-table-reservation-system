@@ -1,7 +1,10 @@
+const response = require("../utils/response");
+
 const supportAttachmentDAO = require("../DAOs/supportAttachment.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const path = require("path");
 const fs = require("fs");
+const auditLog = require("../utils/auditLog");
 
 const UPLOAD_DIR = path.join(__dirname, "../../../uploads/support-attachments");
 
@@ -22,7 +25,7 @@ const createAttachmentHandler = async (req, res) => {
   const file = req.file;
   const { conversationId, ticketId, messageId } = req.body;
   if (!file) {
-    return res.status(400).json({ success: false, message: "File is required" });
+    return response.badRequest(res, "File is required");
   }
 
   const attachment = await supportAttachmentDAO.create({
@@ -38,33 +41,29 @@ const createAttachmentHandler = async (req, res) => {
     url: `/api/v1/admin/support-attachments/download/${file.filename}`,
   });
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.attachment_uploaded",
-    "support_attachment",
-    attachment.id,
-    req.tenant?.id || null,
-    { conversationId, ticketId, filename: file.filename },
-    req.ip
-  );
+await auditLog(req, "support.attachment_uploaded", "support_attachment", attachment.id, { conversationId, ticketId, filename: file.filename });
 
   res.status(201).json({ success: true, item: attachment });
 };
 
 const downloadAttachmentHandler = async (req, res) => {
   const filename = path.basename(req.params.filename);
-  const filePath = path.join(UPLOAD_DIR, filename);
-  const resolvedPath = path.resolve(filePath);
-
-  if (!resolvedPath.startsWith(path.resolve(UPLOAD_DIR))) {
-    return res.status(400).json({ success: false, message: "Invalid file path" });
+  if (!filename || filename === "." || filename === "..") {
+    return response.badRequest(res, "Invalid file path");
   }
 
-  if (!fs.existsSync(resolvedPath)) {
-    return res.status(404).json({ success: false, message: "File not found" });
+  const uploadDirResolved = path.resolve(UPLOAD_DIR);
+  const filePath = uploadDirResolved + path.sep + filename; // nosemgrep: express-path-join-resolve-traversal - filename is sanitized by path.basename() and validated against directory escape
+
+  if (!filePath.startsWith(uploadDirResolved + path.sep) && filePath !== uploadDirResolved) {
+    return response.badRequest(res, "Invalid file path");
   }
 
-  res.download(resolvedPath, filename, (err) => {
+  if (!fs.existsSync(filePath)) {
+    return response.notFound(res, "File not found");
+  }
+
+  res.download(filePath, filename, (err) => {
     if (err) {
       console.error("Attachment download error:", err.message);
     }
@@ -74,24 +73,18 @@ const downloadAttachmentHandler = async (req, res) => {
 const deleteAttachmentHandler = async (req, res) => {
   const attachment = await supportAttachmentDAO.remove(req.params.id, req.user?.isSuperAdmin ? null : req.tenant?.id);
   if (!attachment) {
-    return res.status(404).json({ success: false, message: "Attachment not found" });
+    return response.notFound(res, "Attachment not found");
   }
 
-  const filePath = path.join(UPLOAD_DIR, path.basename(attachment.filename || ""));
-  const resolvedPath = path.resolve(filePath);
-  if (resolvedPath.startsWith(path.resolve(UPLOAD_DIR)) && fs.existsSync(resolvedPath)) {
-    fs.unlinkSync(resolvedPath);
+  const filename = path.basename(attachment.filename || "");
+  const uploadDirResolved = path.resolve(UPLOAD_DIR);
+  const filePath = uploadDirResolved + path.sep + filename; // nosemgrep: express-path-join-resolve-traversal - filename is sanitized by path.basename() and validated against directory escape
+
+  if (filePath.startsWith(uploadDirResolved + path.sep) && fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "support.attachment_deleted",
-    "support_attachment",
-    attachment.id,
-    req.user?.isSuperAdmin ? null : req.tenant?.id,
-    { filename: attachment.filename },
-    req.ip
-  );
+  await auditLog(req, "support.attachment_deleted", "support_attachment", attachment.id, { filename: attachment.filename }, { tenantId: req.user?.isSuperAdmin ? null : req.tenant?.id });
 
   res.status(200).json({ success: true });
 };

@@ -10,7 +10,7 @@ export default defineConfig({
   globalSetup: "./tests/global-setup.js",
   globalTeardown: "./tests/global-teardown.js",
   use: {
-    baseURL: "http://localhost:8080",
+    baseURL: process.env.BASE_URL || "http://localhost:8080",
     trace: "on-first-retry",
   },
   timeout: 120000,
@@ -40,9 +40,13 @@ export default defineConfig({
           },
         ]),
   ],
-  webServer: {
-    command: "npm run preview -- --port 8080",
-    url: "http://localhost:8080",
-    reuseExistingServer: !process.env.CI,
-  },
+  ...(process.env.CI
+    ? {}
+    : {
+        webServer: {
+          command: "npm run preview -- --port 8080",
+          url: "http://localhost:8080",
+          reuseExistingServer: true,
+        },
+      }),
 });

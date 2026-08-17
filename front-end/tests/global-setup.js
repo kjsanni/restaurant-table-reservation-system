@@ -5,6 +5,10 @@ const rootDir = path.resolve(__dirname, "..");
 const backendDir = path.resolve(rootDir, "..", "back-end");
 
 module.exports = async () => {
+  if (process.env.CI) {
+    console.log("[playwright] CI mode — skipping migrations/seeds (handled by CI workflow)");
+    return;
+  }
   try {
     console.log("[playwright] Running migrations...");
     execSync("npm run migrate:up", { cwd: backendDir, stdio: "inherit" });

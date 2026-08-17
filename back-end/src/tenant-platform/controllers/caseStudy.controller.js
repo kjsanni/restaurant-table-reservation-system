@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const caseStudyDAO = require("../DAOs/caseStudy.dao");
 
 const caseStudyController = {};
@@ -17,7 +19,7 @@ caseStudyController.createCaseStudyHandler = async (req, res) => {
   }
 
   if (!data.title) {
-    return res.status(400).json({ success: false, message: "title is required" });
+    return response.badRequest(res, "title is required");
   }
 
   const study = await caseStudyDAO.createCaseStudy(data);
@@ -34,14 +36,14 @@ caseStudyController.updateCaseStudyHandler = async (req, res) => {
   }
   const tenantId = req.tenant?.id;
   const study = await caseStudyDAO.updateCaseStudy(req.params.id, updates, tenantId);
-  if (!study) return res.status(404).json({ success: false, message: "Case study not found" });
+  if (!study) return response.notFound(res, "Case study not found");
   res.status(200).json({ success: true, item: study });
 };
 
 caseStudyController.removeCaseStudyHandler = async (req, res) => {
   const tenantId = req.tenant?.id;
   const removed = await caseStudyDAO.removeCaseStudy(req.params.id, tenantId);
-  if (!removed) return res.status(404).json({ success: false, message: "Case study not found" });
+  if (!removed) return response.notFound(res, "Case study not found");
   res.status(200).json({ success: true });
 };
 

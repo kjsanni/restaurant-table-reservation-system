@@ -1,9 +1,11 @@
+const response = require("../utils/response");
+
 const authDAO = require("../../DAOs/auth.dao");
 const totpService = require("../../services/totp.service");
 
 const setupTOTPHandler = async (req, res) => {
   if (!req.user?.isSuperAdmin) {
-    return res.status(403).json({ success: false, message: "Super admin access required" });
+    return response.forbidden(res, "Super admin access required");
   }
 
   const secret = totpService.generateSecret();
@@ -11,7 +13,7 @@ const setupTOTPHandler = async (req, res) => {
   const hashedCodes = totpService.hashBackupCodes(backupCodes);
   const user = await authDAO.findUserById(req.user.id, req.tenant?.id);
   if (!user) {
-    return res.status(404).json({ success: false, message: "User not found" });
+    return response.notFound(res, "User not found");
   }
 
   await authDAO.updateUser(req.user.id, {
@@ -29,22 +31,22 @@ const setupTOTPHandler = async (req, res) => {
 
 const confirmTOTPHandler = async (req, res) => {
   if (!req.user?.isSuperAdmin) {
-    return res.status(403).json({ success: false, message: "Super admin access required" });
+    return response.forbidden(res, "Super admin access required");
   }
 
   const { token } = req.body;
   if (!token) {
-    return res.status(400).json({ success: false, message: "TOTP token is required" });
+    return response.badRequest(res, "TOTP token is required");
   }
 
   const user = await authDAO.findUserById(req.user.id, req.tenant?.id);
   if (!user || !user.totpSecret) {
-    return res.status(400).json({ success: false, message: "TOTP not set up" });
+    return response.badRequest(res, "TOTP not set up");
   }
 
   const isValid = totpService.verifyTOTP(user.totpSecret, String(token).trim());
   if (!isValid) {
-    return res.status(400).json({ success: false, message: "Invalid TOTP token" });
+    return response.badRequest(res, "Invalid TOTP token");
   }
 
   await authDAO.updateUser(req.user.id, { totpEnabled: true, totpConfirmed: true });
@@ -54,7 +56,7 @@ const confirmTOTPHandler = async (req, res) => {
 
 const disableTOTPHandler = async (req, res) => {
   if (!req.user?.isSuperAdmin) {
-    return res.status(403).json({ success: false, message: "Super admin access required" });
+    return response.forbidden(res, "Super admin access required");
   }
 
   await authDAO.updateUser(req.user.id, { totpEnabled: false, totpConfirmed: false, totpSecret: null, totpBackupCodes: null });
@@ -73,12 +75,12 @@ const totpStatusHandler = async (req, res) => {
 
 const regenerateBackupCodesHandler = async (req, res) => {
   if (!req.user?.isSuperAdmin) {
-    return res.status(403).json({ success: false, message: "Super admin access required" });
+    return response.forbidden(res, "Super admin access required");
   }
 
   const user = await authDAO.findUserById(req.user.id, req.tenant?.id);
   if (!user || !user.totpSecret) {
-    return res.status(400).json({ success: false, message: "TOTP not set up" });
+    return response.badRequest(res, "TOTP not set up");
   }
 
   const backupCodes = totpService.generateBackupCodes(10);
@@ -91,24 +93,24 @@ const regenerateBackupCodesHandler = async (req, res) => {
 
 const verifyBackupCodeHandler = async (req, res) => {
   if (!req.user?.isSuperAdmin) {
-    return res.status(403).json({ success: false, message: "Super admin access required" });
+    return response.forbidden(res, "Super admin access required");
   }
 
   const { code } = req.body;
   if (!code) {
-    return res.status(400).json({ success: false, message: "Backup code is required" });
+    return response.badRequest(res, "Backup code is required");
   }
 
   const user = await authDAO.findUserById(req.user.id, req.tenant?.id);
   if (!user || !user.totpBackupCodes) {
-    return res.status(400).json({ success: false, message: "No backup codes available" });
+    return response.badRequest(res, "No backup codes available");
   }
 
   const hashedCodes = JSON.parse(user.totpBackupCodes);
   const isValid = totpService.verifyBackupCode(code, hashedCodes);
 
   if (!isValid) {
-    return res.status(400).json({ success: false, message: "Invalid backup code" });
+    return response.badRequest(res, "Invalid backup code");
   }
 
   await authDAO.updateUser(req.user.id, { totpBackupCodes: JSON.stringify(hashedCodes) });

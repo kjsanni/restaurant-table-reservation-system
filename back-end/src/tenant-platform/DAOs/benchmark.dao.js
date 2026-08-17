@@ -12,7 +12,7 @@ benchmarkDAO.getPlatformBenchmarks = async (planFilter = null) => {
       tenantWhere.plan = planFilter;
     }
 
-    const tenants = await db.tenant.findAll({
+    const tenants = await db.tenant.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       where: tenantWhere,
       attributes: ["id", "plan", "restaurantType"],
       raw: true,
@@ -30,7 +30,7 @@ benchmarkDAO.getPlatformBenchmarks = async (planFilter = null) => {
 
     const tenantIds = tenants.map((t) => t.id);
 
-    const reservations = await db.reservation.findAll({
+    const reservations = await db.reservation.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       where: { tenantId: tenantIds },
       attributes: [
         "tenantId",

@@ -1,5 +1,6 @@
 const db = require("../../db/models");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const getMaintenanceModeHandler = async (req, res) => {
   const setting = await db.setting.findOne({ where: { key: "maintenance_mode" } });
@@ -27,15 +28,7 @@ const setMaintenanceModeHandler = async (req, res) => {
     await db.setting.create({ key: "maintenance_mode", value });
   }
 
-  await platformAuditDAO.log(
-    req.user.id,
-    enabled ? "maintenance.enabled" : "maintenance.disabled",
-    "setting",
-    null,
-    null,
-    { message: value.message },
-    req.ip
-  );
+  await auditLog(req, enabled ? "maintenance.enabled" : "maintenance.disabled", "setting", null, { message: value.message });
 
   res.status(200).json({ success: true, ...value });
 };

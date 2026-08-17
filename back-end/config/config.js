@@ -42,8 +42,18 @@ const validateEnv = (envName) => {
   return true;
 };
 
-// codacy-suppress Semgrep_problem-based-packs.insecure-transport.js-node.bypass-tls-verification
-const dbSsl = process.env.DB_SSL === "true" ? { ssl: { require: true, rejectUnauthorized: false } } : null;
+// nosemgrep - rejectUnauthorized is intentionally configurable per environment; production enforces true
+const dbSsl = process.env.DB_SSL === "true"
+  ? {
+      ssl: {
+        require: true,
+        rejectUnauthorized:
+          process.env.NODE_ENV === "production"
+            ? true
+            : process.env.DB_SSL_REJECT_UNAUTHORIZED !== "false",
+      },
+    }
+  : null;
 const withSsl = (config) => (dbSsl ? { ...config, dialectOptions: dbSsl } : config);
 
 // Read replica configuration.

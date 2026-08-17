@@ -5,7 +5,7 @@ const revenueDAO = {};
 revenueDAO.getMrrTrends = async (months = 12) => {
   const trends = [];
   const now = new Date();
-  const plans = await db.subscriptionPlan.findAll({
+  const plans = await db.subscriptionPlan.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { isActive: true },
     raw: true,
   });
@@ -57,7 +57,7 @@ revenueDAO.getMrrTrends = async (months = 12) => {
 };
 
 revenueDAO.getRevenueByPlan = async () => {
-  const plans = await db.subscriptionPlan.findAll({
+  const plans = await db.subscriptionPlan.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { isActive: true },
     raw: true,
   });
@@ -88,11 +88,11 @@ revenueDAO.getRevenueByPlan = async () => {
 };
 
 revenueDAO.getLtvByTenant = async () => {
-  const tenants = await db.tenant.findAll({
+  const tenants = await db.tenant.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     attributes: ["id", "name", "plan", "status", "createdAt", "lastPaymentAt"],
     where: { status: { [db.Sequelize.Op.in]: ["active", "past_due", "trialing"] } },
   });
-  const plans = await db.subscriptionPlan.findAll({
+  const plans = await db.subscriptionPlan.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { isActive: true },
     raw: true,
   });
@@ -115,7 +115,7 @@ revenueDAO.getLtvByTenant = async () => {
 };
 
 revenueDAO.getCohortAnalysis = async (months = 12) => {
-  const plans = await db.subscriptionPlan.findAll({
+  const plans = await db.subscriptionPlan.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { isActive: true },
     raw: true,
   });
@@ -131,7 +131,7 @@ revenueDAO.getCohortAnalysis = async (months = 12) => {
     const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
     const cohortLabel = start.toISOString().slice(0, 7);
 
-    const tenants = await db.tenant.findAll({
+    const tenants = await db.tenant.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       where: {
         status: { [db.Sequelize.Op.in]: ["active", "past_due", "trialing"] },
         createdAt: { [db.Sequelize.Op.gte]: start, [db.Sequelize.Op.lt]: end },

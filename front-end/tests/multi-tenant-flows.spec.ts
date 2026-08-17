@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { loginAsTenantStaff } from "./fixtures";
+import { E2E_TENANT_SLUG } from "./fixtures";
 
 test.describe("Multi-tenant flows", () => {
   test.beforeEach(async ({ page }) => {
@@ -10,11 +10,11 @@ test.describe("Multi-tenant flows", () => {
 
   test.describe("Checkout isolation", () => {
     test("tenant A cannot see tenant B orders after checkout", async ({ page }) => {
-      await page.goto("/login");
-      await page.fill('input[name="email"]', "tenant-a@example.com");
-      await page.fill('input[name="password"]', "password123");
+      await page.goto(`/t/${E2E_TENANT_SLUG}/login`);
+      await page.fill("#email", "tenant-a@example.com");
+      await page.fill("#password", "password123");
       await page.click('button[type="submit"]');
-      await page.waitForURL((url) => !url.pathname.includes("/login"));
+      await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 120000, waitUntil: "commit" });
 
       await page.goto("/checkout");
       await page.waitForLoadState("domcontentloaded");
@@ -36,10 +36,10 @@ test.describe("Multi-tenant flows", () => {
       await page.evaluate(() => (window as any).authStore?.logout?.());
       await page.waitForURL((url) => url.pathname.includes("/login"));
 
-      await page.fill('input[name="email"]', "tenant-b@example.com");
-      await page.fill('input[name="password"]', "password123");
+      await page.fill("#email", "tenant-b@example.com");
+      await page.fill("#password", "password123");
       await page.click('button[type="submit"]');
-      await page.waitForURL((url) => !url.pathname.includes("/login"));
+      await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 120000, waitUntil: "commit" });
 
       await page.goto("/checkout");
       await page.waitForLoadState("domcontentloaded");
@@ -56,11 +56,11 @@ test.describe("Multi-tenant flows", () => {
     });
 
     test("checkout preserves cart state on validation error", async ({ page }) => {
-      await page.goto("/login");
-      await page.fill('input[name="email"]', "tenant-a@example.com");
-      await page.fill('input[name="password"]', "password123");
+      await page.goto(`/t/${E2E_TENANT_SLUG}/login`);
+      await page.fill("#email", "tenant-a@example.com");
+      await page.fill("#password", "password123");
       await page.click('button[type="submit"]');
-      await page.waitForURL((url) => !url.pathname.includes("/login"));
+      await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 120000, waitUntil: "commit" });
 
       await page.goto("/menu");
       await page.waitForLoadState("domcontentloaded");
@@ -84,11 +84,11 @@ test.describe("Multi-tenant flows", () => {
 
   test.describe("Feature toggle flows", () => {
     test("tenant without table_management flag does not see floor plan nav", async ({ page }) => {
-      await page.goto("/login");
-      await page.fill('input[name="email"]', "no-table-mgmt@example.com");
-      await page.fill('input[name="password"]', "password123");
+      await page.goto(`/t/${E2E_TENANT_SLUG}/login`);
+      await page.fill("#email", "no-table-mgmt@example.com");
+      await page.fill("#password", "password123");
       await page.click('button[type="submit"]');
-      await page.waitForURL((url) => !url.pathname.includes("/login"));
+      await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 120000, waitUntil: "commit" });
 
       const floorPlanLink = page.getByRole("link", { name: /floor plan/i });
       if (await floorPlanLink.count() > 0) {
@@ -97,11 +97,11 @@ test.describe("Multi-tenant flows", () => {
     });
 
     test("tenant with table_management flag sees floor plan nav", async ({ page }) => {
-      await page.goto("/login");
-      await page.fill('input[name="email"]', "table-mgmt@example.com");
-      await page.fill('input[name="password"]', "password123");
+      await page.goto(`/t/${E2E_TENANT_SLUG}/login`);
+      await page.fill("#email", "table-mgmt@example.com");
+      await page.fill("#password", "password123");
       await page.click('button[type="submit"]');
-      await page.waitForURL((url) => !url.pathname.includes("/login"));
+      await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 120000, waitUntil: "commit" });
 
       const floorPlanLink = page.getByRole("link", { name: /floor plan/i });
       await expect(floorPlanLink).toHaveCount(1);

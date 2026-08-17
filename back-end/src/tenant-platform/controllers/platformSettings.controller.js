@@ -1,5 +1,6 @@
 const authDAO = require("../../DAOs/auth.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const DOMAIN_ALLOWLISTS = {
   security: [
@@ -87,19 +88,11 @@ const updatePlatformSettingHandler = async (req, res) => {
   const previous = await authDAO.getPlatformSettingByKey(key);
   const updated = await authDAO.updatePlatformSetting(key, value);
 
-  await platformAuditDAO.log(
-    req.user.id,
-    "platform_setting.updated",
-    "platform_setting",
-    key,
-    null,
-    {
+await auditLog(req, "platform_setting.updated", "platform_setting", key, {
       key,
       previousValue: previous?.value,
       newValue: updated.value,
-    },
-    req.ip
-  );
+    });
 
   if (key.startsWith("erpnext_")) {
     const erpnextClient = require("../../integrations/erpnext/client");

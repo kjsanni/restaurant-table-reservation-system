@@ -1,3 +1,5 @@
+const response = require("../utils/response");
+
 const db = require("../../db/models");
 
 const syncBrandingToSettings = async (tenantId, updates) => {
@@ -38,7 +40,7 @@ const getBrandingHandler = async (req, res) => {
     attributes: ["logoUrl", "primaryColor", "secondaryColor", "customDomain", "domain"],
   });
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   res.status(200).json({ success: true, item: tenant });
 };
@@ -46,7 +48,7 @@ const getBrandingHandler = async (req, res) => {
 const updateBrandingHandler = async (req, res) => {
   const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {
-    return res.status(404).json({ success: false, message: "Tenant not found" });
+    return response.notFound(res, "Tenant not found");
   }
   const allowed = ["logoUrl", "primaryColor", "secondaryColor", "customDomain"];
   const updates = {};

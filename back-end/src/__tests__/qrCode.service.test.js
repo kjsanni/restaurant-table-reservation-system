@@ -1,3 +1,4 @@
+// codacy-suppress Cryptography,Hardcoded_Secrets - test-only fixtures for unit tests
 "use strict";
 
 jest.mock("../db/models", () => {

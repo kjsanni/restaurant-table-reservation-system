@@ -1,5 +1,8 @@
+const response = require("../utils/response");
+
 const notificationTemplateDAO = require("../DAOs/notificationTemplate.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
+const auditLog = require("../utils/auditLog");
 
 const listTemplatesHandler = async (req, res) => {
   const { channel, isActive } = req.query;
@@ -13,7 +16,7 @@ const listTemplatesHandler = async (req, res) => {
 const createTemplateHandler = async (req, res) => {
   const { key, channel, subject, body, isActive } = req.body;
   if (!key || !channel || !body) {
-    return res.status(400).json({ success: false, message: "key, channel, and body are required" });
+    return response.badRequest(res, "key, channel, and body are required");
   }
 
   const existing = await notificationTemplateDAO.findByKey(key);
@@ -29,15 +32,7 @@ const createTemplateHandler = async (req, res) => {
     isActive: isActive ?? true,
   });
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.notification_template_created",
-    "notification_template",
-    template.id,
-    null,
-    { key, channel },
-    req.ip
-  );
+await auditLog(req, "platform.notification_template_created", "notification_template", template.id, { key, channel });
 
   res.status(201).json({ success: true, item: template });
 };
@@ -51,18 +46,10 @@ const updateTemplateHandler = async (req, res) => {
   });
 
   if (!template) {
-    return res.status(404).json({ success: false, message: "Template not found" });
+    return response.notFound(res, "Template not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.notification_template_updated",
-    "notification_template",
-    template.id,
-    null,
-    { key: template.key },
-    req.ip
-  );
+  await auditLog(req, "platform.notification_template_updated", "notification_template", template.id, { key: template.key });
 
   res.status(200).json({ success: true, item: template });
 };
@@ -70,18 +57,10 @@ const updateTemplateHandler = async (req, res) => {
 const deleteTemplateHandler = async (req, res) => {
   const template = await notificationTemplateDAO.remove(req.params.id);
   if (!template) {
-    return res.status(404).json({ success: false, message: "Template not found" });
+    return response.notFound(res, "Template not found");
   }
 
-  await platformAuditDAO.log(
-    req.user?.id || null,
-    "platform.notification_template_deleted",
-    "notification_template",
-    template.id,
-    null,
-    { key: template.key },
-    req.ip
-  );
+  await auditLog(req, "platform.notification_template_deleted", "notification_template", template.id, { key: template.key });
 
   res.status(200).json({ success: true });
 };
