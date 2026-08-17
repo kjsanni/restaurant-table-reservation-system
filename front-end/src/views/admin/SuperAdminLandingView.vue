@@ -62,6 +62,12 @@ const goToDashboard = () => router.push("/super-admin/overview");
     </nav>
 
     <section class="hero">
+      <img
+        src="@/assets/images/hero-platform-admin.svg"
+        alt=""
+        class="hero-illustration"
+        aria-hidden="true"
+      />
       <div class="hero-content">
         <div class="hero-badge">
           <Icon icon="mdi:shield-lock" width="16" height="16" />
@@ -78,6 +84,7 @@ const goToDashboard = () => router.push("/super-admin/overview");
           <button
             v-if="!authStore.isAuthenticated"
             class="btn-primary-lg"
+            v-tap-scale
             @click="goToLogin"
           >
             <Icon icon="mdi:login" width="20" height="20" />
@@ -86,6 +93,7 @@ const goToDashboard = () => router.push("/super-admin/overview");
           <button
             v-else-if="authStore.isSuperAdmin"
             class="btn-primary-lg"
+            v-tap-scale
             @click="goToDashboard"
           >
             <Icon icon="mdi:view-dashboard" width="20" height="20" />
@@ -276,7 +284,18 @@ const goToDashboard = () => router.push("/super-admin/overview");
   );
 }
 
-.hero::before {
+.hero-illustration {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1.2);
+  width: 640px;
+  height: 400px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero::after {
   content: "";
   position: absolute;
   inset: 0;

@@ -1,17 +1,16 @@
 import { test, expect } from "@playwright/test";
-
-const requiresSeededData = process.env.E2E_MULTI_TENANT_ENABLED === "true";
+import { loginAsTenantStaff } from "./fixtures";
 
 test.describe("Multi-tenant flows", () => {
   test.beforeEach(async ({ page }) => {
-    if (!requiresSeededData) {
-      test.skip(true, "Requires seeded tenants, feature flags, and running backend");
+    if (process.env.E2E_BACKEND_URL === "false") {
+      test.skip(true, "Backend E2E disabled");
     }
-    await page.goto("/login");
   });
 
   test.describe("Checkout isolation", () => {
     test("tenant A cannot see tenant B orders after checkout", async ({ page }) => {
+      await page.goto("/login");
       await page.fill('input[name="email"]', "tenant-a@example.com");
       await page.fill('input[name="password"]', "password123");
       await page.click('button[type="submit"]');
@@ -34,7 +33,7 @@ test.describe("Multi-tenant flows", () => {
         });
       }, orderIds);
 
-      await page.evaluate(() => authStore.logout());
+      await page.evaluate(() => (window as any).authStore?.logout?.());
       await page.waitForURL((url) => url.pathname.includes("/login"));
 
       await page.fill('input[name="email"]', "tenant-b@example.com");
@@ -57,6 +56,7 @@ test.describe("Multi-tenant flows", () => {
     });
 
     test("checkout preserves cart state on validation error", async ({ page }) => {
+      await page.goto("/login");
       await page.fill('input[name="email"]', "tenant-a@example.com");
       await page.fill('input[name="password"]', "password123");
       await page.click('button[type="submit"]');
@@ -84,6 +84,7 @@ test.describe("Multi-tenant flows", () => {
 
   test.describe("Feature toggle flows", () => {
     test("tenant without table_management flag does not see floor plan nav", async ({ page }) => {
+      await page.goto("/login");
       await page.fill('input[name="email"]', "no-table-mgmt@example.com");
       await page.fill('input[name="password"]', "password123");
       await page.click('button[type="submit"]');
@@ -96,6 +97,7 @@ test.describe("Multi-tenant flows", () => {
     });
 
     test("tenant with table_management flag sees floor plan nav", async ({ page }) => {
+      await page.goto("/login");
       await page.fill('input[name="email"]', "table-mgmt@example.com");
       await page.fill('input[name="password"]', "password123");
       await page.click('button[type="submit"]');

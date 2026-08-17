@@ -1,7 +1,7 @@
 const db = require("../../db/models");
 
 const getVerticalAnalyticsHandler = async (req, res) => {
-  const verticals = ["restaurant", "salon"];
+  const verticals = ["restaurant", "salon", "event"];
   const comparison = await Promise.all(
     verticals.map(async (vertical) => {
       const tenants = await db.tenant.findAll({

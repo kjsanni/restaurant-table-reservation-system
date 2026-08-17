@@ -1,0 +1,100 @@
+{
+  "name": "multi-tenant-portal-image-pipeline",
+  "description": "AI-generated image assets for the multi-tenant SaaS portal. Aligns with the warm restaurant/salon brand palette (brand-900 #1a1410, amber #d97706, earth #4d7c0f).",
+  "brand": {
+    "palette": {
+      "primary": "#1a1410",
+      "accent": "#d97706",
+      "earth": "#4d7c0f",
+      "neutral": "#f3f1ed"
+    },
+    "fonts": ["Inter", "Playfair Display"],
+    "style": "Minimalist premium with warm earth tones and clean geometric shapes"
+  },
+  "assets": [
+    {
+      "id": "hero-illustration",
+      "path": "front-end/src/assets/images/hero-platform-admin.svg",
+      "prompt": "Minimalist abstract geometric illustration for a platform administration dashboard hero section. Warm earth-toned restaurant brand palette: deep brown (#1a1410), amber (#d97706), sage green (#4d7c0f). Clean lines, soft gradients, subtle radial light effects. Modern SaaS admin aesthetic. SVG vector style. --no text, no people, no logos.",
+      "type": "hero",
+      "priority": "high"
+    },
+    {
+      "id": "favicon-32",
+      "path": "front-end/src/assets/images/favicon-32.png",
+      "prompt": "Minimalist favicon design for a restaurant/Salon SaaS platform admin portal. Abstract 'R' monogram in warm amber (#d97706) on deep brown (#1a1410) background. Clean geometric style. 32x32px.",
+      "type": "logo",
+      "priority": "high"
+    },
+    {
+      "id": "favicon-16",
+      "path": "front-end/src/assets/images/favicon-16.png",
+      "prompt": "Minimalist favicon design for a restaurant/Salon SaaS platform admin portal. Abstract 'R' monogram in warm amber (#d97706) on deep brown (#1a1410) background. Clean geometric style. 16x16px.",
+      "type": "logo",
+      "priority": "high"
+    },
+    {
+      "id": "apple-touch-icon",
+      "path": "front-end/src/assets/images/apple-touch-icon.png",
+      "prompt": "Apple touch icon for a restaurant/Salon SaaS platform admin portal. Abstract 'R' monogram in warm amber (#d97706) on deep brown (#1a1410) background. Clean geometric style. 180x180px.",
+      "type": "logo",
+      "priority": "high"
+    },
+    {
+      "id": "logo-dark",
+      "path": "front-end/src/assets/images/logo-dark.svg",
+      "prompt": "Dark mode logo for a restaurant/Salon SaaS platform. Same abstract design as main logo but optimized for dark backgrounds. Warm amber (#fbbf24) accent on charcoal background. SVG vector.",
+      "type": "logo",
+      "priority": "medium"
+    },
+    {
+      "id": "empty-no-tenants",
+      "path": "front-end/src/assets/images/illustration-no-tenants.svg",
+      "prompt": "Minimalist line-art SVG illustration for an empty state: 'no tenants found'. A stylized building/office building icon with a subtle search magnifying glass overlay. Warm earth-toned palette. Clean, friendly, professional SaaS illustration style.",
+      "type": "illustration",
+      "priority": "high"
+    },
+    {
+      "id": "empty-no-results",
+      "path": "front-end/src/assets/images/illustration-no-results.svg",
+      "prompt": "Minimalist line-art SVG illustration for an empty state: 'no search results'. A stylized empty data table or list with a magnifying glass. Warm earth-toned palette. Clean, friendly, professional SaaS illustration style.",
+      "type": "illustration",
+      "priority": "medium"
+    },
+    {
+      "id": "empty-no-activity",
+      "path": "front-end/src/assets/images/illustration-no-activity.svg",
+      "prompt": "Minimalist line-art SVG illustration for an empty state: 'no recent activity'. A stylized timeline or activity feed icon with a calm, peaceful scene. Warm earth-toned palette. Clean, friendly, professional SaaS illustration style.",
+      "type": "illustration",
+      "priority": "medium"
+    },
+    {
+      "id": "onboarding-1",
+      "path": "front-end/src/assets/images/illustration-onboarding-1.svg",
+      "prompt": "Minimalist SVG illustration for step 1 of tenant onboarding: 'Welcome & Setup'. A stylized welcome mat or front door with warm lighting. Warm earth-toned palette (#1a1410, #d97706, #4d7c0f). Clean, friendly professional SaaS style.",
+      "type": "illustration",
+      "priority": "medium"
+    },
+    {
+      "id": "onboarding-2",
+      "path": "front-end/src/assets/images/illustration-onboarding-2.svg",
+ "prompt": "Minimalist SVG illustration for step 2 of tenant onboarding: 'Configure Settings'. A stylized gear/settings icon with subtle interactive elements. Warm earth-toned palette (#1a1410, #d97706, #4d7c0f). Clean, friendly professional SaaS style.",
+      "type": "illustration",
+      "priority": "medium"
+    },
+    {
+      "id": "onboarding-3",
+      "path": "front-end/src/assets/images/illustration-onboarding-3.svg",
+      "prompt": "Minimalist SVG illustration for step 3 of tenant onboarding: 'Go Live'. A stylized rocket or arrow pointing upward with a launch pad. Warm earth-toned palette (#1a1410, #d97706, #4d7c0f). Clean, friendly professional SaaS style.",
+      "type": "illustration",
+      "priority": "medium"
+    },
+    {
+      "id": "error-general",
+      "path": "front-end/src/assets/images/illustration-error.svg",
+      "prompt": "Minimalist line-art SVG illustration for a general error page. A stylized warning triangle or server icon with subtle cracks or glitch effects. Warm earth-toned palette. Clean, friendly, professional SaaS illustration style.",
+      "type": "illustration",
+      "priority": "low"
+    }
+  ]
+}

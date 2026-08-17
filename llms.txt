@@ -1,26 +1,30 @@
 # Restaurant Table Reservation System (RTRS)
 
-Multi-tenant restaurant and salon reservation SaaS operated by **Vibespot Technologies Ltd. (Ghana)**
+Multi-tenant restaurant, salon, and event reservation SaaS operated by **Vibespot Technologies Ltd. (Ghana)**
 Built with Node + Express + Sequelize + MySQL backend and Vue 3 + TypeScript + Vite frontend.
 Ghana locale (GHS), Paystack payments, WhatsApp ordering, ShaQ Express delivery, DPA 2012 compliance.
-Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` with vertical modules under `back-end/src/verticals/restaurant/` and `back-end/src/verticals/salon/`.
+Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` with vertical modules under `back-end/src/verticals/restaurant/`, `back-end/src/verticals/salon/`, and `back-end/src/verticals/event/`.
+- Event vertical (Phase 2–5 complete): models `Event`, `GuestList`, `TicketType`, `QRCode`, `EventBooking`, `EventBookingTransfer`, `PassSigningRequest`, `SignedPassArtifact` in `back-end/src/db/models/`; DAOs/controllers/routes/services under `back-end/src/verticals/event/`; 8 migrations including `20260814000002-create-event-booking-transfers` and `20260814000005-create-pass-signing-requests`; RBAC permissions `view_events`/`manage_events`; feature flags `event_guest_list`, `event_ticketing`, `event_qr_checkin`; business rules enforced (capacity, 24h transfer window, 24h refund window); security review + threat model + ADR + canary readiness docs in `Specs/`; QR check-in rate limiting (5 scans/sec) + device binding + HMAC signature verification; immutable `event_booking_transfers` audit table; customer-facing portal views + super-admin event management views; webhook extended for booking payments; **wallet pass signing** (Paystack payment → super-admin approval → multi-platform signing for Apple/Google/Samsung) with `passSigningRequest.dao.js`, `walletPass.service.js`, `walletPass.queue.js`, and customer portal payment flow at `/portal/events/:eventId/wallet-pass`.
 
-**Current session additions:**
-- Multi-tenant platform hardening, pagination, caching, and frontend polish (PR #78 merged):
-  - Backend: distributed Redis cron lock (`back-end/src/utils/redis.js`) for tenant suspension, tenant search/pagination in `tenantAdmin.controller.js`, tenant-aware cache wrapper (`back-end/src/utils/tenantCache.js`) with prefix isolation, CSRF token endpoint fix (`back-end/src/utils/server.js`), schedule/holiday/setting DAO cache integration, monitoring controller refactor with extracted data-gathering functions, review controller XSS sanitization in email notifications, SMS provider service (Twilio), idempotent migration guards.
-  - Frontend: TenantSwitcher search + pagination, table/floor-plan UI polish (status filters, section filters, shape toggle, snap-to-grid), GSAP animation composable (`front-end/src/composables/useAnimations.ts`), motion tokens in `front-end/src/theme/colors.js`, image-gen asset manifest (`front-end/src/assets/manifest.json`).
-  - Docs: design-review, UI audit, retrospective, DX onboarding, canary rollout, tenant on/offboarding runbooks.
-- OSM Store Locator feature (Phases 1–4 merged):
-  - Backend: `latitude`/`longitude` columns on `locations`, auto-geocoding service, WhatsApp store locator flow with haversine nearest-store lookup, feature flag `store_locator_whatsapp`.
-  - Frontend: Leaflet map tab in `CrossLocationDashboardView.vue` with OSM markers and popups.
-- CodeQL unused-variable fixes merged.
-- OSV-Scanner workflow merged.
-- Platform roles, webhook endpoints/notifications, reviews, custom reports, customer loyalty/marketing/waitlist, status/docs, tenant signup.
-- Postman/Newman API testing integration.
-- PWA manifest + service worker baseline.
-- Security lint fixes (Semgrep/Codacy CodeQL): SQL injection in migrations, CSRF HttpOnly suppression, pinned GitHub Actions, SSRF suppression, path traversal protection in module registry.
-- Release automation: changesets, release-drafter, tagged release workflow, PR template, branch protection, Dependabot.
-- Version sync: root + sub-packages at 1.1.0; `version:bump` script for one-command sync.
+- **Current session additions:**
+  - Frontend wallet pass payment flow: customer portal view at `/portal/events/:eventId/wallet-pass` with Paystack redirect before "Add to Wallet" buttons (Apple Wallet, Google Pay, Samsung Pay). Status polling every 15s with auto-stop on terminal states. `eventPortalAPI.js` extended with `createWalletPassRequest`, `listWalletPassRequests`, `getWalletPassRequest` methods.
+  - Event vertical Phase 5 (wallet pass signing) completion:
+  - Super-admin event management UI (`SuperAdminEventManagementView.vue`)
+  - Tenant event management UI (`EventManagementView.vue`, `EventFormView.vue`, `EventBookingManagementView.vue`)
+  - Business rules: capacity enforcement, ticket transfer (>24h before event), cancellation refund policy (>24h before event)
+  - Security review (`Specs/event-vertical-security-review.md`), threat model (`docs/threat-model-event-vertical.md`), performance review (`Specs/event-vertical-performance-review.md`), ADR (`Specs/ADR-0010-event-vertical-module.md`), canary readiness (`Specs/event-vertical-canary-deployment.md`)
+  - QR check-in rate limiting (5 scans/sec window) + device binding + HMAC signature verification
+  - Immutable `event_booking_transfers` audit table with migration `20260814000002`
+- Salon critical production fixes:
+  - Backfilled `appointments.end` for existing null rows
+  - Fixed `bufferMinutes` persistence in appointment DAO update
+  - Fixed undefined `buildAppointmentWhere`/`buildIncludeClause` in scheduling service
+  - Replaced `alert()` with toast notifications in `SalonWhatsAPPaymentsView.vue`
+- ERPNext Phase 1 (Customer & Invoice Sync) complete:
+  - Backend: `mapAppointmentToInvoice` added to customer mapper; `invoice.sync.js` extended to handle reservations + salon appointments; accounting proxy accepts `appointmentIds`; CRM proxy gains `/crm/sync/leads` and `/crm/sync/customers` endpoints
+  - Frontend: `syncAppointmentInvoices` added to `erpnextAPI.js`
+  - Backend tests: 145 suites, 1042 tests passed
+- Event controller/service test fixes: corrected QR checkin test param names (`code` → `token`), used 64-char tokens, matched controller response shape; cleared stale Jest cache
 
 ## Agent Instructions
 
@@ -54,7 +58,7 @@ Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` w
 ## Architecture
 
 - **Monorepo layout**: `back-end/` (Express + Sequelize + Redis/BullMQ + Socket.IO) and `front-end/` (Vue 3 + Pinia + Vuestic UI).
-- **Tenant architecture**: Always multi-tenant. Tenant context resolved by `resolveTenant` middleware; all tenant-platform code under `back-end/src/tenant-platform/`. Restaurant is a vertical module under `back-end/src/verticals/restaurant/`, alongside salon under `back-end/src/verticals/salon/`.
+- **Tenant architecture**: Always multi-tenant. Tenant context resolved by `resolveTenant` middleware; all tenant-platform code under `back-end/src/tenant-platform/`. Restaurant is a vertical module under `back-end/src/verticals/restaurant/`, salon under `back-end/src/verticals/salon/`, and event under `back-end/src/verticals/event/`.
 - **Three frontend entry points** (Vite dev servers):
   - Super-admin portal: `front-end/vite.config.super-admin.js` → port `8080`
   - Tenant portal: `front-end/vite.config.tenant.js` → port `8081`
@@ -80,7 +84,7 @@ Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` w
 - Tenant: `/dashboard`, `/reservations`, `/new-reservation`, `/tables/manage`, `/schedule`, `/calendar`, `/floor-plan`, `/reports`, `/orders/manage`, `/deliveries`, `/payments`, `/revenue`, `/staff/manage`, `/roles/manage`, `/groups/manage`, `/waitlist`, `/audit-logs`, `/search`, `/menu/manage`, `/admin/settings/*`
 - Super-admin (requires `manage_tenants`): `/admin/overview`, `/admin/tenants`, `/admin/tenants/:id/*` (detail, api-keys, branding, grace-period, timeline, notes, trial, invoices, onboarding, dsar), `/admin/plans`, `/admin/payments`, `/admin/usage`, `/admin/revenue`, `/admin/geographic`, `/admin/bulk`, `/admin/financial`, `/admin/feature-flags`, `/admin/integrations`, `/admin/impersonation`, `/admin/analytics`, `/admin/billing-emails`, `/admin/backups`, `/admin/alert-rules`, `/admin/penetration-tests`, `/admin/insurance-documents`, `/admin/encryption-keys`, `/admin/auto-scaling`, `/admin/compliance`, `/admin/failover`, `/admin/maintenance`, `/admin/trust-safety`, `/admin/support-tickets`, `/admin/support-templates`, `/admin/support-chat`, `/admin/monitoring/*`, `/admin/vertical-analytics`, `/admin/vertical-templates`, `/admin/compliance-rules`, `/admin/notification-templates`, `/admin/announcements`, `/admin/data-retention/*`, `/admin/audit`, `/admin/incidents`, `/admin/suspicious-activity`, `/admin/sub-processors`, `/admin/platform-reports`, `/admin/reconciliation`, `/admin/paystack`, `/admin/whatsapp-delivery-failures`, `/admin/shaqexpress-order-conversion`, `/admin/whatsapp-support-ticket-analytics`, `/admin/marketplace`, `/admin/case-studies`, `/admin/referrals`, `/admin/tenant-data-export`, `/admin/cross-tenant-search`, `/admin/data-anonymization`, `/admin/debug`, `/admin/status`, `/admin/migration`, `/admin/change-management`, `/admin/postmortems`, `/admin/fraud`, `/admin/at-risk-tenants`, `/admin/notifications`, `/admin/benchmarks`, `/admin/platform-roles`, `/admin/reviews`, `/admin/custom-reports`
 - Tenant signup/public: `/tenant/signup`, `/api/v1/tenant-signup`
-- Customer portal: `/portal`, `/portal/profile`, `/portal/reservations`, `/portal/orders`, `/portal/appointments` (salon), `/portal/gift-cards` (salon), `/portal/referrals` (salon), `/portal/packages` (salon), `/portal/loyalty`, `/portal/promotions`, `/portal/waitlist`
+- Customer portal: `/portal`, `/portal/profile`, `/portal/reservations`, `/portal/orders`, `/portal/appointments` (salon), `/portal/gift-cards` (salon), `/portal/referrals` (salon), `/portal/packages` (salon), `/portal/loyalty`, `/portal/promotions`, `/portal/waitlist`, `/portal/events` (event), `/portal/events/:id` (event), `/portal/events/:eventId/wallet-pass` (event wallet pass payment + Add to Wallet flow)
 - Salon vertical: `/appointments`, `/stations`, `/station-map`, `/services`, `/packages`, `/gift-cards`, `/referrals`, `/locations`, `/inventory`, `/expenses`, `/pricing`, `/salon/*` (settings, walkins, calendar, shifts, schedule, holidays, reports, recurring, clients, marketing, gallery, unified-schedule, whatsapp-bookings, whatsapp-payments, dashboard, staff)
 - WhatsApp store locator: Inbound keywords `location`, `where`, `directions`, `find us`, `address` trigger store locator flow; multi-location asks for customer location and finds nearest via haversine.
 - Tenant login by slug: `/t/:tenantSlug/login`
@@ -136,8 +140,8 @@ npm run test:e2e                      # Playwright E2E
 
 ## Verification Gates
 
-- **Backend**: `cd back-end && npm test` — 877 Jest tests across 132 suites; must stay green (catches cross-tenant leaks and RBAC regressions).
-- **Frontend**: `cd front-end && npm run lint && npm run build && npm run test:unit` — lint, build, and 22 Vitest unit tests must pass.
+- **Backend**: `cd back-end && npm test` — 996 Jest tests across 143 suites; must stay green (catches cross-tenant leaks and RBAC regressions).
+- **Frontend**: `cd front-end && npm run lint && npm run build && npm run test:unit` — lint, build, and 54 Vitest unit tests must pass.
 - **API integration**: Postman collection + Newman for smoke and regression testing of `/api/v1/*` endpoints.
 - **Migrations**: `npm run migrate:up` — replays from earliest unapplied migration; keep `up()` idempotent.
 - **Dependency advisories**: Dependabot PRs are merged after review; recent example: postcss 8.5.23 security patch (source-map path-traversal fix).

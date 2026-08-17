@@ -1,17 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class Expense extends Model {
-    static associate(models) {
-      Expense.belongsTo(models.location, {
-        foreignKey: "locationId",
-        as: "location",
-      });
-    }
-  }
-  Expense.init(
-    {
-      tenantId: {
+
+const getExpenseAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -48,12 +40,21 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "expense",
-      tableName: "expenses",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class Expense extends Model {
+    static associate(models) {
+      Expense.belongsTo(models.location, {
+        foreignKey: "locationId",
+        as: "location",
+      });
     }
-  );
+  }
+  Expense.init(getExpenseAttributes(DataTypes), {
+    sequelize,
+    modelName: "expense",
+    tableName: "expenses",
+  });
   return Expense;
 };

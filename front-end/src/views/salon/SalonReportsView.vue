@@ -213,7 +213,7 @@
                     class="btn-sm btn-danger"
                     @click="deleteScheduledReport(report.id)"
                   >
-                    Delete
+                    {{ confirmingDelete === report.id ? "Confirm" : "Delete" }}
                   </button>
                 </td>
               </tr>
@@ -315,6 +315,7 @@ const { t } = useI18n();
 
 const loading = ref(true);
 const exporting = ref(false);
+const confirmingDelete = ref<number | null>(null);
 const from = ref("");
 const to = ref("");
 
@@ -446,7 +447,14 @@ const createScheduledReport = async () => {
 };
 
 const deleteScheduledReport = async (id: number) => {
-  if (!confirm("Delete this scheduled report?")) return;
+  if (confirmingDelete.value !== id) {
+    confirmingDelete.value = id;
+    setTimeout(() => {
+      confirmingDelete.value = null;
+    }, 3000);
+    return;
+  }
+  confirmingDelete.value = null;
   try {
     await salonReportsAPI.deleteScheduledReport(id);
     await loadScheduledReports();

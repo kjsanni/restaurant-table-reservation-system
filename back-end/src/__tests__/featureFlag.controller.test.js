@@ -16,6 +16,13 @@ jest.mock("../tenant-platform/services/tenantTypeDefaults.service", () => ({
         salon_module_enabled: { label: "Salon Module", description: "Enable salon vertical", dependencies: [] },
       },
     },
+    event: {
+      label: "Event",
+      flags: {
+        event_guest_list: { label: "Guest List", description: "Manage guest lists", dependencies: [] },
+        event_vip_lounge: { label: "VIP Lounge", description: "VIP access control", dependencies: [] },
+      },
+    },
     erpnext: {
       label: "ERPNext",
       flags: {
@@ -23,7 +30,7 @@ jest.mock("../tenant-platform/services/tenantTypeDefaults.service", () => ({
       },
     },
   },
-  ALL_FEATURE_FLAGS: ["table_management", "waitlist", "salon_appointments", "salon_module_enabled", "erpnext_accounting"],
+  ALL_FEATURE_FLAGS: ["table_management", "waitlist", "salon_appointments", "salon_module_enabled", "erpnext_accounting", "event_guest_list", "event_vip_lounge"],
 }));
 
 describe("listFeatureFlagsHandler", () => {
@@ -37,15 +44,17 @@ describe("listFeatureFlagsHandler", () => {
     await listFeatureFlagsHandler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      success: true,
-      flags: [
-        { flag: "table_management", category: "Restaurant", label: "Table Management", description: "Enable table mapping", dependencies: [] },
-        { flag: "waitlist", category: "Restaurant", label: "Waitlist", description: "Allow digital waitlist", dependencies: [] },
-        { flag: "salon_appointments", category: "Salon", label: "Appointments", description: "Calendar booking", dependencies: [] },
-        { flag: "salon_module_enabled", category: "Salon", label: "Salon Module", description: "Enable salon vertical", dependencies: [] },
-        { flag: "erpnext_accounting", category: "ERPNext", label: "Accounting", description: "Ledger sync", dependencies: [] },
-      ],
-    });
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        flags: [
+          { flag: "table_management", category: "Restaurant", label: "Table Management", description: "Enable table mapping", dependencies: [] },
+          { flag: "waitlist", category: "Restaurant", label: "Waitlist", description: "Allow digital waitlist", dependencies: [] },
+          { flag: "salon_appointments", category: "Salon", label: "Appointments", description: "Calendar booking", dependencies: [] },
+          { flag: "salon_module_enabled", category: "Salon", label: "Salon Module", description: "Enable salon vertical", dependencies: [] },
+          { flag: "erpnext_accounting", category: "ERPNext", label: "Accounting", description: "Ledger sync", dependencies: [] },
+          { flag: "event_guest_list", category: "Event", label: "Guest List", description: "Manage guest lists", dependencies: [] },
+          { flag: "event_vip_lounge", category: "Event", label: "VIP Lounge", description: "VIP access control", dependencies: [] },
+        ],
+      });
   });
 });

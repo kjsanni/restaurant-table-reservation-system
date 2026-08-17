@@ -1,25 +1,9 @@
 "use strict";
+
 const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class Referral extends Model {
-    static associate(models) {
-      Referral.belongsTo(models.customer, {
-        foreignKey: "referrerCustomerId",
-        as: "referrer",
-      });
-      Referral.belongsTo(models.customer, {
-        foreignKey: "refereeCustomerId",
-        as: "referee",
-      });
-      Referral.belongsTo(models.appointment, {
-        foreignKey: "appointmentId",
-        as: "appointment",
-      });
-    }
-  }
-  Referral.init(
-    {
-      tenantId: {
+
+const getReferralAttributes = (DataTypes) => ({
+tenantId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -72,12 +56,29 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-    },
-    {
-      sequelize,
-      modelName: "referral",
-      tableName: "referrals",
+});
+
+module.exports = (sequelize, DataTypes) => {
+  class Referral extends Model {
+    static associate(models) {
+      Referral.belongsTo(models.customer, {
+        foreignKey: "referrerCustomerId",
+        as: "referrer",
+      });
+      Referral.belongsTo(models.customer, {
+        foreignKey: "refereeCustomerId",
+        as: "referee",
+      });
+      Referral.belongsTo(models.appointment, {
+        foreignKey: "appointmentId",
+        as: "appointment",
+      });
     }
-  );
+  }
+  Referral.init(getReferralAttributes(DataTypes), {
+    sequelize,
+    modelName: "referral",
+    tableName: "referrals",
+  });
   return Referral;
 };

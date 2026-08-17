@@ -191,99 +191,107 @@ onMounted(loadServices);
         </div>
       </div>
 
-      <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
-        <div class="modal">
-          <h2>
-            {{
-              editingId
-                ? t("salon.updateCampaign")
-                : t("salon.createAppointment")
-            }}
-          </h2>
-          <div class="form-group">
-            <label>Name</label>
-            <input
-              v-model="form.name"
-              :placeholder="t('salon.appointmentIdPlaceholder')"
-            />
-          </div>
-          <div class="form-group">
-            <label>Description</label>
-            <textarea v-model="form.description" rows="2"></textarea>
-          </div>
-          <div class="form-row">
+      <Transition name="modal">
+        <div
+          v-if="showForm"
+          class="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          @click.self="showForm = false"
+        >
+          <div class="modal">
+            <h2>
+              {{
+                editingId
+                  ? t("salon.updateCampaign")
+                  : t("salon.createAppointment")
+              }}
+            </h2>
             <div class="form-group">
-              <label>Price (GHS)</label>
+              <label>Name</label>
               <input
-                v-model.number="form.price"
-                type="number"
-                min="0"
-                step="0.01"
+                v-model="form.name"
+                :placeholder="t('salon.appointmentIdPlaceholder')"
               />
             </div>
             <div class="form-group">
-              <label>Duration (min)</label>
-              <input
-                v-model.number="form.durationMinutes"
-                type="number"
-                min="5"
-              />
+              <label>Description</label>
+              <textarea v-model="form.description" rows="2"></textarea>
             </div>
-          </div>
-          <div class="form-row">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Price (GHS)</label>
+                <input
+                  v-model.number="form.price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <div class="form-group">
+                <label>Duration (min)</label>
+                <input
+                  v-model.number="form.durationMinutes"
+                  type="number"
+                  min="5"
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Deposit (GHS)</label>
+                <input
+                  v-model.number="form.depositAmount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <div class="form-group">
+                <label>Buffer (min)</label>
+                <input
+                  v-model.number="form.bufferMinutes"
+                  type="number"
+                  min="0"
+                />
+              </div>
+            </div>
             <div class="form-group">
-              <label>Deposit (GHS)</label>
-              <input
-                v-model.number="form.depositAmount"
-                type="number"
-                min="0"
-                step="0.01"
-              />
+              <label>Category</label>
+              <select v-model="form.categoryId">
+                <option :value="null">{{ t("salon.uncategorised") }}</option>
+                <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                  {{ cat.name }}
+                </option>
+              </select>
             </div>
             <div class="form-group">
-              <label>Buffer (min)</label>
-              <input
-                v-model.number="form.bufferMinutes"
-                type="number"
-                min="0"
-              />
+              <label class="checkbox-label">
+                <input v-model="form.isAvailable" type="checkbox" />
+                {{ t("salon.availableForBooking") }}
+              </label>
+              <label class="checkbox-label">
+                <input v-model="form.whatsappBookable" type="checkbox" />
+                {{ t("salon.whatsappBookable") }}
+              </label>
             </div>
-          </div>
-          <div class="form-group">
-            <label>Category</label>
-            <select v-model="form.categoryId">
-              <option :value="null">{{ t("salon.uncategorised") }}</option>
-              <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                {{ cat.name }}
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input v-model="form.isAvailable" type="checkbox" />
-              {{ t("salon.availableForBooking") }}
-            </label>
-            <label class="checkbox-label">
-              <input v-model="form.whatsappBookable" type="checkbox" />
-              {{ t("salon.whatsappBookable") }}
-            </label>
-          </div>
-          <div class="modal-actions">
-            <button
-              class="btn-secondary"
-              @click="
-                showForm = false;
-                resetForm();
-              "
-            >
-              {{ t("salon.cancelBtn") }}
-            </button>
-            <button class="btn-primary" @click="submitForm">
-              {{ t("salon.save") }}
-            </button>
+            <div class="modal-actions">
+              <button
+                class="btn-secondary"
+                @click="
+                  showForm = false;
+                  resetForm();
+                "
+              >
+                {{ t("salon.cancelBtn") }}
+              </button>
+              <button class="btn-primary" @click="submitForm">
+                {{ t("salon.save") }}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -438,6 +446,11 @@ onMounted(loadServices);
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  transition: opacity 250ms var(--ease-in-out, ease-out);
+}
+.modal-enter-from .modal-overlay,
+.modal-leave-to .modal-overlay {
+  opacity: 0;
 }
 .modal {
   background: var(--white);
@@ -448,6 +461,14 @@ onMounted(loadServices);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   max-height: 90vh;
   overflow-y: auto;
+  transition:
+    opacity 250ms var(--ease-in-out, ease-out),
+    transform 250ms var(--ease-in-out, ease-out);
+}
+.modal-enter-from .modal,
+.modal-leave-to .modal {
+  opacity: 0;
+  transform: scale(0.96) translateY(8px);
 }
 .modal h2 {
   font-family: var(--font-serif);

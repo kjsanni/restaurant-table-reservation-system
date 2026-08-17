@@ -162,7 +162,12 @@ onMounted(loadTables);
       </div>
 
       <div v-else class="table-grid">
-        <div v-for="table in filteredTables" :key="table.id" class="table-card">
+        <div
+          v-for="table in filteredTables"
+          :key="table.id"
+          class="table-card"
+          v-hover-lift
+        >
           <div class="table-head">
             <div class="table-name">Table {{ table.id }}</div>
             <span

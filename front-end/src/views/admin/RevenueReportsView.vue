@@ -48,19 +48,19 @@
 
     <div v-else-if="activeTab === 'mrr'" class="tab-panel">
       <div class="summary-cards">
-        <div class="card">
+        <div class="card" v-hover-lift>
           <div class="card-label">Current Revenue</div>
           <div class="card-value">{{ formatCurrency(mrrData.currentMrr) }}</div>
         </div>
-        <div class="card">
+        <div class="card" v-hover-lift>
           <div class="card-label">New Tenants (Last 12M)</div>
           <div class="card-value success">{{ mrrData.newTenantsTotal }}</div>
         </div>
-        <div class="card">
+        <div class="card" v-hover-lift>
           <div class="card-label">Cancelled (Last 12M)</div>
           <div class="card-value danger">{{ mrrData.cancelledTotal }}</div>
         </div>
-        <div class="card">
+        <div class="card" v-hover-lift>
           <div class="card-label">Avg Churn Rate</div>
           <div class="card-value warning">{{ mrrData.avgChurnRate }}%</div>
         </div>

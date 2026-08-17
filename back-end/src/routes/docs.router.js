@@ -3,7 +3,7 @@ const router = express.Router();
 const fs = require("fs");
 const path = require("path");
 
-const openApiPath = path.join(__dirname, "../../docs/openapi.json");
+const openApiPath = path.join(__dirname, "../docs/openapi.json");
 
 router.get("/openapi.json", (req, res) => {
   try {

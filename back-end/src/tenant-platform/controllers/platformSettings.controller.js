@@ -39,6 +39,11 @@ const DOMAIN_ALLOWLISTS = {
     "shaqexpress_enabled",
     "notification_channels",
     "africastalking_config",
+    "erpnext_base_url",
+    "erpnext_api_key",
+    "erpnext_api_secret",
+    "erpnext_timeout_ms",
+    "erpnext_cache_ttl",
   ],
   branding: [
     "platform_brand_name",
@@ -95,6 +100,11 @@ const updatePlatformSettingHandler = async (req, res) => {
     },
     req.ip
   );
+
+  if (key.startsWith("erpnext_")) {
+    const erpnextClient = require("../../integrations/erpnext/client");
+    erpnextClient.resetClient();
+  }
 
   res.status(200).json({ success: true, setting: updated });
 };

@@ -35,7 +35,7 @@ const decrypt = (ciphertext) => {
   const iv = buf.subarray(0, 12);
   const tag = buf.subarray(12, 28);
   const encrypted = buf.subarray(28);
-  const decipher = crypto.createDecipheriv(ALGORITHM, KEY, iv);
+  const decipher = crypto.createDecipheriv(ALGORITHM, KEY, iv, { authTagLength: 16 });
   decipher.setAuthTag(tag);
   return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString(
     "utf8"

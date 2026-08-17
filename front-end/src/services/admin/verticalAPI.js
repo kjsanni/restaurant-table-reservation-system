@@ -27,6 +27,14 @@ export const deleteVerticalTemplate = (id) => {
   return API.delete(`/admin/vertical-templates/${id}`);
 };
 
+export const cloneVerticalTemplate = (id) => {
+  return API.post(`/admin/vertical-templates/${id}/clone`);
+};
+
+export const getVerticalTemplateUsage = () => {
+  return API.get("/admin/vertical-templates/usage");
+};
+
 export const getVerticalAnalytics = () => {
   return API.get("/admin/vertical-analytics");
 };

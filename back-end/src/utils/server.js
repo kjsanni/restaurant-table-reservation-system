@@ -32,6 +32,9 @@ const { authLimiter, generalLimiter, adminActionLimiter, syncLimiter, webhookLim
 const { startNotificationWorker } = require("../queues/notification.queue");
 const { startReportWorker } = require("../queues/report.queue");
 const { startBackupWorker } = require("../queues/backup.queue");
+const { startProvisioningWorker } = require("../queues/provisioning.queue");
+const { startWalletPassSigningWorker, closeWalletPassSigningWorker } = require("../queues/walletPass.queue");
+const walletPassAdminRouter = require("../routes/walletPassAdmin.router");
 const { client: redisClient, getConnectionStatus } = require("./cache");
 const { checkQueueDepths } = require("../queues/queue");
 const { resolveTenant } = require("../tenant-platform/middleware/resolveTenant");
@@ -42,8 +45,8 @@ const erpnextInventoryRouter = require("../integrations/erpnext/proxies/inventor
 const erpnextHrRouter = require("../integrations/erpnext/proxies/hr.proxy");
 const erpnextCrmRouter = require("../integrations/erpnext/proxies/crm.proxy");
 const erpnextManufacturingRouter = require("../integrations/erpnext/proxies/manufacturing.proxy");
+const erpnextReportsRouter = require("../integrations/erpnext/proxies/reports.proxy");
 const erpnextOnboardingRouter = require("../integrations/erpnext/onboarding/onboarding");
-const erpnextAdminRouter = require("../integrations/erpnext/admin/admin.router");
 
 const { adminMiddleware } = require("../middleware/adminMiddleware");
 
@@ -123,14 +126,19 @@ const createServer = () => {
     const nw = startNotificationWorker();
     const rw = startReportWorker();
     const bw = startBackupWorker();
+    const pw = startProvisioningWorker();
+    const wpw = startWalletPassSigningWorker();
     if (nw) workers.push(nw);
     if (rw) workers.push(rw);
     if (bw) workers.push(bw);
+    if (pw) workers.push(pw);
+    if (wpw) workers.push(wpw);
   } catch (err) {
     console.warn("BullMQ workers not started:", err.message);
   }
 
   const shutdownWorkers = async () => {
+    await closeWalletPassSigningWorker();
     await Promise.all(workers.map((w) => w.close().catch(() => {})));
     clearInterval(tenantCronInterval);
     clearInterval(salonCronInterval);
@@ -220,6 +228,7 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
   app.use("/api/v1/audit-logs", generalLimiter, auditLogRouter);
   app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
+  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, walletPassAdminRouter);
   app.use("/api/v1/public", publicRouter);
   app.use("/api/v1/public/status", statusRouter);
   app.use("/api/v1/docs", docsRouter);
@@ -234,15 +243,8 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
     erpnextHrRouter,
     erpnextCrmRouter,
     erpnextManufacturingRouter,
+    erpnextReportsRouter,
     erpnextOnboardingRouter
-  );
-  app.use(
-    "/api/v1/admin/erpnext",
-    logAction,
-    validateCsrfToken,
-    adminActionLimiter,
-    adminMiddleware,
-    erpnextAdminRouter
   );
   app.use("/api/v1/notifications", generalLimiter, logAction, validateCsrfToken, notificationRouter);
   app.use("/api/v1/email-templates", generalLimiter, logAction, validateCsrfToken, emailTemplateRouter);

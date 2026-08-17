@@ -13,6 +13,10 @@ exclude_paths:
   - "back-end/src/verticals/salon/DAOs/inventoryTransfer.dao.js"
   - "back-end/src/verticals/salon/DAOs/staffLocationAssignment.dao.js"
   - "back-end/src/verticals/salon/controllers/inventoryTransfer.controller.js"
+  - "back-end/src/verticals/event/adapters/appleWalletAdapter.js"
+  - "back-end/src/tenant-platform/DAOs/passSigningRequest.dao.js"
+  - "back-end/src/verticals/event/controllers/walletPassRequest.controller.js"
+  - "back-end/src/queues/walletPass.queue.js"
   - "scripts/check-legal-versions.js"
   - "drinks-vendor/**"
 
@@ -20,19 +24,19 @@ engines:
   jshint:
     enabled: false
   eslint:
-    enabled: false
+    enabled: true
   csslint:
-    enabled: false
+    enabled: true
   remark-lint:
     enabled: false
   pmd-legacy:
     enabled: false
   duplication:
-    enabled: false
+    enabled: true
   stylelint:
     enabled: true
   semgrep:
-    enabled: false
+    enabled: true
   shellcheck:
     enabled: true
   hadolint:
@@ -47,3 +51,5 @@ engines:
     enabled: true
     exclude_paths:
       - "back-end/src/tenant-platform/controllers/tenantAdmin.controller.js"
+  markdownlint:
+    enabled: true

@@ -8,6 +8,8 @@
     "start:back-end": "npm --prefix ./back-end start",
     "start:dev": "npm run --prefix ./back-end app:dev",
     "start:prod": "npm run --prefix ./back-end app:prod",
+    "codacy:analyze": "npm --prefix ./back-end run codacy:analyze",
+    "codacy:info": "npm --prefix ./back-end run codacy:info",
     "version:bump": "node -e \"const fs=require('fs');const v=process.argv[1];if(!v)throw new Error('Usage: npm run version:bump -- <new-version>');fs.writeFileSync('VERSION',v);fs.writeFileSync('package.json',JSON.stringify({...JSON.parse(fs.readFileSync('package.json','utf8')),version:v},null,2));\""
   },
   "repository": {
@@ -23,7 +25,6 @@
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/vue": "^0.5.0",
-    "csurf": "^1.11.1",
     "express-rate-limit": "^8.5.2"
   },
   "devDependencies": {
