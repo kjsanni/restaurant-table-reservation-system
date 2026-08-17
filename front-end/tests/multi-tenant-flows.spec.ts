@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { loginAsTenantStaff } from "./fixtures";
+import { loginAsTenantStaff, E2E_TENANT_SLUG } from "./fixtures";
 
 test.describe("Multi-tenant flows", () => {
   test.beforeEach(async ({ page }) => {

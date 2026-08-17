@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { loginAsTenantStaff, E2E_TENANT_SLUG } from "./fixtures";
+import { loginAsTenantStaff } from "./fixtures";
 
 const SCANNER_API_KEY = process.env.E2E_SCANNER_API_KEY || "test-scanner-key-1234567890";
 

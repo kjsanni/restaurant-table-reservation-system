@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { loginAsPlatformAdmin, loginAsTenantStaff, E2E_TENANT_SLUG } from "./fixtures";
+import { loginAsPlatformAdmin, loginAsTenantStaff } from "./fixtures";
 
 const E2E_CUSTOMER_EMAIL = process.env.E2E_CUSTOMER_EMAIL || "customer@demo.test";
 const E2E_CUSTOMER_PASSWORD = process.env.E2E_CUSTOMER_PASSWORD || "customer123";
