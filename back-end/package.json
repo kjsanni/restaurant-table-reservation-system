@@ -43,7 +43,7 @@
   "devDependencies": {
     "autocannon": "^8.0.0",
     "concurrently": "^10.0.4",
-    "eslint": "^10.8.0",
+    "eslint": "^10.8.1",
     "jest": "^30.4.2",
     "nodemon": "^3.1.14",
     "sequelize-cli": "^6.6.5"
