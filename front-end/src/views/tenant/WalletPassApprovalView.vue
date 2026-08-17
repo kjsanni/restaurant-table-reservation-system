@@ -165,7 +165,7 @@ const items = ref<WalletPassRequest[]>([]);
 const processing = ref<Record<number, boolean>>({});
 const rejectTarget = ref<WalletPassRequest | null>(null);
 const rejectNotes = ref("");
-  const rejectNotesError = ref("");
+const rejectNotesError = ref("");
 
 const load = async () => {
   if (!eventId.value) return;
