@@ -13,6 +13,7 @@ const eventBookingRouter = require("../routes/eventBooking.router");
 const eventPaymentRouter = require("../routes/eventPayment.router");
 const webPassRouter = require("../routes/webPass.router");
 const photoRouter = require("../routes/photo.router");
+const walletPassRequestRouter = require("../routes/walletPassRequest.router");
 
 const eventModule = {
   id: "event",
@@ -29,6 +30,7 @@ const eventModule = {
     { path: "/api/v1/events/bookings/:bookingId/payments", router: eventPaymentRouter, middleware: [logAction, validateCsrfToken, tenantWriteLimiter, requireVertical("event")] },
     { path: "/api/v1/public/e", router: webPassRouter, middleware: [tenantLimiter] },
     { path: "/api/v1/events/checkin/photo", router: photoRouter, middleware: [logAction, tenantLimiter] },
+    { path: "/api/v1/events", router: walletPassRequestRouter, middleware: [logAction, validateCsrfToken, tenantLimiter, requireVertical("event"), requiredFeature("event_wallet_passes")] },
   ],
 };
 

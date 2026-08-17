@@ -9,6 +9,10 @@ class EventPortalAPI {
     return API.get(`/events/${eventId}`);
   }
 
+  createEvent(data) {
+    return API.post("/events", data);
+  }
+
   getTicketTypes(eventId) {
     return API.get(`/events/${eventId}/ticket-types`);
   }
@@ -33,6 +37,10 @@ class EventPortalAPI {
     return API.post(`/events/${eventId}/qr-codes`, data);
   }
 
+  generateBatchQRCodes(eventId, data) {
+    return API.post(`/events/${eventId}/qr-codes/batch`, data);
+  }
+
   getBookings(params = {}) {
     const qs = new URLSearchParams(params).toString();
     return API.get(`/events/bookings${qs ? `?${qs}` : ""}`);
@@ -44,6 +52,10 @@ class EventPortalAPI {
 
   createBooking(data) {
     return API.post("/events/bookings", data);
+  }
+
+  confirmBooking(bookingId) {
+    return API.patch(`/events/bookings/${bookingId}`);
   }
 
   updateEvent(eventId, data) {
@@ -94,6 +106,18 @@ class EventPortalAPI {
 
   verifyToken(token) {
     return API.get(`/events/checkin/${token}/verify`);
+  }
+
+  createSigningRequest(eventId, data) {
+    return API.post(`/events/${eventId}/wallet-passes/request`, data);
+  }
+
+  listRequests(eventId) {
+    return API.get(`/events/${eventId}/wallet-passes/requests`);
+  }
+
+  getRequest(eventId, requestId) {
+    return API.get(`/events/${eventId}/wallet-passes/requests/${requestId}`);
   }
 }
 
