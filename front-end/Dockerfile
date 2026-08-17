@@ -8,7 +8,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
-COPY . .
+COPY front-end/ ./
 RUN npm run build
 
 FROM nginx:alpine AS runner
