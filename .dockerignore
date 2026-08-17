@@ -1,0 +1,74 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Environment
+.env
+.env.*.local
+.env*.bak
+
+# Build output
+dist/
+dist-ssr/
+
+# Test artifacts
+test-results/
+playwright-report/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Documentation (not needed in image)
+*.md
+!LICENSE
+
+# Agent/tooling
+.kilo/
+.playwright-mcp/
+
+# Tenant portal build output
+/tenant/
+
+# Mockups
+.kilo/mockups/
+
+# Irrelevant directories for Docker build
+screenshots/
+docs/
+Specs/
+Plans/
+legal/
+mobile/
+retro/
+single-tenant/
+salon-reservation-system/
+salon-nigeria/
+rtrs-skin-mockup.html
+super-admin-portal.html
+whatsapp-flow-mockup.html
+SESSION_NOTES.md
+DESIGN.md
+SECURITY_AUDIT_REPORT.md
+llms.txt
+package-lock.json
+

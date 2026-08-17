@@ -179,7 +179,7 @@ jobs:
           VITE_API_URL: http://localhost:8000/api/v1
       - name: Install Playwright browsers
         working-directory: front-end
-        run: npx playwright install --with-deps chromium firefox webkit
+        run: npx playwright install --with-deps chromium
       - name: Run database migrations
         working-directory: back-end
         run: npx sequelize db:migrate
@@ -188,19 +188,8 @@ jobs:
         run: |
           npm run seed:all
           npm run seed:e2e
-      - name: "Debug - inspect admin user in database"
-        working-directory: back-end
-        run: |
-          echo "=== ALL users with admin@rtrs.com ==="
-          docker exec $(docker ps -q --filter "name=mysql") mysql -u root -proot rtrs_test -e "SELECT id, email, emailVerified, tenantId, isSuperAdmin, totpEnabled FROM users WHERE email='admin@rtrs.com';" 2>&1 || true
-          echo "=== ALL users by id ==="
-          docker exec $(docker ps -q --filter "name=mysql") mysql -u root -proot rtrs_test -e "SELECT id, email, emailVerified, isSuperAdmin FROM users ORDER BY id;" 2>&1 || true
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_NAME: rtrs_test
-          DB_USERNAME: rtrs_user
-          DB_PASSWORD: testpass
+      - name: Install wait-on
+        run: npm install -g wait-on
       - name: Start backend server
         working-directory: back-end
         run: |
@@ -215,8 +204,7 @@ jobs:
           echo $! > /tmp/backend.pid
           echo "Server started with PID: $!"
       - name: Wait for backend
-        run: |
-          npx wait-on http://localhost:8000/api/v1/health --timeout 120000 || (cat /tmp/backend.log 2>/dev/null; exit 1)
+        run: wait-on http://localhost:8000/api/v1/health --timeout 120000 || (cat /tmp/backend.log 2>/dev/null; exit 1)
       - name: Debug backend log
         if: failure()
         run: cat /tmp/backend.log 2>/dev/null || echo "No backend log found"
