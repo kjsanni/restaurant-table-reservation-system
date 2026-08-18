@@ -27,7 +27,7 @@ jobs:
       - name: Generate version tag
         id: version
         run: |
-          VERSION=$(node -p "require('./VERSION')")
+          VERSION=$(cat VERSION)
           SHA=$(git rev-parse --short HEAD)
           echo "tag=${VERSION}-${SHA}" >> $GITHUB_OUTPUT
       - name: Build backend Podman image
