@@ -1,3 +1,4 @@
+process.env.ENCRYPTION_KEY = "test-secret-for-contract-tests";
 const request = require("supertest");
 const createServer = require("../utils/server");
 

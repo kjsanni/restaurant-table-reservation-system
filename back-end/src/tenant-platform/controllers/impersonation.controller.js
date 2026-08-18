@@ -28,7 +28,7 @@ const startImpersonationHandler = async (req, res) => {
     ipAddress: req.ip,
   });
 
-await auditLog(req, "impersonation.started", "user", targetUser.id, { reason, targetEmail: targetUser.email }, { tenantId: targetUser.tenantId });
+  await auditLog(req, "impersonation.started", "user", targetUser.id, { reason, targetEmail: targetUser.email }, { tenantId: targetUser.tenantId });
 
   res.status(201).json({
     success: true,
@@ -54,20 +54,18 @@ const listImpersonationHandler = async (req, res) => {
   res.status(200).json({ success: true, collection: sessions });
 };
 
-module.exports = {
-  startImpersonationHandler,
-  endImpersonationHandler,
-  listImpersonationHandler,
-};
-
 const ImpersonationService = require("../services/impersonation.service");
 
 const startImpersonationByTenantHandler = async (req, res) => {
   try {
     const { tenantId, reason } = req.body;
+    const tenantIdNum = parseInt(tenantId, 10);
+    if (!tenantIdNum || isNaN(tenantIdNum)) {
+      return res.status(400).json({ success: false, message: "Valid tenantId is required" });
+    }
     const session = await ImpersonationService.createImpersonationSession({
       superAdminId: req.user.id,
-      tenantId,
+      tenantId: tenantIdNum,
       reason,
     });
     res.status(201).json({ success: true, data: session });
@@ -78,7 +76,12 @@ const startImpersonationByTenantHandler = async (req, res) => {
 
 const getActiveSessionsHandler = async (req, res) => {
   try {
-    const sessions = await ImpersonationService.getActiveImpersonationSessions(req.params.tenantId);
+    const { tenantId } = req.params;
+    const tenantIdNum = parseInt(tenantId, 10);
+    if (!tenantIdNum || isNaN(tenantIdNum)) {
+      return res.status(400).json({ success: false, message: "Valid tenantId is required" });
+    }
+    const sessions = await ImpersonationService.getActiveImpersonationSessions(tenantIdNum);
     res.status(200).json({ success: true, data: sessions });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

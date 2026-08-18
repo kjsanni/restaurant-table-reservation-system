@@ -14,7 +14,11 @@ const routeTicketHandler = async (req, res) => {
 const getTicketQueueHandler = async (req, res) => {
   try {
     const { teamId } = req.params;
-    const queue = await SupportRouting.getTicketQueue(parseInt(teamId));
+    const teamIdNum = parseInt(teamId, 10);
+    if (!teamIdNum || isNaN(teamIdNum)) {
+      return res.status(400).json({ success: false, message: "Valid teamId is required" });
+    }
+    const queue = await SupportRouting.getTicketQueue(teamIdNum);
     res.status(200).json({ success: true, data: queue });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

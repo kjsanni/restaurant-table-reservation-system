@@ -4,10 +4,7 @@ const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const tenantSupportController = require("../controllers/tenantSupport.controller");
 const { protect } = require("../../middleware/auth");
-const { adminActionLimiter } = require("../../middleware/rateLimit");
 const upload = require("../middleware/supportAttachmentUpload");
-
-router.use(adminActionLimiter);
 
 router
   .route("/tickets")

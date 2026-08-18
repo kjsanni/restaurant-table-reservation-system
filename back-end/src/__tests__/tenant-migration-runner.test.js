@@ -1,4 +1,5 @@
 const request = require("supertest");
+process.env.ENCRYPTION_KEY = "test-secret-for-migration-tests";
 const createServer = require("../utils/server");
 
 jest.mock("../tenant-platform/services/tenant-migration-runner.service", () => ({

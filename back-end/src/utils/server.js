@@ -219,9 +219,9 @@ const createServer = () => {
   app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
   app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, walletPassAdminRouter);
-  app.use("/api/v1/public", publicRouter);
-  app.use("/api/v1/public/status", statusRouter);
-  app.use("/api/v1/docs", docsRouter);
+  app.use("/api/v1/public", generalLimiter, publicRouter);
+  app.use("/api/v1/public/status", generalLimiter, statusRouter);
+  app.use("/api/v1/docs", generalLimiter, docsRouter);
   loadModules(app);
 
   app.get("/api/v1/health", tryCatchHandler(async (req, res) => {
@@ -235,9 +235,7 @@ const createServer = () => {
       queueAlerts: queueAlerts.length ? queueAlerts : undefined,
     });
   }));
-  app.use("/api/v1/public/status", statusRouter);
-  app.use("/api/v1/docs", docsRouter);
-  loadModules(app);
+
   app.use(
     "/api/v1/erpnext",
     logAction,

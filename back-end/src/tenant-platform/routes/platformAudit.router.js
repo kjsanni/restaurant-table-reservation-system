@@ -4,9 +4,6 @@ const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const platformAuditController = require("../controllers/platformAudit.controller");
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
-const { adminActionLimiter } = require("../../middleware/rateLimit");
-
-router.use(adminActionLimiter);
 
 router
   .route("/")

@@ -70,7 +70,7 @@ const OffboardingService = {
 
     await tenant.update({ status: "deleted", deletedAt: new Date() });
 
-    const dependentTables = await db.sequelize.query(
+    const [dependentTables] = await db.sequelize.query(
       "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = 'tenantId' AND TABLE_SCHEMA = DATABASE()"
     );
 

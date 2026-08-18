@@ -8,7 +8,7 @@ jest.mock("../db/models", () => {
     customer: { findAll: mockFindAll },
     user: { findAll: mockFindAll },
     platformAuditLog: { create: jest.fn().mockResolvedValue({ id: 1 }) },
-    sequelize: { query: jest.fn().mockResolvedValue([]) },
+    sequelize: { query: jest.fn().mockResolvedValue([[], {}]) },
   };
 });
 

@@ -1,4 +1,5 @@
 const request = require("supertest");
+process.env.ENCRYPTION_KEY = "test-secret-for-smoke-tests";
 const createServer = require("../utils/server");
 
 describe("Provisioning Smoke Test", () => {
