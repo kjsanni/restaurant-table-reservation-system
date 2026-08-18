@@ -12,6 +12,10 @@ const ImpersonationService = {
       throw new Error("Invalid super-admin or tenant");
     }
 
+    if (["cancelled", "suspended", "deleted"].includes(tenant.status)) {
+      throw new Error(`Cannot impersonate a ${tenant.status} tenant`);
+    }
+
     const session = await db.impersonationSession.create({
       superAdminId,
       tenantId,

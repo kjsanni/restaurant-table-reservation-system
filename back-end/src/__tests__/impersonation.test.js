@@ -2,7 +2,7 @@ jest.mock("../db/models", () => {
   const mockSession = { id: 1, superAdminId: 1, tenantId: 1, active: true, update: jest.fn().mockResolvedValue(true) };
   return {
     user: { findByPk: jest.fn().mockResolvedValue({ id: 1 }) },
-    tenant: { findByPk: jest.fn().mockResolvedValue({ id: 1 }) },
+    tenant: { findByPk: jest.fn().mockResolvedValue({ id: 1, status: "active" }) },
     impersonationSession: {
       create: jest.fn().mockResolvedValue(mockSession),
       findAll: jest.fn().mockResolvedValue([mockSession]),

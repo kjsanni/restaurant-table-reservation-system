@@ -1,7 +1,7 @@
 const express = require("express");
-const { adminActionLimiter } = require("../../middleware/rateLimit");
+const { webhookLimiter } = require("../../middleware/rateLimit");
 const router = express.Router();
-router.use(adminActionLimiter);
+router.use(webhookLimiter);
 const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const billingController = require("../controllers/billing.controller");

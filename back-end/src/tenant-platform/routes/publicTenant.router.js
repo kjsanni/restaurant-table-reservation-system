@@ -1,9 +1,8 @@
 const express = require("express");
-const { adminActionLimiter, authLimiter, generalLimiter } = require("../../middleware/rateLimit");
 const router = express.Router();
-router.use(adminActionLimiter);
 const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
+const { authLimiter, generalLimiter } = require("../../middleware/rateLimit");
 const { validateCsrfToken } = require("../../middleware/csrf");
 const enforcePasswordPolicy = require("../../middleware/passwordPolicy");
 const publicTenantController = require("../controllers/publicTenant.controller");
