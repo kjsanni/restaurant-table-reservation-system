@@ -41,6 +41,7 @@ const integrationAnalyticsRoutes = require("../routes/integrationAnalytics.route
 const impersonationRoutes = require("../routes/impersonation.router");
 const advancedAnalyticsRoutes = require("../routes/advancedAnalytics.router");
 const tenantCustomizationRoutes = require("../routes/tenant-customization.router");
+const dataResidencyRoutes = require("../routes/data-residency.router");
 const platformRoleRoutes = require("../routes/platform-role.router");
 const maintenanceRoutes = require("../routes/maintenance.router");
 const trustSafetyRoutes = require("../routes/trustSafety.router");
@@ -110,6 +111,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/tenants", router: tenantMigrationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/tenants", router: provisioningRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/tenants", router: tenantCustomizationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: dataResidencyRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/plans", router: planRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/payments", router: platformPaymentRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/usage", router: usageRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },

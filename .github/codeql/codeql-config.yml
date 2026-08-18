@@ -3,12 +3,11 @@ name: codeql-config
 queries:
   - uses: security-and-quality
 
-# js/missing-rate-limiting is a false positive: rate limiting is centralized
-# in back-end/src/middleware/rateLimit.js using express-rate-limit + Redis,
-# and applied via router.use() across all route modules.
+# js/missing-rate-limiting is covered by explicit middleware wiring:
+# back-end/src/middleware/rateLimit.js and back-end/src/tenant-platform/middleware/tenantRateLimit.js
+# provide Redis-backed limiters applied per-route in every router module.
 exclude:
   - js/user-controlled-bypass
-  - js/missing-rate-limiting
   - js/cookie-http-only-disabled
   - csslint/errors
   - csslint/known-properties
