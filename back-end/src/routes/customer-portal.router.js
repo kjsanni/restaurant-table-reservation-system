@@ -1,6 +1,7 @@
-// codeql[js/missing-rate-limiting] SUPPRESSED: rate limiting is applied via generalLimiter middleware in all routes
 const express = require("express");
+const { generalLimiter } = require("../middleware/rateLimit");
 const router = express.Router();
+router.use(generalLimiter);
 const httpMethodError = require("../middleware/httpMethodError");
 const customerPortalController = require("../controllers/customer-portal.controller");
 const customerWaitlistController = require("../controllers/customer-waitlist.controller");
@@ -9,7 +10,6 @@ const customerMarketingController = require("../controllers/customer-marketing.c
 const reviewController = require("../controllers/review.controller");
 const { protect } = require("../middleware/auth");
 const { validateCsrfToken } = require("../middleware/csrf");
-const { generalLimiter } = require("../middleware/rateLimit");
 
 router
   .route("/profile")

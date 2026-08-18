@@ -1,15 +1,12 @@
-// codeql[js/missing-rate-limiting] SUPPRESSED: rate limiting is applied via tryCatchHandler-wrapped tenantLimiter/scannerLimiter/checkinLimiter middleware in all routes
-"use strict";
-
 const express = require("express");
-const router = express.Router();
+const { makeTenantLimiter, tenantLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
 const tryCatchHandler = require("../../../middleware/tryCatch");
 const { protect, requirePermission } = require("../../../middleware/auth");
 const { validateCsrfToken } = require("../../../middleware");
-const { makeTenantLimiter, tenantLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
 const { validateEventInput } = require("../middleware/validateEventInput");
 const { validateScannerApiKey } = require("../middleware/scannerAuth");
 const qrCodeController = require("../controllers/qrCode.controller");
+const router = express.Router();
 
 const checkinLimiter = makeTenantLimiter({
   windowMs: 1000,
@@ -22,6 +19,10 @@ const scannerLimiter = makeTenantLimiter({
   max: 5,
   message: { success: false, error: "RATE_LIMITED", message: "Scanner rate limit exceeded" },
 });
+
+router.use(tenantLimiter);
+router.use(scannerLimiter);
+router.use(checkinLimiter);
 
 router
   .route("/:eventId/qr-codes")

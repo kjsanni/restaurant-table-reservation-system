@@ -2,11 +2,12 @@
 "use strict";
 
 const express = require("express");
+const { tenantLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
 const router = express.Router();
+router.use(tenantLimiter);
 const tryCatchHandler = require("../../../middleware/tryCatch");
 const { protect, requirePermission } = require("../../../middleware/auth");
 const { logAction, validateCsrfToken } = require("../../../middleware");
-const { tenantLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
 const { validateEventInput } = require("../middleware/validateEventInput");
 const eventController = require("../controllers/event.controller");
 

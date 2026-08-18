@@ -1,10 +1,9 @@
 const express = require("express");
-const { adminActionLimiter } = require("../../middleware/rateLimit");
+const { adminActionLimiter, authLimiter } = require("../../middleware/rateLimit");
 const router = express.Router();
 router.use(adminActionLimiter);
 const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
-const { authLimiter } = require("../../middleware/rateLimit");
 const validateTurnstile = require("../../middleware/turnstile");
 const publicDsarController = require("../controllers/publicDsar.controller");
 

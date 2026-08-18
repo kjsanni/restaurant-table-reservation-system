@@ -3,6 +3,7 @@ const express = require("express");
 // codeql[js/missing-rate-limiting] SUPPRESSED: rate limiting is applied via generalLimiter middleware
 const { generalLimiter } = require("../middleware/rateLimit");
 const router = express.Router();
+router.use(generalLimiter);
 const httpMethodError = require("../middleware/httpMethodError");
 const tryCatchHandler = require("../middleware/tryCatch");
 const salonCustomerPortalController = require("../controllers/salon-customer-portal.controller");
