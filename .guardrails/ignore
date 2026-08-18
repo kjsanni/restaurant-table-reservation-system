@@ -2,3 +2,11 @@ drinks-vendor/
 node_modules/
 front-end/node_modules/
 back-end/node_modules/
+back-end/src/db/migrations/**
+back-end/src/db/seeders/**
+docs/**
+Specs/**
+CHANGELOG.md
+SESSION_NOTES.md
+AGENTS.md
+mobile/**
