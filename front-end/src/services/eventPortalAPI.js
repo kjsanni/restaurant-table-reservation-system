@@ -163,11 +163,15 @@ class EventPortalAPI {
   }
 
   approveRequest(eventId, requestId) {
-    return API.post(`/events/${eventId}/wallet-passes/requests/${requestId}/approve`);
+    return API.post(
+      `/events/${eventId}/wallet-passes/requests/${requestId}/approve`
+    );
   }
 
   rejectRequest(eventId, requestId) {
-    return API.post(`/events/${eventId}/wallet-passes/requests/${requestId}/reject`);
+    return API.post(
+      `/events/${eventId}/wallet-passes/requests/${requestId}/reject`
+    );
   }
 }
 
