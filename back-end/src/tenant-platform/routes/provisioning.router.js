@@ -1,6 +1,8 @@
 
 const express = require("express");
+const { adminActionLimiter } = require("../../middleware/rateLimit");
 const router = express.Router();
+router.use(adminActionLimiter);
 const tryCatchHandler = require("../../middleware/tryCatch");
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
 const provisioningController = require("../controllers/provisioning.controller");
