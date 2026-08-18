@@ -19,6 +19,8 @@ const legalRouter = require("../routes/legal.router");
 const publicRouter = require("../routes/public.router");
 const statusRouter = require("../routes/status.router");
 const docsRouter = require("../routes/docs.router");
+const openapiSpec = require("../middleware/openapi");
+const { versioningHeaders } = require("../middleware/deprecation");
 const { setCsrfCookie, generateCsrfToken, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
 const { requestMetrics, getStats } = require("../middleware/monitoring");
 const { requestLogger, logStream } = require("../middleware/requestLogger");
@@ -206,6 +208,22 @@ const createServer = () => {
     res.json({ success: true, token });
   });
 
+  app.use(tryCatchHandler(resolveTenant));
+  app.use(tryCatchHandler(requireActiveTenant));
+
+  app.use("/api/v1", generalLimiter, versioningHeaders, require("../routes"));
+  app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
+  app.use("/api/v1/auth", authLimiter, passwordResetRouter);
+  app.use("/api/v1/auth", authLimiter, emailVerificationRouter);
+  app.use("/api/v1/audit-logs", generalLimiter, auditLogRouter);
+  app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
+  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
+  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, walletPassAdminRouter);
+  app.use("/api/v1/public", publicRouter);
+  app.use("/api/v1/public/status", statusRouter);
+  app.use("/api/v1/docs", docsRouter);
+  loadModules(app);
+
   app.get("/api/v1/health", tryCatchHandler(async (req, res) => {
     const queueAlerts = await checkQueueDepths();
     const redisStatus = redisClient ? (getConnectionStatus() ? "connected" : "disconnected") : "not_configured";
@@ -217,19 +235,6 @@ const createServer = () => {
       queueAlerts: queueAlerts.length ? queueAlerts : undefined,
     });
   }));
-
-  app.use(tryCatchHandler(resolveTenant));
-  app.use(tryCatchHandler(requireActiveTenant));
-
-  app.use("/api/v1", generalLimiter, require("../routes"));
-app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
-  app.use("/api/v1/auth", authLimiter, passwordResetRouter);
-  app.use("/api/v1/auth", authLimiter, emailVerificationRouter);
-  app.use("/api/v1/audit-logs", generalLimiter, auditLogRouter);
-  app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
-  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
-  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, walletPassAdminRouter);
-  app.use("/api/v1/public", publicRouter);
   app.use("/api/v1/public/status", statusRouter);
   app.use("/api/v1/docs", docsRouter);
   loadModules(app);
@@ -252,6 +257,15 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
   app.use("/api/v1/webhooks/shaqexpress", logAction, webhookLimiter, shaqexpressRouter);
   app.use("/api/v1/sync", generalLimiter, logAction, syncLimiter, require("../routes/sync.router"));
   app.use("/api/v1/legal", generalLimiter, legalRouter);
+
+  app.use(versioningHeaders);
+
+  app.use("/api/v1/openapi.json", generalLimiter, (req, res) => {
+    const spec = openapiSpec.generate(app);
+    res.json(spec);
+  });
+  app.use("/api/v1/docs", openapiSpec.swaggerUi, openapiSpec.swaggerSetup);
+
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
   }
