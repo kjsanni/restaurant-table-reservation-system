@@ -10,6 +10,9 @@ const platformPaymentRoutes = require("../routes/platformPayment.router");
 const usageRoutes = require("../routes/usage.router");
 const meteringRoutes = require("../routes/metering.router");
 const changeManagementRoutes = require("../routes/change-management.router");
+const offboardingRoutes = require("../routes/offboarding.router");
+const platformAnalyticsRoutes = require("../routes/platform-analytics.router");
+const impersonationRoutes = require("../routes/impersonation.router");
 const revenueRoutes = require("../routes/revenue.router");
 const bulkActionRoutes = require("../routes/bulkAction.router");
 const noteRoutes = require("../routes/note.router");
@@ -40,7 +43,6 @@ const tenantSupportRoutes = require("../routes/tenantSupport.router");
 const financialManagementRoutes = require("../routes/financialManagement.router");
 const whistleblowerTipRoutes = require("../routes/whistleblowerTip.router");
 const integrationAnalyticsRoutes = require("../routes/integrationAnalytics.router");
-const impersonationRoutes = require("../routes/impersonation.router");
 const advancedAnalyticsRoutes = require("../routes/advancedAnalytics.router");
 const tenantCustomizationRoutes = require("../routes/tenant-customization.router");
 const dataResidencyRoutes = require("../routes/data-residency.router");
@@ -55,6 +57,7 @@ const subProcessorRoutes = require("../routes/subProcessor.router");
 const platformReportRoutes = require("../routes/platformReport.router");
 const alertRuleRoutes = require("../routes/alertRule.router");
 const reconciliationRoutes = require("../routes/reconciliation.router");
+const supportRoutingRoutes = require("../routes/support-routing.router");
 const paystackConfigRoutes = require("../routes/paystackConfig.router");
 const shaqExpressConversionRoutes = require("../routes/shaqExpressConversion.router");
 const marketplaceRoutes = require("../routes/marketplace.router");
@@ -119,6 +122,9 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/usage", router: usageRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/metering", router: meteringRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/change-management", router: changeManagementRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: offboardingRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/analytics", router: platformAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: impersonationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/revenue", router: revenueRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/bulk", router: bulkActionRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/billing-emails", router: billingEmailRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
@@ -126,6 +132,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/notifications", router: notificationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/support-tickets", router: supportTicketAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/support-tickets", router: supportTicketRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/support-tickets", router: supportRoutingRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/support-tickets/tenant", router: tenantSupportRoutes, middleware: [logAction, validateCsrfToken] },
     { path: "/api/v1/admin/totp", router: totpRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/sessions", router: sessionRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },

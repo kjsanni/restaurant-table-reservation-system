@@ -59,3 +59,36 @@ module.exports = {
   endImpersonationHandler,
   listImpersonationHandler,
 };
+
+const ImpersonationService = require("../services/impersonation.service");
+
+const startImpersonationByTenantHandler = async (req, res) => {
+  try {
+    const { tenantId, reason } = req.body;
+    const session = await ImpersonationService.createImpersonationSession({
+      superAdminId: req.user.id,
+      tenantId,
+      reason,
+    });
+    res.status(201).json({ success: true, data: session });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+const getActiveSessionsHandler = async (req, res) => {
+  try {
+    const sessions = await ImpersonationService.getActiveImpersonationSessions(req.params.tenantId);
+    res.status(200).json({ success: true, data: sessions });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+module.exports = {
+  startImpersonationHandler,
+  endImpersonationHandler,
+  listImpersonationHandler,
+  startImpersonationByTenantHandler,
+  getActiveSessionsHandler,
+};
