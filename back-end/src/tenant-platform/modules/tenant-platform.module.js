@@ -8,6 +8,7 @@ const tenantAdminRoutes = require("../routes/tenantAdmin.router");
 const planRoutes = require("../routes/plan.router");
 const platformPaymentRoutes = require("../routes/platformPayment.router");
 const usageRoutes = require("../routes/usage.router");
+const meteringRoutes = require("../routes/metering.router");
 const revenueRoutes = require("../routes/revenue.router");
 const bulkActionRoutes = require("../routes/bulkAction.router");
 const noteRoutes = require("../routes/note.router");
@@ -115,6 +116,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/plans", router: planRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/payments", router: platformPaymentRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/usage", router: usageRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/metering", router: meteringRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/revenue", router: revenueRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/bulk", router: bulkActionRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/billing-emails", router: billingEmailRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
