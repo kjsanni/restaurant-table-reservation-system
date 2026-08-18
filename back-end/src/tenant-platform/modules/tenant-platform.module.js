@@ -11,7 +11,6 @@ const usageRoutes = require("../routes/usage.router");
 const meteringRoutes = require("../routes/metering.router");
 const changeManagementRoutes = require("../routes/change-management.router");
 const offboardingRoutes = require("../routes/offboarding.router");
-const platformAnalyticsRoutes = require("../routes/platform-analytics.router");
 const impersonationRoutes = require("../routes/impersonation.router");
 const revenueRoutes = require("../routes/revenue.router");
 const bulkActionRoutes = require("../routes/bulkAction.router");
