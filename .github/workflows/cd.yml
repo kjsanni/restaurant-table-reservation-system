@@ -40,7 +40,7 @@ jobs:
           echo "frontend-image=$FRONTEND_IMAGE" >> $GITHUB_OUTPUT
           
           podman build -t $BACKEND_IMAGE -f back-end/Dockerfile .
-          podman build -t $FRONTEND_IMAGE -f front-end/Dockerfile front-end
+          podman build -t $FRONTEND_IMAGE -f front-end/Dockerfile .
         env:
           DOCKER_BUILDKIT: 1
       - name: Log in to GitHub Container Registry
