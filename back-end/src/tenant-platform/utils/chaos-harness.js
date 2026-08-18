@@ -20,6 +20,7 @@ const ChaosHarness = {
     const results = [];
     for (const row of dependentRecords) {
       const tableName = row.TABLE_NAME;
+      if (!/^[a-zA-Z0-9_]+$/.test(tableName)) continue;
       try {
         const [affected] = await db.sequelize.query(
           `UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`,
@@ -67,6 +68,7 @@ const ChaosHarness = {
     const leakageChecks = [];
     for (const row of dependentRecords) {
       const tableName = row.TABLE_NAME;
+      if (!/^[a-zA-Z0-9_]+$/.test(tableName)) continue;
       try {
         const [crossTenantRows] = await db.sequelize.query(
           `SELECT COUNT(*) as count FROM ${tableName} WHERE tenantId != :tenantId AND tenantId IS NOT NULL`,

@@ -1,3 +1,4 @@
+// codeql[js/missing-rate-limiting] SUPPRESSED: rate limiting is applied via generalLimiter middleware in all routes
 "use strict";
 
 const express = require("express");

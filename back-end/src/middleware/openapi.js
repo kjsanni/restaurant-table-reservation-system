@@ -80,16 +80,20 @@ const buildSpec = (app) => {
   };
 };
 
+const writeSpec = (app) => {
+  const spec = buildSpec(app);
+  fs.writeFileSync(SPEC_PATH, JSON.stringify(spec, null, 2));
+  return spec;
+};
+
+const readSpec = () => {
+  if (!fs.existsSync(SPEC_PATH)) return null;
+  return JSON.parse(fs.readFileSync(SPEC_PATH, "utf8"));
+};
+
 const specGenerator = {
-  generate: (app) => {
-    const spec = buildSpec(app);
-    fs.writeFileSync(SPEC_PATH, JSON.stringify(spec, null, 2));
-    return spec;
-  },
-  getSpec: () => {
-    if (!fs.existsSync(SPEC_PATH)) return null;
-    return JSON.parse(fs.readFileSync(SPEC_PATH, "utf8"));
-  },
+  generate: writeSpec,
+  getSpec: readSpec,
   swaggerUi: swaggerUi.serve,
   swaggerSetup: swaggerUi.setup(null, { spec: SPEC_PATH }),
 };

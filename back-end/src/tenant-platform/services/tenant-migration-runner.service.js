@@ -50,6 +50,9 @@ const TenantMigrationRunner = {
 
     try {
       const migrationPath = require("path").join(process.cwd(), "src", "db", "migrations", migrationName);
+      if (!/^\d{14}-[a-zA-Z0-9_-]+\.js$/.test(migrationName)) {
+        throw new Error(`Invalid migration name: ${migrationName}`);
+      }
       const migration = require(migrationPath);
       if (migration.up && typeof migration.up === "function") {
         await migration.up(db.sequelize.getQueryInterface(), db.sequelize.constructor);
@@ -96,6 +99,9 @@ const TenantMigrationRunner = {
 
     try {
       const migrationPath = require("path").join(process.cwd(), "src", "db", "migrations", migrationName);
+      if (!/^\d{14}-[a-zA-Z0-9_-]+\.js$/.test(migrationName)) {
+        throw new Error(`Invalid migration name: ${migrationName}`);
+      }
       const migration = require(migrationPath);
       if (migration.down && typeof migration.down === "function") {
         await migration.down(db.sequelize.getQueryInterface(), db.sequelize.constructor);
