@@ -14,27 +14,27 @@ const vuesticConfig = {
   config: {
     colors: {
       variables: {
-        primary: "#0f172a",
-        secondary: "#64748b",
-        success: "#16a34a",
-        info: "#0ea5e9",
-        danger: "#dc2626",
-        warning: "#f59e0b",
-        backgroundPrimary: "#f1f5f9",
-        backgroundSecondary: "#ffffff",
-        backgroundElement: "#f8fafc",
-        backgroundBorder: "#e2e8f0",
-        textPrimary: "#0f172a",
-        textInverted: "#fefdf8",
-        shadow: "rgba(15, 23, 42, 0.08)",
-        focus: "#0ea5e9",
+        primary: "var(--brand-700)",
+        secondary: "var(--neutral-600)",
+        success: "var(--earth-500)",
+        info: "var(--sky-500)",
+        danger: "var(--rose-500)",
+        warning: "var(--accent-500)",
+        backgroundPrimary: "var(--background)",
+        backgroundSecondary: "var(--surface)",
+        backgroundElement: "var(--surface)",
+        backgroundBorder: "var(--border)",
+        textPrimary: "var(--ink)",
+        textInverted: "var(--white)",
+        shadow: "rgba(26, 20, 16, 0.08)",
+        focus: "var(--accent-500)",
         transparent: "rgba(0, 0, 0, 0)",
-        white: "#ffffff",
+        white: "var(--white)",
       },
     },
     components: {
       all: {
-        borderRadius: { defaultValue: "8px" },
+        borderRadius: { defaultValue: "var(--radius-lg)" },
       },
       presets: {
         VaButton: {
@@ -73,6 +73,15 @@ async function bootstrap() {
 
 bootstrap();
 
+async function unregisterExistingServiceWorker() {
+  if ("serviceWorker" in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const registration of registrations) {
+      await registration.unregister();
+    }
+  }
+}
+
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
     const isSecure =
@@ -87,4 +96,8 @@ function registerServiceWorker() {
   }
 }
 
-registerServiceWorker();
+if (import.meta.env.DEV) {
+  unregisterExistingServiceWorker();
+} else {
+  registerServiceWorker();
+}

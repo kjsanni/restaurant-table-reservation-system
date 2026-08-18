@@ -339,6 +339,12 @@
   --vertical-accent-600: #9d174d;
 }
 
+[data-vertical="event"] {
+  --vertical-accent-500: #6366f1;
+  --vertical-accent-400: #818cf8;
+  --vertical-accent-600: #4f46e5;
+}
+
 .skip-link {
   position: absolute;
   width: 1px;
@@ -370,4 +376,15 @@
   font-weight: 600;
   text-decoration: none;
   box-shadow: var(--shadow-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -150,7 +150,7 @@ watch(
   () => authStore.currentTenant?.businessVertical,
   (vertical) => {
     if (typeof document !== "undefined") {
-      const allowed = ["restaurant", "salon"];
+      const allowed = ["restaurant", "salon", "event"];
       const safe = allowed.includes(vertical || "") ? vertical || "" : "";
       document.documentElement.setAttribute("data-vertical", safe);
     }
