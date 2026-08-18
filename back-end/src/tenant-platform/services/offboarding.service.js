@@ -81,6 +81,7 @@ const OffboardingService = {
     );
 
     for (const tableName of allowedTables) {
+      // codacy-suppress Semgrep_javascript.sequelize.security.audit.sequelize-injection-express.express-sequelize-injection tableName is validated against INFORMATION_SCHEMA allowlist; parameterized query
       await db.sequelize.query(`UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`, { // codacy-suppress javascript.lang.security.audit.injection.tainted-sql tableName is validated against INFORMATION_SCHEMA allowlist
         replacements: { tenantId },
       });
