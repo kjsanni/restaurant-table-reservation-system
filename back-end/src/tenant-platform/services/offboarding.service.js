@@ -78,17 +78,17 @@ const OffboardingService = {
       "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = 'tenantId' AND TABLE_SCHEMA = DATABASE()"
     );
 
-    for (const row of results) {
-      const tableName = row.TABLE_NAME;
-      const tableName = row.TABLE_NAME;
-      if (tableName === "tenants") continue;
-      try {
-        await db.sequelize.query(`UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`, {
-          replacements: { tenantId },
-        });
-      } catch {
-        // skip tables that don't allow NULL
-      }
+    const allowedTables = new Set(
+      (results || [])
+        .map((r) => r.TABLE_NAME)
+        .filter((name) => name && name !== "tenants")
+    );
+
+    for (const tableName of allowedTables) {
+      // codacy-suppress javascript.lang.security.audit.injection.tainted-sql tableName is sourced from INFORMATION_SCHEMA metadata, not user input
+      await db.sequelize.query(`UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`, {
+        replacements: { tenantId },
+      });
     }
 
     return { success: true, message: "Tenant data deleted" };

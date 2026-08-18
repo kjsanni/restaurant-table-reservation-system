@@ -12,17 +12,7 @@ const collectRoutes = (router, paths, tags, basePath = "") => {
       const fullPath = `${basePath}${route.path}`.replace(/\/+/g, "/");
       const pathItem = paths[fullPath] || {};
       methods.forEach((method) => {
-        const operation = {
-          tags: [`${basePath.split("/")[2] || "root"}`],
-          responses: {
-            "200": { description: "Success" },
-            "400": { description: "Bad Request" },
-            "401": { description: "Unauthorized" },
-            "403": { description: "Forbidden" },
-            "404": { description: "Not Found" },
-            "500": { description: "Server Error" },
-          },
-        };
+        const operation = buildOperation(basePath, method);
         tags.add(`${basePath.split("/")[2] || "root"}`);
         if (!pathItem[method]) pathItem[method] = operation;
       });
@@ -34,6 +24,18 @@ const collectRoutes = (router, paths, tags, basePath = "") => {
   });
 };
 
+const buildOperation = (basePath, method) => ({
+  tags: [`${basePath.split("/")[2] || "root"}`],
+  responses: {
+    "200": { description: "Success" },
+    "400": { description: "Bad Request" },
+    "401": { description: "Unauthorized" },
+    "403": { description: "Forbidden" },
+    "404": { description: "Not Found" },
+    "500": { description: "Server Error" },
+  },
+});
+
 const collectAppRoutes = (app, paths, tags) => {
   app._router.stack.forEach((layer) => {
     if (layer.route) {
@@ -43,17 +45,7 @@ const collectAppRoutes = (app, paths, tags) => {
       const fullPath = route.path.replace(/\/+/g, "/");
       const pathItem = paths[fullPath] || {};
       methods.forEach((method) => {
-        const operation = {
-          tags: ["root"],
-          responses: {
-            "200": { description: "Success" },
-            "400": { description: "Bad Request" },
-            "401": { description: "Unauthorized" },
-            "403": { description: "Forbidden" },
-            "404": { description: "Not Found" },
-            "500": { description: "Server Error" },
-          },
-        };
+        const operation = buildRootOperation();
         tags.add("root");
         if (!pathItem[method]) pathItem[method] = operation;
       });
@@ -64,6 +56,18 @@ const collectAppRoutes = (app, paths, tags) => {
     }
   });
 };
+
+const buildRootOperation = () => ({
+  tags: ["root"],
+  responses: {
+    "200": { description: "Success" },
+    "400": { description: "Bad Request" },
+    "401": { description: "Unauthorized" },
+    "403": { description: "Forbidden" },
+    "404": { description: "Not Found" },
+    "500": { description: "Server Error" },
+  },
+});
 
 const buildSpec = (app) => {
   const paths = {};

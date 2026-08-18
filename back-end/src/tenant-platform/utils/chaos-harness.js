@@ -34,6 +34,7 @@ const ChaosHarness = {
       const tableName = row.TABLE_NAME;
       if (!knownTables.has(tableName)) continue;
       try {
+        // codacy-suppress javascript.lang.security.audit.injection.tainted-sql tableName is validated against knownTables allowlist
         const [affected] = await db.sequelize.query(
           `UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`,
           { replacements: { tenantId } }
@@ -82,6 +83,7 @@ const ChaosHarness = {
       const tableName = row.TABLE_NAME;
       if (!knownTables.has(tableName)) continue;
       try {
+        // codacy-suppress javascript.lang.security.audit.injection.tainted-sql tableName is validated against knownTables allowlist
         const [crossTenantRows] = await db.sequelize.query(
           `SELECT COUNT(*) as count FROM ${tableName} WHERE tenantId != :tenantId AND tenantId IS NOT NULL`,
           { replacements: { tenantId } }
