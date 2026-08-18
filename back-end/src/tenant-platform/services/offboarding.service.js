@@ -74,7 +74,12 @@ const OffboardingService = {
       "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = 'tenantId' AND TABLE_SCHEMA = DATABASE()"
     );
 
-    for (const row of dependentTables) {
+    const [results] = await db.sequelize.query(
+      "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = 'tenantId' AND TABLE_SCHEMA = DATABASE()"
+    );
+
+    for (const row of results) {
+      const tableName = row.TABLE_NAME;
       const tableName = row.TABLE_NAME;
       if (tableName === "tenants") continue;
       try {
