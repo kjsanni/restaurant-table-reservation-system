@@ -2,17 +2,30 @@
 
 const db = require("../../db/models");
 const TenantMigrationStatus = db.tenantMigrationStatus;
-const { QueryTypes } = require("sequelize");
+const fs = require("fs");
+const path = require("path");
+
+const MIGRATIONS_DIR = path.join(__dirname, "..", "..", "db", "migrations");
+const migrationModules = {};
+if (fs.existsSync(MIGRATIONS_DIR)) {
+  fs.readdirSync(MIGRATIONS_DIR)
+    .filter((f) => f.endsWith(".js"))
+    .sort()
+    .forEach((file) => {
+      try {
+        migrationModules[file] = require(path.join(MIGRATIONS_DIR, file));
+      } catch {
+        migrationModules[file] = null;
+      }
+    });
+}
 
 const TenantMigrationRunner = {
   async getMigrationsForTenant(tenantId) {
     const [applied] = await db.sequelize.query("SELECT name FROM SequelizeMeta ORDER BY name ASC");
     const appliedNames = (applied || []).map((row) => row.name);
 
-    const fs = require("fs");
-    const path = require("path");
-    const migrationsDir = path.join(process.cwd(), "src", "db", "migrations");
-    const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith(".js")).sort();
+    const files = Object.keys(migrationModules);
 
     const statuses = await TenantMigrationStatus.findAll({ where: { tenantId } });
     const statusMap = {};
@@ -49,11 +62,10 @@ const TenantMigrationRunner = {
     await TenantMigrationStatus.update({ status: "running", startedAt: new Date() }, { where: { id: status.id } });
 
     try {
-      const migrationPath = require("path").join(process.cwd(), "src", "db", "migrations", migrationName);
-      if (!/^\d{14}-[a-zA-Z0-9_-]+\.js$/.test(migrationName)) {
-        throw new Error(`Invalid migration name: ${migrationName}`);
+      const migration = migrationModules[migrationName];
+      if (!migration) {
+        throw new Error(`Migration not found: ${migrationName}`);
       }
-      const migration = require(migrationPath);
       if (migration.up && typeof migration.up === "function") {
         await migration.up(db.sequelize.getQueryInterface(), db.sequelize.constructor);
       }
@@ -98,11 +110,10 @@ const TenantMigrationRunner = {
     }
 
     try {
-      const migrationPath = require("path").join(process.cwd(), "src", "db", "migrations", migrationName);
-      if (!/^\d{14}-[a-zA-Z0-9_-]+\.js$/.test(migrationName)) {
-        throw new Error(`Invalid migration name: ${migrationName}`);
+      const migration = migrationModules[migrationName];
+      if (!migration) {
+        throw new Error(`Migration not found: ${migrationName}`);
       }
-      const migration = require(migrationPath);
       if (migration.down && typeof migration.down === "function") {
         await migration.down(db.sequelize.getQueryInterface(), db.sequelize.constructor);
       }

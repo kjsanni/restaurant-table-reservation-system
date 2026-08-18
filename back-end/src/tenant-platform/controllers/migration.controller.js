@@ -1,5 +1,4 @@
 const db = require("../../db/models");
-const TenantMigrationStatus = db.tenantMigrationStatus;
 const TenantMigrationRunner = require("../services/tenant-migration-runner.service");
 
 const getMigrationStatusHandler = async (req, res) => {

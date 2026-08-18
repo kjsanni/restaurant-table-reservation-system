@@ -1,7 +1,5 @@
 const request = require("supertest");
 const createServer = require("../utils/server");
-const fs = require("fs");
-const path = require("path");
 
 describe("OpenAPI Contract Tests", () => {
   let app;

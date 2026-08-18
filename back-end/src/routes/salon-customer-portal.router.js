@@ -1,5 +1,7 @@
 "use strict";
 const express = require("express");
+// codeql[js/missing-rate-limiting] SUPPRESSED: rate limiting is applied via generalLimiter middleware
+const { generalLimiter } = require("../middleware/rateLimit");
 const router = express.Router();
 const httpMethodError = require("../middleware/httpMethodError");
 const tryCatchHandler = require("../middleware/tryCatch");
@@ -10,7 +12,7 @@ const { requireVertical } = require("../middleware/requireVertical");
 router
   .route("/profile")
   .get(
-    tryCatchHandler(protect),
+    tryCatchHandler(protect), tryCatchHandler(generalLimiter),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(salonCustomerPortalController.getSalonCustomerProfileHandler)
   )
@@ -19,7 +21,7 @@ router
 router
   .route("/appointments")
   .get(
-    tryCatchHandler(protect),
+    tryCatchHandler(protect), tryCatchHandler(generalLimiter),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("view_appointments")),
     tryCatchHandler(salonCustomerPortalController.getSalonCustomerAppointmentsHandler)
@@ -29,7 +31,7 @@ router
 router
   .route("/appointments/:appointmentId/cancel")
   .post(
-    tryCatchHandler(protect),
+    tryCatchHandler(protect), tryCatchHandler(generalLimiter),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("edit_appointments")),
     tryCatchHandler(salonCustomerPortalController.cancelSalonAppointmentHandler)
@@ -39,7 +41,7 @@ router
 router
   .route("/appointments/:appointmentId/rebook")
   .post(
-    tryCatchHandler(protect),
+    tryCatchHandler(protect), tryCatchHandler(generalLimiter),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("edit_appointments")),
     tryCatchHandler(salonCustomerPortalController.rebookSalonAppointmentHandler)
@@ -49,7 +51,7 @@ router
 router
   .route("/gift-cards")
   .get(
-    tryCatchHandler(protect),
+    tryCatchHandler(protect), tryCatchHandler(generalLimiter),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(salonCustomerPortalController.getCustomerGiftCardsHandler)
   )
@@ -58,7 +60,7 @@ router
 router
   .route("/referrals")
   .get(
-    tryCatchHandler(protect),
+    tryCatchHandler(protect), tryCatchHandler(generalLimiter),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(salonCustomerPortalController.getCustomerReferralsHandler)
   )
@@ -67,7 +69,7 @@ router
 router
   .route("/packages")
   .get(
-    tryCatchHandler(protect),
+    tryCatchHandler(protect), tryCatchHandler(generalLimiter),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(salonCustomerPortalController.listServicePackagesHandler)
   )
@@ -76,7 +78,7 @@ router
 router
   .route("/pricing-rules")
   .get(
-    tryCatchHandler(protect),
+    tryCatchHandler(protect), tryCatchHandler(generalLimiter),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(salonCustomerPortalController.listPricingRulesHandler)
   )

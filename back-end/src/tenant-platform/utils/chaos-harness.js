@@ -17,10 +17,22 @@ const ChaosHarness = {
       "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = 'tenantId' AND TABLE_SCHEMA = DATABASE()"
     );
 
+    const knownTables = new Set([
+      "reservations", "payments", "customers", "orders", "reviews", "waitlist",
+      "tables", "floorPlans", "menuItems", "promotions", "deliveries", "whatsappMessages",
+      "salon_appointments", "salon_stations", "salon_services", "salon_gift_cards",
+      "salon_referrals", "salon_locations", "salon_inventory", "salon_expenses",
+      "salon_pricing_rules", "salon_commissions", "salon_gallery", "salon_staff",
+      "salon_marketing_campaigns", "salon_recurring_appointments", "salon_client_segments",
+      "salon_inventory_transfers", "salon_staff_location_assignments",
+      "event_bookings", "event_guest_lists", "event_ticket_types", "event_qr_codes",
+      "event_web_passes", "event_wallet_pass_requests", "event_photos"
+    ]);
+
     const results = [];
     for (const row of dependentRecords) {
       const tableName = row.TABLE_NAME;
-      if (!/^[a-zA-Z0-9_]+$/.test(tableName)) continue;
+      if (!knownTables.has(tableName)) continue;
       try {
         const [affected] = await db.sequelize.query(
           `UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`,
@@ -68,7 +80,7 @@ const ChaosHarness = {
     const leakageChecks = [];
     for (const row of dependentRecords) {
       const tableName = row.TABLE_NAME;
-      if (!/^[a-zA-Z0-9_]+$/.test(tableName)) continue;
+      if (!knownTables.has(tableName)) continue;
       try {
         const [crossTenantRows] = await db.sequelize.query(
           `SELECT COUNT(*) as count FROM ${tableName} WHERE tenantId != :tenantId AND tenantId IS NOT NULL`,
