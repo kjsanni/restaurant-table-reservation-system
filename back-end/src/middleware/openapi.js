@@ -36,24 +36,28 @@ const buildOperation = (basePath, method) => ({
   },
 });
 
+const processAppLayer = (layer, paths, tags) => {
+  if (layer.route) {
+    const route = layer.route;
+    const methods = Object.keys(route.methods).filter((m) => route.methods[m]).map((m) => m.toLowerCase());
+    if (!methods.length) return;
+    const fullPath = route.path.replace(/\/+/g, "/");
+    const pathItem = paths[fullPath] || {};
+    methods.forEach((method) => {
+      const operation = buildRootOperation();
+      tags.add("root");
+      if (!pathItem[method]) pathItem[method] = operation;
+    });
+    paths[fullPath] = pathItem;
+  } else if (layer.name === "router" && layer.handle && layer.handle.stack) {
+    const routerBase = layer.regexp ? layer.regexp.toString().replace(/\\\//g, "/").replace(/[\\^$.*+?()[\]{}|]/g, "").replace(/\?/g, "") : "";
+    collectRoutes(layer.handle, paths, tags, routerBase);
+  }
+};
+
 const collectAppRoutes = (app, paths, tags) => {
   app._router.stack.forEach((layer) => {
-    if (layer.route) {
-      const route = layer.route;
-      const methods = Object.keys(route.methods).filter((m) => route.methods[m]).map((m) => m.toLowerCase());
-      if (!methods.length) return;
-      const fullPath = route.path.replace(/\/+/g, "/");
-      const pathItem = paths[fullPath] || {};
-      methods.forEach((method) => {
-        const operation = buildRootOperation();
-        tags.add("root");
-        if (!pathItem[method]) pathItem[method] = operation;
-      });
-      paths[fullPath] = pathItem;
-    } else if (layer.name === "router" && layer.handle && layer.handle.stack) {
-      const routerBase = layer.regexp ? layer.regexp.toString().replace(/\\\//g, "/").replace(/[\\^$.*+?()[\]{}|]/g, "").replace(/\?/g, "") : "";
-      collectRoutes(layer.handle, paths, tags, routerBase);
-    }
+    processAppLayer(layer, paths, tags);
   });
 };
 

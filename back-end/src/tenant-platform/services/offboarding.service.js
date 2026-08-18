@@ -85,8 +85,7 @@ const OffboardingService = {
     );
 
     for (const tableName of allowedTables) {
-      // codacy-suppress javascript.lang.security.audit.injection.tainted-sql tableName is sourced from INFORMATION_SCHEMA metadata, not user input
-      await db.sequelize.query(`UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`, {
+      await db.sequelize.query(`UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`, { // codacy-suppress javascript.lang.security.audit.injection.tainted-sql tableName is validated against INFORMATION_SCHEMA allowlist
         replacements: { tenantId },
       });
     }
