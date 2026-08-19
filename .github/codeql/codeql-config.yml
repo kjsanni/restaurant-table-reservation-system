@@ -31,3 +31,4 @@ paths-ignore:
 
 # trigger codacy refresh
 # trigger codeql refresh
+# trigger codeql refresh after PR reopen
