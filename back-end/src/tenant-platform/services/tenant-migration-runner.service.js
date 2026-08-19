@@ -13,7 +13,7 @@ if (fs.existsSync(MIGRATIONS_DIR)) { // nosemgrep: javascript_pathtraversal_rule
     .sort()
     .forEach((file) => {
       try {
-        migrationModules[file] = require(path.join(MIGRATIONS_DIR, file)); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal, javascript_require_rule-non-literal-require, javascript.lang.security.audit.injection.dynamic-load - file is from readdirSync of a fixed directory
+        migrationModules[file] = require(path.join(MIGRATIONS_DIR, file)); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal, javascript_require_rule-non-literal-require, javascript.lang.security.audit.injection.dynamic-load - file is from readdirSync of a fixed directory // codacy-suppress Semgrep_javascript.lang.security.audit.detect-non-literal-require.detect-non-literal-require - file is from readdirSync of a fixed directory
       } catch {
         migrationModules[file] = null;
       }

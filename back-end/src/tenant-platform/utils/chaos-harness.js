@@ -34,7 +34,7 @@ const ChaosHarness = {
       const tableName = row.TABLE_NAME;
       if (!knownTables.has(tableName)) continue;
       try {
-        const [affected] = await db.sequelize.query( // nosemgrep: tainted-sql-string - tableName validated against knownTables allowlist; query uses :tenantId parameter // guardrails-disable-line - tableName validated against knownTables allowlist; query uses :tenantId parameter
+        const [affected] = await db.sequelize.query( // nosemgrep: tainted-sql-string - tableName validated against knownTables allowlist; query uses :tenantId parameter // guardrails-disable-line - tableName validated against knownTables allowlist; query uses :tenantId parameter // codacy-suppress sequelize-injection - tableName validated against knownTables allowlist; parameterized query
           `UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`,
           { replacements: { tenantId } }
         );
@@ -82,7 +82,7 @@ const ChaosHarness = {
       const tableName = row.TABLE_NAME;
       if (!knownTables.has(tableName)) continue;
       try {
-        const [crossTenantRows] = await db.sequelize.query( // nosemgrep: tainted-sql-string - tableName validated against knownTables allowlist; query uses :tenantId parameter // guardrails-disable-line - tableName validated against knownTables allowlist; query uses :tenantId parameter
+        const [crossTenantRows] = await db.sequelize.query( // nosemgrep: tainted-sql-string - tableName validated against knownTables allowlist; query uses :tenantId parameter // guardrails-disable-line - tableName validated against knownTables allowlist; query uses :tenantId parameter // codacy-suppress sequelize-injection - tableName validated against knownTables allowlist; parameterized query
           `SELECT COUNT(*) as count FROM ${tableName} WHERE tenantId != :tenantId AND tenantId IS NOT NULL`,
           { replacements: { tenantId } }
         );
