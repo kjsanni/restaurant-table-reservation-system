@@ -5,7 +5,7 @@ const legalAcceptanceDAO = {};
 legalAcceptanceDAO.list = (filters = {}) => {
   const where = {};
   if (filters.tenantId) where.tenantId = filters.tenantId;
-  if (filters.customerId) where.customerId = filters.customerId;
+  if (filters.customerId !== undefined && filters.customerId !== null) where.customerId = filters.customerId;
   if (filters.accepted !== undefined) where.accepted = filters.accepted;
   if (filters.slug) where.slug = filters.slug;
 
