@@ -1,4 +1,3 @@
-import { ref, onMounted } from "vue";
 import gsap from "gsap";
 
 const isReducedMotion = () =>
