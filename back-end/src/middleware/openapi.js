@@ -36,7 +36,6 @@ const buildOperation = (basePath, method) => ({
   },
 });
 
-// codacy-suppress metric Legacy OpenAPI router helper; complexity is acceptable for route aggregation
 const processAppLayer = (layer, paths, tags) => {
   if (layer.route) {
     const route = layer.route;

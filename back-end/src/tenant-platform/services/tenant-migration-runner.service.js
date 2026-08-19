@@ -5,29 +5,15 @@ const TenantMigrationStatus = db.tenantMigrationStatus;
 const fs = require("fs");
 const path = require("path");
 
-const MIGRATIONS_DIR = path.join(__dirname, "..", "..", "db", "migrations");
+const MIGRATIONS_DIR = path.join(__dirname, "..", "..", "db", "migrations"); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - static __dirname path
 const migrationModules = {};
-// codacy-suppress javascript.lang.security.audit.injection.tainted-sql MIGRATIONS_DIR is a compile-time constant
-// codacy-suppress javascript.lang.security.audit.injection.path-traversal MIGRATIONS_DIR is a compile-time constant
-// codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-generic-path-traversal MIGRATIONS_DIR is a compile-time constant; file is from readdirSync of a fixed directory
-// codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-join-resolve-path-traversal MIGRATIONS_DIR is a compile-time constant; file is from readdirSync of a fixed directory
-// codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-generic-path-traversal MIGRATIONS_DIR is a compile-time constant; file is from readdirSync of a fixed directory
-// codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-join-resolve-path-traversal MIGRATIONS_DIR is a compile-time constant; file is from readdirSync of a fixed directory
-// codacy-suppress Semgrep_javascript_require_rule-non-literal-require MIGRATIONS_DIR is a compile-time constant; file is from readdirSync of a fixed directory
-// codacy-suppress Semgrep_javascript_require_rule-non-literal-require MIGRATIONS_DIR is a compile-time constant; file is from readdirSync of a fixed directory
-if (fs.existsSync(MIGRATIONS_DIR)) { // codacy-suppress javascript.lang.security.audit.injection.path-traversal MIGRATIONS_DIR is a compile-time constant
-  // codacy-suppress javascript.lang.security.audit.injection.tainted-sql MIGRATIONS_DIR is a compile-time constant
-  fs.readdirSync(MIGRATIONS_DIR) // codacy-suppress javascript.lang.security.audit.injection.path-traversal MIGRATIONS_DIR is a compile-time constant
-    // codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-generic-path-traversal MIGRATIONS_DIR is a compile-time constant; file is from readdirSync of a fixed directory
-    // codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-join-resolve-path-traversal MIGRATIONS_DIR is a compile-time constant; file is from readdirSync of a fixed directory
-    // codacy-suppress Semgrep_javascript_require_rule-non-literal-require MIGRATIONS_DIR is a compile-time constant; file is from readdirSync of a fixed directory
+if (fs.existsSync(MIGRATIONS_DIR)) { // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - MIGRATIONS_DIR derived from __dirname
+  fs.readdirSync(MIGRATIONS_DIR) // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - MIGRATIONS_DIR derived from __dirname
     .filter((f) => f.endsWith(".js"))
     .sort()
     .forEach((file) => {
       try {
-        // codacy-suppress javascript.lang.security.audit.injection.tainted-sql file is from readdirSync of a fixed directory
-        // codacy-suppress javascript.lang.security.audit.injection.dynamic-load file is from readdirSync of a fixed directory
-        migrationModules[file] = require(path.join(MIGRATIONS_DIR, file)); // codacy-suppress javascript.lang.security.audit.injection.path-traversal MIGRATIONS_DIR is a compile-time constant // codacy-suppress javascript.lang.security.audit.injection.dynamic-load MIGRATIONS_DIR is a compile-time constant
+        migrationModules[file] = require(path.join(MIGRATIONS_DIR, file)); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal, javascript_require_rule-non-literal-require, javascript.lang.security.audit.injection.dynamic-load - file is from readdirSync of a fixed directory
       } catch {
         migrationModules[file] = null;
       }

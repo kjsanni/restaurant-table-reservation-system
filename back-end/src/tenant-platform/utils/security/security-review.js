@@ -16,31 +16,15 @@ const SecurityReview = {
     ];
 
     const walkDir = (dir) => {
-      // codacy-suppress javascript.lang.security.audit.injection.path-traversal dir is from filesystem enumeration of a fixed source tree
-      // codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-generic-path-traversal Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-      // codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-join-resolve-path-traversal Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-      // codacy-suppress Semgrep_javascript_pathtraversal_rule-non-literal-fs-filename Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-      // codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-generic-path-traversal Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-      // codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-generic-path-traversal Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-      // codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-join-resolve-path-traversal Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-      // codacy-suppress Semgrep_javascript_pathtraversal_rule-non-literal-fs-filename Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-      // codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-join-resolve-path-traversal Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-      // codacy-suppress Semgrep_javascript_pathtraversal_rule-non-literal-fs-filename Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-      const files = fs.readdirSync(dir); // codacy-suppress javascript.lang.security.audit.injection.path-traversal readdirSync of a fixed source tree
+      const files = fs.readdirSync(dir); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - intentionally walks fixed source tree from process.cwd()
       for (const file of files) {
-        // codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-generic-path-traversal Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-        // codacy-suppress Semgrep_rules_lgpl_javascript_traversal_rule-join-resolve-path-traversal Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-        // codacy-suppress Semgrep_javascript_pathtraversal_rule-non-literal-fs-filename Security scanner intentionally walks fixed source tree; paths are from readdirSync, not attacker input
-        // codacy-suppress javascript.lang.security.audit.injection.path-traversal filePath is built from readdirSync of a fixed source tree
-        const filePath = path.join(dir, file); // codacy-suppress javascript.lang.security.audit.injection.path-traversal path.join from readdirSync of fixed source tree
-        const stat = fs.statSync(filePath); // codacy-suppress javascript.lang.security.audit.injection.path-traversal statSync of path from readdirSync
+        const filePath = path.join(dir, file); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - filePath from readdirSync of fixed source tree
+        const stat = fs.statSync(filePath); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - statSync of path from readdirSync
         if (stat.isDirectory() && !filePath.includes("node_modules") && !filePath.includes("__tests__")) {
           walkDir(filePath);
         } else if (file.endsWith(".js") || file.endsWith(".ts") || file.endsWith(".json")) {
           try {
-            // codacy-suppress javascript.lang.security.audit.injection.path-traversal filePath is from filesystem enumeration
-            // codacy-suppress javascript.lang.security.audit.injection.race-condition filePath is from readdirSync of a fixed source tree, not attacker-controlled input
-            const content = fs.readFileSync(filePath, "utf8"); // codacy-suppress javascript.lang.security.audit.injection.path-traversal readFileSync of path from readdirSync
+            const content = fs.readFileSync(filePath, "utf8"); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - readFileSync of path from readdirSync
             for (const { pattern, severity, description } of secretPatterns) {
               if (pattern.test(content)) {
                 issues.push({ file: filePath.replace(process.cwd() + "/", ""), severity, description });
@@ -62,19 +46,15 @@ const SecurityReview = {
     const issues = [];
 
     const walkDir = (dir) => {
-      // codacy-suppress javascript.lang.security.audit.injection.path-traversal dir is from filesystem enumeration of a fixed source tree
-      const files = fs.readdirSync(dir); // codacy-suppress javascript.lang.security.audit.injection.path-traversal readdirSync of a fixed source tree
+      const files = fs.readdirSync(dir); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - intentionally walks fixed source tree from process.cwd()
       for (const file of files) {
-        // codacy-suppress javascript.lang.security.audit.injection.path-traversal filePath is built from readdirSync of a fixed source tree
-        const filePath = path.join(dir, file); // codacy-suppress javascript.lang.security.audit.injection.path-traversal path.join from readdirSync of fixed source tree
-        const stat = fs.statSync(filePath); // codacy-suppress javascript.lang.security.audit.injection.path-traversal statSync of path from readdirSync
+        const filePath = path.join(dir, file); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - path.join from readdirSync of fixed source tree
+        const stat = fs.statSync(filePath); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - statSync of path from readdirSync
         if (stat.isDirectory() && !filePath.includes("node_modules") && !filePath.includes("__tests__")) {
           walkDir(filePath);
         } else if (file.endsWith(".js")) {
           try {
-            // codacy-suppress javascript.lang.security.audit.injection.path-traversal filePath is from filesystem enumeration
-            // codacy-suppress javascript.lang.security.audit.injection.race-condition filePath is from readdirSync of a fixed source tree, not attacker-controlled input
-            const content = fs.readFileSync(filePath, "utf8"); // codacy-suppress javascript.lang.security.audit.injection.path-traversal readFileSync of path from readdirSync
+            const content = fs.readFileSync(filePath, "utf8"); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - readFileSync of path from readdirSync
             if (content.includes(" sequelize.query(") && !content.includes("replacements:") && !content.includes("Op.")) {
               issues.push({ file: filePath.replace(process.cwd() + "/", ""), severity: "high", description: "Potential SQL injection: raw query without parameters" });
             }
@@ -94,19 +74,15 @@ const SecurityReview = {
     const issues = [];
 
     const walkDir = (dir) => {
-      // codacy-suppress javascript.lang.security.audit.injection.path-traversal dir is from filesystem enumeration of a fixed source tree
-      const files = fs.readdirSync(dir); // codacy-suppress javascript.lang.security.audit.injection.path-traversal readdirSync of a fixed source tree
+      const files = fs.readdirSync(dir); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - intentionally walks fixed source tree from process.cwd()
       for (const file of files) {
-        // codacy-suppress javascript.lang.security.audit.injection.path-traversal filePath is built from readdirSync of a fixed source tree
-        const filePath = path.join(dir, file); // codacy-suppress javascript.lang.security.audit.injection.path-traversal path.join from readdirSync of fixed source tree
-        const stat = fs.statSync(filePath); // codacy-suppress javascript.lang.security.audit.injection.path-traversal statSync of path from readdirSync
+        const filePath = path.join(dir, file); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - path.join from readdirSync of fixed source tree
+        const stat = fs.statSync(filePath); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - statSync of path from readdirSync
         if (stat.isDirectory() && !filePath.includes("node_modules") && !filePath.includes("__tests__")) {
           walkDir(filePath);
         } else if (file.endsWith(".router.js")) {
           try {
-            // codacy-suppress javascript.lang.security.audit.injection.path-traversal filePath is from filesystem enumeration
-            // codacy-suppress javascript.lang.security.audit.injection.race-condition filePath is from readdirSync of a fixed source tree, not attacker-controlled input
-            const content = fs.readFileSync(filePath, "utf8"); // codacy-suppress javascript.lang.security.audit.injection.path-traversal readFileSync of path from readdirSync
+            const content = fs.readFileSync(filePath, "utf8"); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - readFileSync of path from readdirSync
             if (content.includes("router.route(") && !content.includes("protect") && !content.includes("requireSuperAdmin")) {
               issues.push({ file: filePath.replace(process.cwd() + "/", ""), severity: "medium", description: "Router may lack authentication middleware" });
             }
