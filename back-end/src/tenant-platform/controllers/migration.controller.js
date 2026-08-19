@@ -8,9 +8,7 @@ const getMigrationStatusHandler = async (req, res) => {
     const appliedNames = (applied || []).map((row) => row.name);
 
     const fs = require("fs");
-    const path = require("path");
-    const migrationsDir = path.join(process.cwd(), "src", "db", "migrations");
-    const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith(".js")).sort(); // codacy-suppress Semgrep_javascript_pathtraversal_rule-non-literal-fs-filename - migrationsDir is derived from process.cwd() and hardcoded paths, not user input
+    const files = fs.readdirSync("src/db/migrations").filter((f) => f.endsWith(".js")).sort();
 
     if (tenantId) {
       const migrations = await TenantMigrationRunner.getMigrationsForTenant(tenantId);
