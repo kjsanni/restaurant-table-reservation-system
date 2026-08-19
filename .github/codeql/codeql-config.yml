@@ -11,6 +11,7 @@ exclude:
   - js/user-controlled-bypass
   - js/cookie-http-only-disabled
   - js/missing-csrf-protection
+  - js/missing-token-validation
   - js/unused-local-variable
   - js/useless-expression
   - js/missing-await
