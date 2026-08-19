@@ -19,7 +19,7 @@ const limit = 300 * 1024;
 
 for (const file of jsFiles) {
   const filePath = path.join(assetsDir, file); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - assetsDir from static import.meta.url; file from readdirSync of fixed directory
-  const buffer = fs.readFileSync(filePath);
+  const buffer = fs.readFileSync(filePath); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - filePath derived from assetsDir (static import.meta.url) and readdirSync of fixed directory
   const gzipped = zlib.gzipSync(buffer);
   const size = gzipped.length;
 

@@ -36,43 +36,9 @@ const buildOperation = (basePath, method) => ({
   },
 });
 
-// codacy-suppress metric Legacy OpenAPI router helper; complexity is acceptable for route aggregation
-const processAppLayer = (layer, paths, tags) => {
-  if (layer.route) {
-    const route = layer.route;
-    const methods = Object.keys(route.methods).filter((m) => route.methods[m]).map((m) => m.toLowerCase());
-    if (!methods.length) return;
-    const fullPath = route.path.replace(/\/+/g, "/");
-    const pathItem = paths[fullPath] || {};
-    methods.forEach((method) => {
-      const operation = buildRootOperation();
-      tags.add("root");
-      if (!pathItem[method]) pathItem[method] = operation;
-    });
-    paths[fullPath] = pathItem;
-  } else if (layer.name === "router" && layer.handle && layer.handle.stack) {
-    const routerBase = layer.regexp ? layer.regexp.toString().replace(/\\\//g, "/").replace(/[\\^$.*+?()[\]{}|]/g, "").replace(/\?/g, "") : "";
-    collectRoutes(layer.handle, paths, tags, routerBase);
-  }
-};
-
 const collectAppRoutes = (app, paths, tags) => {
-  app._router.stack.forEach((layer) => {
-    processAppLayer(layer, paths, tags);
-  });
+  collectRoutes(app._router, paths, tags, "");
 };
-
-const buildRootOperation = () => ({
-  tags: ["root"],
-  responses: {
-    "200": { description: "Success" },
-    "400": { description: "Bad Request" },
-    "401": { description: "Unauthorized" },
-    "403": { description: "Forbidden" },
-    "404": { description: "Not Found" },
-    "500": { description: "Server Error" },
-  },
-});
 
 const buildSpec = (app) => {
   const paths = {};
