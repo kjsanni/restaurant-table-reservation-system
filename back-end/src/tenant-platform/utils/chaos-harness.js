@@ -35,7 +35,7 @@ const ChaosHarness = {
       if (!knownTables.has(tableName)) continue;
       try {
         const [affected] = await db.sequelize.query(["UPDATE", tableName, "SET tenantId = NULL WHERE tenantId = :tenantId"].join(" "), {
-          { replacements: { tenantId } }
+          replacements: { tenantId } }
         );
         results.push({ table: tableName, affected: affected.affectedRows || 0 });
       } catch (err) {
@@ -82,7 +82,7 @@ const ChaosHarness = {
       if (!knownTables.has(tableName)) continue;
       try {
         const [crossTenantRows] = await db.sequelize.query(["SELECT COUNT(*) as count FROM", tableName, "WHERE tenantId != :tenantId AND tenantId IS NOT NULL"].join(" "), {
-          { replacements: { tenantId } }
+          replacements: { tenantId } }
         );
         leakageChecks.push({
           table: tableName,
