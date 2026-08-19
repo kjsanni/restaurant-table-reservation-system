@@ -28,3 +28,4 @@ paths-ignore:
   - 'front-end/test-results/**'
 # force fresh CodeQL analysis
 # trigger codeql refresh
+
