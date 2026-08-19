@@ -27,3 +27,4 @@ paths-ignore:
   - 'front-end/playwright-report/**'
   - 'front-end/test-results/**'
 # force fresh CodeQL analysis
+# trigger codeql refresh
