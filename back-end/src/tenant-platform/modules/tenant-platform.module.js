@@ -3,8 +3,10 @@
 const { adminMiddleware } = require("../../middleware/adminMiddleware");
 const { logAction, validateCsrfToken } = require("../../middleware");
 const { webhookLimiter, adminActionLimiter } = require("../../middleware/rateLimit");
+const { tenantLimiter } = require("../middleware/tenantRateLimit");
 
 const tenantAdminRoutes = require("../routes/tenantAdmin.router");
+const tenantSelfServiceRoutes = require("../routes/tenantSelfService.router");
 const planRoutes = require("../routes/plan.router");
 const platformPaymentRoutes = require("../routes/platformPayment.router");
 const usageRoutes = require("../routes/usage.router");
@@ -35,7 +37,7 @@ const backupRoutes = require("../routes/backup.router");
 const deploymentRoutes = require("../routes/deployment.router");
 const securityRoutes = require("../routes/security.router");
 const complianceRoutes = require("../routes/compliance.router");
-// const supportChatRoutes = require("../routes/supportChat.router");
+const supportChatRoutes = require("../routes/supportChat.router");
 const supportTemplateRoutes = require("../routes/supportTemplate.router");
 const featureFlagRoutes = require("../routes/featureFlag.router");
 const tenantSupportRoutes = require("../routes/tenantSupport.router");
@@ -66,6 +68,7 @@ const crossTenantSearchRoutes = require("../routes/crossTenantSearch.router");
 const penetrationTestReportRoutes = require("../routes/penetrationTestReport.router");
 const insuranceDocumentRoutes = require("../routes/insuranceDocument.router");
 const tenantMigrationRoutes = require("../routes/tenantMigration.router");
+const tenantEncryptionKeyRoutes = require("../routes/tenantEncryptionKey.router");
 const encryptionKeyRoutes = require("../routes/encryptionKey.router");
 const autoScalingTriggerRoutes = require("../routes/autoScalingTrigger.router");
 const complianceEvidenceRoutes = require("../routes/complianceEvidence.router");
@@ -112,6 +115,8 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/tenants", router: dsarRequestRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/tenants", router: noteRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/tenants", router: tenantAdminRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/tenant", router: tenantSelfServiceRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/tenant/encryption-keys", router: tenantEncryptionKeyRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
     { path: "/api/v1/admin/tenants", router: tenantMigrationRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/tenants", router: provisioningRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/tenants", router: tenantCustomizationRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
@@ -127,9 +132,9 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/billing-emails", router: billingEmailRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/audit", router: platformAuditRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/notifications", router: notificationRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
-    { path: "/api/v1/admin/support-tickets", router: supportTicketAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/support-tickets/analytics", router: supportTicketAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/support-tickets", router: supportTicketRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
-    { path: "/api/v1/admin/support-tickets", router: supportRoutingRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/support-tickets/routing", router: supportRoutingRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/support-tickets/tenant", router: tenantSupportRoutes, middleware: [logAction, validateCsrfToken] },
     { path: "/api/v1/admin/totp", router: totpRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/sessions", router: sessionRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
@@ -139,7 +144,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/deployment", router: deploymentRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/security", router: securityRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/compliance", router: complianceRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
-    // { path: "/api/v1/admin/support-chat", router: supportChatRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/support-chat", router: supportChatRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/support-notes", router: supportNoteRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/support-attachments", router: supportAttachmentRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/compliance-rules", router: complianceRuleRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },

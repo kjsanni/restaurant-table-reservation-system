@@ -21,6 +21,7 @@ const successOrderId = ref<number | null>(null);
 const discountCode = ref("");
 const discountApplied = ref<any>(null);
 const discountError = ref("");
+const depositConsent = ref(false);
 
 const guestName = ref("");
 const guestPhone = ref("");
@@ -121,6 +122,13 @@ const submitOrder = async () => {
   if (!customerId) {
     errorMsg.value =
       "Unable to place order. Please log in or continue as guest.";
+    submitting.value = false;
+    return;
+  }
+
+  if (!depositConsent.value) {
+    errorMsg.value =
+      "Please acknowledge the deposit and cancellation policy before placing your order.";
     submitting.value = false;
     return;
   }
@@ -327,6 +335,16 @@ const submitOrder = async () => {
                 placeholder="Any allergies or special requests..."
               />
             </div>
+
+            <label class="checkout-consent">
+              <input type="checkbox" v-model="depositConsent" />
+              <span>
+                I understand and agree to the
+                <a href="/legal/payment-refund" target="_blank"
+                  >deposit and cancellation policy</a
+                >.
+              </span>
+            </label>
 
             <button
               class="btn-place"

@@ -1,89 +1,63 @@
+import { ref, onMounted } from "vue";
 import gsap from "gsap";
-import { motionTokens } from "@/theme/colors";
 
-export type MotionEasing = keyof typeof motionTokens.easing;
-export type MotionDuration = keyof typeof motionTokens.duration;
-
-export interface TransitionConfig {
-  duration?: MotionDuration;
-  easing?: MotionEasing;
-}
-
-const getDuration = (key: MotionDuration = "base") =>
-  motionTokens.duration[key];
-const getEasing = (key: MotionEasing = "easeOut") => motionTokens.easing[key];
+const isReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export const useAnimations = () => {
-  const fadeIn = (el: gsap.TweenTarget, config: TransitionConfig = {}) => {
-    return gsap.fromTo(
+  const enter = (el, done) => {
+    if (isReducedMotion()) {
+      done();
+      return;
+    }
+    gsap.fromTo(
       el,
-      { opacity: 0, y: 8 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: getDuration(config.duration),
-        ease: getEasing(config.easing),
-      }
+      { opacity: 0, y: 12 },
+      { opacity: 1, y: 0, duration: 0.28, ease: "power2.out", onComplete: done }
     );
   };
 
-  const fadeOut = (el: gsap.TweenTarget, config: TransitionConfig = {}) => {
-    return gsap.to(el, {
+  const leave = (el, done) => {
+    if (isReducedMotion()) {
+      done();
+      return;
+    }
+    gsap.to(el, {
       opacity: 0,
       y: -8,
-      duration: getDuration(config.duration),
-      ease: getEasing(config.easing),
+      duration: 0.2,
+      ease: "power2.in",
+      onComplete: done,
     });
   };
 
-  const slideIn = (el: gsap.TweenTarget, config: TransitionConfig = {}) => {
-    return gsap.fromTo(
-      el,
-      { opacity: 0, x: 24 },
-      {
-        opacity: 1,
-        x: 0,
-        duration: getDuration(config.duration),
-        ease: getEasing(config.easing),
-      }
+  const fadeIn = (target, duration = 0.3) => {
+    if (isReducedMotion()) return;
+    gsap.to(target, { opacity: 1, duration, ease: "power2.out" });
+  };
+
+  const slideIn = (target, direction = "up", distance = 16, duration = 0.3) => {
+    if (isReducedMotion()) return;
+    const y =
+      direction === "up" ? distance : direction === "down" ? -distance : 0;
+    const x =
+      direction === "left" ? distance : direction === "right" ? -distance : 0;
+    gsap.fromTo(
+      target,
+      { opacity: 0, y, x },
+      { opacity: 1, x: 0, y: 0, duration, ease: "power2.out" }
     );
   };
 
-  const scaleIn = (el: gsap.TweenTarget, config: TransitionConfig = {}) => {
-    return gsap.fromTo(
-      el,
-      { opacity: 0, scale: 0.96 },
-      {
-        opacity: 1,
-        scale: 1,
-        duration: getDuration(config.duration),
-        ease: getEasing(config.easing),
-      }
+  const staggerList = (selector, stagger = 0.06) => {
+    if (isReducedMotion()) return;
+    gsap.fromTo(
+      selector,
+      { opacity: 0, y: 10 },
+      { opacity: 1, y: 0, duration: 0.25, stagger, ease: "power2.out" }
     );
   };
 
-  const hoverLift = (el: gsap.TweenTarget) => {
-    gsap.to(el, {
-      y: -2,
-      duration: getDuration("fast"),
-      ease: getEasing("easeOut"),
-    });
-  };
-
-  const hoverReset = (el: gsap.TweenTarget) => {
-    gsap.to(el, {
-      y: 0,
-      duration: getDuration("fast"),
-      ease: getEasing("easeOut"),
-    });
-  };
-
-  return {
-    fadeIn,
-    fadeOut,
-    slideIn,
-    scaleIn,
-    hoverLift,
-    hoverReset,
-  };
+  return { enter, leave, fadeIn, slideIn, staggerList };
 };

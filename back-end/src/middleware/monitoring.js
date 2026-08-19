@@ -1,3 +1,51 @@
+const SENSITIVE_HEADERS = new Set([
+  "authorization",
+  "cookie",
+  "set-cookie",
+  "x-api-key",
+  "proxy-authorization",
+]);
+
+const SENSITIVE_PATH_PREFIXES = [
+  "/api/v1/admin/tenants/=/i/",
+];
+
+const sanitizePath = (path) => {
+  if (SENSITIVE_PATH_PREFIXES.some((prefix) => path.startsWith(prefix))) {
+    return `${prefix}:id`;
+  }
+  return path;
+};
+
+const sanitizeHeaders = (headers) => {
+  const sanitized = {};
+  for (const [key, value] of Object.entries(headers)) {
+    if (SENSITIVE_HEADERS.has(key.toLowerCase())) {
+      sanitized[key] = "[REDACTED]";
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  return sanitized;
+};
+
+const requestTiming = (req, res, next) => {
+  const label = `${req.method} ${sanitizePath(req.path)}`;
+  console.time(label);
+  res.on("finish", () => {
+    console.timeEnd(label);
+    console.log(JSON.stringify({
+      method: req.method,
+      path: sanitizePath(req.path),
+      tenantId: req.tenant?.id || null,
+      statusCode: res.statusCode,
+      durationMs: Date.now() - req._timingStart,
+    }));
+  });
+  req._timingStart = Date.now();
+  next();
+};
+
 const Sentry = require("@sentry/node");
 const { getCacheStats } = require("../utils/cache");
 
@@ -59,4 +107,4 @@ const getStats = () => {
   };
 };
 
-module.exports = { Sentry, requestMetrics, errorHandler, getStats };
+module.exports = { Sentry, requestMetrics, requestTiming, errorHandler, getStats };

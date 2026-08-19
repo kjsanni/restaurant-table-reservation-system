@@ -253,6 +253,28 @@ const exportTenantDataHandler = async (req, res) => {
   res.status(200).json({ success: true, data: payload });
 };
 
+const exportSelfTenantDataHandler = async (req, res) => {
+  const tenantId = req.tenant?.id;
+  if (!tenantId) {
+    return response.badRequest(res, "Tenant context is required");
+  }
+
+  const exported = await tenantAdminDAO.export(tenantId);
+  if (!exported) {
+    return response.notFound(res, "Tenant not found");
+  }
+
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    tenant: exported.tenant.toJSON(),
+    settings: exported.settings.map((s) => ({ key: s.key, value: s.value, updatedAt: s.updatedAt })),
+    notes: exported.notes,
+    legalAcceptances: exported.legalAcceptances,
+  };
+
+  res.status(200).json({ success: true, data: payload });
+};
+
 const getDashboardHandler = async (req, res) => {
   const dashboard = await getTenantDashboard();
   res.status(200).json({ success: true, ...dashboard });
@@ -452,6 +474,7 @@ module.exports = {
   updateTenantHandler,
   deleteTenantHandler,
   exportTenantDataHandler,
+  exportSelfTenantDataHandler,
   enableTenantHandler,
   disableTenantHandler,
   getDashboardHandler,

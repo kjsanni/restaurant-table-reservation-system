@@ -46,28 +46,43 @@ const loadReservations = async () => {
     reservations.value = (res.data?.reservations || []) as Reservation[];
   } catch (err) {
     logger.error("Failed to load reservations", { error: err });
+    throw err;
   } finally {
     loading.value = false;
   }
 };
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
-let pollErrorCount = 0;
+const pollErrorCount = ref(0);
 const MAX_POLL_ERRORS = 3;
+const pollError = ref(false);
 
 const startPolling = () => {
   pollTimer = setInterval(async () => {
     try {
       await loadReservations();
-      pollErrorCount = 0;
+      pollErrorCount.value = 0;
+      pollError.value = false;
     } catch {
-      pollErrorCount += 1;
-      if (pollErrorCount >= MAX_POLL_ERRORS && pollTimer) {
+      pollErrorCount.value += 1;
+      if (pollErrorCount.value >= MAX_POLL_ERRORS && pollTimer) {
+        pollError.value = true;
         clearInterval(pollTimer);
         pollTimer = null;
       }
     }
   }, 30000);
+};
+
+const retryPolling = async () => {
+  pollError.value = false;
+  pollErrorCount.value = 0;
+  try {
+    await loadReservations();
+  } catch {
+    // will be handled by next poll cycle
+  }
+  startPolling();
 };
 
 const firstName = computed(() => {
@@ -128,7 +143,11 @@ const goToReview = (reservationId: number) => {
 };
 
 onMounted(async () => {
-  await Promise.all([loadProfile(), loadReservations()]);
+  try {
+    await Promise.all([loadProfile(), loadReservations()]);
+  } catch {
+    pollError.value = true;
+  }
   startPolling();
 });
 
@@ -169,11 +188,15 @@ onUnmounted(() => {
       <div class="bookings">
         <h3>Your Reservations</h3>
         <div v-if="loading" class="state">Loading…</div>
+        <div v-else-if="pollError" class="state error-state">
+          <p>Unable to load reservations. Please try again.</p>
+          <button @click="retryPolling" class="retry-btn">Retry</button>
+        </div>
         <div v-else-if="!filteredReservations.length" class="state">
           No reservations found.
         </div>
-        <template v-else>
-          <div v-for="r in filteredReservations" :key="r.id" class="booking">
+        <ul v-else role="list" class="booking-list">
+          <li v-for="r in filteredReservations" :key="r.id" class="booking">
             <div class="date-badge">
               {{ dateParts(r.resDate).mon
               }}<small>{{ dateParts(r.resDate).day }}</small>
@@ -195,8 +218,8 @@ onUnmounted(() => {
             >
               Review
             </button>
-          </div>
-        </template>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
@@ -323,6 +346,12 @@ onUnmounted(() => {
   box-shadow: 0 10px 30px rgba(26, 20, 16, 0.05);
 }
 
+.booking-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
 .bookings h3 {
   font-family: var(--font-serif);
   font-size: 17px;
@@ -424,5 +453,23 @@ onUnmounted(() => {
   color: var(--ink-secondary);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
+}
+.error-state {
+  color: var(--rose-600);
+}
+.retry-btn {
+  margin-top: var(--space-3);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.retry-btn:hover {
+  background: var(--neutral-100);
 }
 </style>

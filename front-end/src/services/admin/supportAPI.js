@@ -104,5 +104,51 @@ export const deleteSupportTemplate = (id) => {
 };
 
 export const getWhatsAppSupportTicketAnalytics = (params = {}) => {
-  return API.get("/admin/support-tickets/whatsapp/analytics", { params });
+  return API.get("/admin/support-tickets/analytics/whatsapp/analytics", {
+    params,
+  });
+};
+
+export const listSupportConversations = (params = {}) => {
+  return API.get(
+    `/admin/support-chat/conversations${buildQueryString(params)}`
+  );
+};
+
+export const getSupportConversation = (id) => {
+  return API.get(`/admin/support-chat/conversations/${id}`);
+};
+
+export const createSupportConversation = (data) => {
+  return API.post("/admin/support-chat/conversations", data);
+};
+
+export const deleteSupportConversation = (id) => {
+  return API.delete(`/admin/support-chat/conversations/${id}`);
+};
+
+export const listSupportMessages = (conversationId) => {
+  return API.get(
+    `/admin/support-chat/conversations/${conversationId}/messages`
+  );
+};
+
+export const sendSupportMessage = (conversationId, body) => {
+  return API.post(
+    `/admin/support-chat/conversations/${conversationId}/messages`,
+    { body }
+  );
+};
+
+export const autoAssignConversation = (conversationId) => {
+  return API.post(
+    `/admin/support-chat/conversations/${conversationId}/auto-assign`
+  );
+};
+
+export const submitCsat = (conversationId, data) => {
+  return API.post(
+    `/admin/support-chat/conversations/${conversationId}/csat`,
+    data
+  );
 };

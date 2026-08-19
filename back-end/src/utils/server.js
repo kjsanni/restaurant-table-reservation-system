@@ -22,7 +22,7 @@ const docsRouter = require("../routes/docs.router");
 const openapiSpec = require("../middleware/openapi");
 const { versioningHeaders } = require("../middleware/deprecation");
 const { setCsrfCookie, generateCsrfToken, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
-const { requestMetrics, getStats } = require("../middleware/monitoring");
+  const { requestMetrics, requestTiming } = require("../middleware/monitoring");
 const { requestLogger, logStream } = require("../middleware/requestLogger");
 const { logAction } = require("../middleware/auditLog");
 const { cspHeaders } = require("../middleware/csp");
@@ -48,6 +48,7 @@ const erpnextHrRouter = require("../integrations/erpnext/proxies/hr.proxy");
 const erpnextCrmRouter = require("../integrations/erpnext/proxies/crm.proxy");
 const erpnextManufacturingRouter = require("../integrations/erpnext/proxies/manufacturing.proxy");
 const erpnextReportsRouter = require("../integrations/erpnext/proxies/reports.proxy");
+const erpnextPosRouter = require("../integrations/erpnext/proxies/pos.proxy");
 const erpnextOnboardingRouter = require("../integrations/erpnext/onboarding/onboarding");
 
 const { adminMiddleware } = require("../middleware/adminMiddleware");
@@ -173,6 +174,7 @@ const createServer = () => {
   app.use(cookieParser());
   app.use(requestLogger);
   app.use(requestMetrics);
+  app.use(requestTiming);
   app.use(setCsrfCookie);
   app.use(requestTimeout(15000));
 
@@ -247,6 +249,7 @@ const createServer = () => {
     erpnextCrmRouter,
     erpnextManufacturingRouter,
     erpnextReportsRouter,
+    erpnextPosRouter,
     erpnextOnboardingRouter
   );
   app.use("/api/v1/notifications", generalLimiter, logAction, validateCsrfToken, notificationRouter);

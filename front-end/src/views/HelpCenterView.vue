@@ -64,6 +64,34 @@ const faqItems = [
       "Click 'Forgot Password' on the login page, enter your email address, and we'll send a reset link. The link is valid for 1 hour.",
     category: "Account",
   },
+  {
+    id: 9,
+    question: "Where can I find API and webhook documentation?",
+    answer:
+      "You can view the REST API reference at /api-docs and webhook integration docs at /webhook-docs. Both are publicly accessible.",
+    category: "Integrations",
+  },
+  {
+    id: 10,
+    question: "How do I export my tenant data?",
+    answer:
+      "Tenant admins can export tenant data from Settings > Data > Export Tenant Data. The export includes settings, notes, and legal acceptances in JSON format.",
+    category: "Account",
+  },
+  {
+    id: 11,
+    question: "What is the deposit and cancellation policy?",
+    answer:
+      "Some reservations require a deposit. Cancellation policies vary by tenant. You can review the specific policy during checkout before confirming your booking.",
+    category: "Reservations",
+  },
+  {
+    id: 12,
+    question: "How do I contact support?",
+    answer:
+      "Use the in-app support ticket system or email support@vibespot.com. For urgent issues, WhatsApp support is available during business hours.",
+    category: "Account",
+  },
 ];
 
 const categories = [
@@ -74,6 +102,7 @@ const categories = [
   "Notifications",
   "Salon",
   "Account",
+  "Integrations",
 ];
 const activeCategory = ref("All");
 
@@ -111,6 +140,9 @@ const filteredItems = computed(() => {
           </button>
           <button class="nav-link active">Help</button>
           <button class="nav-link" @click="router.push('/legal')">Legal</button>
+          <button class="nav-link" @click="router.push('/webhook-docs')">
+            Webhooks
+          </button>
         </div>
       </div>
     </nav>

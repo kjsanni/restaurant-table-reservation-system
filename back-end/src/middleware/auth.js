@@ -227,6 +227,38 @@ const customer = (req, res, next) => {
   }
 };
 
+const requireSupportAccess = (req, res, next) => {
+  if (!req.user) {
+    return sendForbidden(res, "Authentication required");
+  }
+
+  const isSuperAdmin = req.user?.isSuperAdmin === true;
+  if (isSuperAdmin) {
+    const context = buildAuditContext(req);
+    const rejection = enforceTOTP(req, res, context);
+    if (rejection) return rejection;
+    return next();
+  }
+
+  const userRoles = Array.isArray(req.user?.platformRoles) ? req.user.platformRoles : [];
+  const requiredLevel = ROLE_HIERARCHY["platform_support"];
+  const userMaxLevel = Math.max(0, ...userRoles.map((r) => ROLE_HIERARCHY[r] || 0));
+
+  if (userMaxLevel >= requiredLevel) {
+    const context = buildAuditContext(req);
+    const rejection = enforceTOTP(req, res, context);
+    if (rejection) return rejection;
+    return next();
+  }
+
+  const isTenantStaff = req.user?.role === "admin" || req.user?.role === "staff";
+  if (isTenantStaff) {
+    return next();
+  }
+
+  return sendForbidden(res, "Support chat access required!");
+};
+
 const requirePermission = (permission) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -247,4 +279,4 @@ const requirePermission = (permission) => {
   };
 };
 
-module.exports = { protect, admin, staff, staffOnly, customer, requirePermission, requireSuperAdmin, requirePlatformRole };
+module.exports = { protect, admin, staff, staffOnly, customer, requirePermission, requireSuperAdmin, requirePlatformRole, requireSupportAccess };

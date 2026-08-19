@@ -17,6 +17,10 @@
       Load more
     </button>
     <span v-if="total > 0" class="tenant-total">{{ total }} venues</span>
+    <div v-if="error" class="tenant-error">
+      <span>{{ error }}</span>
+      <button @click="retryLoadTenants" class="tenant-retry">Retry</button>
+    </div>
   </div>
 </template>
 
@@ -41,6 +45,7 @@ const pageSize = 20;
 const hasMore = ref(false);
 const total = ref(0);
 const searchQuery = ref("");
+const error = ref("");
 let searchDebounce = null;
 
 const loadTenants = async (pageNum = 1, search = "") => {
@@ -59,9 +64,14 @@ const loadTenants = async (pageNum = 1, search = "") => {
     hasMore.value = (data.collection?.length || 0) >= pageSize;
     total.value = data.total || 0;
     page.value = pageNum;
-  } catch {
-    // ignore
+    error.value = "";
+  } catch (err) {
+    error.value = err?.message || "Failed to load tenants";
   }
+};
+
+const retryLoadTenants = () => {
+  loadTenants(page.value, searchQuery.value);
 };
 
 const loadMore = () => {
@@ -142,5 +152,24 @@ onMounted(() => {
   font-size: 12px;
   color: var(--ink-muted, #64748b);
   white-space: nowrap;
+}
+.tenant-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--rose-600, #e11d48);
+}
+.tenant-retry {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle, #e3e8ee);
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--ink, #0d253d);
+}
+.tenant-retry:hover {
+  background: #f1f5f9;
 }
 </style>

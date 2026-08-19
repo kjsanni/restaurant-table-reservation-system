@@ -36,7 +36,9 @@ export const getWhatsAppDeliveryFailures = (params = {}) => {
 };
 
 export const getWhatsAppSupportTicketAnalytics = (params = {}) => {
-  return API.get("/admin/support-tickets/whatsapp/analytics", { params });
+  return API.get("/admin/support-tickets/analytics/whatsapp/analytics", {
+    params,
+  });
 };
 
 export const getShaqExpressAnalytics = () => {

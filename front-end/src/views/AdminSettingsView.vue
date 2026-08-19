@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import authAPI from "@/services/authAPI";
+import tenantAdminAPI from "@/services/tenantAdminAPI";
 import logger from "@/utils/logger";
 
 const loading = ref(true);
 const saving = ref(false);
+const exporting = ref(false);
 const profileSettings = ref({
   restaurantName: "",
   email: "",
@@ -78,6 +80,28 @@ const saveNotifications = async () => {
     logger.error("Failed to save notifications", { error: err });
   } finally {
     saving.value = false;
+  }
+};
+
+const exportTenantData = async () => {
+  exporting.value = true;
+  try {
+    const res = await tenantAdminAPI.exportSelfData();
+    const blob = new Blob([JSON.stringify(res.data.data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tenant-export-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    logger.error("Failed to export tenant data", { error: err });
+  } finally {
+    exporting.value = false;
   }
 };
 
@@ -164,6 +188,20 @@ onMounted(loadSettings);
               {{ saving ? "Saving..." : "Update Preferences" }}
             </button>
           </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Data</h3>
+          <p class="text-secondary" style="margin-bottom: 12px">
+            Download a copy of your tenant data for backup or migration.
+          </p>
+          <button
+            class="btn-primary"
+            :disabled="exporting"
+            @click="exportTenantData"
+          >
+            {{ exporting ? "Exporting…" : "Export Tenant Data" }}
+          </button>
         </div>
       </div>
     </div>
