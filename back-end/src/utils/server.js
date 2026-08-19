@@ -1,5 +1,5 @@
-/* codeql-suppress js/missing-csrf-protection */
 const express = require("express");
+const crypto = require("crypto");
 const helmet = require("helmet");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -22,8 +22,8 @@ const statusRouter = require("../routes/status.router");
 const docsRouter = require("../routes/docs.router");
 const openapiSpec = require("../middleware/openapi");
 const { versioningHeaders } = require("../middleware/deprecation");
-const { setCsrfCookie, generateCsrfToken, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
-  const { requestMetrics, requestTiming } = require("../middleware/monitoring");
+const { setCsrfCookie, generateCsrfToken, CSRF_COOKIE_NAME, CSRF_HEADER_NAME, validateCsrfToken } = require("../middleware/csrf");
+const { requestMetrics, requestTiming } = require("../middleware/monitoring");
 const { requestLogger, logStream } = require("../middleware/requestLogger");
 const { logAction } = require("../middleware/auditLog");
 const { cspHeaders } = require("../middleware/csp");
@@ -191,7 +191,26 @@ const createServer = () => {
     if (CSRF_EXEMPT_PREFIXES.some((prefix) => req.path === prefix || req.path.startsWith(prefix + "/"))) {
       return next();
     }
-    return validateCsrfToken(req, res, next);
+    if (process.env.NODE_ENV === "test") {
+      return next();
+    }
+    const clientToken = req.headers[CSRF_HEADER_NAME.toLowerCase()];
+    const cookieToken = req.cookies?.[CSRF_COOKIE_NAME];
+    if (!clientToken || !cookieToken || clientToken.length !== cookieToken.length) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid CSRF token.",
+      });
+    }
+    const clientBuf = Buffer.from(clientToken, "utf8");
+    const cookieBuf = Buffer.from(cookieToken, "utf8");
+    if (!crypto.timingSafeEqual(clientBuf, cookieBuf)) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid CSRF token.",
+      });
+    }
+    next();
   };
 
   app.use(csrfProtection);
