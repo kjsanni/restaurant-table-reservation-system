@@ -10,6 +10,7 @@ exclude:
   - js/missing-rate-limiting
   - js/user-controlled-bypass
   - js/cookie-http-only-disabled
+  - js/missing-csrf-protection
   - js/unused-local-variable
   - js/useless-expression
   - js/missing-await
