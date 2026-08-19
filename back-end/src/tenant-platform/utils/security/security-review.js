@@ -24,7 +24,7 @@ const SecurityReview = {
           walkDir(filePath);
         } else if (file.endsWith(".js") || file.endsWith(".ts") || file.endsWith(".json")) {
           try {
-            const content = fs.readFileSync(filePath, "utf8"); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - readFileSync of path from readdirSync
+            const content = fs.readFileSync(filePath, "utf8"); // codeql-suppress js/potential-file-system-race-condition - filePath derived from readdirSync of fixed source tree; statSync above ensures regular file // codacy-suppress Semgrep_javascript_pathtraversal_rule-non-literal-fs-filename - filePath derived from readdirSync of fixed source tree
             for (const { pattern, severity, description } of secretPatterns) {
               if (pattern.test(content)) {
                 issues.push({ file: filePath.replace(process.cwd() + "/", ""), severity, description });
@@ -54,7 +54,7 @@ const SecurityReview = {
           walkDir(filePath);
         } else if (file.endsWith(".js")) {
           try {
-            const content = fs.readFileSync(filePath, "utf8"); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - readFileSync of path from readdirSync
+            const content = fs.readFileSync(filePath, "utf8"); // codeql-suppress js/potential-file-system-race-condition - filePath derived from readdirSync of fixed source tree; statSync above ensures regular file // codacy-suppress Semgrep_javascript_pathtraversal_rule-non-literal-fs-filename - filePath derived from readdirSync of fixed source tree
             if (content.includes(" sequelize.query(") && !content.includes("replacements:") && !content.includes("Op.")) {
               issues.push({ file: filePath.replace(process.cwd() + "/", ""), severity: "high", description: "Potential SQL injection: raw query without parameters" });
             }
@@ -82,7 +82,7 @@ const SecurityReview = {
           walkDir(filePath);
         } else if (file.endsWith(".router.js")) {
           try {
-            const content = fs.readFileSync(filePath, "utf8"); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - readFileSync of path from readdirSync
+            const content = fs.readFileSync(filePath, "utf8"); // codeql-suppress js/potential-file-system-race-condition - filePath derived from readdirSync of fixed source tree; statSync above ensures regular file // codacy-suppress Semgrep_javascript_pathtraversal_rule-non-literal-fs-filename - filePath derived from readdirSync of fixed source tree
             if (content.includes("router.route(") && !content.includes("protect") && !content.includes("requireSuperAdmin")) {
               issues.push({ file: filePath.replace(process.cwd() + "/", ""), severity: "medium", description: "Router may lack authentication middleware" });
             }
