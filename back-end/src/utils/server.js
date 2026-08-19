@@ -184,7 +184,7 @@ const createServer = () => {
     "/api/v1/sync",
   ];
 
-  app.use((req, res, next) => {
+  const csrfProtection = (req, res, next) => {
     if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
       return next();
     }
@@ -192,7 +192,9 @@ const createServer = () => {
       return next();
     }
     return validateCsrfToken(req, res, next);
-  });
+  };
+
+  app.use(csrfProtection);
 
   app.use(requestTimeout(15000));
 
