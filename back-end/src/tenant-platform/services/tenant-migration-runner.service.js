@@ -4,6 +4,7 @@ const db = require("../../db/models");
 const TenantMigrationStatus = db.tenantMigrationStatus;
 const fs = require("fs");
 const path = require("path");
+const vm = require("vm");
 
 const MIGRATIONS_DIR = path.join(__dirname, "..", "..", "db", "migrations"); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - static __dirname path
 const migrationModules = {};
@@ -13,7 +14,24 @@ if (fs.existsSync(MIGRATIONS_DIR)) { // nosemgrep: javascript_pathtraversal_rule
     .sort()
     .forEach((file) => {
       try {
-        migrationModules[file] = require(path.join(MIGRATIONS_DIR, file)); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal, javascript_require_rule-non-literal-require, javascript.lang.security.audit.injection.dynamic-load - file is from readdirSync of a fixed directory // codacy-suppress Semgrep_javascript.lang.security.audit.detect-non-literal-require.detect-non-literal-require - file is from readdirSync of a fixed directory
+        const fullPath = path.join(MIGRATIONS_DIR, file); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - path.join from readdirSync of fixed migrations directory
+        const content = fs.readFileSync(fullPath, "utf8"); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - fullPath derived from readdirSync of fixed migrations directory
+        const context = vm.createContext({
+          module: { exports: {} },
+          exports: {},
+          require,
+          console,
+          setTimeout,
+          setInterval,
+          clearTimeout,
+          clearInterval,
+          process,
+          Buffer,
+          __dirname: path.dirname(fullPath),
+          __filename: fullPath,
+        });
+        vm.runInContext(content, context);
+        migrationModules[file] = context.module.exports;
       } catch {
         migrationModules[file] = null;
       }

@@ -23,7 +23,7 @@ const SecurityReview = {
           walkDir(fullPath);
         } else if ((file.name.endsWith(".js") || file.name.endsWith(".ts") || file.name.endsWith(".json")) && file.isFile()) {
           try {
-            const content = fs.readFileSync(fullPath, "utf8");
+            const content = fs.readFileSync(fullPath, "utf8"); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - path derived from readdirSync of fixed source tree
             for (const { pattern, severity, description } of secretPatterns) {
               if (pattern.test(content)) {
                 issues.push({ file: fullPath.replace(process.cwd() + "/", ""), severity, description });
@@ -52,7 +52,7 @@ const SecurityReview = {
           walkDir(fullPath);
         } else if (file.name.endsWith(".js") && file.isFile()) {
           try {
-            const content = fs.readFileSync(fullPath, "utf8");
+            const content = fs.readFileSync(fullPath, "utf8"); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - path derived from readdirSync of fixed source tree
             if (content.includes(" sequelize.query(") && !content.includes("replacements:") && !content.includes("Op.")) {
               issues.push({ file: fullPath.replace(process.cwd() + "/", ""), severity: "high", description: "Potential SQL injection: raw query without parameters" });
             }
@@ -79,7 +79,7 @@ const SecurityReview = {
           walkDir(fullPath);
         } else if (file.name.endsWith(".router.js") && file.isFile()) {
           try {
-            const content = fs.readFileSync(fullPath, "utf8");
+            const content = fs.readFileSync(fullPath, "utf8"); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - path derived from readdirSync of fixed source tree
             if (content.includes("router.route(") && !content.includes("protect") && !content.includes("requireSuperAdmin")) {
               issues.push({ file: fullPath.replace(process.cwd() + "/", ""), severity: "medium", description: "Router may lack authentication middleware" });
             }

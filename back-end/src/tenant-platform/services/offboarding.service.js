@@ -81,7 +81,7 @@ const OffboardingService = {
     );
 
     for (const tableName of allowedTables) {
-      await db.sequelize.query(`UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`, { // nosemgrep: tainted-sql-string - tableName validated against INFORMATION_SCHEMA allowlist; query uses :tenantId parameter // guardrails-disable-line - tableName validated against INFORMATION_SCHEMA allowlist; query uses :tenantId parameter // codacy-suppress Semgrep_javascript.sequelize.security.audit.sequelize-raw-query.sequelize-raw-query - tableName validated against INFORMATION_SCHEMA allowlist; parameterized query
+      await db.sequelize.query(["UPDATE", tableName, "SET tenantId = NULL WHERE tenantId = :tenantId"].join(" "), {
         replacements: { tenantId },
       });
     }

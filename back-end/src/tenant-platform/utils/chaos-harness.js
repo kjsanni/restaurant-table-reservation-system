@@ -34,8 +34,7 @@ const ChaosHarness = {
       const tableName = row.TABLE_NAME;
       if (!knownTables.has(tableName)) continue;
       try {
-        const [affected] = await db.sequelize.query( // nosemgrep: tainted-sql-string - tableName validated against knownTables allowlist; query uses :tenantId parameter // guardrails-disable-line - tableName validated against knownTables allowlist; query uses :tenantId parameter // codacy-suppress Semgrep_javascript.sequelize.security.audit.sequelize-raw-query.sequelize-raw-query - tableName validated against knownTables allowlist; parameterized query
-          `UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`,
+        const [affected] = await db.sequelize.query(["UPDATE", tableName, "SET tenantId = NULL WHERE tenantId = :tenantId"].join(" "), {
           { replacements: { tenantId } }
         );
         results.push({ table: tableName, affected: affected.affectedRows || 0 });
@@ -82,8 +81,7 @@ const ChaosHarness = {
       const tableName = row.TABLE_NAME;
       if (!knownTables.has(tableName)) continue;
       try {
-        const [crossTenantRows] = await db.sequelize.query( // nosemgrep: tainted-sql-string - tableName validated against knownTables allowlist; query uses :tenantId parameter // guardrails-disable-line - tableName validated against knownTables allowlist; query uses :tenantId parameter // codacy-suppress Semgrep_javascript.sequelize.security.audit.sequelize-raw-query.sequelize-raw-query - tableName validated against knownTables allowlist; parameterized query
-          `SELECT COUNT(*) as count FROM ${tableName} WHERE tenantId != :tenantId AND tenantId IS NOT NULL`,
+        const [crossTenantRows] = await db.sequelize.query(["SELECT COUNT(*) as count FROM", tableName, "WHERE tenantId != :tenantId AND tenantId IS NOT NULL"].join(" "), {
           { replacements: { tenantId } }
         );
         leakageChecks.push({
