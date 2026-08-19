@@ -172,8 +172,6 @@ const createServer = () => {
   process.once("SIGTERM", shutdownWorkers);
   process.once("SIGINT", shutdownWorkers);
 
-  // codeql[js/missing-csrf-protection] Custom double-submit CSRF middleware applied below
-  // codeql[js/missing-token-validation] Custom double-submit CSRF middleware applied below
   app.use(cookieParser());
   app.use(requestLogger);
   app.use(requestMetrics);

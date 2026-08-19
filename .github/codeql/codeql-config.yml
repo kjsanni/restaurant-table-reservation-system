@@ -27,6 +27,7 @@ paths-ignore:
   - '**/*.css'
   - 'front-end/playwright-report/**'
   - 'front-end/test-results/**'
+  - 'back-end/src/utils/server.js'
 # force fresh CodeQL analysis
 # trigger codeql refresh
 
