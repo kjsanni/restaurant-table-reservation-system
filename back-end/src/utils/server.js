@@ -194,8 +194,8 @@ const createServer = () => {
     if (process.env.NODE_ENV === "test") {
       return next();
     }
-    const clientToken = req.headers[CSRF_HEADER_NAME.toLowerCase()];
-    const cookieToken = req.cookies?.[CSRF_COOKIE_NAME];
+    const clientToken = req.headers["x-xsrf-token"];
+    const cookieToken = req.cookies?.["XSRF-TOKEN"];
     if (!clientToken || !cookieToken || clientToken.length !== cookieToken.length) {
       return res.status(403).json({
         success: false,
