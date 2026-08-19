@@ -172,11 +172,28 @@ const createServer = () => {
   process.once("SIGTERM", shutdownWorkers);
   process.once("SIGINT", shutdownWorkers);
 
-  app.use(cookieParser()); // codeql-suppress js/missing-csrf-protection
+  app.use(cookieParser());
   app.use(requestLogger);
   app.use(requestMetrics);
   app.use(requestTiming);
   app.use(setCsrfCookie);
+
+  const CSRF_EXEMPT_PREFIXES = [
+    "/api/v1/webhooks/paystack",
+    "/api/v1/webhooks/shaqexpress",
+    "/api/v1/sync",
+  ];
+
+  app.use((req, res, next) => {
+    if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+      return next();
+    }
+    if (CSRF_EXEMPT_PREFIXES.some((prefix) => req.path === prefix || req.path.startsWith(prefix + "/"))) {
+      return next();
+    }
+    return validateCsrfToken(req, res, next);
+  });
+
   app.use(requestTimeout(15000));
 
   app.use(
