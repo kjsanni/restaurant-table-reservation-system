@@ -171,7 +171,9 @@ onMounted(() => {
                   :event-id="eventId"
                   label="Upload"
                   :model-value="qr.photoRef"
-                  @update:model-value="(photoRef) => updateQRPhoto(qr.id, photoRef)"
+                  @update:model-value="
+                    (photoRef) => updateQRPhoto(qr.id, photoRef)
+                  "
                 />
                 <span v-else class="text-muted">-</span>
               </td>

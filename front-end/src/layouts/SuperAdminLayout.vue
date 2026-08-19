@@ -177,6 +177,73 @@ const toggleDropdown = (section: string) => {
   activeDropdown.value = activeDropdown.value === section ? null : section;
 };
 
+const dropdownBtnId = (section: string) =>
+  `sa-dropdown-btn-${String(section)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")}`;
+const dropdownPanelId = (section: string) =>
+  `sa-dropdown-panel-${String(section)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")}`;
+
+const DROPDOWN_FOCUSABLE =
+  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+const getPanelItems = (section: string): HTMLElement[] => {
+  const panel = document.getElementById(dropdownPanelId(section));
+  if (!panel) return [];
+  return Array.from(panel.querySelectorAll(DROPDOWN_FOCUSABLE));
+};
+
+const onDropdownBtnKeydown = (e: KeyboardEvent, section: string) => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    if (activeDropdown.value !== section) activeDropdown.value = section;
+    const items = getPanelItems(section);
+    if (items.length) {
+      e.preventDefault();
+      items[0].focus();
+    }
+  }
+};
+
+const onDropdownPanelKeydown = (e: KeyboardEvent, section: string) => {
+  const items = getPanelItems(section);
+  if (!items.length) return;
+  const idx = items.indexOf(document.activeElement as HTMLElement);
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    (items[idx + 1] || items[0]).focus();
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    (items[idx - 1] || items[items.length - 1]).focus();
+  } else if (e.key === "Home") {
+    e.preventDefault();
+    items[0].focus();
+  } else if (e.key === "End") {
+    e.preventDefault();
+    items[items.length - 1].focus();
+  } else if (e.key === "Tab") {
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+};
+
+const onTopBarKeydown = (e: KeyboardEvent) => {
+  if (e.key === "Escape" && activeDropdown.value) {
+    e.preventDefault();
+    const section = activeDropdown.value;
+    activeDropdown.value = null;
+    document.getElementById(dropdownBtnId(section))?.focus();
+  }
+};
+
 const currentSection = computed(() => {
   const currentRoute = route.name as string;
   for (const item of visibleTopBarItems.value) {
@@ -206,10 +273,12 @@ const closeTopBarDropdown = (e: MouseEvent) => {
 
 onMounted(() => {
   document.addEventListener("click", closeTopBarDropdown);
+  document.addEventListener("keydown", onTopBarKeydown);
 });
 
 onUnmounted(() => {
   document.removeEventListener("click", closeTopBarDropdown);
+  document.removeEventListener("keydown", onTopBarKeydown);
 });
 
 const groupedNavItems = computed(() => {
@@ -391,9 +460,13 @@ watch(
                   <button
                     type="button"
                     class="sa-dropdown-btn"
+                    :id="dropdownBtnId(section)"
                     :class="{ active: currentSection === section }"
                     @click="toggleDropdown(section)"
+                    @keydown="onDropdownBtnKeydown($event, section)"
                     :aria-expanded="activeDropdown === section"
+                    :aria-controls="dropdownPanelId(section)"
+                    :aria-haspopup="true"
                   >
                     {{ section }}
                     <span v-if="itemCounts[section]" class="sa-dropdown-count">
@@ -406,7 +479,12 @@ watch(
                       class="sa-dropdown-icon"
                     />
                   </button>
-                  <div class="sa-dropdown-panel">
+                  <div
+                    class="sa-dropdown-panel"
+                    :id="dropdownPanelId(section)"
+                    :aria-labelledby="dropdownBtnId(section)"
+                    @keydown="onDropdownPanelKeydown($event, section)"
+                  >
                     <VaSidebarItem
                       v-for="item in topBarGroups[section]"
                       :key="item.routeName"

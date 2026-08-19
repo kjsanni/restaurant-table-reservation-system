@@ -2,28 +2,31 @@
 
 ## Tenant Lookup
 
-1. Open Super Admin → Tenants.
-2. Use search by name or slug.
-3. Filter by status (`active`, `suspended`, `past_due`, `cancelled`).
-4. Click tenant to view details and activity log.
+1. Open Super Admin Overview
+2. Use tenant switcher search (supports slug/name)
+3. Click tenant to open detail view
 
 ## Subscription Changes
 
-1. Select tenant → Subscription tab.
-2. Change plan: update `plan` field.
-3. Manually extend grace: set `graceEndsAt`.
-4. Log action in platform audit trail.
+1. Open tenant detail → Subscription tab
+2. Click "Change Plan"
+3. Select new plan — system prorates billing via Paystack
+4. Feature flags update immediately
 
 ## Compliance Review
 
-1. Open Super Admin → Compliance.
-2. Review `legalAcceptances` for missing signatures.
-3. Check `dataRetentionPolicy` alignment.
-4. Export compliance evidence for auditors.
+1. Open Compliance Dashboard
+2. Filter by `legal_acceptances` version mismatches
+3. Send reminder via in-app notification + email
 
-## Incident Response
+## System Health
 
-1. Open Super Admin → Incidents.
-2. Lock tenant if abuse is detected (`POST /admin/incidents/:id/lock-tenant`).
-3. Reset tenant tokens if credentials are compromised.
-4. Force logout if session hijacking is suspected.
+1. Open Monitoring → Health
+2. Check: Redis connection, BullMQ queue depths, cron lock status, cache hit rate
+3. If queue depth > 1000: scale provisioning worker via PM2
+
+## Emergency Break-Glass
+
+1. Navigate to `/admin/break-glass`
+2. Require TOTP + second super-admin approval
+3. Elevated session logged to immutable audit trail

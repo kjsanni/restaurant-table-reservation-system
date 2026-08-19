@@ -23,6 +23,7 @@ interface Table {
 const router = useRouter();
 const tables = ref<Table[]>([]);
 const loading = ref(true);
+const error = ref("");
 const activeStatus = ref("all");
 const activeSection = ref("all");
 
@@ -76,10 +77,12 @@ const sectionLabel = (section: string) => {
 
 const loadTables = async () => {
   loading.value = true;
+  error.value = "";
   try {
     const res = await tableAPI.getTables();
     tables.value = res.data.collection || res.data.tables || [];
   } catch (err) {
+    error.value = "Failed to load tables";
     logger.error("Failed to load tables", { error: err });
   } finally {
     loading.value = false;
@@ -145,9 +148,33 @@ onMounted(loadTables);
         </select>
       </div>
 
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading tables...</p>
+      <div
+        v-if="loading"
+        class="loading-state"
+        aria-busy="true"
+        aria-label="Loading tables"
+      >
+        <div class="skeleton-grid">
+          <div class="skeleton-card" v-for="i in 8" :key="i">
+            <div class="skeleton-card-head">
+              <div class="skeleton-cell skeleton-text"></div>
+              <div class="skeleton-cell skeleton-pill"></div>
+            </div>
+            <div class="skeleton-card-body">
+              <div class="skeleton-cell skeleton-text short"></div>
+              <div class="skeleton-cell skeleton-text short"></div>
+            </div>
+            <div class="skeleton-card-actions">
+              <div class="skeleton-cell skeleton-btn"></div>
+              <div class="skeleton-cell skeleton-btn"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="error" class="error-state">
+        <p>{{ error }}</p>
+        <button class="retry-btn" @click="loadTables">Retry</button>
       </div>
 
       <div v-else-if="!filteredTables.length" class="empty-state">
@@ -529,25 +556,106 @@ onMounted(loadTables);
   gap: var(--space-4);
 }
 
-.spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: var(--radius-full);
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-state p {
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-20) var(--space-6);
+  gap: var(--space-4);
+  color: var(--rose-600);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--ink-secondary);
+}
+
+.retry-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.retry-btn:hover {
+  background: var(--neutral-100);
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.skeleton-card {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.skeleton-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--neutral-100);
+}
+
+.skeleton-cell {
+  background: var(--neutral-100);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+.skeleton-text {
+  height: 14px;
+  flex: 1;
+}
+
+.skeleton-text.short {
+  flex: 0 0 80px;
+}
+
+.skeleton-pill {
+  height: 22px;
+  width: 64px;
+  flex-shrink: 0;
+}
+
+.skeleton-btn {
+  height: 32px;
+  flex: 1;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
 
 .empty-state {

@@ -1,3 +1,31 @@
+const SENSITIVE_PATH_PREFIXES = [
+  "/api/v1/admin/tenants/=/i/",
+];
+
+const sanitizePath = (path) => {
+  if (SENSITIVE_PATH_PREFIXES.some((prefix) => path.startsWith(prefix))) {
+    return `${prefix}:id`;
+  }
+  return path;
+};
+
+const requestTiming = (req, res, next) => {
+  const label = `${req.method} ${sanitizePath(req.path)}`;
+  console.time(label);
+  res.on("finish", () => {
+    console.timeEnd(label);
+    console.log(JSON.stringify({
+      method: req.method,
+      path: sanitizePath(req.path),
+      tenantId: req.tenant?.id || null,
+      statusCode: res.statusCode,
+      durationMs: Date.now() - req._timingStart,
+    }));
+  });
+  req._timingStart = Date.now();
+  next();
+};
+
 const Sentry = require("@sentry/node");
 const { getCacheStats } = require("../utils/cache");
 
@@ -59,4 +87,4 @@ const getStats = () => {
   };
 };
 
-module.exports = { Sentry, requestMetrics, errorHandler, getStats };
+module.exports = { Sentry, requestMetrics, requestTiming, errorHandler, getStats };

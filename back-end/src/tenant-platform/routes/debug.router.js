@@ -1,19 +1,20 @@
 const express = require("express");
+const { adminActionLimiter } = require("../../middleware/rateLimit");
 const router = express.Router();
+router.use(adminActionLimiter);
 const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const debugController = require("../controllers/debug.controller");
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
-const { adminActionLimiter } = require("../../middleware/rateLimit");
 
 router
   .route("/tenant/:tenantId")
-  .get(tryCatchHandler(adminActionLimiter), tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(debugController.getTenantDebugInfoHandler))
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(debugController.getTenantDebugInfoHandler))
   .all(httpMethodError);
 
 router
   .route("/platform")
-  .get(tryCatchHandler(adminActionLimiter), tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(debugController.getPlatformDebugInfoHandler))
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(debugController.getPlatformDebugInfoHandler))
   .all(httpMethodError);
 
 module.exports = router;

@@ -103,6 +103,18 @@ const router = createRouter({
       meta: { standalone: true },
     },
     {
+      path: "/webhook-docs",
+      name: "webhook-docs",
+      component: () => import("../views/WebhookDocsView.vue"),
+      meta: { standalone: true },
+    },
+    {
+      path: "/sla",
+      name: "sla",
+      component: () => import("../views/SlaView.vue"),
+      meta: { standalone: true },
+    },
+    {
       path: "/reservations",
       component: () => import("../layouts/TenantLayout.vue"),
       children: [
@@ -219,6 +231,22 @@ const router = createRouter({
       ],
     },
     {
+      path: "/erpnext/pos",
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "erpnext-pos",
+          component: () => import("../views/ErpnextPosView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
+            requiresFeature: "erpnext_pos",
+          },
+        },
+      ],
+    },
+    {
       path: "/new-reservation",
       component: () => import("../layouts/TenantLayout.vue"),
       children: [
@@ -262,6 +290,18 @@ const router = createRouter({
           path: "",
           name: "whatsapp-chat-preview",
           component: () => import("../views/WhatsAppChatPreviewView.vue"),
+          meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
+        },
+      ],
+    },
+    {
+      path: "/admin/settings/encryption-keys",
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "tenant-encryption-keys",
+          component: () => import("../views/TenantEncryptionKeysView.vue"),
           meta: { standalone: true, requiresAuth: true, requiresAdmin: true },
         },
       ],
@@ -975,12 +1015,12 @@ router.addRoute({
       component: () => import("../views/admin/SupportTemplatesView.vue"),
       meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
     },
-    // {
-    //   path: "support-chat",
-    //   name: "platform-support-chat",
-    //   component: () => import("../views/admin/SupportChatView.vue"),
-    //   meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
-    // },
+    {
+      path: "support-chat",
+      name: "platform-support-chat",
+      component: () => import("../views/admin/SupportChatView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+    },
     {
       path: "monitoring",
       name: "platform-monitoring",
@@ -1821,6 +1861,13 @@ const customerPortalRoutes = [
     meta: { requiresAuth: true, requiresVertical: "salon", standalone: true },
   },
   {
+    path: "/portal/pricing-rules",
+    name: "customer-pricing-rules",
+    component: () =>
+      import("../views/customer/CustomerPortalPricingRulesView.vue"),
+    meta: { requiresAuth: true, requiresVertical: "salon", standalone: true },
+  },
+  {
     path: "/portal/events",
     name: "customer-events",
     component: () => import("../views/customer/CustomerPortalEventsView.vue"),
@@ -1836,7 +1883,7 @@ const customerPortalRoutes = [
   {
     path: "/events/manage",
     name: "event-management",
-    component: () => import("../views/tenant/EventManagementView.vue"),
+    component: () => import("../views/event/EventManagementView.vue"),
     meta: {
       requiresAuth: true,
       requiresVertical: "event",
@@ -1846,7 +1893,7 @@ const customerPortalRoutes = [
   {
     path: "/events/new",
     name: "event-create",
-    component: () => import("../views/tenant/EventFormView.vue"),
+    component: () => import("../views/event/EventFormView.vue"),
     meta: {
       requiresAuth: true,
       requiresVertical: "event",
@@ -1856,7 +1903,7 @@ const customerPortalRoutes = [
   {
     path: "/events/:id/edit",
     name: "event-edit",
-    component: () => import("../views/tenant/EventFormView.vue"),
+    component: () => import("../views/event/EventFormView.vue"),
     meta: {
       requiresAuth: true,
       requiresVertical: "event",
@@ -1866,7 +1913,7 @@ const customerPortalRoutes = [
   {
     path: "/events/:eventId/bookings",
     name: "event-bookings",
-    component: () => import("../views/tenant/EventBookingManagementView.vue"),
+    component: () => import("../views/event/EventBookingManagementView.vue"),
     meta: {
       requiresAuth: true,
       requiresVertical: "event",
@@ -1876,7 +1923,7 @@ const customerPortalRoutes = [
   {
     path: "/events/:eventId/guests",
     name: "event-guests",
-    component: () => import("../views/tenant/EventGuestListView.vue"),
+    component: () => import("../views/event/EventGuestListView.vue"),
     meta: {
       requiresAuth: true,
       requiresVertical: "event",
@@ -1886,7 +1933,7 @@ const customerPortalRoutes = [
   {
     path: "/events/:eventId/qr-codes",
     name: "event-qr-codes",
-    component: () => import("../views/tenant/EventQRManageView.vue"),
+    component: () => import("../views/event/EventQRManageView.vue"),
     meta: {
       requiresAuth: true,
       requiresVertical: "event",
@@ -1896,7 +1943,7 @@ const customerPortalRoutes = [
   {
     path: "/events/:eventId/ticket-types",
     name: "event-ticket-types",
-    component: () => import("../views/tenant/EventTicketTypesView.vue"),
+    component: () => import("../views/event/EventTicketTypesView.vue"),
     meta: {
       requiresAuth: true,
       requiresVertical: "event",
@@ -1906,7 +1953,7 @@ const customerPortalRoutes = [
   {
     path: "/events/:eventId/scanner",
     name: "event-scanner",
-    component: () => import("../views/tenant/EventCheckinScannerView.vue"),
+    component: () => import("../views/event/EventCheckinScannerView.vue"),
     meta: {
       requiresAuth: true,
       requiresVertical: "event",
@@ -1917,7 +1964,7 @@ const customerPortalRoutes = [
   {
     path: "/events/:eventId/wallet-passes",
     name: "event-wallet-passes",
-    component: () => import("../views/tenant/WalletPassApprovalView.vue"),
+    component: () => import("../views/event/WalletPassApprovalView.vue"),
     meta: {
       requiresAuth: true,
       requiresVertical: "event",

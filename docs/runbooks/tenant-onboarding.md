@@ -1,34 +1,36 @@
 # Tenant Onboarding Runbook
 
-## 1. Signup
+## Prerequisites
 
-- Tenant submits signup form via customer portal.
-- System creates tenant record with `status = active` and default `plan = starter`.
-- Platform sends welcome email with tenant admin credentials.
+- Tenant signed up and paid via Paystack
+- Super-admin approved tenant in portal
+- Domain/DNS configured (if custom domain)
 
-## 2. Payment
+## Steps
 
-- Tenant is redirected to Paystack for payment.
-- On success, Paystack webhook updates `subscriptionStatus = active`.
-- If payment fails, tenant remains in `past_due` status and receives reminder.
+1. **Provision tenant**
+   - Super-admin creates tenant via `POST /api/v1/admin/tenants`
+   - System enqueues provisioning job (BullMQ)
 
-## 3. Provisioning
+2. **Seed data**
+   - Default staff roles created
+   - Vertical-specific settings seeded (salon / restaurant / event)
+   - Legal acceptance versions initialized
 
-- `seedSalonSettings` runs for salon verticals.
-- Default feature flags are applied from `tenantTypeDefaults.service`.
-- Tenant admin receives onboarding wizard link.
+3. **Enable modules**
+   - Super-admin enables ERPNext modules via `POST /api/v1/admin/erpnext/tenants/:id/provision`
+   - Feature flags set per plan limits
 
-## 4. First Reservation
+4. **Verify**
+   - Tenant can log in at `/{tenantSlug}.vibespot.com`
+   - First reservation / appointment can be created
+   - WhatsApp Business API configured (if enabled)
 
-- Tenant configures tables, staff, and schedules.
-- System sends test reservation confirmation via WhatsApp/email.
-- Tenant verifies end-to-end flow.
+5. **Go-live**
+   - Send welcome email/SMS to tenant admin
+   - Mark tenant `status: "active"` in monitoring dashboard
 
-## 5. Go-Live Checklist
+## Rollback
 
-- [ ] Payment method verified
-- [ ] Feature flags configured
-- [ ] Staff accounts created
-- [ ] Tables and floor plan set up
-- [ ] Notification channels tested (WhatsApp, email)
-- [ ] Legal acceptances signed
+- If provisioning fails: tenant remains `status: "pending"` — no customer impact.
+- Re-queue provisioning job from admin UI.

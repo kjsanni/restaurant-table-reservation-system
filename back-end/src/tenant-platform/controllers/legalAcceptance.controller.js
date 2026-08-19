@@ -37,9 +37,11 @@ const acceptHandler = async (req, res) => {
   }
 
   const version = LEGAL_DOCUMENT_VERSIONS[slug];
+  const customerId = req.body.customerId || null;
   const record = await legalAcceptanceDAO.record({
     tenantId: req.params.tenantId,
     userId: req.user ? req.user.id : null,
+    customerId: customerId ? Number(customerId) : null,
     slug,
     version,
     ipAddress: req.ip,
@@ -53,6 +55,7 @@ const acceptHandler = async (req, res) => {
       version: record.version,
       acceptedAt: record.createdAt,
       acceptedBy: record.userId,
+      customerId: record.customerId,
       ipAddress: record.ipAddress,
     },
   });

@@ -5,6 +5,7 @@ const legalAcceptanceDAO = {};
 legalAcceptanceDAO.list = (filters = {}) => {
   const where = {};
   if (filters.tenantId) where.tenantId = filters.tenantId;
+  if (filters.customerId !== undefined && filters.customerId !== null) where.customerId = filters.customerId;
   if (filters.accepted !== undefined) where.accepted = filters.accepted;
   if (filters.slug) where.slug = filters.slug;
 
@@ -33,10 +34,11 @@ legalAcceptanceDAO.findLatest = (tenantId, slug) => {
 };
 
 // Append a new (immutable) acceptance record.
-legalAcceptanceDAO.record = ({ tenantId, userId, slug, version, ipAddress, userAgent }) => {
+legalAcceptanceDAO.record = ({ tenantId, userId, customerId, slug, version, ipAddress, userAgent }) => {
   return db.legalAcceptance.create({ // codacy-suppress nosql-injection - parameterized ORM call
     tenantId,
     userId: userId || null,
+    customerId: customerId || null,
     slug,
     version,
     ipAddress: ipAddress || null,

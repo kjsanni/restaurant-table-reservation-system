@@ -3,11 +3,17 @@
 const { adminMiddleware } = require("../../middleware/adminMiddleware");
 const { logAction, validateCsrfToken } = require("../../middleware");
 const { webhookLimiter, adminActionLimiter } = require("../../middleware/rateLimit");
+const { tenantLimiter } = require("../middleware/tenantRateLimit");
 
 const tenantAdminRoutes = require("../routes/tenantAdmin.router");
+const tenantSelfServiceRoutes = require("../routes/tenantSelfService.router");
 const planRoutes = require("../routes/plan.router");
 const platformPaymentRoutes = require("../routes/platformPayment.router");
 const usageRoutes = require("../routes/usage.router");
+const meteringRoutes = require("../routes/metering.router");
+const changeManagementRoutes = require("../routes/change-management.router");
+const offboardingRoutes = require("../routes/offboarding.router");
+const impersonationRoutes = require("../routes/impersonation.router");
 const revenueRoutes = require("../routes/revenue.router");
 const bulkActionRoutes = require("../routes/bulkAction.router");
 const noteRoutes = require("../routes/note.router");
@@ -31,15 +37,16 @@ const backupRoutes = require("../routes/backup.router");
 const deploymentRoutes = require("../routes/deployment.router");
 const securityRoutes = require("../routes/security.router");
 const complianceRoutes = require("../routes/compliance.router");
-// const supportChatRoutes = require("../routes/supportChat.router");
+const supportChatRoutes = require("../routes/supportChat.router");
 const supportTemplateRoutes = require("../routes/supportTemplate.router");
 const featureFlagRoutes = require("../routes/featureFlag.router");
 const tenantSupportRoutes = require("../routes/tenantSupport.router");
 const financialManagementRoutes = require("../routes/financialManagement.router");
 const whistleblowerTipRoutes = require("../routes/whistleblowerTip.router");
 const integrationAnalyticsRoutes = require("../routes/integrationAnalytics.router");
-const impersonationRoutes = require("../routes/impersonation.router");
 const advancedAnalyticsRoutes = require("../routes/advancedAnalytics.router");
+const tenantCustomizationRoutes = require("../routes/tenant-customization.router");
+const dataResidencyRoutes = require("../routes/data-residency.router");
 const platformRoleRoutes = require("../routes/platform-role.router");
 const maintenanceRoutes = require("../routes/maintenance.router");
 const trustSafetyRoutes = require("../routes/trustSafety.router");
@@ -51,6 +58,7 @@ const subProcessorRoutes = require("../routes/subProcessor.router");
 const platformReportRoutes = require("../routes/platformReport.router");
 const alertRuleRoutes = require("../routes/alertRule.router");
 const reconciliationRoutes = require("../routes/reconciliation.router");
+const supportRoutingRoutes = require("../routes/support-routing.router");
 const paystackConfigRoutes = require("../routes/paystackConfig.router");
 const shaqExpressConversionRoutes = require("../routes/shaqExpressConversion.router");
 const marketplaceRoutes = require("../routes/marketplace.router");
@@ -60,6 +68,7 @@ const crossTenantSearchRoutes = require("../routes/crossTenantSearch.router");
 const penetrationTestReportRoutes = require("../routes/penetrationTestReport.router");
 const insuranceDocumentRoutes = require("../routes/insuranceDocument.router");
 const tenantMigrationRoutes = require("../routes/tenantMigration.router");
+const tenantEncryptionKeyRoutes = require("../routes/tenantEncryptionKey.router");
 const encryptionKeyRoutes = require("../routes/encryptionKey.router");
 const autoScalingTriggerRoutes = require("../routes/autoScalingTrigger.router");
 const complianceEvidenceRoutes = require("../routes/complianceEvidence.router");
@@ -95,84 +104,92 @@ const tenantPlatformModule = {
   enabled: () => true,
   manifestPath: require("path").join(__dirname, "tenant-platform.module.js"),
   routes: [
-    { path: "/api/v1/admin/tenants", router: trialRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: invoiceRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: statusTimelineRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: gracePeriodRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: whiteLabelRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: apiKeyRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: onboardingRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: legalAcceptanceRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: dsarRequestRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: noteRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: tenantAdminRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: tenantMigrationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/tenants", router: provisioningRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/plans", router: planRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/payments", router: platformPaymentRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/usage", router: usageRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/revenue", router: revenueRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/bulk", router: bulkActionRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/billing-emails", router: billingEmailRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/audit", router: platformAuditRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/notifications", router: notificationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/support-tickets", router: supportTicketAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/support-tickets", router: supportTicketRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: trialRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: invoiceRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: statusTimelineRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: gracePeriodRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: whiteLabelRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: apiKeyRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: onboardingRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: legalAcceptanceRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: dsarRequestRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: noteRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: tenantAdminRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/tenant", router: tenantSelfServiceRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/tenant/encryption-keys", router: tenantEncryptionKeyRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/admin/tenants", router: tenantMigrationRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: provisioningRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: tenantCustomizationRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: dataResidencyRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/plans", router: planRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/payments", router: platformPaymentRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/usage", router: usageRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/metering", router: meteringRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/change-management", router: changeManagementRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/tenants", router: offboardingRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/revenue", router: revenueRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/bulk", router: bulkActionRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/billing-emails", router: billingEmailRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/audit", router: platformAuditRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/notifications", router: notificationRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/support-tickets/analytics", router: supportTicketAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/support-tickets", router: supportTicketRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/support-tickets/routing", router: supportRoutingRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/support-tickets/tenant", router: tenantSupportRoutes, middleware: [logAction, validateCsrfToken] },
-    { path: "/api/v1/admin/totp", router: totpRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/sessions", router: sessionRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/incidents", router: incidentRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/payment-alerts", router: failedPaymentAlertRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/backups", router: backupRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/deployment", router: deploymentRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/security", router: securityRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/compliance", router: complianceRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    // { path: "/api/v1/admin/support-chat", router: supportChatRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/support-notes", router: supportNoteRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/support-attachments", router: supportAttachmentRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/compliance-rules", router: complianceRuleRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/notification-templates", router: notificationTemplateRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/announcements", router: announcementRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/data-retention/policies", router: dataRetentionPolicyRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/support-templates", router: supportTemplateRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/feature-flags", router: featureFlagRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/financial", router: financialManagementRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/whistleblower", router: whistleblowerTipRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/integrations", router: integrationAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/impersonation", router: impersonationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/analytics", router: advancedAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/totp", router: totpRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/sessions", router: sessionRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/incidents", router: incidentRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/payment-alerts", router: failedPaymentAlertRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/backups", router: backupRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/deployment", router: deploymentRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/security", router: securityRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/compliance", router: complianceRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/support-chat", router: supportChatRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/support-notes", router: supportNoteRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/support-attachments", router: supportAttachmentRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/compliance-rules", router: complianceRuleRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/notification-templates", router: notificationTemplateRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/announcements", router: announcementRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/data-retention/policies", router: dataRetentionPolicyRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/support-templates", router: supportTemplateRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/feature-flags", router: featureFlagRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/financial", router: financialManagementRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/whistleblower", router: whistleblowerTipRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/integrations", router: integrationAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/impersonation", router: impersonationRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/analytics", router: advancedAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/platform", router: platformRoleRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
-    { path: "/api/v1/admin/maintenance", router: maintenanceRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/trust-safety", router: trustSafetyRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/monitoring", router: monitoringRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/monitoring/api-latency", router: apiLatencyRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/monitoring/cache", router: cacheStatsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/vertical-analytics", router: verticalAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/vertical-templates", router: verticalTemplateRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/data-retention", router: dataRetentionRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/suspicious-activity", router: suspiciousActivityRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/sub-processors", router: subProcessorRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/platform-reports", router: platformReportRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/alert-rules", router: alertRuleRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/reconciliation", router: reconciliationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/paystack", router: paystackConfigRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/shaqexpress", router: shaqExpressConversionRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/marketplace", router: marketplaceRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/case-studies", router: caseStudyRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/referrals", router: platformReferralRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/search", router: crossTenantSearchRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/penetration-tests", router: penetrationTestReportRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/insurance-documents", router: insuranceDocumentRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/encryption-keys", router: encryptionKeyRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/auto-scaling", router: autoScalingTriggerRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/compliance", router: complianceEvidenceRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/maintenance", router: maintenanceRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/trust-safety", router: trustSafetyRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/monitoring", router: monitoringRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/monitoring/api-latency", router: apiLatencyRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/monitoring/cache", router: cacheStatsRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/vertical-analytics", router: verticalAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/vertical-templates", router: verticalTemplateRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/data-retention", router: dataRetentionRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/suspicious-activity", router: suspiciousActivityRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/sub-processors", router: subProcessorRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/platform-reports", router: platformReportRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/alert-rules", router: alertRuleRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/reconciliation", router: reconciliationRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/paystack", router: paystackConfigRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/shaqexpress", router: shaqExpressConversionRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/marketplace", router: marketplaceRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/case-studies", router: caseStudyRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/referrals", router: platformReferralRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/search", router: crossTenantSearchRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/penetration-tests", router: penetrationTestReportRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/insurance-documents", router: insuranceDocumentRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/encryption-keys", router: encryptionKeyRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/auto-scaling", router: autoScalingTriggerRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/compliance", router: complianceEvidenceRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/debug", router: debugRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
-    { path: "/api/v1/admin/migration", router: migrationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/postmortems", router: postmortemRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/data-anonymization", router: dataAnonymizationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/platform-settings", router: platformSettingsRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/benchmarks", router: benchmarkRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
-    { path: "/api/v1/admin/break-glass", router: breakGlassRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
+    { path: "/api/v1/admin/migration", router: migrationRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/postmortems", router: postmortemRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/data-anonymization", router: dataAnonymizationRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/platform-settings", router: platformSettingsRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/benchmarks", router: benchmarkRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
+    { path: "/api/v1/admin/break-glass", router: breakGlassRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/admin/erpnext", router: erpnextRoutes, middleware: [logAction, validateCsrfToken, adminActionLimiter, adminMiddleware] },
     { path: "/api/v1/billing", router: billingRoutes, middleware: [logAction, validateCsrfToken] },
     { path: "/api/v1/public/dsar-request", router: publicDsarRoutes },

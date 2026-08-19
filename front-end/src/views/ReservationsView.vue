@@ -19,6 +19,7 @@ interface Reservation {
 const router = useRouter();
 const reservations = ref<Reservation[]>([]);
 const loading = ref(true);
+const error = ref("");
 const activeFilter = ref<string>("All");
 
 const filters = ["All", "Confirmed", "Pending", "Seated", "Cancelled"];
@@ -57,10 +58,12 @@ const getStatusColor = (status: string) => {
 
 const loadReservations = async () => {
   loading.value = true;
+  error.value = "";
   try {
     const res = await reservationAPI.getReservations({});
     reservations.value = res.data.collection || res.data || [];
   } catch (err) {
+    error.value = "Failed to load reservations";
     logger.error("Failed to load reservations", { error: err });
   } finally {
     loading.value = false;
@@ -96,23 +99,55 @@ onMounted(loadReservations);
         </button>
       </div>
 
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading reservations...</p>
+      <div
+        v-if="loading"
+        class="loading-state"
+        aria-busy="true"
+        aria-label="Loading reservations"
+      >
+        <div class="skeleton-table">
+          <div class="skeleton-row skeleton-head">
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+            <div class="skeleton-cell"></div>
+          </div>
+          <div class="skeleton-row" v-for="i in 6" :key="i">
+            <div class="skeleton-cell skeleton-text"></div>
+            <div class="skeleton-cell skeleton-text short"></div>
+            <div class="skeleton-cell skeleton-text short"></div>
+            <div class="skeleton-cell skeleton-text short"></div>
+            <div class="skeleton-cell skeleton-text short"></div>
+            <div class="skeleton-cell skeleton-pill"></div>
+            <div class="skeleton-cell skeleton-text short"></div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="error" class="error-state">
+        <p>{{ error }}</p>
+        <button class="retry-btn" @click="loadReservations">Retry</button>
       </div>
 
       <div v-else class="table-wrap">
         <div class="table-scroll">
           <table>
+            <caption>
+              Reservation list showing guest, date, time, party size, table, and
+              status
+            </caption>
             <thead>
               <tr>
-                <th>Guest</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Party</th>
-                <th>Table</th>
-                <th>Status</th>
-                <th></th>
+                <th scope="col">Guest</th>
+                <th scope="col">Date</th>
+                <th scope="col">Time</th>
+                <th scope="col">Party</th>
+                <th scope="col">Table</th>
+                <th scope="col">Status</th>
+                <th scope="col"></th>
               </tr>
             </thead>
             <tbody>
@@ -367,25 +402,80 @@ tr:hover td {
   gap: var(--space-4);
 }
 
-.spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: var(--radius-full);
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-state p {
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-20) var(--space-6);
+  gap: var(--space-4);
+  color: var(--rose-600);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  color: var(--ink-secondary);
+}
+
+.retry-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.retry-btn:hover {
+  background: var(--neutral-100);
+}
+
+.skeleton-table {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-row {
+  display: flex;
+  gap: 12px;
+}
+
+.skeleton-cell {
+  background: var(--neutral-100);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+.skeleton-head .skeleton-cell {
+  height: 18px;
+  width: 100%;
+}
+
+.skeleton-text {
+  height: 14px;
+  flex: 1;
+}
+
+.skeleton-text.short {
+  flex: 0 0 60px;
+}
+
+.skeleton-pill {
+  height: 22px;
+  width: 64px;
+  flex-shrink: 0;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
 
 .btn-primary {

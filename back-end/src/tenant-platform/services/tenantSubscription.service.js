@@ -1,9 +1,9 @@
 const db = require("../../db/models");
 
 const DEFAULT_PLANS = {
-  starter: { maxTables: 10, maxReservationsPerMonth: 500, price: 299, currency: "GHS", name: "Starter", erpnextModules: [] },
-  growth: { maxTables: 25, maxReservationsPerMonth: 2000, price: 599, currency: "GHS", name: "Growth", erpnextModules: ["erpnext_accounting", "erpnext_crm"] },
-  scale: { maxTables: 100, maxReservationsPerMonth: 10000, price: 999, currency: "GHS", name: "Scale", erpnextModules: null },
+  starter: { maxTables: 10, maxReservationsPerMonth: 500, price: 299, currency: "GHS", name: "Starter", erpnextModules: [], byokTier: "platform_only" },
+  growth: { maxTables: 25, maxReservationsPerMonth: 2000, price: 599, currency: "GHS", name: "Growth", erpnextModules: ["erpnext_accounting", "erpnext_crm"], byokTier: "optional" },
+  scale: { maxTables: 100, maxReservationsPerMonth: 10000, price: 999, currency: "GHS", name: "Scale", erpnextModules: null, byokTier: "required" },
 };
 
 const getPlans = async () => {
@@ -21,6 +21,7 @@ const getPlans = async () => {
       currency: row.currency,
       name: row.name,
       erpnextModules: row.erpnextModules !== null && row.erpnextModules !== undefined ? row.erpnextModules : null,
+      byokTier: row.features?.byokTier || DEFAULT_PLANS[row.slug]?.byokTier || "platform_only",
     };
   }
   return { ...DEFAULT_PLANS, ...plans };

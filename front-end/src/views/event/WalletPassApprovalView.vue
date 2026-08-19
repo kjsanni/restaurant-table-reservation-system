@@ -7,10 +7,12 @@
           Back
         </button>
         <h1>Wallet Pass Requests</h1>
-        <p class="subtitle">Review and manage pending wallet pass signing requests</p>
+        <p class="subtitle">
+          Review and manage pending wallet pass signing requests
+        </p>
       </div>
       <button class="btn-refresh" v-tap-scale @click="load" :disabled="loading">
-        <span class="mdi mdi:refresh" :class="{ 'spin': loading }"></span>
+        <span class="mdi mdi:refresh" :class="{ spin: loading }"></span>
         Refresh
       </button>
     </div>
@@ -53,15 +55,25 @@
               <td>
                 <div class="requester">
                   <span class="mdi mdi:account-outline"></span>
-                  {{ item.requester?.username || item.requester?.email || "Unknown" }}
+                  {{
+                    item.requester?.username ||
+                    item.requester?.email ||
+                    "Unknown"
+                  }}
                 </div>
               </td>
               <td>
-                <span class="amount">{{ formatCurrency(item.amount, item.currency) }}</span>
+                <span class="amount">{{
+                  formatCurrency(item.amount, item.currency)
+                }}</span>
               </td>
               <td>
                 <span class="payment-ref" :title="item.paymentReference">
-                  {{ item.paymentReference ? truncate(item.paymentReference, 16) : "—" }}
+                  {{
+                    item.paymentReference
+                      ? truncate(item.paymentReference, 16)
+                      : "—"
+                  }}
                 </span>
               </td>
               <td>
@@ -101,13 +113,19 @@
       <div class="modal" role="dialog" aria-labelledby="reject-title">
         <div class="modal-header">
           <h3 id="reject-title">Reject Request #{{ rejectTarget.id }}</h3>
-          <button class="btn-close" @click="closeRejectModal" aria-label="Close">
+          <button
+            class="btn-close"
+            @click="closeRejectModal"
+            aria-label="Close"
+          >
             <span class="mdi mdi:close"></span>
           </button>
         </div>
         <div class="modal-body">
           <div class="field">
-            <label for="reject-notes">Rejection reason <span class="required">*</span></label>
+            <label for="reject-notes"
+              >Rejection reason <span class="required">*</span></label
+            >
             <textarea
               id="reject-notes"
               v-model="rejectNotes"
@@ -116,7 +134,9 @@
               placeholder="Provide a reason for rejection..."
               :class="{ 'input-error': rejectNotesError }"
             ></textarea>
-            <p v-if="rejectNotesError" class="field-error">{{ rejectNotesError }}</p>
+            <p v-if="rejectNotesError" class="field-error">
+              {{ rejectNotesError }}
+            </p>
           </div>
         </div>
         <div class="modal-actions">
@@ -217,7 +237,10 @@ const confirmReject = async () => {
 
   processing.value[rejectTarget.value.id] = true;
   try {
-    const res = await eventPortalAPI.rejectRequest(rejectTarget.value.eventId, rejectTarget.value.id);
+    const res = await eventPortalAPI.rejectRequest(
+      rejectTarget.value.eventId,
+      rejectTarget.value.id
+    );
     const message = res.data?.message || "Request rejected";
     toast.add(message, "success", 4000);
     items.value = items.value.filter((i) => i.id !== rejectTarget.value!.id);
@@ -330,7 +353,9 @@ onMounted(() => {
   animation: spin 1s linear infinite;
 }
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .card {
   background: var(--white);

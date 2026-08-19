@@ -30,7 +30,9 @@
         <div class="attendee-meta">
           <span v-if="pass.seat" class="badge">Seat: {{ pass.seat }}</span>
           <span v-if="pass.tier" class="badge">{{ pass.tier }} Tier</span>
-          <span v-if="pass.ticketType" class="badge">{{ pass.ticketType }}</span>
+          <span v-if="pass.ticketType" class="badge">{{
+            pass.ticketType
+          }}</span>
         </div>
       </div>
 
@@ -44,11 +46,7 @@
           <span class="mdi mdi:google"></span>
           Add to Google Pay
         </button>
-        <button
-          class="btn-apple-wallet"
-          v-tap-scale
-          @click="addToAppleWallet"
-        >
+        <button class="btn-apple-wallet" v-tap-scale @click="addToAppleWallet">
           <span class="mdi mdi:apple"></span>
           Add to Apple Wallet
         </button>
@@ -56,7 +54,9 @@
 
       <div class="qr-section">
         <p class="qr-hint">Show this ticket at the gate</p>
-        <div class="qr-code">{{ pass.tokenHash?.substring(0, 16) || "N/A" }}...</div>
+        <div class="qr-code">
+          {{ pass.tokenHash?.substring(0, 16) || "N/A" }}...
+        </div>
         <p class="ticket-id">Ticket ID: #{{ pass.id }}</p>
       </div>
     </div>
@@ -97,7 +97,9 @@ onMounted(async () => {
   try {
     const [webPassRes, googleRes] = await Promise.all([
       eventPortalAPI.getWebPass(shortCode.value),
-      eventPortalAPI.getGooglePayJwt(shortCode.value).catch(() => ({ data: null })),
+      eventPortalAPI
+        .getGooglePayJwt(shortCode.value)
+        .catch(() => ({ data: null })),
     ]);
 
     const data = webPassRes.data || {};

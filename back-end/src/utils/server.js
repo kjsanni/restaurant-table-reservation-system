@@ -1,4 +1,5 @@
 const express = require("express");
+const crypto = require("crypto");
 const helmet = require("helmet");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -19,8 +20,10 @@ const legalRouter = require("../routes/legal.router");
 const publicRouter = require("../routes/public.router");
 const statusRouter = require("../routes/status.router");
 const docsRouter = require("../routes/docs.router");
+const openapiSpec = require("../middleware/openapi");
+const { versioningHeaders } = require("../middleware/deprecation");
 const { setCsrfCookie, generateCsrfToken, CSRF_COOKIE_NAME, validateCsrfToken } = require("../middleware/csrf");
-const { requestMetrics, getStats } = require("../middleware/monitoring");
+const { requestMetrics, requestTiming } = require("../middleware/monitoring");
 const { requestLogger, logStream } = require("../middleware/requestLogger");
 const { logAction } = require("../middleware/auditLog");
 const { cspHeaders } = require("../middleware/csp");
@@ -46,6 +49,7 @@ const erpnextHrRouter = require("../integrations/erpnext/proxies/hr.proxy");
 const erpnextCrmRouter = require("../integrations/erpnext/proxies/crm.proxy");
 const erpnextManufacturingRouter = require("../integrations/erpnext/proxies/manufacturing.proxy");
 const erpnextReportsRouter = require("../integrations/erpnext/proxies/reports.proxy");
+const erpnextPosRouter = require("../integrations/erpnext/proxies/pos.proxy");
 const erpnextOnboardingRouter = require("../integrations/erpnext/onboarding/onboarding");
 
 const { adminMiddleware } = require("../middleware/adminMiddleware");
@@ -171,7 +175,46 @@ const createServer = () => {
   app.use(cookieParser());
   app.use(requestLogger);
   app.use(requestMetrics);
+  app.use(requestTiming);
   app.use(setCsrfCookie);
+
+  const CSRF_EXEMPT_PREFIXES = [
+    "/api/v1/webhooks/paystack",
+    "/api/v1/webhooks/shaqexpress",
+    "/api/v1/sync",
+  ];
+
+  const csrfProtection = (req, res, next) => {
+    if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+      return next();
+    }
+    if (CSRF_EXEMPT_PREFIXES.some((prefix) => req.path === prefix || req.path.startsWith(prefix + "/"))) {
+      return next();
+    }
+    if (process.env.NODE_ENV === "test") {
+      return next();
+    }
+    const clientToken = req.headers["x-xsrf-token"];
+    const cookieToken = req.cookies?.["XSRF-TOKEN"];
+    if (!clientToken || !cookieToken || clientToken.length !== cookieToken.length) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid CSRF token.",
+      });
+    }
+    const clientBuf = Buffer.from(clientToken, "utf8");
+    const cookieBuf = Buffer.from(cookieToken, "utf8");
+    if (!crypto.timingSafeEqual(clientBuf, cookieBuf)) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid CSRF token.",
+      });
+    }
+    next();
+  };
+
+  app.use(csrfProtection);
+
   app.use(requestTimeout(15000));
 
   app.use(
@@ -206,6 +249,22 @@ const createServer = () => {
     res.json({ success: true, token });
   });
 
+  app.use(tryCatchHandler(resolveTenant));
+  app.use(tryCatchHandler(requireActiveTenant));
+
+  app.use("/api/v1", generalLimiter, versioningHeaders, require("../routes"));
+  app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
+  app.use("/api/v1/auth", authLimiter, passwordResetRouter);
+  app.use("/api/v1/auth", authLimiter, emailVerificationRouter);
+  app.use("/api/v1/audit-logs", generalLimiter, auditLogRouter);
+  app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
+  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
+  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, walletPassAdminRouter);
+  app.use("/api/v1/public", generalLimiter, publicRouter);
+  app.use("/api/v1/public/status", generalLimiter, statusRouter);
+  app.use("/api/v1/docs", generalLimiter, docsRouter);
+  loadModules(app);
+
   app.get("/api/v1/health", tryCatchHandler(async (req, res) => {
     const queueAlerts = await checkQueueDepths();
     const redisStatus = redisClient ? (getConnectionStatus() ? "connected" : "disconnected") : "not_configured";
@@ -218,21 +277,6 @@ const createServer = () => {
     });
   }));
 
-  app.use(tryCatchHandler(resolveTenant));
-  app.use(tryCatchHandler(requireActiveTenant));
-
-  app.use("/api/v1", generalLimiter, require("../routes"));
-app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
-  app.use("/api/v1/auth", authLimiter, passwordResetRouter);
-  app.use("/api/v1/auth", authLimiter, emailVerificationRouter);
-  app.use("/api/v1/audit-logs", generalLimiter, auditLogRouter);
-  app.use("/api/v1/rbac", generalLimiter, logAction, validateCsrfToken, rbacRouter);
-  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, adminRouter);
-  app.use("/api/v1/admin", logAction, validateCsrfToken, adminActionLimiter, adminMiddleware, walletPassAdminRouter);
-  app.use("/api/v1/public", publicRouter);
-  app.use("/api/v1/public/status", statusRouter);
-  app.use("/api/v1/docs", docsRouter);
-  loadModules(app);
   app.use(
     "/api/v1/erpnext",
     logAction,
@@ -244,6 +288,7 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
     erpnextCrmRouter,
     erpnextManufacturingRouter,
     erpnextReportsRouter,
+    erpnextPosRouter,
     erpnextOnboardingRouter
   );
   app.use("/api/v1/notifications", generalLimiter, logAction, validateCsrfToken, notificationRouter);
@@ -252,6 +297,15 @@ app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
   app.use("/api/v1/webhooks/shaqexpress", logAction, webhookLimiter, shaqexpressRouter);
   app.use("/api/v1/sync", generalLimiter, logAction, syncLimiter, require("../routes/sync.router"));
   app.use("/api/v1/legal", generalLimiter, legalRouter);
+
+  app.use(versioningHeaders);
+
+  app.use("/api/v1/openapi.json", generalLimiter, (req, res) => {
+    const spec = openapiSpec.generate(app);
+    res.json(spec);
+  });
+  app.use("/api/v1/docs", openapiSpec.swaggerUi, openapiSpec.swaggerSetup);
+
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
   }

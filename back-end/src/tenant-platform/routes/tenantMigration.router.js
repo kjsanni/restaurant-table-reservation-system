@@ -1,3 +1,4 @@
+
 const express = require("express");
 const router = express.Router({ mergeParams: true });
 const tryCatchHandler = require("../../middleware/tryCatch");
@@ -21,7 +22,7 @@ router
   .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), async (req, res) => {
     res.set("Deprecation", "true");
     res.set("Sunset", "2026-12-31");
-    res.set("Link", "</api/v1/admin/tenants/:tenantId/migrations>; rel=\"successor-version\"");
+    res.set("Link", '</api/v1/admin/tenants/:tenantId/migrations>; rel="successor-version"');
     req.url = `/api/v1/admin/tenants/${req.params.tenantId}/migrations`;
     return tenantMigrationController.listTenantMigrationsHandler(req, res);
   })
@@ -32,7 +33,7 @@ router
   .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), async (req, res) => {
     res.set("Deprecation", "true");
     res.set("Sunset", "2026-12-31");
-    res.set("Link", "</api/v1/admin/tenants/:tenantId/migrations>; rel=\"successor-version\"");
+    res.set("Link", '</api/v1/admin/tenants/:tenantId/migrations>; rel="successor-version"');
     req.url = `/api/v1/admin/tenants/${req.params.tenantId}/migrations`;
     return tenantMigrationController.enqueueTenantMigrationHandler(req, res);
   })

@@ -9,6 +9,7 @@ import logger from "@/utils/logger";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 const loading = ref(true);
+const error = ref("");
 const reservations = ref([]);
 const total = ref(0);
 const page = ref(1);
@@ -119,6 +120,7 @@ const refreshData = async () => {
 
 const loadData = async () => {
   loading.value = true;
+  error.value = "";
   try {
     const [resRes, summaryRes] = await Promise.all([
       reservationAPI.getReservations({
@@ -132,6 +134,7 @@ const loadData = async () => {
     total.value = payload.total || reservations.value.length;
     summary.value = summaryRes.data.summary;
   } catch (err) {
+    error.value = getApiErrorMessage(err, "Failed to load payment dashboard");
     logger.error("Failed to load payment dashboard", { error: err.message });
   } finally {
     loading.value = false;
@@ -218,9 +221,45 @@ onMounted(loadData);
       </div>
     </div>
     <div class="content-wrapper">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading analytics...</p>
+      <div
+        v-if="loading"
+        class="loading-state"
+        aria-busy="true"
+        aria-label="Loading payment analytics"
+      >
+        <div class="skeleton-dashboard">
+          <div class="skeleton-summary">
+            <div class="skeleton-card skeleton-card--total"></div>
+            <div class="skeleton-card" v-for="i in 4" :key="i"></div>
+          </div>
+          <div class="skeleton-card skeleton-chart">
+            <div class="skeleton-cell skeleton-text"></div>
+            <div class="skeleton-bars">
+              <div class="skeleton-bar-row" v-for="i in 4" :key="i">
+                <div class="skeleton-cell skeleton-text short"></div>
+                <div class="skeleton-cell skeleton-bar"></div>
+              </div>
+            </div>
+          </div>
+          <div class="skeleton-card skeleton-table">
+            <div class="skeleton-cell skeleton-text"></div>
+            <div class="skeleton-rows">
+              <div class="skeleton-row" v-for="i in 5" :key="i">
+                <div class="skeleton-cell skeleton-text short"></div>
+                <div class="skeleton-cell skeleton-text short"></div>
+                <div class="skeleton-cell skeleton-text short"></div>
+                <div class="skeleton-cell skeleton-text short"></div>
+                <div class="skeleton-cell skeleton-text short"></div>
+                <div class="skeleton-cell skeleton-text short"></div>
+                <div class="skeleton-cell skeleton-text short"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="error" class="error-state">
+        <p>{{ error }}</p>
+        <button class="retry-btn" @click="loadData">Retry</button>
       </div>
       <div v-else class="dashboard-container">
         <div class="summary-section">
@@ -372,8 +411,9 @@ onMounted(loadData);
             >?
           </p>
           <div class="field">
-            <label class="field-label">Amount</label>
+            <label class="field-label" for="refund-amount">Amount</label>
             <input
+              id="refund-amount"
               v-model="refundAmount"
               type="number"
               step="0.01"
@@ -383,8 +423,9 @@ onMounted(loadData);
             />
           </div>
           <div class="field">
-            <label class="field-label">Reason</label>
+            <label class="field-label" for="refund-reason">Reason</label>
             <input
+              id="refund-reason"
               v-model="refundReason"
               class="field-input"
               placeholder="Optional reason"
@@ -447,18 +488,120 @@ onMounted(loadData);
   font-weight: 300;
 }
 
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: var(--radius-full);
-  animation: spin 0.8s linear infinite;
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-20) var(--space-5);
+  gap: var(--space-4);
+  color: var(--rose-600);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+.retry-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.retry-btn:hover {
+  background: var(--neutral-100);
+}
+
+.skeleton-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.skeleton-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+.skeleton-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+}
+
+.skeleton-card--total {
+  background-color: var(--ink);
+  border-color: var(--ink);
+}
+
+.skeleton-chart {
+  margin-bottom: var(--space-1);
+}
+
+.skeleton-bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3-5);
+  margin-top: var(--space-4);
+}
+
+.skeleton-bar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.skeleton-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: var(--space-4);
+}
+
+.skeleton-row {
+  display: flex;
+  gap: 12px;
+}
+
+.skeleton-cell {
+  background: var(--neutral-100);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+.skeleton-text {
+  height: 14px;
+  flex: 1;
+}
+
+.skeleton-text.short {
+  flex: 0 0 70px;
+}
+
+.skeleton-bar {
+  flex: 1;
+  height: 36px;
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-table .skeleton-cell {
+  height: 14px;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
 

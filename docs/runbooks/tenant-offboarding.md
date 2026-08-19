@@ -1,33 +1,30 @@
-# Tenant Offboarding Runbook
+# Tenant Offboarding Runboard
 
-## 1. Data Export
+## Prerequisites
 
-- Tenant admin requests data export from tenant portal.
-- System exports: reservations, customers, settings, legal acceptances.
-- Export is delivered as JSON/CSV via secure download link.
+- Tenant requested cancellation or subscription expired
+- All outstanding invoices paid
 
-## 2. Suspension
+## Steps
 
-- Super-admin or automated cron suspends past-due tenants.
-- Tenant status changes to `suspended`.
-- All login attempts are rejected until payment is received.
+1. **Data export**
+   - Export reservations, customers, payments, settings to JSON/CSV
+   - Deliver to tenant via secure link (expires in 7 days)
 
-## 3. Archival
+2. **Suspend tenant**
+   - Set `status: "suspended"` — blocks new reservations
+   - Existing data remains readable for 30 days
 
-- After 90 days of suspension, tenant data is anonymized.
-- `anonymizeData` replaces PII with placeholder values.
-- Audit log records anonymization timestamp and operator.
+3. **Archive**
+   - Move tenant data to archive DB shard (or encrypted S3)
+   - Remove from active tenant cache (`tenantCache.invalidatePattern`)
 
-## 4. Deletion
+4. **Delete**
+   - After 30 days: soft-delete tenant + cascade anonymize PII
+   - Preserve audit logs for compliance (DPA 2012)
 
-- Tenant record is soft-deleted (`deletedAt` timestamp).
-- Related records are cascade-deleted where safe.
-- Hard delete is performed after retention period per legal policy.
+## Verification
 
-## 5. Post-Offboarding
-
-- [ ] Data export confirmed delivered
-- [ ] Suspension reason documented
-- [ ] Anonymization verified
-- [ ] Billing cancelled
-- [ ] Domain/DNS records removed if custom domain was used
+- Confirm tenant cannot authenticate
+- Confirm no cross-tenant data leakage in search/index
+- Confirm billing stopped

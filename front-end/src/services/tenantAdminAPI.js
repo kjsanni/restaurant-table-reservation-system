@@ -36,6 +36,10 @@ const exportData = (id) => {
   return API.get(`/admin/tenants/${id}/export`);
 };
 
+const exportSelfData = () => {
+  return API.get(`/tenant/export`);
+};
+
 const anonymizeData = (id) => {
   return API.post(`/admin/tenants/${id}/anonymize`);
 };
@@ -49,6 +53,56 @@ const bulkChangeVertical = (tenantIds, businessVertical) => {
 
 const getProvisioningStatus = (tenantId) => {
   return API.get(`/admin/tenants/${tenantId}/provisioning`);
+};
+
+const startProvisioning = (tenantId) => {
+  return API.post(`/admin/tenants/${tenantId}/provisioning`);
+};
+
+const pauseProvisioning = (tenantId) => {
+  return API.post(`/admin/tenants/${tenantId}/provisioning/pause`);
+};
+
+const resumeProvisioning = (tenantId) => {
+  return API.post(`/admin/tenants/${tenantId}/provisioning/resume`);
+};
+
+const rollbackProvisioning = (tenantId) => {
+  return API.post(`/admin/tenants/${tenantId}/provisioning/rollback`);
+};
+
+const getProvisioningSteps = () => {
+  return API.get("/admin/provisioning/steps");
+};
+
+const getDLQStatus = (tenantId, limit = 50) => {
+  return API.get(`/admin/tenants/${tenantId}/provisioning/dlq`, {
+    params: { limit },
+  });
+};
+
+const retryDLQEntry = (tenantId, jobId) => {
+  return API.post(`/admin/tenants/${tenantId}/provisioning/dlq/${jobId}/retry`);
+};
+
+const getEncryptionKeys = () => {
+  return API.get("/tenant/encryption-keys");
+};
+
+const createEncryptionKey = (data) => {
+  return API.post("/tenant/encryption-keys", data);
+};
+
+const rotateEncryptionKey = (id) => {
+  return API.post(`/tenant/encryption-keys/${id}/rotate`);
+};
+
+const retireEncryptionKey = (id) => {
+  return API.post(`/tenant/encryption-keys/${id}/retire`);
+};
+
+const deleteEncryptionKey = (id) => {
+  return API.delete(`/tenant/encryption-keys/${id}`);
 };
 
 const updateFeatureFlags = (id, data) => {
@@ -68,7 +122,20 @@ export default {
   disable,
   deleteTenant,
   exportData,
+  exportSelfData,
   anonymizeData,
   bulkChangeVertical,
   getProvisioningStatus,
+  startProvisioning,
+  pauseProvisioning,
+  resumeProvisioning,
+  rollbackProvisioning,
+  getProvisioningSteps,
+  getDLQStatus,
+  retryDLQEntry,
+  getEncryptionKeys,
+  createEncryptionKey,
+  rotateEncryptionKey,
+  retireEncryptionKey,
+  deleteEncryptionKey,
 };

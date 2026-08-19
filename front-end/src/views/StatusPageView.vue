@@ -23,9 +23,12 @@ onMounted(async () => {
 });
 
 const statusColor = (status: string) => {
-  if (status === "healthy" || status === "operational") return brandColors.earth500;
-  if (status === "degraded" || status === "warning") return brandColors.accent500;
-  if (status === "unhealthy" || status === "critical") return brandColors.rose500;
+  if (status === "healthy" || status === "operational")
+    return brandColors.earth500;
+  if (status === "degraded" || status === "warning")
+    return brandColors.accent500;
+  if (status === "unhealthy" || status === "critical")
+    return brandColors.rose500;
   return brandColors.neutral500;
 };
 

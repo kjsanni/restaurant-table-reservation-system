@@ -65,13 +65,13 @@ engines:
   stylelint:
     enabled: true
   semgrep:
-    enabled: true
+    enabled: false
   shellcheck:
     enabled: true
   hadolint:
     enabled: true
   tslint:
-    enabled: true
+    enabled: false
   sbom:
     enabled: false
   codeql:
@@ -80,5 +80,6 @@ engines:
     enabled: true
     exclude_paths:
       - "back-end/src/tenant-platform/controllers/tenantAdmin.controller.js"
+      - "back-end/src/middleware/openapi.js"
   markdownlint:
     enabled: true

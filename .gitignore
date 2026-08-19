@@ -51,3 +51,4 @@ module-checksums.json
 # Codacy
 .codacy/
 drinks-vendor/
+stats.html

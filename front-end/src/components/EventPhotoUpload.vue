@@ -17,12 +17,7 @@
       <span class="mdi mdi:camera"></span>
       {{ uploading ? "Uploading..." : label }}
     </button>
-    <img
-      v-if="previewUrl"
-      :src="previewUrl"
-      :alt="alt"
-      class="photo-preview"
-    />
+    <img v-if="previewUrl" :src="previewUrl" :alt="alt" class="photo-preview" />
   </div>
 </template>
 

@@ -61,7 +61,8 @@ const props = defineProps<Props>();
   font-weight: 600;
   font-size: var(--text-sm);
   cursor: pointer;
-  transition: transform var(--duration-fast) var(--ease-out),
+  transition:
+    transform var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out);
 }
 .empty-action:hover {

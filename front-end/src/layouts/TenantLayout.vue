@@ -20,6 +20,7 @@ const { status, pendingCount } = useOnlineStatus();
 
 const collapsed = ref(false);
 const sidebarVisible = ref(true);
+const sidebarMobileVisible = ref(false);
 const windowWidth = ref<number>(
   typeof window !== "undefined" ? window.innerWidth : 1024
 );
@@ -122,17 +123,14 @@ const checkWindowWidth = () => {
 
 const toggleSidebar = () => {
   if (windowWidth.value <= 768) {
-    if (collapsed.value && sidebarVisible.value) {
-      collapsed.value = false;
-    } else if (!collapsed.value && sidebarVisible.value) {
-      collapsed.value = true;
-    } else {
-      sidebarVisible.value = !sidebarVisible.value;
-      if (sidebarVisible.value) collapsed.value = true;
-    }
+    toggleMobileSidebar();
   } else {
     collapsed.value = !collapsed.value;
   }
+};
+
+const toggleMobileSidebar = () => {
+  sidebarMobileVisible.value = !sidebarMobileVisible.value;
 };
 
 const currentYear = new Date().getFullYear();
@@ -162,7 +160,16 @@ watch(
 <template>
   <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="tl-layout">
-    <aside class="tl-sidebar" :style="{ width: sidebarWidth }">
+    <div
+      v-if="sidebarMobileVisible"
+      class="tl-sidebar-overlay"
+      @click="sidebarMobileVisible = false"
+    ></div>
+    <aside
+      class="tl-sidebar"
+      :class="{ 'sidebar-mobile-visible': sidebarMobileVisible }"
+      :style="{ width: sidebarWidth }"
+    >
       <div class="tl-sidebar-inner">
         <div class="tl-sidebar-top">
           <div class="tl-sidebar-header">
@@ -175,9 +182,13 @@ watch(
             <span v-if="!collapsed" class="tl-brand">RTRS</span>
           </div>
           <button
-            v-if="!collapsed"
+            v-if="!collapsed || sidebarMobileVisible"
             class="tl-collapse-btn"
-            @click="collapsed = true"
+            @click="
+              sidebarMobileVisible
+                ? (sidebarMobileVisible = false)
+                : (collapsed = true)
+            "
             aria-label="Collapse sidebar"
           >
             <Icon icon="mdi:chevron-left" width="20" height="20" />
@@ -357,6 +368,13 @@ watch(
   box-shadow: 4px 0 32px rgba(26, 20, 16, 0.25);
   transition: width var(--duration-normal) var(--ease-in-out);
   overflow: hidden;
+}
+
+.tl-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-sidebar) - 1);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .tl-sidebar-inner {

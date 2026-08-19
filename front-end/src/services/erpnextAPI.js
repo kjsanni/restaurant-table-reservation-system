@@ -124,6 +124,18 @@ const erpnextAPI = {
 
   getGhanaTaxCompliance: (params = {}) =>
     apiClient.get("/reports/ghana/tax-compliance", { params }),
+
+  getPosProxy: (path, method = "GET", params = {}) =>
+    apiClient.request({
+      method,
+      url: `/pos/proxy?path=${encodeURIComponent(path)}`,
+      ...(method === "GET" ? { params } : { data: params }),
+    }),
+
+  syncPos: (syncType, payload = {}) =>
+    apiClient.post("/pos/sync", { syncType, payload }),
+
+  getPosSyncStatus: () => apiClient.get("/pos/sync/status"),
 };
 
 export default erpnextAPI;

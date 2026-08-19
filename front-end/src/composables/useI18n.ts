@@ -13,6 +13,14 @@ const localeNames: Record<Locale, string> = {
   gaa: "Ga",
 };
 
+const isDev = import.meta.env.DEV;
+
+const warnMissing = (key: string, locale: Locale) => {
+  if (isDev) {
+    console.warn(`[i18n] Missing translation: ${key} (locale: ${locale})`);
+  }
+};
+
 const initLocale = (): Locale => {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem(STORAGE_KEY) as Locale | null;
@@ -25,24 +33,85 @@ const initLocale = (): Locale => {
 
 const currentLocale: Ref<Locale> = ref<Locale>(initLocale());
 
+const resolveValue = (root: any, keys: string[]): any => {
+  let value: any = root;
+  for (const k of keys) {
+    if (
+      value &&
+      typeof value === "object" &&
+      k in (value as Record<string, any>)
+    ) {
+      value = (value as Record<string, any>)[k];
+    } else {
+      return undefined;
+    }
+  }
+  return value;
+};
+
+const interpolate = (value: string, params?: Record<string, any>): string => {
+  if (!params || typeof value !== "string") return value;
+  return value.replace(/\{(\w+)\}/g, (_, key) => {
+    if (Object.prototype.hasOwnProperty.call(params, key)) {
+      return String(params[key]);
+    }
+    return `{${key}}`;
+  });
+};
+
 const createI18nInstance = () => {
-  const t = (key: KeyPath, fallback = "") => {
+  const t = (
+    key: KeyPath,
+    fallback = "",
+    params?: Record<string, any>
+  ): string => {
     const keys = key.split(".");
-    let value: any = messages[currentLocale.value as Locale];
-    for (const k of keys) {
-      if (
-        value &&
-        typeof value === "object" &&
-        k in (value as Record<string, any>)
-      ) {
-        value = (value as Record<string, any>)[k];
-      } else {
-        return fallback || key;
-      }
+    const locale = currentLocale.value as Locale;
+    let value = resolveValue(messages[locale], keys);
+
+    if (value === undefined && locale !== "en") {
+      value = resolveValue(messages.en, keys);
     }
+
+    if (value === undefined) {
+      warnMissing(key, locale);
+      return fallback || key;
+    }
+
     if (typeof value === "string") {
-      return value;
+      return interpolate(value, params);
     }
+
+    warnMissing(key, locale);
+    return fallback || key;
+  };
+
+  const te = (
+    key: KeyPath,
+    count: number,
+    fallback = "",
+    params?: Record<string, any>
+  ): string => {
+    const locale = currentLocale.value as Locale;
+    const keys = key.split(".");
+    let pluralKey = `${keys[keys.length - 1]}_plural`;
+    if (count !== 1) pluralKey = `${keys[keys.length - 1]}_other`;
+
+    const pluralKeys = [...keys.slice(0, -1), pluralKey];
+    let value = resolveValue(messages[locale], pluralKeys);
+
+    if (value === undefined && locale !== "en") {
+      value = resolveValue(messages.en, pluralKeys);
+    }
+
+    if (value === undefined) {
+      value = t(key, fallback, params);
+    }
+
+    if (typeof value === "string") {
+      return interpolate(value, { ...params, count });
+    }
+
     return fallback || key;
   };
 
@@ -73,6 +142,7 @@ const createI18nInstance = () => {
 
   return {
     t,
+    te,
     locale,
     localeName,
     availableLocales,
