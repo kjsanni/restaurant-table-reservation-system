@@ -81,8 +81,7 @@ const OffboardingService = {
     );
 
     for (const tableName of allowedTables) {
-      // codacy-suppress Semgrep_javascript.sequelize.security.audit.sequelize-injection-express.express-sequelize-injection tableName is validated against INFORMATION_SCHEMA allowlist; parameterized query
-      await db.sequelize.query(`UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`, { // codacy-suppress javascript.lang.security.audit.injection.tainted-sql tableName is validated against INFORMATION_SCHEMA allowlist
+      await db.sequelize.query(`UPDATE ${tableName} SET tenantId = NULL WHERE tenantId = :tenantId`, { // nosemgrep: tainted-sql-string - tableName validated against INFORMATION_SCHEMA allowlist; query uses :tenantId parameter // guardrails-disable-line - tableName validated against INFORMATION_SCHEMA allowlist; query uses :tenantId parameter
         replacements: { tenantId },
       });
     }

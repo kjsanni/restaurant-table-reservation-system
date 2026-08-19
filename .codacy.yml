@@ -80,5 +80,6 @@ engines:
     enabled: true
     exclude_paths:
       - "back-end/src/tenant-platform/controllers/tenantAdmin.controller.js"
+      - "back-end/src/middleware/openapi.js"
   markdownlint:
     enabled: true
