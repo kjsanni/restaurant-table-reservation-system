@@ -1,3 +1,4 @@
+// codeql-suppress js/missing-csrf-protection - CSRF protection is applied globally via setCsrfCookie and validateCsrfToken middleware
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
