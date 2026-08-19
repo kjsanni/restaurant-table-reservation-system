@@ -18,7 +18,6 @@ const checkErpnextPos = async (req, res, next) => {
 };
 
 router.get("/pos/proxy", tryCatchHandler(requireActiveTenant, checkErpnextPos, async (req, res) => {
-  const tenant = req.tenant;
   const { getClient } = require("../client");
   const { path, method = "GET", ...rest } = req.query;
 
@@ -48,7 +47,6 @@ router.get("/pos/proxy", tryCatchHandler(requireActiveTenant, checkErpnextPos, a
 }));
 
 router.post("/pos/sync", tryCatchHandler(requireActiveTenant, checkErpnextPos, async (req, res) => {
-  const tenant = req.tenant;
   const { getClient } = require("../client");
   const { syncType, payload } = req.body;
 
@@ -84,7 +82,6 @@ router.post("/pos/sync", tryCatchHandler(requireActiveTenant, checkErpnextPos, a
 }));
 
 router.get("/pos/sync/status", tryCatchHandler(requireActiveTenant, checkErpnextPos, async (req, res) => {
-  const tenant = req.tenant;
   const { getClient } = require("../client");
 
   try {

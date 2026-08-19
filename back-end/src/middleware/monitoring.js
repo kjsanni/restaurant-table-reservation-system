@@ -1,11 +1,3 @@
-const SENSITIVE_HEADERS = new Set([
-  "authorization",
-  "cookie",
-  "set-cookie",
-  "x-api-key",
-  "proxy-authorization",
-]);
-
 const SENSITIVE_PATH_PREFIXES = [
   "/api/v1/admin/tenants/=/i/",
 ];
@@ -15,18 +7,6 @@ const sanitizePath = (path) => {
     return `${prefix}:id`;
   }
   return path;
-};
-
-const sanitizeHeaders = (headers) => {
-  const sanitized = {};
-  for (const [key, value] of Object.entries(headers)) {
-    if (SENSITIVE_HEADERS.has(key.toLowerCase())) {
-      sanitized[key] = "[REDACTED]";
-    } else {
-      sanitized[key] = value;
-    }
-  }
-  return sanitized;
 };
 
 const requestTiming = (req, res, next) => {
