@@ -1,7 +1,6 @@
 const response = require("../utils/response");
 
 const encryptionKeyDAO = require("../DAOs/encryptionKey.dao");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const listEncryptionKeysHandler = async (req, res) => {

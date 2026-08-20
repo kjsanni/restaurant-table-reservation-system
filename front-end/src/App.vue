@@ -14,7 +14,11 @@ provide("i18n", i18n);
 watch(
   () => authStore.user?.locale,
   (newLocale) => {
-    if (newLocale && i18n.supportedLocales.includes(newLocale as any) && newLocale !== i18n.locale.value) {
+    if (
+      newLocale &&
+      i18n.supportedLocales.includes(newLocale as any) &&
+      newLocale !== i18n.locale.value
+    ) {
       i18n.setLocale(newLocale as any);
     }
   },

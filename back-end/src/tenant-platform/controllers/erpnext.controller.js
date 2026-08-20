@@ -4,7 +4,6 @@ const response = require("../utils/response");
 
 const db = require("../../db/models");
 const { validateModuleDependencies, getModuleMetadata, getEnabledModules } = require("../../integrations/erpnext/module-registry");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 const { enqueueCustomerSync, enqueueInvoiceSync, enqueuePaymentSync, enqueueItemSync, enqueueStockEntrySync, enqueueEmployeeSync, enqueueCrmCustomerSync, enqueueFullSync } = require("../../integrations/erpnext/sync/orchestrator");
 

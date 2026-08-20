@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { ref } from "vue";
 
 function buildSettingsMap(settings) {
   const map = new Map();

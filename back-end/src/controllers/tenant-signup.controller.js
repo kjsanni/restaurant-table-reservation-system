@@ -6,7 +6,6 @@ const planDAO = require("../tenant-platform/DAOs/plan.dao");
 const { applyTypeDefaults } = require("../tenant-platform/services/tenantTypeDefaults.service");
 const verticalTemplateController = require("../tenant-platform/controllers/verticalTemplate.controller");
 const { enqueueProvisioning } = require("../queues/provisioning.queue");
-const provisioningService = require("../tenant-platform/services/provisioning.service");
 
 const signupTenantHandler = async (req, res) => {
   const {

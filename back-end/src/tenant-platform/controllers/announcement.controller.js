@@ -1,7 +1,6 @@
 const response = require("../utils/response");
 
 const announcementDAO = require("../DAOs/announcement.dao");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const listAnnouncementsHandler = async (req, res) => {

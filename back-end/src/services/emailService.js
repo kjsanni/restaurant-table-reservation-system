@@ -139,10 +139,13 @@ const sendEmail = async ({ to, subject, text, html }) => {
   return info;
 };
 
-const sendTemplate = async ({ templateType, to, data }) => {
+const sendTemplate = async ({ templateType, to, data, locale }) => {
   const templates = await getEmailTemplates();
   const theme = await getEmailTheme();
-  const template = templates[templateType];
+  let template = templates[templateType];
+  if (!template && locale && locale !== "en") {
+    template = templates[`${templateType}_${locale}`];
+  }
   if (!template) {
     throw { status: 400, message: `Unknown email template: ${templateType}` };
   }

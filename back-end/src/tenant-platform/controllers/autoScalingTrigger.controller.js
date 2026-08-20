@@ -1,7 +1,6 @@
 const response = require("../utils/response");
 
 const autoScalingTriggerDAO = require("../DAOs/autoScalingTrigger.dao");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const listAutoScalingTriggersHandler = async (req, res) => {

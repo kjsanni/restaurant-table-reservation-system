@@ -1,7 +1,6 @@
 const response = require("../utils/response");
 
 const dataRetentionPolicyDAO = require("../DAOs/dataRetentionPolicy.dao");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const listPoliciesHandler = async (req, res) => {

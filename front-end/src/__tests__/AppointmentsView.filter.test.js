@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ref, computed } from "vue";
+import { computed } from "vue";
 
 function createAppointmentFilter(appointments, dateStr = "") {
   return computed(() => {

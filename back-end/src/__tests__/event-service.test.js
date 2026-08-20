@@ -125,7 +125,7 @@ describe("Event Service Layer", () => {
       });
       guestListDAO.update.mockResolvedValue(true);
 
-      const result = await guestListService.generateQRCodeForGuest(1, 1, 1);
+      await guestListService.generateQRCodeForGuest(1, 1, 1);
       expect(qrCodeDAO.create).toHaveBeenCalledWith(
         expect.objectContaining({
           eventId: 1,

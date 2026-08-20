@@ -3,7 +3,6 @@ const response = require("../utils/response");
 const db = require("../../db/models");
 const legalAcceptanceDAO = require("../DAOs/legalAcceptance.dao");
 const dsarRequestDAO = require("../DAOs/dsarRequest.dao");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const AUTO_FULFILLABLE_DSAR_TYPES = ["access"];

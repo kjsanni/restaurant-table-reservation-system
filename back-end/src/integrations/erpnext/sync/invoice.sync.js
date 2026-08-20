@@ -39,7 +39,6 @@ const createErpnextInvoice = async (entity, tenant, entityType) => {
 
 const syncInvoice = async (tenantId, entityId, entityType = "reservation") => {
   let entity = null;
-  let include = [];
 
   if (entityType === "appointment") {
     entity = await db.appointment.findByPk(entityId, { // codacy-suppress nosql-injection - parameterized ORM call
