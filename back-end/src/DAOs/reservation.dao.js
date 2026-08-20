@@ -134,10 +134,10 @@ const searchReservations = async (filters = {}, { limit, offset } = {}, tenantId
   return reservations;
 };
 
-const findReservationById = async (reservationId, tenantId) => {
-// codacy-suppress NoSqlInjection
-  const reservation = await Reservation.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
+const findReservationById = async (reservationId, tenantId, transaction) => {
+  const reservation = await Reservation.findOne({
     where: withTenant({ id: reservationId }, tenantId),
+    transaction,
   });
 
   return reservation;
@@ -396,7 +396,7 @@ const createReservation = async (resDetails, tenantId) => {
 
 const statusHistoryDAO = require("../DAOs/reservationStatusHistory.dao");
 
-const updateReservation = async (reservationId, resDetails, tenantId) => {
+const updateReservation = async (reservationId, resDetails, tenantId, transaction) => {
   const allowedFields = ["resStatus", "resDate", "resTime", "people", "notes", "tableId", "paymentStatus", "expectedTotal"];
   const updates = {};
   for (const field of allowedFields) {
@@ -404,13 +404,14 @@ const updateReservation = async (reservationId, resDetails, tenantId) => {
       updates[field] = resDetails[field];
     }
   }
-  const [result] = await Reservation.update(updates, { // codacy-suppress nosql-injection - parameterized ORM call
+  const [result] = await Reservation.update(updates, {
     where: withTenant({ id: reservationId }, tenantId),
+    transaction,
   });
   return result;
 };
 
-const recordStatusChange = async (reservationId, fromStatus, toStatus, actorId, metadata = {}, tenantId) => {
+const recordStatusChange = async (reservationId, fromStatus, toStatus, actorId, metadata = {}, tenantId, transaction) => {
   return await statusHistoryDAO.addHistory({
     reservationId,
     fromStatus,
@@ -418,7 +419,7 @@ const recordStatusChange = async (reservationId, fromStatus, toStatus, actorId, 
     actorId,
     actorType: actorId ? "user" : "system",
     metadata,
-  }, tenantId);
+  }, tenantId, transaction);
 };
 
 const getStatusHistory = async (reservationId, tenantId) => {

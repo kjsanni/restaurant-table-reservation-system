@@ -50,7 +50,7 @@ describe("customer-portal ownership", () => {
       await customerPortalController.cancelReservationHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(reservationDAO.updateReservation).toHaveBeenCalledWith("1", { resStatus: "cancelled" }, 10);
+      expect(reservationDAO.updateReservation).toHaveBeenCalledWith("1", { resStatus: "cancelled" }, 10, expect.objectContaining({}));
     });
 
     it("denies customer from cancelling another customer's reservation", async () => {

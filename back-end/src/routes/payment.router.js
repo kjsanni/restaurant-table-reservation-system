@@ -3,6 +3,9 @@ const router = express.Router();
 const httpMethodError = require("../middleware/httpMethodError");
 const paymentController = require("../controllers/payment.controller");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
+const { generalLimiter } = require("../middleware/rateLimit");
+
+router.use(generalLimiter);
 
 router
   .route("/:reservationId/payments/initialize")

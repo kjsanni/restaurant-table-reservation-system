@@ -8,9 +8,11 @@ const { generalLimiter, authLimiter } = require("../middleware/rateLimit");
 const { validateCsrfToken } = require("../middleware/csrf");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 
+router.use(generalLimiter);
+
 router
   .route("/find-or-create")
-  .post(generalLimiter, tryCatchHandler(protect), validateCsrfToken, tryCatchHandler(customerController.findOrCreateHandler))
+  .post(tryCatchHandler(protect), validateCsrfToken, tryCatchHandler(customerController.findOrCreateHandler))
   .all(httpMethodError);
 
 router

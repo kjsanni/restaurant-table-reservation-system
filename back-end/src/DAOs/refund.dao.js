@@ -8,11 +8,14 @@ const withTenant = (where = {}, tenantId) => {
   return tenantId ? { ...where, tenantId } : where;
 };
 
-const createRefund = async (data, tenantId) => {
-  return await Refund.create({ // codacy-suppress nosql-injection - parameterized ORM call
-    ...data,
-    ...withTenant({}, tenantId),
-  });
+const createRefund = async (data, tenantId, transaction) => {
+  return await Refund.create(
+    {
+      ...data,
+      ...withTenant({}, tenantId),
+    },
+    { transaction }
+  );
 };
 
 const findById = async (id, tenantId) => {

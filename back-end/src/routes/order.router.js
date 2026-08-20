@@ -6,10 +6,12 @@ const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 const { validateCsrfToken } = require("../middleware/csrf");
 const { generalLimiter } = require("../middleware/rateLimit");
 
+router.use(generalLimiter);
+
 router
   .route("/")
   .get(protectedRoute("view_orders", orderController.getOrdersHandler))
-  .post(generalLimiter, writeRoute("edit_orders", orderController.createOrderHandler), validateCsrfToken)
+  .post(writeRoute("edit_orders", orderController.createOrderHandler), validateCsrfToken)
   .all(httpMethodError);
 
 router
@@ -61,7 +63,7 @@ router
 
 router
   .route("/track/:orderId")
-  .get(generalLimiter, protectedRoute("view_orders", orderController.trackOrderHandler))
+  .get(protectedRoute("view_orders", orderController.trackOrderHandler))
   .all(httpMethodError);
 
 module.exports = router;

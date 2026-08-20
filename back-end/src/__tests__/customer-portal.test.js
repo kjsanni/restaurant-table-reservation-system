@@ -54,7 +54,7 @@ describe("Customer portal", () => {
     reservationDAO.updateReservation.mockResolvedValue({ id: 1, resStatus: "cancelled" });
 
     await customerPortalController.cancelReservationHandler(req, res);
-    expect(reservationDAO.updateReservation).toHaveBeenCalledWith(1, { resStatus: "cancelled" }, 1);
+    expect(reservationDAO.updateReservation).toHaveBeenCalledWith(1, { resStatus: "cancelled" }, 1, expect.objectContaining({}));
     expect(res.status).toHaveBeenCalledWith(200);
   });
 

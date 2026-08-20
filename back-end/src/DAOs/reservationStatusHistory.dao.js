@@ -8,11 +8,14 @@ const withTenant = (where = {}, tenantId) => {
   return tenantId ? { ...where, tenantId } : where;
 };
 
-const addHistory = async (data, tenantId) => {
-  return await ReservationStatusHistory.create({ // codacy-suppress nosql-injection - parameterized ORM call
-    ...data,
-    ...withTenant({}, tenantId),
-  });
+const addHistory = async (data, tenantId, transaction) => {
+  return await ReservationStatusHistory.create(
+    {
+      ...data,
+      ...withTenant({}, tenantId),
+    },
+    { transaction }
+  );
 };
 
 const getHistoryByReservation = async (reservationId, tenantId) => {

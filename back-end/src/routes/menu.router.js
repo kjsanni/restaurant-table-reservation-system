@@ -6,24 +6,26 @@ const menuController = require("../controllers/menu.controller");
 const { protectedRoute } = require("../utils/routeHelpers");
 const { generalLimiter } = require("../middleware/rateLimit");
 
+router.use(generalLimiter);
+
 router
   .route("/categories")
-  .get(generalLimiter, protectedRoute("view_menu", menuController.getCategoriesHandler))
+  .get(protectedRoute("view_menu", menuController.getCategoriesHandler))
   .all(httpMethodError);
 
 router
   .route("/items")
-  .get(generalLimiter, protectedRoute("view_menu", menuController.getMenuItemsHandler))
+  .get(protectedRoute("view_menu", menuController.getMenuItemsHandler))
   .all(httpMethodError);
 
 router
   .route("/available")
-  .get(generalLimiter, protectedRoute("view_menu", menuController.getAvailableMenuHandler))
+  .get(protectedRoute("view_menu", menuController.getAvailableMenuHandler))
   .all(httpMethodError);
 
 router
   .route("/items/:id")
-  .get(generalLimiter, protectedRoute("view_menu", menuController.getMenuItemDetailHandler))
+  .get(protectedRoute("view_menu", menuController.getMenuItemDetailHandler))
   .all(httpMethodError);
 
 module.exports = router;

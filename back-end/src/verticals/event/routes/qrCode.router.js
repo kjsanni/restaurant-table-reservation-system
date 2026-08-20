@@ -26,26 +26,26 @@ router.use(checkinLimiter);
 
 router
   .route("/:eventId/qr-codes")
-  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("view_events")), tryCatchHandler(tenantLimiter), tryCatchHandler(qrCodeController.getQRCodesHandler))
-  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(tenantLimiter), tryCatchHandler(validateCsrfToken), tryCatchHandler(validateEventInput), tryCatchHandler(qrCodeController.generateQRCodeHandler))
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("view_events")), tryCatchHandler(qrCodeController.getQRCodesHandler))
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(validateCsrfToken), tryCatchHandler(validateEventInput), tryCatchHandler(qrCodeController.generateQRCodeHandler))
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
 
 router
   .route("/scanner/config")
-  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(tenantLimiter), tryCatchHandler(qrCodeController.getScannerConfigHandler))
+  .get(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(qrCodeController.getScannerConfigHandler))
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
 
 router
   .route("/:eventId/qr-codes/batch")
-  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(tenantLimiter), tryCatchHandler(validateCsrfToken), tryCatchHandler(validateEventInput), tryCatchHandler(qrCodeController.generateBatchQRCodesHandler))
+  .post(tryCatchHandler(protect), tryCatchHandler(requirePermission("manage_events")), tryCatchHandler(validateCsrfToken), tryCatchHandler(validateEventInput), tryCatchHandler(qrCodeController.generateBatchQRCodesHandler))
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
 
 router
   .route("/checkin/:token")
   .post(
     tryCatchHandler(validateScannerApiKey),
-    tryCatchHandler(scannerLimiter),
-    tryCatchHandler(checkinLimiter),
+
+
     tryCatchHandler(qrCodeController.checkinHandler)
   )
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
@@ -54,7 +54,7 @@ router
   .route("/checkin/:token/verify")
   .get(
     tryCatchHandler(validateScannerApiKey),
-    tryCatchHandler(scannerLimiter),
+
     tryCatchHandler(qrCodeController.verifyTokenHandler)
   )
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));

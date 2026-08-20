@@ -37,31 +37,36 @@ const addPayment = async (reservationId, data, tenantId) => {
     throw { status: 400, message: `Split amounts (${totalSplit.toFixed(2)}) must equal the payment amount (${paymentAmount.toFixed(2)}).` };
   }
 
-  const payment = await paymentDAO.create({ // codacy-suppress nosql-injection - parameterized ORM call
-    ...data,
-    reservationId,
-    amount: paymentAmount,
-    method: sanitizedSplits.length > 0 ? "split" : data.method,
-    splits: sanitizedSplits.length > 0 ? sanitizedSplits : undefined,
-  }, tenantId);
+  const result = await db.sequelize.transaction(async (t) => {
+    const payment = await paymentDAO.create(
+      {
+        ...data,
+        reservationId,
+        amount: paymentAmount,
+        method: sanitizedSplits.length > 0 ? "split" : data.method,
+        splits: sanitizedSplits.length > 0 ? sanitizedSplits : undefined,
+      },
+      tenantId,
+      t
+    );
 
-  const paidInfo = await paymentDAO.getTotalPaid(reservationId, tenantId);
-  const reservation = await reservationDAO.findReservationById(reservationId, tenantId);
-  let updatedReservation = null;
-  if (reservation) {
-    const expectedTotal = reservation.expectedTotal || 0;
-    const finalPaid = paidInfo.finalTotal;
-    const newStatus = classifyPaymentStatus(finalPaid, expectedTotal);
-    if (reservation.paymentStatus !== newStatus) {
-      await reservationDAO.updateReservation(reservationId, {
-        paymentStatus: newStatus,
-      }, tenantId);
-      reservation.paymentStatus = newStatus;
+    const paidInfo = await paymentDAO.getTotalPaid(reservationId, tenantId, t);
+    const reservation = await reservationDAO.findReservationById(reservationId, tenantId, t);
+    let updatedReservation = null;
+    if (reservation) {
+      const expectedTotal = reservation.expectedTotal || 0;
+      const finalPaid = paidInfo.finalTotal;
+      const newStatus = classifyPaymentStatus(finalPaid, expectedTotal);
+      if (reservation.paymentStatus !== newStatus) {
+        await reservationDAO.updateReservation(reservationId, { paymentStatus: newStatus }, tenantId, t);
+        reservation.paymentStatus = newStatus;
+      }
+      updatedReservation = reservation;
     }
-    updatedReservation = reservation;
-  }
 
-  const result = { payment, ...paidInfo, reservation: updatedReservation };
+    return { payment, ...paidInfo, reservation: updatedReservation };
+  });
+
   webhookService.dispatch("payment.completed", result, tenantId);
   return result;
 };
@@ -71,23 +76,24 @@ const getTotalPaid = async (reservationId, tenantId) => {
 };
 
 const removePayment = async (reservationId, id, tenantId) => {
-  await paymentDAO.remove(reservationId, id, tenantId);
-  const paidInfo = await paymentDAO.getTotalPaid(reservationId, tenantId);
-  const reservation = await reservationDAO.findReservationById(reservationId, tenantId);
-  let updatedReservation = null;
-  if (reservation) {
-    const expectedTotal = reservation.expectedTotal || 0;
-    const finalPaid = paidInfo.finalTotal;
-    const newStatus = classifyPaymentStatus(finalPaid, expectedTotal);
-    if (reservation.paymentStatus !== newStatus) {
-      await reservationDAO.updateReservation(reservationId, {
-        paymentStatus: newStatus,
-      }, tenantId);
-      reservation.paymentStatus = newStatus;
+  const result = await db.sequelize.transaction(async (t) => {
+    await paymentDAO.remove(reservationId, id, tenantId, t);
+    const paidInfo = await paymentDAO.getTotalPaid(reservationId, tenantId, t);
+    const reservation = await reservationDAO.findReservationById(reservationId, tenantId, t);
+    let updatedReservation = null;
+    if (reservation) {
+      const expectedTotal = reservation.expectedTotal || 0;
+      const finalPaid = paidInfo.finalTotal;
+      const newStatus = classifyPaymentStatus(finalPaid, expectedTotal);
+      if (reservation.paymentStatus !== newStatus) {
+        await reservationDAO.updateReservation(reservationId, { paymentStatus: newStatus }, tenantId, t);
+        reservation.paymentStatus = newStatus;
+      }
+      updatedReservation = reservation;
     }
-    updatedReservation = reservation;
-  }
-  const result = { ...paidInfo, reservation: updatedReservation };
+    return { ...paidInfo, reservation: updatedReservation };
+  });
+
   webhookService.dispatch("payment.refunded", result, tenantId);
   return result;
 };

@@ -25,6 +25,21 @@ Always multi-tenant; platform code lives under `back-end/src/tenant-platform/` w
   - Frontend: `syncAppointmentInvoices` added to `erpnextAPI.js`
   - Backend tests: 145 suites, 1042 tests passed
 - Event controller/service test fixes: corrected QR checkin test param names (`code` → `token`), used 64-char tokens, matched controller response shape; cleared stale Jest cache
+- **Transaction coverage audit (2026-08-20):**
+  - `paymentService.js`: `addPayment` and `removePayment` now wrap multi-step payment + reservation status updates in `db.sequelize.transaction()`.
+  - `customer-portal.controller.js`: `cancelReservationHandler` wraps reservation cancellation, status history, audit log, and refund creation in a single transaction.
+  - DAOs updated to accept optional `transaction` parameter: `payment.dao.js` (`create`, `getTotalPaid`, `remove`), `reservation.dao.js` (`findReservationById`, `updateReservation`, `recordStatusChange`), `order.dao.js` (`addOrderPayment`), `refund.dao.js` (`createRefund`), `reservationStatusHistory.dao.js` (`addHistory`), `platformAudit.dao.js` (`log`).
+- **Cache stampede protection (2026-08-20):**
+  - `cache.js`: added `getOrSet(key, fetcher, ttl, lockTtl)` with Redis `SET NX EX` locking and double-check pattern.
+  - `auth.dao.js`: `getSettingValue` now uses `cache.getOrSet` with 300s TTL; `updateSetting` and `updatePlatformSetting` invalidate cache on write.
+- **Rate-limit header deduplication (2026-08-20):**
+  - `server.js`: removed `generalLimiter` from global `/api/v1` prefix; individual routers now own their limiter via `router.use(generalLimiter)`.
+  - Removed redundant per-route `generalLimiter`/`tenantLimiter`/`adminActionLimiter` entries from `customer-portal.router.js`, `salon-*.router.js`, `event/*.router.js`, `qrCode.router.js`.
+  - `tenant-platform.module.js`: removed module-level `adminActionLimiter` from `/api/v1/admin/*` middleware arrays to prevent triple-stacking with `server.js` prefix.
+- Service-layer consolidation: extracted `buildApiClient.js` with shared interceptors (tenant header, auth header, 401 refresh queue, custom error handler); refactored 21 frontend services to use it.
+- Centralized input validation: created `back-end/src/utils/validation.js` and `back-end/src/middleware/validate.js` with schema support.
+- WhatsApp Ordering: Phase 2 & 3 complete — webhook `charge.success` updates order payment status, sends WhatsApp confirmation, creates delivery; `isOrderingEnabled()`/`isWithinOrderingHours()` gates added; `order_payment_confirmed` template added; seed migration `20260820000001` for default ordering settings.
+- ERPNext Integration: architecture documented in `Specs/erpnext-integration-plan.md`; backend scaffolding not yet started.
 
 ## Agent Instructions
 

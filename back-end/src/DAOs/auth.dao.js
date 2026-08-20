@@ -5,6 +5,7 @@ const RefreshToken = db.refreshToken;
 const Setting = db.setting;
 
 const { normalizeSettingValue } = require("../utils/settings");
+const { cache } = require("../utils/cache");
 
 const withTenant = (where = {}, tenantId) => {
   if (!tenantId) {
@@ -153,9 +154,16 @@ const getSettingByKey = async (key, tenantId) => {
 };
 
 const getSettingValue = async (key, defaultValue, tenantId) => {
-  const setting = await getSettingByKey(key, tenantId);
-  if (!setting) return defaultValue;
-  return normalizeSettingValue(setting.value);
+  const cacheKey = `setting:${tenantId || "platform"}:${key}`;
+  return await cache.getOrSet(
+    cacheKey,
+    async () => {
+      const setting = await getSettingByKey(key, tenantId);
+      if (!setting) return defaultValue;
+      return normalizeSettingValue(setting.value);
+    },
+    300
+  );
 };
 
 const updateSetting = async (key, value, tenantId) => {
@@ -170,6 +178,7 @@ const updateSetting = async (key, value, tenantId) => {
       ...withTenant({}, tenantId),
     });
   }
+  await cache.del(`setting:${tenantId || "platform"}:${key}`);
   return await getSettingByKey(key, tenantId);
 };
 
@@ -194,6 +203,7 @@ const updatePlatformSetting = async (key, value) => {
       tenantId: null,
     });
   }
+  await cache.del(`setting:platform:${key}`);
   return await getPlatformSettingByKey(key);
 };
 

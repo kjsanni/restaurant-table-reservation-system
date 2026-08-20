@@ -9,6 +9,8 @@ const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 const { generalLimiter } = require("../middleware/rateLimit");
 const { protect } = require("../middleware/auth");
 
+router.use(generalLimiter);
+
 router
   .route("/search")
   .get(...protectedRoute("view_reservations", reservationController.searchHandler))
@@ -22,7 +24,7 @@ router
 router
   .route("/")
   .get(...protectedRoute("view_reservations", reservationController.getAllHandler))
-  .post(generalLimiter, tryCatchHandler(protect), validateCsrfToken, tryCatchHandler(reservationController.registerHandler))
+  .post(tryCatchHandler(protect), validateCsrfToken, tryCatchHandler(reservationController.registerHandler))
   .all(httpMethodError);
 
 router

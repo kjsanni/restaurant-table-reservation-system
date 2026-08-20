@@ -18,11 +18,14 @@ const findByReservation = async (reservationId, tenantId) => {
   });
 };
 
-const create = async (data, tenantId) => {
-  return await Payment.create({ // codacy-suppress nosql-injection - parameterized ORM call
-    ...data,
-    ...withTenant({}, tenantId),
-  });
+const create = async (data, tenantId, transaction) => {
+  return await Payment.create(
+    {
+      ...data,
+      ...withTenant({}, tenantId),
+    },
+    { transaction }
+  );
 };
 
 const updateSplits = async (reservationId, id, splits, tenantId) => {
@@ -38,24 +41,25 @@ const updateSplits = async (reservationId, id, splits, tenantId) => {
   return payment;
 };
 
-const getTotalPaid = async (reservationId, tenantId) => {
-  const result = await Payment.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
+const getTotalPaid = async (reservationId, tenantId, transaction) => {
+  const result = await Payment.findOne({
+    where: withTenant({ reservationId }, tenantId),
     attributes: [
       [fn("SUM", col("amount")), "total"],
       [fn("SUM", col("discount")), "discountTotal"],
     ],
-    where: withTenant({ reservationId }, tenantId),
     raw: true,
+    transaction,
   });
   const total = result?.total ? parseFloat(result.total) : 0;
   const discountTotal = result?.discountTotal ? parseFloat(result.discountTotal) : 0;
   return { total, discountTotal, finalTotal: total - discountTotal };
 };
 
-const remove = async (reservationId, id, tenantId) => {
-  const payment = await Payment.findOne({ where: withTenant({ id, reservationId }, tenantId) }); // codacy-suppress nosql-injection - parameterized ORM call
+const remove = async (reservationId, id, tenantId, transaction) => {
+  const payment = await Payment.findOne({ where: withTenant({ id, reservationId }, tenantId) });
   if (!payment) return null;
-  await payment.destroy();
+  await payment.destroy({ transaction });
   return true;
 };
 

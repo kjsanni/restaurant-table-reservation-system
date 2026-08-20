@@ -109,8 +109,7 @@ const erpnextAPI = {
   getGhanaTaxSummary: (params = {}) =>
     apiClient.get("/accounting/ghana-tax-summary", { params }),
 
-  getGhanaPL: (params = {}) =>
-    apiClient.get("/reports/ghana/pl", { params }),
+  getGhanaPL: (params = {}) => apiClient.get("/reports/ghana/pl", { params }),
 
   getGhanaBalanceSheet: (params = {}) =>
     apiClient.get("/reports/ghana/balance-sheet", { params }),
