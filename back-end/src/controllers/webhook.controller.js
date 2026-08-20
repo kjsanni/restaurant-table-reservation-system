@@ -157,8 +157,8 @@ const paystackEventHandler = async (req, res) => {
       }
     }
 
-    const orderId = data.metadata?.orderId; // codacy-suppress nosql-injection - orderId from webhook metadata, used in parameterized ORM query below
-    if (orderId && tenantId) {
+    const orderId = Number(data.metadata?.orderId);
+    if (Number.isInteger(orderId) && orderId > 0 && tenantId) {
       const order = await db.order.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
         where: { id: orderId, tenantId },
       });
@@ -176,7 +176,7 @@ const paystackEventHandler = async (req, res) => {
         try {
           const customerPhone = data.metadata?.customerPhone || order.customer?.phone;
           if (customerPhone) {
-            await messageTemplates.render("order_payment_confirmed", { orderId: order.id }, tenantId).then(async (text) => { // codacy-suppress - false positive: messageTemplates.render is a custom template service, not Express res.render()
+            await messageTemplates.renderTemplate("order_payment_confirmed", { orderId: order.id }, tenantId).then(async (text) => {
               await require("../services/whatsapp.service").sendWhatsAppText(customerPhone, text, tenantId);
             });
           }

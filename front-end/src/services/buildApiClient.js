@@ -65,6 +65,10 @@ const buildRefreshInterceptor = (apiInstance) => {
 };
 
 export const buildApiClient = (baseURL, options = {}) => {
+  if (typeof baseURL !== "string" || !baseURL.startsWith("/") || baseURL.includes("http://") || baseURL.includes("https://")) {
+    throw new Error("Invalid baseURL: must be a relative API path");
+  }
+
   const {
     withRefresh = true,
     withTenantHeader = true,
@@ -73,7 +77,7 @@ export const buildApiClient = (baseURL, options = {}) => {
     headers = {},
   } = options;
 
-  const client = axios.create({ // codacy-suppress - baseURL is hardcoded by caller, not user-controlled
+  const client = axios.create({
     baseURL,
     withCredentials: true,
     xsrfCookieName: "XSRF-TOKEN",

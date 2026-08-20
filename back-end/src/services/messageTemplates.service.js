@@ -114,7 +114,7 @@ const substitute = (template, variables = {}) => {
   return result;
 };
 
-const render = async (templateName, variables = {}, tenantId = null) => {
+const renderTemplate = async (templateName, variables = {}, tenantId = null) => {
   const templates = await loadTemplates(tenantId);
   const template = templates[templateName] || DEFAULT_TEMPLATES[templateName];
   if (!template) {
@@ -129,7 +129,7 @@ const invalidateCache = () => {
 };
 
 module.exports = {
-  render,
+  renderTemplate,
   loadTemplates,
   substitute,
   invalidateCache,

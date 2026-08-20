@@ -13,7 +13,7 @@ jest.mock("../services/delivery.service", () => ({
 }));
 
 jest.mock("../services/messageTemplates.service", () => ({
-  render: jest.fn().mockResolvedValue("Payment confirmed"),
+  renderTemplate: jest.fn().mockResolvedValue("Payment confirmed"),
 }));
 
 jest.mock("../services/whatsapp.service", () => ({
@@ -216,7 +216,7 @@ describe("webhook.controller paystackEventHandler", () => {
       paymentReference: "ref-123",
       paymentMethod: "paystack",
     });
-    expect(require("../services/messageTemplates.service").render).toHaveBeenCalledWith("order_payment_confirmed", { orderId: 10 }, 1);
+    expect(require("../services/messageTemplates.service").renderTemplate).toHaveBeenCalledWith("order_payment_confirmed", { orderId: 10 }, 1);
     expect(require("../services/whatsapp.service").sendWhatsAppText).toHaveBeenCalledWith("+233241234567", "Payment confirmed", 1);
     expect(require("../services/delivery.service").createFromWhatsApp).toHaveBeenCalledWith(1, 10, { region: "Greater Accra", city: "Accra", address: "123 Main St" }, "John Doe", "+233241234567");
   });

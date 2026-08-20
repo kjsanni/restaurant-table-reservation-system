@@ -96,7 +96,7 @@ const webhookHandler = async (req, res) => {
                     customerPhone
                   );
                   if (delivery && delivery.trackingNumber && customerPhone) {
-                    const trackingMsg = await messageTemplates.render(
+                    const trackingMsg = await messageTemplates.renderTemplate(
                       "delivery_tracking",
                       { trackingNumber: delivery.trackingNumber },
                       resolvedTenantId

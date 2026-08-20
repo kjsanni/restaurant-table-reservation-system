@@ -9,7 +9,7 @@ jest.mock("../services/geocoding.service");
 jest.mock("../services/reservationService");
 jest.mock("../services/delivery.service");
 jest.mock("../services/messageTemplates.service", () => ({
-  render: jest.fn(async (name, vars) => {
+  renderTemplate: jest.fn(async (name, vars) => {
     const defaults = {
       welcome: "Welcome menu",
       no_orders: "No orders found.",

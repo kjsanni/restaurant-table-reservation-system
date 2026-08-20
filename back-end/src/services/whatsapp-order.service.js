@@ -71,7 +71,7 @@ const sendText = async (phone, text, tenantId) => {
 };
 
 const sendTemplate = async (phone, templateName, variables = {}, tenantId) => {
-  const text = await messageTemplates.render(templateName, variables, tenantId);
+  const text = await messageTemplates.renderTemplate(templateName, variables, tenantId);
   await sendText(phone, text, tenantId);
 };
 

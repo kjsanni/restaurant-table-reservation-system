@@ -13,7 +13,7 @@ describe("messageTemplates.service", () => {
 
   describe("render", () => {
     it("renders a default template with variable substitution", async () => {
-      const result = await messageTemplates.render("reservation_confirmed", {
+      const result = await messageTemplates.renderTemplate("reservation_confirmed", {
         reservationId: 42,
         resDate: "2026-08-01",
         resTime: "19:00",
@@ -29,7 +29,7 @@ describe("messageTemplates.service", () => {
         welcome: "Custom welcome {{name}}!",
       });
 
-      const result = await messageTemplates.render("welcome", { name: "Kofi" });
+      const result = await messageTemplates.renderTemplate("welcome", { name: "Kofi" });
 
       expect(result).toBe("Custom welcome Kofi!");
       expect(authDAO.getSettingValue).toHaveBeenCalledWith(
@@ -42,9 +42,9 @@ describe("messageTemplates.service", () => {
     it("caches templates for 60 seconds to avoid repeated DB calls", async () => {
       authDAO.getSettingValue.mockResolvedValue({ welcome: "Cached" });
 
-      await messageTemplates.render("welcome", {}, 1);
-      await messageTemplates.render("reservation_start", {}, 1);
-      await messageTemplates.render("no_orders", {}, 1);
+      await messageTemplates.renderTemplate("welcome", {}, 1);
+      await messageTemplates.renderTemplate("reservation_start", {}, 1);
+      await messageTemplates.renderTemplate("no_orders", {}, 1);
 
       expect(authDAO.getSettingValue).toHaveBeenCalledTimes(1);
     });
@@ -52,8 +52,8 @@ describe("messageTemplates.service", () => {
     it("separates cache by tenantId", async () => {
       authDAO.getSettingValue.mockResolvedValue({ welcome: "Tenant 1" });
 
-      await messageTemplates.render("welcome", {}, 1);
-      await messageTemplates.render("welcome", {}, 2);
+      await messageTemplates.renderTemplate("welcome", {}, 1);
+      await messageTemplates.renderTemplate("welcome", {}, 2);
 
       expect(authDAO.getSettingValue).toHaveBeenCalledTimes(2);
       expect(authDAO.getSettingValue).toHaveBeenNthCalledWith(1, "whatsapp_message_templates", null, 1);
@@ -63,7 +63,7 @@ describe("messageTemplates.service", () => {
     it("falls back to defaults when DB setting is not found", async () => {
       authDAO.getSettingValue.mockResolvedValue(null);
 
-      const result = await messageTemplates.render("no_orders", {});
+      const result = await messageTemplates.renderTemplate("no_orders", {});
 
       expect(result).toContain("No orders found");
     });
@@ -71,19 +71,19 @@ describe("messageTemplates.service", () => {
     it("falls back to defaults when DB throws", async () => {
       authDAO.getSettingValue.mockRejectedValue(new Error("DB down"));
 
-      const result = await messageTemplates.render("welcome", {});
+      const result = await messageTemplates.renderTemplate("welcome", {});
 
       expect(result).toContain("Make a reservation");
     });
 
     it("throws for unknown template names", async () => {
-      await expect(messageTemplates.render("nonexistent_template", {})).rejects.toThrow(
+      await expect(messageTemplates.renderTemplate("nonexistent_template", {})).rejects.toThrow(
         "Unknown message template: nonexistent_template"
       );
     });
 
     it("handles missing variables by replacing with empty string", async () => {
-      const result = await messageTemplates.render("reservation_confirmed", {
+      const result = await messageTemplates.renderTemplate("reservation_confirmed", {
         reservationId: 10,
       });
 
@@ -180,12 +180,12 @@ describe("messageTemplates.service", () => {
     it("clears the cache so next render reloads from DB", async () => {
       authDAO.getSettingValue.mockResolvedValue({ welcome: "Cached" });
 
-      await messageTemplates.render("welcome", {}, 1);
+      await messageTemplates.renderTemplate("welcome", {}, 1);
       expect(authDAO.getSettingValue).toHaveBeenCalledTimes(1);
 
       messageTemplates.invalidateCache();
 
-      await messageTemplates.render("welcome", {}, 1);
+      await messageTemplates.renderTemplate("welcome", {}, 1);
       expect(authDAO.getSettingValue).toHaveBeenCalledTimes(2);
     });
   });
