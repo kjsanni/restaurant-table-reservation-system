@@ -54,6 +54,12 @@ const testHandler = async (req, res) => {
   return res.status(200).json({ success: true, message: "Test webhook dispatched" });
 };
 
+const sanitizeOrderId = (raw) => {
+  if (raw === undefined || raw === null) return null;
+  const num = parseInt(raw, 10);
+  return Number.isInteger(num) && num > 0 ? num : null;
+};
+
 const processOrderPayment = async (orderId, tenantId, data) => {
   const order = await db.order.findOne({
     where: { id: orderId, tenantId },
@@ -201,9 +207,8 @@ const paystackEventHandler = async (req, res) => {
       }
     }
 
-    const rawOrderId = data.metadata?.orderId;
-    const orderId = Number(rawOrderId);
-    if (Number.isInteger(orderId) && orderId > 0 && tenantId) {
+    const orderId = sanitizeOrderId(data.metadata?.orderId);
+    if (orderId && tenantId) {
       await processOrderPayment(orderId, tenantId, data);
     }
   }

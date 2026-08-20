@@ -335,7 +335,7 @@ const searchQuery = ref("");
 
 const detailModalRef = ref(null);
 const createModalRef = ref(null);
-const previousActiveElement = ref<HTMLElement | null>(null); // fixed: use proper Vue 3 generic syntax
+const previousActiveElement = (ref < HTMLElement) | (null > null); // fixed: use proper Vue 3 generic syntax
 
 watch(selectedTicket, (val) => {
   if (val) {
