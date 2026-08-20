@@ -49,7 +49,7 @@ const onHeroMouseLeave = () => {
         <img
           src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=80"
           alt="Plated dish"
-          loading="eager"
+          loading="lazy"
           width="1600"
           height="900"
         />
@@ -58,7 +58,7 @@ const onHeroMouseLeave = () => {
         <img
           src="https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=1600&q=80"
           alt="Restaurant bar"
-          loading="eager"
+          loading="lazy"
           width="1600"
           height="900"
         />
@@ -67,7 +67,7 @@ const onHeroMouseLeave = () => {
         <img
           src="https://images.unsplash.com/photo-1544148103-0773bf10d330?w=1600&q=80"
           alt="Fine dining"
-          loading="eager"
+          loading="lazy"
           width="1600"
           height="900"
         />

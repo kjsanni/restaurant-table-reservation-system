@@ -47,7 +47,7 @@ describe("billingController.webhookHandler", () => {
     }));
 
     jest.doMock("../services/messageTemplates.service", () => ({
-      render: mockRenderTemplate,
+      renderTemplate: mockRenderTemplate,
     }));
 
     jest.doMock("../DAOs/order.dao", () => ({

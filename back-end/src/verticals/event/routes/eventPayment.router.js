@@ -12,7 +12,7 @@ const eventPaymentController = require("../controllers/eventPayment.controller")
 
 router
   .route("/:bookingId/payments/initialize")
-  .post(tryCatchHandler(protect), tryCatchHandler(tenantLimiter), tryCatchHandler(validateCsrfToken), tryCatchHandler(eventPaymentController.initializeBookingPaymentHandler))
+  .post(tryCatchHandler(protect), tryCatchHandler(validateCsrfToken), tryCatchHandler(eventPaymentController.initializeBookingPaymentHandler))
   .all((req, res) => res.status(405).json({ success: false, message: "Method not allowed" }));
 
 module.exports = router;

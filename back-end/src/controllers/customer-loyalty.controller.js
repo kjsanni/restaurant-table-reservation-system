@@ -61,7 +61,13 @@ const redeemPointsHandler = async (req, res) => {
     }
 
     const redeemed = await reservationDAO.redeemCustomerPoints(customer.id, redeemPoints, req.tenant?.id);
-    return res.status(200).json({ success: true, loyalty: redeemed });
+    const loyalty = {
+      points: redeemed.points || 0,
+      tier: redeemed.points >= 500 ? "Gold" : redeemed.points >= 200 ? "Silver" : "Bronze",
+      nextTier: redeemed.points >= 500 ? null : redeemed.points >= 200 ? "Gold" : "Silver",
+      pointsToNextTier: redeemed.points >= 500 ? 0 : redeemed.points >= 200 ? 500 - redeemed.points : 200 - redeemed.points,
+    };
+    return res.status(200).json({ success: true, loyalty });
   } catch (err) {
     console.error("redeemPointsHandler error:", err.message);
     const status = err.status || 500;

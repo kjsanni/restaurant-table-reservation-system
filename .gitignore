@@ -28,9 +28,6 @@ dist-ssr/
 
 # Screenshots
 screenshots/
-*.png
-*.jpg
-*.jpeg
 
 # Test artifacts
 test-results/

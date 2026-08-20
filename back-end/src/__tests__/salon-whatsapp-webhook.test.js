@@ -16,7 +16,7 @@ jest.mock("../db/models", () => ({
 }));
 
 jest.mock("../services/messageTemplates.service", () => ({
-  render: jest.fn(async (name, vars) => `Payment confirmed for appointment #${vars?.appointmentId} on ${vars?.date} at ${vars?.time}.`),
+  renderTemplate: jest.fn(async (name, vars) => `Payment confirmed for appointment #${vars?.appointmentId} on ${vars?.date} at ${vars?.time}.`),
 }));
 
 jest.mock("../services/notification.service", () => ({

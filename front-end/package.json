@@ -24,8 +24,7 @@
     "test:e2e": "playwright test",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-pattern 'tests/*' --ignore-pattern 'dist/*' --ignore-pattern 'test-results/*' --ignore-pattern 'playwright-report/*'",
     "format": "prettier .  --write",
-    "check:bundle": "node scripts/check-bundle-size.js",
-    "lhci:ci": "lhci autorun --config=lighthouserc.js"
+    "check:bundle": "node scripts/check-bundle-size.js"
   },
   "dependencies": {
     "@iconify/json": "^2.2.516",
@@ -63,7 +62,6 @@
     "rollup": "^4.62.4",
     "rollup-plugin-visualizer": "^7.0.1",
     "rollup-plugin-vue": "^6.0.0",
-    "@lhci/cli": "^0.15.1",
     "typescript": "^5.9.3",
     "vite": "^8.2.1",
     "vitest": "^4.1.10",

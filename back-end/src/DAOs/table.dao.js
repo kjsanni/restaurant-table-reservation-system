@@ -6,7 +6,12 @@ const User = db.user;
 const TableEvent = db.tableEvent;
 const { fn, col } = db.sequelize;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const findAllTables = async (tenantId) => {
   return await Table.findAll({ // codacy-suppress nosql-injection - parameterized ORM call

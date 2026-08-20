@@ -13,59 +13,59 @@ const { validateCsrfToken } = require("../middleware/csrf");
 
 router
   .route("/profile")
-  .get(protect, generalLimiter, customerPortalController.getCustomerProfileHandler)
-  .patch(protect, generalLimiter, validateCsrfToken, customerPortalController.updateCustomerProfileHandler)
+   .get(protect, customerPortalController.getCustomerProfileHandler)
+   .patch(protect, validateCsrfToken, customerPortalController.updateCustomerProfileHandler)
   .all(httpMethodError);
 
 router
   .route("/reservations")
-  .get(protect, generalLimiter, customerPortalController.getCustomerReservationsHandler)
+   .get(protect, customerPortalController.getCustomerReservationsHandler)
   .all(httpMethodError);
 
 router
   .route("/reservations/:reservationId/cancel")
-  .post(protect, generalLimiter, validateCsrfToken, customerPortalController.cancelReservationHandler)
+   .post(protect, validateCsrfToken, customerPortalController.cancelReservationHandler)
   .all(httpMethodError);
 
 router
   .route("/waitlist")
-  .get(protect, generalLimiter, customerWaitlistController.getCustomerWaitlistHandler)
-  .post(protect, generalLimiter, validateCsrfToken, customerWaitlistController.joinWaitlistHandler)
+   .get(protect, customerWaitlistController.getCustomerWaitlistHandler)
+   .post(protect, validateCsrfToken, customerWaitlistController.joinWaitlistHandler)
   .all(httpMethodError);
 
 router
   .route("/waitlist/:id/cancel")
-  .post(protect, generalLimiter, validateCsrfToken, customerWaitlistController.cancelWaitlistEntryHandler)
+   .post(protect, validateCsrfToken, customerWaitlistController.cancelWaitlistEntryHandler)
   .all(httpMethodError);
 
 router
   .route("/loyalty")
-  .get(protect, generalLimiter, customerLoyaltyController.getLoyaltyHandler)
+   .get(protect, customerLoyaltyController.getLoyaltyHandler)
   .all(httpMethodError);
 
 router
   .route("/loyalty/redeem")
-  .post(protect, generalLimiter, validateCsrfToken, customerLoyaltyController.redeemPointsHandler)
+   .post(protect, validateCsrfToken, customerLoyaltyController.redeemPointsHandler)
   .all(httpMethodError);
 
 router
   .route("/promotions")
-  .get(protect, generalLimiter, customerMarketingController.getPromotionsHandler)
+   .get(protect, customerMarketingController.getPromotionsHandler)
   .all(httpMethodError);
 
 router
   .route("/promotions/:promotionId")
-  .get(protect, generalLimiter, customerMarketingController.getPromotionHandler)
+   .get(protect, customerMarketingController.getPromotionHandler)
   .all(httpMethodError);
 
 router
   .route("/reviews")
-  .get(protect, generalLimiter, reviewController.getCustomerReviewsHandler)
+   .get(protect, reviewController.getCustomerReviewsHandler)
   .all(httpMethodError);
 
 router
   .route("/reviews")
-  .post(protect, generalLimiter, validateCsrfToken, reviewController.createCustomerReviewHandler)
+   .post(protect, validateCsrfToken, reviewController.createCustomerReviewHandler)
   .all(httpMethodError);
 
 module.exports = router;

@@ -13,7 +13,7 @@ const { requireVertical } = require("../middleware/requireVertical");
 router
   .route("/")
   .get(
-    tryCatchHandler(protect), tryCatchHandler(generalLimiter),
+    tryCatchHandler(protect),
     tryCatchHandler(requireVertical("salon")),
     tryCatchHandler(requirePermission("view_appointments")),
     tryCatchHandler(salonDashboardController.getSalonDashboardHandler)

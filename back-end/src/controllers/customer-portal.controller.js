@@ -1,4 +1,10 @@
 const reservationDAO = require("../DAOs/reservation.dao");
+const paymentDAO = require("../DAOs/payment.dao");
+const refundDAO = require("../DAOs/refund.dao");
+const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
+const db = require("../db/models");
+
+const CANCELLATION_POLICY_HOURS = 24;
 
 const buildCustomerDetails = (user) => {
   const email = user?.email;
@@ -44,7 +50,14 @@ const updateCustomerProfileHandler = async (req, res) => {
         message: "No customer profile linked to this account",
       });
     }
-    const updated = await reservationDAO.updateCustomer(customer.id, req.body, req.tenant?.id);
+    const allowedFields = ["firstName", "lastName", "phone", "address", "city", "preferences"];
+    const updates = {};
+    for (const field of allowedFields) {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        updates[field] = req.body[field];
+      }
+    }
+    const updated = await reservationDAO.updateCustomer(customer.id, updates, req.tenant?.id);
     return res.status(200).json({ success: true, customer: updated });
   } catch (err) {
     console.error("updateCustomerProfileHandler error:", err.message);
@@ -85,8 +98,56 @@ const cancelReservationHandler = async (req, res) => {
       return res.status(403).json({ success: false, message: "Not authorized for this reservation" });
     }
 
-    const updated = await reservationDAO.updateReservation(reservationId, { resStatus: "cancelled" }, req.tenant?.id);
-    return res.status(200).json({ success: true, reservation: updated });
+    let refundDue = false;
+
+    if (["paid", "partial"].includes(reservation.paymentStatus) && reservation.resDate && reservation.resTime) {
+      const reservationDateTime = new Date(`${reservation.resDate}T${reservation.resTime}`);
+      const now = new Date();
+      const hoursUntilReservation = (reservationDateTime - now) / (1000 * 60 * 60);
+
+      if (hoursUntilReservation >= CANCELLATION_POLICY_HOURS) {
+        refundDue = true;
+      }
+    }
+
+    const result = await db.sequelize.transaction(async (t) => {
+      const updated = await reservationDAO.updateReservation(reservationId, { resStatus: "cancelled" }, req.tenant?.id, t);
+
+      let actualRefundAmount = 0;
+      if (refundDue) {
+        const payments = await paymentDAO.findByReservation(reservationId, req.tenant?.id);
+        actualRefundAmount = payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+        for (const payment of payments) {
+          await refundDAO.createRefund({
+            reservationId,
+            paymentId: payment.id,
+            amount: parseFloat(payment.amount || 0),
+            reason: "Customer cancellation within policy window",
+            status: "pending",
+          }, req.tenant?.id, t);
+        }
+      }
+
+      await reservationDAO.recordStatusChange(reservationId, reservation.resStatus, "cancelled", req.user?.id, {
+        refundDue,
+        refundAmount: actualRefundAmount,
+      }, req.tenant?.id, t);
+
+      await platformAuditDAO.log(
+        req.user?.id,
+        "reservation.cancelled",
+        "reservation",
+        reservationId,
+        req.tenant?.id,
+        { refundDue, refundAmount: actualRefundAmount, paymentStatus: reservation.paymentStatus },
+        req.ip,
+        t
+      );
+
+      return { success: true, reservation: updated };
+    });
+
+    return res.status(200).json(result);
   } catch (err) {
     console.error("cancelReservationHandler error:", err.message);
     return res.status(500).json({ success: false, message: "Failed to cancel reservation" });
@@ -94,6 +155,7 @@ const cancelReservationHandler = async (req, res) => {
 };
 
 module.exports = {
+  buildCustomerDetails,
   getCustomerProfileHandler,
   updateCustomerProfileHandler,
   getCustomerReservationsHandler,

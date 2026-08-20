@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import adminAPI from "@/services/adminAPI";
 import { useToastStore } from "@/stores/toast";
@@ -10,6 +10,7 @@ const props = withDefaults(
     title: string;
     description: string;
     mode: "platform" | "own";
+    gatewayType: "payment" | "delivery";
     initialPublicKey?: string;
     initialSecretKey?: string;
     initialIdentifier?: string;
@@ -18,6 +19,7 @@ const props = withDefaults(
   }>(),
   {
     mode: "platform",
+    gatewayType: "payment",
     initialPublicKey: "",
     initialSecretKey: "",
     initialIdentifier: "",
@@ -43,11 +45,42 @@ const testingConnection = ref(false);
 const testResult = ref<null | { success: boolean; message: string }>(null);
 const saving = ref(false);
 
-const isPayment = computed(() => props.title.includes("Payment"));
+const isPayment = computed(() => props.gatewayType === "payment");
 const showForm = computed(() => gatewayMode.value === "own");
 const maskedWebhookUrl = computed(
   () => props.webhookUrl || `${window.location.origin}/api/v1/billing/webhook`
 );
+
+const clearPaymentSecrets = () => {
+  publicKey.value = "";
+  secretKey.value = "";
+  secretVisible.value = false;
+};
+
+const clearDeliverySecrets = () => {
+  identifier.value = "";
+  secret.value = "";
+  secretVisibleShaq.value = false;
+};
+
+watch(
+  () => props.gatewayType,
+  (newType) => {
+    if (newType === "payment") {
+      clearDeliverySecrets();
+    } else {
+      clearPaymentSecrets();
+    }
+  }
+);
+
+watch(gatewayMode, (newMode) => {
+  if (newMode === "platform") {
+    clearPaymentSecrets();
+    clearDeliverySecrets();
+    testResult.value = null;
+  }
+});
 
 const testConnection = async () => {
   if (!publicKey.value || (!secretKey.value && isPayment.value)) return;
@@ -63,9 +96,17 @@ const testConnection = async () => {
         secretKey: secretKey.value,
       });
       if (res.data.success) {
+        const data = res.data.data || {};
+        const masked = {
+          ...data,
+          balance: data.balance !== undefined ? "****" : undefined,
+          account_name: data.account_name
+            ? `${String(data.account_name).slice(0, 2)}****`
+            : undefined,
+        };
         testResult.value = {
           success: true,
-          message: `Connected. Currency balance: ${JSON.stringify(res.data.data)}`,
+          message: `Connected. Details: ${JSON.stringify(masked)}`,
         };
       } else {
         testResult.value = {
@@ -281,11 +322,7 @@ const saveGateway = async () => {
           <span v-if="testingConnection">Testing…</span>
           <span v-else>Test Connection</span>
         </button>
-        <button
-          class="btn-primary"
-          :disabled="saving || !testResult?.success"
-          @click="saveGateway"
-        >
+        <button class="btn-primary" :disabled="saving" @click="saveGateway">
           <span v-if="saving">Saving…</span>
           <span v-else>Save Gateway</span>
         </button>

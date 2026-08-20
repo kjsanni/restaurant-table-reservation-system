@@ -31,6 +31,9 @@ const webhookHandler = async (req, res) => {
 
   try {
     const resolvedTenantId = await resolveTenantFromWebhook(data);
+    let paymentStatus = null;
+    let order = null;
+    let metadata = {};
     switch (event) {
       case "invoice.payment_succeeded":
       case "invoice.payment_failed":
@@ -55,10 +58,10 @@ const webhookHandler = async (req, res) => {
             });
           }
 
-          const metadata = data?.metadata || {};
+          metadata = data?.metadata || {};
           const orderId = metadata.orderId;
           if (orderId) {
-            const order = await orderDAO.getOrderById(orderId, resolvedTenantId);
+            order = await orderDAO.getOrderById(orderId, resolvedTenantId);
             if (order) {
               const paidAmount = parseFloat(data.amount || 0) / 100;
               await paymentDAO.create({
@@ -74,7 +77,7 @@ const webhookHandler = async (req, res) => {
               const orderTotal = parseFloat(order.total || 0);
               const discountAmount = parseFloat(metadata.discountAmount || 0);
               const effectiveTotal = orderTotal - discountAmount;
-              const paymentStatus = totalPaid >= effectiveTotal ? "paid" : totalPaid > 0 ? "partial" : "unpaid";
+              paymentStatus = totalPaid >= effectiveTotal ? "paid" : totalPaid > 0 ? "partial" : "unpaid";
               if (order.paymentStatus !== paymentStatus) {
                 await orderDAO.updateOrder(order.id, resolvedTenantId, { paymentStatus });
               }
@@ -93,7 +96,7 @@ const webhookHandler = async (req, res) => {
                     customerPhone
                   );
                   if (delivery && delivery.trackingNumber && customerPhone) {
-                    const trackingMsg = await messageTemplates.render(
+                    const trackingMsg = await messageTemplates.renderTemplate(
                       "delivery_tracking",
                       { trackingNumber: delivery.trackingNumber },
                       resolvedTenantId
@@ -112,7 +115,7 @@ const webhookHandler = async (req, res) => {
           }
 
           const appointmentId = metadata.appointmentId;
-          if (appointmentId) {
+          if (appointmentId && resolvedTenantId) {
             try {
               const appointment = await salonAppointmentDao.findById(appointmentId, resolvedTenantId);
               if (appointment && appointment.paymentStatus !== "paid") {

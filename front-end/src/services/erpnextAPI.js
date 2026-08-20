@@ -1,22 +1,14 @@
-import axios from "axios";
+import { buildApiClient } from "./buildApiClient";
 
-const apiClient = axios.create({
-  baseURL: "/api/v1/erpnext",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
+const apiClient = buildApiClient("/api/v1/erpnext", {
+  withAuthHeader: true,
+  onError: (error) => {
     if (error.response) {
       const message = error.response.data?.message || "ERPNext request failed";
       console.error("[ERPNext API]", message);
     }
-    return Promise.reject(error);
-  }
-);
+  },
+});
 
 const erpnextAPI = {
   getHealth: () => apiClient.get("/health"),

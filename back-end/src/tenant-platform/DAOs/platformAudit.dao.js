@@ -24,9 +24,9 @@ const buildListOptions = (filters = {}, extra = {}) => ({
   offset: filters.offset || 0,
 });
 
-platformAuditDAO.log = (actorUserId, action, entityType, entityId, tenantId, metadata = {}, ipAddress = null) => {
+platformAuditDAO.log = (actorUserId, action, entityType, entityId, tenantId, metadata = {}, ipAddress = null, transaction = null) => {
   const payload = { actorUserId, action, entityType, entityId, tenantId, metadata, ipAddress };
-  const record = db.platformAuditLog.create(payload); // codacy-suppress nosql-injection - parameterized ORM call
+  const record = db.platformAuditLog.create(payload, { transaction });
 
   fireWebhook("platform.audit.created", payload, tenantId).catch(() => {});
 

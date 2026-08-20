@@ -7,8 +7,12 @@ const Customer = db.customer;
 const Reservation = db.reservation;
 const Payment = db.payment;
 
-const withTenant = (where = {}, tenantId) =>
-  tenantId ? { ...where, tenantId } : where;
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const calculateDiscount = (total, discountType, discountValue) => {
   if (!discountType || discountValue === null || discountValue === undefined || parseFloat(discountValue) <= 0) {
@@ -232,27 +236,32 @@ const getOrderPayments = async (orderId, tenantId) => {
   });
 };
 
-const addOrderPayment = async (orderId, tenantId, data) => {
-  const payment = await Payment.create({ // codacy-suppress nosql-injection - parameterized ORM call
-    ...data,
-    orderId,
-    ...withTenant({}, tenantId),
-  });
+const addOrderPayment = async (orderId, tenantId, data, transaction) => {
+  const payment = await Payment.create(
+    {
+      ...data,
+      orderId,
+      ...withTenant({}, tenantId),
+    },
+    { transaction }
+  );
 
-  const payments = await Payment.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
+  const payments = await Payment.findAll({
     where: withTenant({ orderId }, tenantId),
+    transaction,
   });
   const totalPaid = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
 
-  const order = await Order.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
+  const order = await Order.findOne({
     where: withTenant({ id: orderId }, tenantId),
+    transaction,
   });
 
   let updatedOrder = null;
   if (order) {
     const newStatus = totalPaid >= parseFloat(order.total || 0) ? "paid" : totalPaid > 0 ? "partial" : "unpaid";
     if (order.paymentStatus !== newStatus) {
-      await order.update({ paymentStatus: newStatus }); // codacy-suppress nosql-injection - parameterized ORM call
+      await order.update({ paymentStatus: newStatus }, { transaction });
       updatedOrder = order;
     }
   }

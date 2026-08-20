@@ -10,7 +10,7 @@ crossTenantSearchDAO.search = async (query, filters = {}) => {
     .replace(/_/g, "\\_");
   const like = `%${escapedQuery}%`;
 
-  if (!filters.tenantId && !filters.allowAllTenants) {
+  if (!filters.tenantId) {
     throw { status: 400, message: "tenantId is required for cross-tenant search" };
   }
 

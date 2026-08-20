@@ -76,12 +76,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="ticket in items"
-              :key="ticket.id"
-              @click="viewTicket(ticket.id)"
-              class="ticket-row"
-            >
+            <tr v-for="ticket in items" :key="ticket.id" class="ticket-row">
               <td>#{{ ticket.id }}</td>
               <td>
                 <div class="subject-cell">
@@ -117,7 +112,7 @@
     </div>
 
     <div v-if="selectedTicket" class="modal-overlay" @click.self="closeDetail">
-      <div class="detail-modal">
+      <div ref="detailModalRef" class="detail-modal" tabindex="-1">
         <div class="modal-header">
           <div>
             <h3>Ticket #{{ selectedTicket.id }}</h3>
@@ -258,7 +253,7 @@
       class="modal-overlay"
       @click.self="showCreate = false"
     >
-      <div class="modal">
+      <div ref="createModalRef" class="modal" tabindex="-1">
         <div class="modal-header">
           <h3>Create Support Ticket</h3>
           <button class="btn-close" @click="showCreate = false">×</button>
@@ -320,7 +315,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import customerPortalAPI from "@/services/customerPortalAPI";
 
 const loading = ref(false);
@@ -337,6 +332,32 @@ const replyBody = ref("");
 const filterStatus = ref("");
 const filterCategory = ref("");
 const searchQuery = ref("");
+
+const detailModalRef = ref(null);
+const createModalRef = ref(null);
+const previousActiveElement = (ref < HTMLElement) | (null > null); // fixed: use proper Vue 3 generic syntax
+
+watch(selectedTicket, (val) => {
+  if (val) {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) {
+      previousActiveElement.value = active;
+    }
+    nextTick(() => detailModalRef.value?.focus());
+  }
+});
+
+watch(showCreate, (val) => {
+  if (val) {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) {
+      previousActiveElement.value = active;
+    }
+    nextTick(() => createModalRef.value?.focus());
+  } else if (previousActiveElement.value) {
+    nextTick(() => previousActiveElement.value?.focus());
+  }
+});
 
 const createForm = ref({
   subject: "",
@@ -436,6 +457,7 @@ const closeDetail = () => {
   selectedTicket.value = null;
   attachments.value = [];
   replyBody.value = "";
+  nextTick(() => previousActiveElement.value?.focus());
 };
 
 const sendReply = async () => {
@@ -553,32 +575,9 @@ onMounted(() => {
   margin: 0;
   font-size: var(--text-sm);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
 .btn-icon {
   font-size: var(--text-lg);
   line-height: 1;
-}
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
 }
 .summary-cards {
   display: grid;
@@ -666,7 +665,7 @@ onMounted(() => {
   letter-spacing: var(--tracking-wide);
 }
 .ticket-row {
-  cursor: pointer;
+  cursor: default;
 }
 .ticket-row:hover {
   background: var(--surface-hover);
@@ -741,15 +740,6 @@ onMounted(() => {
 .actions-cell {
   display: flex;
   gap: var(--space-2);
-}
-.btn-sm {
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--text-xs);
 }
 .modal-overlay {
   position: fixed;

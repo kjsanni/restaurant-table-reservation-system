@@ -5,7 +5,7 @@ const isReducedMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export const useAnimations = () => {
-  const enter = (el, done) => {
+  const enter = (el: GSAPTweenTarget, done: () => void) => {
     if (isReducedMotion()) {
       done();
       return;
@@ -17,7 +17,7 @@ export const useAnimations = () => {
     );
   };
 
-  const leave = (el, done) => {
+  const leave = (el: GSAPTweenTarget, done: () => void) => {
     if (isReducedMotion()) {
       done();
       return;
@@ -31,12 +31,17 @@ export const useAnimations = () => {
     });
   };
 
-  const fadeIn = (target, duration = 0.3) => {
-    if (isReducedMotion()) return;
-    gsap.to(target, { opacity: 1, duration, ease: "power2.out" });
+  const fadeIn = (target: GSAPTweenTarget, duration = 0.3) => {
+    if (isReducedMotion()) return undefined;
+    return gsap.to(target, { opacity: 1, duration, ease: "power2.out" });
   };
 
-  const slideIn = (target, direction = "up", distance = 16, duration = 0.3) => {
+  const slideIn = (
+    target: GSAPTweenTarget,
+    direction = "up",
+    distance = 16,
+    duration = 0.3
+  ) => {
     if (isReducedMotion()) return;
     const y =
       direction === "up" ? distance : direction === "down" ? -distance : 0;
@@ -49,7 +54,7 @@ export const useAnimations = () => {
     );
   };
 
-  const staggerList = (selector, stagger = 0.06) => {
+  const staggerList = (selector: GSAPTweenTarget, stagger = 0.06) => {
     if (isReducedMotion()) return;
     gsap.fromTo(
       selector,
@@ -58,5 +63,39 @@ export const useAnimations = () => {
     );
   };
 
-  return { enter, leave, fadeIn, slideIn, staggerList };
+  const scaleIn = (
+    target: GSAPTweenTarget,
+    opts: { duration?: number } = {}
+  ) => {
+    if (isReducedMotion()) return;
+    const duration = typeof opts?.duration === "number" ? opts.duration : 0.12;
+    gsap.to(target, {
+      scale: 0.95,
+      duration,
+      ease: "power2.out",
+      yoyo: true,
+      overwrite: true,
+    });
+  };
+
+  const hoverLift = (target: GSAPTweenTarget, distance = 4) => {
+    if (isReducedMotion()) return;
+    gsap.to(target, { y: -distance, duration: 0.2, ease: "power2.out" });
+  };
+
+  const hoverReset = (target: GSAPTweenTarget) => {
+    if (isReducedMotion()) return;
+    gsap.to(target, { y: 0, duration: 0.2, ease: "power2.out" });
+  };
+
+  return {
+    enter,
+    leave,
+    fadeIn,
+    slideIn,
+    staggerList,
+    scaleIn,
+    hoverLift,
+    hoverReset,
+  };
 };

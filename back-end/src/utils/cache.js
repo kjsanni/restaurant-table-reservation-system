@@ -69,6 +69,41 @@ const cache = {
       console.error("Cache del error:", err);
     }
   },
+  getOrSet: async (key, fetcher, ttl = 300, lockTtl = 10) => {
+    const cached = await cache.get(key);
+    if (cached !== null) {
+      return cached;
+    }
+
+    const lockKey = `${key}:lock`;
+    if (!isConnected || !client) {
+      const data = await fetcher();
+      if (data !== undefined && data !== null) {
+        await cache.set(key, data, ttl);
+      }
+      return data;
+    }
+
+    const acquired = await client.set(lockKey, "1", { EX: lockTtl, NX: true });
+    if (acquired !== "OK") {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      return cache.getOrSet(key, fetcher, ttl, lockTtl);
+    }
+
+    try {
+      const doubleCheck = await cache.get(key);
+      if (doubleCheck !== null) {
+        return doubleCheck;
+      }
+      const data = await fetcher();
+      if (data !== undefined && data !== null) {
+        await cache.set(key, data, ttl);
+      }
+      return data;
+    } finally {
+      await client.del(lockKey).catch(() => {});
+    }
+  },
 };
 
 const getConnectionStatus = () => isConnected;

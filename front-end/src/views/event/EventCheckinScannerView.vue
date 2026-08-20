@@ -4,6 +4,12 @@ import { useRoute, useRouter } from "vue-router";
 import { useToastStore } from "@/stores/toast";
 import eventPortalAPI from "@/services/eventPortalAPI";
 
+declare global {
+  interface Window {
+    Html5Qrcode: any;
+  }
+}
+
 interface Attendee {
   id: number;
   attendeeName: string;
@@ -11,6 +17,7 @@ interface Attendee {
   tier?: string;
   ticketType?: string;
   photoUrl?: string;
+  checkedInAt?: string;
 }
 
 interface CheckinResult {
@@ -175,7 +182,7 @@ const initializeScanner = async () => {
       html5QrCode.pause().catch(() => {});
       submitScan(decoded);
     },
-    (err) => {
+    (err: string) => {
       if (
         err?.includes?.("not specified") ||
         err?.includes?.("NotFoundError")

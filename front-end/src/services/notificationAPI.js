@@ -1,4 +1,4 @@
-import axios from "axios";
+import { buildApiClient } from "./buildApiClient";
 import { useAuthStore } from "@/stores/auth";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
@@ -11,21 +11,13 @@ const attachTenantHeader = (config) => {
   return config;
 };
 
-// Tenant-mode admin notifications (list/create/mark-read)
-const adminClient = axios.create({
-  baseURL: `${API_BASE}/admin/notifications`,
-  withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "x-xsrf-token",
+const adminClient = buildApiClient(`${API_BASE}/admin/notifications`, {
+  withRefresh: false,
 });
 adminClient.interceptors.request.use(attachTenantHeader);
 
-// Single-tenant notifications (test senders, webhook info)
-const client = axios.create({
-  baseURL: `${API_BASE}/notifications`,
-  withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "x-xsrf-token",
+const client = buildApiClient(`${API_BASE}/notifications`, {
+  withRefresh: false,
 });
 client.interceptors.request.use(attachTenantHeader);
 

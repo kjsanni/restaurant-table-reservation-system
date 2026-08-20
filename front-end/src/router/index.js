@@ -742,7 +742,7 @@ router.addRoute({
 router.addRoute({
   path: "/t/:tenantSlug/portal",
   name: "customer-portal",
-  component: () => import("../views/customer/CustomerPortalView.vue"),
+  component: () => import("../views/customer/CustomerPortalHomeView.vue"),
   meta: { standalone: true },
 });
 router.addRoute({

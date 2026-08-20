@@ -22,6 +22,7 @@ const partySize = ref(2);
 const desiredTime = ref("");
 const notes = ref("");
 const submitting = ref(false);
+const formError = ref("");
 const message = ref("");
 
 const loadEntries = async () => {
@@ -37,6 +38,15 @@ const loadEntries = async () => {
 };
 
 const joinWaitlist = async () => {
+  formError.value = "";
+  if (partySize.value < 1) {
+    formError.value = "Party size must be at least 1.";
+    return;
+  }
+  if (!desiredTime.value) {
+    formError.value = "Please select a desired time.";
+    return;
+  }
   submitting.value = true;
   message.value = "";
   try {
@@ -110,7 +120,11 @@ onMounted(() => {
     </div>
 
     <div class="content-wrapper">
-      <div v-if="showJoinForm" class="join-card">
+      <form
+        v-if="showJoinForm"
+        class="join-card"
+        @submit.prevent="joinWaitlist"
+      >
         <h3>Join Waitlist</h3>
         <div class="form-row">
           <label>
@@ -130,14 +144,11 @@ onMounted(() => {
             placeholder="Any special requests..."
           ></textarea>
         </label>
-        <button
-          class="btn-primary"
-          :disabled="submitting"
-          @click="joinWaitlist"
-        >
+        <p v-if="formError" class="error">{{ formError }}</p>
+        <button class="btn-primary" type="submit" :disabled="submitting">
           {{ submitting ? "Submitting..." : "Join Waitlist" }}
         </button>
-      </div>
+      </form>
 
       <div v-if="message" class="message" role="status">{{ message }}</div>
 
@@ -268,29 +279,6 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
-.btn-primary {
-  padding: 10px 18px;
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-primary:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
 .message {
   padding: 10px 14px;
   border-radius: var(--radius-lg);
@@ -360,20 +348,5 @@ textarea:focus {
 .t-past {
   background: var(--neutral-100);
   color: var(--neutral-600);
-}
-
-.btn-link {
-  background: none;
-  border: none;
-  color: #dc2626;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 13px;
-  padding: 6px 10px;
-  border-radius: var(--radius-lg);
-}
-
-.btn-link:hover {
-  background: #fef2f2;
 }
 </style>

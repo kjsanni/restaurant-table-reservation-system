@@ -35,12 +35,6 @@ const createForm = ref({
 const createSubmitting = ref(false);
 const createError = ref<string | null>(null);
 
-const roleOptions = [
-  { label: "Admin", value: "admin" },
-  { label: "Manager", value: "manager" },
-  { label: "Staff", value: "staff" },
-];
-
 const roleSelectOptions = computed(() =>
   roles.value.map((r) => ({ label: r.label, value: r.key }))
 );
@@ -119,16 +113,6 @@ function closeCreateModal() {
 const roleLabel = (roleKey: string): string => {
   const r = roles.value.find((r) => r.key === roleKey);
   return r ? r.label : roleKey;
-};
-
-const toggleRole = (roleKey: string) => {
-  if (createForm.value.platformRoles.includes(roleKey)) {
-    createForm.value.platformRoles = createForm.value.platformRoles.filter(
-      (r) => r !== roleKey
-    );
-  } else {
-    createForm.value.platformRoles.push(roleKey);
-  }
 };
 
 onMounted(async () => {
@@ -225,9 +209,10 @@ onMounted(async () => {
             <select
               @change="
                 (e) => {
-                  const val = (e.target as HTMLSelectElement).value;
+                  const target = e.target as HTMLSelectElement;
+                  const val = target.value;
                   if (val) assignRole(user.id, val);
-                  e.target.value = '';
+                  target.value = '';
                 }
               "
               class="pr-select"

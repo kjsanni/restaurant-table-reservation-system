@@ -4,6 +4,9 @@ const httpMethodError = require("../middleware/httpMethodError");
 const deliveryController = require("../controllers/delivery.controller");
 const { protectedRoute, writeRoute } = require("../utils/routeHelpers");
 const { validateCsrfToken } = require("../middleware/csrf");
+const { generalLimiter } = require("../middleware/rateLimit");
+
+router.use(generalLimiter);
 
 router
   .route("/")

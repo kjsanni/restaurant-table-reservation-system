@@ -1,92 +1,60 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { VaSidebarItem } from "vuestic-ui";
 import { useAuthStore } from "@/stores/auth";
-import type { User } from "@/stores/auth";
 import { tenantNavItems } from "@/config/sidebarItems";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 import TenantSwitcher from "@/components/TenantSwitcher.vue";
 import { useOnlineStatus } from "@/composables/useOnlineStatus";
-import gsap from "gsap";
 import { useAnimations } from "@/composables/useAnimations";
+import { useAdminLayout } from "@/composables/useAdminLayout";
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
-const { fadeIn, fadeOut } = useAnimations();
+const { fadeIn } = useAnimations();
 const { status, pendingCount } = useOnlineStatus();
+const {
+  collapsed,
+  sidebarVisible,
+  toggleSidebar,
+  isAuthenticated,
+  user,
+  shouldShow,
+} = useAdminLayout();
 
-const collapsed = ref(false);
-const sidebarVisible = ref(true);
 const sidebarMobileVisible = ref(false);
-const windowWidth = ref<number>(
-  typeof window !== "undefined" ? window.innerWidth : 1024
-);
-
-const isAuthenticated = computed(() => authStore.isAuthenticated);
-const user = computed<User | null>(
-  () => authStore.user as unknown as User | null
-);
-const isAdmin = computed(() => authStore.user?.role === "admin");
-const capabilities = computed(() => authStore.capabilities);
 
 let pageTween: gsap.core.Tween | null = null;
 let leaveTween: gsap.core.Tween | null = null;
 
 const beforeEnter = (el: Element) => {
-  el.style.opacity = "0";
-  el.style.transform = "translateY(8px)";
+  const node = el as HTMLElement;
+  node.style.opacity = "0";
+  node.style.transform = "translateY(8px)";
 };
 
 const onEnter = (el: Element, done: () => void) => {
   if (pageTween) pageTween.kill();
-  pageTween = fadeIn(el, { duration: "base" });
-  pageTween.eventCallback("onComplete", done);
+  pageTween = fadeIn(el, 0.28) as gsap.core.Tween | null;
+  if (pageTween) {
+    pageTween.eventCallback("onComplete", done);
+  } else {
+    done();
+  }
 };
 
 const onLeave = (el: Element, done: () => void) => {
   if (leaveTween) leaveTween.kill();
-  leaveTween = fadeOut(el, { duration: "fast" });
-  leaveTween.eventCallback("onComplete", done);
-};
-
-const shouldShow = (item: {
-  requiresAuth?: boolean;
-  requiresAdmin?: boolean;
-  requiresPermission?: string;
-  requiresFeature?: string;
-  requiresServiceMode?: string;
-  requiresVertical?: string;
-}) => {
-  if (item.requiresAuth && !isAuthenticated.value) return false;
-  if (item.requiresAdmin && !isAdmin.value) return false;
-  if (item.requiresPermission === "manage_tenants") return false;
-  if (
-    item.requiresPermission &&
-    !user.value?.permissions?.[item.requiresPermission]
-  )
-    return false;
-  if (
-    item.requiresFeature &&
-    !capabilities.value?.featureFlags?.[item.requiresFeature]
-  ) {
-    return false;
-  }
-  if (
-    item.requiresServiceMode &&
-    !capabilities.value?.serviceModes?.includes(item.requiresServiceMode)
-  ) {
-    return false;
-  }
-  if (
-    item.requiresVertical &&
-    authStore.currentTenant?.businessVertical !== item.requiresVertical
-  ) {
-    return false;
-  }
-  return true;
+  leaveTween = gsap.to(el, {
+    opacity: 0,
+    y: -8,
+    duration: 0.2,
+    ease: "power2.in",
+    onComplete: done,
+  }) as gsap.core.Tween | null;
 };
 
 const visibleNavItems = computed(() => tenantNavItems.filter(shouldShow));
@@ -107,42 +75,7 @@ const sidebarWidth = computed(() => {
   return "260px";
 });
 
-const checkWindowWidth = () => {
-  windowWidth.value = window.innerWidth;
-  if (windowWidth.value <= 768) {
-    if (!sidebarVisible.value) {
-      sidebarVisible.value = true;
-    }
-  } else {
-    if (!sidebarVisible.value) {
-      sidebarVisible.value = true;
-      collapsed.value = false;
-    }
-  }
-};
-
-const toggleSidebar = () => {
-  if (windowWidth.value <= 768) {
-    toggleMobileSidebar();
-  } else {
-    collapsed.value = !collapsed.value;
-  }
-};
-
-const toggleMobileSidebar = () => {
-  sidebarMobileVisible.value = !sidebarMobileVisible.value;
-};
-
 const currentYear = new Date().getFullYear();
-
-onMounted(() => {
-  checkWindowWidth();
-  window.addEventListener("resize", checkWindowWidth);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("resize", checkWindowWidth);
-});
 
 watch(
   () => authStore.currentTenant?.businessVertical,
@@ -268,7 +201,7 @@ watch(
           </span>
           <LocaleSwitcher />
           <TenantSwitcher
-            v-if="user?.permissions?.manage_tenants"
+            v-if="user?.isSuperAdmin"
             :modelValue="authStore.currentTenant?.id || ''"
           />
           <div v-if="user" class="tl-user-chip">

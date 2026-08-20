@@ -1,5 +1,6 @@
 const orderDAO = require("../DAOs/order.dao");
 const menuDAO = require("../DAOs/menu.dao");
+const db = require("../db/models");
 
 const createOrder = async (tenantId, payload) => {
   const { items = [], reservationId } = payload;
@@ -62,7 +63,9 @@ const applyDiscount = async (orderId, tenantId, discountType, discountValue, dis
 };
 
 const addOrderPayment = async (orderId, tenantId, paymentData) => {
-  return await orderDAO.addOrderPayment(orderId, tenantId, paymentData);
+  return await db.sequelize.transaction(async (t) => {
+    return await orderDAO.addOrderPayment(orderId, tenantId, paymentData, t);
+  });
 };
 
 const getOrderPayments = async (orderId, tenantId) => {

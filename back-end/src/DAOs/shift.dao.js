@@ -2,7 +2,12 @@ const db = require("../db/models");
 const StaffShift = db.staffShift;
 const User = db.user;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const createShift = async ({ userId, dayOfWeek, startTime, endTime, role, locationId }, tenantId) => {
   return await StaffShift.create({ userId, dayOfWeek, startTime, endTime, role, locationId, ...withTenant({}, tenantId) }); // codacy-suppress nosql-injection - parameterized ORM call

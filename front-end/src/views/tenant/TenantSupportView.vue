@@ -207,7 +207,10 @@
                     :value="selectedTicket.status"
                     class="filter-select"
                     @change="
-                      updateStatus(selectedTicket.id, $event.target.value)
+                      updateStatus(
+                        selectedTicket.id,
+                        ($event.target as HTMLSelectElement).value
+                      )
                     "
                   >
                     <option value="open">Open</option>
@@ -364,7 +367,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
 import tenantSupport from "@/services/tenantSupportAPI";
 import {
   supportStatusLabel,
@@ -372,19 +374,51 @@ import {
   supportPriorityLabel,
 } from "@/composables/useSupportStatus";
 
-const router = useRouter();
+interface SupportTicket {
+  id: number;
+  subject: string;
+  message: string;
+  priority: string;
+  category: string;
+  status: string;
+  source: string;
+  tenantId?: number;
+  userId?: number;
+  submitter?: { username?: string };
+  assignee?: { username?: string };
+  messages?: SupportMessage[];
+  notes?: Array<Record<string, unknown>>;
+  attachments?: Array<Record<string, unknown>>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface SupportMessage {
+  id: number;
+  body: string;
+  senderType: string;
+  sender?: { username?: string };
+  createdAt?: string;
+}
+
+interface SupportAttachment {
+  id: number;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url?: string;
+}
+
 const loading = ref(false);
 const creating = ref(false);
 const sendingReply = ref(false);
 const uploading = ref(false);
-const items = ref([]);
-const selectedTicket = ref(null);
+const items = ref<SupportTicket[]>([]);
+const selectedTicket = ref<SupportTicket | null>(null);
 const showCreate = ref(false);
-const notes = ref([]);
-const newNote = ref("");
-const addingNote = ref(false);
-const attachments = ref([]);
-const selectedFile = ref(null);
+const attachments = ref<SupportAttachment[]>([]);
+const selectedFile = ref<File | null>(null);
 const replyBody = ref("");
 const filterStatus = ref("");
 const filterCategory = ref("");
@@ -407,8 +441,18 @@ const summary = computed(() => {
   return { open, inProgress, resolved, closed };
 });
 
-const categoryClass = (category) => {
-  const map = {
+const formatDate = (date?: string) => {
+  if (!date) return "—";
+  return new Date(date).toLocaleDateString();
+};
+
+const formatDateTime = (date?: string) => {
+  if (!date) return "—";
+  return new Date(date).toLocaleString();
+};
+
+const categoryClass = (category: string) => {
+  const map: Record<string, string> = {
     general: "cat-general",
     billing: "cat-billing",
     technical: "cat-technical",
@@ -419,14 +463,25 @@ const categoryClass = (category) => {
   return map[category] || "cat-general";
 };
 
+const formatSize = (bytes: number) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const removeAttachment = async (id: number) => {
+  await tenantSupport.deleteSupportAttachment(id);
+  await loadAttachments(selectedTicket.value!.id);
+};
+
 const load = async () => {
   loading.value = true;
   try {
-    const params = { limit: 100 };
+    const params: Record<string, string> = { limit: "100" };
     if (filterStatus.value) params.status = filterStatus.value;
     if (filterCategory.value) params.category = filterCategory.value;
     const res = await tenantSupport.listMyTickets(params);
-    let data = res.data?.collection || [];
+    let data = (res.data?.collection || []) as SupportTicket[];
     if (searchQuery.value) {
       const q = searchQuery.value.toLowerCase();
       data = data.filter((t) => t.subject.toLowerCase().includes(q));
@@ -459,9 +514,9 @@ const submitCreate = async () => {
   }
 };
 
-const viewTicket = async (id) => {
+const viewTicket = async (id: number) => {
   const res = await tenantSupport.getMyTicket(id);
-  selectedTicket.value = res.data?.item || null;
+  selectedTicket.value = (res.data?.item || null) as SupportTicket | null;
   if (selectedTicket.value) {
     replyBody.value = "";
     await loadMessages(selectedTicket.value.id);
@@ -475,7 +530,7 @@ const closeDetail = () => {
   replyBody.value = "";
 };
 
-const updateStatus = async (id, status) => {
+const updateStatus = async (id: number, status: string) => {
   await tenantSupport.updateMyTicket(id, { status });
   if (selectedTicket.value?.id === id) {
     selectedTicket.value.status = status;
@@ -483,12 +538,13 @@ const updateStatus = async (id, status) => {
   await load();
 };
 
-const loadMessages = async (ticketId) => {
+const loadMessages = async (ticketId: number) => {
   try {
     const res = await tenantSupport.listTicketMessages(ticketId);
-    const messages = res.data?.collection || [];
+    const messages = (res.data?.collection || []) as SupportMessage[];
     if (selectedTicket.value) {
-      selectedTicket.value.messages = messages;
+      selectedTicket.value.messages =
+        messages as unknown as SupportTicket["messages"];
     }
   } catch {
     if (selectedTicket.value) {
@@ -505,7 +561,7 @@ const sendReply = async () => {
       selectedTicket.value.id,
       replyBody.value.trim()
     );
-    const msg = res.data?.item;
+    const msg = res.data?.item as SupportMessage | undefined;
     if (msg && selectedTicket.value) {
       selectedTicket.value.messages = selectedTicket.value.messages || [];
       selectedTicket.value.messages.push(msg);
@@ -516,17 +572,18 @@ const sendReply = async () => {
   }
 };
 
-const loadAttachments = async (ticketId) => {
+const loadAttachments = async (ticketId: number) => {
   try {
     const res = await tenantSupport.listSupportAttachments(ticketId);
-    attachments.value = res.data?.collection || [];
+    attachments.value = (res.data?.collection || []) as SupportAttachment[];
   } catch {
     attachments.value = [];
   }
 };
 
-const onFileSelected = (event) => {
-  const file = event.target.files[0];
+const onFileSelected = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
   if (file) {
     selectedFile.value = file;
   }

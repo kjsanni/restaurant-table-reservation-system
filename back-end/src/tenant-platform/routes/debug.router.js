@@ -6,15 +6,16 @@ const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const debugController = require("../controllers/debug.controller");
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
+const { requireBreakGlass } = require("../../middleware/breakGlass");
 
 router
   .route("/tenant/:tenantId")
-  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(debugController.getTenantDebugInfoHandler))
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(requireBreakGlass), tryCatchHandler(debugController.getTenantDebugInfoHandler))
   .all(httpMethodError);
 
 router
   .route("/platform")
-  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(debugController.getPlatformDebugInfoHandler))
+  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(requireBreakGlass), tryCatchHandler(debugController.getPlatformDebugInfoHandler))
   .all(httpMethodError);
 
 module.exports = router;

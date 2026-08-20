@@ -9,13 +9,14 @@ jest.mock("../services/geocoding.service");
 jest.mock("../services/reservationService");
 jest.mock("../services/delivery.service");
 jest.mock("../services/messageTemplates.service", () => ({
-  render: jest.fn(async (name, vars) => {
+  renderTemplate: jest.fn(async (name, vars) => {
     const defaults = {
       welcome: "Welcome menu",
       no_orders: "No orders found.",
       session_cleared: "Session cleared.",
       unrecognized: "I didn't understand.",
       order_created: `Order #${vars?.orderId || 0} created!\nPay here: ${vars?.paymentLink || ""}\n\nYou'll receive confirmation once paid.`,
+      service_unavailable: "Sorry, this service is not configured. Please contact the restaurant directly.",
     };
     let text = defaults[name] || name;
     if (vars) {
@@ -36,6 +37,9 @@ jest.mock("../utils/cache", () => ({
     del: jest.fn(),
   },
 }));
+jest.mock("../DAOs/auth.dao", () => ({
+  getSettingValue: jest.fn().mockResolvedValue(false),
+}));
 
 const whatsappService = require("../services/whatsapp.service");
 const menuService = require("../services/menu.service");
@@ -44,6 +48,7 @@ const customerService = require("../services/customerService");
 const promotionService = require("../services/promotion.service");
 const { initializeCharge } = require("../tenant-platform/services/paystack.service");
 const { cache } = require("../utils/cache");
+const authDAO = require("../DAOs/auth.dao");
 
 describe("whatsapp-order.service", () => {
   beforeEach(() => {
@@ -51,6 +56,11 @@ describe("whatsapp-order.service", () => {
     cache.get.mockResolvedValue(null);
     cache.set.mockResolvedValue("OK");
     cache.del.mockResolvedValue(1);
+    authDAO.getSettingValue.mockImplementation((key) => {
+      if (key === "whatsapp_ordering_enabled") return Promise.resolve(true);
+      if (key === "whatsapp_ordering_hours") return Promise.resolve(null);
+      return Promise.resolve(null);
+    });
   });
 
   describe("processMessage", () => {
@@ -164,6 +174,52 @@ describe("whatsapp-order.service", () => {
         expect.stringContaining("Commands:"),
         1
       );
+    });
+  });
+
+  describe("ordering enabled gate", () => {
+    it("rejects messages when WhatsApp ordering is disabled", async () => {
+      authDAO.getSettingValue.mockResolvedValue(false);
+      whatsappService.sendWhatsAppText.mockResolvedValue({});
+
+      await whatsappOrderService.processMessage("+233241234567", "menu", 1);
+
+      expect(whatsappService.sendWhatsAppText).toHaveBeenCalledWith(
+        "+233241234567",
+        "Sorry, this service is not configured. Please contact the restaurant directly.",
+        1
+      );
+      expect(menuService.getMenuCategories).not.toHaveBeenCalled();
+    });
+
+    it("allows messages when WhatsApp ordering is enabled", async () => {
+      authDAO.getSettingValue.mockResolvedValue(true);
+      menuService.getMenuCategories.mockResolvedValue([{ id: 1, name: "Mains" }]);
+      whatsappService.sendWhatsAppText.mockResolvedValue({});
+
+      await whatsappOrderService.processMessage("+233241234567", "menu", 1);
+
+      expect(menuService.getMenuCategories).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe("ordering hours gate", () => {
+    it("rejects messages when outside ordering hours", async () => {
+      authDAO.getSettingValue.mockImplementation((key) => {
+        if (key === "whatsapp_ordering_enabled") return Promise.resolve(true);
+        if (key === "whatsapp_ordering_hours") return Promise.resolve({});
+        return Promise.resolve(null);
+      });
+      whatsappService.sendWhatsAppText.mockResolvedValue({});
+
+      await whatsappOrderService.processMessage("+233241234567", "menu", 1);
+
+      expect(whatsappService.sendWhatsAppText).toHaveBeenCalledWith(
+        "+233241234567",
+        expect.stringContaining("closed"),
+        1
+      );
+      expect(menuService.getMenuCategories).not.toHaveBeenCalled();
     });
   });
 });

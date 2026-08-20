@@ -16,6 +16,36 @@ legalAcceptanceDAO.list = (filters = {}) => {
   });
 };
 
+legalAcceptanceDAO.count = (filters = {}) => {
+  const where = {};
+  if (filters.tenantId) where.tenantId = filters.tenantId;
+  if (filters.customerId !== undefined && filters.customerId !== null) where.customerId = filters.customerId;
+  if (filters.accepted !== undefined) where.accepted = filters.accepted;
+  if (filters.slug) where.slug = filters.slug;
+
+  return db.legalAcceptance.count({ // codacy-suppress nosql-injection - parameterized ORM call
+    where,
+  });
+};
+
+legalAcceptanceDAO.groupByDocument = (filters = {}) => {
+  const where = {};
+  if (filters.tenantId) where.tenantId = filters.tenantId;
+  if (filters.customerId !== undefined && filters.customerId !== null) where.customerId = filters.customerId;
+  if (filters.accepted !== undefined) where.accepted = filters.accepted;
+  if (filters.slug) where.slug = filters.slug;
+
+  return db.legalAcceptance.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
+    where,
+    attributes: [
+      "documentKey",
+      [db.sequelize.fn("COUNT", db.sequelize.col("id")), "count"],
+    ],
+    group: ["documentKey"],
+    raw: true,
+  });
+};
+
 // All acceptances for a tenant (immutable history, newest first).
 legalAcceptanceDAO.listByTenant = (tenantId) => {
   return db.legalAcceptance.findAll({ // codacy-suppress nosql-injection - parameterized ORM call

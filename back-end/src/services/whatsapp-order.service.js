@@ -12,10 +12,32 @@ const reservationService = require("./reservationService");
 const messageTemplates = require("./messageTemplates.service");
 const { parseDate, parseTime } = require("../utils/whatsappDateParser");
 const db = require("../db/models");
+const authDAO = require("../DAOs/auth.dao");
 
 const SESSION_PREFIX = "whatsapp:session:";
 const CART_PREFIX = "whatsapp:cart:";
 const SESSION_TTL = 60 * 60 * 24;
+
+const isOrderingEnabled = async (tenantId) => {
+  const enabled = await authDAO.getSettingValue("whatsapp_ordering_enabled", false, tenantId);
+  return !!enabled;
+};
+
+const isWithinOrderingHours = async (tenantId) => {
+  const hours = await authDAO.getSettingValue("whatsapp_ordering_hours", null, tenantId);
+  if (!hours || typeof hours !== "object") return true;
+  const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const today = dayNames[new Date().getDay()];
+  const slot = hours[today];
+  if (!slot || !slot.enabled) return false;
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const [openH, openM] = (slot.open || "00:00").split(":").map(Number);
+  const [closeH, closeM] = (slot.close || "23:59").split(":").map(Number);
+  const openMinutes = openH * 60 + openM;
+  const closeMinutes = closeH * 60 + closeM;
+  return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+};
 
 const getSession = async (phone) => {
   const key = SESSION_PREFIX + phone;
@@ -49,7 +71,7 @@ const sendText = async (phone, text, tenantId) => {
 };
 
 const sendTemplate = async (phone, templateName, variables = {}, tenantId) => {
-  const text = await messageTemplates.render(templateName, variables, tenantId);
+  const text = await messageTemplates.renderTemplate(templateName, variables, tenantId);
   await sendText(phone, text, tenantId);
 };
 
@@ -353,6 +375,18 @@ const processMessage = async (phone, message, tenantId) => {
 
   session.tenantId = tenantId;
 
+  if (!(await isOrderingEnabled(tenantId))) {
+    await sendTemplate(phone, "service_unavailable", {}, tenantId);
+    return;
+  }
+
+  const withinHours = await isWithinOrderingHours(tenantId);
+
+  if (!withinHours) {
+    await sendText(phone, "We are currently closed. Our ordering hours are displayed in the app. Please try again during open hours.", tenantId);
+    return;
+  }
+
   if (["cancel", "stop", "reset", "exit"].includes(normalized)) {
     await setSession(phone, { state: "idle", tenantId });
     await clearCart(phone);
@@ -553,6 +587,17 @@ const processLocationMessage = async (phone, location, tenantId) => {
     session = { state: "idle", tenantId };
   }
   session.tenantId = tenantId;
+
+  if (!(await isOrderingEnabled(tenantId))) {
+    await sendTemplate(phone, "service_unavailable", {}, tenantId);
+    return;
+  }
+
+  const withinHours = await isWithinOrderingHours(tenantId);
+  if (!withinHours) {
+    await sendText(phone, "We are currently closed. Our ordering hours are displayed in the app. Please try again during open hours.", tenantId);
+    return;
+  }
 
   if (session.state === "store_locator_awaiting") {
     const storeLocatorService = require("../verticals/salon/services/storeLocator.service");

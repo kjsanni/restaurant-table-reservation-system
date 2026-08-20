@@ -284,7 +284,9 @@ onUnmounted(() => {
 
           <div v-if="showPayButton" class="payment-section">
             <div class="price-display">
-              {{ fmt(Number(walletPassRequest?.amount || 50)) }}
+              {{
+                walletPassRequest?.amount ? fmt(walletPassRequest.amount) : "—"
+              }}
             </div>
             <p class="payment-note">
               Pay a one-time fee to enable digital wallet passes for this event.
@@ -312,24 +314,24 @@ onUnmounted(() => {
               ></span>
               <h3>
                 {{
-                  walletPassRequest.status === "pending_payment"
+                  walletPassRequest?.status === "pending_payment"
                     ? "Payment Initiated"
-                    : walletPassRequest.status === "pending"
+                    : walletPassRequest?.status === "pending"
                       ? "Awaiting Approval"
                       : "Signing in Progress"
                 }}
               </h3>
               <p class="awaiting-text">
                 {{
-                  walletPassRequest.status === "pending_payment"
+                  walletPassRequest?.status === "pending_payment"
                     ? "Your payment is being processed. This status will update automatically."
-                    : walletPassRequest.status === "pending"
+                    : walletPassRequest?.status === "pending"
                       ? "Your request has been submitted for platform approval. You will be notified once approved."
                       : "Your wallet pass is being signed for all supported platforms."
                 }}
               </p>
-              <p v-if="walletPassRequest.reviewNotes" class="review-notes">
-                Note: {{ walletPassRequest.reviewNotes }}
+              <p v-if="walletPassRequest?.reviewNotes" class="review-notes">
+                Note: {{ walletPassRequest?.reviewNotes }}
               </p>
             </div>
           </div>
@@ -385,12 +387,12 @@ onUnmounted(() => {
               </a>
             </div>
             <p
-              v-if="walletPassRequest.platformStatuses"
+              v-if="walletPassRequest?.platformStatuses"
               class="platform-statuses"
             >
               <span
                 v-for="([platform, status], idx) in Object.entries(
-                  walletPassRequest.platformStatuses
+                  walletPassRequest?.platformStatuses || {}
                 )"
                 :key="idx"
                 :class="['platform-pill', `s-${status}`]"

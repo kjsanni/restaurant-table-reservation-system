@@ -1,134 +1,59 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch } from "vue";
+import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { VaSidebarItem } from "vuestic-ui";
 import { useAuthStore } from "@/stores/auth";
-import type { User } from "@/stores/auth";
 import {
   superAdminSidebarNavItems,
   superAdminTopBarNavItems,
 } from "@/config/sidebarItems";
 import type { NavItem } from "@/config/sidebarItems";
 import { useAnimations } from "@/composables/useAnimations";
-import gsap from "gsap";
+import { useAdminLayout } from "@/composables/useAdminLayout";
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
-const { fadeIn, fadeOut } = useAnimations();
+const { fadeIn } = useAnimations();
+const {
+  collapsed,
+  sidebarVisible,
+  windowWidth,
+  toggleSidebar,
+  isAuthenticated,
+  user,
+  shouldShow,
+} = useAdminLayout();
 
 let pageTween: gsap.core.Tween | null = null;
 let leaveTween: gsap.core.Tween | null = null;
 
 const beforeEnter = (el: Element) => {
-  el.style.opacity = "0";
-  el.style.transform = "translateY(8px)";
+  const node = el as HTMLElement;
+  node.style.opacity = "0";
+  node.style.transform = "translateY(8px)";
 };
 
 const onEnter = (el: Element, done: () => void) => {
   if (pageTween) pageTween.kill();
-  pageTween = fadeIn(el, { duration: "base" });
-  pageTween.eventCallback("onComplete", done);
+  pageTween = fadeIn(el, 0.28) as gsap.core.Tween | null;
+  if (pageTween) {
+    pageTween.eventCallback("onComplete", done);
+  } else {
+    done();
+  }
 };
 
 const onLeave = (el: Element, done: () => void) => {
   if (leaveTween) leaveTween.kill();
-  leaveTween = fadeOut(el, { duration: "fast" });
-  leaveTween.eventCallback("onComplete", done);
-};
-
-const collapsed = ref(false);
-const sidebarVisible = ref(true);
-const windowWidth = ref<number>(
-  typeof window !== "undefined" ? window.innerWidth : 1024
-);
-
-const checkWindowWidth = () => {
-  windowWidth.value = window.innerWidth;
-  if (windowWidth.value <= 768) {
-    if (!sidebarVisible.value) {
-      sidebarVisible.value = true;
-    }
-  } else {
-    if (!sidebarVisible.value) {
-      sidebarVisible.value = true;
-      collapsed.value = false;
-    }
-  }
-};
-
-const toggleSidebar = () => {
-  if (windowWidth.value <= 768) {
-    if (collapsed.value && sidebarVisible.value) {
-      collapsed.value = false;
-    } else if (!collapsed.value && sidebarVisible.value) {
-      collapsed.value = true;
-    } else {
-      sidebarVisible.value = !sidebarVisible.value;
-      if (sidebarVisible.value) collapsed.value = true;
-    }
-  } else {
-    collapsed.value = !collapsed.value;
-  }
-};
-
-onMounted(() => {
-  checkWindowWidth();
-  window.addEventListener("resize", checkWindowWidth);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("resize", checkWindowWidth);
-});
-
-const isAuthenticated = computed(() => authStore.isAuthenticated);
-const user = computed<User | null>(
-  () => authStore.user as unknown as User | null
-);
-const isSuperAdmin = computed(() => authStore.isSuperAdmin);
-
-const shouldShow = (item: {
-  platformOnly?: boolean;
-  tenantOnly?: boolean;
-  requiresAuth?: boolean;
-  requiresAdmin?: boolean;
-  requiresPermission?: string;
-  requiresFeature?: string;
-  requiresServiceMode?: string;
-  requiresVertical?: string;
-  requiresId?: boolean;
-}) => {
-  if (item.platformOnly && !isSuperAdmin.value) return false;
-  if (item.tenantOnly && !authStore.tenantModeEnabled && !isSuperAdmin.value)
-    return false;
-  if (item.requiresAuth && !isAuthenticated.value) return false;
-  if (item.requiresAdmin && user.value?.role !== "admin") return false;
-  if (
-    item.requiresPermission &&
-    !user.value?.permissions?.[item.requiresPermission]
-  )
-    return false;
-  if (
-    item.requiresFeature &&
-    !authStore.capabilities?.featureFlags?.[item.requiresFeature]
-  ) {
-    return false;
-  }
-  if (
-    item.requiresServiceMode &&
-    !authStore.capabilities?.serviceModes?.includes(item.requiresServiceMode)
-  ) {
-    return false;
-  }
-  if (
-    item.requiresVertical &&
-    authStore.currentTenant?.businessVertical !== item.requiresVertical
-  ) {
-    return false;
-  }
-  if (item.requiresId) return false;
-  return true;
+  leaveTween = gsap.to(el, {
+    opacity: 0,
+    y: -8,
+    duration: 0.2,
+    ease: "power2.in",
+    onComplete: done,
+  }) as gsap.core.Tween | null;
 };
 
 const visibleNavItems = computed(() =>

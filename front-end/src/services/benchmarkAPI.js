@@ -1,13 +1,8 @@
-import axios from "axios";
+import { buildApiClient } from "./buildApiClient";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 
-const client = axios.create({
-  baseURL: `${API_BASE}/admin/benchmarks`,
-  withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "x-xsrf-token",
-});
+const client = buildApiClient(`${API_BASE}/admin/benchmarks`);
 
 /**
  * @param {string} [plan] - Optional plan filter

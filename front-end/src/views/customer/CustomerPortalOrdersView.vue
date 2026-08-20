@@ -44,6 +44,15 @@ const statusLabel = (s: string) => {
   };
   return map[s] || s;
 };
+
+const formatDate = (value: string) => {
+  try {
+    if (!value) return "—";
+    return new Date(value).toLocaleString();
+  } catch {
+    return "—";
+  }
+};
 </script>
 
 <template>
@@ -64,9 +73,7 @@ const statusLabel = (s: string) => {
           <div class="order-header">
             <div>
               <b>Order #{{ order.id }}</b>
-              <span class="order-date">{{
-                new Date(order.orderedAt).toLocaleString()
-              }}</span>
+              <span class="order-date">{{ formatDate(order.orderedAt) }}</span>
             </div>
             <span
               :class="[
@@ -80,7 +87,7 @@ const statusLabel = (s: string) => {
           <div class="order-items">
             <div
               v-for="(item, idx) in order.orderItems"
-              :key="idx"
+              :key="item.id ?? idx"
               class="order-item"
             >
               <span

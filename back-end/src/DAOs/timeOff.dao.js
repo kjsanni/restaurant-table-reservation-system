@@ -2,7 +2,12 @@ const db = require("../db/models");
 const TimeOff = db.timeOff;
 const User = db.user;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const createTimeOff = async ({ userId, startDate, endDate, reason }, tenantId) => {
   return await TimeOff.create({ userId, startDate, endDate, reason, status: "pending", ...withTenant({}, tenantId) }); // codacy-suppress nosql-injection - parameterized ORM call

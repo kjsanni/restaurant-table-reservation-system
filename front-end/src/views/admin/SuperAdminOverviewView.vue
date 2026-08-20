@@ -17,6 +17,20 @@
       </div>
 
       <div v-else class="overview-grid">
+        <section class="platform-hero">
+          <img
+            src="@/assets/images/portal/super-admin-hero.jpg"
+            alt="Super admin dashboard hero"
+            class="platform-hero-img"
+          />
+          <div class="platform-hero-overlay">
+            <h2>Platform Command Center</h2>
+            <p>
+              Monitor tenants, revenue, compliance, and support from one view.
+            </p>
+          </div>
+        </section>
+
         <!-- KPI strip -->
         <section class="kpi-strip">
           <article v-for="kpi in kpis" :key="kpi.label" class="kpi-card">
@@ -1420,5 +1434,45 @@ onMounted(async () => {
   .tenant-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Platform hero */
+.platform-hero {
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  min-height: 260px;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: var(--space-6);
+}
+.platform-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.platform-hero-overlay {
+  position: relative;
+  padding: var(--space-6) var(--space-5);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.65) 100%
+  );
+  color: var(--white);
+  width: 100%;
+}
+.platform-hero-overlay h2 {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  letter-spacing: var(--tracking-tight);
+}
+.platform-hero-overlay p {
+  margin: 0;
+  font-size: var(--text-sm);
+  opacity: 0.9;
 }
 </style>

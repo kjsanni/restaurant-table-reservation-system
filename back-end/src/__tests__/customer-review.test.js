@@ -17,7 +17,7 @@ describe("review.controller - customer flow", () => {
   describe("createCustomerReviewHandler", () => {
     it("creates a review for a completed reservation", async () => {
       const req = {
-        user: { id: 100 },
+        user: { id: 100, email: "alice@example.com" },
         tenant: { id: 10 },
         body: { reservationId: 1, rating: 5, comment: "Great!" },
       };
@@ -26,6 +26,7 @@ describe("review.controller - customer flow", () => {
         json: jest.fn().mockReturnThis(),
       };
 
+      jest.spyOn(require("../DAOs/reservation.dao"), "findOrCreateCustomer").mockResolvedValue({ id: 100 });
       jest.spyOn(require("../DAOs/reservation.dao"), "findReservationById").mockResolvedValue(mockReservation);
       jest.spyOn(require("../DAOs/review.dao"), "findByReservation").mockResolvedValue(null);
       jest.spyOn(require("../DAOs/review.dao"), "createReview").mockResolvedValue({
@@ -48,7 +49,7 @@ describe("review.controller - customer flow", () => {
 
     it("rejects review for reservation not owned by customer", async () => {
       const req = {
-        user: { id: 999 },
+        user: { id: 999, email: "other@example.com" },
         tenant: { id: 10 },
         body: { reservationId: 1, rating: 5 },
       };
@@ -57,6 +58,7 @@ describe("review.controller - customer flow", () => {
         json: jest.fn().mockReturnThis(),
       };
 
+      jest.spyOn(require("../DAOs/reservation.dao"), "findOrCreateCustomer").mockResolvedValue({ id: 999 });
       jest.spyOn(require("../DAOs/reservation.dao"), "findReservationById").mockResolvedValue(mockReservation);
 
       await reviewController.createCustomerReviewHandler(req, res);
@@ -70,7 +72,7 @@ describe("review.controller - customer flow", () => {
 
     it("rejects review for incomplete reservation", async () => {
       const req = {
-        user: { id: 100 },
+        user: { id: 100, email: "alice@example.com" },
         tenant: { id: 10 },
         body: { reservationId: 1, rating: 5 },
       };
@@ -79,6 +81,7 @@ describe("review.controller - customer flow", () => {
         json: jest.fn().mockReturnThis(),
       };
 
+      jest.spyOn(require("../DAOs/reservation.dao"), "findOrCreateCustomer").mockResolvedValue({ id: 100 });
       jest.spyOn(require("../DAOs/reservation.dao"), "findReservationById").mockResolvedValue({
         ...mockReservation,
         resStatus: "pending",
@@ -95,7 +98,7 @@ describe("review.controller - customer flow", () => {
 
     it("rejects duplicate review", async () => {
       const req = {
-        user: { id: 100 },
+        user: { id: 100, email: "alice@example.com" },
         tenant: { id: 10 },
         body: { reservationId: 1, rating: 5 },
       };
@@ -104,6 +107,7 @@ describe("review.controller - customer flow", () => {
         json: jest.fn().mockReturnThis(),
       };
 
+      jest.spyOn(require("../DAOs/reservation.dao"), "findOrCreateCustomer").mockResolvedValue({ id: 100 });
       jest.spyOn(require("../DAOs/reservation.dao"), "findReservationById").mockResolvedValue(mockReservation);
       jest.spyOn(require("../DAOs/review.dao"), "findByReservation").mockResolvedValue({ id: 1 });
 
@@ -120,7 +124,7 @@ describe("review.controller - customer flow", () => {
   describe("getCustomerReviewsHandler", () => {
     it("returns reviews for the authenticated customer", async () => {
       const req = {
-        user: { id: 100 },
+        user: { id: 100, email: "alice@example.com" },
         tenant: { id: 10 },
       };
       const res = {
@@ -128,6 +132,7 @@ describe("review.controller - customer flow", () => {
         json: jest.fn().mockReturnThis(),
       };
 
+      jest.spyOn(require("../DAOs/reservation.dao"), "findOrCreateCustomer").mockResolvedValue({ id: 100 });
       jest.spyOn(require("../DAOs/review.dao"), "findByCustomer").mockResolvedValue([
         { id: 1, rating: 5, comment: "Great", createdAt: "2026-08-10" },
       ]);

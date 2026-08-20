@@ -42,6 +42,8 @@ const DEFAULT_TEMPLATES = {
   no_orders: "No orders found.",
   order_status: "Order #{{orderId}}: {{status}} | Payment: {{paymentStatus}}",
   order_created: "Order #{{orderId}} created!\nPay here: {{paymentLink}}\n\nYou'll receive confirmation once paid.",
+  order_payment_confirmed:
+    "Payment confirmed for order #{{orderId}}!\nYour order is being prepared.\nType 'status' to check progress.",
   session_cleared: "Session cleared. Send 'hi' anytime to start again.",
   agent_handoff:
     "A staff member will reach out to you shortly. For urgent matters, please call the restaurant directly.",
@@ -112,7 +114,7 @@ const substitute = (template, variables = {}) => {
   return result;
 };
 
-const render = async (templateName, variables = {}, tenantId = null) => {
+const renderTemplate = async (templateName, variables = {}, tenantId = null) => {
   const templates = await loadTemplates(tenantId);
   const template = templates[templateName] || DEFAULT_TEMPLATES[templateName];
   if (!template) {
@@ -127,7 +129,7 @@ const invalidateCache = () => {
 };
 
 module.exports = {
-  render,
+  renderTemplate,
   loadTemplates,
   substitute,
   invalidateCache,

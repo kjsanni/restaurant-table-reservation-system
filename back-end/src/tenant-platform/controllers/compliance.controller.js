@@ -6,32 +6,37 @@ const dsarRequestDAO = require("../DAOs/dsarRequest.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
+const AUTO_FULFILLABLE_DSAR_TYPES = ["access"];
+
 const computeScorecard = async (tenantId) => {
   const totalTenants = await db.tenant.count({
     where: tenantId ? { id: tenantId } : undefined,
   });
 
-  const accepted = await legalAcceptanceDAO.list({
+  const acceptedCount = await legalAcceptanceDAO.count({
     tenantId,
-    limit: 10000,
   });
 
-  const acceptanceRate = totalTenants > 0 ? (accepted.length / totalTenants) * 100 : 0;
-
   const byDocument = {};
-  for (const acceptance of accepted) {
-    const doc = acceptance.documentKey || "unknown";
-    if (!byDocument[doc]) {
-      byDocument[doc] = { accepted: 0, pending: 0, total: 0 };
-    }
-    byDocument[doc].accepted += 1;
-    byDocument[doc].total += 1;
+  const docRows = await legalAcceptanceDAO.groupByDocument({
+    tenantId,
+  });
+
+  for (const row of docRows) {
+    const doc = row.documentKey || "unknown";
+    byDocument[doc] = {
+      accepted: parseInt(row.count, 10),
+      pending: 0,
+      total: parseInt(row.count, 10),
+    };
   }
+
+  const acceptanceRate = totalTenants > 0 ? (acceptedCount / totalTenants) * 100 : 0;
 
   return {
     totalTenants,
-    acceptedCount: accepted.length,
-    pendingCount: 0,
+    acceptedCount,
+    pendingCount: totalTenants - acceptedCount,
     acceptanceRate: Math.round(acceptanceRate * 10) / 10,
     byDocument,
   };
@@ -59,6 +64,13 @@ const autoFulfillSimpleDsarHandler = async (req, res) => {
     return res.status(400).json({
       success: false,
       message: `DSAR request is already ${record.status}`,
+    });
+  }
+
+  if (!AUTO_FULFILLABLE_DSAR_TYPES.includes(record.requestType)) {
+    return res.status(400).json({
+      success: false,
+      message: "DSAR type requires manual review",
     });
   }
 

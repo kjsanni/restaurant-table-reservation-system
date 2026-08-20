@@ -250,9 +250,8 @@ const createServer = () => {
   });
 
   app.use(tryCatchHandler(resolveTenant));
-  app.use(tryCatchHandler(requireActiveTenant));
 
-  app.use("/api/v1", generalLimiter, versioningHeaders, require("../routes"));
+  app.use("/api/v1", versioningHeaders, require("../routes"));
   app.use("/api/v1/auth", validateCsrfToken, authLimiter, authRouter);
   app.use("/api/v1/auth", authLimiter, passwordResetRouter);
   app.use("/api/v1/auth", authLimiter, emailVerificationRouter);

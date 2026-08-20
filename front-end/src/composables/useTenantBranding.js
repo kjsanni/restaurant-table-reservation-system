@@ -27,11 +27,13 @@ const ACCENT_CSS_VARS = [
   "accent-text",
 ];
 
+const isValidHexColor = (value) => /^#[0-9A-Fa-f]{6}$/.test(value);
+
 const applyBranding = (settings = {}) => {
   const root = document.documentElement;
   const branding = settings.branding || {};
 
-  if (branding.primaryColor) {
+  if (branding.primaryColor && isValidHexColor(branding.primaryColor)) {
     root.style.setProperty("--brand-500", branding.primaryColor);
     root.style.setProperty("--brand-400", branding.primaryColor);
     root.style.setProperty("--brand-600", branding.primaryColor);
@@ -44,7 +46,7 @@ const applyBranding = (settings = {}) => {
     root.style.setProperty("--accent-text", branding.primaryColor);
   }
 
-  if (branding.secondaryColor) {
+  if (branding.secondaryColor && isValidHexColor(branding.secondaryColor)) {
     root.style.setProperty("--brand-900", branding.secondaryColor);
     root.style.setProperty("--brand-800", branding.secondaryColor);
   }

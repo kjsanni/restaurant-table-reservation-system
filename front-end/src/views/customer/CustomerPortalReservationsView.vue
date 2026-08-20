@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useCapabilities } from "@/composables/useCapabilities";
@@ -29,6 +29,15 @@ const reservations = ref<Reservation[]>([]);
 const profile = ref<Profile | null>(null);
 const loading = ref(true);
 const searchQuery = ref("");
+const debouncedSearch = ref("");
+
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+watch(searchQuery, (value) => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    debouncedSearch.value = value;
+  }, 300);
+});
 
 const loadProfile = async () => {
   try {
@@ -52,31 +61,50 @@ const loadReservations = async () => {
   }
 };
 
-let pollTimer: ReturnType<typeof setInterval> | null = null;
-const pollErrorCount = ref(0);
+let pollTimer: ReturnType<typeof setTimeout> | null = null;
+let pollIntervalMs = 5000;
+const BASE_POLL_INTERVAL_MS = 5000;
+const MAX_POLL_INTERVAL_MS = 60000;
 const MAX_POLL_ERRORS = 3;
+const pollErrorCount = ref(0);
 const pollError = ref(false);
 
-const startPolling = () => {
-  pollTimer = setInterval(async () => {
+const clearPollTimer = () => {
+  if (pollTimer !== null) {
+    clearTimeout(pollTimer);
+    pollTimer = null;
+  }
+};
+
+const scheduleNextPoll = () => {
+  clearPollTimer();
+  pollTimer = setTimeout(async () => {
     try {
       await loadReservations();
-      pollErrorCount.value = 0;
       pollError.value = false;
+      pollErrorCount.value = 0;
+      pollIntervalMs = BASE_POLL_INTERVAL_MS;
     } catch {
       pollErrorCount.value += 1;
-      if (pollErrorCount.value >= MAX_POLL_ERRORS && pollTimer) {
-        pollError.value = true;
-        clearInterval(pollTimer);
-        pollTimer = null;
+      pollError.value = true;
+      pollIntervalMs = Math.min(pollIntervalMs * 2, MAX_POLL_INTERVAL_MS);
+    } finally {
+      if (pollErrorCount.value < MAX_POLL_ERRORS) {
+        scheduleNextPoll();
       }
     }
-  }, 30000);
+  }, pollIntervalMs);
+};
+
+const startPolling = () => {
+  pollIntervalMs = BASE_POLL_INTERVAL_MS;
+  scheduleNextPoll();
 };
 
 const retryPolling = async () => {
   pollError.value = false;
   pollErrorCount.value = 0;
+  pollIntervalMs = BASE_POLL_INTERVAL_MS;
   try {
     await loadReservations();
   } catch {
@@ -95,8 +123,8 @@ const firstName = computed(() => {
 });
 
 const filteredReservations = computed(() => {
-  if (!searchQuery.value) return reservations.value;
-  const q = searchQuery.value.toLowerCase();
+  if (!debouncedSearch.value) return reservations.value;
+  const q = debouncedSearch.value.toLowerCase();
   return reservations.value.filter((r: Reservation) => {
     const occasion = (r.occasion || "").toLowerCase();
     const table = (r.tableName || "").toLowerCase();
@@ -148,11 +176,16 @@ onMounted(async () => {
   } catch {
     pollError.value = true;
   }
-  startPolling();
+  if (pollError.value) {
+    retryPolling();
+  } else {
+    startPolling();
+  }
 });
 
 onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer);
+  if (pollTimer !== null) clearTimeout(pollTimer);
+  if (searchDebounceTimer !== null) clearTimeout(searchDebounceTimer);
 });
 </script>
 

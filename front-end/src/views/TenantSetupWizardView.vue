@@ -215,11 +215,18 @@ onMounted(() => {
   <main class="setup-wizard-main">
     <div class="setup-wizard">
       <div class="wizard-card">
-        <div class="wizard-header">
-          <h1>Welcome! Let's set up your restaurant</h1>
-          <p class="wizard-subtitle">
-            Tell us about your business so we can tailor the experience.
-          </p>
+        <div class="wizard-hero">
+          <img
+            src="@/assets/images/portal/tenant-onboarding-hero.jpg"
+            alt="Tenant onboarding hero"
+            class="wizard-hero-img"
+          />
+          <div class="wizard-hero-overlay">
+            <h1>Welcome! Let's set up your restaurant</h1>
+            <p class="wizard-subtitle">
+              Tell us about your business so we can tailor the experience.
+            </p>
+          </div>
         </div>
 
         <div class="stepper">
@@ -484,11 +491,48 @@ onMounted(() => {
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  padding: 32px;
+  padding: 0;
+  overflow: hidden;
+}
+.wizard-hero {
+  position: relative;
+  min-height: 220px;
+}
+.wizard-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.wizard-hero-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  color: var(--white);
+}
+.wizard-hero-overlay h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+}
+.wizard-hero-overlay .wizard-subtitle {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+  color: var(--white);
 }
 .wizard-header {
   text-align: center;
   margin-bottom: 24px;
+  padding: 0 24px;
 }
 .wizard-header h1 {
   margin: 0 0 8px;

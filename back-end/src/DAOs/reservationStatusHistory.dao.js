@@ -1,13 +1,21 @@
 const db = require("../db/models");
 const ReservationStatusHistory = db.reservationStatusHistory;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
-const addHistory = async (data, tenantId) => {
-  return await ReservationStatusHistory.create({ // codacy-suppress nosql-injection - parameterized ORM call
-    ...data,
-    ...withTenant({}, tenantId),
-  });
+const addHistory = async (data, tenantId, transaction) => {
+  return await ReservationStatusHistory.create(
+    {
+      ...data,
+      ...withTenant({}, tenantId),
+    },
+    { transaction }
+  );
 };
 
 const getHistoryByReservation = async (reservationId, tenantId) => {

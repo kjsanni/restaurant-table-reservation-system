@@ -61,6 +61,10 @@ export const useCartStore = defineStore("cart", () => {
     items.value = [];
   };
 
+  // NOTE: Cart data is non-sensitive. It only ever stores menu item IDs
+  // (menuItemId), the menu item name (not a customer name), price, quantity,
+  // selected option adjustments, and free-text item notes. It must never hold
+  // customer PII such as names, emails, phone numbers, or delivery addresses.
   const loadFromStorage = () => {
     try {
       const raw = localStorage.getItem("cart");
@@ -73,6 +77,8 @@ export const useCartStore = defineStore("cart", () => {
   };
 
   const saveToStorage = () => {
+    // Persisted payload is limited to menu item IDs and quantities only; no
+    // customer PII is stored in cart.
     localStorage.setItem("cart", JSON.stringify(items.value));
   };
 

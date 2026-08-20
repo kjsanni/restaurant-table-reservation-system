@@ -1,13 +1,11 @@
-import axios from "axios";
+import { buildApiClient } from "./buildApiClient";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api/v1";
 
-const client = axios.create({
-  baseURL: `${API_BASE}/public/tenants`,
-  withCredentials: false,
-  headers: {
-    "Content-Type": "application/json",
-  },
+const client = buildApiClient(`${API_BASE}/public/tenants`, {
+  withRefresh: false,
+  withTenantHeader: false,
+  withAuthHeader: false,
 });
 
 export const getBySlug = async (slug) => {
