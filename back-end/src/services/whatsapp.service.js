@@ -24,6 +24,11 @@ const resolveConfig = async (tenantId) => {
   return { token, phoneNumberId, enabled: Boolean(token && phoneNumberId) };
 };
 
+const isTenantWhatsAppEnabled = async (tenantId) => {
+  const { enabled } = await resolveConfig(tenantId);
+  return enabled;
+};
+
 const buildClient = (token, phoneNumberId) => {
   const baseUrl = `https://graph.facebook.com/v18.0/${phoneNumberId}`;
   return {
@@ -155,11 +160,18 @@ const verifyWebhookSignature = (payload, signature, appSecret) => {
   return signature === expected;
 };
 
+const sendLoginOTP = async (to, code, tenantId) => {
+  const text = `Your login code is: ${code}\n\nThis code expires in 5 minutes. Do not share it with anyone.`;
+  await sendWhatsAppText(to, text, tenantId);
+};
+
 module.exports = {
   sendWhatsAppMessage,
   sendWhatsAppText,
   sendLocationMessage,
   sendInteractiveMessage,
+  sendLoginOTP,
   formatPhoneNumber,
   verifyWebhookSignature,
+  isTenantWhatsAppEnabled,
 };

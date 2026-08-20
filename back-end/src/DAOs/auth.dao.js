@@ -51,6 +51,12 @@ const findUserByEmail = async (email, tenantId) => {
   });
 };
 
+const findUserByPhone = async (phone, tenantId) => {
+  return await User.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
+    where: withTenant({ phone }, tenantId),
+  });
+};
+
 const findUserById = async (id, tenantId) => {
   return await User.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: withTenant({ id }, tenantId),
@@ -67,7 +73,7 @@ const createUser = async (userData, tenantId, options = {}) => {
 
 const getAllStaff = async (tenantId) => {
   return await User.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
-    attributes: ["id", "username", "email", "role", "permissions", "createdAt"],
+    attributes: ["id", "username", "email", "phone", "role", "permissions", "createdAt"],
     where: withTenant({ role: ["staff", "manager"] }, tenantId),
   });
 };
@@ -91,7 +97,7 @@ const getAdminCount = async (tenantId) => {
   return await User.count({ where: withTenant({ role: "admin" }, tenantId) });
 };
 
-const createStaffUser = async ({ username, email, password, role, permissions }, tenantId) => {
+const createStaffUser = async ({ username, email, password, role, permissions, phone }, tenantId) => {
   const errors = validatePasswordComplexity(password);
   if (errors.length > 0) {
     throw { status: 400, message: errors.join(". ") + "." };
@@ -103,6 +109,7 @@ const createStaffUser = async ({ username, email, password, role, permissions },
     password: hashedPassword,
     role: role || "staff",
     permissions,
+    phone,
     ...withTenant({}, tenantId),
   });
 };
@@ -121,7 +128,14 @@ const updateStaffUser = async (id, updates, tenantId) => {
     }
     updates.password = await hashPassword(updates.password);
   }
-  return await user.update(updates); // codacy-suppress nosql-injection - parameterized ORM call
+  const allowed = ["username", "email", "password", "role", "permissions", "phone", "firstLoginCompleted"];
+  const filtered = {};
+  for (const key of allowed) {
+    if (updates[key] !== undefined) {
+      filtered[key] = updates[key];
+    }
+  }
+  return await user.update(filtered); // codacy-suppress nosql-injection - parameterized ORM call
 };
 
 const updateUser = async (id, updates, tenantId) => {
@@ -412,6 +426,7 @@ module.exports = {
   hashPassword,
   comparePassword,
   findUserByEmail,
+  findUserByPhone,
   findUserById,
   createUser,
   updateUser,

@@ -96,6 +96,12 @@ export const useAuthStore = defineStore("auth", () => {
     return response.data;
   };
 
+  const loginWithWhatsAppOTP = async (tempToken: string, code: string) => {
+    const response = await authAPI.loginWithWhatsAppOTP(tempToken, code);
+    user.value = response.data.user;
+    return response.data;
+  };
+
   const register = async (
     username: string,
     email: string,
@@ -280,6 +286,7 @@ export const useAuthStore = defineStore("auth", () => {
     isSuperAdmin,
     login,
     loginWithTOTP,
+    loginWithWhatsAppOTP,
     register,
     customerRegister,
     logout,

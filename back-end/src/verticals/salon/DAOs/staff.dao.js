@@ -7,7 +7,7 @@ const staffDAO = {
 
     return db.user.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
       where,
-      attributes: ["id", "username", "email", "name", "role"],
+      attributes: ["id", "username", "email", "name", "role", "phone"],
       limit: filters.limit || 100,
       offset: filters.offset || 0,
     });
@@ -16,7 +16,7 @@ const staffDAO = {
   async findById(id, tenantId) {
     return db.user.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
       where: { id, tenantId, role: "staff" },
-      attributes: ["id", "username", "email", "name", "role"],
+      attributes: ["id", "username", "email", "name", "role", "phone"],
     });
   },
 

@@ -114,6 +114,15 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: false,
       },
+      phone: {
+        type: DataTypes.STRING(20),
+        allowNull: true,
+      },
+      firstLoginCompleted: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
     {
       sequelize,

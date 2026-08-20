@@ -91,6 +91,15 @@
           <input v-model="form.email" class="field-input" type="email" />
         </div>
         <div class="form-group">
+          <label>Phone</label>
+          <input
+            v-model="form.phone"
+            class="field-input"
+            type="tel"
+            placeholder="+233..."
+          />
+        </div>
+        <div class="form-group">
           <label>{{ t("salon.fullName", "Full Name") }}</label>
           <input v-model="form.name" class="field-input" />
         </div>
@@ -209,7 +218,7 @@ const selectedStaff = ref(null);
 const submittingForm = ref(false);
 const submittingDelete = ref(false);
 const submittingAssignment = ref(false);
-const form = ref({ username: "", email: "", name: "" });
+const form = ref({ username: "", email: "", name: "", phone: "" });
 const assignmentForm = ref({ locationId: null, isPrimary: false });
 
 const load = async () => {
@@ -243,6 +252,7 @@ const openEditForm = (person) => {
     username: person.username || "",
     email: person.email || "",
     name: person.name || person.username || "",
+    phone: person.phone || "",
   };
   showFormModal.value = true;
 };

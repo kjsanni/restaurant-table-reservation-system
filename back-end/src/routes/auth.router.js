@@ -97,6 +97,26 @@ router
   .all(httpMethodError);
 
 router
+  .route("/profile")
+  .patch(
+    tryCatchHandler(protect),
+    authLimiter,
+    validateCsrfToken,
+    tryCatchHandler(authController.updateProfileHandler)
+  )
+  .all(httpMethodError);
+
+router
+  .route("/staff/:id/reset-password")
+  .post(
+    tryCatchHandler(protect),
+    tryCatchHandler(requirePermission("manage_staff")),
+    validateCsrfToken,
+    tryCatchHandler(authController.adminResetStaffPasswordHandler)
+  )
+  .all(httpMethodError);
+
+router
   .route("/users")
   .get(...protectedRoute("manage_staff", authController.getAllUsersHandler))
   .all(httpMethodError);
