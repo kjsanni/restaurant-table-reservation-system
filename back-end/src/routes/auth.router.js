@@ -50,6 +50,11 @@ router
   .all(httpMethodError);
 
 router
+  .route("/login-whatsapp-otp")
+  .post(authLimiter, tryCatchHandler(authController.loginWhatsAppOTPHandler))
+  .all(httpMethodError);
+
+router
   .route("/logout")
   .post(
     validateCsrfToken,
@@ -59,11 +64,11 @@ router
 
 router
   .route("/me")
-  .get(...protectedRoute("", authController.getMeHandler));
+  .get(...protectedRoute("", authController.getMeHandler, true));
 
 router
   .route("/tenant/capabilities")
-  .get(...protectedRoute("", authController.getTenantCapabilitiesHandler));
+  .get(...protectedRoute("", authController.getTenantCapabilitiesHandler, true));
 
 router
   .route("/tenant/setup")

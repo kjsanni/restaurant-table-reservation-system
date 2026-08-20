@@ -3,8 +3,11 @@ const { protect, requirePermission } = require("../middleware/auth");
 const { validateCsrfToken } = require("../middleware/csrf");
 const { requireActiveTenant } = require("../tenant-platform/middleware/tenantStatus");
 
-const protectedRoute = (permission, handler) => {
-  const middlewares = [tryCatchHandler(protect), tryCatchHandler(requireActiveTenant)];
+const protectedRoute = (permission, handler, skipActiveTenantCheck = false) => {
+  const middlewares = [tryCatchHandler(protect)];
+  if (!skipActiveTenantCheck) {
+    middlewares.push(tryCatchHandler(requireActiveTenant));
+  }
   if (permission) {
     middlewares.push(tryCatchHandler(requirePermission(permission)));
   }

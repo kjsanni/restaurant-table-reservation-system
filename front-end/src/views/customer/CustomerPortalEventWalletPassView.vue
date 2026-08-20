@@ -159,7 +159,6 @@ const initiateWalletPassPayment = async () => {
         completedAt: null,
       };
       startPolling();
-      stopPolling();
       window.location.href = data.paymentUrl;
     } else {
       throw new Error(data?.message || "Payment initialization failed");

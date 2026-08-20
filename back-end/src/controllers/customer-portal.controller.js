@@ -99,7 +99,6 @@ const cancelReservationHandler = async (req, res) => {
     }
 
     let refundDue = false;
-    let refundAmount = 0;
 
     if (["paid", "partial"].includes(reservation.paymentStatus) && reservation.resDate && reservation.resTime) {
       const reservationDateTime = new Date(`${reservation.resDate}T${reservation.resTime}`);
@@ -108,17 +107,30 @@ const cancelReservationHandler = async (req, res) => {
 
       if (hoursUntilReservation >= CANCELLATION_POLICY_HOURS) {
         refundDue = true;
-        const payments = await paymentDAO.findByReservation(reservationId, req.tenant?.id);
-        refundAmount = payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
       }
     }
 
     const result = await db.sequelize.transaction(async (t) => {
       const updated = await reservationDAO.updateReservation(reservationId, { resStatus: "cancelled" }, req.tenant?.id, t);
 
+      let actualRefundAmount = 0;
+      if (refundDue) {
+        const payments = await paymentDAO.findByReservation(reservationId, req.tenant?.id);
+        actualRefundAmount = payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+        for (const payment of payments) {
+          await refundDAO.createRefund({
+            reservationId,
+            paymentId: payment.id,
+            amount: parseFloat(payment.amount || 0),
+            reason: "Customer cancellation within policy window",
+            status: "pending",
+          }, req.tenant?.id, t);
+        }
+      }
+
       await reservationDAO.recordStatusChange(reservationId, reservation.resStatus, "cancelled", req.user?.id, {
         refundDue,
-        refundAmount,
+        refundAmount: actualRefundAmount,
       }, req.tenant?.id, t);
 
       await platformAuditDAO.log(
@@ -127,24 +139,10 @@ const cancelReservationHandler = async (req, res) => {
         "reservation",
         reservationId,
         req.tenant?.id,
-        { refundDue, refundAmount, paymentStatus: reservation.paymentStatus },
+        { refundDue, refundAmount: actualRefundAmount, paymentStatus: reservation.paymentStatus },
         req.ip,
         t
       );
-
-      if (refundDue && refundAmount > 0) {
-        const payments = await paymentDAO.findByReservation(reservationId, req.tenant?.id);
-        const payment = payments[0];
-        if (payment) {
-          await refundDAO.createRefund({
-            reservationId,
-            paymentId: payment.id,
-            amount: refundAmount,
-            reason: "Customer cancellation within policy window",
-            status: "pending",
-          }, req.tenant?.id, t);
-        }
-      }
 
       return { success: true, reservation: updated };
     });

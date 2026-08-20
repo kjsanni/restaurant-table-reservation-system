@@ -26,7 +26,7 @@ const logPlatformAudit = async (context, event, extra = {}) => {
 };
 
 const enforceTOTP = (req, res, context) => {
-  if (req.user.totpEnabled !== true && process.env.TOTP_BYPASS !== "true") {
+  if (req.user.totpEnabled !== true && !(process.env.NODE_ENV !== "production" && process.env.TOTP_BYPASS === "true")) {
     logPlatformAudit(context, "platform_role.access_denied_totp", { requiredRole: context.requiredRole }).catch(() => {});
     return res.status(403).json({
       success: false,
@@ -148,7 +148,7 @@ const admin = (req, res, next) => {
 const requireSuperAdmin = (req, res, next) => {
   if (req.user && req.user.isSuperAdmin) {
     const context = buildAuditContext(req);
-    if (req.user.totpEnabled !== true && process.env.TOTP_BYPASS !== "true") {
+    if (req.user.totpEnabled !== true && !(process.env.NODE_ENV !== "production" && process.env.TOTP_BYPASS === "true")) {
       logPlatformAudit(context, "super_admin.access_denied_totp").catch(() => {});
       return res.status(403).json({
         success: false,

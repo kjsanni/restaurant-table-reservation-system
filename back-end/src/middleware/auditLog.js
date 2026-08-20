@@ -1,15 +1,24 @@
 const db = require("../db/models");
 const AuditLog = db.auditLog;
 
-const SENSITIVE_FIELDS = ["password", "token", "secret", "jwt"];
+const SENSITIVE_FIELDS = ["password", "token", "secret", "jwt", "email", "phone", "address", "firstName", "lastName", "name", "ccNumber", "cvv", "expiry", "bankAccount", "nin", "ssn"];
+const WHITELISTED_AUTH_FIELDS = ["route", "method", "statusCode", "ipAddress", "userAgent"];
 
 const sanitizeData = (data) => {
   if (!data || typeof data !== "object") return data;
 
-  const sanitized = { ...data };
-  for (const field of SENSITIVE_FIELDS) {
-    if (sanitized[field]) {
-      sanitized[field] = "[REDACTED]";
+  if (Array.isArray(data)) {
+    return data.map(item => sanitizeData(item));
+  }
+
+  const sanitized = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (SENSITIVE_FIELDS.includes(key)) {
+      sanitized[key] = "[REDACTED]";
+    } else if (value && typeof value === "object") {
+      sanitized[key] = sanitizeData(value);
+    } else {
+      sanitized[key] = value;
     }
   }
   return sanitized;
@@ -81,18 +90,19 @@ const logAction = async (req, res, next) => {
   const logAuthFailure = async (statusCode) => {
     const route = req.route ? req.route.path : req.path;
     try {
+      const changes = {};
+      for (const field of WHITELISTED_AUTH_FIELDS) {
+        if (field === "route") changes[field] = route;
+        else if (field === "method") changes[field] = req.method;
+        else if (field === "statusCode") changes[field] = statusCode;
+        else if (field === "ipAddress") changes[field] = req.ip;
+        else if (field === "userAgent") changes[field] = truncate(req.get("user-agent"));
+      }
       await AuditLog.create({
         action: "auth_failed",
         entityType: "auth",
         userId: null,
-        changes: {
-          route,
-          method: req.method,
-          statusCode,
-          ipAddress: req.ip,
-          userAgent: truncate(req.get("user-agent")),
-          body: sanitizeData(req.body),
-        },
+        changes,
         ipAddress: req.ip,
       });
     } catch (err) {
