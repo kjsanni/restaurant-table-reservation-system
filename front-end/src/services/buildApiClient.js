@@ -64,16 +64,13 @@ const buildRefreshInterceptor = (apiInstance) => {
   return { request: null, response };
 };
 
-const sanitizeBaseURL = (url) => {
-  if (typeof url !== "string") return null;
-  if (!url.startsWith("/")) return null;
-  if (url.includes("http://") || url.includes("https://")) return null;
-  return url;
-};
-
 export const buildApiClient = (baseURL, options = {}) => {
-  const safeURL = sanitizeBaseURL(baseURL);
-  if (!safeURL) {
+  if (
+    typeof baseURL !== "string" ||
+    !baseURL.startsWith("/") ||
+    baseURL.includes("http://") ||
+    baseURL.includes("https://")
+  ) {
     throw new Error("Invalid baseURL: must be a relative API path");
   }
 
@@ -86,7 +83,7 @@ export const buildApiClient = (baseURL, options = {}) => {
   } = options;
 
   const client = axios.create({
-    baseURL: safeURL,
+    baseURL,
     withCredentials: true,
     xsrfCookieName: "XSRF-TOKEN",
     xsrfHeaderName: "x-xsrf-token",

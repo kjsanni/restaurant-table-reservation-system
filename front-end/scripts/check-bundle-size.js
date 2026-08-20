@@ -1,18 +1,12 @@
 import fs from "fs";
 import path from "path";
 import zlib from "zlib";
+import { fileURLToPath } from "url";
 
-const SCRIPT_DIR = new URL(".", import.meta.url).pathname;
+const SCRIPT_PATH = fileURLToPath(import.meta.url);
+const SCRIPT_DIR = path.dirname(SCRIPT_PATH);
 const DIST_DIR = path.resolve(SCRIPT_DIR, "dist");
-const ASSETS_DIR = path.join(DIST_DIR, "assets");
-
-function assertWithinDirectory(filePath, baseDir) {
-  const resolved = path.resolve(filePath);
-  if (!resolved.startsWith(baseDir)) {
-    throw new Error(`Path escapes expected directory: ${filePath}`);
-  }
-  return resolved;
-}
+const ASSETS_DIR = path.resolve(DIST_DIR, "assets");
 
 if (!fs.existsSync(ASSETS_DIR)) {
   console.error("Build assets directory not found. Run `npm run build` first.");
@@ -26,7 +20,11 @@ let failed = false;
 const limit = 300 * 1024;
 
 for (const file of jsFiles) {
-  const filePath = assertWithinDirectory(path.join(ASSETS_DIR, file), DIST_DIR);
+  const filePath = path.resolve(ASSETS_DIR, file);
+  if (!filePath.startsWith(DIST_DIR)) {
+    console.error(`Skipping file outside expected directory: ${file}`);
+    continue;
+  }
   const buffer = fs.readFileSync(filePath);
   const gzipped = zlib.gzipSync(buffer);
   const size = gzipped.length;
