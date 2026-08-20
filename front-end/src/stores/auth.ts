@@ -10,6 +10,7 @@ export interface User {
   permissions?: Record<string, boolean>;
   tenantId?: number;
   isSuperAdmin?: boolean;
+  locale?: string;
 }
 
 export interface TenantCapabilities {

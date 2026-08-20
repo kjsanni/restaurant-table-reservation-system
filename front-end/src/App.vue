@@ -1,13 +1,34 @@
 <script setup lang="ts">
-import { ref, provide } from "vue";
+import { ref, provide, watch } from "vue";
 import { useTenantBranding } from "@/composables/useTenantBranding";
 import { getCurrentInstance } from "vue";
 import { useI18n } from "@/composables/useI18n";
+import { useAuthStore } from "@/stores/auth";
 import OfflineBanner from "@/components/OfflineBanner.vue";
 
 useTenantBranding();
 const i18n = useI18n();
+const authStore = useAuthStore();
 provide("i18n", i18n);
+
+watch(
+  () => authStore.user?.locale,
+  (newLocale) => {
+    if (newLocale && i18n.supportedLocales.includes(newLocale as any) && newLocale !== i18n.locale.value) {
+      i18n.setLocale(newLocale as any);
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => i18n.locale.value,
+  (newLocale) => {
+    if (authStore.user && authStore.user.locale !== newLocale) {
+      authStore.user.locale = newLocale;
+    }
+  }
+);
 
 const app = getCurrentInstance()?.appContext?.app;
 if (app) {

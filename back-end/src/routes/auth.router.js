@@ -99,8 +99,8 @@ router
 router
   .route("/profile")
   .patch(
-    tryCatchHandler(protect),
     authLimiter,
+    tryCatchHandler(protect),
     validateCsrfToken,
     tryCatchHandler(authController.updateProfileHandler)
   )
