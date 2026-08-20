@@ -49,6 +49,7 @@ jest.mock("../utils/cache", () => ({
 const whatsappService = require("../services/whatsapp.service");
 const reservationService = require("../services/reservationService");
 const { cache } = require("../utils/cache");
+const authDAO = require("../DAOs/auth.dao");
 
 describe("whatsapp-order.service — reservation flow", () => {
   beforeEach(() => {
@@ -56,8 +57,17 @@ describe("whatsapp-order.service — reservation flow", () => {
     cache.get.mockResolvedValue(null);
     cache.set.mockResolvedValue("OK");
     cache.del.mockResolvedValue(1);
+    jest.spyOn(authDAO, "getSettingValue").mockImplementation((key) => {
+      if (key === "whatsapp_ordering_enabled") return Promise.resolve(true);
+      if (key === "whatsapp_ordering_hours") return Promise.resolve(null);
+      return Promise.resolve(null);
+    });
     whatsappService.sendWhatsAppText.mockResolvedValue({});
     whatsappService.formatPhoneNumber.mockImplementation((p) => p);
+  });
+
+  afterEach(() => {
+    authDAO.getSettingValue.mockRestore?.();
   });
 
   const setSessionState = (state, extra = {}) => {
