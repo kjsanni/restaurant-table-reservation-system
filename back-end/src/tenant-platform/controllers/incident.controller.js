@@ -1,7 +1,6 @@
 const response = require("../utils/response");
 
 const db = require("../../db/models");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const authDAO = require("../../DAOs/auth.dao");
 const auditLog = require("../utils/auditLog");
 

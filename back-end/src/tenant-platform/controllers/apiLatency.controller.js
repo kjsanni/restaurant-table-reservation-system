@@ -1,5 +1,4 @@
 const { getLatencyMetrics, clearLatencyMetrics } = require("../../utils/apiLatency");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const getApiLatencyHandler = async (req, res) => {

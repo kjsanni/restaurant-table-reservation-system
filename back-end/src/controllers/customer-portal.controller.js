@@ -3,6 +3,7 @@ const paymentDAO = require("../DAOs/payment.dao");
 const refundDAO = require("../DAOs/refund.dao");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 const db = require("../db/models");
+const { localizedResponse, localizedError } = require("../utils/localizedResponse");
 
 const CANCELLATION_POLICY_HOURS = 24;
 
@@ -29,15 +30,12 @@ const getCustomerProfileHandler = async (req, res) => {
   try {
     const customer = await resolveCustomer(req);
     if (!customer) {
-      return res.status(404).json({
-        success: false,
-        message: "No customer profile linked to this account",
-      });
+      return localizedError(req, res, 404, "common.profileLinkedToAccount");
     }
-    return res.status(200).json({ success: true, customer });
+    return localizedResponse(req, res, 200, "common.success", {}, customer);
   } catch (err) {
     console.error("getCustomerProfileHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to load profile" });
+    return localizedError(req, res, 500, "common.failedToLoadProfile");
   }
 };
 
@@ -45,10 +43,7 @@ const updateCustomerProfileHandler = async (req, res) => {
   try {
     const customer = await resolveCustomer(req);
     if (!customer) {
-      return res.status(404).json({
-        success: false,
-        message: "No customer profile linked to this account",
-      });
+      return localizedError(req, res, 404, "common.profileLinkedToAccount");
     }
     const allowedFields = ["firstName", "lastName", "phone", "address", "city", "preferences"];
     const updates = {};
@@ -58,10 +53,10 @@ const updateCustomerProfileHandler = async (req, res) => {
       }
     }
     const updated = await reservationDAO.updateCustomer(customer.id, updates, req.tenant?.id);
-    return res.status(200).json({ success: true, customer: updated });
+    return localizedResponse(req, res, 200, "common.success", {}, updated);
   } catch (err) {
     console.error("updateCustomerProfileHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to update profile" });
+    return localizedError(req, res, 500, "common.failedToUpdateProfile");
   }
 };
 
@@ -69,16 +64,16 @@ const getCustomerReservationsHandler = async (req, res) => {
   try {
     const customer = await resolveCustomer(req);
     if (!customer) {
-      return res.status(200).json({ success: true, reservations: [] });
+      return localizedResponse(req, res, 200, "common.success", {}, []);
     }
     const reservations = await reservationDAO.findAllReservationsRaw(
       { customerId: customer.id },
       req.tenant?.id
     );
-    return res.status(200).json({ success: true, reservations });
+    return localizedResponse(req, res, 200, "common.success", {}, reservations);
   } catch (err) {
     console.error("getCustomerReservationsHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to load reservations" });
+    return localizedError(req, res, 500, "common.failedToLoadReservations");
   }
 };
 
@@ -87,15 +82,15 @@ const cancelReservationHandler = async (req, res) => {
     const { reservationId } = req.params;
     const reservation = await reservationDAO.findReservationById(reservationId, req.tenant?.id);
     if (!reservation) {
-      return res.status(404).json({ success: false, message: "Reservation not found" });
+      return localizedError(req, res, 404, "common.reservationNotFound");
     }
     if (reservation.resStatus === "cancelled" || reservation.resStatus === "completed") {
-      return res.status(400).json({ success: false, message: "Reservation cannot be cancelled" });
+      return localizedError(req, res, 400, "common.reservationCannotBeCancelled");
     }
 
     const customer = await resolveCustomer(req);
     if (!customer || reservation.customerId !== customer.id) {
-      return res.status(403).json({ success: false, message: "Not authorized for this reservation" });
+      return localizedError(req, res, 403, "common.notAuthorizedForThisReservation");
     }
 
     let refundDue = false;
@@ -147,10 +142,10 @@ const cancelReservationHandler = async (req, res) => {
       return { success: true, reservation: updated };
     });
 
-    return res.status(200).json(result);
+    return localizedResponse(req, res, 200, "common.success", {}, result);
   } catch (err) {
     console.error("cancelReservationHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to cancel reservation" });
+    return localizedError(req, res, 500, "common.failedToCancelAppointment");
   }
 };
 

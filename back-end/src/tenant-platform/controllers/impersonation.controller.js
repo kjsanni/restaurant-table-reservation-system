@@ -1,7 +1,6 @@
 const response = require("../utils/response");
 
 const impersonationDAO = require("../DAOs/impersonation.dao");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const startImpersonationHandler = async (req, res) => {

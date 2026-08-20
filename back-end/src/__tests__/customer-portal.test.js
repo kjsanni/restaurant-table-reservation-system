@@ -17,7 +17,7 @@ describe("Customer portal", () => {
 
     await customerPortalController.getCustomerProfileHandler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({ success: true, customer: { id: 1, name: "Alice" } });
+    expect(res.json).toHaveBeenCalledWith({ success: true, message: "Success", data: { id: 1, name: "Alice" } });
   });
 
   it("updateCustomerProfileHandler updates customer", async () => {

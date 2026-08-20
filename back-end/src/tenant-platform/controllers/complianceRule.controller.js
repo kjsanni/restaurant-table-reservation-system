@@ -1,7 +1,6 @@
 const response = require("../utils/response");
 
 const complianceRuleDAO = require("../DAOs/complianceRule.dao");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const listRulesHandler = async (req, res) => {

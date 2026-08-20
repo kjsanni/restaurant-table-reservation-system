@@ -5,6 +5,7 @@ const giftCardDao = require("../verticals/salon/DAOs/giftCard.dao");
 const referralDao = require("../verticals/salon/DAOs/referral.dao");
 const servicePackageDao = require("../verticals/salon/DAOs/servicePackage.dao");
 const pricingRuleDao = require("../verticals/salon/DAOs/pricingRule.dao");
+const { localizedResponse, localizedError } = require("../utils/localizedResponse");
 
 const buildCustomerDetails = (user) => {
   const email = user?.email;
@@ -25,15 +26,12 @@ const getSalonCustomerProfileHandler = async (req, res) => {
       req.tenant?.id
     );
     if (!customer) {
-      return res.status(404).json({
-        success: false,
-        message: "No customer profile linked to this account",
-      });
+      return localizedError(req, res, 404, "common.profileLinkedToAccount");
     }
-    return res.status(200).json({ success: true, customer });
+    return localizedResponse(req, res, 200, "common.success", {}, customer);
   } catch (err) {
     console.error("getSalonCustomerProfileHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to load profile" });
+    return localizedError(req, res, 500, "common.failedToLoadProfile");
   }
 };
 
@@ -45,15 +43,15 @@ const getSalonCustomerAppointmentsHandler = async (req, res) => {
       req.tenant?.id
     );
     if (!customer) {
-      return res.status(200).json({ success: true, appointments: [] });
+      return localizedResponse(req, res, 200, "common.success", {}, []);
     }
     const result = await appointmentDao.findAllForTenant(req.tenant?.id, {
       customerId: customer.id,
     });
-    return res.status(200).json({ success: true, appointments: result.data });
+    return localizedResponse(req, res, 200, "common.success", {}, result.data);
   } catch (err) {
     console.error("getSalonCustomerAppointmentsHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to load appointments" });
+    return localizedError(req, res, 500, "common.failedToLoadAppointments");
   }
 };
 
@@ -62,10 +60,10 @@ const cancelSalonAppointmentHandler = async (req, res) => {
     const { appointmentId } = req.params;
     const appointment = await appointmentDao.findById(appointmentId, req.tenant?.id);
     if (!appointment) {
-      return res.status(404).json({ success: false, message: "Appointment not found" });
+      return localizedError(req, res, 404, "salon.appointmentNotFound");
     }
     if (appointment.status === "cancelled" || appointment.status === "completed") {
-      return res.status(400).json({ success: false, message: "Appointment cannot be cancelled" });
+      return localizedError(req, res, 400, "common.appointmentCannotBeCancelled");
     }
 
     const customer = await reservationDAO.findOrCreateCustomer(
@@ -75,14 +73,14 @@ const cancelSalonAppointmentHandler = async (req, res) => {
     );
 
     if (appointment.customerId !== customer.id && req.user?.role !== "admin") {
-      return res.status(403).json({ success: false, message: "You do not have permission to cancel this appointment" });
+      return localizedError(req, res, 403, "common.youDoNotHavePermissionToCancelThisAppointment");
     }
 
     const updated = await appointmentDao.update(appointmentId, req.tenant?.id, { status: "cancelled" }); // codacy-suppress nosql-injection - parameterized ORM call
-    return res.status(200).json({ success: true, appointment: updated });
+    return localizedResponse(req, res, 200, "common.success", {}, updated);
   } catch (err) {
     console.error("cancelSalonAppointmentHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to cancel appointment" });
+    return localizedError(req, res, 500, "common.failedToCancelAppointment");
   }
 };
 
@@ -91,10 +89,10 @@ const rebookSalonAppointmentHandler = async (req, res) => {
     const { appointmentId } = req.params;
     const appointment = await appointmentDao.findById(appointmentId, req.tenant?.id);
     if (!appointment) {
-      return res.status(404).json({ success: false, message: "Appointment not found" });
+      return localizedError(req, res, 404, "salon.appointmentNotFound");
     }
     if (!["completed", "cancelled"].includes(appointment.status)) {
-      return res.status(400).json({ success: false, message: "Only completed or cancelled appointments can be rebooked" });
+      return localizedError(req, res, 400, "common.onlyCompletedOrCancelledAppointmentsCanBeRebooked");
     }
 
     const customer = await reservationDAO.findOrCreateCustomer(
@@ -104,7 +102,7 @@ const rebookSalonAppointmentHandler = async (req, res) => {
     );
 
     if (appointment.customerId !== customer.id && req.user?.role !== "admin") {
-      return res.status(403).json({ success: false, message: "You do not have permission to rebook this appointment" });
+      return localizedError(req, res, 403, "common.youDoNotHavePermissionToRebookThisAppointment");
     }
 
     const now = new Date();
@@ -130,10 +128,10 @@ const rebookSalonAppointmentHandler = async (req, res) => {
       notes: `Rebooked from appointment #${appointment.id}`,
     });
 
-    return res.status(200).json({ success: true, appointment: newAppointment });
+    return localizedResponse(req, res, 200, "common.success", {}, newAppointment);
   } catch (err) {
     console.error("rebookSalonAppointmentHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to rebook appointment" });
+    return localizedError(req, res, 500, "common.failedToRebookAppointment");
   }
 };
 
@@ -145,16 +143,16 @@ const getCustomerGiftCardsHandler = async (req, res) => {
       req.tenant?.id
     );
     if (!customer) {
-      return res.status(200).json({ success: true, giftCards: [] });
+      return localizedResponse(req, res, 200, "common.success", {}, []);
     }
     const giftCards = await giftCardDao.findAll(req.tenant?.id, {}); // codacy-suppress nosql-injection - parameterized ORM call
     const customerCards = giftCards.filter(
       (card) => card.purchasedByCustomerId === customer.id || card.redeemedByCustomerId === customer.id
     );
-    return res.status(200).json({ success: true, giftCards: customerCards });
+    return localizedResponse(req, res, 200, "common.success", {}, customerCards);
   } catch (err) {
     console.error("getCustomerGiftCardsHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to load gift cards" });
+    return localizedError(req, res, 500, "common.failedToLoadGiftCards");
   }
 };
 
@@ -166,36 +164,36 @@ const getCustomerReferralsHandler = async (req, res) => {
       req.tenant?.id
     );
     if (!customer) {
-      return res.status(200).json({ success: true, referrals: [] });
+      return localizedResponse(req, res, 200, "common.success", {}, []);
     }
     const referrals = await referralDao.findAll(req.tenant?.id, {}); // codacy-suppress nosql-injection - parameterized ORM call
     const customerReferrals = referrals.filter(
       (r) => r.referrerCustomerId === customer.id || r.refereeCustomerId === customer.id
     );
-    return res.status(200).json({ success: true, referrals: customerReferrals });
+    return localizedResponse(req, res, 200, "common.success", {}, customerReferrals);
   } catch (err) {
     console.error("getCustomerReferralsHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to load referrals" });
+    return localizedError(req, res, 500, "common.failedToLoadReferrals");
   }
 };
 
 const listServicePackagesHandler = async (req, res) => {
   try {
     const packages = await servicePackageDao.findAll(req.tenant?.id, {}); // codacy-suppress nosql-injection - parameterized ORM call
-    return res.status(200).json({ success: true, packages });
+    return localizedResponse(req, res, 200, "common.success", {}, packages);
   } catch (err) {
     console.error("listServicePackagesHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to load packages" });
+    return localizedError(req, res, 500, "common.failedToLoadPackages");
   }
 };
 
 const listPricingRulesHandler = async (req, res) => {
   try {
     const rules = await pricingRuleDao.findAll(req.tenant?.id, { isActive: true }); // codacy-suppress nosql-injection - parameterized ORM call
-    return res.status(200).json({ success: true, rules });
+    return localizedResponse(req, res, 200, "common.success", {}, rules);
   } catch (err) {
     console.error("listPricingRulesHandler error:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to load pricing rules" });
+    return localizedError(req, res, 500, "common.failedToLoadPricingRules");
   }
 };
 

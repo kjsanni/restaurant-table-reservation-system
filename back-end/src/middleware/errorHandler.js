@@ -7,9 +7,14 @@ const errorHandler = (err, req, res, next) => {
   const locale = getLocale(req);
 
   if (err.name === "SequelizeValidationError") {
+    const errors = getErrorMessagesByColumn(err.errors);
+    const translatedErrors = {};
+    for (const [field, messages] of Object.entries(errors)) {
+      translatedErrors[field] = messages.map((msg) => t(msg, locale));
+    }
     return res.status(400).json({
       success: false,
-      errors: getErrorMessagesByColumn(err.errors),
+      errors: translatedErrors,
     });
   }
 

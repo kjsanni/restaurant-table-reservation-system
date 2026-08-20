@@ -202,7 +202,7 @@ onMounted(loadCards);
           <table class="report-table">
             <thead>
               <tr>
-                <th>Code</th>
+                <th>{{ t("salon.code") }}</th>
                 <th>{{ t("salon.amount", "Amount") }}</th>
                 <th>{{ t("salon.balance", "Balance") }}</th>
                 <th>{{ t("salon.status", "Status") }}</th>

@@ -208,19 +208,19 @@ onMounted(loadServices);
               }}
             </h2>
             <div class="form-group">
-              <label>Name</label>
+              <label>{{ t("salon.name") }}</label>
               <input
                 v-model="form.name"
                 :placeholder="t('salon.appointmentIdPlaceholder')"
               />
             </div>
             <div class="form-group">
-              <label>Description</label>
+              <label>{{ t("salon.description") }}</label>
               <textarea v-model="form.description" rows="2"></textarea>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Price (GHS)</label>
+                <label>{{ t("salon.priceGhs", "Price (GHS)") }}</label>
                 <input
                   v-model.number="form.price"
                   type="number"
@@ -229,7 +229,7 @@ onMounted(loadServices);
                 />
               </div>
               <div class="form-group">
-                <label>Duration (min)</label>
+                <label>{{ t("salon.durationMinutes") }}</label>
                 <input
                   v-model.number="form.durationMinutes"
                   type="number"
@@ -239,7 +239,7 @@ onMounted(loadServices);
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Deposit (GHS)</label>
+                <label>{{ t("salon.depositGhs", "Deposit (GHS)") }}</label>
                 <input
                   v-model.number="form.depositAmount"
                   type="number"
@@ -248,7 +248,9 @@ onMounted(loadServices);
                 />
               </div>
               <div class="form-group">
-                <label>Buffer (min)</label>
+                <label>{{
+                  t("salon.bufferMinutes", "Buffer (minutes)")
+                }}</label>
                 <input
                   v-model.number="form.bufferMinutes"
                   type="number"
@@ -257,7 +259,7 @@ onMounted(loadServices);
               </div>
             </div>
             <div class="form-group">
-              <label>Category</label>
+              <label>{{ t("salon.category") }}</label>
               <select v-model="form.categoryId">
                 <option :value="null">{{ t("salon.uncategorised") }}</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">

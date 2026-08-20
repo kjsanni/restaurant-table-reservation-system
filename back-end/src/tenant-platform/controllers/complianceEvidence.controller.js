@@ -1,7 +1,6 @@
 const response = require("../utils/response");
 
 const complianceEvidenceDAO = require("../DAOs/complianceEvidence.dao");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const listComplianceEvidenceHandler = async (req, res) => {

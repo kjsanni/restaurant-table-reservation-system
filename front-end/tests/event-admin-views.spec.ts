@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { loginAsTenantStaff, E2E_TENANT_SLUG } from "./fixtures";
+import { loginAsTenantStaff } from "./fixtures";
 
 test.describe("Event admin flow - QR codes, guest list, ticket types", () => {
   test.beforeEach(async ({ page }) => {

@@ -1,5 +1,4 @@
 const db = require("../../db/models");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const getMaintenanceModeHandler = async (req, res) => {

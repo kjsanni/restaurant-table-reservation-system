@@ -1,7 +1,6 @@
 const response = require("../utils/response");
 
 const notificationTemplateDAO = require("../DAOs/notificationTemplate.dao");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const listTemplatesHandler = async (req, res) => {
