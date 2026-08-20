@@ -83,7 +83,6 @@ export const buildApiClient = (baseURL, options = {}) => {
   } = options;
 
   const client = axios.create({
-    baseURL,
     withCredentials: true,
     xsrfCookieName: "XSRF-TOKEN",
     xsrfHeaderName: "x-xsrf-token",
@@ -92,6 +91,7 @@ export const buildApiClient = (baseURL, options = {}) => {
       ...headers,
     },
   });
+  client.defaults.baseURL = baseURL;
 
   if (withTenantHeader) {
     client.interceptors.request.use(attachTenantHeader);
