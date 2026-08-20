@@ -2,6 +2,7 @@ const db = require("../db/models");
 const AuditLog = db.auditLog;
 
 const SENSITIVE_FIELDS = ["password", "token", "secret", "jwt", "email", "phone", "address", "firstName", "lastName", "name", "ccNumber", "cvv", "expiry", "bankAccount", "nin", "ssn"];
+const PROTECTED_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 const WHITELISTED_AUTH_FIELDS = ["route", "method", "statusCode", "ipAddress", "userAgent"];
 
 const sanitizeData = (data) => {
@@ -11,17 +12,11 @@ const sanitizeData = (data) => {
     return data.map(item => sanitizeData(item));
   }
 
-  const sanitized = {};
-  for (const [key, value] of Object.entries(data)) {
-    if (SENSITIVE_FIELDS.includes(key)) {
-      sanitized[key] = "[REDACTED]";
-    } else if (value && typeof value === "object") {
-      sanitized[key] = sanitizeData(value);
-    } else {
-      sanitized[key] = value;
-    }
-  }
-  return sanitized;
+  const entries = Object.entries(data)
+    .filter(([key]) => !SENSITIVE_FIELDS.includes(key) && !PROTECTED_KEYS.has(key))
+    .map(([key, value]) => [key, value && typeof value === "object" ? sanitizeData(value) : value]);
+
+  return Object.fromEntries(entries);
 };
 
 const truncate = (str, maxLength = 500) => {
