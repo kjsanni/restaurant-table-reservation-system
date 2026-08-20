@@ -11,14 +11,14 @@ describe("reservation.controller — mass-assignment protection", () => {
 
   it("editHandler strips non-allowlisted fields from the request body", async () => {
     const reservationDAO = require("../DAOs/reservation.dao");
-    reservationDAO.findReservationById.mockResolvedValue({ id: 1, resDate: "2026-08-20", resTime: "19:00:00", resStatus: "pending" });
+    reservationDAO.findReservationById.mockResolvedValue({ id: 1, resDate: "2026-08-21", resTime: "23:59:59", resStatus: "pending" });
     reservationDAO.updateReservation.mockResolvedValue(1);
 
     const req = {
       params: { reservationId: "1" },
       body: {
-        resDate: "2026-08-20",
-        resTime: "19:00:00",
+        resDate: "2026-08-21",
+        resTime: "23:59:59",
         people: 4,
         notes: "near the window",
         tenantId: 999,
@@ -40,7 +40,7 @@ describe("reservation.controller — mass-assignment protection", () => {
     expect(passedPayload._v).toBeUndefined();
     expect(passedPayload.isSuperAdmin).toBeUndefined();
     expect(passedPayload.malicious).toBeUndefined();
-    expect(passedPayload.resDate).toBe("2026-08-20");
+    expect(passedPayload.resDate).toBe("2026-08-21");
     expect(passedPayload.people).toBe(4);
   });
 });
