@@ -28,6 +28,7 @@ exclude_paths:
   - "back-end/src/verticals/salon/models/index.js"
   - "back-end/load-tests/**"
   - "back-end/scripts/**"
+  - "front-end/scripts/check-bundle-size.js"
   - "back-end/src/__tests__/**"
   - "docs/**"
   - "Specs/**"
