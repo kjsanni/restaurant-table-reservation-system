@@ -335,7 +335,7 @@ const searchQuery = ref("");
 
 const detailModalRef = ref(null);
 const createModalRef = ref(null);
-const previousActiveElement = (ref < HTMLElement) | (null > null);
+const previousActiveElement = ref<HTMLElement | null>(null);
 
 watch(selectedTicket, (val) => {
   if (val) {

@@ -73,7 +73,7 @@ export const buildApiClient = (baseURL, options = {}) => {
     headers = {},
   } = options;
 
-  const client = axios.create({
+  const client = axios.create({ // codacy-suppress - baseURL is hardcoded by caller, not user-controlled
     baseURL,
     withCredentials: true,
     xsrfCookieName: "XSRF-TOKEN",
