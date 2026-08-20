@@ -5,7 +5,8 @@ import zlib from "zlib";
 const distDir = path.resolve(new URL(".", import.meta.url).pathname, "../dist");
 const assetsDir = path.join(distDir, "assets");
 
-if (!fs.existsSync(assetsDir)) { // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - assetsDir derived from static import.meta.url path
+if (!fs.existsSync(assetsDir)) {
+  // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - assetsDir derived from static import.meta.url path
   console.error("Build assets directory not found. Run `npm run build` first.");
   process.exit(1);
 }

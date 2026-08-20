@@ -2,6 +2,7 @@ const reviewDAO = require("../DAOs/review.dao");
 const reservationDAO = require("../DAOs/reservation.dao");
 const { sendEmail } = require("../services/emailService");
 const db = require("../db/models");
+const { buildCustomerDetails } = require("../controllers/customer-portal.controller");
 
 const escapeHtml = (str) => {
   if (!str) return "";
@@ -156,11 +157,18 @@ const getAverageRatingHandler = async (req, res) => {
 
 const getCustomerReviewsHandler = async (req, res) => {
   try {
-    const customerId = req.user?.id;
-    if (!customerId) {
+    if (!req.user) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
-    const reviews = await reviewDAO.findByCustomer(customerId, req.tenant?.id, 50);
+    const customer = await reservationDAO.findOrCreateCustomer(
+      buildCustomerDetails(req.user),
+      null,
+      req.tenant?.id
+    );
+    if (!customer?.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    const reviews = await reviewDAO.findByCustomer(customer.id, req.tenant?.id, 50);
     return res.status(200).json({ success: true, reviews });
   } catch (err) {
     console.error("getCustomerReviewsHandler error:", err.message);
@@ -170,10 +178,18 @@ const getCustomerReviewsHandler = async (req, res) => {
 
 const createCustomerReviewHandler = async (req, res) => {
   try {
-    const customerId = req.user?.id;
-    if (!customerId) {
+    if (!req.user) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
+    const customer = await reservationDAO.findOrCreateCustomer(
+      buildCustomerDetails(req.user),
+      null,
+      req.tenant?.id
+    );
+    if (!customer?.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    const customerId = customer.id;
 
     const { reservationId, rating, comment } = req.body;
     if (!reservationId || !rating) {

@@ -5,6 +5,9 @@ const salonCustomerPortalController = require("../controllers/salon-customer-por
 
 jest.mock("../DAOs/reservation.dao");
 jest.mock("../verticals/salon/DAOs/appointment.dao");
+jest.mock("../DAOs/payment.dao");
+jest.mock("../DAOs/refund.dao");
+jest.mock("../tenant-platform/DAOs/platformAudit.dao");
 
 const buildReq = (overrides = {}) => ({
   user: {

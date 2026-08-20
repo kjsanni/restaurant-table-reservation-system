@@ -46,7 +46,7 @@ const restaurantModule = {
     { path: "/api/v1/reviews", router: reviewRouter, middleware: [logAction, validateCsrfToken, tenantLimiter] },
     { path: "/api/v1/custom-reports", router: customReportRouter, middleware: [logAction, validateCsrfToken, tenantLimiter] },
     { path: "/api/v1/customers", router: customerRouter, middleware: [logAction, validateCsrfToken, tenantLimiter] },
-    { path: "/api/v1/customer-portal", router: customerPortalRouter, middleware: [logAction, validateCsrfToken, tenantLimiter] },
+    { path: "/api/v1/customer-portal", router: customerPortalRouter, middleware: [logAction, validateCsrfToken, tenantLimiter, requireVertical("restaurant")] },
     { path: "/api/v1/deliveries", router: deliveryRouter, middleware: [logAction, validateCsrfToken, tenantLimiter, requiresServiceMode("delivery")] },
     { path: "/api/v1/whatsapp", router: whatsappRouter, middleware: [logAction, validateCsrfToken, tenantLimiter] },
   ],

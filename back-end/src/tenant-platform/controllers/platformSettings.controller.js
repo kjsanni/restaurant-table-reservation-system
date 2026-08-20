@@ -70,9 +70,17 @@ const listPlatformSettingsHandler = async (req, res) => {
       }
     }
     if (!groups[domain]) groups[domain] = [];
+    const SENSITIVE_KEY_PATTERN = /secret|key|password|token/i;
+    const EXPLICIT_SENSITIVE_KEYS = new Set([
+      "turnstile_secret_key",
+      "erpnext_api_secret",
+      "ip_allowlist",
+      "password_policy",
+    ]);
+    const isSensitive = EXPLICIT_SENSITIVE_KEYS.has(key) || SENSITIVE_KEY_PATTERN.test(key);
     groups[domain].push({
       key: setting.key,
-      value: setting.value,
+      value: isSensitive ? "[REDACTED]" : setting.value,
       updatedAt: setting.updatedAt,
     });
   }

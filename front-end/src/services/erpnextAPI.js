@@ -1,10 +1,25 @@
 import axios from "axios";
+import { useAuthStore } from "@/stores/auth";
 
 const apiClient = axios.create({
   baseURL: "/api/v1/erpnext",
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
+  xsrfCookieName: "XSRF-TOKEN",
+  xsrfHeaderName: "x-xsrf-token",
+});
+
+apiClient.interceptors.request.use((config) => {
+  const authStore = useAuthStore();
+  if (authStore.token) {
+    config.headers.Authorization = `Bearer ${authStore.token}`;
+  }
+  if (authStore.currentTenant) {
+    config.headers["X-Tenant-Id"] = authStore.currentTenant.id;
+  }
+  return config;
 });
 
 apiClient.interceptors.response.use(

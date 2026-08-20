@@ -7,7 +7,12 @@ const Customer = db.customer;
 const Table = db.table;
 const { flattenArrayObjects } = require("../utils/flattenObject");
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const findAllReservations = async ({ limit, offset } = {}, tenantId) => {
   const opts = {
@@ -98,6 +103,8 @@ const searchReservations = async (filters = {}, { limit, offset } = {}, tenantId
       { resTime: like },
       { notes: like },
       { "$Customer.tags$": like },
+      { resStatus: like },
+      { paymentStatus: like },
     ];
     const num = parseInt(q, 10);
     if (!Number.isNaN(num)) {
@@ -121,30 +128,6 @@ const searchReservations = async (filters = {}, { limit, offset } = {}, tenantId
   );
   let reservations = flattenArrayObjects(rows);
 
-  if (q) {
-    const term = q.toLowerCase();
-    reservations = reservations
-      .filter((r) => {
-        const customer = r.Customer || {};
-        const searchable = [
-          customer.name,
-          customer.email,
-          customer.phone,
-          r.resDate,
-          r.resTime,
-          r.resStatus,
-          r.notes,
-          r.paymentStatus,
-        ];
-        return searchable.some(
-          (val) => val !== null && val !== undefined && String(val).toLowerCase().includes(term)
-        );
-      })
-      .map((r) => {
-        const { Customer, ...rest } = r;
-        return Customer ? { ...rest, Customer } : rest;
-      });
-  }
   if (limit) {
     return { reservations, total: count };
   }
@@ -199,9 +182,6 @@ const findOrCreateCustomer = async (customerDetails, t = null, tenantId) => {
         throw err;
       }
     }
-  } else {
-    await customer.increment("visitCount", { by: 1 });
-    await customer.update({ lastVisitDate: new Date() }); // codacy-suppress nosql-injection - parameterized ORM call
   }
   return customer;
 };
@@ -417,7 +397,14 @@ const createReservation = async (resDetails, tenantId) => {
 const statusHistoryDAO = require("../DAOs/reservationStatusHistory.dao");
 
 const updateReservation = async (reservationId, resDetails, tenantId) => {
-  const [result] = await Reservation.update(resDetails, { // codacy-suppress nosql-injection - parameterized ORM call
+  const allowedFields = ["resStatus", "resDate", "resTime", "people", "notes", "tableId", "paymentStatus", "expectedTotal"];
+  const updates = {};
+  for (const field of allowedFields) {
+    if (Object.prototype.hasOwnProperty.call(resDetails, field)) {
+      updates[field] = resDetails[field];
+    }
+  }
+  const [result] = await Reservation.update(updates, { // codacy-suppress nosql-injection - parameterized ORM call
     where: withTenant({ id: reservationId }, tenantId),
   });
   return result;

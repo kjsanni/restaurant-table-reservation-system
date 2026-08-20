@@ -3,7 +3,12 @@ const Schedule = db.schedule;
 const Holiday = db.holiday;
 const { tenantCache } = require("../utils/tenantCache");
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const createSchedule = async (scheduleData, tenantId) => {
   await tenantCache.del(tenantId || "global", "schedules:all");

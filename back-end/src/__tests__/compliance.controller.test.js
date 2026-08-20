@@ -10,6 +10,8 @@ jest.mock("../db/models", () => ({
 
 jest.mock("../tenant-platform/DAOs/legalAcceptance.dao", () => ({
   list: jest.fn(),
+  count: jest.fn(),
+  groupByDocument: jest.fn(),
 }));
 
 jest.mock("../tenant-platform/DAOs/dsarRequest.dao", () => ({
@@ -37,15 +39,18 @@ describe("compliance.controller", () => {
 
   it("getComplianceScorecardHandler returns scorecard", async () => {
     db.tenant.count.mockResolvedValueOnce(5);
-    legalAcceptanceDAO.list.mockResolvedValueOnce([
-      { documentKey: "privacy_policy", accepted: true },
-      { documentKey: "terms_of_service", accepted: true },
+    legalAcceptanceDAO.count.mockResolvedValueOnce(2);
+    legalAcceptanceDAO.groupByDocument.mockResolvedValueOnce([
+      { documentKey: "privacy_policy", count: 2 },
+      { documentKey: "terms_of_service", count: 2 },
     ]);
     await complianceController.getComplianceScorecardHandler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     const data = res.json.mock.calls[0][0];
     expect(data.success).toBe(true);
     expect(data.scorecard.totalTenants).toBe(5);
+    expect(data.scorecard.acceptedCount).toBe(2);
+    expect(data.scorecard.pendingCount).toBe(3);
   });
 
   it("autoFulfillSimpleDsarHandler fulfills pending DSAR", async () => {
@@ -78,10 +83,10 @@ describe("compliance.controller", () => {
 
   it("generateComplianceReportHandler returns report", async () => {
     db.tenant.count.mockResolvedValueOnce(5);
-    legalAcceptanceDAO.list.mockResolvedValueOnce([
-      { documentKey: "privacy_policy", accepted: true },
-    ]).mockResolvedValueOnce([
-      { documentKey: "terms_of_service", accepted: false },
+    legalAcceptanceDAO.count.mockResolvedValueOnce(2);
+    legalAcceptanceDAO.groupByDocument.mockResolvedValueOnce([
+      { documentKey: "privacy_policy", count: 2 },
+      { documentKey: "terms_of_service", count: 2 },
     ]);
     dsarRequestDAO.listByTenant.mockResolvedValue([
       { id: 1, status: "pending" },

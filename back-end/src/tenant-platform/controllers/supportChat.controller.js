@@ -1,5 +1,7 @@
 const response = require("../utils/response");
 
+const db = require("../../db/models");
+
 const supportConversationDAO = require("../DAOs/supportConversation.dao");
 const supportMessageDAO = require("../DAOs/supportMessage.dao");
 const platformAuditDAO = require("../DAOs/platformAudit.dao");
@@ -139,6 +141,7 @@ const autoAssignConversationHandler = async (req, res) => {
     group: ["assignedTo"],
     order: [[db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "ASC"]],
     raw: true,
+    limit: 1000,
   });
 
   let bestAgentId = null;
@@ -153,7 +156,7 @@ const autoAssignConversationHandler = async (req, res) => {
     return res.status(200).json({ success: true, item: updated });
   }
 
-  res.status(200).json({ success: true, item: conversation, message: "No agents available" });
+  return res.status(200).json({ success: true, item: conversation, message: "No agents available" });
 };
 
 const submitCsatHandler = async (req, res) => {

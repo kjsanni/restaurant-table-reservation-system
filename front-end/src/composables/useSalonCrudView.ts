@@ -58,13 +58,13 @@ export function useSalonCrudView<T>(config: {
   const form = ref<Record<string, any>>({ ...config.defaultForm });
   const extra = ref<Record<string, any>>({ ...(config.extra || {}) });
 
-  const load = async (params = {}) => {
+  const load = async (params: Record<string, any> = {}) => {
     loading.value = true;
     try {
       const method = resolveMethod(config.listMethod, "list");
       const res = await executeApiCall(config.api, method, {
-        limit: 100,
         ...params,
+        limit: params.limit ?? 100,
       });
       list.value = res.data.data || [];
     } catch (err) {

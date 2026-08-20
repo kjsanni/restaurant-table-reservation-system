@@ -27,7 +27,11 @@ describe("TenantDashboardView", () => {
       businessVertical: "restaurant",
       name: "Test Restaurant",
     };
-    authStore.capabilities = { serviceModes: ["dine_in"] };
+    authStore.capabilities = {
+      restaurantType: "restaurant",
+      serviceModes: ["dine_in"],
+      featureFlags: {},
+    };
 
     const wrapper = mount(TenantDashboardView, {
       global: { provide: { authStore } },
@@ -43,7 +47,11 @@ describe("TenantDashboardView", () => {
       businessVertical: "salon",
       name: "Test Salon",
     };
-    authStore.capabilities = { serviceModes: ["dine_in"] };
+    authStore.capabilities = {
+      restaurantType: "salon",
+      serviceModes: ["dine_in"],
+      featureFlags: {},
+    };
 
     const wrapper = mount(TenantDashboardView, {
       global: { provide: { authStore } },

@@ -91,6 +91,7 @@ const logAction = async (req, res, next) => {
           statusCode,
           ipAddress: req.ip,
           userAgent: truncate(req.get("user-agent")),
+          body: sanitizeData(req.body),
         },
         ipAddress: req.ip,
       });

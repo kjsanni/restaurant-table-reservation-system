@@ -1,7 +1,10 @@
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
+
+const router = useRouter();
 
 const client = axios.create({
   baseURL: `${API_BASE}/admin/payments`,
@@ -25,7 +28,7 @@ client.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      window.location.href = "/login";
+      router.push("/login");
     }
     return Promise.reject(error);
   }

@@ -3,8 +3,12 @@ const MenuCategory = db.menuCategory;
 const MenuItem = db.menuItem;
 const MenuItemOption = db.menuItemOption;
 
-const withTenant = (where = {}, tenantId) =>
-  tenantId ? { ...where, tenantId } : where;
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const createCategory = async (tenantId, data) => {
   return await MenuCategory.create({ // codacy-suppress nosql-injection - parameterized ORM call

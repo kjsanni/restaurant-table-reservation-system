@@ -7,8 +7,12 @@ const Customer = db.customer;
 const Reservation = db.reservation;
 const Payment = db.payment;
 
-const withTenant = (where = {}, tenantId) =>
-  tenantId ? { ...where, tenantId } : where;
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const calculateDiscount = (total, discountType, discountValue) => {
   if (!discountType || discountValue === null || discountValue === undefined || parseFloat(discountValue) <= 0) {

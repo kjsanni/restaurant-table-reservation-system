@@ -3,7 +3,12 @@ const readReplica = require("../db/readReplica");
 const Payment = db.payment;
 const { Op, fn, col } = db.Sequelize;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const findByReservation = async (reservationId, tenantId) => {
   return await Payment.findAll({ // codacy-suppress nosql-injection - parameterized ORM call

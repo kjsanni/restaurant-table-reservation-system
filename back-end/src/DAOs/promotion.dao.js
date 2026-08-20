@@ -2,7 +2,12 @@ const db = require("../db/models");
 const Promotion = db.promotion;
 const { Op } = db.Sequelize;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const createPromotion = async (tenantId, data, userId) => {
   const promotion = await Promotion.create({ // codacy-suppress nosql-injection - parameterized ORM call

@@ -1,7 +1,12 @@
 const db = require("../db/models");
 const Refund = db.refund;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const createRefund = async (data, tenantId) => {
   return await Refund.create({ // codacy-suppress nosql-injection - parameterized ORM call

@@ -18,6 +18,9 @@ const extendTrialHandler = async (req, res) => {
 };
 
 const convertTrialHandler = async (req, res) => {
+  if (!req.user?.permissions?.manage_billing) {
+    return response.forbidden(res, "Billing permission required to convert trial");
+  }
   const { plan, billingEmail, billingName } = req.body;
   const tenant = await db.tenant.findByPk(req.params.tenantId);
   if (!tenant) {

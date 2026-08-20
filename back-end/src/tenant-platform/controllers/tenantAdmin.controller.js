@@ -15,6 +15,8 @@ const verticalTemplateController = require("./verticalTemplate.controller");
 const axios = require("axios");
 const { normalizeSettingValue } = require("../../utils/settings");
 const auditLog = require("../utils/auditLog");
+const { ROLE_HIERARCHY } = require("../../middleware/auth");
+const secretEncryption = require("../../utils/secretEncryption");
 
 const createTenantHandler = async (req, res) => {
   const { name, slug, domain, plan, status, billingEmail, billingName, currency, restaurantType, businessVertical, serviceModes, templateId } = req.body;
@@ -149,7 +151,7 @@ const getTenantHandler = async (req, res) => {
     return response.notFound(res, "Tenant not found");
   }
 
-  res.status(200).json({ success: true, item: tenant });
+  res.status(200).json({ success: true, item: sanitizeTenant(tenant) });
 };
 
 const updateTenantHandler = async (req, res) => {
@@ -188,7 +190,7 @@ const updateTenantHandler = async (req, res) => {
     await auditLog(req, "tenant.updated", "tenant", tenant.id, { changes }, { tenantId: tenant.id });
   }
 
-  res.status(200).json({ success: true, item: tenant });
+  res.status(200).json({ success: true, item: sanitizeTenant(tenant) });
 };
 
 const deleteTenantHandler = async (req, res) => {
@@ -244,7 +246,7 @@ const exportTenantDataHandler = async (req, res) => {
 
   const payload = {
     exportedAt: new Date().toISOString(),
-    tenant: exported.tenant.toJSON(),
+    tenant: sanitizeTenant(exported.tenant),
     settings: exported.settings.map((s) => ({ key: s.key, value: s.value, updatedAt: s.updatedAt })),
     notes: exported.notes,
     legalAcceptances: exported.legalAcceptances,
@@ -266,7 +268,7 @@ const exportSelfTenantDataHandler = async (req, res) => {
 
   const payload = {
     exportedAt: new Date().toISOString(),
-    tenant: exported.tenant.toJSON(),
+    tenant: sanitizeTenant(exported.tenant),
     settings: exported.settings.map((s) => ({ key: s.key, value: s.value, updatedAt: s.updatedAt })),
     notes: exported.notes,
     legalAcceptances: exported.legalAcceptances,
@@ -292,7 +294,8 @@ const sanitizeTenant = (tenant) => {
   const obj = tenant.toJSON ? tenant.toJSON() : { ...tenant };
   for (const f of SENSITIVE_FIELDS) {
     if (obj[f] !== undefined && obj[f] !== null) {
-      const str = String(obj[f]);
+      const decrypted = secretEncryption.decrypt(obj[f]);
+      const str = String(decrypted);
       obj[f] = str.slice(-4).padStart(str.length, "*");
     }
   }
@@ -300,7 +303,8 @@ const sanitizeTenant = (tenant) => {
     const cfg = normalizeSettingValue(obj.settings);
     if (cfg.shaqexpress_config) {
       if (cfg.shaqexpress_config.secret) {
-        const s = String(cfg.shaqexpress_config.secret);
+        const decrypted = secretEncryption.decrypt(cfg.shaqexpress_config.secret);
+        const s = String(decrypted);
         cfg.shaqexpress_config.secret = s
           .slice(-4)
           .padStart(s.length, "*");
@@ -315,6 +319,16 @@ const testPaystackHandler = async (req, res) => {
   const tenant = await tenantAdminDAO.findById(req.params.id);
   if (!tenant) {
     return response.notFound(res, "Tenant not found");
+  }
+
+  const userRoles = Array.isArray(req.user?.platformRoles) ? req.user.platformRoles : [];
+  const userMaxLevel = Math.max(0, ...userRoles.map((r) => ROLE_HIERARCHY[r] || 0));
+  const isAuthorized =
+    req.user?.isSuperAdmin === true ||
+    userMaxLevel >= ROLE_HIERARCHY.platform_technical ||
+    req.user?.permissions?.manage_billing === true;
+  if (!isAuthorized) {
+    return res.status(403).json({ success: false, message: "Forbidden" });
   }
 
   const { publicKey, secretKey } = req.body;
@@ -353,6 +367,16 @@ const testShaqExpressHandler = async (req, res) => {
   const tenant = await tenantAdminDAO.findById(req.params.id);
   if (!tenant) {
     return response.notFound(res, "Tenant not found");
+  }
+
+  const userRoles = Array.isArray(req.user?.platformRoles) ? req.user.platformRoles : [];
+  const userMaxLevel = Math.max(0, ...userRoles.map((r) => ROLE_HIERARCHY[r] || 0));
+  const isAuthorized =
+    req.user?.isSuperAdmin === true ||
+    userMaxLevel >= ROLE_HIERARCHY.platform_technical ||
+    req.user?.permissions?.manage_billing === true;
+  if (!isAuthorized) {
+    return res.status(403).json({ success: false, message: "Forbidden" });
   }
 
   const { identifier, secret } = req.body;
@@ -405,8 +429,8 @@ const applyPaystackSettings = (tenant, paystackPublicKey, paystackSecretKey, cha
     tenant.paystackPublicKey = paystackPublicKey;
     changes.push({ field: "paystackPublicKey", changed: true });
   }
-  if (paystackSecretKey !== undefined && paystackSecretKey !== null) {
-    tenant.paystackSecretKey = paystackSecretKey;
+  if (paystackSecretKey !== undefined && paystackSecretKey !== null && String(paystackSecretKey).trim() !== "") {
+    tenant.paystackSecretKey = secretEncryption.encrypt(paystackSecretKey);
     changes.push({ field: "paystackSecretKey", changed: true });
   }
 };
@@ -420,9 +444,11 @@ const applyShaqExpressSettings = (tenant, shaqexpressIdentifier, shaqexpressSecr
     return;
   }
   const settings = tenant.settings || {};
+  const existingSecret = settings.shaqexpress_config?.secret ?? null;
+  const rawSecret = shaqexpressSecret === undefined ? existingSecret : shaqexpressSecret;
   const shaqConfig = {
     identifier: shaqexpressIdentifier ?? settings.shaqexpress_config?.identifier ?? null,
-    secret: shaqexpressSecret ?? settings.shaqexpress_config?.secret ?? null,
+    secret: rawSecret === null ? null : secretEncryption.encrypt(String(rawSecret)),
     webhookUrl: shaqexpressWebhookUrl ?? settings.shaqexpress_config?.webhookUrl ?? null,
     enabled: true,
   };

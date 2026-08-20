@@ -32,6 +32,7 @@ const tenantBranding = ref<{
   primaryColor?: string;
   secondaryColor?: string;
 }>({});
+const tenantStatus = ref<string>("");
 const loadingBranding = ref(false);
 
 const brandSideStyle = computed(() => {
@@ -42,8 +43,7 @@ const brandSideStyle = computed(() => {
   return { background: "#0f172a" };
 });
 
-const isValidHexColor = (value: string) =>
-  /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value);
+const isValidHexColor = (value: string) => /^#[0-9A-Fa-f]{6}$/.test(value);
 
 const isValidUrl = (value: string) => {
   try {
@@ -82,11 +82,14 @@ const loadTenantBranding = async () => {
   loadingBranding.value = true;
   try {
     const response = await getPublicTenant(tenantSlug.value);
-    const settings = response.data?.item?.settings || {};
+    const item = response.data?.item;
+    tenantStatus.value = item?.status || "";
+    const settings = item?.settings || {};
     tenantBranding.value = settings.branding || {};
     applyBrandingToDOM(tenantBranding.value);
   } catch {
     tenantBranding.value = {};
+    tenantStatus.value = "";
   } finally {
     loadingBranding.value = false;
   }
@@ -100,6 +103,9 @@ onMounted(() => {
   loadTenantBranding();
 });
 
+const isValidRedirect = (path: string) =>
+  path.startsWith("/") && !path.includes("://") && !path.startsWith("//");
+
 const handleRegister = async () => {
   if (submitting.value) return;
   submitting.value = true;
@@ -108,6 +114,25 @@ const handleRegister = async () => {
 
   if (form.value.password !== form.value.confirmPassword) {
     generalError.value = "Passwords do not match.";
+    submitting.value = false;
+    return;
+  }
+
+  const GHANA_PHONE_RE = /^\+233\d{9}$/;
+  if (!GHANA_PHONE_RE.test(form.value.phone.trim())) {
+    validationErrors.value = {
+      phone: ["Enter a valid Ghana phone number, e.g. +233501234567."],
+    };
+    submitting.value = false;
+    return;
+  }
+
+  if (
+    tenantSlug.value &&
+    tenantStatus.value &&
+    tenantStatus.value !== "active"
+  ) {
+    generalError.value = "This tenant is not available for registration.";
     submitting.value = false;
     return;
   }
@@ -128,7 +153,8 @@ const handleRegister = async () => {
         query: { email: response.data.email },
       });
     } else {
-      router.push("/portal");
+      const redirect = (route.query.redirect as string) || "/portal";
+      router.push(isValidRedirect(redirect) ? redirect : "/portal");
     }
   } catch (err) {
     generalError.value = getApiErrorMessage(err);

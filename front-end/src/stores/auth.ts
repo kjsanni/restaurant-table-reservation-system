@@ -30,15 +30,22 @@ export const useAuthStore = defineStore("auth", () => {
     slug?: string;
     businessVertical?: string;
     settings?: Record<string, unknown>;
-  } | null>(() => {
-    try {
-      const stored = sessionStorage.getItem("currentTenant");
-      const parsed = stored ? JSON.parse(stored) : null;
-      return parsed;
-    } catch {
-      return null;
+  } | null>(null);
+
+  try {
+    const stored = sessionStorage.getItem("currentTenant");
+    if (stored) {
+      currentTenant.value = JSON.parse(stored) as {
+        id: number;
+        name: string;
+        slug?: string;
+        businessVertical?: string;
+        settings?: Record<string, unknown>;
+      } | null;
     }
-  });
+  } catch {
+    currentTenant.value = null;
+  }
   const tenantModeEnabled = ref(false);
   const branding = ref({
     brandName: "",
@@ -59,7 +66,13 @@ export const useAuthStore = defineStore("auth", () => {
   ) => {
     const s = settings.find((d) => d.key === key);
     if (!s || s.value == null) return;
-    const v = typeof s.value === "string" ? JSON.parse(s.value) : s.value;
+    let v: unknown;
+    try {
+      v = typeof s.value === "string" ? JSON.parse(s.value) : s.value;
+    } catch {
+      console.warn("Failed to parse setting value", key);
+      return;
+    }
     if (v && typeof v === "object") Object.assign(target, v);
   };
 
@@ -137,7 +150,7 @@ export const useAuthStore = defineStore("auth", () => {
   const getMe = async () => {
     const response = await authAPI.getMe();
     user.value = response.data.user;
-    if (!currentTenant.value && response.data.user?.tenant) {
+    if (response.data.user?.tenant) {
       currentTenant.value = response.data.user.tenant;
       sessionStorage.setItem(
         "currentTenant",
@@ -228,7 +241,11 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       const storedTenant = sessionStorage.getItem("currentTenant");
       if (storedTenant) {
-        currentTenant.value = JSON.parse(storedTenant);
+        try {
+          currentTenant.value = JSON.parse(storedTenant);
+        } catch {
+          console.warn("Failed to parse stored tenant");
+        }
       }
       await Promise.all([
         getMe().catch(() => {}),

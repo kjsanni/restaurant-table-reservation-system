@@ -3,7 +3,12 @@ const AuditLog = db.auditLog;
 const User = db.user;
 const { Op } = db.Sequelize;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const createLog = async ({ action, entityType, entityId, userId, changes, ipAddress }, tenantId) => {
   return await AuditLog.create({ // codacy-suppress nosql-injection - parameterized ORM call

@@ -1,22 +1,24 @@
 <script setup lang="ts">
 import { computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useCapabilities } from "@/composables/useCapabilities";
 import { useTenantBranding } from "@/composables/useTenantBranding";
+import { useTenantResolver } from "@/composables/useTenantResolver";
 import logger from "@/utils/logger";
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 const { businessVertical } = useCapabilities();
 const { apply: applyBranding } = useTenantBranding();
+const { resolveFromPath } = useTenantResolver();
 
 const isSalon = computed(() => businessVertical.value === "salon");
 const isEvent = computed(() => businessVertical.value === "event");
 
 const firstName = computed(() => {
-  const name =
-    authStore.user?.username || (authStore.user as any)?.name || "Guest";
+  const name = authStore.user?.username || "Guest";
   return String(name).split(" ")[0];
 });
 
@@ -88,6 +90,24 @@ const portalLinks = computed(() => {
 });
 
 onMounted(async () => {
+  const tenantSlug = route.params.tenantSlug as string | undefined;
+  if (tenantSlug) {
+    try {
+      const resolved = await resolveFromPath(tenantSlug);
+      if (!resolved) {
+        await router.replace("/");
+        return;
+      }
+    } catch (err) {
+      logger.error(
+        "Customer portal tenant resolution failed",
+        err instanceof Error ? err : new Error(String(err))
+      );
+      await router.replace("/");
+      return;
+    }
+  }
+
   try {
     await applyBranding();
   } catch (err) {
@@ -101,10 +121,17 @@ onMounted(async () => {
 
 <template>
   <div class="portal-home">
-    <div class="portal-header">
-      <h1>{{ greeting }}</h1>
-      <h2>Customer Portal</h2>
-      <p>{{ portalSubtitle }}</p>
+    <div class="portal-hero">
+      <img
+        src="@/assets/images/portal/customer-landing-hero.jpg"
+        alt="Customer landing hero"
+        class="portal-hero-img"
+      />
+      <div class="portal-hero-overlay">
+        <h1>{{ greeting }}</h1>
+        <h2>Customer Portal</h2>
+        <p>{{ portalSubtitle }}</p>
+      </div>
     </div>
     <div class="portal-links">
       <button
@@ -128,6 +155,50 @@ onMounted(async () => {
   max-width: 720px;
   margin: 0 auto;
   padding: var(--space-8) var(--space-4);
+}
+.portal-hero {
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  min-height: 240px;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: var(--space-8);
+}
+.portal-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.portal-hero-overlay {
+  position: relative;
+  padding: var(--space-6) var(--space-5);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.65) 100%
+  );
+  color: var(--white);
+  width: 100%;
+}
+.portal-hero-overlay h1 {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  letter-spacing: var(--tracking-tight);
+}
+.portal-hero-overlay h2 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  opacity: 0.95;
+}
+.portal-hero-overlay p {
+  margin: 0;
+  font-size: var(--text-sm);
+  opacity: 0.85;
 }
 .portal-header {
   margin-bottom: var(--space-8);

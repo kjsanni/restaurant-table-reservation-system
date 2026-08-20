@@ -144,7 +144,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
   }
 
   if (user.isSuperAdmin) {
-    if (!user.totpEnabled && process.env.NODE_ENV !== "development" && process.env.NODE_ENV !== "test") {
+    if (!user.totpEnabled && process.env.TOTP_BYPASS !== "true") {
       throw {
         status: 403,
         message: "Super admin accounts require two-factor authentication. Please contact another super admin to enable TOTP.",

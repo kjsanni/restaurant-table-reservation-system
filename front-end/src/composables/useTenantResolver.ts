@@ -39,10 +39,27 @@ export function useTenantResolver() {
   };
 
   const resolveFromHost = async (host: string) => {
-    const slug = host.split(".")[0];
-    if (!slug || slug === "www" || slug === "localhost" || slug === "127")
+    try {
+      if (!host) return null;
+      const lower = host.toLowerCase();
+      if (
+        lower === "localhost" ||
+        lower === "127.0.0.1" ||
+        lower.startsWith("127.") ||
+        lower.startsWith("192.168.") ||
+        lower.startsWith("10.") ||
+        lower.startsWith("172.")
+      ) {
+        return null;
+      }
+      const parts = lower.split(".");
+      if (parts.length < 2) return null;
+      const slug = parts[parts.length - 2];
+      if (!slug || slug === "www") return null;
+      return resolveFromPath(slug);
+    } catch {
       return null;
-    return resolveFromPath(slug);
+    }
   };
 
   const redirectToPortalHome = () => {

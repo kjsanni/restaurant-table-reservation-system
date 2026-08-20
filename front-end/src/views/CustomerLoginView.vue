@@ -26,6 +26,9 @@ const onTurnstileSuccess = (token: string) => {
   cfTurnstileToken.value = token;
 };
 
+const isValidRedirect = (path: string) =>
+  path.startsWith("/") && !path.includes("://") && !path.startsWith("//");
+
 const handleLogin = async () => {
   if (submitting.value) return;
   submitting.value = true;
@@ -47,7 +50,7 @@ const handleLogin = async () => {
     }
 
     const redirect = (route.query.redirect as string) || "/portal";
-    router.push(redirect);
+    router.push(isValidRedirect(redirect) ? redirect : "/portal");
   } catch (err) {
     generalError.value = getApiErrorMessage(err);
     validationErrors.value = getApiErrors(err);

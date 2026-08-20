@@ -114,6 +114,14 @@ const listMyBreakGlassRequestsHandler = async (req, res) => {
 
 const expireBreakGlassHandler = async (req, res) => {
   const expired = await breakGlassRequestDAO.expireOld();
+  await logBreakGlassAudit(
+    req.user.id,
+    "break_glass.expired",
+    null,
+    req.tenant?.id || null,
+    { expiredCount: expired.length, actorId: req.user.id, actorEmail: req.user.email },
+    req.ip
+  );
   return res.status(200).json({ success: true, expiredCount: expired.length });
 };
 

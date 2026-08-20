@@ -2,7 +2,12 @@ const db = require("../db/models");
 const { Op } = db.Sequelize;
 const LoginAttempt = db.loginAttempt;
 
-const withTenant = (where = {}, tenantId) => (tenantId ? { ...where, tenantId } : where);
+const withTenant = (where = {}, tenantId) => {
+  if (!tenantId) {
+    console.warn(`[tenant-scoping] ${require("path").basename(module.filename)}: withTenant called without tenantId — tenant filter dropped`);
+  }
+  return tenantId ? { ...where, tenantId } : where;
+};
 
 const recordAttempt = async (email, ipAddress, tenantId) => {
   return await LoginAttempt.create({ // codacy-suppress nosql-injection - parameterized ORM call

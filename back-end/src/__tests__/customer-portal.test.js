@@ -1,6 +1,9 @@
 const customerPortalController = require("../controllers/customer-portal.controller");
 
 jest.mock("../DAOs/reservation.dao");
+jest.mock("../DAOs/payment.dao");
+jest.mock("../DAOs/refund.dao");
+jest.mock("../tenant-platform/DAOs/platformAudit.dao");
 
 const reservationDAO = require("../DAOs/reservation.dao");
 
@@ -18,13 +21,13 @@ describe("Customer portal", () => {
   });
 
   it("updateCustomerProfileHandler updates customer", async () => {
-    const req = { user: { email: "alice@example.com", phone: "123" }, tenant: { id: 1 }, body: { name: "Alice Updated" } };
+    const req = { user: { email: "alice@example.com", phone: "123" }, tenant: { id: 1 }, body: { firstName: "Alice Updated" } };
     const res = { status: jest.fn(() => res), json: jest.fn() };
     reservationDAO.findOrCreateCustomer.mockResolvedValue({ id: 1 });
-    reservationDAO.updateCustomer.mockResolvedValue({ id: 1, name: "Alice Updated" });
+    reservationDAO.updateCustomer.mockResolvedValue({ id: 1, firstName: "Alice Updated" });
 
     await customerPortalController.updateCustomerProfileHandler(req, res);
-    expect(reservationDAO.updateCustomer).toHaveBeenCalledWith(1, { name: "Alice Updated" }, 1);
+    expect(reservationDAO.updateCustomer).toHaveBeenCalledWith(1, { firstName: "Alice Updated" }, 1);
     expect(res.status).toHaveBeenCalledWith(200);
   });
 

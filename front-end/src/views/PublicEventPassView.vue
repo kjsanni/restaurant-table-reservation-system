@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useToastStore } from "@/stores/toast";
 import eventPortalAPI from "@/services/eventPortalAPI";
@@ -134,18 +134,6 @@ const addToGooglePay = () => {
 
 const addToAppleWallet = () => {
   toast.add("Apple Wallet pass saved", "success", 3000);
-};
-</script>
-
-<script lang="ts">
-const statusClass = (status: string) => {
-  const map: Record<string, string> = {
-    active: "badge-success",
-    used: "badge-info",
-    expired: "badge-warning",
-    cancelled: "badge-danger",
-  };
-  return map[status] || "badge";
 };
 </script>
 

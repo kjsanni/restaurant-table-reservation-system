@@ -64,16 +64,6 @@ const generate = async () => {
   }
 };
 
-const generateForGuest = async (guestId: number) => {
-  try {
-    await eventPortalAPI.generateGuestQRCode(eventId.value, guestId);
-    toast.add("Guest QR code generated", "success", 3000);
-    load();
-  } catch (err) {
-    toast.add("Failed to generate guest QR code", "error", 4000);
-  }
-};
-
 const goBack = () => {
   router.push({ name: "event-management" });
 };

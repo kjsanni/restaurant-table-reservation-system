@@ -119,17 +119,17 @@ const statusClass = (status: string) => {
 
 const cancelId = ref<number | null>(null);
 const rebookId = ref<number | null>(null);
-const cancelError = ref("");
-const rebookError = ref("");
+const cancelErrors = ref<Record<number, string>>({});
+const rebookErrors = ref<Record<number, string>>({});
 
 const cancelAppointment = async (apt: SalonAppointment) => {
   cancelId.value = apt.id;
-  cancelError.value = "";
+  cancelErrors.value[apt.id] = "";
   try {
     await salonCustomerPortalAPI.cancelAppointment(apt.id);
     apt.status = "cancelled";
   } catch (err) {
-    cancelError.value =
+    cancelErrors.value[apt.id] =
       err instanceof Error ? err.message : "Failed to cancel appointment";
     logger.error("Failed to cancel appointment", { error: err });
   } finally {
@@ -139,7 +139,7 @@ const cancelAppointment = async (apt: SalonAppointment) => {
 
 const rebookAppointment = async (apt: SalonAppointment) => {
   rebookId.value = apt.id;
-  rebookError.value = "";
+  rebookErrors.value[apt.id] = "";
   try {
     const res = await salonCustomerPortalAPI.rebookAppointment(apt.id);
     const newApt = res.data?.appointment;
@@ -148,7 +148,7 @@ const rebookAppointment = async (apt: SalonAppointment) => {
       apt.status = "cancelled";
     }
   } catch (err) {
-    rebookError.value =
+    rebookErrors.value[apt.id] =
       err instanceof Error ? err.message : "Failed to rebook appointment";
     logger.error("Failed to rebook appointment", { error: err });
   } finally {
@@ -220,7 +220,9 @@ onMounted(loadData);
             >
               {{ cancelId === apt.id ? "Cancelling…" : "Cancel" }}
             </button>
-            <p v-if="cancelError" class="error-text">{{ cancelError }}</p>
+            <p v-if="cancelErrors[apt.id]" class="error-text">
+              {{ cancelErrors[apt.id] }}
+            </p>
             <button
               v-if="['completed', 'cancelled'].includes(apt.status)"
               class="btn-primary-sm"
@@ -229,7 +231,9 @@ onMounted(loadData);
             >
               {{ rebookId === apt.id ? "Rebooking…" : "Rebook" }}
             </button>
-            <p v-if="rebookError" class="error-text">{{ rebookError }}</p>
+            <p v-if="rebookErrors[apt.id]" class="error-text">
+              {{ rebookErrors[apt.id] }}
+            </p>
           </div>
         </template>
       </div>

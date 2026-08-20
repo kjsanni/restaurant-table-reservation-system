@@ -4,6 +4,7 @@ import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
 import customerAPI from "@/services/customerAPI";
+import legalAcceptanceAPI from "@/services/legalAcceptanceAPI";
 import logger from "@/utils/logger";
 
 const router = useRouter();
@@ -30,6 +31,7 @@ const preferences = ref<{ dietaryRestrictions: string[]; allergies: string[] }>(
   }
 );
 const acceptLegal = ref(false);
+const finishing = ref(false);
 
 const dietaryOptions = [
   "Vegetarian",
@@ -63,11 +65,13 @@ const startOtpTimer = () => {
   timerInterval = id;
 };
 
+const GHANA_PHONE_RE = /^\+233\d{9}$/;
+
 const checkPhone = async () => {
   errorMsg.value = "";
   const raw = phone.value.trim();
-  if (!raw || raw.length < 10) {
-    errorMsg.value = "Enter a valid phone number.";
+  if (!GHANA_PHONE_RE.test(raw)) {
+    errorMsg.value = "Enter a valid Ghana phone number, e.g. +233501234567.";
     return;
   }
 
@@ -148,19 +152,32 @@ const verifyOtp = async () => {
   }
 };
 
-const finishDetails = () => {
+const finishDetails = async () => {
   if (!acceptLegal.value) {
     errorMsg.value = "Please accept the terms to continue.";
     return;
   }
-  step.value = "done";
-  setTimeout(() => {
-    if (cartStore.count > 0) {
-      router.push("/checkout");
-    } else {
-      router.push(resumePath.value);
+  finishing.value = true;
+  errorMsg.value = "";
+  try {
+    const tenantId = authStore.currentTenant?.id;
+    if (tenantId) {
+      await legalAcceptanceAPI.acceptDocument(tenantId, "customer");
     }
-  }, 800);
+    step.value = "done";
+    setTimeout(() => {
+      if (cartStore.count > 0) {
+        router.push("/checkout");
+      } else {
+        router.push(resumePath.value);
+      }
+    }, 800);
+  } catch (err) {
+    errorMsg.value = "Failed to save acceptance. Please try again.";
+    logger.error("Legal acceptance failed", { error: err });
+  } finally {
+    finishing.value = false;
+  }
 };
 
 const togglePref = (opt: string) => {
@@ -255,7 +272,13 @@ const skip = () => {
           <span>I accept the terms of service and privacy policy.</span>
         </label>
         <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
-        <button class="btn-primary" @click="finishDetails">Finish</button>
+        <button
+          class="btn-primary"
+          :disabled="finishing"
+          @click="finishDetails"
+        >
+          {{ finishing ? "Saving..." : "Finish" }}
+        </button>
       </div>
 
       <div v-else class="step">
@@ -315,11 +338,11 @@ const skip = () => {
 .btn-primary {
   width: 100%;
   padding: 12px;
-  background: var(--accent-500);
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
   color: var(--white);
   border: none;
-  border-radius: 10px;
-  font-size: 15px;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
   margin-top: 4px;
