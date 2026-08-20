@@ -65,7 +65,12 @@ const buildRefreshInterceptor = (apiInstance) => {
 };
 
 export const buildApiClient = (baseURL, options = {}) => {
-  if (typeof baseURL !== "string" || !baseURL.startsWith("/") || baseURL.includes("http://") || baseURL.includes("https://")) {
+  if (
+    typeof baseURL !== "string" ||
+    !baseURL.startsWith("/") ||
+    baseURL.includes("http://") ||
+    baseURL.includes("https://")
+  ) {
     throw new Error("Invalid baseURL: must be a relative API path");
   }
 

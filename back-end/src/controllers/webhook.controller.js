@@ -54,6 +54,50 @@ const testHandler = async (req, res) => {
   return res.status(200).json({ success: true, message: "Test webhook dispatched" });
 };
 
+const processOrderPayment = async (orderId, tenantId, data) => {
+  const order = await db.order.findOne({
+    where: { id: orderId, tenantId },
+  });
+  if (!order || order.paymentStatus === "paid") return;
+
+  await order.update({
+    paymentStatus: "paid",
+    paymentReference: data.reference,
+    paymentMethod: "paystack",
+  });
+
+  logger.info("WhatsApp order payment confirmed", {
+    orderId,
+    tenantId,
+    reference: data.reference,
+  });
+
+  try {
+    const customerPhone = data.metadata?.customerPhone || order.customer?.phone;
+    if (customerPhone) {
+      await messageTemplates.renderTemplate("order_payment_confirmed", { orderId: order.id }, tenantId).then(async (text) => {
+        await require("../services/whatsapp.service").sendWhatsAppText(customerPhone, text, tenantId);
+      });
+    }
+    const deliveryLocation = data.metadata?.deliveryLocation;
+    if (deliveryLocation) {
+      await deliveryService.createFromWhatsApp(
+        tenantId,
+        order.id,
+        deliveryLocation,
+        order.customer ? `${order.customer.firstName || ""} ${order.customer.lastName || ""}`.trim() : "Customer",
+        customerPhone
+      );
+    }
+  } catch (notifyErr) {
+    logger.warn("Failed to send WhatsApp order confirmation or create delivery", {
+      error: notifyErr.message,
+      orderId,
+      tenantId,
+    });
+  }
+};
+
 const paystackEventHandler = async (req, res) => {
   const signature = req.headers["x-paystack-signature"];
   const rawBody = JSON.stringify(req.body);
@@ -68,11 +112,11 @@ const paystackEventHandler = async (req, res) => {
   if (event === "charge.failed") {
     let tenantId = null;
     if (data.metadata?.tenantId) {
-      const tenant = await db.tenant.findByPk(data.metadata.tenantId); // codacy-suppress nosql-injection - parameterized ORM call
+      const tenant = await db.tenant.findByPk(data.metadata.tenantId);
       if (tenant) tenantId = tenant.id;
     }
 
-    await failedPaymentAlertDAO.create({ // codacy-suppress nosql-injection - parameterized ORM call
+    await failedPaymentAlertDAO.create({
       tenantId,
       reservationId: data.metadata?.reservationId || null,
       reference: data.reference || data.id,
@@ -91,17 +135,17 @@ const paystackEventHandler = async (req, res) => {
   if (event === "charge.success") {
     let tenantId = null;
     if (data.metadata?.tenantId) {
-      const tenant = await db.tenant.findByPk(data.metadata.tenantId); // codacy-suppress nosql-injection - parameterized ORM call
+      const tenant = await db.tenant.findByPk(data.metadata.tenantId);
       if (tenant) tenantId = tenant.id;
     }
 
     const appointmentId = data.metadata?.appointmentId;
     if (appointmentId && tenantId) {
-      const appointment = await db.appointment.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
+      const appointment = await db.appointment.findOne({
         where: { id: appointmentId, tenantId },
       });
       if (appointment && appointment.paymentStatus !== "paid") {
-        await appointment.update({ // codacy-suppress nosql-injection - parameterized ORM call
+        await appointment.update({
           paymentStatus: "paid",
           depositAmount: parseFloat(data.amount || 0) / 100,
         });
@@ -114,7 +158,7 @@ const paystackEventHandler = async (req, res) => {
         where: { id: bookingId, tenantId },
       });
       if (booking && booking.paymentStatus !== "paid") {
-        await booking.update({ // codacy-suppress nosql-injection - parameterized ORM call
+        await booking.update({
           paymentStatus: "paid",
           status: "confirmed",
           paymentReference: data.reference,
@@ -134,12 +178,12 @@ const paystackEventHandler = async (req, res) => {
           reference: data.reference,
         });
         try {
-          const superAdmins = await db.user.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
+          const superAdmins = await db.user.findAll({
             where: { isSuperAdmin: true },
             attributes: ["id"],
           });
           for (const admin of superAdmins) {
-            await notificationDAO.create({ // codacy-suppress nosql-injection - parameterized ORM call
+            await notificationDAO.create({
               userId: admin.id,
               tenantId: null,
               type: "wallet_pass_signing_request",
@@ -157,47 +201,10 @@ const paystackEventHandler = async (req, res) => {
       }
     }
 
-    const orderId = Number(data.metadata?.orderId);
+    const rawOrderId = data.metadata?.orderId;
+    const orderId = Number(rawOrderId);
     if (Number.isInteger(orderId) && orderId > 0 && tenantId) {
-      const order = await db.order.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
-        where: { id: orderId, tenantId },
-      });
-      if (order && order.paymentStatus !== "paid") {
-        await order.update({ // codacy-suppress nosql-injection - parameterized ORM call
-          paymentStatus: "paid",
-          paymentReference: data.reference,
-          paymentMethod: "paystack",
-        });
-        logger.info("WhatsApp order payment confirmed", {
-          orderId,
-          tenantId,
-          reference: data.reference,
-        });
-        try {
-          const customerPhone = data.metadata?.customerPhone || order.customer?.phone;
-          if (customerPhone) {
-            await messageTemplates.renderTemplate("order_payment_confirmed", { orderId: order.id }, tenantId).then(async (text) => {
-              await require("../services/whatsapp.service").sendWhatsAppText(customerPhone, text, tenantId);
-            });
-          }
-          const deliveryLocation = data.metadata?.deliveryLocation;
-          if (deliveryLocation) {
-            await deliveryService.createFromWhatsApp(
-              tenantId,
-              order.id,
-              deliveryLocation,
-              order.customer ? `${order.customer.firstName || ""} ${order.customer.lastName || ""}`.trim() : "Customer",
-              customerPhone
-            );
-          }
-        } catch (notifyErr) {
-          logger.warn("Failed to send WhatsApp order confirmation or create delivery", {
-            error: notifyErr.message,
-            orderId,
-            tenantId,
-          });
-        }
-      }
+      await processOrderPayment(orderId, tenantId, data);
     }
   }
 
