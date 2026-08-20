@@ -2,6 +2,8 @@ const webhookService = require("../services/webhook.service");
 const failedPaymentAlertDAO = require("../tenant-platform/DAOs/failedPaymentAlert.dao");
 const passSigningRequestDAO = require("../tenant-platform/DAOs/passSigningRequest.dao");
 const notificationDAO = require("../tenant-platform/DAOs/notification.dao");
+const deliveryService = require("../services/delivery.service");
+const messageTemplates = require("../services/messageTemplates.service");
 const db = require("../db/models");
 const logger = require("../utils/logger");
 const { verifyWebhookSignature } = require("../tenant-platform/services/paystack.service");
@@ -150,6 +152,49 @@ const paystackEventHandler = async (req, res) => {
           logger.warn("Failed to notify super-admins of wallet pass request", {
             error: notifyErr.message,
             requestId: signingRequestId,
+          });
+        }
+      }
+    }
+
+    const orderId = data.metadata?.orderId;
+    if (orderId && tenantId) {
+      const order = await db.order.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
+        where: { id: orderId, tenantId },
+      });
+      if (order && order.paymentStatus !== "paid") {
+        await order.update({ // codacy-suppress nosql-injection - parameterized ORM call
+          paymentStatus: "paid",
+          paymentReference: data.reference,
+          paymentMethod: "paystack",
+        });
+        logger.info("WhatsApp order payment confirmed", {
+          orderId,
+          tenantId,
+          reference: data.reference,
+        });
+        try {
+          const customerPhone = data.metadata?.customerPhone || order.customer?.phone;
+          if (customerPhone) {
+            await messageTemplates.render("order_payment_confirmed", { orderId: order.id }, tenantId).then(async (text) => {
+              await require("../services/whatsapp.service").sendWhatsAppText(customerPhone, text, tenantId);
+            });
+          }
+          const deliveryLocation = data.metadata?.deliveryLocation;
+          if (deliveryLocation) {
+            await deliveryService.createFromWhatsApp(
+              tenantId,
+              order.id,
+              deliveryLocation,
+              order.customer ? `${order.customer.firstName || ""} ${order.customer.lastName || ""}`.trim() : "Customer",
+              customerPhone
+            );
+          }
+        } catch (notifyErr) {
+          logger.warn("Failed to send WhatsApp order confirmation or create delivery", {
+            error: notifyErr.message,
+            orderId,
+            tenantId,
           });
         }
       }

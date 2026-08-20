@@ -1,38 +1,17 @@
-import axios from "axios";
-import { useAuthStore } from "@/stores/auth";
+import { buildApiClient } from "./buildApiClient";
 import { useRouter } from "vue-router";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 
 const router = useRouter();
 
-const client = axios.create({
-  baseURL: `${API_BASE}/admin/plans`,
-  withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "x-xsrf-token",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-client.interceptors.request.use((config) => {
-  const authStore = useAuthStore();
-  if (authStore.currentTenant) {
-    config.headers["X-Tenant-Id"] = authStore.currentTenant.id;
-  }
-  return config;
-});
-
-client.interceptors.response.use(
-  (response) => response,
-  (error) => {
+const client = buildApiClient(`${API_BASE}/admin/plans`, {
+  onError: (error) => {
     if (error.response?.status === 401) {
       router.push("/login");
     }
-    return Promise.reject(error);
-  }
-);
+  },
+});
 
 export const listPlans = (params = {}) => client.get("/", { params });
 export const getPlan = (id) => client.get(`/${id}`);

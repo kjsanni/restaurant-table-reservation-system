@@ -1,37 +1,14 @@
-import axios from "axios";
-import { useAuthStore } from "@/stores/auth";
+import { buildApiClient } from "./buildApiClient";
 
-const apiClient = axios.create({
-  baseURL: "/api/v1/erpnext",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "x-xsrf-token",
-});
-
-apiClient.interceptors.request.use((config) => {
-  const authStore = useAuthStore();
-  if (authStore.token) {
-    config.headers.Authorization = `Bearer ${authStore.token}`;
-  }
-  if (authStore.currentTenant) {
-    config.headers["X-Tenant-Id"] = authStore.currentTenant.id;
-  }
-  return config;
-});
-
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
+const apiClient = buildApiClient("/api/v1/erpnext", {
+  withAuthHeader: true,
+  onError: (error) => {
     if (error.response) {
       const message = error.response.data?.message || "ERPNext request failed";
       console.error("[ERPNext API]", message);
     }
-    return Promise.reject(error);
-  }
-);
+  },
+});
 
 const erpnextAPI = {
   getHealth: () => apiClient.get("/health"),
@@ -132,7 +109,8 @@ const erpnextAPI = {
   getGhanaTaxSummary: (params = {}) =>
     apiClient.get("/accounting/ghana-tax-summary", { params }),
 
-  getGhanaPL: (params = {}) => apiClient.get("/reports/ghana/pl", { params }),
+  getGhanaPL: (params = {}) =>
+    apiClient.get("/reports/ghana/pl", { params }),
 
   getGhanaBalanceSheet: (params = {}) =>
     apiClient.get("/reports/ghana/balance-sheet", { params }),

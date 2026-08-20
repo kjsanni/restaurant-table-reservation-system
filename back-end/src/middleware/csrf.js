@@ -23,7 +23,7 @@ const setCsrfCookie = (req, res, next) => {
       console.warn("[CSRF] Development mode: sameSite set to lax. For production, use strict.");
     }
     res.cookie(CSRF_COOKIE_NAME, token, {
-      httpOnly: false,
+      httpOnly: false, // guardrails-disable-line - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
       secure: isProduction,
       sameSite,
       path: "/",

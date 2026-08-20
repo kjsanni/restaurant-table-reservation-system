@@ -1,22 +1,8 @@
-import axios from "axios";
-import { useAuthStore } from "@/stores/auth";
+import { buildApiClient } from "./buildApiClient";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api/v1";
 
-const client = axios.create({
-  baseURL: `${API_BASE}/admin/tenants`,
-  withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "x-xsrf-token",
-});
-
-client.interceptors.request.use((config) => {
-  const authStore = useAuthStore();
-  if (authStore.currentTenant) {
-    config.headers["X-Tenant-Id"] = authStore.currentTenant.id;
-  }
-  return config;
-});
+const client = buildApiClient(`${API_BASE}/admin/tenants`);
 
 export const listNotes = (tenantId) => client.get(`/${tenantId}/notes`);
 export const createNote = (tenantId, note) =>
