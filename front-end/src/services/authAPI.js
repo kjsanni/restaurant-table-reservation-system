@@ -24,6 +24,10 @@ const loginWithTOTP = async (tempToken, token) => {
   return await API.post("/auth/login-totp", { tempToken, token });
 };
 
+const loginWithWhatsAppOTP = async (tempToken, code) => {
+  return await API.post("/auth/login-whatsapp-otp", { tempToken, code });
+};
+
 const getMe = async () => {
   return await API.get("/auth/me");
 };
@@ -58,6 +62,14 @@ const createStaff = async (staffData) => {
 
 const updateStaff = async (id, updates) => {
   return await API.patch("/auth/staff/" + id, updates);
+};
+
+const updateProfile = async (updates) => {
+  return await API.patch("/auth/profile", updates);
+};
+
+const adminResetStaffPassword = async (userId) => {
+  return await API.post("/auth/staff/" + userId + "/reset-password", {});
 };
 
 const deleteStaff = async (id) => {
@@ -108,6 +120,7 @@ export default {
   register,
   login,
   loginWithTOTP,
+  loginWithWhatsAppOTP,
   getMe,
   getTenantCapabilities,
   logout,
@@ -118,6 +131,8 @@ export default {
   getUsers,
   createStaff,
   updateStaff,
+  updateProfile,
+  adminResetStaffPassword,
   deleteStaff,
   forgotPassword,
   resetPassword,

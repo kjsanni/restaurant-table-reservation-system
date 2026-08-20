@@ -69,7 +69,8 @@ export const buildApiClient = (baseURL, options = {}) => {
     throw new Error("Invalid baseURL: must be a string");
   }
   const isRelative = baseURL.startsWith("/");
-  const isAbsolute = baseURL.startsWith("http://") || baseURL.startsWith("https://");
+  const isAbsolute =
+    baseURL.startsWith("http://") || baseURL.startsWith("https://");
   if (!isRelative && !isAbsolute) {
     throw new Error("Invalid baseURL: must be a relative path or absolute URL");
   }

@@ -49,8 +49,10 @@ const credentials = ref({
   password: "",
 });
 const totpToken = ref("");
+const whatsappOtpToken = ref("");
 const submitting = ref(false);
 const pendingTOTP = ref(false);
+const pendingWhatsAppOTP = ref(false);
 const tempToken = ref("");
 const cfTurnstileToken = ref("");
 
@@ -101,6 +103,13 @@ const handleLogin = async () => {
       return;
     }
 
+    if (response?.pendingWhatsAppOTP) {
+      pendingWhatsAppOTP.value = true;
+      tempToken.value = response.tempToken || "";
+      submitting.value = false;
+      return;
+    }
+
     if (resolvedMode.value === "super-admin") {
       router.push("/super-admin/overview");
     } else if (resolvedMode.value === "tenant") {
@@ -141,6 +150,29 @@ const handleTOTPLogin = async () => {
     submitting.value = false;
   }
 };
+
+const handleWhatsAppOTPLogin = async () => {
+  if (submitting.value) return;
+  submitting.value = true;
+  validationErrors.value = null;
+  generalError.value = null;
+  try {
+    await authStore.loginWithWhatsAppOTP(
+      tempToken.value,
+      whatsappOtpToken.value
+    );
+    if (resolvedMode.value === "super-admin") {
+      router.push("/super-admin/overview");
+    } else {
+      router.push("/dashboard");
+    }
+  } catch (err) {
+    generalError.value = getApiErrorMessage(err);
+    validationErrors.value = getApiErrors(err);
+  } finally {
+    submitting.value = false;
+  }
+};
 </script>
 
 <template>
@@ -164,7 +196,10 @@ const handleTOTPLogin = async () => {
       <div class="form-card">
         <h2>{{ formTitle }}</h2>
         <p class="subtitle">{{ formSubtitle }}</p>
-        <form v-if="!pendingTOTP" @submit.prevent="handleLogin">
+        <form
+          v-if="!pendingTOTP && !pendingWhatsAppOTP"
+          @submit.prevent="handleLogin"
+        >
           <div class="field">
             <label for="email">Email</label>
             <input
@@ -214,6 +249,47 @@ const handleTOTPLogin = async () => {
           </div>
         </form>
 
+        <form
+          v-else-if="pendingWhatsAppOTP"
+          @submit.prevent="handleWhatsAppOTPLogin"
+        >
+          <div class="field">
+            <label for="whatsapp-otp">WhatsApp code</label>
+            <input
+              id="whatsapp-otp"
+              v-model="whatsappOtpToken"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              placeholder="123456"
+              maxlength="6"
+            />
+          </div>
+
+          <div v-if="generalError" class="alert alert-danger">
+            {{ generalError }}
+          </div>
+
+          <div class="actions">
+            <button
+              type="submit"
+              class="btn-primary"
+              :disabled="submitting || !whatsappOtpToken"
+            >
+              {{ submitting ? "Verifying..." : "Verify" }}
+            </button>
+            <button
+              type="button"
+              class="link"
+              @click="
+                pendingWhatsAppOTP = false;
+                tempToken = '';
+              "
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
         <form v-else @submit.prevent="handleTOTPLogin">
           <div class="field">
             <label for="totp">Authenticator code</label>

@@ -10,6 +10,7 @@ export interface User {
   permissions?: Record<string, boolean>;
   tenantId?: number;
   isSuperAdmin?: boolean;
+  locale?: string;
 }
 
 export interface TenantCapabilities {
@@ -92,6 +93,12 @@ export const useAuthStore = defineStore("auth", () => {
 
   const loginWithTOTP = async (tempToken: string, token: string) => {
     const response = await authAPI.loginWithTOTP(tempToken, token);
+    user.value = response.data.user;
+    return response.data;
+  };
+
+  const loginWithWhatsAppOTP = async (tempToken: string, code: string) => {
+    const response = await authAPI.loginWithWhatsAppOTP(tempToken, code);
     user.value = response.data.user;
     return response.data;
   };
@@ -280,6 +287,7 @@ export const useAuthStore = defineStore("auth", () => {
     isSuperAdmin,
     login,
     loginWithTOTP,
+    loginWithWhatsAppOTP,
     register,
     customerRegister,
     logout,

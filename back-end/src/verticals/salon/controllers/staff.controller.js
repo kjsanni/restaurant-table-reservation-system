@@ -53,6 +53,7 @@ const createSalonStaffHandler = async (req, res) => {
       name: payload.name || payload.username,
       role: "staff",
       password: hashedPassword,
+      phone: payload.phone || null,
     });
     const { password: _pw, ...safeStaff } = staff.toJSON ? staff.toJSON() : staff;
     res.status(201).json({ success: true, data: safeStaff });
@@ -71,6 +72,7 @@ const updateSalonStaffHandler = async (req, res) => {
       username: payload.username,
       email: payload.email,
       name: payload.name,
+      phone: payload.phone,
     });
     if (!staff) {
       return res.status(404).json({ success: false, message: "Staff not found" });

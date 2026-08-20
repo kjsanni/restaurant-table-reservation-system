@@ -161,7 +161,6 @@ const editReservation = async (reservationId, reservationDAO, payload, tenantId)
       status: 404,
       message: "Reservation not found!",
     };
-  validateTime(new Date(), payload.resDate, payload.resTime);
   const updated = await reservationDAO.updateReservation(reservationId, payload, tenantId);
   webhookService.dispatch("reservation.updated", updated, tenantId);
   return updated;

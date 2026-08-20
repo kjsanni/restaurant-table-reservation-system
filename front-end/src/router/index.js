@@ -457,6 +457,10 @@ const router = createRouter({
       ],
     },
     {
+      path: "/staff/add",
+      redirect: "/staff/manage",
+    },
+    {
       path: "/staff/manage",
       component: () => import("../layouts/TenantLayout.vue"),
       children: [
@@ -468,6 +472,21 @@ const router = createRouter({
             standalone: true,
             requiresAuth: true,
             requiresPermission: "manage_staff",
+          },
+        },
+      ],
+    },
+    {
+      path: "/staff/profile",
+      component: () => import("../layouts/TenantLayout.vue"),
+      children: [
+        {
+          path: "",
+          name: "staff-profile",
+          component: () => import("../views/StaffProfileView.vue"),
+          meta: {
+            standalone: true,
+            requiresAuth: true,
           },
         },
       ],

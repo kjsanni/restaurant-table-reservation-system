@@ -8,6 +8,9 @@ const emailService = require("../services/emailService");
 const platformAuditDAO = require("../tenant-platform/DAOs/platformAudit.dao");
 const db = require("../db/models");
 const logger = require("../utils/logger");
+const whatsappService = require("../services/whatsapp.service");
+const whatsappOtpService = require("../services/whatsapp-otp.service");
+const passwordResetDAO = require("../DAOs/passwordReset.dao");
 
 const registerCustomerHandler = async (req, res) => {
   try {
@@ -153,7 +156,6 @@ const registerHandler = async (req, res) => {
 const loginHandler = async (req, res) => {
   const payload = req.body;
   const ipAddress = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;
-  // authDAO implements both userDAO and refreshTokenDAO interfaces
   const result = await authService.loginUser(authDAO, payload, req.tenant?.id, authDAO, ipAddress);
 
   if (result.pendingTOTP) {
@@ -172,6 +174,45 @@ const loginHandler = async (req, res) => {
       message: "Please verify your email address before logging in.",
       email: result.user.email,
     });
+  }
+
+  const userRole = result.user.role;
+  const isStaff = userRole === "staff" || userRole === "manager";
+  const isSuperAdmin = !!result.user.isSuperAdmin;
+
+  if (isStaff && !isSuperAdmin) {
+    const fullUser = await authDAO.findUserById(result.user.id, req.tenant?.id);
+    const tenantWhatsAppEnabled = await whatsappService.isTenantWhatsAppEnabled(req.tenant?.id);
+
+    if (!fullUser.firstLoginCompleted) {
+      await authDAO.updateUser(fullUser.id, { firstLoginCompleted: true }, req.tenant?.id);
+    } else if (tenantWhatsAppEnabled && fullUser.phone) {
+      const otpCode = await whatsappOtpService.generateOTP(fullUser.id, fullUser.phone, req.tenant?.id);
+      try {
+        await whatsappService.sendLoginOTP(fullUser.phone, otpCode, req.tenant?.id);
+      } catch (err) {
+      logger.error("WhatsApp login OTP send failed", { error: err.message, userId: fullUser.id });
+      return res.status(502).json({
+        success: false,
+        message: "WhatsApp OTP delivery failed. Contact your administrator.",
+      });
+      }
+
+      const tempToken = authService.generateToken(fullUser.id, fullUser.role, fullUser.locale);
+      return res.status(200).json({
+        success: true,
+        pendingWhatsAppOTP: true,
+        message: "WhatsApp OTP verification required",
+        tempToken,
+        user: {
+          id: fullUser.id,
+          username: fullUser.username,
+          email: fullUser.email,
+          role: fullUser.role,
+          permissions: fullUser.permissions || {},
+        },
+      });
+    }
   }
 
   const isSecure = req.secure || false;
@@ -220,29 +261,75 @@ const loginTOTPHandler = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid TOTP token" });
     }
 
-    const newToken = authService.generateToken(user.id, user.role, user.locale);
-    const newRefreshToken = authService.generateRefreshToken();
+    await _issueAuthTokens(res, req, user);
 
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    await authDAO.createRefreshToken(user.id, newRefreshToken, expiresAt, req.tenant?.id);
-
-    const isSecure = req.secure || false;
-    const cookieBase = {
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: isSecure ? "lax" : false,
-      path: "/",
-    };
-
-    res.cookie("token", newToken, {
-      ...cookieBase,
-      maxAge: 30 * 60 * 1000,
+    return res.status(200).json({
+      success: true,
+      message: "Login successful!",
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions || {},
+        isSuperAdmin: !!user.isSuperAdmin,
+      },
     });
+  } catch {
+    return res.status(400).json({ success: false, message: "Invalid or expired temporary token" });
+  }
+};
 
-    res.cookie("refreshToken", newRefreshToken, {
-      ...cookieBase,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+const _issueAuthTokens = async (res, req, user) => {
+  const token = authService.generateToken(user.id, user.role, user.locale);
+  const refreshToken = authService.generateRefreshToken();
+
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  await authDAO.createRefreshToken(user.id, refreshToken, expiresAt, req.tenant?.id);
+
+  const isSecure = req.secure || false;
+  const cookieBase = {
+    httpOnly: true,
+    secure: isSecure,
+    sameSite: isSecure ? "lax" : false,
+    path: "/",
+  };
+
+  res.cookie("token", token, {
+    ...cookieBase,
+    maxAge: 30 * 60 * 1000,
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    ...cookieBase,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  });
+
+  return { token, refreshToken };
+};
+
+const loginWhatsAppOTPHandler = async (req, res) => {
+  const { tempToken, code } = req.body;
+  if (!tempToken || !code) {
+    return res.status(400).json({ success: false, message: "Temporary token and OTP code are required" });
+  }
+
+  try {
+    const decoded = authService.verifyToken(tempToken);
+    const user = await authDAO.findUserById(decoded.userId, req.tenant?.id);
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid OTP session" });
+    }
+
+    const verification = await whatsappOtpService.verifyOTP(user.id, String(code).trim());
+    if (!verification.valid) {
+      const message = verification.reason === "too_many_attempts"
+        ? "Too many failed attempts. Please request a new code."
+        : "Invalid OTP code";
+      return res.status(400).json({ success: false, message });
+    }
+
+    await _issueAuthTokens(res, req, user);
 
     return res.status(200).json({
       success: true,
@@ -571,6 +658,7 @@ const updateSettingsHandler = async (req, res) => {
     "password_policy",
     "whatsapp_ordering_enabled",
     "whatsapp_ordering_hours",
+    "whatsapp_message_templates",
   ];
   if (!allowedKeys.includes(key)) {
     return res.status(400).json({ success: false, message: "Unknown or protected setting key." });
@@ -651,6 +739,85 @@ const updateStaffHandler = async (req, res) => {
   });
 };
 
+const updateProfileHandler = async (req, res) => {
+  const allowed = ["phone", "password"];
+  const updates = {};
+  for (const key of allowed) {
+    if (req.body[key] !== undefined) {
+      updates[key] = req.body[key];
+    }
+  }
+
+  if (!Object.keys(updates).length) {
+    return res.status(400).json({ success: false, message: "No updatable fields provided" });
+  }
+
+  const user = await authDAO.updateStaffUser(req.user.id, updates, req.tenant?.id);
+
+  return res.status(200).json({
+    success: true,
+    message: "Profile updated successfully!",
+    user,
+  });
+};
+
+const adminResetStaffPasswordHandler = async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ success: false, message: "User ID is required" });
+  }
+
+  const targetUser = await authDAO.findUserById(Number(userId), req.tenant?.id);
+  if (!targetUser) {
+    return res.status(404).json({ success: false, message: "Staff member not found" });
+  }
+
+  if (targetUser.role !== "staff" && targetUser.role !== "manager") {
+    return res.status(400).json({ success: false, message: "Cannot reset password for this role" });
+  }
+
+  await passwordResetDAO.invalidateUserTokens(targetUser.id);
+
+  const { raw, _expiresAt } = await passwordResetDAO.create({
+    userId: targetUser.id,
+    ipAddress: req.ip || req.connection?.remoteAddress || null,
+    userAgent: req.get("user-agent") || null,
+  });
+
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${raw}`;
+
+  try {
+    await emailService.sendEmail({
+      to: targetUser.email,
+      subject: "Your password has been reset by an admin",
+      html: `<p>Hi ${targetUser.username},</p>
+             <p>An administrator has initiated a password reset for your account.</p>
+             <p>Click the link below to set a new password. This link expires in 1 hour.</p>
+             <p><a href="${resetUrl}">Reset Password</a></p>
+             <p>If you didn't request this, please contact support.</p>`,
+    });
+  } catch (err) {
+    logger.error("Admin password reset email failed", { error: err.message, userId: targetUser.id });
+    return res.status(500).json({ success: false, message: "Failed to send reset email" });
+  }
+
+  await platformAuditDAO.log(
+    req.user.id,
+    "auth.admin_password_reset",
+    "user",
+    targetUser.id,
+    req.tenant?.id,
+    { targetUserId: targetUser.id, targetEmail: targetUser.email },
+    req.ip
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: "Password reset email sent to staff member",
+  });
+};
+
 const deleteStaffHandler = async (req, res) => {
   const { id } = req.params;
 
@@ -689,6 +856,7 @@ module.exports = {
   registerCustomerHandler,
   loginHandler,
   loginTOTPHandler,
+  loginWhatsAppOTPHandler,
   getMeHandler,
   getTenantCapabilitiesHandler,
   setupTenantHandler,
@@ -703,4 +871,6 @@ module.exports = {
   getAllUsersHandler,
   updateStaffHandler,
   deleteStaffHandler,
+  updateProfileHandler,
+  adminResetStaffPasswordHandler,
 };
