@@ -236,6 +236,11 @@ const checkUsageLimit = async (tenantId, resource) => {
       };
     }
   }
+
+  if (resource === "events" || resource === "bookings" || resource === "guests" || resource === "qr_codes") {
+    const { checkEventUsageLimit } = require("./planLimits.service");
+    await checkEventUsageLimit(tenantId, resource);
+  }
 };
 
 module.exports = {

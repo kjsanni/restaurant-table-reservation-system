@@ -1,9 +1,11 @@
 "use strict";
 
 const eventBookingService = require("../services/eventBooking.service");
+const { checkUsageLimit } = require("../../../tenant-platform/services/tenantSubscription.service");
 
 const createBookingHandler = async (req, res) => {
   try {
+    await checkUsageLimit(req.tenant?.id, "bookings");
     const booking = await eventBookingService.createBooking(
       req.body,
       req.tenant?.id,
@@ -11,7 +13,8 @@ const createBookingHandler = async (req, res) => {
     );
     res.status(201).json({ success: true, item: booking });
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
+    const status = err.status || 400;
+    res.status(status).json({ success: false, message: err.message });
   }
 };
 

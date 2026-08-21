@@ -8,10 +8,23 @@ jest.mock("../verticals/event/services/ticketType.service");
 jest.mock("../verticals/event/services/qrCode.service");
 jest.mock("../verticals/event/services/eventBooking.service");
 jest.mock("../tenant-platform/services/paystack.service");
+jest.mock("../tenant-platform/services/tenantSubscription.service");
 
 jest.mock("../db/models", () => ({
   tenant: {
     findByPk: jest.fn(),
+  },
+  event: {
+    count: jest.fn().mockResolvedValue(0),
+  },
+  eventBooking: {
+    count: jest.fn().mockResolvedValue(0),
+  },
+  reservation: {
+    count: jest.fn().mockResolvedValue(0),
+  },
+  table: {
+    count: jest.fn().mockResolvedValue(0),
   },
 }));
 
@@ -22,6 +35,7 @@ const qrCodeService = require("../verticals/event/services/qrCode.service");
 const eventBookingService = require("../verticals/event/services/eventBooking.service");
 const paystackService = require("../tenant-platform/services/paystack.service");
 const dbModels = require("../db/models");
+const tenantSubscriptionService = require("../tenant-platform/services/tenantSubscription.service");
 
 const eventController = require("../verticals/event/controllers/event.controller");
 const guestListController = require("../verticals/event/controllers/guestList.controller");
@@ -33,7 +47,8 @@ const eventPaymentController = require("../verticals/event/controllers/eventPaym
 describe("Event Controllers", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    dbModels.tenant.findByPk.mockResolvedValue({ id: 1, slug: "test-tenant" });
+    dbModels.tenant.findByPk.mockResolvedValue({ id: 1, slug: "test-tenant", plan: "starter" });
+    jest.spyOn(tenantSubscriptionService, "checkUsageLimit").mockResolvedValue(undefined);
   });
 
   describe("event.controller", () => {
@@ -65,7 +80,7 @@ describe("Event Controllers", () => {
 
     it("createEventHandler creates event", async () => {
       eventService.createEvent.mockResolvedValue({ id: 1, name: "New Event" });
-      const req = { tenant: { id: 1 }, user: { id: 1 }, body: { name: "New Event" } };
+      const req = { tenant: { id: 1, plan: "starter" }, user: { id: 1 }, body: { name: "New Event" } };
       const res = createRes();
       await eventController.createEventHandler(req, res);
       expect(res.status).toHaveBeenCalledWith(201);

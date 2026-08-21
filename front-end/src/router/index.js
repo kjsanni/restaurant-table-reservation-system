@@ -1815,6 +1815,12 @@ const customerPortalRoutes = [
     meta: { requiresAuth: true, standalone: true },
   },
   {
+    path: "/portal/unified",
+    name: "customer-unified",
+    component: () => import("../views/customer/CustomerPortalUnifiedView.vue"),
+    meta: { requiresAuth: true, standalone: true },
+  },
+  {
     path: "/portal/profile",
     name: "customer-profile",
     component: () => import("../views/customer/CustomerPortalProfileView.vue"),
@@ -1988,6 +1994,26 @@ const customerPortalRoutes = [
       requiresAuth: true,
       requiresVertical: "event",
       requiresPermission: "manage_events",
+    },
+  },
+  {
+    path: "/events/templates",
+    name: "event-templates",
+    component: () => import("../views/event/EventTemplateManagementView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "manage_events",
+    },
+  },
+  {
+    path: "/events/:eventId/analytics",
+    name: "event-analytics",
+    component: () => import("../views/event/EventAnalyticsView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresVertical: "event",
+      requiresPermission: "view_events",
     },
   },
 ];

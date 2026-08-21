@@ -12,27 +12,27 @@ const { status, pendingCount, setStatus, setSyncError } = useOnlineStatus();
     <span class="offline-text">
       {{
         t(
-          "salon.offlineBanner",
+          "common.offlineBanner",
           "Offline — changes will sync when you reconnect"
         )
       }}
     </span>
     <span v-if="pendingCount > 0" class="offline-pending">
-      {{ pendingCount }} pending
+      {{ t("common.pendingCount", "{count} pending", { count: pendingCount }) }}
     </span>
   </div>
 
   <div v-else-if="status === 'syncing'" class="offline-banner syncing">
     <span class="offline-spinner"></span>
     <span class="offline-text">
-      {{ t("salon.syncingBanner", "Syncing...") }}
+      {{ t("common.syncingBanner", "Syncing...") }}
     </span>
   </div>
 
   <div v-else-if="status === 'sync-failed'" class="offline-banner sync-failed">
     <span class="offline-icon">&#x2716;</span>
     <span class="offline-text">
-      {{ t("salon.syncFailedBanner", "Sync failed") }}
+      {{ t("common.syncFailedBanner", "Sync failed") }}
     </span>
     <button
       class="offline-retry"
@@ -41,7 +41,7 @@ const { status, pendingCount, setStatus, setSyncError } = useOnlineStatus();
         setSyncError(null);
       "
     >
-      {{ t("salon.retry", "Retry") }}
+      {{ t("common.retry", "Retry") }}
     </button>
   </div>
 </template>

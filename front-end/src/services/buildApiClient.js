@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth";
+import { attachOfflineInterceptor } from "@/utils/offlineInterceptor";
 
 let refreshing = false;
 const refreshQueue = [];
@@ -127,6 +128,8 @@ export const buildApiClient = (baseURL, options = {}) => {
       }
     );
   }
+
+  attachOfflineInterceptor(client);
 
   return client;
 };

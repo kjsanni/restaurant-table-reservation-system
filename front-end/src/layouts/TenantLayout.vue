@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth";
 import { tenantNavItems } from "@/config/sidebarItems";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 import TenantSwitcher from "@/components/TenantSwitcher.vue";
+import OfflineBanner from "@/components/OfflineBanner.vue";
 import { useOnlineStatus } from "@/composables/useOnlineStatus";
 import { useAnimations } from "@/composables/useAnimations";
 import { useAdminLayout } from "@/composables/useAdminLayout";
@@ -185,19 +186,23 @@ watch(
         </div>
         <div class="tl-topbar-right">
           <span v-if="status === 'offline'" class="sync-indicator offline">
-            Offline
+            {{ t("common.offlineBanner", "Offline") }}
           </span>
           <span v-else-if="status === 'syncing'" class="sync-indicator syncing">
-            Syncing...
+            {{ t("common.syncingBanner", "Syncing...") }}
           </span>
           <span
             v-else-if="status === 'sync-failed'"
             class="sync-indicator sync-failed"
           >
-            Sync failed
+            {{ t("common.syncFailedBanner", "Sync failed") }}
           </span>
           <span v-else-if="pendingCount > 0" class="sync-indicator pending">
-            {{ pendingCount }} pending
+            {{
+              t("common.pendingCount", "{count} pending", {
+                count: pendingCount,
+              })
+            }}
           </span>
           <LocaleSwitcher />
           <TenantSwitcher
@@ -211,6 +216,7 @@ watch(
       </header>
 
       <main id="main-content" class="tl-content">
+        <OfflineBanner />
         <Transition
           name="page-transition"
           @before-enter="beforeEnter"

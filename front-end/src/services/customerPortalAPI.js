@@ -87,6 +87,22 @@ class CustomerPortalAPI {
       data
     );
   }
+
+  getUnifiedProfile() {
+    return API.get("/customer-portal/profile/unified");
+  }
+
+  getCrossVerticalHistory() {
+    return API.get("/customer-portal/history");
+  }
+
+  addLoyaltyPoints(points, source) {
+    return API.post("/customer-portal/loyalty/add", { points, source });
+  }
+
+  redeemLoyaltyPoints(points) {
+    return API.post("/customer-portal/loyalty/redeem", { points });
+  }
 }
 
 function buildQueryString(params = {}) {

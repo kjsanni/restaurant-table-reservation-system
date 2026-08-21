@@ -14,4 +14,14 @@ router
   .get(tryCatchHandler(publicController.getChangelogHandler))
   .all(httpMethodError);
 
+router
+  .route("/events")
+  .get(tryCatchHandler(publicController.listPublicEventsHandler))
+  .all(httpMethodError);
+
+router
+  .route("/events/:id")
+  .get(tryCatchHandler(publicController.getPublicEventHandler))
+  .all(httpMethodError);
+
 module.exports = router;

@@ -11,6 +11,12 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: "cascade",
         onUpdate: "cascade",
       });
+      if (models.eventBooking) {
+        Customer.hasMany(models.eventBooking, { foreignKey: "customerId", onDelete: "SET NULL" });
+      }
+      if (models.loyaltyTransaction) {
+        Customer.hasMany(models.loyaltyTransaction, { foreignKey: "customerId", onDelete: "CASCADE" });
+      }
     }
   }
   Customer.init(

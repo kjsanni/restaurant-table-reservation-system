@@ -24,6 +24,14 @@
         <div class="card-label">Avg Reservations Usage</div>
         <div class="card-value">{{ summary.avgReservationsUsage }}%</div>
       </div>
+      <div class="card">
+        <div class="card-label">Avg Events Usage</div>
+        <div class="card-value">{{ summary.avgEventsUsage }}%</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Avg Bookings Usage</div>
+        <div class="card-value">{{ summary.avgBookingsUsage }}%</div>
+      </div>
     </div>
 
     <div class="filters">
@@ -64,6 +72,10 @@
             <th>Tables Limit</th>
             <th>Reservations Used</th>
             <th>Reservations Limit</th>
+            <th>Events Used</th>
+            <th>Events Limit</th>
+            <th>Bookings Used</th>
+            <th>Bookings Limit</th>
             <th>Warnings</th>
           </tr>
         </thead>
@@ -95,6 +107,32 @@
               </span>
             </td>
             <td>{{ item.reservationsLimit || "—" }}</td>
+            <td>
+              <span
+                :class="{
+                  warning:
+                    getUsagePercent(item.eventsUsed, item.eventsLimit) >= 80,
+                  danger:
+                    getUsagePercent(item.eventsUsed, item.eventsLimit) >= 100,
+                }"
+              >
+                {{ item.eventsUsed || 0 }}
+              </span>
+            </td>
+            <td>{{ item.eventsLimit || "—" }}</td>
+            <td>
+              <span
+                :class="{
+                  warning:
+                    getUsagePercent(item.bookingsUsed, item.bookingsLimit) >= 80,
+                  danger:
+                    getUsagePercent(item.bookingsUsed, item.bookingsLimit) >= 100,
+                }"
+              >
+                {{ item.bookingsUsed || 0 }}
+              </span>
+            </td>
+            <td>{{ item.bookingsLimit || "—" }}</td>
             <td>
               <div class="usage-bars">
                 <div class="usage-bar">
@@ -148,6 +186,48 @@
                     )
                   }}</span>
                 </div>
+                <div class="usage-bar">
+                  <div
+                    class="usage-bar-fill"
+                    :class="
+                      getBarClass(
+                        getUsagePercent(item.eventsUsed, item.eventsLimit)
+                      )
+                    "
+                    :style="{
+                      width:
+                        clampPercent(
+                          getUsagePercent(item.eventsUsed, item.eventsLimit)
+                        ) + '%',
+                    }"
+                  ></div>
+                  <span class="usage-bar-label">{{
+                    formatPercent(
+                      getUsagePercent(item.eventsUsed, item.eventsLimit)
+                    )
+                  }}</span>
+                </div>
+                <div class="usage-bar">
+                  <div
+                    class="usage-bar-fill"
+                    :class="
+                      getBarClass(
+                        getUsagePercent(item.bookingsUsed, item.bookingsLimit)
+                      )
+                    "
+                    :style="{
+                      width:
+                        clampPercent(
+                          getUsagePercent(item.bookingsUsed, item.bookingsLimit)
+                        ) + '%',
+                    }"
+                  ></div>
+                  <span class="usage-bar-label">{{
+                    formatPercent(
+                      getUsagePercent(item.bookingsUsed, item.bookingsLimit)
+                    )
+                  }}</span>
+                </div>
               </div>
             </td>
           </tr>
@@ -189,7 +269,9 @@ const summary = computed(() => {
         u.reservationsUsed,
         u.reservationsLimit
       );
-      return tablesPct >= 80 || reservationsPct >= 80;
+      const eventsPct = getUsagePercent(u.eventsUsed, u.eventsLimit);
+      const bookingsPct = getUsagePercent(u.bookingsUsed, u.bookingsLimit);
+      return tablesPct >= 80 || reservationsPct >= 80 || eventsPct >= 80 || bookingsPct >= 80;
     }).length,
     avgTablesUsage: data.length
       ? Math.round(
@@ -204,6 +286,22 @@ const summary = computed(() => {
           data.reduce(
             (sum, u) =>
               sum + getUsagePercent(u.reservationsUsed, u.reservationsLimit),
+            0
+          ) / data.length
+        )
+      : 0,
+    avgEventsUsage: data.length
+      ? Math.round(
+          data.reduce(
+            (sum, u) => sum + getUsagePercent(u.eventsUsed, u.eventsLimit),
+            0
+          ) / data.length
+        )
+      : 0,
+    avgBookingsUsage: data.length
+      ? Math.round(
+          data.reduce(
+            (sum, u) => sum + getUsagePercent(u.bookingsUsed, u.bookingsLimit),
             0
           ) / data.length
         )
@@ -224,8 +322,12 @@ const filteredUsage = computed(() => {
       u.reservationsUsed,
       u.reservationsLimit
     );
-    const isWarning = tablesPct >= 80 || reservationsPct >= 80;
-    const isCritical = tablesPct >= 100 || reservationsPct >= 100;
+    const eventsPct = getUsagePercent(u.eventsUsed, u.eventsLimit);
+    const bookingsPct = getUsagePercent(u.bookingsUsed, u.bookingsLimit);
+    const isWarning =
+      tablesPct >= 80 || reservationsPct >= 80 || eventsPct >= 80 || bookingsPct >= 80;
+    const isCritical =
+      tablesPct >= 100 || reservationsPct >= 100 || eventsPct >= 100 || bookingsPct >= 100;
     const matchesWarning =
       !filterWarning.value ||
       (filterWarning.value === "warning" && isWarning) ||
