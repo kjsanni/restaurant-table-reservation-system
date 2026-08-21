@@ -7,18 +7,12 @@ services:
       dockerfile: back-end/Dockerfile
     ports:
       - "127.0.0.1:8000:8000"
+    env_file:
+      - ./back-end/.env
     environment:
       NODE_ENV: production
       DB_HOST: localhost
-      DB_PORT: 3306
-      DB_NAME: ${DB_NAME:-rtrs_prod}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
       REDIS_HOST: localhost
-      REDIS_PORT: 6379
-      JWT_SECRET: ${JWT_SECRET}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
-      PORT: 8000
     volumes:
       - ./back-end/uploads:/app/uploads
     tmpfs:
