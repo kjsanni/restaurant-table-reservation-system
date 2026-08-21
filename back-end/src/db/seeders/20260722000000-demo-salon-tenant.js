@@ -24,7 +24,7 @@ module.exports = {
     };
 
     await queryInterface.sequelize.query(
-      `UPDATE tenants SET businessVertical = 'salon', updatedAt = :now WHERE id = :tenantId`,
+      `UPDATE tenants SET businessVertical = 'salon', serviceModes = '["appointments","walkins"]', updatedAt = :now WHERE id = :tenantId`,
       { replacements: { now: formatDateTime(now), tenantId } }
     );
 
