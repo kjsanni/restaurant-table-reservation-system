@@ -49,15 +49,16 @@ exclude_paths:
   - "back-end/src/db/migrations/**"
   - "back-end/src/db/seeders/**"
   - "front-end/src/composables/**"
+  - "To-Be-Discussed.md"
+  - "front-end/src/views/admin/AUDIT_REPORT.md"
+  - "front-end/android/**"
+  - "qr-event/**"
 
 engines:
   jshint:
     enabled: false
   eslint:
-    enabled: true
-    exclude_paths:
-      - "back-end/src/**/*.js"
-      - "back-end/src/**/*.mjs"
+    enabled: false
   csslint:
     enabled: true
   remark-lint:

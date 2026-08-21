@@ -23,6 +23,7 @@ Generalized from salon-only to all verticals (restaurant, salon, event). All 4 s
 | 6 | **UX during offline** | Top banner: amber "Offline — changes will sync when you reconnect". Sync in progress: spinner + "Syncing..." banner. Sync failed: red banner with retry button. Mutations: **allowed offline** → queued as draft → auto-submitted on reconnect. Queue count shown in banner. |
 
 ### STOP Conditions
+
 - Do NOT store payment history or full client PII offline
 - Do NOT allow offline edits that bypass business rules (capacity, staff availability)
 - Do NOT implement if browser support matrix is reduced below Chrome/Edge/Safari
