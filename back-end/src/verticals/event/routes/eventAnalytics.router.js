@@ -2,10 +2,10 @@
 
 const express = require("express");
 const router = express.Router();
+const { tenantLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
+router.use(tenantLimiter);
 const tryCatchHandler = require("../../../middleware/tryCatch");
 const { protect, requirePermission } = require("../../../middleware/auth");
-const { logAction } = require("../../../middleware");
-const { tenantLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
 const eventAnalyticsController = require("../controllers/eventAnalytics.controller");
 
 router

@@ -3,9 +3,6 @@ import { syncEngine, type PendingMutation } from "./syncEngine";
 
 export type OnlineStatus = "online" | "offline" | "syncing" | "sync-failed";
 
-const ONLINE_EVENT = "online";
-const OFFLINE_EVENT = "offline";
-
 export const offlineService = {
   async isOnline(): Promise<boolean> {
     if (typeof window === "undefined") return true;

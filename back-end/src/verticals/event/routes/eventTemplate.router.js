@@ -2,10 +2,11 @@
 
 const express = require("express");
 const router = express.Router();
+const { tenantLimiter, tenantWriteLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
+router.use(tenantLimiter);
 const tryCatchHandler = require("../../../middleware/tryCatch");
 const { protect, requirePermission } = require("../../../middleware/auth");
-const { logAction, validateCsrfToken } = require("../../../middleware");
-const { tenantLimiter, tenantWriteLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
+const { validateCsrfToken } = require("../../../middleware");
 const eventTemplateController = require("../controllers/eventTemplate.controller");
 
 router
