@@ -3,6 +3,7 @@ import { computed, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { VaSidebarItem } from "vuestic-ui";
+import gsap from "gsap";
 import { useAuthStore } from "@/stores/auth";
 import { tenantNavItems } from "@/config/sidebarItems";
 import LocaleSwitcher from "@/components/LocaleSwitcher.vue";

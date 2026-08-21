@@ -3,6 +3,7 @@ import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { VaSidebarItem } from "vuestic-ui";
+import gsap from "gsap";
 import { useAuthStore } from "@/stores/auth";
 import {
   superAdminSidebarNavItems,
