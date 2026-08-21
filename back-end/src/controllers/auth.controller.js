@@ -564,12 +564,12 @@ const refreshTokenHandler = async (req, res) => {
   }
   const result = await authService.refreshAccessToken(authDAO, refreshToken, req.tenant?.id);
 
-  const isProd = process.env.NODE_ENV === "production";
+  const isSecure = req.secure || false;
   const cookieBase = {
     httpOnly: true,
-    secure: isProd,
+    secure: isSecure,
     path: "/",
-    sameSite: isProd ? "lax" : false,
+    sameSite: isSecure ? "lax" : false,
   };
 
   res.cookie("token", result.token, {

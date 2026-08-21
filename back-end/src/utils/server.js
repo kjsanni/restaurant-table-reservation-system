@@ -237,11 +237,11 @@ const createServer = () => {
 
   app.get("/api/v1/csrf-token", (req, res) => {
     const token = req.cookies?.[CSRF_COOKIE_NAME] || generateCsrfToken();
+    const isSecure = req.secure || (req.headers["x-forwarded-proto"] === "https");
     if (!req.cookies?.[CSRF_COOKIE_NAME]) {
       res.cookie(CSRF_COOKIE_NAME, token, {
-        // nosemgrep: javascript.lang.security.audit.cookie-http-only-disabled - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
-        httpOnly: false, // guardrails-disable-line - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
-        secure: process.env.NODE_ENV === "production",
+        httpOnly: false,
+        secure: isSecure,
         sameSite: process.env.NODE_ENV === "production" ? "lax" : false,
         path: "/",
         maxAge: 24 * 60 * 60 * 1000,

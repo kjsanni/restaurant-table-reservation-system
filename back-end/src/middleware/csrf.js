@@ -13,6 +13,7 @@ const setCsrfCookie = (req, res, next) => {
     const token = generateCsrfToken();
     const isProduction = process.env.NODE_ENV === "production";
     const isTest = process.env.NODE_ENV === "test";
+    const isSecure = req.secure || (req.headers["x-forwarded-proto"] === "https");
     let sameSite;
     if (isTest) {
       sameSite = false;
@@ -23,8 +24,8 @@ const setCsrfCookie = (req, res, next) => {
       console.warn("[CSRF] Development mode: sameSite set to lax. For production, use strict.");
     }
     res.cookie(CSRF_COOKIE_NAME, token, {
-      httpOnly: false, // guardrails-disable-line - XSRF-TOKEN cookie must be readable by frontend JS for double-submit CSRF pattern
-      secure: isProduction,
+      httpOnly: false,
+      secure: isSecure,
       sameSite,
       path: "/",
       maxAge: 24 * 60 * 60 * 1000,
