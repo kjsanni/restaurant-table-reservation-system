@@ -49,9 +49,8 @@ const validateCsrfToken = (req, res, next) => {
 
   const clientToken = req.headers[CSRF_HEADER_NAME.toLowerCase()];
   const cookieToken = req.cookies?.[CSRF_COOKIE_NAME];
-  const sessionToken = req.session?.csrfToken;
 
-  if (!clientToken || !cookieToken || !sessionToken) {
+  if (!clientToken || !cookieToken) {
     return res.status(403).json({
       success: false,
       message: "Invalid CSRF token.",
@@ -69,17 +68,6 @@ const validateCsrfToken = (req, res, next) => {
   const cookieBuf = Buffer.from(cookieToken, "utf8");
 
   if (!crypto.timingSafeEqual(clientBuf, cookieBuf)) {
-    return res.status(403).json({
-      success: false,
-      message: "Invalid CSRF token.",
-    });
-  }
-
-  const sessionHash = crypto.createHash("sha256").update(clientToken, "utf8").digest("hex");
-  const sessionBuf = Buffer.from(sessionHash, "utf8");
-  const expectedBuf = Buffer.from(sessionToken, "utf8");
-
-  if (!crypto.timingSafeEqual(sessionBuf, expectedBuf)) {
     return res.status(403).json({
       success: false,
       message: "Invalid CSRF token.",
