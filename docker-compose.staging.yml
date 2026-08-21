@@ -15,8 +15,6 @@ services:
       REDIS_HOST: localhost
     volumes:
       - ./back-end/uploads:/app/uploads
-    tmpfs:
-      - /app/logs
     restart: unless-stopped
 
   frontend:
