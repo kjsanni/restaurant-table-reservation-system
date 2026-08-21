@@ -43,7 +43,10 @@ module.exports = {
         try {
           await queryInterface.removeIndex(table, indexName);
         } catch (err) {
-          if (!err.message.includes("check that column/key exists")) {
+          if (
+            !err.message.includes("check that column/key exists") &&
+            !err.message.includes("check that it exists")
+          ) {
             throw err;
           }
         }
