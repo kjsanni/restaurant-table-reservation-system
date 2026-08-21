@@ -21,13 +21,15 @@ const checkOverageAlerts = async () => {
       if (typeof metric !== "string" || !metric) continue;
       if (!usage.warnings[metric] && !(usage.percentages[metric] >= 100)) continue;
 
-      const existing = await db.alertRule.findOne({ // nosemgrep: javascript.sequelize.security.audit.sequelize-injection-express.express-sequelize-injection
+      const existingRows = await db.alertRule.findAll({
         where: {
           metric,
           entityId: tenant.id,
           createdAt: { [db.Sequelize.Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) },
         },
+        limit: 1,
       });
+      const existing = existingRows[0] || null;
 
       if (existing) continue;
 
