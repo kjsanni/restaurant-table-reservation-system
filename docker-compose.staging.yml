@@ -5,8 +5,7 @@ services:
     build:
       context: .
       dockerfile: back-end/Dockerfile
-    ports:
-      - "127.0.0.1:8000:8000"
+    network_mode: "host"
     env_file:
       - ./back-end/.env
     environment:
@@ -21,8 +20,7 @@ services:
     build:
       context: .
       dockerfile: front-end/Dockerfile
-    ports:
-      - "127.0.0.1:8080:8080"
+    network_mode: "host"
     environment:
       VITE_API_URL: /api/v1
     depends_on:
