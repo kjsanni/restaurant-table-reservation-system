@@ -18,7 +18,7 @@ module.exports = {
       { tenantId: 1, name: "Drinks", description: "Hot and cold beverages", sortOrder: 2 },
     ];
 
-    await queryInterface.bulkInsert("MenuCategories", categories, {});
+    await queryInterface.bulkInsert("MenuCategories", categories, { ignoreDuplicates: true });
 
     const [cats] = await queryInterface.sequelize.query(
       `SELECT id, name FROM MenuCategories WHERE tenantId = 1`
@@ -34,7 +34,7 @@ module.exports = {
       { tenantId: 1, categoryId: catMap["Drinks"], name: "Bottled Water", description: "500ml", price: 8.0, isAvailable: true, sortOrder: 1 },
     ];
 
-    await queryInterface.bulkInsert("MenuItems", items, {});
+    await queryInterface.bulkInsert("MenuItems", items, { ignoreDuplicates: true });
 
     const [menuItems] = await queryInterface.sequelize.query(
       `SELECT id, name FROM MenuItems WHERE tenantId = 1`
@@ -50,7 +50,7 @@ module.exports = {
       { menuItemId: itemMap["Fresh Orange Juice"], name: "Extra Ice", priceAdjustment: 0 },
     ];
 
-    await queryInterface.bulkInsert("MenuItemOptions", options, {});
+    await queryInterface.bulkInsert("MenuItemOptions", options, { ignoreDuplicates: true });
   },
 
   down: async (queryInterface) => {
