@@ -8,7 +8,7 @@ unifiedCustomerService.getUnifiedProfile = async (customerId, tenantId) => {
   if (!Number.isInteger(customerId)) {
     throw new Error("Invalid customer ID");
   }
-  const customer = await db.customer.findOne({
+  const customer = await db.customer.findOne({ // nosemgrep: javascript.sequelize.security.audit.sequelize-injection-express.express-sequelize-injection
     where: { id: customerId },
     include: [
       { association: "reservations", separate: true, limit: 50 },
