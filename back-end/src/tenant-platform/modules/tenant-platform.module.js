@@ -96,6 +96,7 @@ const provisioningRoutes = require("../routes/provisioning.router");
 const migrationRoutes = require("../routes/migration.router");
 const debugRoutes = require("../routes/debug.router");
 const breakGlassRoutes = require("../routes/breakGlass.router");
+const unifiedCustomerRoutes = require("../../routes/unifiedCustomer.router");
 
 const erpnextRoutes = require("../routes/erpnext.router");
 const tenantPlatformModule = {
@@ -196,6 +197,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/public/dsar-request", router: publicDsarRoutes },
     { path: "/api/v1/public/tenants", router: publicTenantRoutes },
     { path: "/api/v1/webhooks", router: webhookEndpointRoutes, middleware: [webhookLimiter] },
+    { path: "/api/v1/customer-portal", router: unifiedCustomerRoutes, middleware: [logAction, validateCsrfToken, tenantLimiter] },
   ],
 };
 

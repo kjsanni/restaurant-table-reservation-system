@@ -29,22 +29,50 @@ usageDAO.getTenantUsage = async (tenantId) => {
   const tablesPercent = limits.maxTables === Infinity ? 0 : Math.round((tablesCount / limits.maxTables) * 100);
   const reservationsPercent = limits.maxReservationsPerMonth === Infinity ? 0 : Math.round((reservationsCount / limits.maxReservationsPerMonth) * 100);
 
+  const eventsCount = await db.event.count({ where: { tenantId } });
+  const bookingsCount = await db.eventBooking.count({
+    where: {
+      tenantId,
+      createdAt: { [db.Sequelize.Op.gte]: startOfMonth },
+    },
+  });
+
+  const { getEventLimits } = require("../services/planLimits.service");
+  const eventLimits = getEventLimits(plan);
+  const eventsPercent = eventLimits.maxEvents === Infinity ? 0 : Math.round((eventsCount / eventLimits.maxEvents) * 100);
+  const bookingsPercent = eventLimits.maxBookingsPerMonth === Infinity ? 0 : Math.round((bookingsCount / eventLimits.maxBookingsPerMonth) * 100);
+
   return {
     tenantId,
     tenantName: tenant.name,
     plan: tenant.plan,
     limits,
+    eventLimits,
     usage: {
       tables: tablesCount,
       reservationsThisMonth: reservationsCount,
+      events: eventsCount,
+      bookingsThisMonth: bookingsCount,
     },
+    tablesUsed: tablesCount,
+    tablesLimit: limits.maxTables,
+    reservationsUsed: reservationsCount,
+    reservationsLimit: limits.maxReservationsPerMonth,
+    eventsUsed: eventsCount,
+    eventsLimit: eventLimits.maxEvents,
+    bookingsUsed: bookingsCount,
+    bookingsLimit: eventLimits.maxBookingsPerMonth,
     percentages: {
       tables: tablesPercent,
       reservations: reservationsPercent,
+      events: eventsPercent,
+      bookingsThisMonth: bookingsPercent,
     },
     warnings: {
       tables: tablesPercent >= 80,
       reservations: reservationsPercent >= 80,
+      events: eventsPercent >= 80,
+      bookingsThisMonth: bookingsPercent >= 80,
     },
   };
 };

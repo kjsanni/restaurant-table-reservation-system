@@ -1,6 +1,7 @@
 "use strict";
 
 const eventService = require("../services/event.service");
+const { checkUsageLimit } = require("../../../tenant-platform/services/tenantSubscription.service");
 
 const getEventsHandler = async (req, res) => {
   const result = await eventService.getEvents(req.tenant?.id, req.query);
@@ -16,8 +17,14 @@ const getEventHandler = async (req, res) => {
 };
 
 const createEventHandler = async (req, res) => {
-  const event = await eventService.createEvent(req.body, req.tenant?.id, req.user?.id);
-  res.status(201).json({ success: true, item: event });
+  try {
+    await checkUsageLimit(req.tenant?.id, "events");
+    const event = await eventService.createEvent(req.body, req.tenant?.id, req.user?.id);
+    res.status(201).json({ success: true, item: event });
+  } catch (err) {
+    const status = err.status || 400;
+    res.status(status).json({ success: false, message: err.message });
+  }
 };
 
 const updateEventHandler = async (req, res) => {

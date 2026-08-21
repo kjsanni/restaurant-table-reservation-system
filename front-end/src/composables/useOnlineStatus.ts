@@ -1,4 +1,5 @@
 import { ref, onMounted, onUnmounted } from "vue";
+import { offlineService } from "@/utils/offlineService";
 
 export type ConnectionStatus = "online" | "offline" | "syncing" | "sync-failed";
 
@@ -19,19 +20,42 @@ export const useOnlineStatus = () => {
     syncError.value = error;
   };
 
-  const handleOnline = () => {
+  const updatePendingCount = async () => {
+    const mutations = await offlineService.getPendingMutations();
+    pendingCount.value = mutations.length;
+  };
+
+  const handleOnline = async () => {
     setStatus("syncing");
     setSyncError(null);
+    await updatePendingCount();
+
+    try {
+      const result = await offlineService.replayMutations(async () => {
+        return { success: true };
+      });
+      if (result.failed > 0) {
+        setStatus("sync-failed");
+        setSyncError(`${result.failed} changes failed to sync`);
+      } else {
+        setStatus("online");
+        pendingCount.value = 0;
+      }
+    } catch (err) {
+      setStatus("sync-failed");
+      setSyncError(err instanceof Error ? err.message : "Sync failed");
+    }
   };
 
   const handleOffline = () => {
     setStatus("offline");
   };
 
-  onMounted(() => {
+  onMounted(async () => {
     if (typeof window !== "undefined") {
       window.addEventListener("online", handleOnline);
       window.addEventListener("offline", handleOffline);
+      await updatePendingCount();
     }
   });
 
@@ -49,6 +73,7 @@ export const useOnlineStatus = () => {
     setStatus,
     setPendingCount,
     setSyncError,
+    updatePendingCount,
     isOnline: () => status.value === "online",
   };
 };

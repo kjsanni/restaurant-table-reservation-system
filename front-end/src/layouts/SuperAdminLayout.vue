@@ -11,6 +11,8 @@ import {
 import type { NavItem } from "@/config/sidebarItems";
 import { useAnimations } from "@/composables/useAnimations";
 import { useAdminLayout } from "@/composables/useAdminLayout";
+import { useOnlineStatus } from "@/composables/useOnlineStatus";
+import OfflineBanner from "@/components/OfflineBanner.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -25,6 +27,8 @@ const {
   user,
   shouldShow,
 } = useAdminLayout();
+
+const { status, pendingCount } = useOnlineStatus();
 
 let pageTween: gsap.core.Tween | null = null;
 let leaveTween: gsap.core.Tween | null = null;
@@ -445,6 +449,7 @@ watch(
       </header>
 
       <main class="sa-content">
+        <OfflineBanner />
         <Transition
           name="page-transition"
           @before-enter="beforeEnter"

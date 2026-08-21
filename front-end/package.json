@@ -24,9 +24,18 @@
     "test:e2e": "playwright test",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-pattern 'tests/*' --ignore-pattern 'dist/*' --ignore-pattern 'test-results/*' --ignore-pattern 'playwright-report/*'",
     "format": "prettier .  --write",
-    "check:bundle": "node scripts/check-bundle-size.js"
+    "check:bundle": "node scripts/check-bundle-size.js",
+    "cap:sync": "cap sync",
+    "cap:open:android": "cap open android",
+    "cap:open:ios": "cap open ios",
+    "cap:build:android": "npm run build && cap sync android && cd android && ./gradlew assembleDebug",
+    "cap:build:ios": "npm run build && cap sync ios && cd ios && xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
     "@iconify/json": "^2.2.516",
     "@iconify/utils": "3.1.4",
     "@iconify/vue": "^5.0.1",

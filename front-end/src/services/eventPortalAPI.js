@@ -158,8 +158,59 @@ class EventPortalAPI {
     return API.get(`/public/e/${shortCode}`, { params: { format: "google" } });
   }
 
+  listPublicEvents(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return API.get(`/public/events${qs ? `?${qs}` : ""}`);
+  }
+
+  getPublicEvent(eventId) {
+    return API.get(`/public/events/${eventId}`);
+  }
+
+  createPublicBooking(data) {
+    return API.post("/public/events/bookings", data);
+  }
+
+  initializePublicBookingPayment(bookingId, email) {
+    return API.post(`/public/events/bookings/${bookingId}/payments/initialize`, { email });
+  }
+
+  getPublicBooking(bookingId) {
+    return API.get(`/public/events/bookings/${bookingId}`);
+  }
+
   listPendingApproval(eventId) {
     return API.get(`/events/${eventId}/wallet-passes/requests/pending`);
+  }
+
+  getEventTemplates() {
+    return API.get("/events/templates");
+  }
+
+  getEventTemplate(id) {
+    return API.get(`/events/templates/${id}`);
+  }
+
+  createEventTemplate(data) {
+    return API.post("/events/templates", data);
+  }
+
+  updateEventTemplate(id, data) {
+    return API.patch(`/events/templates/${id}`, data);
+  }
+
+  deleteEventTemplate(id) {
+    return API.delete(`/events/templates/${id}`);
+  }
+
+  getEventAnalytics(eventId, params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return API.get(`/events/${eventId}/analytics${qs ? `?${qs}` : ""}`);
+  }
+
+  getEventAnalyticsTrend(eventId, params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return API.get(`/events/${eventId}/analytics/trend${qs ? `?${qs}` : ""}`);
   }
 
   approveRequest(eventId, requestId) {
