@@ -11,7 +11,6 @@ const KNOWN_PLACEHOLDERS = new Set([
   "secure-password",
   "examplePublicKey@o0.ingest.sentry.io/0000000",
   "your-domain.com",
-  "localhost",
 ]);
 
 const validateEnv = (envName) => {
