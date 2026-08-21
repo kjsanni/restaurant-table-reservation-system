@@ -2,7 +2,7 @@ const multer = require("multer");
 const path = require("path");
 const crypto = require("crypto");
 
-const UPLOAD_DIR = path.join(__dirname, "../../../uploads/support-attachments");
+const UPLOAD_DIR = "/app/uploads/support-attachments";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

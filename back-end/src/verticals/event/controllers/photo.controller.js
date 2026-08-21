@@ -6,7 +6,7 @@ const path = require("path");
 const db = require("../../../db/models");
 const qrCodeDAO = require("../DAOs/qrCode.dao");
 
-const ATTENDEE_PHOTOS_DIR = path.join(__dirname, "../../../uploads/event-photos");
+const ATTENDEE_PHOTOS_DIR = "/app/uploads/event-photos";
 const ALLOWED_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp"]);
 const ATTENDEE_PHOTOS_BASE_DIR = path.resolve(ATTENDEE_PHOTOS_DIR);
 

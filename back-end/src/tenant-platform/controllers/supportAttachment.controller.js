@@ -6,7 +6,7 @@ const path = require("path");
 const fs = require("fs");
 const auditLog = require("../utils/auditLog");
 
-const UPLOAD_DIR = path.join(__dirname, "../../../uploads/support-attachments");
+const UPLOAD_DIR = "/app/uploads/support-attachments";
 
 const listAttachmentsHandler = async (req, res) => {
   const { conversationId, ticketId, messageId } = req.query;

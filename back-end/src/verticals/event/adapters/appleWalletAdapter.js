@@ -8,7 +8,7 @@ const { decrypt } = require("../../../utils/encryption");
 const logger = require("../../../utils/logger");
 const WalletPassAdapter = require("./walletPassAdapter.base");
 
-const PKPASS_TEMP_DIR = path.join(__dirname, "../../../uploads/.pkpass-temp"); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - static __dirname path
+const PKPASS_TEMP_DIR = "/app/uploads/.pkpass-temp";
 
 if (!fs.existsSync(PKPASS_TEMP_DIR)) { // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - static directory path derived from __dirname
   fs.mkdirSync(PKPASS_TEMP_DIR, { recursive: true, mode: 0o700 }); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - static directory path derived from __dirname
@@ -63,9 +63,9 @@ class AppleWalletAdapter extends WalletPassAdapter {
     if (!qrCodeData.photoRef) return;
     const photoRef = String(qrCodeData.photoRef);
     if (!/^[a-f0-9]{64}$/i.test(photoRef)) return;
-    const photoPath = path.join(__dirname, "../../../uploads/event-photos", `${photoRef}.jpg`); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - photoRef validated as SHA-256 hex above
-    const resolvedPhoto = path.resolve(photoPath); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - resolved path validated below
-    const resolvedAssets = path.resolve(path.join(__dirname, "../../../uploads/event-photos")); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - static __dirname path
+    const photoPath = path.join("/app/uploads/event-photos", `${photoRef}.jpg`);
+    const resolvedPhoto = path.resolve(photoPath);
+    const resolvedAssets = path.resolve("/app/uploads/event-photos");
     if (resolvedPhoto.startsWith(resolvedAssets + path.sep) && fs.existsSync(resolvedPhoto)) { // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - path traversal check is in place above
       passJson.images = { logo: "logo.jpg" };
     }
@@ -146,8 +146,8 @@ class AppleWalletAdapter extends WalletPassAdapter {
     if (!designSnapshot.ticketData?.photoRef) return;
     const photoRef = String(designSnapshot.ticketData.photoRef);
     if (!/^[a-f0-9]{64}$/i.test(photoRef)) return;
-    const photoPath = path.join(__dirname, "../../../uploads/event-photos", `${photoRef}.jpg`); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - validated as SHA-256 hex above
-    if (fs.existsSync(photoPath)) { // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - photoPath derived from validated photoRef
+      const photoPath = path.join("/app/uploads/event-photos", `${photoRef}.jpg`);
+      if (fs.existsSync(photoPath)) {
       const logoCopy = path.join(tempDir, "logo.jpg"); // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal - static filename in validated tempDir
       fs.copyFileSync(photoPath, logoCopy); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - photoPath validated above
     }

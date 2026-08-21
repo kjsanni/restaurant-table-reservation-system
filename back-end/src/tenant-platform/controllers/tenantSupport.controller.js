@@ -9,7 +9,7 @@ const path = require("path");
 const fs = require("fs");
 const auditLog = require("../utils/auditLog");
 
-const UPLOAD_DIR = path.join(__dirname, "../../../uploads/support-attachments");
+const UPLOAD_DIR = "/app/uploads/support-attachments";
 
 const listMyTicketsHandler = async (req, res) => {
   const { status, category, limit } = req.query;
