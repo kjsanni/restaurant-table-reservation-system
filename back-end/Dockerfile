@@ -22,7 +22,7 @@ COPY --from=builder /app/config ./config
 COPY --from=builder /app/src/db/migrations ./migrations
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/ecosystem.config.js ./
-RUN mkdir -p logs
+RUN mkdir -p logs && chown -R nodejs:nodejs logs
 USER nodejs
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
