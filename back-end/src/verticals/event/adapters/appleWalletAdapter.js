@@ -8,7 +8,7 @@ const { decrypt } = require("../../../utils/encryption");
 const logger = require("../../../utils/logger");
 const WalletPassAdapter = require("./walletPassAdapter.base");
 
-const PKPASS_TEMP_DIR = "/app/uploads/.pkpass-temp";
+const PKPASS_TEMP_DIR = "/tmp/.pkpass-temp";
 
 if (!fs.existsSync(PKPASS_TEMP_DIR)) { // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - static directory path derived from __dirname
   fs.mkdirSync(PKPASS_TEMP_DIR, { recursive: true, mode: 0o700 }); // nosemgrep: javascript_pathtraversal_rule-non-literal-fs-filename - static directory path derived from __dirname
