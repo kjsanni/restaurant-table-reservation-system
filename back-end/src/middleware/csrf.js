@@ -18,7 +18,7 @@ const setCsrfCookie = (req, res, next) => {
     if (isTest) {
       sameSite = false;
     } else if (isProduction) {
-      sameSite = "strict";
+      sameSite = "lax";
     } else {
       sameSite = "lax";
       console.warn("[CSRF] Development mode: sameSite set to lax. For production, use strict.");
