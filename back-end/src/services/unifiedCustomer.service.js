@@ -5,6 +5,9 @@ const db = require("../db/models");
 const unifiedCustomerService = {};
 
 unifiedCustomerService.getUnifiedProfile = async (customerId, tenantId) => {
+  if (!Number.isInteger(customerId)) {
+    throw new Error("Invalid customer ID");
+  }
   const customer = await db.customer.findOne({
     where: { id: customerId },
     include: [
@@ -54,6 +57,9 @@ unifiedCustomerService.getUnifiedProfile = async (customerId, tenantId) => {
 };
 
 unifiedCustomerService.getCrossVerticalHistory = async (customerId, tenantId) => {
+  if (!Number.isInteger(customerId)) {
+    throw new Error("Invalid customer ID");
+  }
   const [reservations, eventBookings] = await Promise.all([
     db.reservation.findAll({
       where: { customerId },
@@ -98,6 +104,9 @@ unifiedCustomerService.getCrossVerticalHistory = async (customerId, tenantId) =>
 };
 
 unifiedCustomerService.addLoyaltyPoints = async (customerId, points, source, tenantId) => {
+  if (!Number.isInteger(customerId)) {
+    throw new Error("Invalid customer ID");
+  }
   const customer = await db.customer.findByPk(customerId);
   if (!customer) throw new Error("Customer not found");
 
@@ -117,6 +126,9 @@ unifiedCustomerService.addLoyaltyPoints = async (customerId, points, source, ten
 };
 
 unifiedCustomerService.redeemLoyaltyPoints = async (customerId, points, tenantId) => {
+  if (!Number.isInteger(customerId)) {
+    throw new Error("Invalid customer ID");
+  }
   const customer = await db.customer.findByPk(customerId);
   if (!customer) throw new Error("Customer not found");
   if ((customer.points || 0) < points) {
