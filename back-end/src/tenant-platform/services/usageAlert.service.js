@@ -18,6 +18,7 @@ const checkOverageAlerts = async () => {
     const activeRules = await alertRuleDAO.findActive();
     for (const rule of activeRules) {
       const metric = rule.metric;
+      if (typeof metric !== "string" || !metric) continue;
       if (!usage.warnings[metric] && !(usage.percentages[metric] >= 100)) continue;
 
       const existing = await db.alertRule.findOne({

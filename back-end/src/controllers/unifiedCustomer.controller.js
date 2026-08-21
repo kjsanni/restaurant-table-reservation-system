@@ -4,7 +4,7 @@ const unifiedCustomerService = require("../services/unifiedCustomer.service");
 
 const getUnifiedProfileHandler = async (req, res) => {
   try {
-    const customerId = req.params.customerId || req.customer?.id;
+    const customerId = parseInt(req.params.customerId, 10) || req.customer?.id;
     if (!customerId) {
       return res.status(400).json({ success: false, message: "Customer ID is required" });
     }
@@ -20,7 +20,7 @@ const getUnifiedProfileHandler = async (req, res) => {
 
 const getCrossVerticalHistoryHandler = async (req, res) => {
   try {
-    const customerId = req.params.customerId || req.customer?.id;
+    const customerId = parseInt(req.params.customerId, 10) || req.customer?.id;
     if (!customerId) {
       return res.status(400).json({ success: false, message: "Customer ID is required" });
     }
@@ -33,7 +33,7 @@ const getCrossVerticalHistoryHandler = async (req, res) => {
 
 const addLoyaltyPointsHandler = async (req, res) => {
   try {
-    const customerId = req.params.customerId || req.customer?.id;
+    const customerId = parseInt(req.params.customerId, 10) || req.customer?.id;
     const { points, source } = req.body;
     if (!points || Number(points) <= 0) {
       return res.status(400).json({ success: false, message: "Invalid points value" });
@@ -48,7 +48,7 @@ const addLoyaltyPointsHandler = async (req, res) => {
 
 const redeemLoyaltyPointsHandler = async (req, res) => {
   try {
-    const customerId = req.params.customerId || req.customer?.id;
+    const customerId = parseInt(req.params.customerId, 10) || req.customer?.id;
     const { points } = req.body;
     if (!points || Number(points) <= 0) {
       return res.status(400).json({ success: false, message: "Invalid points value" });
