@@ -5,21 +5,22 @@ const tryCatchHandler = require("../../middleware/tryCatch");
 const httpMethodError = require("../../middleware/httpMethodError");
 const tenantMigrationController = require("../controllers/tenantMigration.controller");
 const { protect, requireSuperAdmin } = require("../../middleware/auth");
+const { adminActionLimiter } = require("../../middleware/rateLimit");
 
 router
   .route("/:tenantId/migrations")
-  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.listTenantMigrationsHandler))
-  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.enqueueTenantMigrationHandler))
+  .get(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.listTenantMigrationsHandler))
+  .post(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.enqueueTenantMigrationHandler))
   .all(httpMethodError);
 
 router
   .route("/:tenantId/migrations/status")
-  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.getTenantMigrationStatusHandler))
+  .get(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.getTenantMigrationStatusHandler))
   .all(httpMethodError);
 
 router
   .route("/:tenantId/migration/export")
-  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), async (req, res) => {
+  .get(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), async (req, res) => {
     res.set("Deprecation", "true");
     res.set("Sunset", "2026-12-31");
     res.set("Link", '</api/v1/admin/tenants/:tenantId/migrations>; rel="successor-version"');
@@ -30,7 +31,7 @@ router
 
 router
   .route("/migration/import")
-  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), async (req, res) => {
+  .post(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), async (req, res) => {
     res.set("Deprecation", "true");
     res.set("Sunset", "2026-12-31");
     res.set("Link", '</api/v1/admin/tenants/:tenantId/migrations>; rel="successor-version"');
@@ -41,27 +42,27 @@ router
 
 router
   .route("/migrations/:id")
-  .get(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.getTenantMigrationHandler))
+  .get(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.getTenantMigrationHandler))
   .all(httpMethodError);
 
 router
   .route("/migrations/:id/run")
-  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.runTenantMigrationHandler))
+  .post(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.runTenantMigrationHandler))
   .all(httpMethodError);
 
 router
   .route("/migrations/:id/pause")
-  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.pauseTenantMigrationHandler))
+  .post(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.pauseTenantMigrationHandler))
   .all(httpMethodError);
 
 router
   .route("/migrations/:id/resume")
-  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.resumeTenantMigrationHandler))
+  .post(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.resumeTenantMigrationHandler))
   .all(httpMethodError);
 
 router
   .route("/migrations/:id/rollback")
-  .post(tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.rollbackTenantMigrationHandler))
+  .post(adminActionLimiter, tryCatchHandler(protect), tryCatchHandler(requireSuperAdmin), tryCatchHandler(tenantMigrationController.rollbackTenantMigrationHandler))
   .all(httpMethodError);
 
 module.exports = router;

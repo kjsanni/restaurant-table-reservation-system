@@ -127,11 +127,8 @@ module.exports = {
       { replacements: { eventId }, type: queryInterface.sequelize.QueryTypes.SELECT }
     );
 
-    let ticketTypeId;
-    if (existingTicket) {
-      ticketTypeId = existingTicket.id;
-    } else {
-      const [ticketResult] = await queryInterface.sequelize.query(
+    if (!existingTicket) {
+      await queryInterface.sequelize.query(
         `INSERT INTO TicketTypes (tenantId, eventId, name, description, price, currency, quantity, soldCount, isActive, createdAt, updatedAt)
          VALUES (:tenantId, :eventId, 'General Admission', 'Standard entry', 50.00, 'GHS', 100, 0, true, NOW(), NOW())`,
         {
@@ -139,7 +136,6 @@ module.exports = {
           type: queryInterface.sequelize.QueryTypes.INSERT,
         }
       );
-      ticketTypeId = ticketResult;
     }
   },
 

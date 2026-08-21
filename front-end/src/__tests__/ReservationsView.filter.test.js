@@ -1,15 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { ref, computed } from "vue";
+import { computed } from "vue";
 
 function createReservationFilter(reservations, activeFilter = "All") {
   const filters = ["All", "Confirmed", "Pending", "Seated", "Cancelled"];
-  const statusMap = {
-    confirmed: "Confirmed",
-    pending: "Pending",
-    seated: "Seated",
-    cancelled: "Cancelled",
-    no_show: "No-show",
-  };
 
   return computed(() => {
     if (activeFilter === "All") return reservations;

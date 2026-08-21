@@ -1,7 +1,7 @@
 "use strict";
 
 const { requireVertical } = require("../../../middleware/requireVertical");
-const { requiredFeature, requiresServiceMode } = require("../../../tenant-platform/middleware/featureGuard");
+const { requiredFeature } = require("../../../tenant-platform/middleware/featureGuard");
 const { logAction, validateCsrfToken } = require("../../../middleware");
 const { tenantLimiter, tenantWriteLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
 

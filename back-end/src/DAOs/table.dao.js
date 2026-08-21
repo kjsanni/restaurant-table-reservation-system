@@ -5,6 +5,7 @@ const Customer = db.customer;
 const User = db.user;
 const TableEvent = db.tableEvent;
 const { fn, col } = db.sequelize;
+const { tenantCache } = require("../utils/tenantCache");
 
 const withTenant = (where = {}, tenantId) => {
   if (!tenantId) {
@@ -14,7 +15,9 @@ const withTenant = (where = {}, tenantId) => {
 };
 
 const findAllTables = async (tenantId) => {
-  return await Table.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
+  const cached = await tenantCache.get(tenantId || "global", "tables:all");
+  if (cached) return cached;
+  const tables = await Table.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     attributes: { exclude: ["linkedTableIds"] },
     where: withTenant({}, tenantId),
     include: [
@@ -37,6 +40,8 @@ const findAllTables = async (tenantId) => {
     ],
     order: [["positionY", "ASC"], ["positionX", "ASC"]],
   });
+  await tenantCache.set(tenantId || "global", "tables:all", tables, 300);
+  return tables;
 };
 
 const createTable = async ({ name, capacity, staffIds, floorPlanId }, tenantId) => {
@@ -46,6 +51,7 @@ const createTable = async ({ name, capacity, staffIds, floorPlanId }, tenantId) 
     floorPlanId: floorPlanId ?? null,
     ...withTenant({}, tenantId),
   });
+  await tenantCache.del(tenantId || "global", "tables:all");
   if (staffIds && staffIds.length > 0) {
     await table.addUsers(staffIds);
   }
@@ -54,16 +60,23 @@ const createTable = async ({ name, capacity, staffIds, floorPlanId }, tenantId) 
 
 const findTableById = async (id, tenantId) => {
 // codacy-suppress NoSqlInjection
-  return await Table.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
+  const cached = await tenantCache.get(tenantId || "global", `table:${id}`);
+  if (cached) return cached;
+  const table = await Table.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: withTenant({ id }, tenantId),
   });
+  await tenantCache.set(tenantId || "global", `table:${id}`, table, 300);
+  return table;
 };
 
 const updateTable = async (table, payload, tenantId) => {
   if (tenantId && table.tenantId !== tenantId) {
     throw { status: 404, message: "Table not found!" };
   }
-  return await table.update(payload); // codacy-suppress nosql-injection - parameterized ORM call
+  const updated = await table.update(payload); // codacy-suppress nosql-injection - parameterized ORM call
+  await tenantCache.del(tenantId || "global", `table:${table.id}`);
+  await tenantCache.del(tenantId || "global", "tables:all");
+  return updated;
 };
 
 const blockTable = async (id, notes = null, tenantId) => {
@@ -71,7 +84,10 @@ const blockTable = async (id, notes = null, tenantId) => {
   if (!table) {
     throw { status: 404, message: "Table not found!" };
   }
-  return await table.update({ isBlocked: true, maintenanceNotes: notes }); // codacy-suppress nosql-injection - parameterized ORM call
+  const updated = await table.update({ isBlocked: true, maintenanceNotes: notes }); // codacy-suppress nosql-injection - parameterized ORM call
+  await tenantCache.del(tenantId || "global", `table:${id}`);
+  await tenantCache.del(tenantId || "global", "tables:all");
+  return updated;
 };
 
 const unblockTable = async (id, tenantId) => {
@@ -79,7 +95,10 @@ const unblockTable = async (id, tenantId) => {
   if (!table) {
     throw { status: 404, message: "Table not found!" };
   }
-  return await table.update({ isBlocked: false, maintenanceNotes: null }); // codacy-suppress nosql-injection - parameterized ORM call
+  const updated = await table.update({ isBlocked: false, maintenanceNotes: null }); // codacy-suppress nosql-injection - parameterized ORM call
+  await tenantCache.del(tenantId || "global", `table:${id}`);
+  await tenantCache.del(tenantId || "global", "tables:all");
+  return updated;
 };
 
 const freeTable = async (reservationDAO, table, tenantId) => {
@@ -195,11 +214,14 @@ const updateTablePosition = async (id, positionX, positionY, floorPlanId = "defa
   if (!table) {
     throw { status: 404, message: "Table not found!" };
   }
-  return await table.update({ // codacy-suppress nosql-injection - parameterized ORM call
+  const updated = await table.update({ // codacy-suppress nosql-injection - parameterized ORM call
     positionX,
     positionY,
     floorPlanId,
   });
+  await tenantCache.del(tenantId || "global", `table:${id}`);
+  await tenantCache.del(tenantId || "global", "tables:all");
+  return updated;
 };
 
 const recordEvent = async (tableId, eventType, description = null, actorId = null, tenantId) => {

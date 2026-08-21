@@ -26,7 +26,7 @@ describe("salon-customer-portal.controller", () => {
       await salonCustomerPortalController.getSalonCustomerProfileHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ success: true, customer: { id: 1, email: "test@example.com" } });
+      expect(res.json).toHaveBeenCalledWith({ success: true, message: "Success", data: { id: 1, email: "test@example.com" } });
     });
 
     it("returns 404 when no customer profile exists", async () => {
@@ -51,7 +51,7 @@ describe("salon-customer-portal.controller", () => {
       await salonCustomerPortalController.getSalonCustomerAppointmentsHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ success: true, appointments: [{ id: 1, status: "confirmed" }] });
+      expect(res.json).toHaveBeenCalledWith({ success: true, message: "Success", data: [{ id: 1, status: "confirmed" }] });
     });
 
     it("returns empty appointments when customer not found", async () => {
@@ -62,7 +62,7 @@ describe("salon-customer-portal.controller", () => {
       await salonCustomerPortalController.getSalonCustomerAppointmentsHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ success: true, appointments: [] });
+      expect(res.json).toHaveBeenCalledWith({ success: true, message: "Success", data: [] });
     });
   });
 
@@ -78,7 +78,7 @@ describe("salon-customer-portal.controller", () => {
 
       expect(appointmentDao.update).toHaveBeenCalledWith("1", 1, { status: "cancelled" });
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ success: true, appointment: { id: 1, status: "cancelled" } });
+      expect(res.json).toHaveBeenCalledWith({ success: true, message: "Success", data: { id: 1, status: "cancelled" } });
     });
 
     it("returns 404 when appointment not found", async () => {

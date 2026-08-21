@@ -4,7 +4,7 @@ const express = require("express");
 const router = express.Router();
 const tryCatchHandler = require("../../../middleware/tryCatch");
 const { protect, requirePermission } = require("../../../middleware/auth");
-const { logAction, validateCsrfToken } = require("../../../middleware");
+const { validateCsrfToken } = require("../../../middleware");
 const { tenantLimiter } = require("../../../tenant-platform/middleware/tenantRateLimit");
 const eventBookingController = require("../controllers/eventBooking.controller");
 

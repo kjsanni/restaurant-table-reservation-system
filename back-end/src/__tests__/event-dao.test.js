@@ -55,13 +55,13 @@ describe("Event DAOs", () => {
   describe("guestList.dao", () => {
     it("adds guest to event", async () => {
       guestListDAO.create.mockResolvedValue({ id: 1, guestName: "John" });
-      const result = await guestListDAO.create({ eventId: 1, guestName: "John", tenantId: 1 });
+      await guestListDAO.create({ eventId: 1, guestName: "John", tenantId: 1 });
       expect(guestListDAO.create).toHaveBeenCalledWith({ eventId: 1, guestName: "John", tenantId: 1 });
     });
 
     it("lists guests with filters", async () => {
       guestListDAO.list.mockResolvedValue({ rows: [], count: 0 });
-      const result = await guestListDAO.list(1, 1, { status: "invited" });
+      await guestListDAO.list(1, 1, { status: "invited" });
       expect(guestListDAO.list).toHaveBeenCalledWith(1, 1, { status: "invited" });
     });
   });
@@ -76,7 +76,7 @@ describe("Event DAOs", () => {
 
     it("lists ticket types for event", async () => {
       ticketTypeDAO.list.mockResolvedValue([]);
-      const result = await ticketTypeDAO.list(1, 1);
+      await ticketTypeDAO.list(1, 1);
       expect(ticketTypeDAO.list).toHaveBeenCalledWith(1, 1);
     });
   });
@@ -91,7 +91,7 @@ describe("Event DAOs", () => {
 
     it("finds QR code by code", async () => {
       qrCodeDAO.findByCode.mockResolvedValue({ id: 1, code: "abc123" });
-      const result = await qrCodeDAO.findByCode("abc123", 1);
+      await qrCodeDAO.findByCode("abc123", 1);
       expect(qrCodeDAO.findByCode).toHaveBeenCalledWith("abc123", 1);
     });
   });

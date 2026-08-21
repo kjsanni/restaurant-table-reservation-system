@@ -2,7 +2,6 @@ const response = require("../utils/response");
 
 const backupRecordDAO = require("../DAOs/backupRecord.dao");
 const backupService = require("../services/backup.service");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const fs = require("fs");
 const auditLog = require("../utils/auditLog");
 

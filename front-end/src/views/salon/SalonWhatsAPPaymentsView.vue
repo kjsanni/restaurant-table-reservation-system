@@ -48,7 +48,7 @@
               <th>{{ t("salon.amount") }}</th>
               <th>{{ t("salon.deposit") }}</th>
               <th>{{ t("salon.paymentStatus") }}</th>
-              <th>Ref</th>
+              <th>{{ t("salon.ref", "Ref") }}</th>
             </tr>
           </thead>
           <tbody>

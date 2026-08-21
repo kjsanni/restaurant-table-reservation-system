@@ -91,7 +91,7 @@
           <input v-model="form.email" class="field-input" type="email" />
         </div>
         <div class="form-group">
-          <label>Phone</label>
+          <label>{{ t("salon.phone") }}</label>
           <input
             v-model="form.phone"
             class="field-input"

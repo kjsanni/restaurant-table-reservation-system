@@ -1,7 +1,6 @@
 const response = require("../utils/response");
 
 const insuranceDocumentDAO = require("../DAOs/insuranceDocument.dao");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const listInsuranceDocumentsHandler = async (req, res) => {

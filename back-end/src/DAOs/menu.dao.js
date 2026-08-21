@@ -2,6 +2,7 @@ const db = require("../db/models");
 const MenuCategory = db.menuCategory;
 const MenuItem = db.menuItem;
 const MenuItemOption = db.menuItemOption;
+const { tenantCache } = require("../utils/tenantCache");
 
 const withTenant = (where = {}, tenantId) => {
   if (!tenantId) {
@@ -23,6 +24,7 @@ const updateCategory = async (id, tenantId, data) => {
     where: withTenant({ id }, tenantId),
   });
   if (!category) return null;
+  await tenantCache.del(tenantId || "global", "menu:categories:all");
   return await category.update(data); // codacy-suppress nosql-injection - parameterized ORM call
 };
 
@@ -31,15 +33,20 @@ const deleteCategory = async (id, tenantId) => {
     where: withTenant({ id }, tenantId),
   });
   if (!category) return 0;
+  await tenantCache.del(tenantId || "global", "menu:categories:all");
   const deleted = await category.destroy();
   return deleted ? 1 : 0;
 };
 
 const getCategories = async (tenantId) => {
-  return await MenuCategory.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
+  const cached = await tenantCache.get(tenantId || "global", "menu:categories:all");
+  if (cached) return cached;
+  const categories = await MenuCategory.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: withTenant({}, tenantId),
     order: [["sortOrder", "ASC"], ["name", "ASC"]],
   });
+  await tenantCache.set(tenantId || "global", "menu:categories:all", categories, 300);
+  return categories;
 };
 
 const createMenuItem = async (tenantId, data) => {
@@ -54,6 +61,9 @@ const updateMenuItem = async (id, tenantId, data) => {
     where: withTenant({ id }, tenantId),
   });
   if (!item) return null;
+  await tenantCache.del(tenantId || "global", "menu:items:all");
+  await tenantCache.del(tenantId || "global", `menu:item:${id}`);
+  await tenantCache.del(tenantId || "global", "menu:items:available");
   return await item.update(data); // codacy-suppress nosql-injection - parameterized ORM call
 };
 
@@ -62,6 +72,9 @@ const deleteMenuItem = async (id, tenantId) => {
     where: withTenant({ id }, tenantId),
   });
   if (!item) return 0;
+  await tenantCache.del(tenantId || "global", "menu:items:all");
+  await tenantCache.del(tenantId || "global", `menu:item:${id}`);
+  await tenantCache.del(tenantId || "global", "menu:items:available");
   const deleted = await item.destroy();
   return deleted ? 1 : 0;
 };
@@ -76,7 +89,12 @@ const getMenuItems = async (tenantId, filters = {}) => {
   if (filters.isSpicy !== undefined) where.isSpicy = filters.isSpicy;
   if (filters.isNutFree !== undefined) where.isNutFree = filters.isNutFree;
 
-  return await MenuItem.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
+  const filterKey = JSON.stringify(filters);
+  const cacheKey = `menu:items:${filterKey}`;
+  const cached = await tenantCache.get(tenantId || "global", cacheKey);
+  if (cached) return cached;
+
+  const items = await MenuItem.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where,
     include: [
       {
@@ -86,10 +104,14 @@ const getMenuItems = async (tenantId, filters = {}) => {
     ],
     order: [["sortOrder", "ASC"], ["name", "ASC"]],
   });
+  await tenantCache.set(tenantId || "global", cacheKey, items, 300);
+  return items;
 };
 
 const getAvailableMenuItems = async (tenantId) => {
-  return await MenuItem.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
+  const cached = await tenantCache.get(tenantId || "global", "menu:items:available");
+  if (cached) return cached;
+  const items = await MenuItem.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: withTenant({ isAvailable: true }, tenantId),
     include: [
       {
@@ -103,10 +125,14 @@ const getAvailableMenuItems = async (tenantId) => {
     ],
     order: [["sortOrder", "ASC"], ["name", "ASC"]],
   });
+  await tenantCache.set(tenantId || "global", "menu:items:available", items, 300);
+  return items;
 };
 
 const getMenuItemById = async (id, tenantId) => {
-  return await MenuItem.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
+  const cached = await tenantCache.get(tenantId || "global", `menu:item:${id}`);
+  if (cached) return cached;
+  const item = await MenuItem.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: withTenant({ id }, tenantId),
     include: [
       {
@@ -119,6 +145,8 @@ const getMenuItemById = async (id, tenantId) => {
       },
     ],
   });
+  await tenantCache.set(tenantId || "global", `menu:item:${id}`, item, 300);
+  return item;
 };
 
 const createMenuItemOption = async (menuItemId, data) => {

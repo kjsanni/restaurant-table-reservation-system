@@ -1,5 +1,4 @@
 const { getCacheStats, resetCacheStats } = require("../../utils/cache");
-const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const getCacheStatsHandler = async (req, res) => {
