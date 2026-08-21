@@ -20,17 +20,17 @@ const validateEnv = (envName) => {
       `[config] Missing required environment variables for "${envName}": ${missing.join(", ")}`
     );
   }
-  if (envName === "production") {
+  if (envName === "production" || envName === "staging") {
     const prodMissing = PROD_REQUIRED_VARS.filter((v) => !process.env[v]);
     if (prodMissing.length > 0) {
       throw new Error(
-        `[config] Missing required production environment variables: ${prodMissing.join(", ")}`
+        `[config] Missing required ${envName} environment variables: ${prodMissing.join(", ")}`
       );
     }
     for (const [key, value] of Object.entries(process.env)) {
       if (KNOWN_PLACEHOLDERS.has(value)) {
         throw new Error(
-          `[config] Placeholder value detected for ${key} in production. Replace "${value}" with a real value.`
+          `[config] Placeholder value detected for ${key} in ${envName}. Replace "${value}" with a real value.`
         );
       }
     }
@@ -47,7 +47,7 @@ const dbSsl = process.env.DB_SSL === "true"
       ssl: {
         require: true,
         rejectUnauthorized:
-          process.env.NODE_ENV === "production"
+          process.env.NODE_ENV === "production" || process.env.NODE_ENV === "staging"
             ? true
             : process.env.DB_SSL_REJECT_UNAUTHORIZED !== "false",
       },
@@ -111,6 +111,16 @@ const environments = {
     replica: null,
   }),
   production: withSsl({
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    dialect: process.env.DB_DIALECT || "mysql",
+    port: process.env.DB_PORT,
+    server_port: process.env.PORT,
+    replica: buildReplica(process.env.DB_NAME),
+  }),
+  staging: withSsl({
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
