@@ -55,6 +55,9 @@ engines:
     enabled: false
   eslint:
     enabled: true
+    exclude_paths:
+      - "back-end/src/**/*.js"
+      - "back-end/src/**/*.mjs"
   csslint:
     enabled: true
   remark-lint:
