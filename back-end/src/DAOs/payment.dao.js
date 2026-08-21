@@ -2,6 +2,7 @@ const db = require("../db/models");
 const readReplica = require("../db/readReplica");
 const Payment = db.payment;
 const { Op, fn, col } = db.Sequelize;
+const { tenantCache } = require("../utils/tenantCache");
 
 const withTenant = (where = {}, tenantId) => {
   if (!tenantId) {
@@ -11,21 +12,27 @@ const withTenant = (where = {}, tenantId) => {
 };
 
 const findByReservation = async (reservationId, tenantId) => {
-  return await Payment.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
+  const cached = await tenantCache.get(tenantId || "global", `payments:reservation:${reservationId}`);
+  if (cached) return cached;
+  const payments = await Payment.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: withTenant({ reservationId }, tenantId),
     order: [["paidAt", "DESC"]],
     attributes: ["id", "reservationId", "amount", "method", "paidBy", "reference", "paidAt", "splits"],
   });
+  await tenantCache.set(tenantId || "global", `payments:reservation:${reservationId}`, payments, 300);
+  return payments;
 };
 
 const create = async (data, tenantId, transaction) => {
-  return await Payment.create(
+  const payment = await Payment.create(
     {
       ...data,
       ...withTenant({}, tenantId),
     },
     { transaction }
   );
+  await tenantCache.del(tenantId || "global", `payments:reservation:${data.reservationId}`);
+  return payment;
 };
 
 const updateSplits = async (reservationId, id, splits, tenantId) => {
@@ -38,6 +45,7 @@ const updateSplits = async (reservationId, id, splits, tenantId) => {
     throw { status: 400, message: `Split amounts must sum to the payment amount (${allowedTotal.toFixed(2)}).` };
   }
   await payment.update({ splits: splits || [] }); // codacy-suppress nosql-injection - parameterized ORM call
+  await tenantCache.del(tenantId || "global", `payments:reservation:${reservationId}`);
   return payment;
 };
 
@@ -60,6 +68,7 @@ const remove = async (reservationId, id, tenantId, transaction) => {
   const payment = await Payment.findOne({ where: withTenant({ id, reservationId }, tenantId) });
   if (!payment) return null;
   await payment.destroy({ transaction });
+  await tenantCache.del(tenantId || "global", `payments:reservation:${reservationId}`);
   return true;
 };
 
