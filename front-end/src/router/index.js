@@ -1765,6 +1765,7 @@ router.beforeEach((to, from, next) => {
   } else if (
     to.meta.requiresPermission &&
     !authStore.isLoading &&
+    !authStore.isSuperAdmin &&
     !authStore.user?.permissions?.[to.meta.requiresPermission]
   ) {
     next({ name: "home" });

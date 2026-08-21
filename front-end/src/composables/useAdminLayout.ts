@@ -76,6 +76,7 @@ export const useAdminLayout = () => {
     if (item.requiresAdmin && user.value?.role !== "admin") return false;
     if (
       item.requiresPermission &&
+      !authStore.isSuperAdmin &&
       !user.value?.permissions?.[item.requiresPermission]
     )
       return false;
