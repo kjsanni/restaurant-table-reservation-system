@@ -5,6 +5,15 @@ const SENSITIVE_FIELDS = ["password", "token", "secret", "jwt", "email", "phone"
 const PROTECTED_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 const WHITELISTED_AUTH_FIELDS = ["route", "method", "statusCode", "ipAddress", "userAgent"];
 
+const getClientIp = (req) => {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (forwarded) {
+    const ips = Array.isArray(forwarded) ? forwarded : forwarded.split(",").map((ip) => ip.trim());
+    return ips[0] || req.ip || req.connection?.remoteAddress || null;
+  }
+  return req.ip || req.connection?.remoteAddress || null;
+};
+
 const sanitizeData = (data) => {
   if (!data || typeof data !== "object") return data;
 
@@ -72,7 +81,7 @@ const logAction = async (req, res, next) => {
           body: sanitizeData(req.body),
           params: sanitizeData(req.params),
         },
-        ipAddress: req.ip,
+        ipAddress: getClientIp(req),
       });
     } catch (err) {
       console.error("Audit log error:", err);
@@ -90,7 +99,7 @@ const logAction = async (req, res, next) => {
         if (field === "route") changes[field] = route;
         else if (field === "method") changes[field] = req.method;
         else if (field === "statusCode") changes[field] = statusCode;
-        else if (field === "ipAddress") changes[field] = req.ip;
+        else if (field === "ipAddress") changes[field] = getClientIp(req);
         else if (field === "userAgent") changes[field] = truncate(req.get("user-agent"));
       }
       await AuditLog.create({
@@ -98,7 +107,7 @@ const logAction = async (req, res, next) => {
         entityType: "auth",
         userId: null,
         changes,
-        ipAddress: req.ip,
+        ipAddress: getClientIp(req),
       });
     } catch (err) {
       console.error("Audit log error:", err);

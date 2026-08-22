@@ -167,16 +167,7 @@ onMounted(() => {
   border-radius: var(--radius-lg);
   font-size: var(--text-sm);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
+
 .card {
   background: var(--white);
   border: 1px solid var(--border);

@@ -273,14 +273,21 @@
             <div v-else-if="backupStatus" class="backup-status">
               <div class="backup-row">
                 <span>Last backup</span>
-                <b>{{
-                  formatTimeAgo(
-                    new Date(
-                      backupStatus.latestBackup?.createdAt ||
-                        backupStatus.lastBackupAt
+                <b
+                  v-if="
+                    backupStatus.latestBackup?.createdAt ||
+                    backupStatus.lastBackupAt
+                  "
+                  >{{
+                    formatTimeAgo(
+                      new Date(
+                        backupStatus.latestBackup?.createdAt ||
+                          backupStatus.lastBackupAt
+                      )
                     )
-                  )
-                }}</b>
+                  }}</b
+                >
+                <b v-else>No backups</b>
               </div>
               <div class="backup-row">
                 <span>Status</span>
@@ -839,14 +846,23 @@ const formatTimeAgo = (date) => {
 };
 
 const loadDashboard = async () => {
-  const res = await tenantAdminAPI.getDashboard();
-  dashboard.value = { ...dashboard.value, ...res.data };
+  try {
+    const res = await tenantAdminAPI.getDashboard();
+    dashboard.value = { ...dashboard.value, ...res.data };
+  } catch (e) {
+    logger.error("Failed to load dashboard", { error: e?.message });
+  }
 };
 
 const loadTenants = async () => {
-  const res = await tenantAdminAPI.getAll();
-  const collection = res.data.collection || res.data || [];
-  tenants.value = Array.isArray(collection) ? collection : [];
+  try {
+    const res = await tenantAdminAPI.getAll();
+    const collection = res.data.collection || res.data || [];
+    tenants.value = Array.isArray(collection) ? collection : [];
+  } catch (e) {
+    logger.error("Failed to load tenants", { error: e?.message });
+    tenants.value = [];
+  }
 };
 
 const loadPlans = async () => {

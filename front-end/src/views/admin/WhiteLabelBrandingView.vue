@@ -328,22 +328,7 @@ onMounted(() => {
   align-items: center;
   gap: var(--space-3);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(
-    135deg,
-    var(--brand-700) 0%,
-    var(--brand-600) 100%
-  );
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
+
 .btn-primary:hover {
   background: linear-gradient(
     135deg,
@@ -352,10 +337,7 @@ onMounted(() => {
   );
   box-shadow: var(--shadow-md);
 }
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .saved-tag {
   color: var(--earth-600);
   font-size: var(--text-sm);

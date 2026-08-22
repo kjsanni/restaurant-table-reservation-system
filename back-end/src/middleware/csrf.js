@@ -13,7 +13,7 @@ const setCsrfCookie = (req, res, next) => {
     const token = generateCsrfToken();
     const isProduction = process.env.NODE_ENV === "production";
     const isTest = process.env.NODE_ENV === "test";
-    const isSecure = req.secure || (req.headers["x-forwarded-proto"] === "https");
+    const isSecure = req.secure || (req.headers?.["x-forwarded-proto"] === "https");
     let sameSite;
     if (isTest) {
       sameSite = false;
@@ -23,6 +23,7 @@ const setCsrfCookie = (req, res, next) => {
       sameSite = "lax";
       console.warn("[CSRF] Development mode: sameSite set to lax. For production, use strict.");
     }
+    // CSRF cookie must be readable by JavaScript to send X-XSRF-TOKEN header.
     res.cookie(CSRF_COOKIE_NAME, token, {
       httpOnly: false,
       secure: isSecure,

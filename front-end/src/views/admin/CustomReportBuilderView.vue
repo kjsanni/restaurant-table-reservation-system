@@ -631,52 +631,6 @@ const columns = computed(() => {
   margin-top: var(--space-4);
 }
 
-.btn-primary {
-  flex: 1;
-  padding: 10px 18px;
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-primary:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  flex: 1;
-  padding: 10px 18px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--neutral-300);
-  background: var(--white);
-  color: var(--neutral-900);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--neutral-50);
-  border-color: var(--neutral-400);
-}
-
-.btn-secondary:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
 .results {
   background: var(--white);
   border: 1px solid var(--neutral-200);

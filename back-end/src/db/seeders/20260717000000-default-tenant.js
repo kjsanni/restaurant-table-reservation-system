@@ -18,6 +18,7 @@ module.exports = {
           plan: "starter",
           subscriptionStatus: "active",
           currency: "GHS",
+          monthlyRevenue: 299,
           createdAt: new Date(),
           updatedAt: new Date(),
         },

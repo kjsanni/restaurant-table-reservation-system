@@ -34,27 +34,47 @@
         {{ event.description }}
       </div>
 
-      <div v-if="checkoutStep === 'form' && event.isTicketed" class="checkout-section">
+      <div
+        v-if="checkoutStep === 'form' && event.isTicketed"
+        class="checkout-section"
+      >
         <h2 class="checkout-title">Buy Tickets</h2>
         <form @submit.prevent="submitBooking" class="checkout-form">
           <div v-if="ticketTypes.length > 1" class="form-group">
             <label for="ticketType">Ticket Type</label>
             <select id="ticketType" v-model="form.ticketTypeId" required>
               <option value="">Select ticket type</option>
-              <option v-for="ticket in ticketTypes" :key="ticket.id" :value="ticket.id">
-                {{ ticket.name }} — {{ formatGhs(ticket.price) }} ({{ ticket.quantity - (ticket.soldCount || 0) }} left)
+              <option
+                v-for="ticket in ticketTypes"
+                :key="ticket.id"
+                :value="ticket.id"
+              >
+                {{ ticket.name }} — {{ formatGhs(ticket.price) }} ({{
+                  ticket.quantity - (ticket.soldCount || 0)
+                }}
+                left)
               </option>
             </select>
           </div>
 
           <div class="form-group">
             <label for="guestName">Full Name</label>
-            <input id="guestName" v-model="form.guestName" type="text" required />
+            <input
+              id="guestName"
+              v-model="form.guestName"
+              type="text"
+              required
+            />
           </div>
 
           <div class="form-group">
             <label for="guestEmail">Email</label>
-            <input id="guestEmail" v-model="form.guestEmail" type="email" required />
+            <input
+              id="guestEmail"
+              v-model="form.guestEmail"
+              type="email"
+              required
+            />
           </div>
 
           <div class="form-group">
@@ -64,7 +84,14 @@
 
           <div class="form-group">
             <label for="quantity">Quantity</label>
-            <input id="quantity" v-model="form.quantity" type="number" min="1" :max="maxQuantity" required />
+            <input
+              id="quantity"
+              v-model="form.quantity"
+              type="number"
+              min="1"
+              :max="maxQuantity"
+              required
+            />
           </div>
 
           <div v-if="total > 0" class="checkout-total">
@@ -72,7 +99,11 @@
           </div>
 
           <div class="checkout-actions">
-            <button type="button" class="secondary-button" @click="checkoutStep = 'detail'">
+            <button
+              type="button"
+              class="secondary-button"
+              @click="checkoutStep = 'detail'"
+            >
               Cancel
             </button>
             <button type="submit" class="primary-button" :disabled="submitting">
@@ -82,17 +113,30 @@
         </form>
       </div>
 
-      <div v-else-if="checkoutStep === 'payment' && paymentUrl" class="checkout-section">
+      <div
+        v-else-if="checkoutStep === 'payment' && paymentUrl"
+        class="checkout-section"
+      >
         <h2 class="checkout-title">Complete Payment</h2>
         <p class="checkout-subtitle">You are being redirected to Paystack...</p>
-        <a :href="paymentUrl" target="_blank" rel="noopener" class="primary-button">
+        <a
+          :href="paymentUrl"
+          target="_blank"
+          rel="noopener"
+          class="primary-button"
+        >
           Open Payment Page
         </a>
       </div>
 
-      <div v-else-if="checkoutStep === 'success' && booking" class="checkout-section">
+      <div
+        v-else-if="checkoutStep === 'success' && booking"
+        class="checkout-section"
+      >
         <h2 class="checkout-title">Booking Confirmed</h2>
-        <p class="checkout-subtitle">Your booking has been created successfully.</p>
+        <p class="checkout-subtitle">
+          Your booking has been created successfully.
+        </p>
         <div class="booking-reference">
           Booking Reference: <strong>{{ booking.id }}</strong>
         </div>
@@ -102,10 +146,7 @@
       </div>
 
       <div v-else class="event-detail-actions">
-        <RouterLink
-          :to="{ name: 'customer-events' }"
-          class="secondary-button"
-        >
+        <RouterLink :to="{ name: 'customer-events' }" class="secondary-button">
           Back to events
         </RouterLink>
         <button
@@ -184,7 +225,9 @@ const loadEvent = async () => {
     event.value = (res.data?.event || res.data) as Event;
     if (event.value?.isTicketed) {
       const ticketRes = await eventPortalAPI.getTicketTypes(eventId);
-      const tickets = (ticketRes.data?.data || ticketRes.data || []) as TicketType[];
+      const tickets = (ticketRes.data?.data ||
+        ticketRes.data ||
+        []) as TicketType[];
       ticketTypes.value = tickets;
       if (tickets.length > 0) {
         form.value.ticketTypeId = String(tickets[0].id);
@@ -215,7 +258,9 @@ const submitBooking = async () => {
   try {
     const payload = {
       eventId: event.value.id,
-      ticketTypeId: form.value.ticketTypeId ? Number(form.value.ticketTypeId) : null,
+      ticketTypeId: form.value.ticketTypeId
+        ? Number(form.value.ticketTypeId)
+        : null,
       quantity: form.value.quantity,
       guestName: form.value.guestName,
       guestEmail: form.value.guestEmail,
@@ -235,7 +280,10 @@ const submitBooking = async () => {
       createdBooking.id,
       form.value.guestEmail
     );
-    paymentUrl.value = paymentRes.data?.authorizationUrl || paymentRes.data?.authorization_url || "";
+    paymentUrl.value =
+      paymentRes.data?.authorizationUrl ||
+      paymentRes.data?.authorization_url ||
+      "";
     checkoutStep.value = "payment";
   } catch {
     alert("Failed to create booking. Please try again.");

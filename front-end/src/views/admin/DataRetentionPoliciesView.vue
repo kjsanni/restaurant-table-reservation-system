@@ -117,6 +117,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
 
@@ -194,11 +196,6 @@ const removePolicy = async (id) => {
   await load();
 };
 
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleString();
-};
-
 onMounted(() => {
   load();
 });
@@ -226,16 +223,7 @@ onMounted(() => {
   margin: 0;
   font-size: var(--text-sm);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
+
 .loading-state-inline {
   display: flex;
   justify-content: center;
@@ -293,10 +281,7 @@ onMounted(() => {
   cursor: pointer;
   font-size: var(--text-xs);
 }
-.btn-danger {
-  border-color: var(--rose-300);
-  color: var(--rose-700);
-}
+
 .badge {
   display: inline-block;
   padding: var(--space-1) var(--space-2);
@@ -378,15 +363,5 @@ onMounted(() => {
   justify-content: flex-end;
   gap: var(--space-3);
   margin-top: var(--space-4);
-}
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
 }
 </style>

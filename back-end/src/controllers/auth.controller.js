@@ -11,6 +11,7 @@ const logger = require("../utils/logger");
 const whatsappService = require("../services/whatsapp.service");
 const whatsappOtpService = require("../services/whatsapp-otp.service");
 const passwordResetDAO = require("../DAOs/passwordReset.dao");
+const { logPlatformAudit, buildAuditContext } = require("../middleware/auth");
 
 const registerCustomerHandler = async (req, res) => {
   try {
@@ -180,6 +181,11 @@ const loginHandler = async (req, res) => {
   const isStaff = userRole === "staff" || userRole === "manager";
   const isSuperAdmin = !!result.user.isSuperAdmin;
 
+  if (isSuperAdmin) {
+    const context = buildAuditContext(req);
+    logPlatformAudit(context, "super_admin.access_granted").catch(() => {});
+  }
+
   if (isStaff && !isSuperAdmin) {
     const fullUser = await authDAO.findUserById(result.user.id, req.tenant?.id);
     const tenantWhatsAppEnabled = await whatsappService.isTenantWhatsAppEnabled(req.tenant?.id);
@@ -261,6 +267,11 @@ const loginTOTPHandler = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid TOTP token" });
     }
 
+    if (user.isSuperAdmin) {
+      const context = buildAuditContext(req);
+      logPlatformAudit(context, "super_admin.access_granted").catch(() => {});
+    }
+
     await _issueAuthTokens(res, req, user);
 
     return res.status(200).json({
@@ -281,6 +292,21 @@ const loginTOTPHandler = async (req, res) => {
 };
 
 const _issueAuthTokens = async (res, req, user) => {
+  const MAX_CONCURRENT_SESSIONS = user.isSuperAdmin ? 3 : 5;
+  const activeCount = await authDAO.getActiveSessionCount(user.id, req.tenant?.id);
+
+  if (activeCount >= MAX_CONCURRENT_SESSIONS) {
+    const revoked = await authDAO.revokeOldestSession(user.id, req.tenant?.id);
+    if (revoked) {
+      const context = buildAuditContext(req);
+      logPlatformAudit(context, "super_admin.session_limit_revoked", {
+        userId: user.id,
+        activeSessions: activeCount,
+        maxAllowed: MAX_CONCURRENT_SESSIONS,
+      }).catch(() => {});
+    }
+  }
+
   const token = authService.generateToken(user.id, user.role, user.locale);
   const refreshToken = authService.generateRefreshToken();
 

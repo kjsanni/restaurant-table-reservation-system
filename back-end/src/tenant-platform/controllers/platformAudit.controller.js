@@ -13,7 +13,14 @@ const buildAuditFilters = (query, extra = {}) => {
   if (query.startDate) filters.startDate = query.startDate;
   if (query.endDate) filters.endDate = query.endDate;
   if (query.limit) filters.limit = parseIntQuery(query.limit, 100);
-  if (query.offset) filters.offset = parseIntQuery(query.offset, 0);
+  if (query.pageSize) filters.pageSize = parseIntQuery(query.pageSize, 100);
+  if (query.offset) {
+    filters.offset = parseIntQuery(query.offset, 0);
+  } else if (query.page) {
+    const size = filters.pageSize || filters.limit || 100;
+    filters.offset = (parseIntQuery(query.page, 1) - 1) * size;
+  }
+  if (filters.pageSize) filters.limit = filters.pageSize;
   return { ...filters, ...extra };
 };
 
@@ -43,8 +50,10 @@ const escapeCsv = (value) => {
 };
 
 const listPlatformAuditHandler = async (req, res) => {
-  const data = await platformAuditDAO.list(buildAuditFilters(req.query));
-  res.status(200).json({ success: true, collection: data });
+  const filters = buildAuditFilters(req.query);
+  const data = await platformAuditDAO.list(filters);
+  const total = await platformAuditDAO.count(filters);
+  res.status(200).json({ success: true, collection: data, total });
 };
 
 const listForUserHandler = async (req, res) => {

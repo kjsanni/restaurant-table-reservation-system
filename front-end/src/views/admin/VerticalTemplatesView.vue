@@ -15,13 +15,23 @@
         <option value="salon">Salon</option>
         <option value="event">Event</option>
       </select>
-      <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Search templates..."
-        class="filter-select"
-        @input="load"
-      />
+      <div class="search-input-wrapper">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search templates..."
+          class="filter-select"
+          @input="load"
+        />
+        <button
+          v-if="searchQuery"
+          @click="searchQuery = ''"
+          class="search-input-clear"
+          aria-label="Clear search"
+        >
+          ×
+        </button>
+      </div>
     </div>
 
     <div class="card">
@@ -356,6 +366,8 @@ const load = async () => {
       );
     }
     items.value = data;
+  } catch {
+    items.value = [];
   } finally {
     loading.value = false;
   }
@@ -447,8 +459,9 @@ const loadUsage = async () => {
     const res = await adminAPI.getVerticalTemplateUsage();
     usageSummary.value = res.data?.summary || [];
     usageItems.value = res.data?.collection || [];
-  } catch (err) {
-    console.error("Failed to load template usage", err);
+  } catch {
+    usageSummary.value = [];
+    usageItems.value = [];
   } finally {
     usageLoading.value = false;
   }
@@ -486,24 +499,6 @@ onMounted(() => {
   display: flex;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
-}
-.filter-select {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  background: var(--surface);
-  color: var(--ink);
-}
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
 }
 
 .checkbox-group {
@@ -644,10 +639,7 @@ onMounted(() => {
   cursor: pointer;
   font-size: var(--text-xs);
 }
-.btn-danger {
-  border-color: var(--rose-300);
-  color: var(--rose-700);
-}
+
 .badge {
   display: inline-block;
   padding: var(--space-1) var(--space-2);
@@ -728,15 +720,5 @@ textarea.field-input {
   justify-content: flex-end;
   gap: var(--space-3);
   margin-top: var(--space-4);
-}
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
 }
 </style>

@@ -3,10 +3,18 @@ const response = require("../utils/response");
 const invoiceDAO = require("../DAOs/invoice.dao");
 
 const listInvoicesHandler = async (req, res) => {
-  const { status, limit, locationId } = req.query;
+  const { status: invoiceStatus, limit, locationId, page, pageSize, offset } = req.query;
   const tenantId = req.tenant?.id;
-  const data = await invoiceDAO.list({ tenantId, status, locationId, limit: limit ? parseInt(limit, 10) : 100 });
-  res.status(200).json({ success: true, collection: data });
+  const data = await invoiceDAO.list({
+    tenantId,
+    status: invoiceStatus,
+    locationId,
+    limit: limit ? parseInt(limit, 10) : 100,
+    page: page ? parseInt(page, 10) : 1,
+    pageSize: pageSize ? parseInt(pageSize, 10) : undefined,
+    offset: offset !== undefined ? parseInt(offset, 10) : undefined,
+  });
+  res.status(200).json({ success: true, collection: data.collection, total: data.total });
 };
 
 const getInvoiceHandler = async (req, res) => {

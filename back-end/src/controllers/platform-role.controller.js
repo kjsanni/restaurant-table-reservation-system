@@ -127,8 +127,11 @@ const revokePlatformRoleHandler = async (req, res) => {
 };
 
 const listPlatformUsersHandler = async (req, res) => {
-  const users = await authDAO.listPlatformUsers();
-  return res.status(200).json({ success: true, users });
+  const { page, pageSize, limit, offset } = req.query || {};
+  const size = pageSize ? parseInt(pageSize, 10) : limit ? parseInt(limit, 10) : 20;
+  const off = offset !== undefined ? parseInt(offset, 10) : (page ? (parseInt(page, 10) - 1) * size : 0);
+  const { users, total } = await authDAO.listPlatformUsers({ limit: size, offset: off });
+  return res.status(200).json({ success: true, users, total });
 };
 
 const createPlatformUserHandler = async (req, res) => {

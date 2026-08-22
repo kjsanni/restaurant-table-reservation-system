@@ -52,6 +52,14 @@ const DOMAIN_ALLOWLISTS = {
     "platform_primary_color",
     "custom_domain",
   ],
+  events: [
+    "event_qr_secret",
+    "event_checkin_config",
+  ],
+  other: [
+    "vertical_onboarding_templates",
+    "global_feature_flags",
+  ],
 };
 
 const ALLOWLIST = Object.values(DOMAIN_ALLOWLISTS).flat();
@@ -74,7 +82,6 @@ const listPlatformSettingsHandler = async (req, res) => {
     const EXPLICIT_SENSITIVE_KEYS = new Set([
       "turnstile_secret_key",
       "erpnext_api_secret",
-      "ip_allowlist",
       "password_policy",
     ]);
     const isSensitive = EXPLICIT_SENSITIVE_KEYS.has(key) || SENSITIVE_KEY_PATTERN.test(key);
@@ -96,11 +103,11 @@ const updatePlatformSettingHandler = async (req, res) => {
   const previous = await authDAO.getPlatformSettingByKey(key);
   const updated = await authDAO.updatePlatformSetting(key, value);
 
-await auditLog(req, "platform_setting.updated", "platform_setting", key, {
-      key,
-      previousValue: previous?.value,
-      newValue: updated.value,
-    });
+  await auditLog(req, "platform_setting.updated", "platform_setting", key, {
+    key,
+    previousValue: previous?.value,
+    newValue: updated.value,
+  });
 
   if (key.startsWith("erpnext_")) {
     const erpnextClient = require("../../integrations/erpnext/client");

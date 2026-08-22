@@ -174,6 +174,104 @@ const onTopBarKeydown = (e: KeyboardEvent) => {
   }
 };
 
+const onGlobalKeydown = (e: KeyboardEvent) => {
+  if (e.key === "Escape") {
+    activeDropdown.value = null;
+    return;
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+    e.preventDefault();
+    const searchInput = document.querySelector(
+      'input[type="search"], input[placeholder*="Search"]'
+    ) as HTMLInputElement | null;
+    if (searchInput) {
+      searchInput.focus();
+      searchInput.select();
+    }
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key === "n") {
+    e.preventDefault();
+    router.push({ name: "tenant-dashboard" }).then(() => {
+      setTimeout(() => {
+        const createBtn = document.querySelector(
+          '.btn-primary, button[aria-label*="Add"], button[aria-label*="Create"]'
+        ) as HTMLButtonElement | null;
+        createBtn?.click();
+      }, 300);
+    });
+  }
+};
+
+const breadcrumbs = computed(() => {
+  const segments = route.path.split("/").filter(Boolean);
+  const items: { label: string; to?: string }[] = [
+    { label: "Platform Admin", to: { name: "super-admin-overview" } },
+  ];
+  let path = "";
+  for (const segment of segments) {
+    path += `/${segment}`;
+    const label = segment
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    items.push({ label, to: path });
+  }
+  return items;
+});
+
+const pageTitle = computed(() => {
+  const explicit = (route.meta?.title as string | undefined)?.trim();
+  if (explicit) return explicit;
+  const name = route.name as string | undefined;
+  if (!name) return "Platform Admin";
+  const special: Record<string, string> = {
+    "super-admin-overview": "Overview",
+    "tenant-dashboard": "Tenants",
+    "tenant-detail": "Tenant Detail",
+    "tenant-migrations": "Migrations",
+    "tenant-provisioning": "Provisioning",
+    "tenant-api-keys": "API Keys",
+    "tenant-branding": "Branding",
+    "tenant-grace-period": "Grace Period",
+    "tenant-timeline": "Status Timeline",
+    "tenant-notes": "Notes",
+    "tenant-trial": "Trial Management",
+    "tenant-invoices": "Invoices",
+    "tenant-onboarding": "Onboarding",
+    "tenant-dsar": "DSAR Requests",
+    "plans-management": "Plans",
+    "platform-payment-dashboard": "Payments",
+    "platform-usage": "Usage",
+    "platform-revenue": "Revenue",
+    "platform-geographic": "Geographic",
+    "platform-bulk-actions": "Bulk Actions",
+    "platform-analytics": "Advanced Analytics",
+    "platform-vertical-analytics": "Vertical Analytics",
+    "platform-settings": "Settings",
+    "platform-audit": "Audit Log",
+    "platform-reports": "Reports",
+    "platform-roles": "Platform Users",
+    "super-admin-login": "Login",
+  };
+  return (
+    special[name] ||
+    name.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+  );
+});
+
+watch(
+  () => [pageTitle.value, route.path] as const,
+  ([title]) => {
+    if (typeof document !== "undefined") {
+      document.title = title
+        ? `${title} | Vibespot Business`
+        : "Vibespot Business";
+    }
+  },
+  { immediate: true }
+);
+
 const currentSection = computed(() => {
   const currentRoute = route.name as string;
   for (const item of visibleTopBarItems.value) {
@@ -204,11 +302,13 @@ const closeTopBarDropdown = (e: MouseEvent) => {
 onMounted(() => {
   document.addEventListener("click", closeTopBarDropdown);
   document.addEventListener("keydown", onTopBarKeydown);
+  document.addEventListener("keydown", onGlobalKeydown);
 });
 
 onUnmounted(() => {
   document.removeEventListener("click", closeTopBarDropdown);
   document.removeEventListener("keydown", onTopBarKeydown);
+  document.removeEventListener("keydown", onGlobalKeydown);
 });
 
 const groupedNavItems = computed(() => {
@@ -438,9 +538,7 @@ watch(
           </nav>
         </div>
         <div class="sa-topbar-center">
-          <span class="sa-topbar-title">{{
-            route.meta.title || "Platform Admin"
-          }}</span>
+          <span class="sa-topbar-title">{{ pageTitle }}</span>
         </div>
         <div class="sa-topbar-right">
           <div v-if="user" class="sa-user-chip">
@@ -448,6 +546,32 @@ watch(
           </div>
         </div>
       </header>
+
+      <nav
+        v-if="breadcrumbs.length > 1"
+        class="sa-breadcrumbs"
+        aria-label="Breadcrumb"
+      >
+        <template v-for="(crumb, index) in breadcrumbs" :key="index">
+          <RouterLink
+            v-if="crumb.to"
+            :to="crumb.to"
+            class="sa-breadcrumb-link"
+            :class="{
+              'sa-breadcrumb-link--active': index === breadcrumbs.length - 1,
+            }"
+          >
+            {{ crumb.label }}
+          </RouterLink>
+          <span v-else class="sa-breadcrumb-current">{{ crumb.label }}</span>
+          <span
+            v-if="index < breadcrumbs.length - 1"
+            class="sa-breadcrumb-separator"
+            aria-hidden="true"
+            >/</span
+          >
+        </template>
+      </nav>
 
       <main class="sa-content">
         <OfflineBanner />
@@ -903,6 +1027,43 @@ watch(
   min-height: calc(100vh - var(--topbar-height));
   position: relative;
   z-index: 1;
+}
+
+.sa-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sa-breadcrumb-link {
+  color: var(--ink-muted);
+  text-decoration: none;
+  transition: color var(--duration-150) var(--ease-in-out);
+}
+
+.sa-breadcrumb-link:hover {
+  color: var(--accent);
+}
+
+.sa-breadcrumb-link--active {
+  color: var(--ink);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.sa-breadcrumb-current {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.sa-breadcrumb-separator {
+  color: var(--neutral-400);
+  user-select: none;
 }
 
 @media screen and (max-width: 768px) {

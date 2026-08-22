@@ -11,11 +11,15 @@ const ALLOWED_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp"]);
 const ATTENDEE_PHOTOS_BASE_DIR = path.resolve(ATTENDEE_PHOTOS_DIR);
 
 const isPathSafe = (filePath) => {
-  const resolved = path.resolve(filePath); // codacy-suppress express-path-join-resolve-traversal - resolved path checked by startsWith
+  const resolved = path.resolve(filePath);
   return resolved.startsWith(ATTENDEE_PHOTOS_BASE_DIR + path.sep);
 };
 
-fs.mkdirSync(ATTENDEE_PHOTOS_DIR, { recursive: true });
+try {
+  fs.mkdirSync(ATTENDEE_PHOTOS_DIR, { recursive: true });
+} catch {
+  // Directory creation is best-effort; tests and some environments may not need it.
+}
 
 const photoController = {};
 

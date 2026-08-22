@@ -8,9 +8,9 @@ const listTenantEncryptionKeysHandler = async (req, res) => {
   if (!tenantId) {
     return response.badRequest(res, "Tenant context is required");
   }
-  const { status, purpose, limit } = req.query;
+  const { status: queryStatus, purpose, limit } = req.query;
   const data = await tenantEncryptionKeyDAO.findByTenantId(tenantId, {
-    status,
+    queryStatus,
     purpose,
     limit: limit ? parseInt(limit, 10) : 100,
   });

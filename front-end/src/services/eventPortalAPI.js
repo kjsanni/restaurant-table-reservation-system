@@ -172,7 +172,10 @@ class EventPortalAPI {
   }
 
   initializePublicBookingPayment(bookingId, email) {
-    return API.post(`/public/events/bookings/${bookingId}/payments/initialize`, { email });
+    return API.post(
+      `/public/events/bookings/${bookingId}/payments/initialize`,
+      { email }
+    );
   }
 
   getPublicBooking(bookingId) {

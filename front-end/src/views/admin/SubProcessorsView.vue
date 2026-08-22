@@ -234,16 +234,7 @@ onMounted(() => {
   margin: 0;
   font-size: var(--text-sm);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
+
 .loading-state-inline {
   display: flex;
   justify-content: center;
@@ -296,10 +287,6 @@ onMounted(() => {
   background: var(--white);
   cursor: pointer;
   font-size: var(--text-sm);
-}
-.btn-sm.btn-danger {
-  border-color: #fca5a5;
-  color: #dc2626;
 }
 .modal-overlay {
   position: fixed;
@@ -364,14 +351,5 @@ textarea.field-input {
   justify-content: flex-end;
   gap: var(--space-2);
   margin-top: var(--space-5);
-}
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
 }
 </style>

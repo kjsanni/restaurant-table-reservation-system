@@ -14,7 +14,7 @@
       <select
         v-model="selectedTenantId"
         class="filter-select"
-        @change="loadInvoices"
+        @change="onFilterChange"
       >
         <option value="0">All Tenants</option>
         <option v-for="tenant in tenants" :key="tenant.id" :value="tenant.id">
@@ -70,6 +70,13 @@
         </tbody>
       </table>
     </div>
+
+    <Pagination
+      v-if="invoices.length > 0"
+      :current-page="page"
+      :total-pages="totalPages"
+      @update:page="onPageChange"
+    />
 
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal">
@@ -148,10 +155,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { formatDate, formatDateTime } from "@/utils/format";
+
+import { ref, onMounted, computed } from "vue";
 import { useToastStore } from "@/stores/toast";
 import invoiceAPI from "@/services/invoiceAPI";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
+import Pagination from "@/components/AdminPagination.vue";
 
 const toastStore = useToastStore();
 
@@ -161,6 +171,13 @@ const invoices = ref([]);
 const selectedTenantId = ref("0");
 const showModal = ref(false);
 const editingInvoice = ref(null);
+const page = ref(1);
+const pageSize = ref(20);
+const total = ref(0);
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(total.value / pageSize.value))
+);
 
 const form = ref({
   tenantId: "",
@@ -186,8 +203,11 @@ const loadInvoices = async () => {
     const tenantId =
       selectedTenantId.value === "0" ? 0 : Number(selectedTenantId.value);
     const params = selectedTenantId.value === "0" ? {} : { tenantId };
+    params.page = page.value;
+    params.pageSize = pageSize.value;
     const response = await invoiceAPI.listInvoices(tenantId, params);
     invoices.value = response.data.collection || response.data.items || [];
+    total.value = response.data.total || 0;
   } catch (err) {
     toastStore.add(
       err.response?.data?.message || "Failed to load invoices",
@@ -197,6 +217,16 @@ const loadInvoices = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const onFilterChange = () => {
+  page.value = 1;
+  loadInvoices();
+};
+
+const onPageChange = (p) => {
+  page.value = p;
+  loadInvoices();
 };
 
 const getTenantName = (tenantId) => {
@@ -323,11 +353,6 @@ const deleteInvoice = async (invoice) => {
       4000
     );
   }
-};
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString();
 };
 
 const formatAmount = (val) => {
@@ -484,22 +509,7 @@ onMounted(async () => {
 .btn-small.danger:hover {
   background: var(--rose-600);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(
-    135deg,
-    var(--brand-700) 0%,
-    var(--brand-600) 100%
-  );
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
+
 .btn-primary:hover {
   background: linear-gradient(
     135deg,
@@ -508,17 +518,7 @@ onMounted(async () => {
   );
   box-shadow: var(--shadow-md);
 }
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink-secondary);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-family: var(--font-sans);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
+
 .btn-secondary:hover {
   border-color: var(--neutral-300);
   background: var(--surface-sunken);

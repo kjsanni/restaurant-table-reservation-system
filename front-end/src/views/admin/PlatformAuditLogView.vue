@@ -43,29 +43,53 @@
         </table>
       </div>
     </div>
+
+    <Pagination
+      v-if="logs.length > 0"
+      :current-page="page"
+      :total-pages="totalPages"
+      @update:page="onPageChange"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { formatDate, formatDateTime } from "@/utils/format";
+
+import { ref, onMounted, computed, watch } from "vue";
 import adminAPI from "@/services/adminAPI";
+import Pagination from "@/components/AdminPagination.vue";
 
 const loading = ref(false);
 const logs = ref([]);
+const page = ref(1);
+const pageSize = ref(20);
+const total = ref(0);
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(total.value / pageSize.value))
+);
 
 const load = async () => {
   loading.value = true;
   try {
-    const res = await adminAPI.getPlatformAuditLog();
+    const res = await adminAPI.getPlatformAuditLog({
+      page: page.value,
+      pageSize: pageSize.value,
+    });
     logs.value = res.data?.collection || [];
+    total.value = res.data?.total || 0;
   } finally {
     loading.value = false;
   }
 };
 
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleString();
+watch(page, () => {
+  load();
+});
+
+const onPageChange = (p) => {
+  page.value = p;
 };
 
 onMounted(() => {

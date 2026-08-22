@@ -451,6 +451,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
 import formatMoney from "@/utils/formatMoney";
@@ -494,11 +496,6 @@ const shaqLoading = ref(false);
 
 const unifiedEvents = ref([]);
 const unifiedLoading = ref(false);
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString();
-};
 
 const latencyBadge = (value) => {
   if (value === null || value === undefined) return "badge-error";
@@ -670,6 +667,8 @@ const loadAll = async () => {
       loadShaqExpressAnalytics(),
       loadUnifiedEvents(),
     ]);
+  } catch {
+    // Swallow partial failures so the page still renders
   } finally {
     loading.value = false;
   }
@@ -800,20 +799,7 @@ onMounted(() => {
   background: var(--surface);
   color: var(--ink);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;

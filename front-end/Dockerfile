@@ -19,6 +19,7 @@ RUN mkdir -p /run/nginx && \
     chmod -R 755 /usr/share/nginx/html
 RUN apk add --no-cache curl
 EXPOSE 8080
+USER nginx
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/ || exit 1
 CMD ["nginx", "-g", "daemon off;"]

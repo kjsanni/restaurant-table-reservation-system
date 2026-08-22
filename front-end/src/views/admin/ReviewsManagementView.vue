@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import reviewAPI from "@/services/reviewAPI";
 import logger from "@/utils/logger";
@@ -101,13 +103,6 @@ const unflagReview = async (id: number) => {
 
 const stars = (rating: number) =>
   Array.from({ length: 5 }, (_, i) => i < rating);
-
-const formatDate = (v?: string) => {
-  if (!v) return "—";
-  const dt = new Date(v);
-  if (isNaN(dt.getTime())) return v;
-  return dt.toLocaleString();
-};
 
 onMounted(() => {
   loadReviews();
@@ -405,29 +400,6 @@ onMounted(() => {
   outline: none;
   border-color: var(--brand-600);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-}
-
-.btn-primary {
-  padding: 10px 18px;
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-primary:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
 }
 
 .review-footer {

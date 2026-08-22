@@ -53,11 +53,11 @@ describe("supportTicket.controller", () => {
 
   it("listSupportTicketsHandler returns collection", async () => {
     const ticketDAO = require("../tenant-platform/DAOs/supportTicket.dao");
-    ticketDAO.list.mockResolvedValue([]);
+    ticketDAO.list.mockResolvedValue({ collection: [], total: 0 });
 
     req.query = {};
     await supportTicketController.listSupportTicketsHandler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({ success: true, collection: [] });
+    expect(res.json).toHaveBeenCalledWith({ success: true, collection: [], total: 0 });
   });
 });

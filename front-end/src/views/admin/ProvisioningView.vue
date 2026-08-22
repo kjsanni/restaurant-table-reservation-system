@@ -167,6 +167,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
@@ -193,12 +195,6 @@ const formatStatus = (s) => {
     rolled_back: "Rolled Back",
   };
   return map[s] || s;
-};
-
-const formatDate = (d) => {
-  if (!d) return "";
-  const date = new Date(d);
-  return date.toLocaleString();
 };
 
 const loadStatus = async () => {

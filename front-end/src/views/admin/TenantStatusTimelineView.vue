@@ -44,6 +44,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import logger from "@/utils/logger";
@@ -69,11 +71,6 @@ const loadData = async () => {
   } finally {
     loading.value = false;
   }
-};
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleString();
 };
 
 const formatAction = (action) => {

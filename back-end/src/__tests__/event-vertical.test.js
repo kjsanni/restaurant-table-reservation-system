@@ -28,9 +28,6 @@ describe("Event Vertical Defaults", () => {
         pos_sync: false,
         event_ticketing: true,
         event_guest_list: true,
-        event_vip_lounge: true,
-        event_table_reservation: true,
-        event_access_control: true,
         event_qr_checkin: false,
         event_whatsapp_invites: false,
       });
@@ -73,7 +70,7 @@ describe("Event Vertical Defaults", () => {
         "table_reservation",
         "event_checkin",
       ]);
-      expect(result.settings.featureFlags.event_vip_lounge).toBe(true);
+      expect(result.settings.featureFlags.event_guest_list).toBe(true);
       expect(result.settings.featureFlags.event_qr_checkin).toBe(true);
     });
 
@@ -94,16 +91,16 @@ describe("Event Vertical Defaults", () => {
     it("returns true for enabled event flags", () => {
       const tenant = {
         settings: {
-          featureFlags: { event_vip_lounge: true, event_guest_list: false },
+          featureFlags: { event_guest_list: true, event_qr_checkin: false },
         },
       };
-      expect(getFeatureFlag(tenant, "event_vip_lounge")).toBe(true);
-      expect(getFeatureFlag(tenant, "event_guest_list")).toBe(false);
+      expect(getFeatureFlag(tenant, "event_guest_list")).toBe(true);
+      expect(getFeatureFlag(tenant, "event_qr_checkin")).toBe(false);
     });
 
     it("returns false for missing flags", () => {
       const tenant = { settings: {} };
-      expect(getFeatureFlag(tenant, "event_vip_lounge")).toBe(false);
+      expect(getFeatureFlag(tenant, "event_guest_list")).toBe(false);
     });
   });
 

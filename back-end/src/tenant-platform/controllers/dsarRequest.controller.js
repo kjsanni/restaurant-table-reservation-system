@@ -88,9 +88,9 @@ const createHandler = async (req, res) => {
 };
 
 const patchHandler = async (req, res) => {
-  const { status, staffNotes } = req.body;
+  const { status: queryStatus, staffNotes } = req.body;
 
-  if (status && !VALID_STATUSES.includes(status)) {
+  if (queryStatus && !VALID_STATUSES.includes(queryStatus)) {
     return res.status(400).json({
       success: false,
       message: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
@@ -102,7 +102,7 @@ const patchHandler = async (req, res) => {
     return response.notFound(res, "DSAR request not found");
   }
 
-  const nextStatus = status || record.status;
+  const nextStatus = queryStatus || record.status;
   const nextNotes = staffNotes !== undefined ? staffNotes : record.staffNotes;
   const nextFulfilledAt = nextStatus === "fulfilled" && record.fulfilledAt === null
     ? new Date()

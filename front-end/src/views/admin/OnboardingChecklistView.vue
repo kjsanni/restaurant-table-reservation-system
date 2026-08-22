@@ -455,57 +455,14 @@ onMounted(() => {
   gap: var(--space-3);
   margin-top: var(--space-6);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(
-    135deg,
-    var(--brand-700) 0%,
-    var(--brand-600) 100%
-  );
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  font-family: var(--font-sans);
-}
-.btn-success {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(
-    135deg,
-    var(--earth-500) 0%,
-    var(--earth-600) 100%
-  );
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  font-family: var(--font-sans);
-}
+
 .gateway-editor {
   margin-top: var(--space-3);
   padding-top: var(--space-3);
   border-top: 1px solid var(--border-subtle);
 }
-.btn-secondary {
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink-secondary);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+
 .btn-secondary:hover {
   background: var(--neutral-100);
-}
-.btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

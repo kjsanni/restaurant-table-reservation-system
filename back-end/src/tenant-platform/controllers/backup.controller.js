@@ -6,9 +6,9 @@ const fs = require("fs");
 const auditLog = require("../utils/auditLog");
 
 const listBackupRecordsHandler = async (req, res) => {
-  const { status, type, limit } = req.query;
+  const { status: queryStatus, type, limit } = req.query;
   const data = await backupRecordDAO.list({
-    status,
+    queryStatus,
     type,
     limit: limit ? parseInt(limit, 10) : 50,
   });

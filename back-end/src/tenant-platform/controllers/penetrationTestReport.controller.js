@@ -5,9 +5,9 @@ const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const listPenetrationTestReportsHandler = async (req, res) => {
-  const { status, limit } = req.query;
+  const { status: queryStatus, limit } = req.query;
   const data = await penetrationTestReportDAO.list({
-    status,
+    queryStatus,
     limit: limit ? parseInt(limit, 10) : 100,
   });
   res.status(200).json({ success: true, collection: data });

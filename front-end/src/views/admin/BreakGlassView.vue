@@ -137,6 +137,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
 
@@ -210,11 +212,6 @@ const loadPendingRequests = async () => {
     const res = await adminAPI.listBreakGlassRequests({ status: "pending" });
     pendingRequests.value = res.data?.collection || [];
   });
-};
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleString();
 };
 
 const statusClass = (status) => {
@@ -334,40 +331,7 @@ onMounted(() => {
   display: flex;
   gap: var(--space-2);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border: none;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
-  color: white;
-  font-weight: 600;
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: white;
-  color: var(--ink-secondary);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-.btn-danger {
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid #fecaca;
-  border-radius: var(--radius-md);
-  background: #fef2f2;
-  color: #991b1b;
-  font-weight: 600;
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
+
 .btn-sm {
   padding: var(--space-1) var(--space-3);
   font-size: var(--text-xs);

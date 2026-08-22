@@ -3,9 +3,9 @@ const response = require("../utils/response");
 const db = require("../../db/models");
 
 const listRefundsHandler = async (req, res) => {
-  const { status, tenantId, from, to } = req.query;
+  const { status: queryStatus, tenantId, from, to } = req.query;
   const where = {};
-  if (status) where.status = status;
+  if (queryStatus) where.status = queryStatus;
   if (tenantId) where.tenantId = parseInt(tenantId, 10);
   if (from || to) {
     where.createdAt = {};
@@ -218,17 +218,22 @@ const detectFinancialAnomaliesHandler = async (req, res) => {
     }
   }
 
-  const lowStockItems = await db.inventoryItem.findAll({
-    where: {
-      isActive: true,
-      quantity: { [db.Sequelize.Op.lte]: db.Sequelize.col("reorderLevel") },
-    },
-    include: [
-      { model: db.tenant, as: "tenant", attributes: ["id", "name"] },
-    ],
-    order: [["quantity", "ASC"]],
-    limit: 30,
-  });
+  let lowStockItems = [];
+  try {
+    lowStockItems = await db.inventoryItem.findAll({
+      where: {
+        isActive: true,
+        quantity: { [db.Sequelize.Op.lte]: db.Sequelize.col("reorderLevel") },
+      },
+      include: [
+        { model: db.tenant, as: "tenant", attributes: ["id", "name"] },
+      ],
+      order: [["quantity", "ASC"]],
+      limit: 30,
+    });
+  } catch {
+    lowStockItems = [];
+  }
 
   for (const item of lowStockItems) {
     anomalies.push({
@@ -243,26 +248,31 @@ const detectFinancialAnomaliesHandler = async (req, res) => {
     });
   }
 
-  const staffActions = await db.auditLog.findAll({
-    where: {
-      entityType: "order",
-      action: { [db.Sequelize.Op.in]: ["void", "comp", "cancel"] },
-      createdAt: { [db.Sequelize.Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-    },
-    include: [
-      { model: db.user, as: "user", attributes: ["id", "username", "role"] },
-    ],
-    group: ["userId", "user.id"],
-    attributes: [
-      "userId",
-      [db.Sequelize.fn("COUNT", db.Sequelize.col("auditLog.id")), "actionCount"],
-      [db.Sequelize.fn("SUM", db.Sequelize.literal("CAST(changes->>'$.amount' AS DECIMAL(10,2))")), "totalAmount"],
-    ],
-    having: db.Sequelize.literal("COUNT(auditLog.id) >= 2"),
-    order: [[db.Sequelize.literal("actionCount"), "DESC"]],
-    limit: 20,
-    raw: true,
-  });
+  let staffActions = [];
+  try {
+    staffActions = await db.auditLog.findAll({
+      where: {
+        entityType: "order",
+        action: { [db.Sequelize.Op.in]: ["void", "comp", "cancel"] },
+        createdAt: { [db.Sequelize.Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+      },
+      include: [
+        { model: db.user, as: "user", attributes: ["id", "username", "role"] },
+      ],
+      group: ["userId"],
+      attributes: [
+        "userId",
+        [db.Sequelize.fn("COUNT", db.Sequelize.col("auditLog.id")), "actionCount"],
+        [db.Sequelize.fn("SUM", db.Sequelize.literal("CAST(changes->>'$.amount' AS DECIMAL(10,2))")), "totalAmount"],
+      ],
+      having: db.Sequelize.literal("COUNT(auditLog.id) >= 2"),
+      order: [[db.Sequelize.literal("actionCount"), "DESC"]],
+      limit: 20,
+      raw: true,
+    });
+  } catch {
+    staffActions = [];
+  }
 
   for (const row of staffActions) {
     const score = Math.min(100, parseInt(row.actionCount, 10) * 10 + (parseFloat(row.totalAmount || 0) > 500 ? 20 : 0));
@@ -277,18 +287,23 @@ const detectFinancialAnomaliesHandler = async (req, res) => {
     });
   }
 
-  const longDurationReservations = await db.reservation.findAll({
-    where: {
-      resStatus: { [db.Sequelize.Op.in]: ["completed", "cancelled"] },
-      createdAt: { [db.Sequelize.Op.lte]: new Date(Date.now() - 3 * 60 * 60 * 1000) },
-    },
-    include: [
-      { model: db.customer, as: "customer", attributes: ["id", "firstName", "lastName", "email"] },
-      { model: db.tenant, as: "tenant", attributes: ["id", "name"] },
-    ],
-    order: [["createdAt", "ASC"]],
-    limit: 20,
-  });
+  let longDurationReservations = [];
+  try {
+    longDurationReservations = await db.reservation.findAll({
+      where: {
+        resStatus: { [db.Sequelize.Op.in]: ["completed", "cancelled"] },
+        createdAt: { [db.Sequelize.Op.lte]: new Date(Date.now() - 3 * 60 * 60 * 1000) },
+      },
+      include: [
+        { model: db.customer, as: "customer", attributes: ["id", "firstName", "lastName", "email"] },
+        { model: db.tenant, as: "tenant", attributes: ["id", "name"] },
+      ],
+      order: [["createdAt", "ASC"]],
+      limit: 20,
+    });
+  } catch {
+    longDurationReservations = [];
+  }
 
   for (const reservation of longDurationReservations) {
     const durationHours = (new Date(reservation.updatedAt) - new Date(reservation.createdAt)) / (1000 * 60 * 60);
@@ -305,30 +320,37 @@ const detectFinancialAnomaliesHandler = async (req, res) => {
     }
   }
 
-  const cashConcentration = await db.payment.findAll({
-    where: { method: "cash" },
-    attributes: [
-      "tenantId",
-      [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "cashCount"],
-      [db.Sequelize.fn("SUM", db.Sequelize.col("amount")), "cashTotal"],
-    ],
-    group: ["tenantId"],
-    having: db.Sequelize.literal("SUM(amount) > 0"),
-    order: [[db.Sequelize.literal("cashTotal"), "DESC"]],
-    limit: 20,
-    raw: true,
-  });
+  let cashConcentration = [];
+  let totalPayments = [];
+  try {
+    cashConcentration = await db.payment.findAll({
+      where: { method: "cash" },
+      attributes: [
+        "tenantId",
+        [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "cashCount"],
+        [db.Sequelize.fn("SUM", db.Sequelize.col("amount")), "cashTotal"],
+      ],
+      group: ["tenantId"],
+      having: db.Sequelize.literal("SUM(amount) > 0"),
+      order: [[db.Sequelize.literal("cashTotal"), "DESC"]],
+      limit: 20,
+      raw: true,
+    });
 
-  const totalPayments = await db.payment.findAll({
-    attributes: [
-      "tenantId",
-      [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "totalCount"],
-      [db.Sequelize.fn("SUM", db.Sequelize.col("amount")), "totalAmount"],
-    ],
-    group: ["tenantId"],
-    having: db.Sequelize.literal("SUM(amount) > 0"),
-    raw: true,
-  });
+    totalPayments = await db.payment.findAll({
+      attributes: [
+        "tenantId",
+        [db.Sequelize.fn("COUNT", db.Sequelize.col("id")), "totalCount"],
+        [db.Sequelize.fn("SUM", db.Sequelize.col("amount")), "totalAmount"],
+      ],
+      group: ["tenantId"],
+      having: db.Sequelize.literal("SUM(amount) > 0"),
+      raw: true,
+    });
+  } catch {
+    cashConcentration = [];
+    totalPayments = [];
+  }
 
   const totalMap = new Map(totalPayments.map((p) => [p.tenantId, { count: parseInt(p.totalCount, 10), total: parseFloat(p.totalAmount || 0) }]));
 

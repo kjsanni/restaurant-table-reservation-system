@@ -18,7 +18,9 @@ jest.mock("../DAOs/passwordReset.dao", () => ({
 jest.mock("../DAOs/auth.dao", () => ({
   findUserByEmail: jest.fn(),
   updateUserPassword: jest.fn(),
+  updateUser: jest.fn(),
   hashPassword: jest.fn().mockResolvedValue("hashed"),
+  validatePasswordComplexity: jest.fn().mockResolvedValue(true),
 }));
 
 jest.mock("../services/emailService", () => ({
@@ -105,7 +107,7 @@ describe("Password Reset Controller", () => {
         id: 1,
         user: mockUser,
       });
-      authDAO.updateUserPassword.mockResolvedValue(undefined);
+      authDAO.updateUser.mockResolvedValue(undefined);
       passwordResetDAO.markUsed.mockResolvedValue({ id: 1 });
       passwordResetDAO.invalidateUserTokens.mockResolvedValue(undefined);
 
@@ -118,7 +120,7 @@ describe("Password Reset Controller", () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({ success: true, message: expect.any(String) })
       );
-      expect(authDAO.updateUserPassword).toHaveBeenCalledWith(1, expect.any(String));
+      expect(authDAO.updateUser).toHaveBeenCalledWith(1, expect.objectContaining({ password: expect.any(String) }));
       expect(passwordResetDAO.markUsed).toHaveBeenCalledWith(1);
       expect(passwordResetDAO.invalidateUserTokens).toHaveBeenCalledWith(1);
     });

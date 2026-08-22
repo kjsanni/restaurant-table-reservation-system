@@ -13,7 +13,11 @@
         class="events-search"
         @input="debouncedSearch"
       />
-      <select v-model="selectedEventType" class="events-type-filter" @change="loadEvents">
+      <select
+        v-model="selectedEventType"
+        class="events-type-filter"
+        @change="loadEvents"
+      >
         <option value="">All Types</option>
         <option v-for="type in eventTypes" :key="type" :value="type">
           {{ type }}
@@ -48,7 +52,10 @@
             {{ event.tenant.name }}
           </span>
           <RouterLink
-            :to="{ name: 'customer-event-detail', params: { eventId: event.id } }"
+            :to="{
+              name: 'customer-event-detail',
+              params: { eventId: event.id },
+            }"
             class="event-detail-link"
           >
             View Details

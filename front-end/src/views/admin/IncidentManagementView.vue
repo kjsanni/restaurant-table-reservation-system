@@ -31,16 +31,14 @@
 
     <div class="filters">
       <select v-model="filters.status" class="filter-select" @change="load">
-        <option value="">All Statuses</option>
-        <option value="open">Open</option>
+        <option value="open" selected>Open</option>
         <option value="investigating">Investigating</option>
         <option value="resolved">Resolved</option>
         <option value="closed">Closed</option>
       </select>
       <select v-model="filters.severity" class="filter-select" @change="load">
-        <option value="">All Severities</option>
+        <option value="medium" selected>Medium</option>
         <option value="low">Low</option>
-        <option value="medium">Medium</option>
         <option value="high">High</option>
         <option value="critical">Critical</option>
       </select>
@@ -192,6 +190,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
 
@@ -200,7 +200,7 @@ const saving = ref(false);
 const incidents = ref([]);
 const showCreate = ref(false);
 const editingIncident = ref(null);
-const filters = ref({ status: "", severity: "" });
+const filters = ref({ status: "open", severity: "medium" });
 const form = ref({
   title: "",
   description: "",
@@ -337,11 +337,6 @@ const closeModal = () => {
   };
 };
 
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleString();
-};
-
 const severityClass = (severity) => {
   const map = {
     low: "status-healthy",
@@ -470,48 +465,7 @@ onMounted(() => {
   font-weight: 700;
   color: var(--ink);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-danger {
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-md);
-  border: none;
-  background: var(--rose-500);
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-xs);
-  font-weight: 600;
-}
-.btn-danger:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .btn-xs {
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-md);

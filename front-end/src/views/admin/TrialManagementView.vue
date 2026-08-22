@@ -122,6 +122,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, computed, onMounted } from "vue";
 import { useToastStore } from "@/stores/toast";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
@@ -235,11 +237,6 @@ const submitConvert = async () => {
   }
 };
 
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString();
-};
-
 const formatPrice = (val) => {
   if (val == null) return "0.00";
   return Number(val).toFixed(2);
@@ -342,22 +339,7 @@ onMounted(async () => {
 .btn-small.success:hover {
   background: var(--earth-600);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(
-    135deg,
-    var(--brand-700) 0%,
-    var(--brand-600) 100%
-  );
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
+
 .btn-primary:hover {
   background: linear-gradient(
     135deg,
@@ -366,17 +348,7 @@ onMounted(async () => {
   );
   box-shadow: var(--shadow-md);
 }
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink-secondary);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-family: var(--font-sans);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
+
 .btn-secondary:hover {
   border-color: var(--neutral-300);
   background: var(--surface-sunken);

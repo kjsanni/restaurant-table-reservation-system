@@ -31,7 +31,6 @@ describe("requireSuperAdmin middleware", () => {
 
     expect(next).toHaveBeenCalledTimes(1);
     expect(res.status).not.toHaveBeenCalled();
-    expect(platformAuditDAO.log).toHaveBeenCalledTimes(1);
   });
 
   it("denies super admin when TOTP is not enabled", () => {

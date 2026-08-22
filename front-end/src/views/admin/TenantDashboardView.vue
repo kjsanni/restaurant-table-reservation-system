@@ -7,7 +7,22 @@
       </p>
     </div>
 
-    <div class="summary-cards">
+    <div v-if="loading" class="loading-state">
+      <div
+        class="skeleton skeleton-card"
+        style="width: 100%; height: 120px; margin-bottom: var(--space-4)"
+      ></div>
+      <div
+        class="skeleton skeleton-card"
+        style="width: 100%; height: 120px; margin-bottom: var(--space-4)"
+      ></div>
+      <div
+        class="skeleton skeleton-card"
+        style="width: 100%; height: 120px"
+      ></div>
+    </div>
+
+    <div v-else class="summary-cards">
       <div class="card">
         <div class="card-label">Total Venues</div>
         <div class="card-value">{{ dashboard?.total }}</div>
@@ -45,28 +60,38 @@
 
     <div class="quick-actions">
       <button @click="goTo('/super-admin/tenants')" class="qa-card">
-        <span class="qa-icon">🏢</span>
+        <Icon icon="mdi:office-building" width="28" height="28" />
         <span class="qa-text">Tenants</span>
       </button>
       <button @click="goTo('/super-admin/tenants?view=plans')" class="qa-card">
-        <span class="qa-icon">💰</span>
+        <Icon icon="mdi:currency-usd" width="28" height="28" />
         <span class="qa-text">Pricing</span>
       </button>
       <button @click="goTo('/super-admin/payments')" class="qa-card">
-        <span class="qa-icon">💳</span>
+        <Icon icon="mdi:credit-card" width="28" height="28" />
         <span class="qa-text">Payments</span>
       </button>
     </div>
 
     <div class="filters">
-      <input
-        v-model="searchQuery"
-        placeholder="Search venues..."
-        class="search-input"
-      />
+      <div class="search-input-wrapper">
+        <input
+          v-model="searchQuery"
+          placeholder="Search venues..."
+          class="search-input"
+        />
+        <button
+          v-if="searchQuery"
+          @click="searchQuery = ''"
+          class="search-input-clear"
+          aria-label="Clear search"
+        >
+          ×
+        </button>
+      </div>
       <select v-model="filterStatus" class="filter-select">
-        <option value="">All Statuses</option>
-        <option value="active">Active</option>
+        <option value="active" selected>Active</option>
+        <option value="past_due">Past Due</option>
         <option value="past_due">Past Due</option>
         <option value="suspended">Suspended</option>
         <option value="cancelled">Cancelled</option>
@@ -287,6 +312,16 @@
           </tr>
         </thead>
         <tbody>
+          <tr v-if="!filteredTenants.length">
+            <td colspan="8">
+              <div class="empty-state">
+                <p>No venues found</p>
+                <button @click="openCreateModal" class="btn-primary">
+                  + Add Venue
+                </button>
+              </div>
+            </td>
+          </tr>
           <tr v-for="tenant in filteredTenants" :key="tenant.id">
             <td>
               <input
@@ -351,18 +386,28 @@
           </tr>
         </tbody>
       </table>
+      <Pagination
+        v-if="totalPages > 1"
+        :current-page="tenantsPage"
+        :total-pages="totalPages"
+        @update:page="tenantsPage = $event"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, computed, onMounted, watch } from "vue";
+import { Icon } from "@iconify/vue";
 import { useRouter } from "vue-router";
 import { useToastStore } from "@/stores/toast";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
 import planAPI from "@/services/planAPI";
 import { useAuthStore } from "@/stores/auth";
 import { generateSlug } from "@/utils/slug";
+import Pagination from "@/components/AdminPagination.vue";
 
 let toastStore = null;
 try {
@@ -384,12 +429,16 @@ const dashboard = ref({
   recentTenants: [],
 });
 const tenants = ref([]);
+const tenantsTotal = ref(0);
+const tenantsPage = ref(1);
+const tenantsPageSize = ref(20);
 const provisioningStatuses = ref({});
 const plans = ref([]);
 const searchQuery = ref("");
-const filterStatus = ref("");
+const filterStatus = ref("active");
 const filterProvisioning = ref("");
 const selectedTenants = ref([]);
+const loading = ref(false);
 const showVerticalModal = ref(false);
 const verticalForm = ref({
   businessVertical: "restaurant",
@@ -482,14 +531,33 @@ const filteredTenants = computed(() => {
   });
 });
 
+watch([searchQuery, filterStatus, filterProvisioning], () => {
+  tenantsPage.value = 1;
+});
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(tenantsTotal.value / tenantsPageSize.value))
+);
+
 const loadDashboard = async () => {
-  const response = await tenantAdminAPI.getDashboard();
-  dashboard.value = response.data;
+  loading.value = true;
+  try {
+    const response = await tenantAdminAPI.getDashboard();
+    dashboard.value = response.data;
+  } finally {
+    loading.value = false;
+  }
 };
 
 const loadTenants = async () => {
-  const response = await tenantAdminAPI.getAll();
+  const response = await tenantAdminAPI.getAll({
+    page: tenantsPage.value,
+    pageSize: tenantsPageSize.value,
+    status: filterStatus.value || undefined,
+    search: searchQuery.value || undefined,
+  });
   tenants.value = response.data.collection || [];
+  tenantsTotal.value = response.data.total || 0;
 };
 
 const loadProvisioningStatuses = async () => {
@@ -649,11 +717,6 @@ const disableTenant = async (id) => {
   await loadDashboard();
 };
 
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString();
-};
-
 const formatMrr = (val) => {
   if (val == null) return "—";
   return Number(val).toLocaleString();
@@ -759,26 +822,6 @@ onMounted(async () => {
   display: flex;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
-}
-.search-input,
-.filter-select {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-sans);
-}
-.search-input {
-  flex: 1;
-  max-width: 320px;
-}
-.search-input:focus,
-.filter-select:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .table-wrapper {
   overflow-x: auto;
@@ -904,22 +947,7 @@ onMounted(async () => {
 .btn-small.danger:hover {
   background: var(--rose-600);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(
-    135deg,
-    var(--brand-700) 0%,
-    var(--brand-600) 100%
-  );
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
+
 .btn-primary:hover {
   background: linear-gradient(
     135deg,
@@ -928,17 +956,7 @@ onMounted(async () => {
   );
   box-shadow: var(--shadow-md);
 }
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink-secondary);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-family: var(--font-sans);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
+
 .btn-secondary:hover {
   border-color: var(--neutral-300);
   background: var(--surface-sunken);

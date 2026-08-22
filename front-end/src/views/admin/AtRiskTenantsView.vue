@@ -147,6 +147,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, computed, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
 import formatMoney from "@/utils/formatMoney";
@@ -166,11 +168,6 @@ const atRiskTenants = computed(() => {
     (t) => t.risk === "at_risk" || t.risk === "warning" || t.risk === "critical"
   );
 });
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString();
-};
 
 const riskBadge = (risk) => {
   const map = {
@@ -373,19 +370,5 @@ onMounted(() => {
 .badge-unhealthy {
   background: var(--rose-100);
   color: var(--rose-700);
-}
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 </style>

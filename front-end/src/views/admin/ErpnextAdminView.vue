@@ -20,13 +20,23 @@
 
     <div v-else class="erpnext-content">
       <div class="search-bar">
-        <input
-          v-model="searchQuery"
-          type="search"
-          placeholder="Search tenants..."
-          class="form-input search-input"
-          @input="handleSearch"
-        />
+        <div class="search-input-wrapper">
+          <input
+            v-model="searchQuery"
+            type="search"
+            placeholder="Search tenants..."
+            class="form-input search-input"
+            @input="handleSearch"
+          />
+          <button
+            v-if="searchQuery"
+            @click="searchQuery = ''"
+            class="search-input-clear"
+            aria-label="Clear search"
+          >
+            ×
+          </button>
+        </div>
         <select v-model="planFilter" class="form-select" @change="loadTenants">
           <option value="">All plans</option>
           <option value="starter">Starter</option>
@@ -166,10 +176,6 @@ onMounted(() => {
   display: flex;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
-}
-.search-input {
-  flex: 1;
-  max-width: 400px;
 }
 .stats-row {
   display: flex;

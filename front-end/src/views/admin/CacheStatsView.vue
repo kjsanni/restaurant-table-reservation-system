@@ -132,16 +132,7 @@ onMounted(() => {
 .card-value.danger {
   color: var(--rose-600);
 }
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
+
 .loading-state-inline {
   display: flex;
   justify-content: center;

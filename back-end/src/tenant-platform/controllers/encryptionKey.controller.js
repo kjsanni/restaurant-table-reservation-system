@@ -4,9 +4,9 @@ const encryptionKeyDAO = require("../DAOs/encryptionKey.dao");
 const auditLog = require("../utils/auditLog");
 
 const listEncryptionKeysHandler = async (req, res) => {
-  const { status, purpose, limit } = req.query;
+  const { status: queryStatus, purpose, limit } = req.query;
   const data = await encryptionKeyDAO.list({
-    status,
+    queryStatus,
     purpose,
     limit: limit ? parseInt(limit, 10) : 100,
   });

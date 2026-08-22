@@ -2,7 +2,7 @@ const db = require("../../db/models");
 
 const invoiceDAO = {};
 
-invoiceDAO.list = (filters = {}) => {
+invoiceDAO.list = async (filters = {}) => {
   const where = {};
   if (filters.tenantId) where.tenantId = filters.tenantId;
   if (filters.status) where.status = filters.status;
@@ -17,12 +17,25 @@ invoiceDAO.list = (filters = {}) => {
     });
   }
 
-  return db.invoice.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
+  const page = filters.page ? parseInt(filters.page, 10) : 1;
+  const pageSize = filters.limit
+    ? parseInt(filters.limit, 10)
+    : filters.pageSize
+    ? parseInt(filters.pageSize, 10)
+    : 100;
+  const offset =
+    filters.offset !== undefined
+      ? parseInt(filters.offset, 10)
+      : (page - 1) * pageSize;
+
+  const { rows, count } = await db.invoice.findAndCountAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where,
     include,
     order: [["createdAt", "DESC"]],
-    limit: filters.limit || 100,
+    limit: pageSize,
+    offset,
   });
+  return { collection: rows, total: count };
 };
 
 invoiceDAO.getById = (id, tenantId) => {

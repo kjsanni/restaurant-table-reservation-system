@@ -40,6 +40,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import axios from "axios";
@@ -89,6 +91,7 @@ const addNote = async () => {
 };
 
 const removeNote = async (note) => {
+  if (!confirm("Are you sure?")) return;
   try {
     await axios.delete(
       `${API_BASE}/admin/tenants/${tenantId}/notes/${note.id}`,
@@ -98,11 +101,6 @@ const removeNote = async (note) => {
   } catch (e) {
     error.value = e.response?.data?.message || "Failed to delete note.";
   }
-};
-
-const formatDate = (iso) => {
-  if (!iso) return "";
-  return new Date(iso).toLocaleString();
 };
 
 onMounted(fetchNotes);
