@@ -23,23 +23,18 @@ const requireElevatedSuperAdmin = (req, res, next) => {
 };
 
 const refreshElevation = async (req, res, next) => {
-  if (req.user && req.user.isSuperAdmin && req.user.elevatedUntil) {
-    const elevatedUntil = new Date(req.user.elevatedUntil);
-    const now = new Date();
+  if (req.user && req.user.isSuperAdmin) {
+    try {
+      const activeRequest = await breakGlassRequestDAO.listForUser(req.user.id, {
+        status: "approved",
+        limit: 1,
+      });
 
-    if (elevatedUntil > now) {
-      try {
-        const activeRequest = await breakGlassRequestDAO.listForUser(req.user.id, {
-          status: "approved",
-          limit: 1,
-        });
-
-        if (activeRequest.length > 0 && activeRequest[0].elevatedUntil) {
-          req.user.elevatedUntil = activeRequest[0].elevatedUntil;
-        }
-      } catch (err) {
-        console.error("Failed to refresh elevation:", err.message);
+      if (activeRequest.length > 0 && activeRequest[0].elevatedUntil) {
+        req.user.elevatedUntil = activeRequest[0].elevatedUntil;
       }
+    } catch (err) {
+      console.error("Failed to refresh elevation:", err.message);
     }
   }
 

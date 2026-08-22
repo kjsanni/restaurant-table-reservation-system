@@ -84,6 +84,7 @@ const billingRoutes = require("../routes/billing.router");
 const apiLatencyRoutes = require("../routes/apiLatency.router");
 const cacheStatsRoutes = require("../routes/cacheStats.router");
 const verticalTemplateRoutes = require("../routes/verticalTemplate.router");
+const verticalConfigurationRoutes = require("../routes/verticalConfiguration.router");
 const webhookEndpointRoutes = require("../routes/webhookEndpoint.router");
 const supportNoteRoutes = require("../routes/supportNote.router");
 const supportAttachmentRoutes = require("../routes/supportAttachment.router");
@@ -168,6 +169,7 @@ const tenantPlatformModule = {
     { path: "/api/v1/admin/monitoring/cache", router: cacheStatsRoutes, middleware: [logAction, validateCsrfToken, adminOrPlatformMiddleware] },
     { path: "/api/v1/admin/vertical-analytics", router: verticalAnalyticsRoutes, middleware: [logAction, validateCsrfToken, adminOrPlatformMiddleware] },
     { path: "/api/v1/admin/vertical-templates", router: verticalTemplateRoutes, middleware: [logAction, validateCsrfToken, adminOrPlatformMiddleware] },
+    { path: "/api/v1/admin/vertical-configurations", router: verticalConfigurationRoutes, middleware: [logAction, validateCsrfToken, adminMiddleware] },
     { path: "/api/v1/admin/data-retention", router: dataRetentionRoutes, middleware: [logAction, validateCsrfToken, adminOrPlatformMiddleware] },
     { path: "/api/v1/admin/suspicious-activity", router: suspiciousActivityRoutes, middleware: [logAction, validateCsrfToken, adminOrPlatformMiddleware] },
     { path: "/api/v1/admin/sub-processors", router: subProcessorRoutes, middleware: [logAction, validateCsrfToken, adminOrPlatformMiddleware] },

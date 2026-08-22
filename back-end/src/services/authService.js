@@ -5,8 +5,8 @@ const { verifyTokenWithFallback, getCurrentSecret } = require("../utils/jwtRotat
 const JWT_SECRET = getCurrentSecret();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "30m";
 
-const generateToken = (userId, role, locale = "en") => {
-  return jwt.sign({ userId, role, locale }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+const generateToken = (userId, role, locale = "en", elevatedUntil) => {
+  return jwt.sign({ userId, role, locale, elevatedUntil }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
 
 const generateRefreshToken = () => {
@@ -68,7 +68,7 @@ const refreshAccessToken = async (refreshTokenDAO, refreshToken, tenantId) => {
     throw { status: 401, message: "User not found!" };
   }
 
-  const newAccessToken = generateToken(user.id, user.role, user.locale);
+  const newAccessToken = generateToken(user.id, user.role, user.locale, user.elevatedUntil);
   const newRefreshToken = generateRefreshToken();
 
   if (refreshTokenDAO.createRefreshToken && refreshTokenDAO.revokeRefreshToken) {
@@ -86,6 +86,7 @@ const refreshAccessToken = async (refreshTokenDAO, refreshToken, tenantId) => {
       email: user.email,
       role: user.role,
       permissions: user.permissions || {},
+      elevatedUntil: user.elevatedUntil || null,
     },
   };
 };
@@ -175,7 +176,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
     }
   }
 
-  const token = generateToken(user.id, user.role, user.locale);
+  const token = generateToken(user.id, user.role, user.locale, user.elevatedUntil);
   const refreshToken = generateRefreshToken();
 
   let permissions = user.permissions || {};
@@ -288,6 +289,7 @@ const loginUser = async (userDAO, payload, tenantId, refreshTokenDAO = null, ipA
       isSuperAdmin: !!user.isSuperAdmin,
       platformRoles: user.platformRoles || [],
       emailVerified: !!user.emailVerified,
+      elevatedUntil: user.elevatedUntil || null,
     },
   };
 };
