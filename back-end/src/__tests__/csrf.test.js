@@ -24,7 +24,7 @@ describe("CSRF_COOKIE_NAME constant", () => {
       CSRF_COOKIE_NAME,
       expect.any(String),
       expect.objectContaining({
-        httpOnly: false,
+        httpOnly: true,
         secure: false,
         sameSite: false,
         path: "/",

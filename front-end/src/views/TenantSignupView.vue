@@ -5,7 +5,7 @@ import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
 import TurnstileWidget from "@/components/TurnstileWidget.vue";
 import { useTurnstileConfig } from "@/composables/useTurnstileConfig";
-import { getXsrfToken } from "@/composables/useXsrfToken";
+import { getCsrfToken } from "@/utils/csrf";
 
 const { config: turnstileConfig } = useTurnstileConfig();
 
@@ -122,7 +122,7 @@ const handleSignup = async () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-xsrf-token": getXsrfToken(),
+        "x-xsrf-token": await getCsrfToken(),
       },
       credentials: "include",
       body: JSON.stringify({

@@ -23,9 +23,8 @@ const setCsrfCookie = (req, res, next) => {
       sameSite = "lax";
       console.warn("[CSRF] Development mode: sameSite set to lax. For production, use strict.");
     }
-    // CSRF cookie must be readable by JavaScript to send X-XSRF-TOKEN header.
     res.cookie(CSRF_COOKIE_NAME, token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: isSecure,
       sameSite,
       path: "/",

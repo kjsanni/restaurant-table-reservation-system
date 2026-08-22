@@ -239,9 +239,8 @@ const createServer = () => {
     const token = req.cookies?.[CSRF_COOKIE_NAME] || generateCsrfToken();
     const isSecure = req.secure || (req.headers["x-forwarded-proto"] === "https");
     if (!req.cookies?.[CSRF_COOKIE_NAME]) {
-    // CSRF cookie must be readable by JavaScript to send X-XSRF-TOKEN header.
     res.cookie(CSRF_COOKIE_NAME, token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: isSecure,
       sameSite: process.env.NODE_ENV === "production" ? "lax" : false,
       path: "/",

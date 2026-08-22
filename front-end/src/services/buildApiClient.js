@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth";
 import { attachOfflineInterceptor } from "@/utils/offlineInterceptor";
+import { getCsrfToken } from "@/utils/csrf";
 
 let refreshing = false;
 const refreshQueue = [];
@@ -86,14 +87,22 @@ export const buildApiClient = (baseURL, options = {}) => {
 
   const client = axios.create({
     withCredentials: true,
-    xsrfCookieName: "XSRF-TOKEN",
-    xsrfHeaderName: "x-xsrf-token",
     headers: {
       "Content-Type": "application/json",
       ...headers,
     },
   });
   client.defaults.baseURL = baseURL;
+
+  client.interceptors.request.use(async (config) => {
+    if (config.url !== "/csrf-token") {
+      const token = await getCsrfToken();
+      if (token) {
+        config.headers["x-xsrf-token"] = token;
+      }
+    }
+    return config;
+  });
 
   if (withTenantHeader) {
     client.interceptors.request.use(attachTenantHeader);
