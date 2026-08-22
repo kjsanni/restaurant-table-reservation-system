@@ -291,6 +291,38 @@ const revokeAllUserTokens = async (userId, tenantId) => {
   return true;
 };
 
+const getActiveSessionCount = async (userId, tenantId) => {
+  return RefreshToken.count({
+    where: withTenant(
+      {
+        userId,
+        isRevoked: false,
+        expiresAt: { [db.Sequelize.Op.gt]: new Date() },
+      },
+      tenantId
+    ),
+  });
+};
+
+const revokeOldestSession = async (userId, tenantId) => {
+  const oldest = await RefreshToken.findOne({
+    where: withTenant(
+      {
+        userId,
+        isRevoked: false,
+        expiresAt: { [db.Sequelize.Op.gt]: new Date() },
+      },
+      tenantId
+    ),
+    order: [["createdAt", "ASC"]],
+  });
+  if (oldest) {
+    await oldest.update({ isRevoked: true });
+    return true;
+  }
+  return false;
+};
+
 const cleanupExpiredTokens = async (tenantId) => {
   await RefreshToken.destroy({
     where: withTenant(
@@ -380,9 +412,9 @@ const clearLoginAttempts = async (email, ipAddress, tenantId) => {
   });
 };
 
-const listPlatformUsers = async () => {
+const listPlatformUsers = async ({ limit, offset } = {}) => {
   const { Op } = db.Sequelize;
-  return await User.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
+  const queryOptions = {
     attributes: ["id", "username", "email", "role", "permissions", "locale", "isSuperAdmin", "platformRoles", "tenantId", "createdAt", "updatedAt"],
     where: {
       [Op.or]: [
@@ -391,7 +423,11 @@ const listPlatformUsers = async () => {
       ],
     },
     order: [["createdAt", "DESC"]],
-  });
+  };
+  if (limit !== undefined) queryOptions.limit = limit;
+  if (offset !== undefined) queryOptions.offset = offset;
+  const { rows, count } = await User.findAndCountAll(queryOptions); // codacy-suppress nosql-injection - parameterized ORM call
+  return { users: rows, total: count };
 };
 
 const findPlatformUserByEmail = async (email) => {
@@ -455,4 +491,6 @@ module.exports = {
   checkLoginLockout,
   clearLoginAttempts,
   validatePasswordComplexity,
+  getActiveSessionCount,
+  revokeOldestSession,
 };

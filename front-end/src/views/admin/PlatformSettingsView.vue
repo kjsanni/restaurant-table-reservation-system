@@ -270,6 +270,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted, computed } from "vue";
 import adminAPI from "@/services/adminAPI";
 import { useRouter } from "vue-router";
@@ -302,13 +304,10 @@ const DOMAIN_LABELS = {
   integrations: "Integrations",
   branding: "Branding & White-label",
   other: "Other",
+  events: "Events",
 };
 
-const INLINE_EDITABLE = new Set([
-  "maintenance_mode",
-  "tenant_mode_enabled",
-  "currency_locale",
-]);
+const INLINE_EDITABLE = new Set(["maintenance_mode", "tenant_mode_enabled"]);
 
 const TURNSITE_KEYS = new Set([
   "turnstile_enabled",
@@ -369,28 +368,27 @@ const loadSettings = async () => {
   try {
     const res = await adminAPI.listPlatformSettings();
     domains.value = res.data?.domains || {};
-    await loadTurnstileSettings();
-    await loadErpnextSettings();
+
+    const securitySettings = domains.value.security || [];
+    const findSetting = (key) =>
+      securitySettings.find((s) => s.key === key)?.value;
+    turnstileEnabled.value = findSetting("turnstile_enabled") || false;
+    turnstileSiteKey.value = findSetting("turnstile_site_key") || "";
+    turnstileSecretKey.value = findSetting("turnstile_secret_key") || "";
+
+    const integrationSettings = domains.value.integrations || [];
+    const findIntegrationSetting = (key) =>
+      integrationSettings.find((s) => s.key === key)?.value;
+    erpnextBaseUrl.value = findIntegrationSetting("erpnext_base_url") || "";
+    erpnextApiKey.value = findIntegrationSetting("erpnext_api_key") || "";
+    erpnextApiSecret.value = findIntegrationSetting("erpnext_api_secret") || "";
+    erpnextTimeoutMs.value =
+      findIntegrationSetting("erpnext_timeout_ms") || 30000;
+    erpnextCacheTtl.value = findIntegrationSetting("erpnext_cache_ttl") || 300;
   } catch (e) {
     error.value = "Failed to load platform settings.";
   } finally {
     loading.value = false;
-  }
-};
-
-const loadErpnextSettings = async () => {
-  try {
-    const res = await adminAPI.get("/admin/platform-settings");
-    const settings = res.data?.domains?.integrations || [];
-    const findSetting = (key) => settings.find((s) => s.key === key)?.value;
-
-    erpnextBaseUrl.value = findSetting("erpnext_base_url") || "";
-    erpnextApiKey.value = findSetting("erpnext_api_key") || "";
-    erpnextApiSecret.value = findSetting("erpnext_api_secret") || "";
-    erpnextTimeoutMs.value = findSetting("erpnext_timeout_ms") || 30000;
-    erpnextCacheTtl.value = findSetting("erpnext_cache_ttl") || 300;
-  } catch {
-    // keep defaults
   }
 };
 
@@ -500,11 +498,6 @@ const formatValue = (value) => {
     }
   }
   return String(value);
-};
-
-const formatDate = (date) => {
-  if (!date) return "";
-  return new Date(date).toLocaleString();
 };
 
 const loadAuditChanges = async () => {
@@ -684,23 +677,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
 }
-.btn-primary {
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-secondary {
-  background: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--border);
-}
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .audit-section {
   margin-top: var(--space-6);
   padding: var(--space-5);

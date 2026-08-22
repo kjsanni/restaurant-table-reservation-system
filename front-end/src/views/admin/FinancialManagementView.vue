@@ -52,14 +52,103 @@
         <div v-else class="anomaly-list">
           <div
             v-for="item in anomalies"
-            :key="item.refundId"
+            :key="
+              item.refundId ||
+              item.orderId ||
+              item.customerId ||
+              item.giftCardId ||
+              item.reservationId ||
+              item.userId
+            "
             class="anomaly-item"
           >
-            <b>Large refund ({{ item.ratio }}x)</b>
-            <span
-              >Venue #{{ item.tenantId }} · GHS
-              {{ item.amount.toFixed(2) }}</span
-            >
+            <template v-if="item.type === 'large_refund'">
+              <b>Large refund ({{ item.ratio }}x)</b>
+              <span
+                >Venue #{{ item.tenantId }} · GHS
+                {{ (item.amount || 0).toFixed(2) }}</span
+              >
+            </template>
+            <template v-else-if="item.type === 'high_discount'">
+              <b>High discount order</b>
+              <span
+                >Venue #{{ item.tenantId }} · {{ item.discountValue }}% off ·
+                GHS {{ (item.total || 0).toFixed(2) }}</span
+              >
+            </template>
+            <template v-else-if="item.type === 'frequent_canceller'">
+              <b>Frequent canceller</b>
+              <span
+                >{{ item.customerName }} ·
+                {{ item.cancellationCount }} cancellations</span
+              >
+            </template>
+            <template v-else-if="item.type === 'staff_void'">
+              <b>Staff void</b>
+              <span
+                >Venue #{{ item.tenantId }} · {{ item.createdBy }} · GHS
+                {{ (item.total || 0).toFixed(2) }}</span
+              >
+            </template>
+            <template v-else-if="item.type === 'cash_reconciliation_gap'">
+              <b>Cash reconciliation gap</b>
+              <span
+                >Venue #{{ item.tenantId }} · Gap: GHS
+                {{ (item.gap || 0).toFixed(2) }} ({{
+                  (item.ratio || 0).toFixed(2)
+                }})</span
+              >
+            </template>
+            <template v-else-if="item.type === 'inventory_shrinkage'">
+              <b>Inventory shrinkage</b>
+              <span
+                >Venue #{{ item.tenantId }} · {{ item.name || "Item" }} · Qty:
+                {{ item.quantity }} / Reorder: {{ item.reorderLevel }}</span
+              >
+            </template>
+            <template v-else-if="item.type === 'staff_behavior_score'">
+              <b>Staff behavior score: {{ item.score }}</b>
+              <span
+                >{{ item.username || "User" }} ({{ item.role }}) ·
+                {{ item.actionCount }} actions · GHS
+                {{ (item.totalAmount || 0).toFixed(2) }}</span
+              >
+            </template>
+            <template v-else-if="item.type === 'long_table_duration'">
+              <b>Long table duration</b>
+              <span
+                >Venue #{{ item.tenantId }} · {{ item.customerName }} ·
+                {{ item.durationHours }}h · {{ item.resStatus }}</span
+              >
+            </template>
+            <template v-else-if="item.type === 'cash_concentration'">
+              <b>Cash concentration</b>
+              <span
+                >Venue #{{ item.tenantId }} · {{ item.cashCount }} of
+                {{ item.totalPayments }} payments ({{
+                  (item.cashRatio || 0).toFixed(2)
+                }})</span
+              >
+            </template>
+            <template v-else-if="item.type === 'gift_card_fraud'">
+              <b>Gift card fraud</b>
+              <span
+                >Tenant #{{ item.tenantId }} · Purchased by
+                {{ item.purchasedBy }} · Redeemed by {{ item.redeemedBy }} ·
+                {{ item.hoursToRedeem }}h</span
+              >
+            </template>
+            <template v-else-if="item.type === 'cross_tenant_fraud_pattern'">
+              <b>Cross-tenant fraud pattern</b>
+              <span
+                >Venue #{{ item.tenantId }} ({{ item.tenantName }}) ·
+                {{ item.anomalyCount }} anomalies</span
+              >
+            </template>
+            <template v-else>
+              <b>Anomaly</b>
+              <span>Venue #{{ item.tenantId }}</span>
+            </template>
           </div>
         </div>
       </div>
@@ -69,8 +158,8 @@
       <h3>Platform Refunds</h3>
       <div class="filter-row">
         <select v-model="refundStatus" class="filter-select">
-          <option value="">All statuses</option>
-          <option value="pending">Pending</option>
+          <option value="pending" selected>Pending</option>
+          <option value="succeeded">Succeeded</option>
           <option value="succeeded">Succeeded</option>
           <option value="failed">Failed</option>
         </select>
@@ -117,6 +206,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
 import formatMoney from "@/utils/formatMoney";
@@ -127,12 +218,7 @@ const anomalies = ref([]);
 const anomaliesLoading = ref(false);
 const refunds = ref([]);
 const refundsLoading = ref(false);
-const refundStatus = ref("");
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString();
-};
+const refundStatus = ref("pending");
 
 const loadSubscriptionHealth = async () => {
   healthLoading.value = true;
@@ -283,20 +369,7 @@ onMounted(() => {
   background: var(--surface);
   color: var(--ink);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;

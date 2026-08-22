@@ -3,11 +3,11 @@ const response = require("../utils/response");
 const failedPaymentAlertDAO = require("../DAOs/failedPaymentAlert.dao");
 
 const listFailedPaymentAlertsHandler = async (req, res) => {
-  const { status, gateway, limit } = req.query;
+  const { status: queryStatus, gateway, limit } = req.query;
   const tenantId = req.user?.isSuperAdmin ? null : req.tenant?.id;
   const data = await failedPaymentAlertDAO.list({
     tenantId,
-    status,
+    queryStatus,
     gateway,
     limit: limit ? parseInt(limit, 10) : 50,
   });

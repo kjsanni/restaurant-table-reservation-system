@@ -7,16 +7,19 @@ const supportNotificationService = require("../services/supportNotification.serv
 const auditLog = require("../utils/auditLog");
 
 const listSupportTicketsHandler = async (req, res) => {
-  const { status, priority, category, limit } = req.query;
+  const { status: queryStatus, priority, category, limit, page, pageSize, offset } = req.query;
   const tenantId = req.user?.isSuperAdmin ? null : req.tenant?.id;
   const data = await supportTicketDAO.list({
     tenantId,
-    status,
+    queryStatus,
     priority,
     category,
     limit: limit ? parseInt(limit, 10) : 50,
+    page: page ? parseInt(page, 10) : 1,
+    pageSize: pageSize ? parseInt(pageSize, 10) : undefined,
+    offset: offset !== undefined ? parseInt(offset, 10) : undefined,
   });
-  res.status(200).json({ success: true, collection: data });
+  res.status(200).json({ success: true, collection: data.collection, total: data.total });
 };
 
 const getSupportTicketHandler = async (req, res) => {
@@ -207,11 +210,11 @@ const autoAssignTicketHandler = async (req, res) => {
             category: ticket.category,
             status: { [db.Sequelize.Op.not]: "resolved" },
           })
-        : [];
+        : { collection: [] };
       return {
         agent,
-        openCount: openTickets.length,
-        categoryMatchCount: categoryMatches.length,
+        openCount: openTickets.collection.length,
+        categoryMatchCount: categoryMatches.collection.length,
       };
     })
   );

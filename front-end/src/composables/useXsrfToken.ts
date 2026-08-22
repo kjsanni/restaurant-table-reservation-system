@@ -1,4 +1,6 @@
-export function getXsrfToken(): string {
-  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : "";
+import { getCsrfToken } from "@/utils/csrf";
+
+export async function getXsrfToken(): Promise<string> {
+  const token = await getCsrfToken();
+  return token || "";
 }

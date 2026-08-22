@@ -24,9 +24,4 @@ router
   .get(...protectedRoute("view_audit_logs", auditLogController.exportJSONHandler))
   .all(httpMethodError);
 
-router
-  .route("/bulk-delete")
-  .post(...writeRoute("manage_audit_logs", auditLogController.bulkDeleteHandler))
-  .all(httpMethodError);
-
 module.exports = router;

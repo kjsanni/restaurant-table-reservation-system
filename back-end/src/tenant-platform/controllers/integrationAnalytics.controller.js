@@ -1,6 +1,7 @@
 const db = require("../../db/models");
 const paystackService = require("../services/paystack.service");
 const deliveryAnalyticsDAO = require("../DAOs/deliveryAnalytics.dao");
+const { normalizeSettingValue } = require("../../utils/settings");
 
 const getPaystackTransactionsHandler = async (req, res) => {
   try {
@@ -249,7 +250,8 @@ const getThirdPartyStatusHandler = async (req, res) => {
 
   try {
     const config = await db.setting.findOne({ where: { key: "paystack_config" } });
-    integrations.paystack.status = config?.value?.secretKey ? "configured" : "not_configured";
+    const normalized = normalizeSettingValue(config?.value) || {};
+    integrations.paystack.status = normalized.secretKey ? "configured" : "not_configured";
     integrations.paystack.lastCheck = new Date().toISOString();
   } catch {
     integrations.paystack.status = "error";
@@ -257,7 +259,8 @@ const getThirdPartyStatusHandler = async (req, res) => {
 
   try {
     const waConfig = await db.setting.findOne({ where: { key: "salon_whatsapp_config" } });
-    integrations.whatsapp.status = waConfig?.value?.enabled ? "enabled" : "disabled";
+    const waNormalized = normalizeSettingValue(waConfig?.value) || {};
+    integrations.whatsapp.status = waNormalized.enabled ? "enabled" : "disabled";
     integrations.whatsapp.lastCheck = new Date().toISOString();
   } catch {
     integrations.whatsapp.status = "error";
@@ -265,7 +268,8 @@ const getThirdPartyStatusHandler = async (req, res) => {
 
   try {
     const seConfig = await db.setting.findOne({ where: { key: "shaqexpress_config" } });
-    integrations.shaqexpress.status = seConfig?.value?.enabled ? "enabled" : "disabled";
+    const seNormalized = normalizeSettingValue(seConfig?.value) || {};
+    integrations.shaqexpress.status = seNormalized.enabled ? "enabled" : "disabled";
     integrations.shaqexpress.lastCheck = new Date().toISOString();
   } catch {
     integrations.shaqexpress.status = "error";
@@ -273,7 +277,8 @@ const getThirdPartyStatusHandler = async (req, res) => {
 
   try {
     const emailConfig = await db.setting.findOne({ where: { key: "email_server" } });
-    integrations.email.status = emailConfig?.value?.host ? "configured" : "not_configured";
+    const emailNormalized = normalizeSettingValue(emailConfig?.value) || {};
+    integrations.email.status = emailNormalized.host ? "configured" : "not_configured";
     integrations.email.lastCheck = new Date().toISOString();
   } catch {
     integrations.email.status = "error";

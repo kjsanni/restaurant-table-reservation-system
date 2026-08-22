@@ -148,21 +148,23 @@ describe("platform-role.controller", () => {
       const mockUsers = [
         { id: 1, username: "admin1", email: "admin1@co.com", role: "admin", isSuperAdmin: true, platformRoles: [] },
       ];
-      authDAO.listPlatformUsers.mockResolvedValue(mockUsers);
+      authDAO.listPlatformUsers.mockResolvedValue({ users: mockUsers, total: mockUsers.length });
       const req = createReq();
+      req.query = {};
       const res = createRes();
       await platformRoleController.listPlatformUsersHandler(req, res);
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ success: true, users: mockUsers });
+      expect(res.json).toHaveBeenCalledWith({ success: true, users: mockUsers, total: mockUsers.length });
     });
 
     it("returns empty list when no platform users", async () => {
-      authDAO.listPlatformUsers.mockResolvedValue([]);
+      authDAO.listPlatformUsers.mockResolvedValue({ users: [], total: 0 });
       const req = createReq();
+      req.query = {};
       const res = createRes();
       await platformRoleController.listPlatformUsersHandler(req, res);
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ success: true, users: [] });
+      expect(res.json).toHaveBeenCalledWith({ success: true, users: [], total: 0 });
     });
   });
 

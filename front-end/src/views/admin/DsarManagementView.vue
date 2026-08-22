@@ -246,10 +246,7 @@ async function saveEdit() {
 .btn-ghost:hover {
   background: var(--background-warm, #f9fafb);
 }
-.btn-primary {
-  background: var(--brand-600, #7c4a2a);
-  color: #fff;
-}
+
 .btn-primary:hover {
   background: var(--brand-700, #5c3520);
 }

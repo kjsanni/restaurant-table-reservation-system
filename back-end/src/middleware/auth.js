@@ -161,7 +161,6 @@ const requireSuperAdmin = (req, res, next) => {
       });
     }
 
-    logPlatformAudit(context, "super_admin.access_granted").catch(() => {});
     return next();
   }
 
@@ -283,4 +282,4 @@ const requirePermission = (permission) => {
   };
 };
 
-module.exports = { protect, admin, staff, staffOnly, customer, requirePermission, requireSuperAdmin, requirePlatformRole, requireSupportAccess, ROLE_HIERARCHY };
+module.exports = { buildAuditContext, logPlatformAudit, protect, admin, staff, staffOnly, customer, requirePermission, requireSuperAdmin, requirePlatformRole, requireSupportAccess, ROLE_HIERARCHY };

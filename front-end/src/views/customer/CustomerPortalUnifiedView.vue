@@ -3,7 +3,9 @@
     <div class="page-header">
       <div>
         <h1>My Dashboard</h1>
-        <p class="subtitle">Unified view across all your bookings and loyalty</p>
+        <p class="subtitle">
+          Unified view across all your bookings and loyalty
+        </p>
       </div>
     </div>
 
@@ -34,17 +36,36 @@
       </div>
 
       <div class="loyalty-actions">
-        <button class="btn-primary" @click="showAddPoints = true">+ Add Points</button>
-        <button class="btn-secondary" @click="showRedeemPoints = true">Redeem Points</button>
+        <button class="btn-primary" @click="showAddPoints = true">
+          + Add Points
+        </button>
+        <button class="btn-secondary" @click="showRedeemPoints = true">
+          Redeem Points
+        </button>
       </div>
 
       <div v-if="showAddPoints" class="card form-card">
         <h3>Add Points</h3>
         <form @submit.prevent="handleAddPoints">
-          <input v-model="pointsForm.amount" type="number" min="1" placeholder="Points" required />
-          <input v-model="pointsForm.source" placeholder="Source (e.g. booking)" />
+          <input
+            v-model="pointsForm.amount"
+            type="number"
+            min="1"
+            placeholder="Points"
+            required
+          />
+          <input
+            v-model="pointsForm.source"
+            placeholder="Source (e.g. booking)"
+          />
           <div class="form-actions">
-            <button type="button" class="btn-secondary" @click="showAddPoints = false">Cancel</button>
+            <button
+              type="button"
+              class="btn-secondary"
+              @click="showAddPoints = false"
+            >
+              Cancel
+            </button>
             <button type="submit" class="btn-primary">Add</button>
           </div>
         </form>
@@ -53,9 +74,22 @@
       <div v-if="showRedeemPoints" class="card form-card">
         <h3>Redeem Points</h3>
         <form @submit.prevent="handleRedeemPoints">
-          <input v-model="pointsForm.amount" type="number" min="1" :max="profile.points" placeholder="Points" required />
+          <input
+            v-model="pointsForm.amount"
+            type="number"
+            min="1"
+            :max="profile.points"
+            placeholder="Points"
+            required
+          />
           <div class="form-actions">
-            <button type="button" class="btn-secondary" @click="showRedeemPoints = false">Cancel</button>
+            <button
+              type="button"
+              class="btn-secondary"
+              @click="showRedeemPoints = false"
+            >
+              Cancel
+            </button>
             <button type="submit" class="btn-primary">Redeem</button>
           </div>
         </form>
@@ -63,41 +97,71 @@
 
       <div class="section">
         <h2>Recent Activity</h2>
-        <div v-if="!profile.recentActivity?.length" class="empty-state">No activity yet.</div>
+        <div v-if="!profile.recentActivity?.length" class="empty-state">
+          No activity yet.
+        </div>
         <div v-else class="activity-list">
-          <div v-for="item in profile.recentActivity" :key="item.date + item.type" class="activity-item">
-            <div class="activity-icon">{{ item.type === 'reservation' ? '🍽️' : '🎫' }}</div>
+          <div
+            v-for="item in profile.recentActivity"
+            :key="item.date + item.type"
+            class="activity-item"
+          >
+            <div class="activity-icon">
+              {{ item.type === "reservation" ? "🍽️" : "🎫" }}
+            </div>
             <div class="activity-body">
               <div class="activity-title">{{ item.title }}</div>
-              <div class="activity-meta">{{ formatDate(item.date) }} · {{ item.status }}</div>
+              <div class="activity-meta">
+                {{ formatDate(item.date) }} · {{ item.status }}
+              </div>
             </div>
-            <div class="activity-total">{{ item.total ? formatGhs(item.total) : '' }}</div>
+            <div class="activity-total">
+              {{ item.total ? formatGhs(item.total) : "" }}
+            </div>
           </div>
         </div>
       </div>
 
       <div class="section">
         <h2>Cross-Vertical History</h2>
-        <div v-if="loadingHistory" class="loading-state">Loading history...</div>
+        <div v-if="loadingHistory" class="loading-state">
+          Loading history...
+        </div>
         <div v-else-if="!history" class="empty-state">No history found.</div>
         <div v-else class="history-grid">
           <div class="card">
             <h3>Restaurant Reservations</h3>
-            <div v-if="!history.reservations.length" class="empty-state">No reservations</div>
+            <div v-if="!history.reservations.length" class="empty-state">
+              No reservations
+            </div>
             <div v-else class="list">
-              <div v-for="item in history.reservations" :key="item.id" class="list-item">
+              <div
+                v-for="item in history.reservations"
+                :key="item.id"
+                class="list-item"
+              >
                 <div>{{ item.tenantName }}</div>
-                <div class="meta">{{ formatDate(item.date) }} · {{ item.status }}</div>
+                <div class="meta">
+                  {{ formatDate(item.date) }} · {{ item.status }}
+                </div>
               </div>
             </div>
           </div>
           <div class="card">
             <h3>Event Bookings</h3>
-            <div v-if="!history.events.length" class="empty-state">No event bookings</div>
+            <div v-if="!history.events.length" class="empty-state">
+              No event bookings
+            </div>
             <div v-else class="list">
-              <div v-for="item in history.events" :key="item.id" class="list-item">
-                <div>{{ item.eventName || 'Event' }}</div>
-                <div class="meta">{{ formatDate(item.date) }} · {{ item.status }}</div>
+              <div
+                v-for="item in history.events"
+                :key="item.id"
+                class="list-item"
+              >
+                <div>{{ item.eventName || "Event" }}</div>
+                <div class="meta">
+                  {{ formatDate(item.date) }} · {{ item.status }}
+                </div>
               </div>
             </div>
           </div>
@@ -120,7 +184,13 @@ interface Profile {
   totalVisits: number;
   totalSpent: number;
   verticals: { restaurant: number; event: number };
-  recentActivity: Array<{ type: string; date: string; title: string; status: string; total?: number }>;
+  recentActivity: Array<{
+    type: string;
+    date: string;
+    title: string;
+    status: string;
+    total?: number;
+  }>;
 }
 
 const loading = ref(true);
@@ -150,14 +220,20 @@ const loadHistory = async () => {
   loadingHistory.value = true;
   try {
     const res = await customerPortalAPI.getCrossVerticalHistory();
-    history.value = (res.data?.history || res.data) as { reservations: any[]; events: any[] };
+    history.value = (res.data?.history || res.data) as {
+      reservations: any[];
+      events: any[];
+    };
   } finally {
     loadingHistory.value = false;
   }
 };
 
 const handleAddPoints = async () => {
-  await customerPortalAPI.addLoyaltyPoints(pointsForm.value.amount, pointsForm.value.source);
+  await customerPortalAPI.addLoyaltyPoints(
+    pointsForm.value.amount,
+    pointsForm.value.source
+  );
   showAddPoints.value = false;
   pointsForm.value = { amount: 1, source: "manual" };
   await loadProfile();
@@ -171,7 +247,10 @@ const handleRedeemPoints = async () => {
 };
 
 const formatGhs = (amount: number) => {
-  return new Intl.NumberFormat("en-GH", { style: "currency", currency: "GHS" }).format(amount);
+  return new Intl.NumberFormat("en-GH", {
+    style: "currency",
+    currency: "GHS",
+  }).format(amount);
 };
 
 const formatDate = (dateStr: string) => {

@@ -323,48 +323,7 @@ onMounted(() => {
 .status-failed {
   color: var(--rose-600);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-danger {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: var(--rose-500);
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-danger:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .btn-xs {
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-md);

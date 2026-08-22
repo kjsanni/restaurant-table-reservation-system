@@ -71,7 +71,11 @@ const resetPasswordHandler = async (req, res) => {
   }
 
   const hashedPassword = await authDAO.hashPassword(password);
-  await authDAO.updateUserPassword(tokenRecord.user.id, hashedPassword);
+  const passwordValid = await authDAO.validatePasswordComplexity(password);
+  if (!passwordValid) {
+    return res.status(400).json({ success: false, message: "Password does not meet complexity requirements" });
+  }
+  await authDAO.updateUser(tokenRecord.user.id, { password: hashedPassword });
 
   await passwordResetDAO.markUsed(tokenRecord.id);
   await passwordResetDAO.invalidateUserTokens(tokenRecord.user.id);

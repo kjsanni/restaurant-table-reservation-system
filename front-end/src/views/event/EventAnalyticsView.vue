@@ -14,7 +14,12 @@
           {{ event.name }}
         </option>
       </select>
-      <input v-model="dateFrom" type="date" class="filter-input" @change="load" />
+      <input
+        v-model="dateFrom"
+        type="date"
+        class="filter-input"
+        @change="load"
+      />
       <span class="filter-separator">to</span>
       <input v-model="dateTo" type="date" class="filter-input" @change="load" />
     </div>
@@ -137,7 +142,10 @@ const load = async () => {
       if (dateFrom.value) params.from = dateFrom.value;
       if (dateTo.value) params.to = dateTo.value;
 
-      const res = await eventAPI.getEventAnalytics(selectedEventId.value as number, params);
+      const res = await eventAPI.getEventAnalytics(
+        selectedEventId.value as number,
+        params
+      );
       summary.value = res.data?.data || null;
     } else {
       summary.value = null;

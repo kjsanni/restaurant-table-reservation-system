@@ -10,12 +10,22 @@
     </div>
 
     <div class="search-bar">
-      <input
-        v-model="query"
-        class="search-input"
-        placeholder="Search by name, email, phone, status..."
-        @keydown.enter="search"
-      />
+      <div class="search-input-wrapper">
+        <input
+          v-model="query"
+          class="search-input"
+          placeholder="Search by name, email, phone, status..."
+          @keydown.enter="search"
+        />
+        <button
+          v-if="query"
+          @click="query = ''"
+          class="search-input-clear"
+          aria-label="Clear search"
+        >
+          ×
+        </button>
+      </div>
       <button class="btn-primary" @click="search">Search</button>
     </div>
 
@@ -175,23 +185,7 @@ const formatCurrency = (value) => {
   gap: var(--space-3);
   margin-bottom: var(--space-5);
 }
-.search-input {
-  flex: 1;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-base);
-}
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
+
 .loading-state-inline {
   display: flex;
   justify-content: center;

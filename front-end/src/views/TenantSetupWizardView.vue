@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { Icon } from "@iconify/vue";
 import { useAuthStore } from "@/stores/auth";
-import { getXsrfToken } from "@/composables/useXsrfToken";
+import { getCsrfToken } from "@/utils/csrf";
 import erpnextAPI from "@/services/erpnextAPI";
 
 const router = useRouter();
@@ -140,7 +140,7 @@ const submitSetup = async () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-xsrf-token": getXsrfToken(),
+        "x-xsrf-token": await getCsrfToken(),
       },
       credentials: "include",
       body: JSON.stringify({

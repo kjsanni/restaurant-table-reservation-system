@@ -103,6 +103,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import notificationAPI from "@/services/notificationAPI";
 
@@ -140,11 +142,6 @@ const create = async () => {
 const markRead = async (n) => {
   await notificationAPI.markRead(n.id);
   n.read = true;
-};
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleString();
 };
 
 onMounted(() => {

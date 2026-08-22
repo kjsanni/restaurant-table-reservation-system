@@ -54,21 +54,32 @@
     </div>
 
     <div class="filters">
-      <select v-model="filterStatus" class="filter-select" @change="load">
-        <option value="">All Statuses</option>
-        <option value="open">Open</option>
+      <select
+        v-model="filterStatus"
+        class="filter-select"
+        @change="onFilterChange"
+      >
+        <option value="open" selected>Open</option>
         <option value="in_progress">In Progress</option>
         <option value="resolved">Resolved</option>
         <option value="closed">Closed</option>
       </select>
-      <select v-model="filterPriority" class="filter-select" @change="load">
+      <select
+        v-model="filterPriority"
+        class="filter-select"
+        @change="onFilterChange"
+      >
         <option value="">All Priorities</option>
         <option value="low">Low</option>
         <option value="medium">Medium</option>
         <option value="high">High</option>
         <option value="critical">Critical</option>
       </select>
-      <select v-model="filterCategory" class="filter-select" @change="load">
+      <select
+        v-model="filterCategory"
+        class="filter-select"
+        @change="onFilterChange"
+      >
         <option value="">All Categories</option>
         <option value="general">General</option>
         <option value="billing">Billing</option>
@@ -77,13 +88,23 @@
         <option value="salon">Salon</option>
         <option value="restaurant">Restaurant</option>
       </select>
-      <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Search subject..."
-        class="filter-select"
-        @input="load"
-      />
+      <div class="search-input-wrapper">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search subject..."
+          class="filter-select"
+          @input="onFilterChange"
+        />
+        <button
+          v-if="searchQuery"
+          @click="searchQuery = ''"
+          class="search-input-clear"
+          aria-label="Clear search"
+        >
+          ×
+        </button>
+      </div>
     </div>
 
     <div class="card">
@@ -190,6 +211,13 @@
         </table>
       </div>
     </div>
+
+    <Pagination
+      v-if="items.length > 0"
+      :current-page="page"
+      :total-pages="totalPages"
+      @update:page="onPageChange"
+    />
 
     <div v-if="selectedTicket" class="modal-overlay" @click.self="closeDetail">
       <div class="detail-modal">
@@ -527,19 +555,29 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import adminAPI from "@/services/adminAPI";
+import Pagination from "@/components/AdminPagination.vue";
 
 const router = useRouter();
 const loading = ref(false);
 const items = ref([]);
 const selectedTicket = ref(null);
 const showCreate = ref(false);
-const filterStatus = ref("");
+const filterStatus = ref("open");
 const filterPriority = ref("");
 const filterCategory = ref("");
 const searchQuery = ref("");
+const page = ref(1);
+const pageSize = ref(20);
+const total = ref(0);
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(total.value / pageSize.value))
+);
 const csatTicket = ref(null);
 const csatForm = ref({ rating: 0, feedback: "" });
 const notes = ref([]);
@@ -676,37 +714,40 @@ const formatDuration = (ms) => {
   return `${minutes}m`;
 };
 
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString();
-};
-
-const formatDateTime = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleString();
-};
-
 const stars = (rating) => "★".repeat(rating) + "☆".repeat(5 - rating);
 
 const load = async () => {
   loading.value = true;
   try {
-    const params = { limit: 100 };
+    const params = {
+      page: page.value,
+      pageSize: pageSize.value,
+      limit: pageSize.value,
+    };
     if (filterStatus.value) params.status = filterStatus.value;
     if (filterPriority.value) params.priority = filterPriority.value;
+    if (filterCategory.value) params.category = filterCategory.value;
     const res = await adminAPI.listSupportTickets(params);
     let data = res.data?.collection || [];
+    total.value = res.data?.total || 0;
     if (searchQuery.value) {
       const q = searchQuery.value.toLowerCase();
       data = data.filter((t) => t.subject.toLowerCase().includes(q));
-    }
-    if (filterCategory.value) {
-      data = data.filter((t) => t.category === filterCategory.value);
     }
     items.value = data;
   } finally {
     loading.value = false;
   }
+};
+
+const onFilterChange = () => {
+  page.value = 1;
+  load();
+};
+
+const onPageChange = (p) => {
+  page.value = p;
+  load();
 };
 
 const updateStatus = async (id, status) => {
@@ -776,6 +817,7 @@ const addNote = async () => {
 };
 
 const removeNote = async (id) => {
+  if (!confirm("Are you sure?")) return;
   await adminAPI.deleteSupportNote(id);
   if (selectedTicket.value) {
     await loadNotes(selectedTicket.value.id);
@@ -820,6 +862,7 @@ const uploadAttachment = async () => {
 };
 
 const removeAttachment = async (id) => {
+  if (!confirm("Are you sure?")) return;
   await adminAPI.deleteSupportAttachment(id);
   if (selectedTicket.value) {
     await loadAttachments(selectedTicket.value.id);
@@ -1087,34 +1130,7 @@ onMounted(() => {
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
-.filter-select {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  background: var(--surface);
-  color: var(--ink);
-}
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
+
 .loading-state-inline {
   display: flex;
   justify-content: center;
@@ -1626,9 +1642,5 @@ onMounted(() => {
   font-size: var(--text-sm);
   background: var(--surface);
   color: var(--ink);
-}
-.btn-danger {
-  border-color: var(--rose-300);
-  color: var(--rose-700);
 }
 </style>

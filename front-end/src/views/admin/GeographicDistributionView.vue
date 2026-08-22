@@ -118,20 +118,7 @@ onMounted(() => {
   margin: 0;
   font-size: var(--text-sm);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

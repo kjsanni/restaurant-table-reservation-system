@@ -35,11 +35,21 @@
     </div>
 
     <div class="filters">
-      <input
-        v-model="searchQuery"
-        placeholder="Search venues..."
-        class="search-input"
-      />
+      <div class="search-input-wrapper">
+        <input
+          v-model="searchQuery"
+          placeholder="Search venues..."
+          class="search-input"
+        />
+        <button
+          v-if="searchQuery"
+          @click="searchQuery = ''"
+          class="search-input-clear"
+          aria-label="Clear search"
+        >
+          ×
+        </button>
+      </div>
       <select v-model="filterPlan" class="filter-select">
         <option value="">All Plans</option>
         <option v-for="plan in plans" :key="plan.slug" :value="plan.slug">
@@ -124,9 +134,11 @@
               <span
                 :class="{
                   warning:
-                    getUsagePercent(item.bookingsUsed, item.bookingsLimit) >= 80,
+                    getUsagePercent(item.bookingsUsed, item.bookingsLimit) >=
+                    80,
                   danger:
-                    getUsagePercent(item.bookingsUsed, item.bookingsLimit) >= 100,
+                    getUsagePercent(item.bookingsUsed, item.bookingsLimit) >=
+                    100,
                 }"
               >
                 {{ item.bookingsUsed || 0 }}
@@ -271,7 +283,12 @@ const summary = computed(() => {
       );
       const eventsPct = getUsagePercent(u.eventsUsed, u.eventsLimit);
       const bookingsPct = getUsagePercent(u.bookingsUsed, u.bookingsLimit);
-      return tablesPct >= 80 || reservationsPct >= 80 || eventsPct >= 80 || bookingsPct >= 80;
+      return (
+        tablesPct >= 80 ||
+        reservationsPct >= 80 ||
+        eventsPct >= 80 ||
+        bookingsPct >= 80
+      );
     }).length,
     avgTablesUsage: data.length
       ? Math.round(
@@ -325,9 +342,15 @@ const filteredUsage = computed(() => {
     const eventsPct = getUsagePercent(u.eventsUsed, u.eventsLimit);
     const bookingsPct = getUsagePercent(u.bookingsUsed, u.bookingsLimit);
     const isWarning =
-      tablesPct >= 80 || reservationsPct >= 80 || eventsPct >= 80 || bookingsPct >= 80;
+      tablesPct >= 80 ||
+      reservationsPct >= 80 ||
+      eventsPct >= 80 ||
+      bookingsPct >= 80;
     const isCritical =
-      tablesPct >= 100 || reservationsPct >= 100 || eventsPct >= 100 || bookingsPct >= 100;
+      tablesPct >= 100 ||
+      reservationsPct >= 100 ||
+      eventsPct >= 100 ||
+      bookingsPct >= 100;
     const matchesWarning =
       !filterWarning.value ||
       (filterWarning.value === "warning" && isWarning) ||
@@ -443,26 +466,6 @@ onMounted(() => {
   gap: var(--space-3);
   margin-bottom: var(--space-4);
   flex-wrap: wrap;
-}
-.search-input,
-.filter-select {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-sans);
-}
-.search-input {
-  flex: 1;
-  max-width: 320px;
-}
-.search-input:focus,
-.filter-select:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .table-wrapper {
   overflow-x: auto;

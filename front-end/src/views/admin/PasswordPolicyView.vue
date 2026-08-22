@@ -216,34 +216,7 @@ onMounted(() => {
   gap: var(--space-3);
   margin-top: var(--space-5);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .feedback {
   margin-top: var(--space-3);
   font-size: var(--text-sm);

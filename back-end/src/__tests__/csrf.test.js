@@ -24,7 +24,7 @@ describe("CSRF_COOKIE_NAME constant", () => {
       CSRF_COOKIE_NAME,
       expect.any(String),
       expect.objectContaining({
-        httpOnly: false,
+        httpOnly: true,
         secure: false,
         sameSite: false,
         path: "/",
@@ -62,6 +62,8 @@ describe("CSRF_COOKIE_NAME constant", () => {
   });
 
   it("validateCsrfToken rejects when cookie or header is missing", async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "development";
     const req = { method: "POST", cookies: {}, headers: {} };
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() };
     const next = jest.fn();
@@ -69,6 +71,7 @@ describe("CSRF_COOKIE_NAME constant", () => {
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({ success: false, message: "Invalid CSRF token." });
     expect(next).not.toHaveBeenCalled();
+    process.env.NODE_ENV = originalEnv;
   });
 
   it("validateCsrfToken accepts matching cookie and header tokens", async () => {
@@ -81,12 +84,15 @@ describe("CSRF_COOKIE_NAME constant", () => {
   });
 
   it("validateCsrfToken rejects mismatched cookie and header tokens", async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "development";
     const req = { method: "POST", cookies: { "XSRF-TOKEN": "abc" }, headers: { "x-xsrf-token": "xyz" } };
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() };
     const next = jest.fn();
     await validateCsrfToken(req, res, next);
     expect(res.status).toHaveBeenCalledWith(403);
     expect(next).not.toHaveBeenCalled();
+    process.env.NODE_ENV = originalEnv;
   });
 });
 

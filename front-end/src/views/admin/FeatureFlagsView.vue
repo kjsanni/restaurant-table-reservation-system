@@ -18,12 +18,22 @@
       <div class="card">
         <h3>Global Feature Flags</h3>
         <div class="search-row">
-          <input
-            v-model="globalSearch"
-            type="text"
-            placeholder="Search flags..."
-            class="search-input"
-          />
+          <div class="search-input-wrapper">
+            <input
+              v-model="globalSearch"
+              type="text"
+              placeholder="Search flags..."
+              class="search-input"
+            />
+            <button
+              v-if="globalSearch"
+              @click="globalSearch = ''"
+              class="search-input-clear"
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          </div>
         </div>
         <div v-if="globalLoading" class="loading-state-inline">
           <div class="spinner-sm"></div>
@@ -90,7 +100,12 @@
             </div>
           </div>
         </div>
-        <div v-else class="empty-state">No global flags configured</div>
+        <div v-else class="empty-state">
+          No global flags configured
+          <button class="btn-primary" style="margin-top: var(--space-3)">
+            Create Flag
+          </button>
+        </div>
       </div>
 
       <div class="card">
@@ -125,12 +140,22 @@
 
         <div v-if="selectedTenantId && tenantFlags" class="tenant-section">
           <div class="search-row">
-            <input
-              v-model="tenantSearch"
-              type="text"
-              placeholder="Search tenant flags..."
-              class="search-input"
-            />
+            <div class="search-input-wrapper">
+              <input
+                v-model="tenantSearch"
+                type="text"
+                placeholder="Search tenant flags..."
+                class="search-input"
+              />
+              <button
+                v-if="tenantSearch"
+                @click="tenantSearch = ''"
+                class="search-input-clear"
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <div class="preset-row">
@@ -244,6 +269,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, computed, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
@@ -501,12 +528,6 @@ const createPreset = async () => {
   }
 };
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return d.toLocaleString();
-};
-
 onMounted(() => {
   loadGlobalFlags();
   loadTenants();
@@ -556,15 +577,6 @@ onMounted(() => {
 }
 .search-row {
   margin-bottom: var(--space-4);
-}
-.search-input {
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  background: var(--surface);
-  color: var(--ink);
 }
 .flags-categorized {
   display: flex;
@@ -676,14 +688,6 @@ onMounted(() => {
   margin-bottom: var(--space-4);
   flex-wrap: wrap;
 }
-.filter-select {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  background: var(--surface);
-  color: var(--ink);
-}
 .preset-row {
   display: flex;
   gap: var(--space-3);
@@ -700,20 +704,7 @@ onMounted(() => {
   background: var(--surface-sunken);
   border-radius: var(--radius-lg);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .btn-warning {
   background: linear-gradient(135deg, var(--warning), #d97706);
 }

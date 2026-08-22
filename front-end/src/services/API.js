@@ -1,11 +1,10 @@
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth";
+import { getCsrfToken } from "@/utils/csrf";
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api/v1",
   withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "x-xsrf-token",
 });
 
 let refreshing = false;
@@ -22,7 +21,13 @@ const processQueue = (error) => {
   refreshQueue.length = 0;
 };
 
-API.interceptors.request.use((config) => {
+API.interceptors.request.use(async (config) => {
+  if (config.url !== "/csrf-token") {
+    const token = await getCsrfToken();
+    if (token) {
+      config.headers["x-xsrf-token"] = token;
+    }
+  }
   const authStore = useAuthStore();
   if (authStore.currentTenant) {
     config.headers["X-Tenant-Id"] = authStore.currentTenant.id;

@@ -1,11 +1,22 @@
 const { exec } = require("child_process");
 const { promisify } = require("util");
+const { readFileSync } = require("fs");
+const { join, dirname } = require("path");
 const _execAsync = promisify(exec);
+
+const packageJsonPath = join(dirname(__dirname), "..", "..", "package.json");
+let packageVersion = "unknown";
+try {
+  const pkg = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+  packageVersion = pkg.version || "unknown";
+} catch {
+  packageVersion = process.env.npm_package_version || "unknown";
+}
 
 const getDeploymentStatusHandler = async (req, res) => {
   const status = {
     environment: process.env.NODE_ENV || "development",
-    version: process.env.npm_package_version || "unknown",
+    version: packageVersion || process.env.npm_package_version || "unknown",
     nodeVersion: process.version,
     platform: process.platform,
     uptime: process.uptime(),

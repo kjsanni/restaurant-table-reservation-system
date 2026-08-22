@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import adminAPI from "@/services/adminAPI";
+import Pagination from "@/components/AdminPagination.vue";
 
 interface PlatformRole {
   key: string;
@@ -22,6 +23,13 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const roles = ref<PlatformRole[]>([]);
 const users = ref<PlatformUser[]>([]);
+const page = ref(1);
+const pageSize = ref(20);
+const total = ref(0);
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(total.value / pageSize.value))
+);
 
 const showCreateModal = ref(false);
 const createForm = ref({
@@ -50,11 +58,23 @@ const loadRoles = async () => {
 
 const loadUsers = async () => {
   try {
-    const response = await adminAPI.listPlatformUsers();
+    const response = await adminAPI.listPlatformUsers({
+      page: page.value,
+      pageSize: pageSize.value,
+    });
     users.value = response.data?.users || [];
+    total.value = response.data?.total || 0;
   } catch {
     error.value = "Failed to load users.";
   }
+};
+
+watch(page, () => {
+  loadUsers();
+});
+
+const onPageChange = (p: number) => {
+  page.value = p;
 };
 
 const assignRole = async (userId: number, role: string) => {
@@ -67,6 +87,7 @@ const assignRole = async (userId: number, role: string) => {
 };
 
 const revokeRole = async (userId: number, role: string) => {
+  if (!confirm("Are you sure?")) return;
   try {
     await adminAPI.revokePlatformRole(userId, role);
     await loadUsers();
@@ -161,6 +182,10 @@ onMounted(async () => {
       <Icon icon="mdi:account-group" width="48" height="48" />
       <h3>No platform users found.</h3>
       <p>Create a platform user to get started.</p>
+      <button @click="showCreateModal = true" class="pr-create-btn">
+        <Icon icon="mdi:account-plus" width="18" height="18" />
+        Create Platform User
+      </button>
     </div>
 
     <!-- Users Table -->
@@ -238,6 +263,13 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+
+    <Pagination
+      v-if="users.length > 0"
+      :current-page="page"
+      :total-pages="totalPages"
+      @update:page="onPageChange"
+    />
 
     <!-- Roles Legend -->
     <div class="pr-legend">

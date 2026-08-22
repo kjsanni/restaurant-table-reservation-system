@@ -37,6 +37,10 @@ platformAuditDAO.list = (filters = {}) => {
   return db.platformAuditLog.findAll(buildListOptions(filters)); // codacy-suppress nosql-injection - parameterized ORM call
 };
 
+platformAuditDAO.count = (filters = {}) => {
+  return db.platformAuditLog.count(buildListOptions(filters)); // codacy-suppress nosql-injection - parameterized ORM call
+};
+
 platformAuditDAO.findRecent = (action, limit = 5) => {
   return db.platformAuditLog.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where: { action },

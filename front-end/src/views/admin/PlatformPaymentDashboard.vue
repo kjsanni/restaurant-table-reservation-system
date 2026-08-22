@@ -51,12 +51,22 @@
     </div>
 
     <div class="filters">
-      <input
-        v-model="searchQuery"
-        placeholder="Search venues..."
-        class="search-input"
-        @input="onFilterChange"
-      />
+      <div class="search-input-wrapper">
+        <input
+          v-model="searchQuery"
+          placeholder="Search venues..."
+          class="search-input"
+          @input="onFilterChange"
+        />
+        <button
+          v-if="searchQuery"
+          @click="searchQuery = ''"
+          class="search-input-clear"
+          aria-label="Clear search"
+        >
+          ×
+        </button>
+      </div>
       <input
         v-model="dateFrom"
         type="date"
@@ -74,8 +84,7 @@
         class="filter-select"
         @change="onFilterChange"
       >
-        <option value="">All Statuses</option>
-        <option value="active">Active</option>
+        <option value="active" selected>Active</option>
         <option value="past_due">Past Due</option>
         <option value="suspended">Suspended</option>
         <option value="cancelled">Cancelled</option>
@@ -299,6 +308,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import platformPaymentAPI from "@/services/platformPaymentAPI";
@@ -321,7 +332,7 @@ const tenants = ref([]);
 const recentPayments = ref([]);
 const plans = ref([]);
 const searchQuery = ref("");
-const filterStatus = ref("");
+const filterStatus = ref("active");
 const filterPlan = ref("");
 const dateFrom = ref("");
 const dateTo = ref("");
@@ -417,11 +428,6 @@ const formatCurrency = (val) => {
   });
 };
 
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString();
-};
-
 onMounted(() => {
   loadData();
   loadPlans();
@@ -493,35 +499,6 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
-}
-.search-input,
-.filter-input,
-.filter-select {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-sans);
-}
-.search-input {
-  flex: 1;
-  min-width: 200px;
-  max-width: 320px;
-}
-.filter-input {
-  width: 160px;
-}
-.filter-select {
-  width: 160px;
-}
-.search-input:focus,
-.filter-input:focus,
-.filter-select:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .reset-btn {
   padding: var(--space-2) var(--space-3);

@@ -63,6 +63,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
 
@@ -77,11 +79,6 @@ const load = async () => {
   } finally {
     loading.value = false;
   }
-};
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleString();
 };
 
 const severityClass = (severity) => {
@@ -165,20 +162,7 @@ onMounted(() => {
 .status-failed {
   color: var(--rose-600);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .loading-state-inline {
   display: flex;
   justify-content: center;

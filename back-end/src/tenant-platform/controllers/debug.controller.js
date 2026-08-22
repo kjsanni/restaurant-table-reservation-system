@@ -63,9 +63,21 @@ const getPlatformDebugInfoHandler = async (req, res) => {
   const memPercent = (mem.heapUsed / mem.heapTotal) * 100;
   checks.memory = memPercent > 90 ? "degraded" : "healthy";
 
-  const tenantCount = await db.tenant.count();
-  const userCount = await db.user.count();
-  const reservationCount = await db.sequelize.models.reservation.count();
+  let tenantCount = 0;
+  let userCount = 0;
+  let reservationCount = 0;
+
+  try {
+    const counts = await db.sequelize.transaction(async (tx) => {
+      const tc = await db.tenant.count({ transaction: tx });
+      const uc = await db.user.count({ transaction: tx });
+      const rc = await db.sequelize.models.reservation.count({ transaction: tx });
+      return [tc, uc, rc];
+    });
+    [tenantCount, userCount, reservationCount] = counts;
+  } catch (e) {
+    logger.error("Failed to count platform resources", { error: e.message });
+  }
 
   res.status(200).json({
     success: true,

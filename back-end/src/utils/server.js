@@ -239,13 +239,13 @@ const createServer = () => {
     const token = req.cookies?.[CSRF_COOKIE_NAME] || generateCsrfToken();
     const isSecure = req.secure || (req.headers["x-forwarded-proto"] === "https");
     if (!req.cookies?.[CSRF_COOKIE_NAME]) {
-      res.cookie(CSRF_COOKIE_NAME, token, {
-        httpOnly: false,
-        secure: isSecure,
-        sameSite: process.env.NODE_ENV === "production" ? "lax" : false,
-        path: "/",
-        maxAge: 24 * 60 * 60 * 1000,
-      });
+    res.cookie(CSRF_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: process.env.NODE_ENV === "production" ? "lax" : false,
+      path: "/",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
     }
     res.json({ success: true, token });
   });

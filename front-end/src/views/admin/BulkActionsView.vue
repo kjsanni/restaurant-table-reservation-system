@@ -34,13 +34,23 @@
           </span>
         </div>
         <div class="toolbar-right">
-          <input
-            v-model="searchQuery"
-            type="search"
-            placeholder="Search venues..."
-            class="search-input"
-            aria-label="Search tenants"
-          />
+          <div class="search-input-wrapper">
+            <input
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search venues..."
+              class="search-input"
+              aria-label="Search tenants"
+            />
+            <button
+              v-if="searchQuery"
+              @click="searchQuery = ''"
+              class="search-input-clear"
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          </div>
           <select
             v-model="filterStatus"
             class="filter-select"
@@ -235,6 +245,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, computed, onMounted } from "vue";
 import bulkAPI from "@/services/bulkAPI";
 import planAPI from "@/services/planAPI";
@@ -332,17 +344,6 @@ const statusClass = (status) => {
     trialing: "status-info",
   };
   return map[status] || "status-muted";
-};
-
-const formatDate = (value) => {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 };
 
 const handleBulkSuspend = async () => {
@@ -578,31 +579,7 @@ onMounted(() => {
   font-weight: 600;
   color: var(--accent-600);
 }
-.search-input {
-  width: 240px;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-sans);
-}
 .search-input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.filter-select {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-sm);
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-sans);
-}
-.filter-select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
@@ -713,77 +690,7 @@ onMounted(() => {
   flex-direction: column;
   gap: var(--space-3);
 }
-.btn-primary {
-  width: 100%;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(
-    135deg,
-    var(--brand-700) 0%,
-    var(--brand-600) 100%
-  );
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
-.btn-primary:hover:not(:disabled) {
-  background: linear-gradient(
-    135deg,
-    var(--brand-600) 0%,
-    var(--brand-500) 100%
-  );
-  box-shadow: var(--shadow-md);
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-secondary {
-  width: 100%;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
-.btn-secondary:hover:not(:disabled) {
-  border-color: var(--neutral-300);
-  background: var(--surface-sunken);
-}
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-danger {
-  width: 100%;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: var(--rose-500);
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
-.btn-danger:hover:not(:disabled) {
-  background: var(--rose-600);
-  box-shadow: var(--shadow-md);
-}
-.btn-danger:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .btn-small {
   padding: var(--space-1-5) var(--space-3);
   border-radius: var(--radius-lg);

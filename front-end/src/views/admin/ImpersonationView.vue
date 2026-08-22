@@ -72,6 +72,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
 
@@ -116,11 +118,6 @@ const endSession = async (id) => {
   } finally {
     endingId.value = null;
   }
-};
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleString();
 };
 
 onMounted(() => {
@@ -185,35 +182,7 @@ onMounted(() => {
   background: var(--surface);
   color: var(--ink);
 }
-.btn-primary {
-  width: 100%;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-danger {
-  padding: var(--space-1-5) var(--space-3);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: var(--rose-500);
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-danger:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .session-list {
   display: flex;
   flex-direction: column;

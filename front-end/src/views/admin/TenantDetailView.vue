@@ -351,12 +351,22 @@
       </div>
       <template v-else>
         <div class="search-row">
-          <input
-            v-model="flagSearch"
-            type="text"
-            placeholder="Search flags..."
-            class="search-input"
-          />
+          <div class="search-input-wrapper">
+            <input
+              v-model="flagSearch"
+              type="text"
+              placeholder="Search flags..."
+              class="search-input"
+            />
+            <button
+              v-if="flagSearch"
+              @click="flagSearch = ''"
+              class="search-input-clear"
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          </div>
         </div>
         <div v-if="filteredTenantFlags.length" class="flags-categorized">
           <div
@@ -411,6 +421,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import tenantAdminAPI from "@/services/tenantAdminAPI";
@@ -795,11 +807,6 @@ const saveResidency = async () => {
   } finally {
     savingResidency.value = false;
   }
-};
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString();
 };
 
 onMounted(() => {
@@ -1247,70 +1254,6 @@ onMounted(() => {
   margin-top: var(--space-xl);
 }
 .flags-categorized {
-  margin-top: var(--space-md);
-}
-.flag-group {
-  margin-bottom: var(--space-lg);
-}
-.flag-group-title {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ink-muted);
-  margin: 0 0 var(--space-sm);
-}
-.flags-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-.flag-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-.flag-info {
-  flex: 1;
-  min-width: 0;
-}
-.flag-label {
-  font-weight: 500;
-  font-size: var(--text-sm);
-  display: block;
-}
-.flag-description {
-  font-size: var(--text-sm);
-  color: var(--ink-muted);
-  display: block;
-  margin-top: 2px;
-}
-.dependency-warning {
-  font-size: var(--text-sm);
-  color: var(--warning);
-  margin-top: var(--space-xs);
-}
-.loading-state-inline {
-  display: flex;
-  justify-content: center;
-  padding: var(--space-lg);
-}
-.search-input {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  background: var(--surface);
-  color: var(--ink);
-  width: 100%;
-  max-width: 320px;
-}
-.empty-state {
   color: var(--ink-muted);
   font-size: var(--text-sm);
   padding: var(--space-lg);

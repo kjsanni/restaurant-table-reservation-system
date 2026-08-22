@@ -3,9 +3,13 @@
     <div class="page-header">
       <div>
         <h1>Event Templates</h1>
-        <p class="subtitle">Reusable event configurations and automation presets</p>
+        <p class="subtitle">
+          Reusable event configurations and automation presets
+        </p>
       </div>
-      <button class="btn-primary" @click="showCreateForm = true">+ New Template</button>
+      <button class="btn-primary" @click="showCreateForm = true">
+        + New Template
+      </button>
     </div>
 
     <div v-if="showCreateForm" class="card form-card">
@@ -30,8 +34,16 @@
           <textarea v-model="form.description" rows="3"></textarea>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn-secondary" @click="showCreateForm = false">Cancel</button>
-          <button type="submit" class="btn-primary" :disabled="saving">{{ saving ? "Saving..." : "Save Template" }}</button>
+          <button
+            type="button"
+            class="btn-secondary"
+            @click="showCreateForm = false"
+          >
+            Cancel
+          </button>
+          <button type="submit" class="btn-primary" :disabled="saving">
+            {{ saving ? "Saving..." : "Save Template" }}
+          </button>
         </div>
       </form>
     </div>
@@ -63,13 +75,24 @@
               <td>{{ item.category || "General" }}</td>
               <td>{{ item.isSystem ? "System" : "Custom" }}</td>
               <td>
-                <span class="badge" :class="item.isActive ? 'badge-success' : 'badge-danger'">
+                <span
+                  class="badge"
+                  :class="item.isActive ? 'badge-success' : 'badge-danger'"
+                >
                   {{ item.isActive ? "Active" : "Inactive" }}
                 </span>
               </td>
               <td class="actions-cell">
-                <button class="btn-sm" @click="applyTemplate(item)">Apply</button>
-                <button v-if="!item.isSystem" class="btn-sm btn-danger" @click="confirmDelete(item)">Delete</button>
+                <button class="btn-sm" @click="applyTemplate(item)">
+                  Apply
+                </button>
+                <button
+                  v-if="!item.isSystem"
+                  class="btn-sm btn-danger"
+                  @click="confirmDelete(item)"
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           </tbody>
@@ -97,7 +120,12 @@ const items = ref<Template[]>([]);
 const loading = ref(true);
 const saving = ref(false);
 const showCreateForm = ref(false);
-const form = ref({ name: "", category: "general", description: "", config: {} });
+const form = ref({
+  name: "",
+  category: "general",
+  description: "",
+  config: {},
+});
 
 const load = async () => {
   loading.value = true;

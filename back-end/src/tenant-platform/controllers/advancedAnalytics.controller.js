@@ -128,17 +128,15 @@ const getRevenueAnalyticsHandler = async (req, res) => {
       "tenantId",
       "amount",
       "currency",
-      "status",
-      "paymentMethod",
+      "method",
       "createdAt",
     ],
     order: [["createdAt", "DESC"]],
   });
 
-  const totalRevenue = transactions.reduce(
-    (sum, t) => sum + (t.status === "completed" ? parseFloat(t.amount || 0) : 0),
-    0
-  );
+  const totalRevenue = transactions
+    .filter((t) => t.status === "completed")
+    .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
   const byTenant = {};
   for (const tx of transactions) {
@@ -217,8 +215,7 @@ const getPaymentAnalyticsHandler = async (req, res) => {
       "tenantId",
       "amount",
       "currency",
-      "status",
-      "paymentMethod",
+      "method",
       "createdAt",
     ],
     order: [["createdAt", "DESC"]],
@@ -226,17 +223,17 @@ const getPaymentAnalyticsHandler = async (req, res) => {
 
   const byMethod = {};
   for (const p of payments) {
-    const method = p.paymentMethod || "unknown";
-    if (!byMethod[method]) byMethod[method] = { total: 0, count: 0, completed: 0 };
+    const method = p.method || "unknown";
+    if (!byMethod[method]) byMethod[method] = { total: 0, count: 0 };
     byMethod[method].count += 1;
     byMethod[method].total += parseFloat(p.amount || 0);
-    if (p.status === "completed") byMethod[method].completed += 1;
   }
 
+  const totalCompleted = payments
+    .filter((p) => p.status === "completed")
+    .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
   const failedPayments = payments.filter((p) => p.status === "failed").length;
-  const totalCompleted = payments.filter(
-    (p) => p.status === "completed"
-  ).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
 
   res.status(200).json({
     success: true,

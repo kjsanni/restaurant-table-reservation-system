@@ -19,6 +19,9 @@
 
     <div v-else-if="keys.length === 0" class="empty-state">
       <p>No API keys found. Create one to get started.</p>
+      <button @click="openCreateModal" class="btn-primary">
+        + Create API Key
+      </button>
     </div>
 
     <div v-else class="table-wrapper">
@@ -127,6 +130,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useToastStore } from "@/stores/toast";
@@ -234,11 +239,6 @@ const copyKey = async () => {
   } catch {
     // ignore clipboard errors
   }
-};
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString();
 };
 
 onMounted(() => {
@@ -376,22 +376,7 @@ onMounted(() => {
   opacity: 0.6;
   cursor: not-allowed;
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(
-    135deg,
-    var(--brand-700) 0%,
-    var(--brand-600) 100%
-  );
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
+
 .btn-primary:hover {
   background: linear-gradient(
     135deg,
@@ -400,17 +385,7 @@ onMounted(() => {
   );
   box-shadow: var(--shadow-md);
 }
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink-secondary);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-family: var(--font-sans);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
+
 .btn-secondary:hover {
   border-color: var(--neutral-300);
   background: var(--surface-sunken);

@@ -10,7 +10,13 @@
       <button @click="openCreateModal" class="btn-primary">+ New Plan</button>
     </div>
 
-    <div class="table-wrapper">
+    <div v-if="loading" class="loading-state">
+      <div class="skeleton skeleton-text" style="width: 60%"></div>
+      <div class="skeleton skeleton-text" style="width: 80%"></div>
+      <div class="skeleton skeleton-text" style="width: 40%"></div>
+    </div>
+
+    <div v-else class="table-wrapper">
       <table class="plans-table">
         <thead>
           <tr>
@@ -177,6 +183,7 @@ const authStore = useAuthStore();
 const plans = ref([]);
 const showModal = ref(false);
 const editingPlan = ref(null);
+const loading = ref(false);
 const form = ref({
   name: "",
   slug: "",
@@ -192,8 +199,13 @@ const form = ref({
 const erpnextModuleOptions = ERP_NEXT_MODULE_OPTIONS;
 
 const loadPlans = async () => {
-  const response = await planAPI.listPlans();
-  plans.value = response.data.collection || [];
+  loading.value = true;
+  try {
+    const response = await planAPI.listPlans();
+    plans.value = response.data.collection || [];
+  } finally {
+    loading.value = false;
+  }
 };
 
 const openCreateModal = () => {
@@ -375,22 +387,7 @@ onMounted(() => {
 .btn-small.danger:hover {
   background: var(--rose-600);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(
-    135deg,
-    var(--brand-700) 0%,
-    var(--brand-600) 100%
-  );
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
+
 .btn-primary:hover {
   background: linear-gradient(
     135deg,
@@ -399,17 +396,7 @@ onMounted(() => {
   );
   box-shadow: var(--shadow-md);
 }
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink-secondary);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-family: var(--font-sans);
-  transition: all var(--duration-150) var(--ease-in-out);
-}
+
 .btn-secondary:hover {
   border-color: var(--neutral-300);
   background: var(--surface-sunken);

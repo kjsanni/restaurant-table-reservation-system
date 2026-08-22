@@ -58,6 +58,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
 
@@ -77,6 +79,7 @@ const loadSessions = async () => {
 };
 
 const revokeSingle = async (id) => {
+  if (!confirm("Are you sure?")) return;
   revokingId.value = id;
   try {
     await adminAPI.revokeSession(id);
@@ -98,11 +101,6 @@ const revokeAll = async () => {
   } finally {
     revokingAll.value = false;
   }
-};
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleString();
 };
 
 const isExpiringSoon = (expiresAt) => {
@@ -138,20 +136,7 @@ onMounted(() => {
   margin: 0;
   font-size: var(--text-sm);
 }
-.btn-danger {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: var(--rose-500);
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-danger:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border-subtle);

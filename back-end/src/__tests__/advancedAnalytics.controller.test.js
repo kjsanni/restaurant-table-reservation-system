@@ -48,8 +48,8 @@ describe("advancedAnalytics.controller", () => {
 
   it("getRevenueAnalyticsHandler returns revenue data", async () => {
     db.payment.findAll.mockResolvedValue([
-      { id: 1, tenantId: 1, amount: "50.00", currency: "GHS", status: "completed", paymentMethod: "mobile_money", createdAt: new Date() },
-      { id: 2, tenantId: 1, amount: "30.00", currency: "GHS", status: "failed", paymentMethod: "card", createdAt: new Date() },
+      { id: 1, tenantId: 1, amount: "50.00", currency: "GHS", status: "completed", method: "mobile_money", createdAt: new Date() },
+      { id: 2, tenantId: 1, amount: "30.00", currency: "GHS", status: "failed", method: "card", createdAt: new Date() },
     ]);
     await advancedAnalyticsController.getRevenueAnalyticsHandler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -73,9 +73,9 @@ describe("advancedAnalytics.controller", () => {
 
   it("getPaymentAnalyticsHandler returns payment analytics", async () => {
     db.payment.findAll.mockResolvedValue([
-      { id: 1, tenantId: 1, amount: "50.00", currency: "GHS", status: "completed", paymentMethod: "mobile_money", createdAt: new Date() },
-      { id: 2, tenantId: 2, amount: "30.00", currency: "GHS", status: "completed", paymentMethod: "card", createdAt: new Date() },
-      { id: 3, tenantId: 1, amount: "20.00", currency: "GHS", status: "failed", paymentMethod: "mobile_money", createdAt: new Date() },
+      { id: 1, tenantId: 1, amount: "50.00", currency: "GHS", status: "completed", method: "mobile_money", createdAt: new Date() },
+      { id: 2, tenantId: 2, amount: "30.00", currency: "GHS", status: "completed", method: "card", createdAt: new Date() },
+      { id: 3, tenantId: 1, amount: "20.00", currency: "GHS", status: "failed", method: "mobile_money", createdAt: new Date() },
     ]);
     await advancedAnalyticsController.getPaymentAnalyticsHandler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);

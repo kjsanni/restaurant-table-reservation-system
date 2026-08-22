@@ -11,8 +11,8 @@
           class="filter-select"
           @change="loadConversations"
         >
-          <option value="">All statuses</option>
-          <option value="open">Open</option>
+          <option value="open" selected>Open</option>
+          <option value="in_progress">In Progress</option>
           <option value="in_progress">In Progress</option>
           <option value="resolved">Resolved</option>
           <option value="closed">Closed</option>
@@ -214,6 +214,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted, nextTick } from "vue";
 import adminAPI from "@/services/adminAPI";
 
@@ -222,7 +224,7 @@ const conversations = ref([]);
 const selectedConversation = ref(null);
 const messages = ref([]);
 const messagesLoading = ref(false);
-const filterStatus = ref("");
+const filterStatus = ref("open");
 const replyBody = ref("");
 const templates = ref([]);
 const selectedTemplateId = ref("");
@@ -372,11 +374,6 @@ const createConversation = async () => {
   } finally {
     creating.value = false;
   }
-};
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleString();
 };
 
 const statusClass = (status) => {
@@ -628,48 +625,7 @@ onMounted(() => {
 .status-failed {
   color: var(--rose-600);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-secondary {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-danger {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: var(--rose-500);
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-danger:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .modal-overlay {
   position: fixed;
   inset: 0;

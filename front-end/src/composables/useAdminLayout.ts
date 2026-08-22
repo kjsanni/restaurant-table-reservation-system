@@ -1,15 +1,27 @@
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import type { User } from "@/stores/auth";
+
+const SIDEBAR_COLLAPSED_KEY = "sa-sidebar-collapsed";
 
 export const useAdminLayout = () => {
   const authStore = useAuthStore();
 
-  const collapsed = ref(false);
+  const collapsed = ref(
+    typeof window !== "undefined"
+      ? localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true"
+      : false
+  );
   const sidebarVisible = ref(true);
   const windowWidth = ref<number>(
     typeof window !== "undefined" ? window.innerWidth : 1024
   );
+
+  watch(collapsed, (val) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(val));
+    }
+  });
 
   const checkWindowWidth = () => {
     windowWidth.value = window.innerWidth;

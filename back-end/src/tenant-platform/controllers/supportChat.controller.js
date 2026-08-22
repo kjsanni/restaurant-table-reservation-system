@@ -8,11 +8,11 @@ const platformAuditDAO = require("../DAOs/platformAudit.dao");
 const auditLog = require("../utils/auditLog");
 
 const listConversationsHandler = async (req, res) => {
-  const { status, assignedTo } = req.query;
+  const { status: queryStatus, assignedTo } = req.query;
   const tenantId = req.user?.isSuperAdmin ? null : req.tenant?.id;
   const data = await supportConversationDAO.list({
     tenantId,
-    status,
+    queryStatus,
     assignedTo,
     limit: 100,
   });

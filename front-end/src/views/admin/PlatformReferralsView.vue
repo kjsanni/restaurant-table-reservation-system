@@ -201,16 +201,7 @@ onMounted(() => {
   margin: 0;
   font-size: var(--text-sm);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
+
 .card {
   background: var(--white);
   border: 1px solid var(--border);
@@ -323,14 +314,5 @@ onMounted(() => {
   justify-content: flex-end;
   gap: var(--space-3);
   margin-top: var(--space-4);
-}
-.btn-secondary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
 }
 </style>

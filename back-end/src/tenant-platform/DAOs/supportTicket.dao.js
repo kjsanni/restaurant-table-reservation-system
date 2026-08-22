@@ -6,7 +6,7 @@ supportTicketDAO.create = async (payload) => {
   return await db.supportTicket.create(payload); // codacy-suppress nosql-injection - parameterized ORM call
 };
 
-supportTicketDAO.list = (filters = {}) => {
+supportTicketDAO.list = async (filters = {}) => {
   const where = {};
   if (filters.tenantId) where.tenantId = filters.tenantId;
   if (filters.status) where.status = filters.status;
@@ -15,11 +15,24 @@ supportTicketDAO.list = (filters = {}) => {
   if (filters.assignedTo) where.assignedTo = filters.assignedTo;
   if (filters.category) where.category = filters.category;
 
-  return db.supportTicket.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
+  const page = filters.page ? parseInt(filters.page, 10) : 1;
+  const pageSize = filters.limit
+    ? parseInt(filters.limit, 10)
+    : filters.pageSize
+    ? parseInt(filters.pageSize, 10)
+    : 100;
+  const offset =
+    filters.offset !== undefined
+      ? parseInt(filters.offset, 10)
+      : (page - 1) * pageSize;
+
+  const { rows, count } = await db.supportTicket.findAndCountAll({ // codacy-suppress nosql-injection - parameterized ORM call
     where,
     order: [["createdAt", "DESC"]],
-    limit: filters.limit || 100,
+    limit: pageSize,
+    offset,
   });
+  return { collection: rows, total: count };
 };
 
 supportTicketDAO.findById = (id, tenantId) => {

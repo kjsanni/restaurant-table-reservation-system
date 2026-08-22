@@ -12,7 +12,7 @@ const auditLog = require("../utils/auditLog");
 const UPLOAD_DIR = "/app/uploads/support-attachments";
 
 const listMyTicketsHandler = async (req, res) => {
-  const { status, category, limit } = req.query;
+  const { status: queryStatus, category, limit } = req.query;
   const tenantId = req.tenant?.id;
   if (!tenantId) {
     return response.forbidden(res, "Tenant context required");
@@ -20,11 +20,11 @@ const listMyTicketsHandler = async (req, res) => {
 
   const data = await supportTicketDAO.list({
     tenantId,
-    status,
+    queryStatus,
     category,
     limit: limit ? parseInt(limit, 10) : 50,
   });
-  res.status(200).json({ success: true, collection: data });
+  res.status(200).json({ success: true, collection: data.collection, total: data.total });
 };
 
 const getTicketHandler = async (req, res) => {

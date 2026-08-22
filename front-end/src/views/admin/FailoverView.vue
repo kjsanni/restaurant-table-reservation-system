@@ -77,6 +77,8 @@
 </template>
 
 <script setup>
+import { formatDate, formatDateTime } from "@/utils/format";
+
 import { ref, onMounted } from "vue";
 import adminAPI from "@/services/adminAPI";
 
@@ -137,11 +139,6 @@ const save = async () => {
   } finally {
     saving.value = false;
   }
-};
-
-const formatDate = (date) => {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString();
 };
 
 const statusClass = (status) => {
@@ -252,20 +249,7 @@ onMounted(() => {
   color: var(--ink);
   font-size: var(--text-sm);
 }
-.btn-primary {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
-  border: none;
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
-  color: var(--white);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+
 .status-healthy {
   color: var(--earth-600);
 }
