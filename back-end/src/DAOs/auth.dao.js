@@ -60,7 +60,7 @@ const findUserByPhone = async (phone, tenantId) => {
 const findUserById = async (id, tenantId) => {
   return await User.findOne({ // codacy-suppress nosql-injection - parameterized ORM call
     where: withTenant({ id }, tenantId),
-    attributes: ["id", "username", "email", "role", "permissions", "locale", "isSuperAdmin", "platformRoles", "tenantId", "createdAt", "updatedAt"],
+    attributes: ["id", "username", "email", "role", "permissions", "locale", "isSuperAdmin", "platformRoles", "tenantId", "createdAt", "updatedAt", "elevatedUntil"],
   });
 };
 
@@ -383,7 +383,7 @@ const clearLoginAttempts = async (email, ipAddress, tenantId) => {
 const listPlatformUsers = async () => {
   const { Op } = db.Sequelize;
   return await User.findAll({ // codacy-suppress nosql-injection - parameterized ORM call
-    attributes: ["id", "username", "email", "role", "permissions", "locale", "isSuperAdmin", "platformRoles", "tenantId", "createdAt", "updatedAt"],
+    attributes: ["id", "username", "email", "role", "permissions", "locale", "isSuperAdmin", "platformRoles", "tenantId", "createdAt", "updatedAt", "elevatedUntil"],
     where: {
       [Op.or]: [
         { isSuperAdmin: true },

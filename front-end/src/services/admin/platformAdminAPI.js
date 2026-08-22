@@ -117,3 +117,31 @@ export const crossTenantSearch = (params = {}) => {
 export const getPlatformDebug = () => {
   return API.get("/admin/debug/platform");
 };
+
+export const listVerticalConfigurations = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.vertical) query.set("vertical", params.vertical);
+  if (params.isActive !== undefined) query.set("isActive", String(params.isActive));
+  const qs = query.toString();
+  return API.get(`/admin/vertical-configurations${qs ? `?${qs}` : ""}`);
+};
+
+export const getVerticalConfiguration = (id) => {
+  return API.get(`/admin/vertical-configurations/${id}`);
+};
+
+export const createVerticalConfiguration = (data) => {
+  return API.post("/admin/vertical-configurations", data);
+};
+
+export const updateVerticalConfiguration = (id, data) => {
+  return API.patch(`/admin/vertical-configurations/${id}`, data);
+};
+
+export const deleteVerticalConfiguration = (id) => {
+  return API.delete(`/admin/vertical-configurations/${id}`);
+};
+
+export const getVerticalConfigurationSummary = () => {
+  return API.get("/admin/vertical-configurations/summary");
+};

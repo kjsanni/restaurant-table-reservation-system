@@ -22,6 +22,10 @@ response.forbidden = (res, message) => {
   return res.status(403).json({ success: false, message });
 };
 
+response.conflict = (res, message) => {
+  return res.status(409).json({ success: false, message });
+};
+
 response.error = (res, status, message) => {
   return res.status(status).json({ success: false, message });
 };

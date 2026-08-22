@@ -1212,6 +1212,12 @@ router.addRoute({
       meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
     },
     {
+      path: "vertical-configurator",
+      name: "vertical-configurator",
+      component: () => import("../views/admin/VerticalConfiguratorView.vue"),
+      meta: { requiresAuth: true, requiresPermission: "manage_tenants" },
+    },
+    {
       path: "debug",
       name: "platform-debug",
       component: () => import("../views/admin/DebugToolsView.vue"),
